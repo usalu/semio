@@ -13,7 +13,7 @@
       "const": "replaceRegisterRow"
     },
     "row": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterRow",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json#/$defs/RegisterRow",
       "x-semio-ui": {
         "widget": "record",
         "role": "payload",

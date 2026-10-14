@@ -4,17 +4,16 @@
 //! nothing to undo.
 
 use crate::change_generation_value::ChangeGenerationValue;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
-pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<ChangeGenerationValue>>(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     base.generation
         .generations
         .iter()
         .find(|entry| entry.id == payload.id)
         .map(|entry| {
-            vec![Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(semio_framework_value::DslValue::Null) })]
+            vec![Op::from(ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), new_value: entry.values.get(&payload.question_id).cloned().unwrap_or(semio_framework_value::DslValue::Null) })]
         })
         .unwrap_or_default()
 

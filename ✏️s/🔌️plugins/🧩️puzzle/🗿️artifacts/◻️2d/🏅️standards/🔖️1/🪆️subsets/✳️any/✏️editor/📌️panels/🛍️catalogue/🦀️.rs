@@ -7,7 +7,7 @@
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, ui_label, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::snapshot::inferred_kind_entries, crate::editor::puzzle2d::snapshot::kind_catalog_entries, crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ActionFactory;

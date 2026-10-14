@@ -9,7 +9,7 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/infinite-world-r3f:test"
+    "test": "bun --cwd \"../../../../../../../../..\" repo run @semio-tech/infinite-world-r3f:test"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

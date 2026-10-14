@@ -1,10 +1,10 @@
 //! EN 1999 numeric compliance tests — hand-derived worked examples + DoD gates.
 
-use crate::document::{AnnexChoice, CheckStatus};
-use crate::snapshot::En1999Snapshot;
-use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1999_dsl};
-use crate::standards::v1::subsets::any::io::text::snapshot::{decode_en1999_dsl};
-use crate::standards::v1::subsets::any::schema::{evaluate_structure, na_de, part_1_1, part_1_2, part_1_3};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_dsl;
+use semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_dsl;
+use semio_s_artifact_norm_en1999_checks::{evaluate_structure, na_de, part_1_1, part_1_2, part_1_3};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -34,7 +34,6 @@ fn alloy_table_3_2_6082_t6() {
     let expected = a_eff * row.f_o_pa / na_de::AnnexParams::de().gamma_m1;
     assert!((n_rd - expected).abs() / expected.max(1.0) < 1e-9, "N_Rd limit {n_rd} must equal catalogue-based {expected}");
 }
-
 
 #[test]
 fn alloy_5083_class_b() {
@@ -121,14 +120,14 @@ fn cold_formed_and_shells_evaluate_when_present() {
     let mut doc = En1999Snapshot::empty();
     doc.materials = En1999Snapshot::compliant_roof_purlin().materials.clone();
     let mat_id = doc.materials[0].id.clone();
-    doc.cold_formed.push(crate::snapshot::ColdFormedSheet {
+    doc.cold_formed.push(semio_s_artifact_norm_en1999_model::ColdFormedSheet {
         id: "sheet-1".into(),
         material_id: mat_id.clone(),
         thickness: 0.0025,
         width: 0.20,
         span: 1.2,
         welded: false,
-        actions: vec![crate::snapshot::MemberAction {
+        actions: vec![semio_s_artifact_norm_en1999_model::MemberAction {
             id: "G".into(),
             kind: "permanent".into(),
             category: "self".into(),
@@ -142,13 +141,13 @@ fn cold_formed_and_shells_evaluate_when_present() {
             m_z_k: 0.0,
         }],
     });
-    doc.shells.push(crate::snapshot::AluminiumShell {
+    doc.shells.push(semio_s_artifact_norm_en1999_model::AluminiumShell {
         id: "shell-1".into(),
         material_id: mat_id,
         radius: 0.60,
         thickness: 0.008,
         length: 2.0,
-        actions: vec![crate::snapshot::MemberAction {
+        actions: vec![semio_s_artifact_norm_en1999_model::MemberAction {
             id: "G".into(),
             kind: "permanent".into(),
             category: "self".into(),
@@ -277,7 +276,6 @@ fn remedy_law_writing_required_improves_fail() {
     }
 }
 
-
 #[test]
 fn chi_never_read_from_snapshot() {
     let json = serde_json::to_value(En1999Snapshot::default()).unwrap();
@@ -368,11 +366,7 @@ fn example_snapshot_validates_against_json_schema() {
     }
 }
 
-
 #[test]
-
-
-
 
 fn bundled_example_assets_match_regenerated_dsl_and_pack() {
     let any = family_any_dir();
@@ -383,7 +377,7 @@ fn bundled_example_assets_match_regenerated_dsl_and_pack() {
         let dsl_path = any.join("🖼️assets").join(name).join(name).join("🗣️.dsl.semio");
         let pack_path = any.join("🖼️assets").join(name).join("🎒️.pack.semio");
         let expected_dsl = encode_en1999_dsl(&snap);
-        let expected_pack = crate::standards::v1::subsets::any::io::binary::snapshot::encode_en1999_pack(&snap);
+        let expected_pack = semio_s_artifact_norm_en1999_io::binary::snapshot::encode_en1999_pack(&snap);
         let committed_dsl = std::fs::read_to_string(&dsl_path).unwrap_or_default();
         let committed_pack = std::fs::read(&pack_path).unwrap_or_default();
         assert_eq!(
@@ -399,7 +393,7 @@ fn bundled_example_assets_match_regenerated_dsl_and_pack() {
 
 #[test]
 fn field_meta_covers_every_editable_leaf_en_de() {
-    use crate::field_meta::en1999_field_meta;
+    use semio_s_artifact_norm_en1999_editor::field_meta::en1999_field_meta;
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
         let value = serde_json::to_value(&snap).expect("json");
         let mut missing = Vec::new();
@@ -429,9 +423,6 @@ fn field_meta_covers_every_editable_leaf_en_de() {
         assert!(missing.is_empty(), "missing field-meta for: {missing:?}");
     }
 }
-
-
-
 
 #[test]
 fn facet_field_names_match_snapshot_json_schema() {
@@ -474,7 +465,7 @@ fn facet_diff_matches_rust() {
 
 #[test]
 fn facet_mutations_match_kinds() {
-    use crate::mutations::KINDS;
+    use semio_s_artifact_norm_en1999_mutations::KINDS;
     let mut_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🟦️.ts")).unwrap_or_default();
     let mut_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🔗️.graphql")).unwrap_or_default();
     let mut_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🛰️.proto")).unwrap_or_default();
@@ -548,7 +539,7 @@ fn field_meta_rows_resolve_to_schema_leaves() {
         if leaf == "id" || leaf.starts_with("id=") { return; }
         leaves.push(path.to_string());
     });
-    use crate::field_meta::en1999_field_meta;
+    use semio_s_artifact_norm_en1999_editor::field_meta::en1999_field_meta;
     // Every meta TABLE path pattern must match at least one leaf prefix style — check no stale design names
     for stale in ["vYEd", "vZEd", "mZEd", "mYEd", "slopeM"] {
         assert!(leaves.iter().all(|p| !p.contains(stale)), "snapshot still has stale {stale}");
@@ -594,8 +585,6 @@ fn sls_deflection_and_stress_checks_present() {
     assert!(!f.remedies.is_empty());
 }
 
-
-
 fn walk_leaves(path: &str, value: &serde_json::Value, visit: &mut dyn FnMut(&str)) {
     match value {
         serde_json::Value::Object(map) => {
@@ -621,7 +610,6 @@ fn walk_leaves(path: &str, value: &serde_json::Value, visit: &mut dyn FnMut(&str
         _ => visit(path),
     }
 }
-
 
 #[test]
 fn haz_rho_u_governs_welded_net_section() {
@@ -660,8 +648,6 @@ fn shell_chi_from_geometry_hand_value() {
 }
 
 #[test]
-
-
 
 fn every_editable_leaf_influences_a_check() {
     // Descriptive report labels only — never geometry/loads.
@@ -749,13 +735,7 @@ fn every_editable_leaf_influences_a_check() {
     }
 }
 
-
-
-
 #[test]
-
-
-
 
 fn regen_example_assets_when_env_set() {
     if std::env::var("REGEN_EN1999_ASSETS").is_err() {
@@ -771,11 +751,11 @@ fn regen_example_assets_when_env_set() {
         std::fs::write(dir.join("🗣️.dsl.semio"), encode_en1999_dsl(&snap)).unwrap();
         std::fs::write(
             any.join("🖼️assets").join(name).join("🎒️.pack.semio"),
-            crate::standards::v1::subsets::any::io::binary::snapshot::encode_en1999_pack(&snap),
+            semio_s_artifact_norm_en1999_io::binary::snapshot::encode_en1999_pack(&snap),
         ).unwrap();
         std::fs::write(
             dir.join("🔣️.json"),
-            crate::standards::v1::subsets::any::io::text::snapshot::encode_en1999_snapshot_json(&snap),
+            semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&snap),
         ).unwrap();
     }
 }
@@ -796,7 +776,7 @@ fn duplicate_material_id_fails_with_oneof_remedy() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert_ne!(check.explanation.en, check.explanation.de);
     let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
-    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf));
     assert!(!remedy.options.is_empty());
     assert!(!remedy.options.iter().any(|o| o == &dup_id));
 }
@@ -817,7 +797,7 @@ fn dangling_connection_material_id_fails_with_oneof_existing_materials() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert_ne!(check.explanation.en, check.explanation.de);
     let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
-    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf));
     assert!(!remedy.options.is_empty());
     for opt in &remedy.options {
         assert!(existing.contains(opt), "remedy option {opt} must be an existing material id");
@@ -841,14 +821,13 @@ fn dangling_connection_member_id_fails_with_oneof_existing_members() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert_ne!(check.explanation.en, check.explanation.de);
     let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
-    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf));
     assert!(!remedy.options.is_empty());
     for opt in &remedy.options {
         assert!(existing.contains(opt), "remedy option {opt} must be an existing member id");
     }
     assert!(!remedy.options.iter().any(|o| o == "member-missing"));
 }
-
 
 fn family_any_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
@@ -972,7 +951,6 @@ fn parse_segments(path: &str) -> Result<Vec<PathSeg>, String> {
     Ok(segments)
 }
 
-
 fn set_bool_at_path(root: &mut serde_json::Value, path: &str, value: bool) -> Result<(), String> {
     let segments = parse_segments(path)?;
     let (last, parents) = segments.split_last().ok_or_else(|| "empty path".to_string())?;
@@ -1029,7 +1007,6 @@ fn set_string_at_path(root: &mut serde_json::Value, path: &str, value: &str) -> 
     }
 }
 
-
 #[test]
 fn gate_parity_every_fail_remedy_clears_status() {
     let doc = En1999Snapshot::noncompliant_multi_fail();
@@ -1068,7 +1045,7 @@ fn gate_parity_every_fail_remedy_clears_status() {
             !check.remedies.is_empty(),
             "{id}: Fail without remedies"
         );
-        let applicables: Vec<(usize, &crate::document::Remedy)> = check
+        let applicables: Vec<(usize, &semio_s_plugin_norm_compliance::Remedy)> = check
             .remedies
             .iter()
             .enumerate()
@@ -1084,7 +1061,7 @@ fn gate_parity_every_fail_remedy_clears_status() {
                 partials.push(format!("remedy[{remedy_index}] empty path"));
                 continue;
             }
-            let ok = if matches!(remedy.bound, crate::document::RemedyBound::OneOf) {
+            let ok = if matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) {
                 let opt = remedy.options.first().cloned().unwrap_or_default();
                 set_string_at_path(&mut tree, path, &opt).is_ok()
                     || set_u64_at_path(&mut tree, path, opt.parse().unwrap_or(0)).is_ok()
@@ -1142,7 +1119,7 @@ fn gate_parity_every_fail_remedy_clears_status() {
             let mut sequential_ok = true;
             for (remedy_index, remedy) in &applicables {
                 let path = remedy.target.path.as_str();
-                let ok = if matches!(remedy.bound, crate::document::RemedyBound::OneOf) {
+                let ok = if matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) {
                     let opt = remedy.options.first().cloned().unwrap_or_default();
                     set_string_at_path(&mut tree, path, &opt).is_ok()
                         || set_u64_at_path(&mut tree, path, opt.parse().unwrap_or(0)).is_ok()

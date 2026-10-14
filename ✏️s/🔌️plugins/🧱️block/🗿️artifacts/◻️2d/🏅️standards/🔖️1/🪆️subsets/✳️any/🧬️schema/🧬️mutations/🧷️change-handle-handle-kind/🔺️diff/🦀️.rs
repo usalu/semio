@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `ChangeHandleHandleKind`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block2dHandlesDelta, Block2dHandlesPatchEntry, Block2dHandleTemplatePatch};
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
+use semio_s_artifact_block_2d_diff::{Block2dHandlesDelta, Block2dHandlesPatchEntry, Block2dHandleTemplatePatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeHandleHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &crate::change_handle_handle_kind::ChangeHandleHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     let Some(existing) = base.handles.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "handle", payload.id), vec![payload.id.clone()]);
     };

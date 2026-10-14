@@ -1,9 +1,9 @@
-use super::*;
-use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::{build_minimal_docx,document_to_xml};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::{encode_docx};
-use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
-use crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::{build_minimal_docx,document_to_xml};
+use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::{encode_docx};
+use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_docx, sniff_docx_bytes};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::DocxError;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
@@ -155,8 +155,8 @@ async fn analyzer_builder_round_trip() {
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
-    use super::*;
-    use crate::schema::{diff, mutations, snapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -165,11 +165,11 @@ mod conformance_laws {
     /// message).
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
@@ -177,7 +177,7 @@ mod conformance_laws {
     /// 🧾️ The native Text grammar recognizes the complete owned logical document.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar=semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
+        let grammar=semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
         let text=pack::snapshot::ArtifactDsl::print_dsl(&demo_docx_snapshot().await);
         let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();
         assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());
@@ -187,7 +187,7 @@ mod conformance_laws {
     /// output for every `DocxMutation` variant (`mutations::demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -199,7 +199,7 @@ mod conformance_laws {
     /// for every representative `DocxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
@@ -210,21 +210,21 @@ mod conformance_laws {
     /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_docx_snapshot().await;
         let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
-        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
@@ -262,9 +262,9 @@ mod conformance_laws {
 
 #[test]
 fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
-    use crate::schema::diff::DocxBlockPath;
-    use crate::schema::mutations::{apply_docx_mutation, remove_style, set_run_text, DocxMutation};
-    use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, remove_style, set_run_text, DocxMutation};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     use std::io::Read;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📦️save-part-identity/🔣️.json")).unwrap();
@@ -288,7 +288,7 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
         let mut snapshot = decode_docx(&input).unwrap();
         assert_eq!(snapshot.project_document().unwrap().styles.len(), 1);
         apply_docx_mutation(&mut snapshot, &DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: "Normal".into() }));
-        let address = crate::schema::mutations::docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).unwrap();
+        let address = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).unwrap();
         apply_docx_mutation(&mut snapshot, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: fixture["text"].as_str().unwrap().into() }));
         if case["removeRequiredRelationships"].as_bool().unwrap_or(false) {
             snapshot
@@ -335,8 +335,8 @@ fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
 }
 
 fn canonical_authority_fixture() -> (DocxSnapshot, serde_json::Value) {
-    use crate::schema::snapshot::DocxXmlPart;
-    use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️canonical-xml-authority/🔣️.json")).unwrap();
@@ -386,7 +386,7 @@ fn canonical_marker_path(snapshot: &DocxSnapshot, part_path: &str, marker: &str)
 
 #[test]
 fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
-    use crate::schema::mutations::{apply_docx_mutation, insert_table_row, set_paragraph_style, set_run_formatting, set_run_text, DocxMutation};
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, insert_table_row, set_paragraph_style, set_run_formatting, set_run_text, DocxMutation};
     use protocol::Mutation;
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
@@ -411,16 +411,16 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
         inverses.push(inverse.into_iter().next().unwrap());
     }
     let text_edit = edit("hyperlink-run-text");
-    let address = crate::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, text_edit["targetMarker"].as_str().unwrap())).unwrap();
+    let address = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, text_edit["targetMarker"].as_str().unwrap())).unwrap();
     commit(&mut snapshot, DocxMutation::SetRunText(set_run_text::SetRunText { address, text: text_edit["value"].as_str().unwrap().into() }), &mut inverses);
     let formatting_edit = edit("hyperlink-run-bold");
-    let address = crate::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, formatting_edit["targetMarker"].as_str().unwrap())).unwrap();
+    let address = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, formatting_edit["targetMarker"].as_str().unwrap())).unwrap();
     commit(&mut snapshot, DocxMutation::SetRunFormatting(set_run_formatting::SetRunFormatting { address, bold: formatting_edit["value"].as_bool().unwrap(), italic: true, underline: true }), &mut inverses);
     let style_edit = edit("paragraph-style");
-    let address = crate::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, style_edit["targetMarker"].as_str().unwrap())).unwrap();
+    let address = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, style_edit["targetMarker"].as_str().unwrap())).unwrap();
     commit(&mut snapshot, DocxMutation::SetParagraphStyle(set_paragraph_style::SetParagraphStyle { address, style_id: Some(style_edit["value"].as_str().unwrap().into()) }), &mut inverses);
     let row_edit = edit("table-row");
-    let address = crate::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, row_edit["targetMarker"].as_str().unwrap())).unwrap();
+    let address = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_xml_address(&snapshot, main_path, canonical_marker_path(&snapshot, main_path, row_edit["targetMarker"].as_str().unwrap())).unwrap();
     let cells = row_edit["value"]["cells"].as_array().unwrap().iter().map(|cell| cell.as_str().unwrap().to_string()).collect();
     commit(&mut snapshot, DocxMutation::InsertTableRow(insert_table_row::InsertTableRow { address, index: row_edit["value"]["index"].as_u64().unwrap() as usize, cells }), &mut inverses);
 
@@ -476,8 +476,8 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
 
 #[test]
 fn malformed_authored_authority_is_refused_atomically() {
-    use crate::schema::diff::DocxDiff;
-    use crate::schema::mutations::{apply_docx_mutation, set_part, DocxMutation};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_part, DocxMutation};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
     use semio_s_artifact_stdio_zip::opc::{OpcPart, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
@@ -515,7 +515,7 @@ fn malformed_authored_authority_is_refused_atomically() {
         assert!(encode_docx(&candidate).is_err());
     }
 
-    let diff = DocxDiff { xml_parts: Some(crate::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, crate::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
+    let diff = DocxDiff { xml_parts: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
     assert!(protocol::apply_diff(&diff, &valid).is_err(), "invalid candidate diff must be refused");
     let mut source = valid.clone();
     let drifting = valid.xml_parts[0].clone();

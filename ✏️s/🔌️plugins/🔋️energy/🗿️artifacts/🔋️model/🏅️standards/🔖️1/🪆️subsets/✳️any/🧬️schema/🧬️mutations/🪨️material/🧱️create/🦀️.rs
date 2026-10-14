@@ -1,8 +1,7 @@
 //! 🧱️ Energy model mutation — `CreateMaterial`: Adds one opaque material layer definition at a stated position in the model's material list. Thickness, conductivity, density and specific heat are the four the conduction transfer functions integrate; the three absorptances close the surface radiation balance.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -26,8 +25,8 @@ pub struct CreateMaterial {
     pub visible_absorptance: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_material(
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_material<Op: From<CreateMaterial>>(
     index: u32,
     id: crate::model::EntityId,
     name: String,
@@ -39,18 +38,21 @@ pub fn create_material(
     thermal_absorptance: f64,
     solar_absorptance: f64,
     visible_absorptance: f64,
-) -> EnergyModelMutation {
-    EnergyModelMutation::CreateMaterial(CreateMaterial { index, id, name, roughness, thickness_m, conductivity_w_m_k, density_kg_m3, specific_heat_j_kg_k, thermal_absorptance, solar_absorptance, visible_absorptance })
+) -> Op {
+    CreateMaterial { index, id, name, roughness, thickness_m, conductivity_w_m_k, density_kg_m3, specific_heat_j_kg_k, thermal_absorptance, solar_absorptance, visible_absorptance }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateMaterial {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateMaterial
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateMaterial> + From<crate::DeleteMaterial>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "material", kind: "create-material", record: "CreatedMaterial" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

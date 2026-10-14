@@ -12,8 +12,8 @@
 //! arena refused a row's argument map at roughly the eleventh object, and picks now cost zero arena
 //! because the tree carries ONE `interactionSelect` binding instead of one per row.
 
-use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use {crate::editor::puzzle3d::snapshot::puzzle3d_object_display_label, crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id, crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dAttraction, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject, crate::editor::puzzle3d::snapshot::Puzzle3dReference, crate::editor::puzzle3d::snapshot::Puzzle3dTargetVolume, crate::editor::puzzle3d::snapshot::Puzzle3dVortex, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_REFERENCE, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_VORTEX, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_object_display_label, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dReference, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_REFERENCE, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 use {semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -34,7 +34,7 @@ use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.3d.play.artifact";
-pub(crate) const ROOT: &str = "puzzle3d-play-document";
+pub const ROOT: &str = "puzzle3d-play-document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "searchFilter",
+  "id": "search-filter-a",
+  "newName": "Renamed Search Filter A"
+}

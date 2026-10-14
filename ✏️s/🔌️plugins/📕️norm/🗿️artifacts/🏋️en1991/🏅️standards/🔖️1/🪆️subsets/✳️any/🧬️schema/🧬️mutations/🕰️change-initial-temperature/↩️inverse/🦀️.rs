@@ -1,9 +1,9 @@
 //! Inverse for `change-initial-temperature`.
-use super::ChangeInitialTemperature;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeInitialTemperature, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_initial_temperature::ChangeInitialTemperature;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeInitialTemperature, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_initial_temperature::ChangeInitialTemperature> {
     Ok((|| {
-    vec![En1991Mutation::ChangeInitialTemperature(ChangeInitialTemperature { new_t_0: base.t_0 })]
+    vec![Op::from(ChangeInitialTemperature { new_t_0: base.t_0 })]
 
     })())
 }

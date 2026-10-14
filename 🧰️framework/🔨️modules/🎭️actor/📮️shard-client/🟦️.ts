@@ -34,7 +34,7 @@ import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, 
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../🚪️lifetime/🩹️patch/🟦️.ts";
 import type { CoalesceKey, Lane } from "../🤖️generated/🎭️actor/🟦️.ts";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../🪪️activation/🚪️instance/📥️output/🟦️.ts";
-import type { ShardCodecAnswer, ShardCodecRequest } from "./🧬️component-codec/🟦️.ts";
+import { admitActorCodecRequestV1, admitActorCodecAnswerV1, type ActorCodecAnswer, type ActorCodecRequest } from "../🧬️codec/🟦️.ts";
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 export { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../📤️return/🟦️.ts";
 export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
@@ -386,7 +386,7 @@ type OutboundMessage =
   | { readonly kind: "takeSegmentedDownloadChunk"; readonly requestId: string; readonly actorId: string; readonly instanceId: number; readonly operationId: bigint }
   | { readonly kind: "checkpoint"; readonly requestId: string; readonly actorId: string }
   | { readonly kind: "restore"; readonly requestId: string; readonly actorId: string; readonly state: Uint8Array }
-  | { readonly kind: "codec"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly request: ShardCodecRequest }
+  | { readonly kind: "codec"; readonly requestId: string; readonly actorId: string; readonly activationGeneration: bigint; readonly request: ActorCodecRequest }
   | { readonly kind: "dispose"; readonly actorId: string; readonly activationGeneration: bigint }
   /** 📨️ terra-web-shardframe: the ONE new wire message every {@link ShardFrame} variant travels over —
    * additive alongside `"activate"`/`"turn"`/etc above, none of which this message kind replaces or
@@ -2256,11 +2256,13 @@ export class ShardClient {
 
   /** 🧬️ Calls the actor's component `codec` interface once. The caller serializes it with the actor's
    * turns (the worker refuses a codec call while a turn of the actor is in flight). */
-  async codec(actorId: string, request: ShardCodecRequest): Promise<ShardCodecAnswer> {
+  async codec<Request extends ActorCodecRequest>(actorId: string, request: Request): Promise<ActorCodecAnswer<Request["operation"]>> {
+    admitActorCodecRequestV1(request);
+    const operation=request.operation;
     const slot = this.requireShard(actorId);
     const activation = this.captureActorActivation(actorId);
     const requestId = this.nextRequestId();
-    return this.send<ShardCodecAnswer>(slot, { kind: "codec", requestId, actorId, activationGeneration: activation.activationGeneration, request }, requestId);
+    return this.send<unknown>(slot, { kind: "codec", requestId, actorId, activationGeneration: activation.activationGeneration, request }, requestId).then(value => admitActorCodecAnswerV1<Request["operation"]>(operation, value));
   }
 
   /** ⏏️ Frees the worker-side actor entry — does not touch this shard's routing entry so a caller that

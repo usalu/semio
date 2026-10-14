@@ -1,8 +1,8 @@
 //! 🔺️ `introduce-property-definition` — sparse diff construction.
 
-use super::mutation::IntroducePropertyDefinition;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757PropertyDefinitionsRows};
+use crate::introduce_property_definition::mutation::IntroducePropertyDefinition;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757PropertyDefinitionsRows};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is `mutation.duplicate-id`; an explicit index past the end is

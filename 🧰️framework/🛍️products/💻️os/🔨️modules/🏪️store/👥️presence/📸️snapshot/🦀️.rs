@@ -1,6 +1,6 @@
 //! 📸️ Presence owns an explicit original native factory independently of relational adapters.
 
-use semio_framework_io_sqlite_snapshot::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_value::{retirement::RetireOwned, FromValue, ToValue, ValueError};
 
 #[path = "🔤️json/🦀️.rs"]

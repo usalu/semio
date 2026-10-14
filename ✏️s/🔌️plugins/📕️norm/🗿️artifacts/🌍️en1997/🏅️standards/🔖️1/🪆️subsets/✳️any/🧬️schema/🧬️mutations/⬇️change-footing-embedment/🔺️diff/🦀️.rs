@@ -1,6 +1,6 @@
-use super::ChangeFootingEmbedment;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997FootingsRows, En1997FootingsPatch};
+use crate::change_footing_embedment::ChangeFootingEmbedment;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997FootingsRows, En1997FootingsPatch};
 
 pub fn diff(payload: &ChangeFootingEmbedment, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_embedment.is_finite() || payload.new_embedment < 0.0 {

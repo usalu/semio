@@ -19,7 +19,7 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
 
     const fallback = ["{workspaceRoot}/fallback-marker.ts"];
     const target = { options: { cwd: "entry", command: "bun ./📜️script.ts run" } };
-    const declarations: unknown[] = cacheInternals.genericTargetCommandInputs(target, root, fallback), inputs = declarations.filter((input): input is string => typeof input === "string");
+    const declarations: unknown[] = await cacheInternals.genericTargetCommandInputs(target, root, fallback), inputs = declarations.filter((input): input is string => typeof input === "string");
     assert.deepEqual(declarations.filter(input => typeof input !== "string"), [{ externalDependencies: [] }]);
 
     assert.ok(inputs.includes("{workspaceRoot}/entry/📜️script.ts"), "closure must include the target's own script");
@@ -42,7 +42,7 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
     assert.deepEqual([...inputs].sort(), oracleFiles, "plugin closure must match the independent esbuild import oracle");
 
     const unparseable = { options: { cwd: ".", command: "echo hello" } };
-    const fallbackResult = cacheInternals.genericTargetCommandInputs(unparseable, root, fallback);
+    const fallbackResult = await cacheInternals.genericTargetCommandInputs(unparseable, root, fallback);
     assert.deepEqual(fallbackResult, [...fallback, "{workspaceRoot}/package.json", "{workspaceRoot}/bun.lock"], "a command naming no script must fall back to the previous broad contract, never under-hash");
 
     const hashOfListedBytes = () => createHash("sha256").update(inputs.map((path: string) => readFileSync(join(root, path.replace("{workspaceRoot}/", "")))).join("\0")).digest("hex");

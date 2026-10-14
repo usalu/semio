@@ -2,7 +2,7 @@
 //! `(payload, base)` (idempotent even when `base.structure_classic_model` is already `None`).
 
 use super::DeleteStructureClassicModel;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadModelSlot};
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadModelSlot};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff

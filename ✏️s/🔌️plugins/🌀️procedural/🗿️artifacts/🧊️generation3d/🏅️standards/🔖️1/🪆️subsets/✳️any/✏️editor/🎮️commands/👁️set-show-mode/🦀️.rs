@@ -1,6 +1,7 @@
 //! 👁️ 👁️ Generation3d play app commands command — `set-show-mode`.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
@@ -14,5 +15,5 @@ pub struct SetShowMode {
 }
 
 pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetShowMode(crate::editor::generation3d::config::SetShowMode { value: payload.value.clone() })]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetShowMode(semio_s_artifact_procedural_3d_editor_config::SetShowMode { value: payload.value.clone() })]))
 }

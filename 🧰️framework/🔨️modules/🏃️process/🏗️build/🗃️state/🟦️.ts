@@ -20,6 +20,9 @@ export function compilerStateDirectory(options: CompilerStateOwner): string {
   return requireMaterializedPathV1(directory);
 }
 
+/** 🧮️ Bounds mutable compiler lock metadata independently of input and toolchain history. */
+export function compilerStateResourceV1(directory:string):string{return "compiler-state:v1:"+(parseInt(createHash("sha256").update(requireMaterializedPathV1(resolve(directory))).digest("hex").slice(0,4),16)%schema.definitions.Protocol.const.writerShards);}
+
 /** 🔒️ Serializes access to owned mutable compiler state while retaining warm intermediates. */
 export async function withCompilerState<T>(options: CompilerStateOwner & { readonly control: CompilerAdmissionControl; readonly leaseDirectory: string; readonly files: readonly string[]; readonly environment?: Readonly<Record<string, string | undefined>>; readonly capacity?: boolean; readonly requestedParallelism?: 1 }, operation: (directory: string, environment: Readonly<Record<string, string | undefined>>) => Promise<T>): Promise<T> {
   checkResourceLeaseControl(options.control);
@@ -29,12 +32,12 @@ export async function withCompilerState<T>(options: CompilerStateOwner & { reado
     const path = requireMaterializedPathV1(join(directory, file)), child = relative(directory, path);
     if (isAbsolute(file) || child === ".." || child.startsWith("../") || child.startsWith("..\\") || file.includes("\0")) throw Error("Compiler materialized path must remain within its state owner");
   }
-  resourceLeasePathV1(options.leaseDirectory, `compiler-state:${directory}`);
+  const resource=compilerStateResourceV1(directory);resourceLeasePathV1(options.leaseDirectory,resource);
   let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined, lease: Awaited<ReturnType<typeof acquireResourceLease>> | undefined;
   try {
     checkResourceLeaseControl(options.control);
     if (options.capacity !== false) capacity = await acquireCompilerCapacityLeaseV1({ directory: options.leaseDirectory, control: options.control, environment, requestedParallelism: options.requestedParallelism });
-    lease = await acquireResourceLease({ directory: options.leaseDirectory, resource: `compiler-state:${directory}`, mode: "exclusive", signal: options.control.signal, control: options.control });
+    lease = await acquireResourceLease({ directory: options.leaseDirectory, resource, mode: "exclusive", signal: options.control.signal, control: options.control });
     checkResourceLeaseControl(options.control);
     await mkdir(directory, { recursive: true });
     checkResourceLeaseControl(options.control);

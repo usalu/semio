@@ -1,12 +1,12 @@
 //! ↩️ `replace-zones` inverse.
 
-use crate::mutations::replace_zones::ReplaceZones;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::replace_zones::ReplaceZones;
 
-pub fn inverse(_payload: &ReplaceZones, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ReplaceZones, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::replace_zones::ReplaceZones> {
     Ok((|| {
-    vec![Din18599Mutation::ReplaceZones(ReplaceZones { new_zones: base.zones.clone() })]
+    vec![Op::from(ReplaceZones { new_zones: base.zones.clone() })]
 
     })())
 }

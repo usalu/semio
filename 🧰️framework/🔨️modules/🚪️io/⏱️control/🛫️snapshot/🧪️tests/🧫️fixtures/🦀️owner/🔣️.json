@@ -1,8 +1,8 @@
 {
   "format": 1,
-  "package": "semio-framework-os-kernel",
-  "project": "@semio-tech/framework-os-kernel",
-  "manifest": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+  "package": "semio-framework-io-control",
+  "project": "@semio-tech/framework-io-control-rs",
+  "manifest": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/Cargo.toml",
   "target": "test-snapshot-receiving-native",
   "filter": "original_receiving_",
   "minimumSelectedLaws": 6,

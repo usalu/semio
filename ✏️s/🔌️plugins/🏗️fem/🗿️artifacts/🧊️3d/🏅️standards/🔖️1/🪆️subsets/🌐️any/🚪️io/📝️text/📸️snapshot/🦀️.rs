@@ -1,6 +1,6 @@
 //! 📜️ FEM 3D artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::Fem3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -23,21 +23,10 @@ pub fn print_dsl(document: &Fem3dSnapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
-/// 🚀️ The document every `fem3d` surface boots with — the bundled `concrete-forest` (Betonwald) example
-/// so Entwerfen-mit-Bestand surfaces and the demonstrator Statik pane paint the reuse story on first
-/// frame. Shared by `Fem3dPlayApp::initial_snapshot` and `Fem3dViewer::initial_snapshot` (the viewer
-/// must never import through the sibling editor module, so the shared boot document lives here). Falls
-/// back to the legacy `demo` fixture, then the empty document, if parsing ever fails — a boot must
-/// never fault on a fixture.
-pub fn fem3d_boot_snapshot() -> Fem3dSnapshot {
-    parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT)
-        .or_else(|_| parse_dsl(FEM3D_EXAMPLE_TEXT))
-        .unwrap_or_else(|_| crate::standards::v1::subsets::any::schema::empty_fem3d_snapshot())
-}
 
 /// 🎬️ The bundled `demo` fixture — the only built-in document that carries nodes, elements, solids,
 /// supports and both load cases at once, so it is the document every law about concrete entity ids
-/// (`n20_l1`, `sol1`, `steel`, `hea200`, …) is stated over. Distinct from [`fem3d_boot_snapshot`]
+/// (`n20_l1`, `sol1`, `steel`, `hea200`, …) is stated over. Distinct from the io boot document (`fem3d_boot_snapshot`)
 /// since the boot document became the `concrete-forest` example (frames only, no solids).
 pub fn fem3d_demo_snapshot() -> Fem3dSnapshot {
     parse_dsl(FEM3D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
@@ -62,7 +51,8 @@ pub type Fem3dSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -93,7 +83,8 @@ impl pack::snapshot::ArtifactDsl for Fem3dSnapshot {
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

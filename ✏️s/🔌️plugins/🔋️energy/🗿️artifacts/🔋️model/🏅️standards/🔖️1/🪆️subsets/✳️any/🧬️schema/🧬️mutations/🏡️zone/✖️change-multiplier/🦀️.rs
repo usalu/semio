@@ -1,8 +1,7 @@
 //! ✖️ Energy model mutation — `ChangeZoneMultiplier`: Sets how many identical instances of the zone the results are scaled by.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneMultiplier {
     pub new_multiplier: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_multiplier(id: crate::model::EntityId, new_multiplier: u32) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneMultiplier(ChangeZoneMultiplier { id, new_multiplier })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_multiplier<Op: From<ChangeZoneMultiplier>>(id: crate::model::EntityId, new_multiplier: u32) -> Op {
+    ChangeZoneMultiplier { id, new_multiplier }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneMultiplier {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneMultiplier
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneMultiplier>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone", kind: "change-zone-multiplier", record: "ChangedZoneMultiplier" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

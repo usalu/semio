@@ -1,6 +1,14 @@
 //! 💡️ En1996 inference schema — masonry building outline + compliance evaluate.
 
-use crate::En1996Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -61,8 +69,8 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ `En1996Snapshot -> CheckReport` — full masonry-building evaluation.
-pub fn evaluate(document: &En1996Snapshot) -> crate::document::CheckReport {
-    crate::artifact_schema::evaluate_building(
+pub fn evaluate(document: &En1996Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+    semio_s_artifact_norm_en1996_schema::evaluate_building(
         document.annex,
         document.masonry_class,
         document.design_situation,
@@ -76,4 +84,9 @@ pub fn evaluate(document: &En1996Snapshot) -> crate::document::CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 
-pub use super::outline::En1996Outline;
+pub use crate::outline::En1996Outline;
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

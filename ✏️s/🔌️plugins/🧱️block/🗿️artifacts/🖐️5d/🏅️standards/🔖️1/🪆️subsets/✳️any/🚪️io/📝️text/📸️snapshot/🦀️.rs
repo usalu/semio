@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
@@ -37,10 +37,10 @@ pub type Block5dSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+use crate::text::snapshot::*;
+use semio_s_artifact_block_5d_model::*;
+use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, BLOCK_5D_SCHEMA};
+use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
@@ -64,26 +64,26 @@ impl pack::snapshot::ArtifactDsl for Block5dSnapshot {
     }
 }
 }
-#[cfg(test)] pub use snapshot_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{Block5dSnapshot};
+use semio_s_artifact_block_5d_schema::*;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::BlockKindIdentity;
-use crate::Block5dPart2d;
-use crate::Block5dPart3d;
-use crate::BlockRepresentation;
-use crate::Block5dGripKind;
-use crate::Block5dGripTemplate;
-use crate::BlockCompatibilityRule;
-use crate::BlockAttribute;
-use crate::BlockAuthor;
-use crate::BlockCamera2d;
-use crate::BlockCamera3d;
-use crate::BlockMeta;
+use semio_s_plugin_block::BlockKindIdentity;
+use semio_s_artifact_block_5d_model::Block5dPart2d;
+use semio_s_artifact_block_5d_model::Block5dPart3d;
+use semio_s_plugin_block::BlockRepresentation;
+use semio_s_artifact_block_5d_model::Block5dGripKind;
+use semio_s_artifact_block_5d_model::Block5dGripTemplate;
+use semio_s_plugin_block::BlockCompatibilityRule;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_plugin_block::BlockAuthor;
+use semio_s_plugin_block::BlockCamera2d;
+use semio_s_plugin_block::BlockCamera3d;
+use semio_s_plugin_block::BlockMeta;
 
 /// 📸️ A fresh, empty `Block5dSnapshot` (all fields at their `Default`).
 pub fn empty_block5d_snapshot() -> Block5dSnapshot {
@@ -100,7 +100,7 @@ pub fn empty_block5d_snapshot() -> Block5dSnapshot {
 /// carry identity across examples. Booting on the same fixture the id assertions name keeps the boot
 /// document and its own identity consistent.
 pub fn default_block5d_snapshot() -> Block5dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
+    crate::text::snapshot::parse_dsl(crate::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
 }
 }
-pub use snapshot_wire_codec::*;
+pub use crate::text::snapshot::snapshot_wire_codec::*;

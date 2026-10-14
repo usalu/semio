@@ -1,21 +1,21 @@
 //! ⏯️ Fem3d play app command — `result-animation`: the fem 3d results window as a [`FemPlaybackTransport`]. The
 //! payload, the field vocabulary and the playback step are the ONE FEM implementation in the fem 2d crate
-//! (`semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation`).
+//! (`semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation`).
 
-use crate::app_surface::FemResultsAnimation;
-use crate::editor::fem3d::modes::edit::windows::results;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_fem_app_surface::FemResultsAnimation;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation};
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::apply_field;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::merge;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::rearm_effect;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::set_result_animation_step;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::FemPlaybackStep;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::FemPlaybackTransport;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::SetResultAnimation;
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::TICK_ACTION;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::apply_field;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::merge;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::rearm_effect;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::set_result_animation_step;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::FemPlaybackStep;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::FemPlaybackTransport;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::SetResultAnimation;
+pub use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::TICK_ACTION;
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 /// 🧊️ The fem 3d results window as a playback transport.
 pub struct Fem3dResultsPlayback;
@@ -48,7 +48,7 @@ impl FemPlaybackTransport for Fem3dResultsPlayback {
 
     /// 🪟️ The results body and the panel that reads its transport.
     fn dirty_scope() -> semio_framework::kernel::UiDirtyScope {
-        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::FEM3D_BODY_RESULTS.to_owned()], panel_bodies: vec![crate::editor::fem3d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::FEM3D_BODY_RESULTS.to_owned()], panel_bodies: vec![semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
     }
 }
 
@@ -62,7 +62,4 @@ pub fn handle_window(payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem3d
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
-use crate::editor::puzzle2d::empty_board_snapshot;
+use crate::editor::puzzle2d::snapshot::empty_board_snapshot;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
@@ -25,5 +25,5 @@ fn brush_params_are_tagged_utility_options_not_engagement_controls() {
     let brush_scene = scene(empty_board_snapshot(), brush_runtime, overview::utilities::brush::UTILITY_ID);
     let brush_measures = overview::window_measures(&brush_scene, labels);
     assert_eq!(group_tag(&brush_measures, "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));
-    assert!(puzzle2d_engagement(&brush_scene, &host, overview::WINDOW_KIND_ID, labels).control.is_none(), "brush engagement HUD must no longer carry the relocated control");
+    assert!(puzzle2d_engagement(&brush_scene, &host, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, labels).control.is_none(), "brush engagement HUD must no longer carry the relocated control");
 }

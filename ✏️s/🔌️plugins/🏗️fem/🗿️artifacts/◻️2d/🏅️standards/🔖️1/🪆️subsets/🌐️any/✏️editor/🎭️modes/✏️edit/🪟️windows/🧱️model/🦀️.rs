@@ -25,16 +25,16 @@ use semio_framework_ui_scene::{
     canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
 };
 use std::collections::HashMap;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::SCALE_2D;
 use std::fmt::Write;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-model";
 pub const BODY_KEY: &str = "fem2d.play.model";
 
-/// 📐️ Model-meters -> screen-pixels scale for the 2D canvas (a 6m span shouldn't render as 6px wide).
-pub(crate) const SCALE_2D: f64 = 20.0;
-/// 📐️ Screen-space origin offset so a structure anchored at (0,0) isn't drawn at the canvas corner.
-pub(crate) const ORIGIN_2D: f64 = 40.0;
 /// 📐️ Exaggeration factor for offsetting the moment-diagram polyline perpendicular to a member — single
 /// consumer: the results window's static-results moment diagram
 /// (`crate::editor::fem2d::modes::edit::windows::results::render`).
@@ -980,19 +980,6 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
 //#endregion 👁️LiveVisualLanguage
 
 //#region 🔖️SharedDrawHelpers
-pub(crate) fn screen_2d(x: f64, y: f64) -> (f64, f64) {
-    (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
-}
-
-pub(crate) fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
-    nodes.iter().find(|n| n.id == id)
-}
-
-pub(crate) fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
-    match element {
-        FemElement::Bar { start, end, .. } | FemElement::Beam { start, end, .. } => (start.as_str(), end.as_str()),
-    }
-}
 
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every region outline vertex — the
 /// reference length `MODE_SHAPE_AMPLITUDE_RATIO` scales a normalized mode shape against. Falls back to
@@ -1131,8 +1118,8 @@ fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color:
             }
             continue;
         }
-        if let Some((_, load)) = crate::editor::fem2d::interaction::fem2d_load_owner(doc, id) {
-            if let Some((from, to)) = crate::editor::fem2d::interaction::fem2d_load_glyph(doc, load) {
+        if let Some((_, load)) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner(doc, id) {
+            if let Some((from, to)) = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_glyph(doc, load) {
                 layers.push(emphasis_path_layer(&format!("{prefix}-load-{id}"), &[from, to], false, color, width));
             }
         }
@@ -1142,7 +1129,7 @@ fn emphasis_layers_for(doc: &Fem2dSnapshot, ids: &[String], prefix: &str, color:
 
 /// 🕹️ The selected/hovered emphasis overlay for one interaction snapshot — hovered first, selected on
 /// top, every layer id stable (`sel-node-n1`, `hov-el-e3`, …) so a host can diff frames.
-pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
+pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = emphasis_layers_for(doc, &interaction.hovered_ids, "hov", HOVER_COLOR_2D, HOVER_STROKE_WIDTH_2D, false);
     layers.extend(emphasis_layers_for(doc, &interaction.selected_ids, "sel", SELECTION_COLOR_2D, SELECTION_STROKE_WIDTH_2D, true));
     layers
@@ -1151,7 +1138,7 @@ pub(crate) fn fem2d_highlight_layers(doc: &Fem2dSnapshot, interaction: &crate::e
 /// 🖼️ [`fem2d_structure_layers`] plus the interaction emphasis overlay — the entry point both windows
 /// render through; the bare twin stays for the viewer app and the story fixtures, which have no
 /// interaction state at all.
-pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
+pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = fem2d_structure_layers(doc, node_color, line_color, support_color);
     layers.extend(fem2d_highlight_layers(doc, interaction));
     layers
@@ -1246,23 +1233,23 @@ pub fn render_with_progress(
     doc: &Fem2dSnapshot,
     camera: &Viewport2d,
     progress: Option<&Fem2dMountedVisualLease>,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     window_instance_id: Option<&str>,
     active_utility: &str,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let layers = fem2d_structure_layers_with(doc, "#38bdf8", "#94a3b8", "#f97316", interaction);
-    let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
-    let layers_json = crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta);
+    let gumball_meta = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
+    let layers_json = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta);
     semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️vector-json-contract/🦀️.rs"]
 mod vector_json_contract;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️emphasis/🦀️.rs"]
+mod emphasis;

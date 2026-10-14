@@ -23,16 +23,16 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::{apply_en1991_mutation, inverse_en1991_mutation};
+    use semio_s_artifact_norm_en1991_mutations::mutation_bridge::{apply_en1991_mutation, inverse_en1991_mutation};
 
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::text::mutations::{decode_en1991_mutation_json};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::snapshot::{En1991Snapshot};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::binary::snapshot::{encode_en1991_pack};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::binary::snapshot::{decode_en1991_pack};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_dsl};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::text::snapshot::{decode_en1991_dsl};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::text::snapshot::{decode_en1991_snapshot_json};
-    use semio_s_artifact_norm_en1991::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_snapshot_json};
+    use semio_s_artifact_norm_en1991_io::text::mutations::decode_en1991_mutation_json;
+    use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+    use semio_s_artifact_norm_en1991_io::binary::snapshot::encode_en1991_pack;
+    use semio_s_artifact_norm_en1991_io::binary::snapshot::decode_en1991_pack;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_dsl;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_dsl;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_snapshot_json;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_snapshot_json;
     use semio_repo_test_host::law;
 
     /// 🗣️ The real committed EN 1991 document the identity scenario declares.
@@ -175,7 +175,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::mutations::KINDS {
+        for kind in semio_s_artifact_norm_en1991_mutations::KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
         built = built.subject("identity-round-trip", subject::round_trip);

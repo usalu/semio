@@ -20,7 +20,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string):
   put(join(owner, "package.json"), JSON.stringify({ name: fixture.project, private: true }));
   put("component/Cargo.toml", `[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:${fixture.plugin}"\n[package.metadata.semio]\nrole = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "${fixture.variant}"\n`);
   const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
+  const targets = await cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
   for (const profile of ["prototype", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
   for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
     const target = targets[`${command}-${fixture.variant}-wgpu-${profile}`];

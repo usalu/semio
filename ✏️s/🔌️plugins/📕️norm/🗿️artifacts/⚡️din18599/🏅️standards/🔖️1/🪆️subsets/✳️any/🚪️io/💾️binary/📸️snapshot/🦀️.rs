@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
@@ -27,11 +27,9 @@ mod tests;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{
-    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
-};
+use crate::binary::snapshot::*;
+use semio_s_artifact_norm_din18599_model::*;
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for Din18599Snapshot {
@@ -55,22 +53,20 @@ impl pack::snapshot::ArtifactPack for Din18599Snapshot {
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Din18599Snapshot {
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec())
+        Some(crate::sqlite::snapshot::sqlite_codec())
     }
 }
 }
-#[cfg(test)] pub use snapshot_codec::*;
+#[cfg(test)] pub use crate::binary::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
-use super::*;
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{
-    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
-};
+use crate::binary::snapshot::*;
+use crate::binary::snapshot::*;
+use semio_s_artifact_norm_din18599_model::*;
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 /// 📦️ Decodes a [`Din18599Snapshot`] from the binary `.pack.semio` envelope.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_pack(bytes: &[u8]) -> Result<Din18599Snapshot, String> {
@@ -82,4 +78,4 @@ pub fn encode_din18599_pack(snapshot: &Din18599Snapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
-pub use native_snapshot_codec::*;
+pub use crate::binary::snapshot::native_snapshot_codec::*;

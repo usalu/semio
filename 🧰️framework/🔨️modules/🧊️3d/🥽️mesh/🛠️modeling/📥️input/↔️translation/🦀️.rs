@@ -1,10 +1,10 @@
 //! ↔️ Original mesh translation clones all seven topology and metadata owners through their defining typed cursors.
 use super::super::*;
 use std::sync::Arc;
-use protocol::value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneSource,RetainedCloneOwner,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneSource,RetainedCloneOwner,RetainedCloneStep}};
 
 /// 🧵️ Every partial clone, original alias, seam, attribute, material and texture remains in paid retirement custody.
-#[derive(protocol::value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct MeshTranslationProduction{identity:usize,offset:[f32;3],alias:Option<Arc<HalfedgeMesh>>,source:Option<RetainedCloneSource<HalfedgeMesh,Arc<HalfedgeMesh>>>,cursor:RetainedCloneOwner<HalfedgeMesh>,mesh:Option<HalfedgeMesh>,phase:u8,ordinal:usize,atoms:usize}
 impl MeshTranslationProduction{
  pub fn new(original:&Arc<HalfedgeMesh>,offset:[f32;3])->Result<Self,ValueError>{if offset.iter().any(|value|!value.is_finite()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original mesh translation requires finite offset"))}Ok(Self{identity:Arc::as_ptr(original)as usize,offset,alias:None,source:None,cursor:Default::default(),mesh:None,phase:0,ordinal:0,atoms:0})}

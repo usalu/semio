@@ -1,0 +1,462 @@
+{
+  "snapshots": {
+    "📜️docx": {
+      "⬅️before": {
+        "schema": "s.stdio.docx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "before"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "nodes": [
+                {
+                  "nextSibling": null,
+                  "value": {
+                    "kind": "element",
+                    "name": "fixture",
+                    "first_attribute": 0,
+                    "attribute_count": 0,
+                    "first_child": 1
+                  }
+                },
+                {
+                  "nextSibling": null,
+                  "value": {
+                    "kind": "text",
+                    "text": "before"
+                  }
+                }
+              ],
+              "attributes": [],
+              "prolog": [],
+              "epilog": [],
+              "root": 0,
+              "doctype": null,
+              "declaration": null
+            }
+          }
+        ]
+      },
+      "➡️after": {
+        "schema": "s.stdio.docx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "after"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "nodes": [
+                {
+                  "nextSibling": null,
+                  "value": {
+                    "kind": "element",
+                    "name": "fixture",
+                    "first_attribute": 0,
+                    "attribute_count": 0,
+                    "first_child": 1
+                  }
+                },
+                {
+                  "nextSibling": null,
+                  "value": {
+                    "kind": "text",
+                    "text": "after"
+                  }
+                }
+              ],
+              "attributes": [],
+              "prolog": [],
+              "epilog": [],
+              "root": 0,
+              "doctype": null,
+              "declaration": null
+            }
+          }
+        ]
+      }
+    },
+    "📕️xlsx": {
+      "⬅️before": {
+        "schema": "s.stdio.xlsx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "before"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "prolog": [],
+              "epilog": [],
+              "root": {
+                "kind": "element",
+                "name": "fixture",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "before"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "➡️after": {
+        "schema": "s.stdio.xlsx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "after"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "prolog": [],
+              "epilog": [],
+              "root": {
+                "kind": "element",
+                "name": "fixture",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "after"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "📽️pptx": {
+      "⬅️before": {
+        "schema": "s.stdio.pptx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "before"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "prolog": [],
+              "epilog": [],
+              "root": {
+                "kind": "element",
+                "name": "fixture",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "before"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "➡️after": {
+        "schema": "s.stdio.pptx",
+        "opc": {
+          "parts": [],
+          "contentTypes": {
+            "defaults": [],
+            "overrides": []
+          },
+          "relationships": {},
+          "comment": "after"
+        },
+        "xmlParts": [
+          {
+            "path": "custom/document.xml",
+            "contentType": "application/xml",
+            "document": {
+              "prolog": [],
+              "epilog": [],
+              "root": {
+                "kind": "element",
+                "name": "fixture",
+                "attrs": [],
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "after"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "diff": {
+    "opc": {
+      "comment": "after"
+    }
+  },
+  "pptx": {
+    "address": {
+      "partPath": "ppt/slides/slide1.xml",
+      "nodePath": [
+        0
+      ],
+      "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+      "localName": "sp",
+      "revision": "0123456789abcdef"
+    },
+    "mutations": [
+      {
+        "mutation": "insertSlide",
+        "vacancy": {
+          "container": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "index": 0
+        },
+        "entry": {
+          "kind": "element",
+          "name": "p:sp",
+          "attrs": [],
+          "children": []
+        }
+      },
+      {
+        "mutation": "removeSlide",
+        "address": {
+          "entry": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "slidePartPath": "ppt/slides/slide1.xml",
+          "relationshipId": "rId1",
+          "slideId": "256"
+        }
+      },
+      {
+        "mutation": "moveSlide",
+        "address": {
+          "entry": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "slidePartPath": "ppt/slides/slide1.xml",
+          "relationshipId": "rId1",
+          "slideId": "256"
+        },
+        "destinationIndex": 1
+      },
+      {
+        "mutation": "insertShape",
+        "vacancy": {
+          "container": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "index": 0
+        },
+        "shape": {
+          "kind": "element",
+          "name": "p:sp",
+          "attrs": [],
+          "children": []
+        }
+      },
+      {
+        "mutation": "removeShape",
+        "address": {
+          "node": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "shapeId": "42"
+        }
+      },
+      {
+        "mutation": "setShapeText",
+        "address": {
+          "node": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "shapeId": "42"
+        },
+        "text": "Grüße 文字"
+      },
+      {
+        "mutation": "setShapePosition",
+        "address": {
+          "node": {
+            "partPath": "ppt/slides/slide1.xml",
+            "nodePath": [
+              0
+            ],
+            "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+            "localName": "sp",
+            "revision": "0123456789abcdef"
+          },
+          "shapeId": "42"
+        },
+        "position": {
+          "x": "1",
+          "y": "2",
+          "cx": "3",
+          "cy": "4"
+        }
+      },
+      {
+        "mutation": "replaceXmlNode",
+        "address": {
+          "partPath": "ppt/slides/slide1.xml",
+          "nodePath": [
+            0
+          ],
+          "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+          "localName": "sp",
+          "revision": "0123456789abcdef"
+        },
+        "node": {
+          "kind": "element",
+          "name": "p:sp",
+          "attrs": [],
+          "children": []
+        }
+      },
+      {
+        "mutation": "setRelationship",
+        "owner": "ppt/presentation.xml",
+        "id": "rId1",
+        "relType": "http://example.test/slide",
+        "target": "slides/slide1.xml",
+        "external": false,
+        "index": 0
+      },
+      {
+        "mutation": "removeRelationship",
+        "owner": "ppt/presentation.xml",
+        "id": "rId1"
+      },
+      {
+        "mutation": "setContentType",
+        "isOverride": true,
+        "name": "/ppt/slides/slide1.xml",
+        "contentType": "application/xml",
+        "index": 0
+      },
+      {
+        "mutation": "removeContentType",
+        "isOverride": true,
+        "name": "/ppt/slides/slide1.xml"
+      }
+    ],
+    "invalidAddresses": [
+      {
+        "partPath": "ppt/slides/slide1.xml",
+        "nodePath": [
+          0
+        ],
+        "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+        "localName": "sp",
+        "revision": "XYZ"
+      },
+      {
+        "partPath": "../escape.xml",
+        "nodePath": [
+          0
+        ],
+        "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+        "localName": "sp",
+        "revision": "0123456789abcdef"
+      },
+      {
+        "partPath": "ppt/slides/slide1.xml",
+        "nodePath": [
+          -1
+        ],
+        "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+        "localName": "sp",
+        "revision": "0123456789abcdef"
+      },
+      {
+        "partPath": "ppt/slides/slide1.xml",
+        "nodePath": [
+          0
+        ],
+        "namespaceUri": "http://schemas.openxmlformats.org/presentationml/2006/main",
+        "localName": "sp",
+        "revision": "0123456789abcdef",
+        "foreign": true
+      }
+    ]
+  }
+}

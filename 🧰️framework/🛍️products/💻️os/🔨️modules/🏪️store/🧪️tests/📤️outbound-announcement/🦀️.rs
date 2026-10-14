@@ -103,7 +103,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
     assert_eq!(fixture.schema, "semio.store.outbound-announcement/v1");
     let mut steps = 0usize;
     for vector in &fixture.vectors {
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners());
         store.closes_on_drop();
         let (channel, remote) = ChannelBackbone::pair("outbound").await;

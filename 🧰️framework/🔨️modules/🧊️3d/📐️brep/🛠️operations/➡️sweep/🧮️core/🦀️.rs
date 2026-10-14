@@ -10,9 +10,9 @@
 
 use std::collections::HashMap;
 
-use {crate::euler::{add_face, add_shell, add_solid, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
-use crate::primitives::line_edge;
-use crate::transform::transform_face;
+use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_construction::primitives::line_edge;
+use semio_framework_3d_brep_construction::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;

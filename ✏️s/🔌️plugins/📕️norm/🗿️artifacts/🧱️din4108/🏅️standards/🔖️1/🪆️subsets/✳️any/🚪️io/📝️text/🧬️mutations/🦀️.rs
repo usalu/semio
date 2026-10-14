@@ -6,59 +6,20 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifact_schema::mutations::Din4108Mutation;
-use crate::artifact_schema::mutations::{
-    change_climate_zone,
-    change_usage,
-    change_t_int_c,
-    change_rh_int,
-    change_airtightness_n50,
-    change_has_mechanical_ventilation,
-    change_bb2_details_conform,
-    insert_zone,
-    remove_zone,
-    change_zone_floor_area,
-    change_zone_heaviness,
-    change_zone_night_ventilation,
-    insert_zone_window,
-    remove_zone_window,
-    change_zone_window_area,
-    change_zone_window_g_value,
-    change_zone_window_shading_fc,
-    insert_element,
-    remove_element,
-    change_element_area,
-    change_element_adjacent,
-    change_element_kind,
-    insert_layer,
-    remove_layer,
-    reorder_layers,
-    change_layer_thickness,
-    change_layer_lambda,
-    change_layer_mu,
-    change_layer_material_id,
-    insert_thermal_bridge,
-    remove_thermal_bridge,
-    change_thermal_bridge_psi,
-    change_thermal_bridge_length,
-    change_element_orientation_deg,
-    change_element_inclination_deg,
-    change_element_delta_u_g,
-    change_element_delta_u_f,
-    change_element_delta_u_r,
-    change_thermal_bridge_bb2_type,
-    change_zone_window_orientation,
-    change_zone_window_inclination_deg,
-    change_layer_application_type,
-    change_layer_compressive_class,
-};
+use semio_s_artifact_norm_din4108_mutations::Din4108Mutation;
+use semio_s_artifact_norm_din4108_mut_building::{change_climate_zone, change_usage, change_t_int_c, change_rh_int, change_airtightness_n50, change_has_mechanical_ventilation, change_bb2_details_conform};
+use semio_s_artifact_norm_din4108_mut_zones::{insert_zone, remove_zone, change_zone_floor_area, change_zone_heaviness, change_zone_night_ventilation};
+use semio_s_artifact_norm_din4108_mut_windows::{insert_zone_window, remove_zone_window, change_zone_window_area, change_zone_window_g_value, change_zone_window_shading_fc, change_zone_window_orientation, change_zone_window_inclination_deg};
+use semio_s_artifact_norm_din4108_mut_elements::{insert_element, remove_element, change_element_area, change_element_adjacent, change_element_kind, change_element_orientation_deg, change_element_inclination_deg, change_element_delta_u_g, change_element_delta_u_f, change_element_delta_u_r};
+use semio_s_artifact_norm_din4108_mut_layers::{insert_layer, remove_layer, reorder_layers, change_layer_thickness, change_layer_lambda, change_layer_mu, change_layer_material_id, change_layer_application_type, change_layer_compressive_class};
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::{insert_thermal_bridge, remove_thermal_bridge, change_thermal_bridge_psi, change_thermal_bridge_length, change_thermal_bridge_bb2_type};
 use protocol::OpText;
 
 //#region 🔖️OpText
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub(crate) enum Din4108MutationDsl {
     ChangeClimateZone {
-        new_climate_zone: crate::document::ClimateZoneDe,
+        new_climate_zone: semio_s_plugin_norm_compliance::ClimateZoneDe,
     },
     ChangeUsage {
         new_usage: String,
@@ -81,7 +42,7 @@ pub(crate) enum Din4108MutationDsl {
     InsertZone {
         index: Option<usize>,
         #[dsl(block)]
-        zone: crate::ThermalZone,
+        zone: semio_s_artifact_norm_din4108_model::ThermalZone,
     },
     RemoveZone {
         index: usize,
@@ -102,7 +63,7 @@ pub(crate) enum Din4108MutationDsl {
         zone_id: String,
         index: Option<usize>,
         #[dsl(block)]
-        window: crate::ZoneWindow,
+        window: semio_s_artifact_norm_din4108_model::ZoneWindow,
     },
     RemoveZoneWindow {
         zone_id: String,
@@ -126,7 +87,7 @@ pub(crate) enum Din4108MutationDsl {
     InsertElement {
         index: Option<usize>,
         #[dsl(block)]
-        element: crate::EnvelopeElement,
+        element: semio_s_artifact_norm_din4108_model::EnvelopeElement,
     },
     RemoveElement {
         index: usize,
@@ -147,7 +108,7 @@ pub(crate) enum Din4108MutationDsl {
         element_id: String,
         index: Option<usize>,
         #[dsl(block)]
-        layer: crate::LayerDocument,
+        layer: semio_s_artifact_norm_din4108_model::LayerDocument,
     },
     RemoveLayer {
         element_id: String,
@@ -181,7 +142,7 @@ pub(crate) enum Din4108MutationDsl {
     InsertThermalBridge {
         index: Option<usize>,
         #[dsl(block)]
-        bridge: crate::ThermalBridge,
+        bridge: semio_s_artifact_norm_din4108_model::ThermalBridge,
     },
     RemoveThermalBridge {
         index: usize,
@@ -261,8 +222,6 @@ impl OpText for Din4108MutationDsl {
     }
 }
 
-
-
 impl OpText for Din4108Mutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         Ok(din4108_mutation_from_dsl(Din4108MutationDsl::parse_op(line)?))
@@ -271,8 +230,6 @@ impl OpText for Din4108Mutation {
         din4108_mutation_to_dsl(self).print_op()
     }
 }
-
-
 
 //#endregion 🔖️HandcraftedOpCodecs
 
@@ -376,7 +333,7 @@ pub(crate) fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutat
 
 #[cfg(test)]
 fn demo_mutation_cases() -> Vec<Din4108Mutation> {
-    use crate::document::ClimateZoneDe;
+    use semio_s_plugin_norm_compliance::ClimateZoneDe;
     vec![
         Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone: ClimateZoneDe::Zone3 }),
         Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage: "nonresidential".into() }),
@@ -406,58 +363,59 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{Din4108Diff, Din4108Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::change_climate_zone;
-use crate::standards::v1::subsets::any::schema::mutations::change_usage;
-use crate::standards::v1::subsets::any::schema::mutations::change_t_int_c;
-use crate::standards::v1::subsets::any::schema::mutations::change_rh_int;
-use crate::standards::v1::subsets::any::schema::mutations::change_airtightness_n50;
-use crate::standards::v1::subsets::any::schema::mutations::change_has_mechanical_ventilation;
-use crate::standards::v1::subsets::any::schema::mutations::change_bb2_details_conform;
-use crate::standards::v1::subsets::any::schema::mutations::insert_zone;
-use crate::standards::v1::subsets::any::schema::mutations::remove_zone;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_floor_area;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_heaviness;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_night_ventilation;
-use crate::standards::v1::subsets::any::schema::mutations::insert_zone_window;
-use crate::standards::v1::subsets::any::schema::mutations::remove_zone_window;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_window_area;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_window_g_value;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_window_shading_fc;
-use crate::standards::v1::subsets::any::schema::mutations::insert_element;
-use crate::standards::v1::subsets::any::schema::mutations::remove_element;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_area;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_adjacent;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_kind;
-use crate::standards::v1::subsets::any::schema::mutations::insert_layer;
-use crate::standards::v1::subsets::any::schema::mutations::remove_layer;
-use crate::standards::v1::subsets::any::schema::mutations::reorder_layers;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_thickness;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_lambda;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_mu;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_material_id;
-use crate::standards::v1::subsets::any::schema::mutations::insert_thermal_bridge;
-use crate::standards::v1::subsets::any::schema::mutations::remove_thermal_bridge;
-use crate::standards::v1::subsets::any::schema::mutations::change_thermal_bridge_psi;
-use crate::standards::v1::subsets::any::schema::mutations::change_thermal_bridge_length;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_orientation_deg;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_inclination_deg;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_delta_u_g;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_delta_u_f;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_delta_u_r;
-use crate::standards::v1::subsets::any::schema::mutations::change_thermal_bridge_bb2_type;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_window_orientation;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_window_inclination_deg;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_application_type;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_compressive_class;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_din4108_mutations::*;
+use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+use semio_s_artifact_norm_din4108_mut_building::change_climate_zone;
+use semio_s_artifact_norm_din4108_mut_building::change_usage;
+use semio_s_artifact_norm_din4108_mut_building::change_t_int_c;
+use semio_s_artifact_norm_din4108_mut_building::change_rh_int;
+use semio_s_artifact_norm_din4108_mut_building::change_airtightness_n50;
+use semio_s_artifact_norm_din4108_mut_building::change_has_mechanical_ventilation;
+use semio_s_artifact_norm_din4108_mut_building::change_bb2_details_conform;
+use semio_s_artifact_norm_din4108_mut_zones::insert_zone;
+use semio_s_artifact_norm_din4108_mut_zones::remove_zone;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_floor_area;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_heaviness;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_night_ventilation;
+use semio_s_artifact_norm_din4108_mut_windows::insert_zone_window;
+use semio_s_artifact_norm_din4108_mut_windows::remove_zone_window;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_area;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_g_value;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_shading_fc;
+use semio_s_artifact_norm_din4108_mut_elements::insert_element;
+use semio_s_artifact_norm_din4108_mut_elements::remove_element;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_area;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_adjacent;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_kind;
+use semio_s_artifact_norm_din4108_mut_layers::insert_layer;
+use semio_s_artifact_norm_din4108_mut_layers::remove_layer;
+use semio_s_artifact_norm_din4108_mut_layers::reorder_layers;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_thickness;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_lambda;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_mu;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_material_id;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::insert_thermal_bridge;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::remove_thermal_bridge;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_psi;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_length;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_orientation_deg;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_inclination_deg;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_g;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_f;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_r;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_bb2_type;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_orientation;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_inclination_deg;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_application_type;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_compressive_class;
 
 pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

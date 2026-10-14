@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "dependencies",
+    "sqliteReceivingOwner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "semio-framework-io-control"
+    },
+    "dependencies": {
+      "const": [
+        "semio-framework-value"
+      ]
+    },
+    "sqliteReceivingOwner": {
+      "const": "semio-framework-io-sqlite-snapshot"
+    }
+  }
+}

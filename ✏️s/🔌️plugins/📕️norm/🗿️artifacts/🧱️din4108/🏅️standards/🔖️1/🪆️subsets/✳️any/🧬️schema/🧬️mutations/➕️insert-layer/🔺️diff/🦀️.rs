@@ -1,8 +1,8 @@
 //! ➕️ `insert-layer` diff — inserts the layer into the element's stack at its position, clamped to the end of the stack.
 
-use super::InsertLayer;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta};
-use crate::Din4108Snapshot;
+use crate::insert_layer::InsertLayer;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &InsertLayer, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

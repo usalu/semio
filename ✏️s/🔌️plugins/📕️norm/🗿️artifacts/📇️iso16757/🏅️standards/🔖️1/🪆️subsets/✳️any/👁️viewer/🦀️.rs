@@ -4,10 +4,18 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::viewer::iso16757::modes::view;
-use crate::viewer::iso16757::modes::view::windows::report;
-use crate::Iso16757Snapshot;
-use crate::{ISO16757_DIALECT, ISO16757_DOCUMENT_SCHEMA};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::modes::view;
+use crate::modes::view::windows::report;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_model::{ISO16757_DIALECT, ISO16757_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
@@ -41,7 +49,7 @@ pub struct Iso16757Viewer;
 
 impl ArtifactViewer for Iso16757Viewer {
     type Snapshot = Iso16757Snapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
+    type Mutation = semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -88,7 +96,7 @@ pub fn create_iso16757_viewer() -> semio_framework_plugin::AppDefinition {
         .document(["semio", "norm", "iso16757"])
         .icon_id("check-circle")
         .mode_def(view::definition())
-        .default_mode_id(crate::app_surface::MODE_VIEW)
+        .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)
         .window_kind_def(report::definition())
         .default_layout(view::layout())
         .build_definition()
@@ -100,3 +108,21 @@ pub fn create_iso16757_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

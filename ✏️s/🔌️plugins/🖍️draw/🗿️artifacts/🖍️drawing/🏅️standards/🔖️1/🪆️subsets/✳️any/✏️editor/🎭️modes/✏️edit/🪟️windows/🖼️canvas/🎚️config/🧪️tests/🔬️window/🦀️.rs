@@ -21,8 +21,8 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
         .name("drawing-canvas-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_drawing_windows(async {
-            use crate::commands::{engagement_input, set_camera};
-            use crate::{create_drawing_app, DrawingCommand, DrawingPlayApp};
+            use semio_s_artifact_draw_drawing_editor_commands::{engagement_input, set_camera};
+            use semio_s_artifact_draw_drawing_editor::{create_drawing_app, DrawingCommand, DrawingPlayApp};
             use crate::modes::edit::windows::canvas::DRAWING_PLAY_BODY_COMPOSITE;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 

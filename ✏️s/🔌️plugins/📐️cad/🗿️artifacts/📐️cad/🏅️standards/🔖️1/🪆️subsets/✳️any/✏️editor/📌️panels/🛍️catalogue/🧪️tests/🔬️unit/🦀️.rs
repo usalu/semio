@@ -1,6 +1,22 @@
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
 use semio_s_artifact_cad_cad_panels::catalogue::*;
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, ui_label, ui_value_map, ui_value_text, TYPOLOGY_CATALOG};
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 use semio_s_artifact_cad_cad_config::CadConfig;
-use semio_s_artifact_cad_cad_editor::unit_tests::context::*;
+use crate::context::*;
 use semio_s_artifact_cad_cad_editor::CadPlayApp;
 use semio_s_artifact_cad_cad_inferences::default_document;
 use semio_framework_plugin::ArtifactView;

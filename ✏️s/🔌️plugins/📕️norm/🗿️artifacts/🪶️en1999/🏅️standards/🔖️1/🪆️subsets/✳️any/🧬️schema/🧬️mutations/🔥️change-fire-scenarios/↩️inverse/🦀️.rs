@@ -1,12 +1,12 @@
 //! ↩️ `change-fire-scenarios` inverse.
 
-use crate::mutations::change_fire_scenarios::ChangeFireScenarios;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_fire_scenarios::ChangeFireScenarios;
 
-pub fn inverse(_payload: &ChangeFireScenarios, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeFireScenarios, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_fire_scenarios::ChangeFireScenarios> {
     Ok((|| {
-    vec![En1999Mutation::ChangeFireScenarios(ChangeFireScenarios { fire_scenarios: base.fire_scenarios.clone() })]
+    vec![Op::from(ChangeFireScenarios { fire_scenarios: base.fire_scenarios.clone() })]
 
     })())
 }

@@ -4,7 +4,7 @@ import {prepareJavascriptDependencies,runTool} from "./🟦️.ts";
 import {mkdirSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {Script,ScriptRouter,checkScriptInvocation,receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {publishBunWorkspaceOwnership} from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
+import {discoverCurrentBunWorkspaceScopesV1} from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 
@@ -14,10 +14,10 @@ export class SyncScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length && !(args.length===1 && args[0]==="--all") && !(args.length===2 && args[0]==="--scope")) throw new Error("Dependency synchronization accepts --all or --scope <owner>");
     checkScriptInvocation(this.invocation);
-    if(args[0]==="--scope"){await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,store=>prepareJavascriptDependencies(this.mode,join(this.root,args[1]!),store));return;}
-    const report = await publishBunWorkspaceOwnership(this.root, {
+    const selection=args[0]==="--all"||!args.length&&this.mode==="lock"?{kind:"all" as const}:{kind:"scope" as const,owner:args[0]==="--scope"?args[1]!:"."};
+    const control = {
       signal: this.invocation.control.signal,
-      advance: async progress => {
+      advance: async (progress:import("../../../🗂️workspaces/🟦️bun/🟦️.ts").BunWorkspaceProgress) => {
         checkScriptInvocation(this.invocation);
         if (progress.completedOperations % 128 === 0) {
           await this.invocation.control.publish({ owner: this.invocation.policy.owner, command: "Bun ownership " + progress.operation + " " + progress.completedOperations, stage: "running" });
@@ -25,15 +25,16 @@ export class SyncScript extends Script {
         }
         checkScriptInvocation(this.invocation);
       },
-    });
-    const scopes = report.scopes.map(scope => ({ ...scope, directory: dirname(scope.manifest).replaceAll("\\", "/") })), requested = args[0] === "--all" || !args.length && this.mode === "lock" ? scopes : scopes.filter(scope => scope.directory === (args[0] === "--scope" ? args[1] : "."));
-    if (!requested.length) throw new Error("Unknown present Bun installation scope");
-    for (const scope of requested) {
+    };
+    const scopes = await discoverCurrentBunWorkspaceScopesV1(this.root, selection, control);
+    if (!scopes.length) throw new Error("Unknown present Bun installation scope");
+    for (const scope of scopes) {
       checkScriptInvocation(this.invocation);
       console.log("[bun-workspace] " + scope.manifest + " " + this.mode);
-      await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,store=>prepareJavascriptDependencies(this.mode,join(this.root,scope.directory),store));
+      await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,store=>prepareJavascriptDependencies(this.mode,join(this.root,dirname(scope.manifest)),store));
       checkScriptInvocation(this.invocation);
     }
+    if(selection.kind==="all"){const current=await discoverCurrentBunWorkspaceScopesV1(this.root,selection,control);if(JSON.stringify(current.map(scope=>scope.manifest))!==JSON.stringify(scopes.map(scope=>scope.manifest)))throw Error("Original Bun installation owner membership changed");}
   }
 }
 

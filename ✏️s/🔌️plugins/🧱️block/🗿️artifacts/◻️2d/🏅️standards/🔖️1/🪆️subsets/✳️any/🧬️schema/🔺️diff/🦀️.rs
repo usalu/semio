@@ -1,7 +1,15 @@
 //! 🧬️ Block2d diff schema — a field-sparse, id-keyed delta over the artifact: sub-documents carry field patches, id-keyed lists carry
 //! removed/added/patched rows (never a whole row, list or sub-document copy). `absorb` coalesces per field and per id, `inverse` restores exact base values.
 
-use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
 use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera2dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalNumber, BlockOptionalText, BlockPatchError, block_patch, block_patch_absorb, block_patch_apply, block_patch_inverse, block_patch_is_empty};
 use ::semio_framework_schema::ArtifactSchema;
 
@@ -134,3 +142,8 @@ impl protocol::DiffAlgebra<Block2dSnapshot> for Block2dDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

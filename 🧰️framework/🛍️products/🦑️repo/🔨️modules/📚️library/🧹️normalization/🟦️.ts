@@ -3519,17 +3519,33 @@ function pathLiteralMatches(content: string): [number, string, string][] {
   const lookahead = (index: number): boolean => index >= content.length || PATH_LOOKAHEAD.has(content[index]!) || REGEX_WHITESPACE.has(content[index]!);
   const word = (code: number): boolean => code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 95 || code === 46 || code === 64 || code === 45;
   const suffix = (code: number): boolean => code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 46;
+  let runFrom = -1, runTo = -1, wordFrom = -1, wordTo = -1, suffixLast = -1, suffixFirst = -1, slashAt = -1, dotAt = -1;
+  const next = (at: number, from: number, code: number): number => {
+    if (at >= from || at === Infinity) return at;
+    for (let index = from; index < content.length; index++) if (content.charCodeAt(index) === code) return index;
+    return Infinity;
+  };
   const valueEnd = (start: number): number => {
-    let end = start;
-    while (end < content.length && !PATH_RUN_EXCLUDED.has(content[end]!) && !REGEX_WHITESPACE.has(content[end]!)) end++;
-    if (end > start && lookahead(end)) for (let slash = start + 1; slash < end - 1; slash++) if (content.charCodeAt(slash) === 47) return end;
-    let last = start;
-    while (last < content.length && word(content.charCodeAt(last))) last++;
+    if (runFrom < 0 || start < runFrom || start > runTo) {
+      let end = start;
+      while (end < content.length && !PATH_RUN_EXCLUDED.has(content[end]!) && !REGEX_WHITESPACE.has(content[end]!)) end++;
+      runFrom = start; runTo = end;
+    }
+    const end = runTo;
+    if (end > start && lookahead(end) && (slashAt = next(slashAt, start + 1, 47)) < end - 1) return end;
+    if (wordFrom < 0 || start < wordFrom || start > wordTo) {
+      let last = start;
+      while (last < content.length && word(content.charCodeAt(last))) last++;
+      wordFrom = start; wordTo = last;
+    }
+    const last = wordTo;
     if (last - start < 3 || !lookahead(last)) return -1;
-    let first = last;
-    while (first > start && suffix(content.charCodeAt(first - 1))) first--;
-    for (let dot = Math.max(first, start + 1); dot < last - 1; dot++) if (content.charCodeAt(dot) === 46) return last;
-    return -1;
+    if (suffixLast !== last) {
+      let first = last;
+      while (first > 0 && suffix(content.charCodeAt(first - 1))) first--;
+      suffixLast = last; suffixFirst = first;
+    }
+    return (dotAt = next(dotAt, Math.max(suffixFirst, start + 1), 46)) < last - 1 ? last : -1;
   };
   for (let position = 0; position < content.length;) {
     let start = -1, end = -1;
@@ -4302,6 +4318,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       if (oldTarget) fileTargets.set(referenceEditIdentity(edit), oldTarget);
     }
     const rustSupported = supported.filter(({ token }) => token.adapter === "rust");
+    let coverers: Map<string, ReferenceToken[]> | undefined, exactOwnerCoverers: ReferenceToken[] = [];
     for (const candidate of !staying || unsupportedMayResolve() ? analysis.unsupported ?? unsupportedReferenceTokens(content, referenceAdapter(entry.sourcePath)) : []) {
       if (!reachable(candidate)) continue;
       if (candidate.adapter === "rust" && rustSupported.some(({ token }) => rustReferenceInterpretationCovers(token, candidate))) continue;
@@ -4315,7 +4332,13 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
         unresolved.push(violation("immutable-plan-reference-unowned", entry.sourcePath, `${candidate.structuredLocation} is not an exact typed coordinate in a canonical digest-verified plan`));
         continue;
       }
-      const covered = supported.some(({ token, target }) => (target === oldTarget || token.rewriteKind === "exact-owner-reference") && token.start <= candidate.start && token.end >= candidate.end);
+      if (!coverers) {
+        coverers = new Map();
+        exactOwnerCoverers = supported.filter(({ token }) => token.rewriteKind === "exact-owner-reference").map(({ token }) => token);
+        for (const { token, target } of supported) if (target !== null) { const rows = coverers.get(target); if (rows) rows.push(token); else coverers.set(target, [token]); }
+      }
+      const covers = (token: ReferenceToken): boolean => token.start <= candidate.start && token.end >= candidate.end;
+      const covered = (coverers.get(oldTarget)?.some(covers) ?? false) || exactOwnerCoverers.some(covers);
       const destination = destinationBySource.get(oldTarget) ?? oldTarget;
       const unchanged = rewriteReferenceValue(finalReferencePath, candidate.value, oldTarget, destination, entry.sourcePath, inventory.repoRoot) === candidate.value;
       if (!covered && !unchanged) unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${candidate.adapter} ${candidate.structuredLocation} contains unsupported path-bearing token ${JSON.stringify(candidate.value)} targeting ${oldTarget}`));
@@ -7982,7 +8005,7 @@ function removalAuthorityPaths(authority: TaxonomyRemovalAuthority): readonly st
   if (authority.kind === "byte-and-mode-identical") return authority.members.flatMap((member) => [member.sourcePath, member.finalPath]);
   if (authority.kind === "owner-manifest-status") return [authority.manifestPath];
   if (authority.kind === "exact-path-mutation" || authority.kind === "exact-owner-generated-source" || authority.kind === "nested-cargo-generated-source") return [authority.catalogPath];
-  return [authority.catalogPath];
+  throw Error("Closed taxonomy removal authority required");
 }
 
 function removalIncomingIgnoredSourceRoots(removal: TaxonomyEvidenceRemoval): readonly string[] {

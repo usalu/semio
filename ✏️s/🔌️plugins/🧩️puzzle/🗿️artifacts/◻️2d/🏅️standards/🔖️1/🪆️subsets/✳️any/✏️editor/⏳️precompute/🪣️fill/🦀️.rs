@@ -297,14 +297,14 @@ pub(crate) fn fill_run_entity(node_id: &semio_framework_value::paged::PagedUtf8<
 /// (`inferred_node_kind_rows` — Concrete Forest names no manifest and carries no catalog, and a fill
 /// that finds no kind places nothing).
 fn fill_kind_rows(document: &Value) -> Vec<Value> {
-    if let Some(rows) = crate::editor::puzzle2d::kind_catalog_entries(document, "nodes").filter(|rows| !rows.is_empty()) {
+    if let Some(rows) = crate::editor::puzzle2d::snapshot::kind_catalog_entries(document, "nodes").filter(|rows| !rows.is_empty()) {
         return rows.to_vec();
     }
-    let manifest_rows = crate::editor::puzzle2d::board_kind_catalogs_json(document).and_then(|json| semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|catalogs| catalogs.get("nodeKinds").and_then(Value::as_array).cloned()).unwrap_or_default();
+    let manifest_rows = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json(document).and_then(|json| semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).and_then(|catalogs| catalogs.get("nodeKinds").and_then(Value::as_array).cloned()).unwrap_or_default();
     if manifest_rows.iter().any(|row| row.get("handles").and_then(Value::as_array).is_some_and(|templates| !templates.is_empty())) {
         return manifest_rows;
     }
-    let inferred = crate::editor::puzzle2d::inferred_node_kind_rows(document);
+    let inferred = crate::editor::puzzle2d::snapshot::inferred_node_kind_rows(document);
     if inferred.is_empty() { manifest_rows } else { inferred }
 }
 
@@ -319,10 +319,10 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
     let handles = (0..placement.handle_count())
         .map(|index| {
             let (id, handle_kind, angle, radius) = placement.handle(index).ok_or("puzzle2d-fill-apply-handle")?;
-            Ok(crate::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
+            Ok(crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
         })
         .collect::<Result<semio_framework_value::list::PagedList<_, { usize::MAX }>, &'static str>>()?;
-    let node = crate::Puzzle2dNode {
+    let node = crate::standards::v1::subsets::any::schema::Puzzle2dNode {
         id: placement.node_id.as_str().into(),
         node_kind: Some(placement.node_kind.as_str().into()),
         shape: Some(placement.shape.into()),
@@ -333,7 +333,7 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
         height: rectangle.then_some(placement.height),
         text: Some(placement.node_id.as_str().into()),
         icon_kind: placement.icon_kind.as_ref().map(|icon| icon.as_str().into()),
-        anchor: crate::Puzzle2dNodeAnchor::Fixed,
+        anchor: crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor::Fixed,
         handles,
         ..Default::default()
     };
@@ -345,11 +345,11 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
 /// [`FILL_RUN_TARGET_REGION_SLOTS`] — a document painted past that ceiling constrains fill by its
 /// first regions rather than faulting the run, and the excess is visible in the board itself.
 pub(crate) fn fill_visible_region_bounds(snapshot: &Value) -> Vec<[f64; 4]> {
-    crate::editor::puzzle2d::snapshot_target_regions(snapshot)
+    crate::editor::puzzle2d::snapshot::snapshot_target_regions(snapshot)
         .iter()
         .filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true))
         .take(FILL_RUN_TARGET_REGION_SLOTS)
-        .map(crate::editor::puzzle2d::puzzle2d_region_bounds)
+        .map(crate::editor::puzzle2d::snapshot::puzzle2d_region_bounds)
         .collect()
 }
 
@@ -1694,7 +1694,7 @@ impl Puzzle2dFillRevalidateJob {
         }
     }
 
-    fn placement(&self, index: usize) -> Option<(&crate::Puzzle2dNode, &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>)> {
+    fn placement(&self, index: usize) -> Option<(&crate::standards::v1::subsets::any::schema::Puzzle2dNode, &semio_framework_value::paged::PagedUtf8<{ usize::MAX }>)> {
         match self.ops.get(index * FILL_RUN_OPS_PER_PLACEMENT..(index + 1) * FILL_RUN_OPS_PER_PLACEMENT)? {
             [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(connect)] => Some((&create.node, &connect.source)),
             _ => None,

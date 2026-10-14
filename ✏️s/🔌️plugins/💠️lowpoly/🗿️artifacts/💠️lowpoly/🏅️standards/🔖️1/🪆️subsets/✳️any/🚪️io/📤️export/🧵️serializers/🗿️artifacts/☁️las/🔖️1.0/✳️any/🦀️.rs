@@ -5,8 +5,8 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: a point cloud of the vertices — faces, objects and paint do not survive,
 //! so there is no las import.
-use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::mesh_geometry::world_parts;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::encode_las;
 use semio_s_artifact_stdio_las::schema::snapshot::{LasHeader, LasPoint};
 use semio_s_artifact_stdio_las::LasSnapshot;

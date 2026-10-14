@@ -1,7 +1,7 @@
 //! 🚪️ Extension resources and declarative payloads retain their owners through bounded close.
 
 use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, ExtensionRequestHandler, Fault, FaultCode, FaultOrigin};
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 
 #[cfg(test)]
@@ -146,16 +146,16 @@ impl ExtensionBundle {
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if self.resource_owner.as_ref().is_some_and(|owner|!owner.terminal_is_empty()){
-            if cx.should_yield()||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            if cx.should_yield()||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
             if self.close_cancelled{return Ok(PluginLifecycleStep::Blocked{reason:"extension close paused"})}
             self.begin_close();let owner=self.resource_owner.as_mut().expect("quoted original extension resource remains owned");let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             let before=cx.retained_progress();let step=cx.with_retained_loan(child,|same|owner.close_step(same))?;
-            let progress=step.progress().unwrap_or_default();let actual=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+            let progress=step.progress().unwrap_or_default();let actual=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
             if !progress.fits(child)||progress!=actual{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"extension resource owner differs from its original posted receipt").into())}
             if matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"extension resource owner reported Complete without terminal emptiness").into())}
             return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
         }
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
     }
 
     fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
@@ -408,13 +408,13 @@ impl ExtensionBundleRegistry {
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if self.current.as_ref().is_some_and(|current|!current.terminal_is_empty()){
-            if cx.should_yield()||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            if cx.should_yield()||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
             if self.paused{return Ok(PluginLifecycleStep::Blocked{reason:"extension close paused"})}
             if !self.has_retirement(){self.begin_close()}
             let current=self.current.as_mut().expect("quoted original extension bundle remains owned");let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             return cx.with_retained_loan(child,|same|current.close_step(same)).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
         }
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
     }
 
     fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{

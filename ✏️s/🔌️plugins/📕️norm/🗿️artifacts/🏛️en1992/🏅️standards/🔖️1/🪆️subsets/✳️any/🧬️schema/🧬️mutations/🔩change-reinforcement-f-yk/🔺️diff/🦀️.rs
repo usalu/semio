@@ -1,6 +1,6 @@
-use crate::diff::{En1992Diff, En1992ReinforcementGradesRows, En1992ReinforcementGradesPatch};
-use super::ChangeReinforcementFYk;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::{En1992Diff, En1992ReinforcementGradesRows, En1992ReinforcementGradesPatch};
+use crate::change_reinforcement_f_yk::ChangeReinforcementFYk;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &ChangeReinforcementFYk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let Some(g) = base.reinforcement_grades.iter().find(|g| g.id == payload.grade_id) else {

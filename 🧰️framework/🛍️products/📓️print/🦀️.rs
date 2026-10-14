@@ -50,8 +50,9 @@ pub fn chart_artifact_declaration()->Result<semio_framework_plugin::app::Artifac
 /// 🚀️ The print domain boots through the existing transactional plugin assembly.
 pub fn print_plugin()->Result<semio_framework_plugin::app::Plugin<semio_framework_plugin::app::NoPluginApp>,semio_framework_plugin::app::PluginAssemblyError>{
     use semio_framework_plugin::app::{Plugin,NoPluginApp,PluginAssemblyError};
+    use semio_framework_plugin::app::PluginBuilder;
     let declaration=chart_artifact_declaration().map_err(|error|PluginAssemblyError::new("print.chart.declaration",error.to_string()))?;
-    let plugin=Plugin::<NoPluginApp>::builder("print").label("Print").version(env!("CARGO_PKG_VERSION")).package_id("semio:print").artifact(declaration).try_build()?;
+    let plugin=PluginBuilder::<_, NoPluginApp>::new("print").label("Print").version(env!("CARGO_PKG_VERSION")).package_id("semio:print").artifact(declaration).try_build()?;
     register_chart_inference().map_err(|error|PluginAssemblyError::new("print.chart.inference-registration",error.to_string()))?;
     semio_framework_schema_registry::register_referenced_schema_documents(&[include_str!("🧬️schema/🔣️.json"),include_str!("🧬️schema/🧬️mutations/🔣️.json")]);
     Ok(plugin)

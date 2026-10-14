@@ -7,14 +7,26 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-use crate::artifact_schema::mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 
-use crate::artifact_schema::mutations::{
-    add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode, add_curve::AddCurve, add_geometry::AddGeometry,
-    add_product::AddProduct, remove_curve::RemoveCurve, remove_geometry::RemoveGeometry, remove_product::RemoveProduct, remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection,
-    rename_product::RenameProduct, change_curve_points::ChangeCurvePoints, change_geometry_parameters::ChangeGeometryParameters, change_product_configuration::ChangeProductConfiguration, resize_geometry::ResizeGeometry,
-    change_manufacturer_file::ChangeManufacturerFile,
-};
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection::AddGeometryConnection;
+use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of::ChangeCorrectionAsOf;
+use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile::ChangeEditionProfile;
+use semio_s_artifact_norm_vdi3805_mut_file::change_strict_mode::ChangeStrictMode;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_curve::AddCurve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry::AddGeometry;
+use semio_s_artifact_norm_vdi3805_mut_products::add_product::AddProduct;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_curve::RemoveCurve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry::RemoveGeometry;
+use semio_s_artifact_norm_vdi3805_mut_products::remove_product::RemoveProduct;
+use semio_s_artifact_norm_vdi3805_mut_file::remove_edition_profile::RemoveEditionProfile;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry_connection::RemoveGeometryConnection;
+use semio_s_artifact_norm_vdi3805_mut_products::rename_product::RenameProduct;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_curve_points::ChangeCurvePoints;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_geometry_parameters::ChangeGeometryParameters;
+use semio_s_artifact_norm_vdi3805_mut_products::change_product_configuration::ChangeProductConfiguration;
+use semio_s_artifact_norm_vdi3805_mut_geometry::resize_geometry::ResizeGeometry;
+use semio_s_artifact_norm_vdi3805_mut_file::change_manufacturer_file::ChangeManufacturerFile;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -180,38 +192,10 @@ impl protocol::OpText for Vdi3805Mutation {
 /// consolidation used by `OpText` above applies equally here — one `write_str_bin` per field
 /// regardless of that field's own structural complexity.
 
-
-
-
-
-
-
-
-
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `Vdi3805Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🏷️WireTags
-
 
 //#endregion 🔖️OpBinaryCodec
 
@@ -227,7 +211,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     let product = CatalogueProduct {
         id: "VLV-NEW".into(),
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
-        title: crate::bilingual("Neu", "New"),
+        title: semio_s_artifact_norm_vdi3805_model::bilingual("Neu", "New"),
         sheet: SheetId(3),
         records: Vec::new(),
         configuration: Configuration { id: "cfg.new".into(), attributes: SheetAttributes::Generic(GenericAttributes::default()), geometry_ref: None, function_refs: Vec::new() },
@@ -239,14 +223,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     let curve = CharacteristicCurve { id: "curve.new".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: vec![CurvePoint { x: 0.0, y: 0.0 }] };
 
     vec![
-        Vdi3805Mutation::ChangeManufacturerFile(ChangeManufacturerFile { new_manufacturer_file: crate::reference_fixture().catalog.file }),
+        Vdi3805Mutation::ChangeManufacturerFile(ChangeManufacturerFile { new_manufacturer_file: semio_s_artifact_norm_vdi3805_model::reference_fixture().catalog.file }),
         Vdi3805Mutation::ChangeCorrectionAsOf(ChangeCorrectionAsOf { new_correction_as_of: EditionId::new(2025, 3) }),
         Vdi3805Mutation::ChangeStrictMode(ChangeStrictMode { new_strict_mode: true }),
         Vdi3805Mutation::ChangeEditionProfile(ChangeEditionProfile { sheet: "8".into(), new_choice: EditionProfileChoice::Legacy }),
         Vdi3805Mutation::RemoveEditionProfile(RemoveEditionProfile { sheet: "8".into() }),
         Vdi3805Mutation::AddProduct(AddProduct { product: product.clone(), index: Some(0) }),
         Vdi3805Mutation::RemoveProduct(RemoveProduct { id: "VLV-50-001".into() }),
-        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: crate::bilingual("Umbenannt", "Renamed") }),
+        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: semio_s_artifact_norm_vdi3805_model::bilingual("Umbenannt", "Renamed") }),
         Vdi3805Mutation::ChangeProductConfiguration(ChangeProductConfiguration { id: "VLV-50-001".into(), new_configuration: product.configuration.clone() }),
         Vdi3805Mutation::AddGeometry(AddGeometry { geometry: geometry.clone() }),
         Vdi3805Mutation::RemoveGeometry(RemoveGeometry { id: "geom-valve-50".into() }),
@@ -285,28 +269,29 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Diff, Vdi3805Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::add_geometry_connection;
-use crate::standards::v1::subsets::any::schema::mutations::change_correction_as_of;
-use crate::standards::v1::subsets::any::schema::mutations::change_edition_profile;
-use crate::standards::v1::subsets::any::schema::mutations::change_strict_mode;
-use crate::standards::v1::subsets::any::schema::mutations::add_curve;
-use crate::standards::v1::subsets::any::schema::mutations::add_geometry;
-use crate::standards::v1::subsets::any::schema::mutations::add_product;
-use crate::standards::v1::subsets::any::schema::mutations::remove_curve;
-use crate::standards::v1::subsets::any::schema::mutations::remove_geometry;
-use crate::standards::v1::subsets::any::schema::mutations::remove_product;
-use crate::standards::v1::subsets::any::schema::mutations::remove_edition_profile;
-use crate::standards::v1::subsets::any::schema::mutations::remove_geometry_connection;
-use crate::standards::v1::subsets::any::schema::mutations::rename_product;
-use crate::standards::v1::subsets::any::schema::mutations::change_curve_points;
-use crate::standards::v1::subsets::any::schema::mutations::change_geometry_parameters;
-use crate::standards::v1::subsets::any::schema::mutations::change_product_configuration;
-use crate::standards::v1::subsets::any::schema::mutations::resize_geometry;
-use crate::standards::v1::subsets::any::schema::mutations::change_manufacturer_file;
-use crate::standards::v1::subsets::any::schema::mutations::change_limits;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_vdi3805_mutations::*;
+use semio_s_artifact_norm_vdi3805_model::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection;
+use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of;
+use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile;
+use semio_s_artifact_norm_vdi3805_mut_file::change_strict_mode;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_curve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry;
+use semio_s_artifact_norm_vdi3805_mut_products::add_product;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_curve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry;
+use semio_s_artifact_norm_vdi3805_mut_products::remove_product;
+use semio_s_artifact_norm_vdi3805_mut_file::remove_edition_profile;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry_connection;
+use semio_s_artifact_norm_vdi3805_mut_products::rename_product;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_curve_points;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_geometry_parameters;
+use semio_s_artifact_norm_vdi3805_mut_products::change_product_configuration;
+use semio_s_artifact_norm_vdi3805_mut_geometry::resize_geometry;
+use semio_s_artifact_norm_vdi3805_mut_file::change_manufacturer_file;
+use semio_s_artifact_norm_vdi3805_mut_file::change_limits;
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
 /// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
@@ -318,7 +303,7 @@ pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, Strin
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

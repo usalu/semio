@@ -1,7 +1,7 @@
 //! Diff for `change-beam-action-q-area-pa`.
-use super::ChangeBeamActionQAreaPa;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch, En1994BeamsActionsRows, En1994BeamsActionsPatch};
+use crate::change_beam_action_q_area_pa::ChangeBeamActionQAreaPa;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch, En1994BeamsActionsRows, En1994BeamsActionsPatch};
 
 pub fn diff(payload: &ChangeBeamActionQAreaPa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_q_area_pa.is_finite() {

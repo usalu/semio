@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceReferenceMedia`.
 use super::ReplaceReferenceMedia;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadReferencesDelta};
-use semio_s_artifact_cad_cad_model::{diff::CadOpacitySet, diff::CadOrientationSet, diff::CadReferencePatch, diff::CadScaleSet};
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadReferencesDelta};
+use semio_s_artifact_cad_cad_model_diff::{CadOpacitySet, CadOrientationSet, CadReferencePatch, CadScaleSet};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use std::collections::BTreeMap;
 

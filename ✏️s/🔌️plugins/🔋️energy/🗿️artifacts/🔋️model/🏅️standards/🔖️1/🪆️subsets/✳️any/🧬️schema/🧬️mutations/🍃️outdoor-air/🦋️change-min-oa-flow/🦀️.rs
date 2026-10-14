@@ -1,8 +1,7 @@
 //! 🦋️ Energy model mutation — `ChangeOutdoorAirSystemMinOaFlow`: Sets the outdoor air flow the system always draws, in m³/s.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeOutdoorAirSystemMinOaFlow {
     pub new_min_oa_flow_m3_s: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_outdoor_air_system_min_oa_flow(id: crate::model::EntityId, new_min_oa_flow_m3_s: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeOutdoorAirSystemMinOaFlow(ChangeOutdoorAirSystemMinOaFlow { id, new_min_oa_flow_m3_s })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_outdoor_air_system_min_oa_flow<Op: From<ChangeOutdoorAirSystemMinOaFlow>>(id: crate::model::EntityId, new_min_oa_flow_m3_s: f64) -> Op {
+    ChangeOutdoorAirSystemMinOaFlow { id, new_min_oa_flow_m3_s }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeOutdoorAirSystemMinOaFlow {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeOutdoorAirSystemMinOaFlow
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeOutdoorAirSystemMinOaFlow>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-air-system", kind: "change-outdoor-air-system-min-oa-flow", record: "ChangedOutdoorAirSystemMinOaFlow" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

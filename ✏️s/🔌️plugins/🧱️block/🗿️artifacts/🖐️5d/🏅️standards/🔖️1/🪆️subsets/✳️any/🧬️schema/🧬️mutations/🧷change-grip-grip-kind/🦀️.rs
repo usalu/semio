@@ -1,8 +1,7 @@
 //! 🧷 Block5d mutation — `ChangeGripGripKind`: a grip's `gripKind` catalog reference (rebind).
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🧷 `change-grip-grip-kind` payload.
@@ -19,19 +18,19 @@ pub struct ChangeGripGripKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_grip_grip_kind(id: String, new_grip_kind: String) -> Block5dMutation {
-    Block5dMutation::ChangeGripGripKind(ChangeGripGripKind { id, new_grip_kind })
+pub fn change_grip_grip_kind<Op: From<crate::change_grip_grip_kind::ChangeGripGripKind>>(id: String, new_grip_kind: String) -> Op {
+    Op::from(ChangeGripGripKind { id, new_grip_kind })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripGripKind {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripGripKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_grip_kind::ChangeGripGripKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip", kind: "change-grip-grip-kind", record: "ChangedGripGripKind" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::change_grip_grip_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_grip_grip_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripGrip
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -9,6 +9,7 @@ import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬�
 import { checkScriptInvocation, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { BuildExecutionV1 } from "../🕸️graph/🟦️.ts";
 import { resolve } from "node:path";
+import {issueRepositoryCargoExecutionBackendV1} from "../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
 
 /** 🏛️ Declares actual native resources granted to an owned build invocation. */
 export interface NativeBuildCallerCapabilitiesV1 { readonly tool:"nx"|"bazel"; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>; readonly launches:readonly (readonly string[])[] }
@@ -52,8 +53,8 @@ export function issueBuildTaskEnvironmentV1(root:string,invocation:ScriptInvocat
   let selected:object=capabilities;
   if(request!==undefined){
     if(validateJsonSchemaSubset(nativeSchema.properties.command,request).length)throw Error("Discovered native build command required");
-    const command=request as NativeOwnerCapabilities["command"];
-    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command:{...command,arguments:[...command.arguments,...effective]},transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network});
+    const declared=request as NativeOwnerCapabilities["command"],command={...declared,arguments:[...declared.arguments,...effective]},cargoExecutionBackend=issueRepositoryCargoExecutionBackendV1(root,command,capabilities.native.transport);
+    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
   }
   const result=scriptInvocationEnvironment({...invocation,capabilities:selected},{...canonical,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_WORKSPACE_ROOT:root});
   delete result.SEMIO_SCRIPT_CAPABILITIES;

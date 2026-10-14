@@ -1,0 +1,32 @@
+{
+ "base": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "steps": [
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "start": "pub fn generation_command_result_for(",
+   "end": "        _ => None,\n    }\n}",
+   "before": "//#region 🔖️InstanceOperationOwner"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+   "start": "pub fn edits_components(",
+   "end": "matches!(granularity, Some(\"vertex\" | \"edge\" | \"face\"))\n}"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+   "text": "use crate::editor::generation3d::modes::{edit, generate};\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs",
+   "start": "/// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.",
+   "end": "    Ok(meshes)\n}"
+  }
+ ]
+}

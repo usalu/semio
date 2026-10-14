@@ -1,7 +1,15 @@
 //! 🧱 EN 1996 snapshot — masonry building subject (walls with units, mortar, actions).
 
-use crate::document::{AnnexChoice, DesignSituation};
-use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -26,8 +34,6 @@ pub struct En1996Snapshot {
     pub walls: Vec<MasonryWall>,
 }
 //#endregion 🔖️Snapshot
-
-
 
 impl Default for En1996Snapshot {
     fn default() -> Self {
@@ -223,11 +229,282 @@ impl En1996Snapshot {
 
 }
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+/// 🧱️ Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum MasonryClass {
+    Class1,
+    Class2,
+    #[default]
+    Class3,
+    Class4,
+    Class5,
+}
 
+impl MasonryClass {
+    /// ⚖️ EN-recommended γ_M by category of execution/manufacturing control.
+    pub fn gamma_m_en(self) -> f64 {
+        match self {
+            Self::Class1 => 1.5,
+            Self::Class2 => 1.7,
+            Self::Class3 => 2.0,
+            Self::Class4 => 2.2,
+            Self::Class5 => 2.5,
+        }
+    }
 
+    /// ⚖️ DIN EN 1996-1-1/NA γ_M from manufacturing category × execution class.
+    /// Class1→Cat I+A, Class2→Cat I+B, Class3→Cat II+A, Class4/5→Cat II+B.
+    pub fn gamma_m_de(self, accidental: bool) -> f64 {
+        if accidental {
+            return 1.3;
+        }
+        match self {
+            Self::Class1 => 1.5,
+            Self::Class2 => 1.7,
+            Self::Class3 => 1.7,
+            Self::Class4 | Self::Class5 => 2.0,
+        }
+    }
+}
 
+/// 🌦️ Masonry durability exposure class (EN 1996-2 / Annex B MX1–MX5).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum ExposureClass {
+    Mx1,
+    Mx2,
+    Mx3,
+    Mx4,
+    Mx5,
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🧱 Masonry unit material.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum UnitMaterial {
+    Clay,
+    CalciumSilicate,
+    Aerated,
+    Concrete,
+}
+
+/// 🧱 Unit group per EN 771 / EN 1996-1-1 (Group 1–4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum UnitGroup {
+    Group1,
+    Group2,
+    Group3,
+    Group4,
+}
+
+/// 🧈 Mortar type per EN 998-2 / EN 1996-1-1.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum MortarType {
+    GeneralPurpose,
+    ThinLayer,
+    Lightweight,
+}
+
+/// 🧈 Mortar compressive-strength class (EN 998-2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum MortarClass {
+    M1,
+    #[dsl(key = "m2_5")]
+    M2_5,
+    M5,
+    M10,
+    M15,
+    M20,
+}
+
+impl MortarClass {
+    /// 🗜️ Characteristic compressive strength f_m [MPa] of the mortar class.
+    pub fn f_m_mpa(self) -> f64 {
+        match self {
+            Self::M1 => 1.0,
+            Self::M2_5 => 2.5,
+            Self::M5 => 5.0,
+            Self::M10 => 10.0,
+            Self::M15 => 15.0,
+            Self::M20 => 20.0,
+        }
+    }
+    /// ♻️ Alias used by older durability helpers.
+    pub fn compressive_strength_mpa(self) -> f64 { self.f_m_mpa() }
+}
+
+/// 🧱 Wall structural role.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum WallType {
+    #[dsl(key = "load-bearing")]
+    LoadBearing,
+    Shear,
+    #[dsl(key = "non-load-bearing")]
+    NonLoadBearing,
+}
+
+/// 🪟 Opening in a masonry wall — SI base units.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct WallOpening {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub width_m: f64,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    #[dsl(unit = "m")]
+    pub sill_height_m: f64,
+}
+
+/// 🏋️ Characteristic concentrated action on a masonry wall — SI base units.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ConcentratedLoad {
+    pub id: String,
+    /// Characteristic concentrated force F_k [N].
+    #[dsl(unit = "N")]
+    pub force_n: f64,
+    #[dsl(unit = "m2")]
+    pub bearing_area_m2: f64,
+    #[dsl(unit = "m")]
+    pub bearing_length_m: f64,
+}
+
+/// 📜️ Characteristic actions for one wall load case — EN 1990 combinations formed in evaluate().
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct WallLoadCase {
+    pub id: String,
+    /// persistent | transient | accidental | seismic
+    pub design_situation: String,
+    /// Imposed-floor category (A/B/C/D/E/H/…) for ψ factors (EN 1990 Table A1.1 / DE NA).
+    pub imposed_category: String,
+    /// Characteristic permanent vertical load from slabs/floors onto this wall [N] (excl. wall self-weight).
+    #[dsl(unit = "N")]
+    pub g_k_slab_n: f64,
+    /// Characteristic imposed floor load intensity [Pa].
+    #[dsl(unit = "Pa")]
+    pub q_k_imposed_pa: f64,
+    /// Tributary floor area for imposed / snow vertical load [m²].
+    #[dsl(unit = "m2")]
+    pub tributary_area_m2: f64,
+    /// Clear slab span [m] (eccentricity + EN 1996-3/NA Table NA.A.1 ≤ 6 m).
+    #[dsl(unit = "m")]
+    pub slab_span_m: f64,
+    /// Characteristic snow load intensity on tributary [Pa].
+    #[dsl(unit = "Pa")]
+    pub q_k_snow_pa: f64,
+    /// Peak velocity pressure q_p [Pa] (EN 1991-1-4).
+    #[dsl(unit = "Pa")]
+    pub q_p_wind_pa: f64,
+    /// External pressure coefficient c_pe [-] (EN 1991-1-4).
+    pub c_pe: f64,
+    /// Characteristic horizontal earth-pressure resultant on basement wall [N].
+    #[dsl(unit = "N")]
+    pub h_k_earth_n: f64,
+    #[dsl(table)]
+    pub concentrated: Vec<ConcentratedLoad>,
+}
+
+/// 🧱 Masonry wall subject entity — SI base units throughout.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct MasonryWall {
+    pub id: String,
+    pub label_en: String,
+    pub label_de: String,
+    pub wall_type: WallType,
+    #[dsl(unit = "m")]
+    pub thickness_m: f64,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    #[dsl(unit = "m")]
+    pub length_m: f64,
+    pub support_sides: u8,
+    #[dsl(table)]
+    pub openings: Vec<WallOpening>,
+    #[dsl(unit = "m")]
+    pub slab_bearing_depth_m: f64,
+    #[dsl(unit = "m")]
+    pub eccentricity_top_m: f64,
+    #[dsl(unit = "m")]
+    pub eccentricity_bottom_m: f64,
+    pub unit_group: UnitGroup,
+    pub unit_material: UnitMaterial,
+    #[dsl(unit = "Pa")]
+    pub f_b_pa: f64,
+    #[dsl(unit = "m")]
+    pub unit_length_m: f64,
+    #[dsl(unit = "m")]
+    pub unit_width_m: f64,
+    #[dsl(unit = "m")]
+    pub unit_height_m: f64,
+    pub mortar_type: MortarType,
+    pub mortar_class: MortarClass,
+    /// Declared mortar compressive strength (SI Pa) — must match `mortarClass` within tolerance.
+    #[dsl(unit = "Pa")]
+    pub mortar_strength_pa: f64,
+    #[dsl(unit = "m")]
+    pub bed_joint_thickness_m: f64,
+    pub reinforced: bool,
+    #[dsl(unit = "m2")]
+    pub as_vertical_m2: f64,
+    #[dsl(unit = "m2")]
+    pub as_horizontal_m2: f64,
+    #[dsl(unit = "Pa")]
+    pub f_yd_pa: f64,
+    pub fire_rei_min: u32,
+    pub exposure: ExposureClass,
+    /// Friction coefficient μ for sliding (EN 1996-1-1 §6.2 / DE NA).
+    pub mu: f64,
+    /// Masonry bulk density for self-weight [kg/m³].
+    pub density_kg_m3: f64,
+    /// Final creep coefficient φ_∞ (EN 1996-1-1 Table 3.3 / DE NA) used in e_k.
+    pub phi_infinity: f64,
+    /// Basement wall (EN 1996-3/NA earth-pressure path).
+    pub is_basement: bool,
+    #[dsl(table)]
+    pub load_cases: Vec<WallLoadCase>,
+}
+
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1996", "EN 1996", EN1996_DOCUMENT_SCHEMA)
+}
+
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1996_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1996", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+pub const EN1996_DOCUMENT_SCHEMA: &str = "semio.norm.en1996/v1";

@@ -1,10 +1,10 @@
-use crate::mutations::change_title::ChangeTitle;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use crate::change_title::ChangeTitle;
 
-pub fn inverse(_payload: &ChangeTitle, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeTitle, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_title::ChangeTitle> {
     Ok((|| {
-    vec![En1992Mutation::ChangeTitle(ChangeTitle { new_title: base.title.clone() })]
+    vec![Op::from(ChangeTitle { new_title: base.title.clone() })]
 
     })())
 }

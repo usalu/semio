@@ -1,8 +1,9 @@
-use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::En1990Inference;
-use crate::standards::v1::subsets::any::schema::mutations::change_consequence_class::ChangeConsequenceClass;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
-use crate::{En1990Mutation, En1990Snapshot};
+use crate::*;
+use semio_s_artifact_norm_en1990_inferences::En1990Inference;
+use semio_s_artifact_norm_en1990_mut_reliability::change_consequence_class::ChangeConsequenceClass;
+use crate::text::snapshot::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
+use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::Inference;
 
 use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};

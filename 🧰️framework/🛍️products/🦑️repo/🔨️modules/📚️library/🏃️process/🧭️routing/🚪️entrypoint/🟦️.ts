@@ -4,12 +4,12 @@ import { readScriptPolicy } from "../../../../../../../🔨️modules/🏃️pro
 import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain, type RunScriptMainOptions } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-export type RunRepoScriptMainOptions = Pick<RunScriptMainOptions, "defaultCommand">;
+export type RunRepoScriptMainOptions = Pick<RunScriptMainOptions, "defaultCommand"|"beforeDispatch">;
 
 /** 🦑️ Contributes repository policy commands to the neutral command entrypoint, receiving the caller's invocation or opening the root one. */
 export async function runRepoScriptMain(router: ScriptRouter, scriptUrl: string, options: RunRepoScriptMainOptions = {}): Promise<void> {
   const run = (invocation: ScriptInvocation) => runScriptMain(router, { ...options, invocation, beforeDispatch: async (argv) => {
-    if (argv[0] !== "policy") return false;
+    if (argv[0] !== "policy") return options.beforeDispatch?.(argv,invocation)??false;
     const { dispatchPolicyArgv } = await import("../../../🟦️.ts");
     return dispatchPolicyArgv([...argv], scriptUrl);
   } });

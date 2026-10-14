@@ -123,7 +123,7 @@ use semio_framework_diagnostic::Severity;
     /// a minimal `/DPartRoot` → `/DParts` → one `/DPart` node carrying `/DPM`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn seeded_snapshot(output_condition: String) -> PdfSnapshot {
-        let profile = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc")).to_vec();
+        let profile = include_bytes!("../../../../../🖼️assets/🌈️icc/🌈️sRGB2014.icc").to_vec();
         let condition_identifier = output_condition.clone();
         let objects = vec![
             PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![

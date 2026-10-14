@@ -1,0 +1,79 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "base",
+    "rows",
+    "expected",
+    "expectedInverse",
+    "composition"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "base": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "rows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "op"
+        ],
+        "properties": {
+          "op": {
+            "enum": [
+              "insert",
+              "replace",
+              "remove"
+            ]
+          },
+          "value": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "expectedInverse": {
+      "type": "object"
+    },
+    "composition": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "first",
+          "later",
+          "expected"
+        ],
+        "properties": {
+          "first": {
+            "type": "object"
+          },
+          "later": {
+            "type": "object"
+          },
+          "expected": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$id": "framework.replication.mutation.diff.v1"
+}

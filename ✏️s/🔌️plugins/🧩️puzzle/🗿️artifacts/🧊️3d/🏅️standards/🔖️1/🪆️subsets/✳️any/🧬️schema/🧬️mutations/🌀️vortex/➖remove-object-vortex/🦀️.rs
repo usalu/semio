@@ -1,17 +1,17 @@
 //! ➖ Puzzle3d mutation — `RemoveObjectVortex`: detaches a rim vortex from an object (captures
 //! cascade — any attraction whose `attracting`/`attracted` referenced this vortex is severed too).
-use crate::standards::v1::subsets::any::schema::mutations::{AddObjectVortex, ConnectVortices};
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+use {crate::add_object_vortex::mutation::AddObjectVortex, crate::connect_vortices::mutation::ConnectVortices};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// ➖ `remove-object-vortex` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "remove-object-vortex")]
 pub struct RemoveObjectVortex {
     pub object_id: String,

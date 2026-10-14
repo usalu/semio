@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rust Unit Producer Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "cache",
+    "projectRoot"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts"
+    },
+    "cache": {
+      "const": true
+    },
+    "projectRoot": {
+      "const": "descriptor-directory"
+    }
+  }
+}

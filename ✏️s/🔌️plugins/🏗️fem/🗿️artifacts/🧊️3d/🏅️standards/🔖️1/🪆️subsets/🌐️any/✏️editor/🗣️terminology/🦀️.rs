@@ -142,3 +142,26 @@ pub fn fem3d_labels(view_state: &ViewModel) -> &'static Fem3dLabels {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🎛️Controller
+/// 🪪️ The fem3d play app id.
+pub const FEM3D_APP_ID: &str = "fem3d-play";
+/// 🎛️ Stable controller/action-factory tag every panel row and control binds its actions under
+/// (the `ActionFactory` id, distinct from the derived surface app id) — the same string as the app id.
+pub const FEM3D_PLAY_CONTROLLER_ID: &str = FEM3D_APP_ID;
+
+/// 🏷️ Admits resolved fem3d text into the semantic UI contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI label admission failed"))
+}
+
+/// 🎛️ Mints one fem3d-controller action for a panel row or control binding.
+pub fn fem3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(FEM3D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+/// 🎛️ Window-measure action binding — same controller scope as [`fem3d_action`], without the UI assembly envelope.
+pub fn fem3d_measure_action(action: &str, args: Option<semio_framework_pack_json::Value>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: FEM3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
+}
+//#endregion 🎛️Controller

@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::{Process3dMountedPackSession, Process3dMountedSnapshotOwner, process3d_mounted_pack_session};
+use crate::{standards::v1::subsets::any::io::component::binary::snapshot::Process3dMountedPackSession, standards::v1::subsets::any::io::component::binary::snapshot::Process3dMountedSnapshotOwner, standards::v1::subsets::any::io::component::binary::snapshot::process3d_mounted_pack_session};
 use super::*;
-use crate::{ProcessMeasure, StepOrigin, StockQuantity};
+use crate::{snapshot::ProcessMeasure, snapshot::StepOrigin, snapshot::StockQuantity};
 
 fn capability(id: &str, recipe: MeasureRecipe) -> Capability {
     Capability {
@@ -18,7 +18,7 @@ fn capability(id: &str, recipe: MeasureRecipe) -> Capability {
 }
 
 fn complete_snapshot() -> Process3dSnapshot {
-    let mut snapshot = crate::empty_process3d_snapshot();
+    let mut snapshot = crate::snapshot::empty_process3d_snapshot();
     snapshot.workshop = Workshop {
         machines: vec![
             WorkshopMachine {
@@ -113,7 +113,7 @@ fn derived_pack_identity_and_text_pack_equivalence() {
     let hash = store::os_store::test_support::assert_pack_schema_identity(&snapshot);
     assert_eq!(hash, store::os_pack::schema_hash(&Process3dSnapshot::__dsl_spec()));
     store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
-    store::os_store::test_support::assert_dsl_pack_equivalence(&crate::empty_process3d_snapshot());
+    store::os_store::test_support::assert_dsl_pack_equivalence(&crate::snapshot::empty_process3d_snapshot());
 }
 
 #[test]

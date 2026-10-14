@@ -8,10 +8,12 @@
 //! `Adjustment` arm of the diff builder's four-way match; the sibling `Pixel` layer in the same
 //! document is the one that would have taken the "is not an adjustment layer" error branch.
 
-use crate::mutations::{inverse_raster_mutation, RasterMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
+use semio_s_artifact_raster_raster_mutations::{inverse_raster_mutation, RasterMutation};
+use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-layer-adjustment/📈️switches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-layer-adjustment/📈️switches/📸️snapshot/➡️after/🔣️.json");
@@ -125,5 +127,5 @@ async fn committed_diff_applies_to_after() {
 /// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation(), &before(), <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
 }

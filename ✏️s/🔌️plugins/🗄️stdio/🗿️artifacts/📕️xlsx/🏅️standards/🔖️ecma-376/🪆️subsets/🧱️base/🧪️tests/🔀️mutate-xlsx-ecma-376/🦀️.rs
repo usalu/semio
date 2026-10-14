@@ -169,10 +169,12 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, is_pool_kind, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
-    use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxMutation, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
     use semio_repo_test_host::law::wire_operation;
 

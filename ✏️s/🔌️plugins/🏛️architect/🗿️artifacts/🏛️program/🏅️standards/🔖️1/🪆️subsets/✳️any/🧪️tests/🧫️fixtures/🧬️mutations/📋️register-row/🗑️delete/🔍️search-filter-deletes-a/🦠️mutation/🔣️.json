@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "searchFilter",
+  "id": "search-filter-a"
+}

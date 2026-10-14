@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `RenameGripKind`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block5dGripKindsDelta, Block5dGripKindsPatchEntry, Block5dGripKindPatch};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
+use semio_s_artifact_block_5d_diff::{Block5dGripKindsDelta, Block5dGripKindsPatchEntry, Block5dGripKindPatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::RenameGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::rename_grip_kind::RenameGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     let Some(existing) = base.grip_kinds.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "grip-kind", payload.id), vec![payload.id.clone()]);
     };

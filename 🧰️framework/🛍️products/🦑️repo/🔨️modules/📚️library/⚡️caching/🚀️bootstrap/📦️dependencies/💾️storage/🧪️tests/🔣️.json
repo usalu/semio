@@ -1,4 +1,26 @@
 {
+  "siblingScope": {
+    "cases":[
+      {"scope":"scope","members":["../shared","local"],"paths":["scope","shared","scope/local"]},
+      {"scope":"a/b","members":["../../shared"],"paths":["a/b","shared"]}
+    ],
+    "refused":[{"scope":".","members":["../outside"]},{"scope":"scope","members":["../../outside"]},{"scope":"scope","members":["x/../sibling"]},{"scope":"scope","members":["../shared","../shared"]},{"scope":"scope","members":["."]},{"scope":"scope","members":["C:/outside"]},{"scope":"scope","members":["/outside"]},{"scope":"scope","members":["..\\shared"]}],
+    "platforms":[{"kind":"posix","root":"/workspace/repo"},{"kind":"win32","root":"C:\\workspace\\repo"}],
+    "root":{"name":"sibling-scope","private":true,"workspaces":["../shared","../shared/child"],"dependencies":{"sibling-owned":"workspace:*"}},
+    "member":{"name":"sibling-owned","version":"1.0.0","workspaces":["child"],"dependencies":{"child-owned":"workspace:*"},"semio":{"workspace":{"schemaVersion":1,"members":["child"],"owners":[]}}},
+    "child":{"name":"child-owned","version":"1.0.0"},
+    "members":["../shared","../shared/child"],
+    "stagedMembers":["w/0","w/1"],
+    "patch":{"package":"fixture-only@1.0.0","path":"../patches/source.patch","text":"diff --git a/fixture.txt b/fixture.txt\n--- a/fixture.txt\n+++ b/fixture.txt\n@@ -1 +1 @@\n-before\n+after\n"}
+  },
+  "bindingPublication": {
+    "members": ["w"],
+    "interruptionFile": "w/node_modules",
+    "changedName": "changed-root",
+    "receiptBeforeBindings": true,
+    "retainedUnqualifiedLink": true,
+    "resumedBindings": 2
+  },
   "cases": [
     {
       "scope": ".",

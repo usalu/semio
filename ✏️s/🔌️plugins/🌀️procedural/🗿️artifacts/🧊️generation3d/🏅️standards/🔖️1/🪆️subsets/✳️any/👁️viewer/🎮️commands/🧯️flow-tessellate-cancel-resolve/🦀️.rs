@@ -5,7 +5,8 @@
 //! is "one budgeted tessellate step" and whose settle path may RE-ARM — restarting the very chain
 //! the user just stopped. This one arms nothing and publishes nothing.
 
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 

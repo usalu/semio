@@ -1,8 +1,10 @@
 //! 📝️ `update-paragraph-style` — replaces one paragraph style's typography.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutParagraphStylesDelta, LayoutParagraphStylesModification, ParagraphStylePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutParagraphStylesDelta, ParagraphStylePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutParagraphStylesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,12 +25,12 @@ pub struct UpdateParagraphStyle {
     pub alignment: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateParagraphStyle {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParagraphStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_paragraph_style::UpdateParagraphStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "paragraph-style", kind: "update-paragraph-style", record: "UpdatedParagraphStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_paragraph_style(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_paragraph_style(self, base)?
     
@@ -76,10 +78,10 @@ pub fn diff_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Layout
     })
 }
 
-pub fn inverse_update_paragraph_style(payload: &UpdateParagraphStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_paragraph_style<Op: From<crate::update_paragraph_style::UpdateParagraphStyle>>(payload: &UpdateParagraphStyle, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(style) = base.paragraph_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateParagraphStyle(UpdateParagraphStyle {
+    vec![Op::from(UpdateParagraphStyle {
         id: style.id.clone(),
         name: style.name.clone(),
         font_family: style.font_family.clone(),

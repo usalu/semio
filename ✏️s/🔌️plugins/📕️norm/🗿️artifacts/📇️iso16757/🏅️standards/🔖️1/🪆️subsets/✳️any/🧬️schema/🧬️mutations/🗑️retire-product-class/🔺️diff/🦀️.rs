@@ -1,8 +1,8 @@
 //! Diff for `retire-product-class`.
 
-use super::mutation::RetireProductClass;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductClassesRows};
+use crate::retire_product_class::mutation::RetireProductClass;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductClassesRows};
 
 pub fn diff(payload: &RetireProductClass, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     let Some(index) = base.catalogue.product_classes.iter().position(|item| item.id == payload.id) else {

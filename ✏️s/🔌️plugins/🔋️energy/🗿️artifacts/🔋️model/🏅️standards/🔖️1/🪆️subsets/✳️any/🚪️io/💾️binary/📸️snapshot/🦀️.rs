@@ -28,7 +28,7 @@ mod tests;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
+use crate::*;
 use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;

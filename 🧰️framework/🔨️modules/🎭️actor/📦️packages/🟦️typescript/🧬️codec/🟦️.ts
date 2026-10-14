@@ -1,4 +1,4 @@
 /** 🧬️ Defining Actor ./codec public facet. */
-export { ACTOR_CODEC_REFUSAL, actorCodecAnswer } from "../../../📮️shard-client/🧬️component-codec/🟦️.ts";
-export type { ShardCodecRequest, ShardCodecDocumentPair, ShardCodecSuccess, ShardCodecAnswer, ActorCodecExports } from "../../../📮️shard-client/🧬️component-codec/🟦️.ts";
-export { default as actorComponentCodecSchema } from "../../../📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json" with { type: "json" };
+export { ACTOR_CODEC_REFUSAL, actorCodecAnswer, admitActorCodecRequestV1, admitActorCodecAnswerV1, actorCodecRuntimeSourceV1 } from "../../../🧬️codec/🟦️.ts";
+export type { ActorCodecRequest, ActorCodecDocumentPair, ActorCodecSuccess, ActorCodecAnswer, ActorCodecExports } from "../../../🧬️codec/🟦️.ts";
+export { default as actorCodecSchema } from "../../../🧬️codec/🧬️schema/🔣️.json" with { type: "json" };

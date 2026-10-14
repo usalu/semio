@@ -1,12 +1,12 @@
 //! ↩️ `change-net-floor-area-m2` inverse.
 
-use crate::mutations::change_net_floor_area_m2::ChangeNetFloorAreaM2;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_net_floor_area_m2::ChangeNetFloorAreaM2;
 
-pub fn inverse(_payload: &ChangeNetFloorAreaM2, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeNetFloorAreaM2, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_net_floor_area_m2::ChangeNetFloorAreaM2> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeNetFloorAreaM2(ChangeNetFloorAreaM2 { new_net_floor_area_m2: base.net_floor_area_m2 })]
+    vec![Op::from(ChangeNetFloorAreaM2 { new_net_floor_area_m2: base.net_floor_area_m2 })]
 
     })())
 }

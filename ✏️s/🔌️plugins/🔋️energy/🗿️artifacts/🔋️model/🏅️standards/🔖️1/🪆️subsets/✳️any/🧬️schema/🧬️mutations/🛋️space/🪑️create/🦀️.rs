@@ -1,8 +1,7 @@
 //! 🪑️ Energy model mutation — `CreateSpace`: Adds one space inside an existing zone. The owning zone must already exist, so the document never carries a space whose zone the reports cannot resolve.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -20,19 +19,22 @@ pub struct CreateSpace {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_space(id: crate::model::EntityId, name: String, zone_id: crate::model::EntityId, floor_area_m2: f64, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSpace(CreateSpace { id, name, zone_id, floor_area_m2, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_space<Op: From<CreateSpace>>(id: crate::model::EntityId, name: String, zone_id: crate::model::EntityId, floor_area_m2: f64, index: Option<u32>) -> Op {
+    CreateSpace { id, name, zone_id, floor_area_m2, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSpace {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSpace
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSpace> + From<crate::DeleteSpace>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreatedSpace" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

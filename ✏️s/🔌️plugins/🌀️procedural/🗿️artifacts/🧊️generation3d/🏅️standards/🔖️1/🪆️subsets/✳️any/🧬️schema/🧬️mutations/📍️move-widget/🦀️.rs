@@ -2,7 +2,6 @@
 //! (`📓️taxonomy.md`'s `move` row: "Absolute spatial reposition", addr + position).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 //#region 🔖️MoveWidget
@@ -14,14 +13,17 @@ pub struct MoveWidget {
     pub layout: WidgetLayout,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for MoveWidget {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for MoveWidget
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<MoveWidget> + From<crate::delete_widget_position::DeleteWidgetPosition>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::move_widget::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::move_widget::inverse::inverse(self, base)?
     

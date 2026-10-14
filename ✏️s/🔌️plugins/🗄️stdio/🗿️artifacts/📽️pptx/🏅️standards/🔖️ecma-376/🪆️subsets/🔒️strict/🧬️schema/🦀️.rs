@@ -8,10 +8,10 @@
 //! Ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES: real ISO/IEC 29500-1 Strict
 //! conformance-class subset, same shared pattern as `📜️docx`/`📕️xlsx` ecma-376 🔒️strict.
 
-pub use crate::standards::v_ecma_376::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
 
 /// 🏛️ Authors the Strict presentation, master, layout, theme and their complete OPC relationships.
-pub fn blank_strict_pptx_snapshot() -> crate::PptxSnapshot {
+pub fn blank_strict_pptx_snapshot() -> semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot {
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr,XmlNode};
     let mut snapshot = construction::minimal::build_minimal_pptx(Default::default());
     for part in &mut snapshot.xml_parts {

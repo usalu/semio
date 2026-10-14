@@ -3,8 +3,8 @@
 //! A [`Region`] has a counter-clockwise outer ring and clockwise holes. Every operation is driven in work grants of [`GRANT`] steps and calls `control` between grants with the current [`BooleanProgress`]; returning `false` cancels the job and yields [`BooleanError::Cancelled`] without a partial result.
 //! Offsets are exact for straight edges: a band is built on the grown/shrunk side of every edge, corner wedges (miter, bevel or round) fill the gaps at corners that turn away from that side, and the union (grow) or difference (shrink) with the region removes all self-overlap.
 
-use crate::booleans::{BooleanError, BooleanFillRule, BooleanInput, BooleanJob, BooleanOperand, BooleanOperation, BooleanProgress};
-use crate::{PathSegment, Vec2};
+use semio_framework_2d_booleans::{BooleanError, BooleanFillRule, BooleanInput, BooleanJob, BooleanOperand, BooleanOperation, BooleanProgress};
+use semio_framework_2d_engine::{PathSegment, Vec2};
 
 /// 🕐️ Work steps granted to the arrangement job between two `control` calls.
 pub const GRANT: usize = 4096;

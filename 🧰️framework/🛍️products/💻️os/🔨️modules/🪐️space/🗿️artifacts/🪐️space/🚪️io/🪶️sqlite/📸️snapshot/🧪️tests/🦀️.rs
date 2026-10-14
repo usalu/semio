@@ -15,7 +15,7 @@ async fn sqlite_snapshot_framework_space_builtin_creation_and_reload_publish_io_
         return;
     };
     let source = fixture();
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "sqlite-builtin", source.clone(), None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "sqlite-builtin", source.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     if mode == "retained" { envelope.dialect = Some(dialect()); }
     let mut live = if mode == "retained" {
         let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
@@ -51,9 +51,9 @@ async fn sqlite_snapshot_framework_space_builtin_creation_and_reload_publish_io_
         let envelope = if mode == "reload" {
         let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
         envelope.retire_unadopted();
-        store::os_store::text_format::parse_document_pack::<SpaceSnapshot, SpaceMutation>(&saved.pack, &saved.spr).await.unwrap().into_envelope()
+        store::os_store::text_format::parse_document_pack::<SpaceSnapshot, SpaceMutation>(&saved.pack, &saved.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap().into_envelope()
         } else { envelope };
-        let mut live = store::ArtifactStore::new(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
+        let mut live = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
         live.install_document_store_owners_exact(store::test_support::plain_document_store_owners());
         live
     };

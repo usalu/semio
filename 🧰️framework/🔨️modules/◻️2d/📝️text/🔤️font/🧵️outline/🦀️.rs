@@ -1,6 +1,6 @@
 //! 🧵️ Borrowed immutable SFNT bytes resolve retained paged contours and composite components.
 use super::{FontFace,FontOutlineLimits,FontProgress,FontReader,FontTable,reserve_slot};
-use crate::PathSegment;
+use semio_framework_2d_engine::PathSegment;
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 #[derive(Clone,Copy,Default)]
 struct Point{x:f64,y:f64,on:bool}

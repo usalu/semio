@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_english_and_german_from_the_shared_view_state() {

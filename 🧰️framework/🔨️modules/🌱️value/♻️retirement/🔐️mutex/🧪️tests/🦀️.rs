@@ -1,5 +1,5 @@
 use super::*;
-use crate::value::observe_retirement_allocations as observe;
+use crate::allocation_testing::observe_retirement_allocations as observe;
 
 #[test]
 fn original_mutex_owned_and_poisoned_payloads_preserve_exact_heap_custody(){

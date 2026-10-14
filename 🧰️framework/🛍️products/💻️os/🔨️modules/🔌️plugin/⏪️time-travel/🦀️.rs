@@ -190,7 +190,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub(crate) session: TimeTravelSession,
     pub(crate) pending_command: Option<semio_framework_time_travel::TimeTravelCommandCustody>,
     pub(crate) discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
-    pub(crate) command_retirements: semio_framework_value::retirement::queue::RetirementQueue,
+    pub(crate) command_retirements: semio_framework_value::retirement_queue::RetirementQueue,
     pub(crate) command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     session_retired: bool,

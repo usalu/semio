@@ -46,9 +46,9 @@ export function cleanIsBuildArtifactDirName(name: string): boolean {
   return false;
 }
 
-/** 🦀️Every Cargo target dir outside the shared cache root is stray — nothing writes there since `.cargo/config.toml` moved `build.target-dir`/`build.build-dir` under the cache root. Names are exact (`🎯️targets` is a source taxonomy folder). */
+/** 🦀️ Classifies raw Cargo output names independently of emoji domain Source owners. */
 export function cleanIsCargoTargetDirName(name: string): boolean {
-  return name === "target" || name === "🎯️target" || name.startsWith("target-") || name.startsWith("🎯️target-");
+  return name === "target" || name.startsWith("target-");
 }
 
 /** 🏷️Cargo stamps every target and build dir with `CACHEDIR.TAG`; only such dirs are provably Cargo output. https://bford.info/cachedir/ */

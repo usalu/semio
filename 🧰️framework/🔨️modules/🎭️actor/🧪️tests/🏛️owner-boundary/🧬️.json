@@ -43,7 +43,7 @@
           "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
           "📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
           "📦️packages/🟦️typescript/🫀️liveness/🟦️.ts",
-          "📮️shard-client/🧬️component-codec/🧪️tests/🟦️.ts"
+          "🧬️codec/🧪️tests/🟦️.ts"
         ]
       }
     },

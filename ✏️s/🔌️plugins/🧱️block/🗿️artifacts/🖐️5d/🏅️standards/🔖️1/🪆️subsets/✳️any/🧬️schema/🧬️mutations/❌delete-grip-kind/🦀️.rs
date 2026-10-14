@@ -1,8 +1,7 @@
 //! ❌ Block5d mutation — `DeleteGripKind`: a grip-kind catalog row.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// ❌ `delete-grip-kind` payload.
@@ -18,19 +17,19 @@ pub struct DeleteGripKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_grip_kind(id: String) -> Block5dMutation {
-    Block5dMutation::DeleteGripKind(DeleteGripKind { id })
+pub fn delete_grip_kind<Op: From<crate::delete_grip_kind::DeleteGripKind>>(id: String) -> Op {
+    Op::from(DeleteGripKind { id })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for DeleteGripKind {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for DeleteGripKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::create_grip_kind::CreateGripKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "grip-kind", kind: "delete-grip-kind", record: "DeletedGripKind" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::delete_grip_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::delete_grip_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -42,3 +41,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for DeleteGripKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

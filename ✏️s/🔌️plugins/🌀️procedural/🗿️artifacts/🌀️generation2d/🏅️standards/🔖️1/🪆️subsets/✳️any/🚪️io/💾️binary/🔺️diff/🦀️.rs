@@ -3,4 +3,4 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-semio_framework_os_kernel::diff_binary!(crate::standards::v1::subsets::any::schema::diff::Generation2dDiff);
+semio_framework_os_kernel::diff_binary!(semio_s_artifact_procedural_2d_model::diff::Generation2dDiff);

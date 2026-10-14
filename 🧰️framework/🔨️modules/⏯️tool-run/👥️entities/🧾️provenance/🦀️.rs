@@ -1,6 +1,7 @@
 //! 🧾️ Publishes deduplicated original operation provenance and its entity projection atomically.
 use super::{EntityMap,ToolRunEntityEdit,ToolRunEntityEditKind,ToolRunEntityEditGrant,ToolRunEntityEditProgress};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,ordered_map::{RetainedOrderedMap,BoundedOrdProgress}},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,ordered_map::{RetainedOrderedMap,BoundedOrdProgress}},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
+use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 use std::mem::{ManuallyDrop,size_of};
 
 pub type ProvenanceMap=RetainedOrderedMap<u128,()>;

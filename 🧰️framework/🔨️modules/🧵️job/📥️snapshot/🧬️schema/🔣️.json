@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "framework/job/original-snapshot-intake/schema.json",
+  "title": "Original Snapshot Intake Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "contract",
+    "cases",
+    "producer"
+  ],
+  "properties": {
+    "schema": {
+      "const": "framework.job.original-snapshot-intake.v1"
+    },
+    "contract": {
+      "const": "typed-original-owner"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "cancelAfter",
+          "copyBytes",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cancelAfter": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sameSourceAllocation",
+              "takeAfterClose",
+              "finalRootDrops",
+              "terminalEmpty",
+              "terminalReleaseIsConcreteBody"
+            ],
+            "properties": {
+              "sameSourceAllocation": {
+                "const": true
+              },
+              "takeAfterClose": {
+                "const": false
+              },
+              "finalRootDrops": {
+                "const": 1
+              },
+              "terminalEmpty": {
+                "const": true
+              },
+              "terminalReleaseIsConcreteBody": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "producer": {
+      "const": {
+        "source": "original-typed-owner",
+        "quote": "actual-source-and-concrete-intake-body",
+        "refusal": "unchanged-source-or-admitted-concrete-intake",
+        "methods": [
+          "source_demands",
+          "preserve_source",
+          "admit"
+        ]
+      }
+    }
+  }
+}

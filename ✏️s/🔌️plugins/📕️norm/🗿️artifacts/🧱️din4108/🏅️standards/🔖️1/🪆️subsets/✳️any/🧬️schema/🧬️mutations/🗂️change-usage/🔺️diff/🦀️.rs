@@ -1,7 +1,8 @@
 //! 🔺️ `change-usage` diff.
 
-use super::ChangeUsage;
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::change_usage::ChangeUsage;
+use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeUsage, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.usage == payload.new_usage {

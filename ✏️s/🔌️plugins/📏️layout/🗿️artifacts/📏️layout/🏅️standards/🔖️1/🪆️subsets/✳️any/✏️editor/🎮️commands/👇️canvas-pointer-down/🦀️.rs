@@ -1,14 +1,14 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-down`.
 
-use crate::editor::layout::canvas::active_page;
-use crate::editor::layout::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
+use crate::canvas::active_page;
+use crate::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::layout::engine::scene::hit_test_page_frames;
-use crate::mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_engine::scene::hit_test_page_frames;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 #[cfg(test)]
-use crate::LayoutCamera;
-use crate::LayoutSnapshot;
+#[cfg(test)] use semio_s_artifact_layout_layout_model::LayoutCamera;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -84,8 +84,8 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot
         // ⚖️ `Invertive` merge is the toggle-on-shift-click `extend` used to hand-roll (add if absent,
         // remove if present); `Replace` is a plain click. Both now resolve against the CURRENT
         // framework-owned selection inside `dispatch_interaction_action`, not a locally-read snapshot.
-        Some(id) => crate::editor::layout::layout_select_effect(std::slice::from_ref(&id), if payload.extend { "invertive" } else { "replace" }),
-        None => crate::editor::layout::layout_clear_selection_effect(),
+        Some(id) => crate::layout_select_effect(std::slice::from_ref(&id), if payload.extend { "invertive" } else { "replace" }),
+        None => crate::layout_clear_selection_effect(),
     };
     Ok(Emit::effect(effect))
 }

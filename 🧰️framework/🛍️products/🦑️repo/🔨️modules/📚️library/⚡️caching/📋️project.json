@@ -462,6 +462,52 @@
         }
       }
     },
+    "test-rustup-protocol": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test rustup-protocol",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {}
+      }
+    },
+    "test-rustup-generation": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test rustup-generation",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {}
+      }
+    },
     "test-toolkit-use": {
       "executor": "repo:script",
       "cache": false,
@@ -697,6 +743,29 @@
     "test-repository-exact-cargo": {
       "executor": "repo:script",
       "cache": false,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🧪️execution/🔣️.json"
+      ],
       "outputs": [],
       "dependsOn": [],
       "metadata": {
@@ -847,6 +916,105 @@
             "kind": "source"
           }
         }
+      }
+    },
+    "test-runtime-verification-storage": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test runtime-verification-storage",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-runtime-verification-storage-runtime": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test runtime-verification-storage-runtime",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-cargo-launcher": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test cargo-launcher",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-cargo-ingress": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test cargo-ingress",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-rustup-toolchain": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test rustup-toolchain",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {}
       }
     }
   },

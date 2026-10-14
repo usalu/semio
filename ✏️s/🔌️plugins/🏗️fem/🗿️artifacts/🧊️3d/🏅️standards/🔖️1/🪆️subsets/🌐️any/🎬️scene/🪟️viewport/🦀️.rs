@@ -1,0 +1,14 @@
+//! 🪟️ Initial navigation pose shared by FEM 3D editor and viewer windows.
+
+/// 📐️ Initial FEM model orientation — frames the bundled 12 m × 6 m × 6.5 m demo hall from its
+/// front-right corner; each open window retains its own later pose.
+pub const INITIAL: semio_framework_os_kernel::Viewport3dOrbit = semio_framework_os_kernel::Viewport3dOrbit { position: [24.0, -20.0, 14.0], target: [6.0, 3.0, 3.0], zoom: 1.0, up: None };
+
+/// 🎬️ Encodes the exact retained pose at the current world-scene wire boundary.
+pub fn scene_camera_json(camera: &semio_framework_os_kernel::Viewport3dOrbit) -> String {
+    semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(camera))
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

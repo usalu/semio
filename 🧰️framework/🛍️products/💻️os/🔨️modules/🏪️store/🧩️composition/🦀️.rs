@@ -2,7 +2,6 @@
 //! and member factories.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::os_spr::command::ArtifactMessageSource;

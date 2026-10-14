@@ -6,7 +6,8 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): an artifact is schema + io, never an engine.
 //! Relocated verbatim from the deleted `🗿️artifacts/💠️lowpoly/…/⚙️engine/🦀️.rs`.
 
-use crate::{LowpolyObject, LowpolyPaintLayer, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySelection, snapshot::LowpolySnapshot, snapshot::LOWPOLY_PAINT_TEXTURE_SIZE};
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use semio_framework_plugin::MeshData;
 use std::collections::HashMap;
@@ -81,7 +82,7 @@ pub struct LowpolyDocument {
     /// (`LowpolyScratch::mesh_workspace_map()`), updated in place by `sync_meshes_to_snapshot`/
     /// `add_primitive`, and read back out via `mesh_workspace()` so the caller can merge it back into
     /// its own session cache after a successful edit.
-    mesh_workspace: HashMap<String, crate::LowpolyMeshState>,
+    mesh_workspace: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
 }
 
 fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
@@ -89,12 +90,12 @@ fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
 }
 
 impl LowpolyDocument {
-    pub fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, crate::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
+    pub fn new(snapshot: LowpolySnapshot, mesh_workspace: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
         let active_object_id = snapshot.objects.first().map(|object| object.id.clone()).unwrap_or_default();
         Self::with_context(snapshot, active_object_id, LowpolySelection::default(), mesh_workspace)
     }
 
-    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, crate::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
+    pub fn with_context(snapshot: LowpolySnapshot, active_object_id: String, selection: LowpolySelection, mesh_workspace: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>) -> Result<Self, LowpolyCoreError> {
         let next_object_serial = snapshot.objects.iter().filter_map(|object| object.id.strip_prefix("obj-")?.parse::<u32>().ok()).max().unwrap_or(100);
         let mut doc = Self { snapshot, active_object_id, selection, meshes: Vec::new(), dirty: Vec::new(), next_object_serial, mesh_workspace };
         doc.reload_meshes()?;
@@ -103,7 +104,7 @@ impl LowpolyDocument {
     }
     /// `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
     /// cache (`LowpolyScratch::set_mesh_workspace_map`) after a successful edit.
-    pub fn mesh_workspace(&self) -> &HashMap<String, crate::LowpolyMeshState> {
+    pub fn mesh_workspace(&self) -> &HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState> {
         &self.mesh_workspace
     }
 
@@ -130,19 +131,19 @@ impl LowpolyDocument {
             }
             for layer in &mut object.paint_layers {
                 if layer.pixels.len() != LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4 {
-                    layer.pixels = crate::empty_paint_pixels();
+                    layer.pixels = semio_s_artifact_lowpoly_lowpoly_model::snapshot::empty_paint_pixels();
                 }
             }
         }
     }
 
     pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
-        crate::schema::layer_pixels_at(&self.snapshot, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
+        semio_s_artifact_lowpoly_lowpoly_model::layer_pixels_at(&self.snapshot, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
     pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, LowpolyCoreError> {
         self.ensure_paint_layer(object_id, layer_index)?;
-        crate::schema::object_mut(&mut self.snapshot, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
+        semio_s_artifact_lowpoly_lowpoly_model::object_mut(&mut self.snapshot, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
     /// 🕸️ Load actual topology from the persisted managed owner; source text remains independent.
@@ -165,8 +166,8 @@ impl LowpolyDocument {
             if !*dirty {
                 continue;
             }
-            let state=crate::LowpolyMeshState::from_mesh(mesh.clone());
-            object.mesh=Some(crate::managed_mesh_child_handle(&object.id,&state));
+            let state=semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState::from_mesh(mesh.clone());
+            object.mesh=Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&object.id,&state));
             object.mesh_state=Some(state.clone());
             self.mesh_workspace.insert(object.id.clone(),state);
             *dirty = false;
@@ -303,8 +304,8 @@ impl LowpolyDocument {
         prepare_paint_mesh(&mut mesh);
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
-        let mesh_workspace=crate::LowpolyMeshState::from_mesh(mesh.clone());
-        let mesh_handle=crate::managed_mesh_child_handle(&id,&mesh_workspace);
+        let mesh_workspace=semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState::from_mesh(mesh.clone());
+        let mesh_handle=semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&id,&mesh_workspace);
         self.snapshot.objects.push(LowpolyObject { mesh_state:Some(mesh_workspace.clone()), id: id.clone(), name: kind.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh_handle), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content:String::new() });
         self.mesh_workspace.insert(id.clone(), mesh_workspace);
         self.meshes.push(mesh);
@@ -447,26 +448,26 @@ impl LowpolyDocument {
 
     pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
-        Ok(crate::schema::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
+        Ok(semio_s_artifact_lowpoly_lowpoly_model::composite_layer_pixels(&self.snapshot.objects[idx].paint_layers))
     }
 
     /// 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
     #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for stamp_brush's own justified 8 args plus object_id/layer_index; a params struct would only move the same fields around for this single call site")]
     pub fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        crate::schema::stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
+        semio_s_artifact_lowpoly_lowpoly_model::stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
         Ok(())
     }
 
     pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
-        crate::schema::flood_fill(layer_pixels, u, v, color);
+        semio_s_artifact_lowpoly_lowpoly_model::flood_fill(layer_pixels, u, v, color);
         Ok(())
     }
 
     pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], LowpolyCoreError> {
         let composite = self.composite_layers(object_id)?;
-        Ok(crate::schema::sample_pixel_from(&composite, u, v))
+        Ok(semio_s_artifact_lowpoly_lowpoly_model::sample_pixel_from(&composite, u, v))
     }
 }
 //#endregion 🔖️ComputeSession
@@ -480,9 +481,9 @@ impl LowpolyDocument {
 /// `snapshot` by reference now that `LowpolySnapshot` no longer round-trips through `serde_json::Value`
 /// (its `Serialize`/`Deserialize` are `cfg(test)`-only) — the caller already holds the typed snapshot,
 /// so the old JSON encode/decode pair was pure overhead, not a real boundary.
-pub fn lowpoly_mesh_from_document(snapshot: &LowpolySnapshot, mesh_workspace: &HashMap<String, crate::LowpolyMeshState>) -> Result<MeshData, String> {
+pub fn lowpoly_mesh_from_document(snapshot: &LowpolySnapshot, mesh_workspace: &HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>) -> Result<MeshData, String> {
     let loaded = LowpolyDocument::new(snapshot.clone(), mesh_workspace.clone()).map_err(|e| e.to_string())?;
-    Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| crate::schema::mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
+    Ok(loaded.active_mesh().ok().and_then(|mesh| LowpolyDocument::tessellate_transfer_json(mesh).ok()).map(|transfer| semio_s_artifact_lowpoly_lowpoly_model::mesh_data_from_transfer(&transfer, None)).unwrap_or_default())
 }
 //#endregion 🔖️MediaExport
 

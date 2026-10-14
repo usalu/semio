@@ -11,12 +11,13 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract() {
     use semio_framework::kernel::{ArtifactKind, Rights, Scope};
     use semio_framework_plugin::{Plugin, PluginApp, PluginLifecycleStep};
+    use semio_framework_plugin::PluginBuilder;
     let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
     let definition = create_flow_viewer();
     assert_eq!(definition.role, AppRole::Viewer);
     assert_eq!(fixture["role"].as_str().unwrap(), "viewer");
     let id = definition.id.clone();
-    let plugin = Plugin::<FlowViewerTestApps>::builder("flow-viewer-lifecycle")
+    let plugin = PluginBuilder::<_, FlowViewerTestApps>::new("flow-viewer-lifecycle")
         .label("Flow Viewer Lifecycle")
         .version("0.1.0")
         .package_id("semio:flow-viewer-lifecycle")

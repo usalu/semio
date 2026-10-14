@@ -14,7 +14,7 @@ use semio_framework::{Fault, FaultCode, FaultOrigin};
 
 // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
 // (`.map_err`/`.ok_or_else`) — see R9.
-pub(crate) fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
+pub fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), message)
 }
 

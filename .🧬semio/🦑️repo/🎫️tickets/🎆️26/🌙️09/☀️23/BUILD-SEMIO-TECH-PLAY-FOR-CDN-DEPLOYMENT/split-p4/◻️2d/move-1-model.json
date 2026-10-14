@@ -1,0 +1,7 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs", "crate": "semio_s_artifact_puzzle_2d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs", "from_module": "", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs", "to_module": "standards::v1::subsets::any::schema",
+   "select": ["PUZZLE_2D_SCHEMA", "regionx:🔖️Document", "PUZZLE2D_DIALECT", "artifact_kind"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs", "from_module": "", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", "to_module": "standards::v1::subsets::any::schema::mutations",
+   "select": ["apply_puzzle2d_mutation"]}
+ ]}

@@ -2,10 +2,10 @@
 //! in `🎮️commands/🖌️brush::{set_brush_size,set_brush_opacity}` (eraser reuses the same brush-size/opacity
 //! config fields — one shared brush model, two utilities that read it).
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::raster_measure_action;
+use crate::config::RasterConfig;
+use crate::raster_measure_action;
 use semio_framework_plugin::WindowMeasure;
-use crate::editor::raster::terminology::RasterPlayLabels;
+use crate::terminology::RasterPlayLabels;
 
 //#region 🔖️Measure
 pub fn measure(config: &RasterConfig, labels: &RasterPlayLabels) -> WindowMeasure {

@@ -1,9 +1,9 @@
 //! Inverse for `change-bridge-span`.
-use super::ChangeBridgeSpan;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeBridgeSpan, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_bridge_span::ChangeBridgeSpan;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeBridgeSpan, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_bridge_span::ChangeBridgeSpan> {
     Ok((|| {
-    vec![En1991Mutation::ChangeBridgeSpan(ChangeBridgeSpan { new_bridge_span: base.bridge_span })]
+    vec![Op::from(ChangeBridgeSpan { new_bridge_span: base.bridge_span })]
 
     })())
 }

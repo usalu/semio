@@ -15,6 +15,8 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 import { advanceScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const PACKAGE = "semio-framework-tool-run";
+const ENTITIES = "semio-framework-tool-run-entities";
+const PRESENTATION = "semio-framework-tool-run-presentation";
 
 /** 🏛️ Checks complete ToolRun conformance and source ownership under the original invocation. */
 class SourceScript extends BundleScript {
@@ -34,7 +36,7 @@ class TestScript extends SourceScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await super.run([]);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE, ENTITIES, PRESENTATION], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -44,7 +46,7 @@ class OriginalProgressTestScript extends BundleScript {
   if(args.length>1||(args.length===1&&args[0]!=="source"))throw Error("Expected test-original-progress [source]");
   await runBudgetedTestCommand(process.execPath,["test","--test-name-pattern","schema oracle|tick codec and step ring",join(this.root,"../../🧪️tests/🧪️conformance/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",join(this.root,"../../📊️progress/📸️clone/🟦️.ts"),join(this.root,"../../📊️progress/💍️steps/➕️insert/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🧬️update/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🌱️seed/🟦️.ts"),join(this.root,"../../📊️progress/🪟️presentation/🗃️slot/🟦️.ts"),join(this.root,"../../📽️tick/🔐️source/🟦️.ts")],this.repoRoot,"tool-run:original-progress-clone:types",120000);
-  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_progress_metadata","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE,PRESENTATION],cwd:this.root,extraArgs:["--lib","original_tool_run_progress_metadata","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 /** 👥️ Verifies bounded original entity edit custody against shared independent append/retract laws. */
@@ -54,7 +56,7 @@ class OriginalEntitiesTestScript extends BundleScript {
   const file=join(this.root,"../../👥️entities/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"tool-run:entity-edit:types",120000);
-  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_tool_run_entity_edit","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+  if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[ENTITIES],cwd:this.root,extraArgs:["--lib","original_tool_run_entity_edit","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 /** 📏️ Verifies required captured receiving bounds against the neutral oracle and exact native law. */

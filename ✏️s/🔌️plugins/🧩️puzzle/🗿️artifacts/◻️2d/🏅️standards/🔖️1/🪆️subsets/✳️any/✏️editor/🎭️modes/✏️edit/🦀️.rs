@@ -7,7 +7,7 @@ use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CA
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::runtime_camera, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_SURFACE_ID};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::Board2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -36,7 +36,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ Triptych play layout: a wide interactive overview beside the detail and selection panes.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[overview::WINDOW_KIND_ID.into(), detail::WINDOW_KIND_ID.into(), selection::WINDOW_KIND_ID.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))
+    create_default_layout(&[crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into(), crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))
 }
 //#endregion 🔖️Definition
 
@@ -48,8 +48,8 @@ const PUZZLE2D_VIEWPORT_ZOOM_BOOST: f64 = 2.5;
 
 fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     match pane {
-        detail::WINDOW_KIND_ID => detail::ZOOM_SCALE,
-        selection::WINDOW_KIND_ID => selection::ZOOM_SCALE,
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => detail::ZOOM_SCALE,
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => selection::ZOOM_SCALE,
         _ => overview::ZOOM_SCALE,
     }
 }
@@ -91,7 +91,7 @@ fn puzzle2d_fixture_world_bounds(snapshot: &Value) -> (f64, f64, f64) {
 /// `puzzle2dPlayTriptychCameraForPane`.
 pub fn puzzle2d_pane_camera(snapshot: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
     let (camera_x, camera_y, camera_zoom) = runtime_camera(runtime);
-    if pane == overview::WINDOW_KIND_ID {
+    if pane == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID {
         return (camera_x, camera_y, puzzle2d_clamp_zoom(camera_zoom));
     }
     let (cx, cy, half_span) = puzzle2d_fixture_world_bounds(snapshot);
@@ -100,14 +100,14 @@ pub fn puzzle2d_pane_camera(snapshot: &Value, runtime: &Puzzle2dPlayRuntime, pan
     let base_zoom = puzzle2d_clamp_zoom((usable / world_span) * PUZZLE2D_VIEWPORT_ZOOM_BOOST);
     let zoom = puzzle2d_clamp_zoom(base_zoom * puzzle2d_pane_zoom_scale(pane));
     match pane {
-        detail::WINDOW_KIND_ID => {
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => {
             let nodes = board_snapshot_nodes(snapshot);
             let detail_node = nodes.get(nodes.len().saturating_sub(1).min(42));
             let x = detail_node.and_then(|node| node.get("x")).and_then(|value| value.as_f64()).unwrap_or(cx) + camera_x * 0.02;
             let y = detail_node.and_then(|node| node.get("y")).and_then(|value| value.as_f64()).unwrap_or(cy) + camera_y * 0.02;
             (x, y, zoom)
         }
-        selection::WINDOW_KIND_ID => (cx - half_span * 0.28 + camera_x * 0.06, cy + half_span * 0.22 + camera_y * 0.05, zoom),
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => (cx - half_span * 0.28 + camera_x * 0.06, cy + half_span * 0.22 + camera_y * 0.05, zoom),
         _ => (cx + camera_x * 0.04, cy + camera_y * 0.03, zoom),
     }
 }
@@ -177,7 +177,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
     let snapshot = &envelope.board_snapshot;
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(snapshot, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json_or_inferred(snapshot).unwrap_or_else(|| "{}".into());
+    let glyph_catalogs_json = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json_or_inferred(snapshot).unwrap_or_else(|| "{}".into());
     // 🕹️ The framework-owned `vortex` selection, resolved once per render by
     // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
     let selection_json = envelope.interaction.selection_json();
@@ -194,7 +194,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         glyph_catalogs_json,
         selection_json,
         highlighted_ids_json: envelope.interaction.referenced_json(),
-        interactive: pane == overview::WINDOW_KIND_ID,
+        interactive: pane == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID,
         // 🐁️ The framework-owned `vortex` hover, echoed into every pane: the interactive overview
         // publishes it from its own pointer raycast, the detail/selection panes and the outliner
         // tree rows read it back, so hovering anywhere highlights the same entity everywhere.
@@ -215,10 +215,10 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         // 🖍️ The Area Brush's own W/H steppers as world extent — what ONE click paints. The regions
         // themselves ride the snapshot lane (the document's `targetRegions`), not a second carrier.
         area_brush_size: Some({
-            let (width, height) = crate::editor::puzzle2d::puzzle2d_area_brush_extent_world(&envelope.runtime);
+            let (width, height) = crate::editor::puzzle2d::snapshot::puzzle2d_area_brush_extent_world(&envelope.runtime);
             json!({ "width": width, "height": height }).to_string()
         }),
-        domain_id: Some(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN.into()),
+        domain_id: Some(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN.into()),
         suggestion_menu_json,
         tool_run_trace: None,
         lanes: Vec::new(),

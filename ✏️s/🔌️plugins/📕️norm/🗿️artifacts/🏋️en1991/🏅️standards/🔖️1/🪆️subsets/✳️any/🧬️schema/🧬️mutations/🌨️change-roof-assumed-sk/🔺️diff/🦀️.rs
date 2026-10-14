@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `change-roof-assumed-sk`.
-use super::ChangeRoofAssumedSk;
-use crate::{En1991Diff, En1991Snapshot};
-use crate::diff::{En1991RoofDelta, En1991RoofPatch};
+use crate::change_roof_assumed_sk::ChangeRoofAssumedSk;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_diff::{En1991RoofDelta, En1991RoofPatch};
 pub fn diff(payload: &ChangeRoofAssumedSk, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.roofs.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);

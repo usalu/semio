@@ -41,7 +41,3 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetContentType {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

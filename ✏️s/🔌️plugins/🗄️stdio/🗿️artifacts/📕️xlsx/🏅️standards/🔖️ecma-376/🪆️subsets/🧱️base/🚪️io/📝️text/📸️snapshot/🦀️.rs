@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type XlsxSnapshotText = String;
 //#endregion 🚚️Carrier
 
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode_text;
 
 impl pack::snapshot::ArtifactDsl for XlsxSnapshot {

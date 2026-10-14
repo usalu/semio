@@ -9,6 +9,7 @@ import { runOwnedCommand } from "../🏃️process/📦️packages/🟦️typesc
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const suite=args.shift();
+    if(suite==="std-copy-selection"||suite==="clone-source-custody"){const file=resolve(this.root,suite==="std-copy-selection"?"🧬️retained-clone/🧺️std-collections/🧪️tests/🟦️.ts":"🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts");await runOwnedCommand(process.execPath,["test",file],this.root,`value:${suite}`,120000);await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,`value:${suite}:types`,120000);return;}
     if(suite==="scalar-retained"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts"),...args],this.root,"value:scalar-retained",120000);return;}
     if(suite==="uncontrolled-owners"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"♻️retirement/🔓️uncontrolled-owners/🧪️tests/🟦️.ts"),...args],this.root,"value:uncontrolled-owners",120000);return;}
     if(suite==="bulk-vec-retained"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts"),...args],this.root,"value:bulk-vec-retained",120000);return;}

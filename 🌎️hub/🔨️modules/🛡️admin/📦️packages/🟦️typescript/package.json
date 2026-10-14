@@ -9,8 +9,8 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "build": "bun repo run os-hub-admin:build",
-    "test": "bun repo run os-hub-admin:test"
+    "build": "bun --cwd \"../../../../..\" repo run os-hub-admin:build",
+    "test": "bun --cwd \"../../../../..\" repo run os-hub-admin:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*",

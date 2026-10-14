@@ -24,6 +24,7 @@ use crate::editor::architect::modes::{report as report_mode, review as review_mo
 use crate::editor::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::registers::RegisterRow;
 use crate::standards::v1::subsets::any::schema::{snapshot::{sample_plugin, ProgramSnapshot}, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
@@ -245,7 +246,7 @@ pub mod behavior {
                         communication_channels: Vec::new(),
                         success_metrics: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(item), index: None }));
                 }
                 "user" => {
                     let item = UserProfile {
@@ -275,7 +276,7 @@ pub mod behavior {
                         validated: false,
                         stakeholder_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::UserProfile(item), index: None }));
                 }
                 "activity" => {
                     let item = Activity {
@@ -305,7 +306,7 @@ pub mod behavior {
                         temporal_pattern: None,
                         supervision_level: None,
                     };
-                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Activity(item), index: None }));
                 }
                 "function" => {
                     let item = Function {
@@ -333,7 +334,7 @@ pub mod behavior {
                         hierarchy_parent_id: None,
                         conflict_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Function(item), index: None }));
                 }
                 "element" | "room" => {
                     let item = ProgramElement {
@@ -364,7 +365,7 @@ pub mod behavior {
                         adjacency_preferences: Vec::new(),
                         environmental_zone: None,
                     };
-                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::ProgramElement(item), index: None }));
                     element_ids.push(id.clone());
                 }
                 "requirement" => {
@@ -391,7 +392,7 @@ pub mod behavior {
                         trace_links: Vec::new(),
                         superseded_by: None,
                     };
-                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Requirement(item), index: None }));
                 }
                 "risk" => {
                     let item = Risk {
@@ -416,7 +417,7 @@ pub mod behavior {
                         escalation_path: Vec::new(),
                         monitoring_plan: None,
                     };
-                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Risk(item), index: None }));
                 }
                 "process" => {
                     let item = Process {
@@ -445,7 +446,7 @@ pub mod behavior {
                         handoff_points: Vec::new(),
                         quality_gates: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Process(item), index: None }));
                 }
                 "equipment" => {
                     let item = Equipment {
@@ -475,7 +476,7 @@ pub mod behavior {
                         commissioning_notes: Vec::new(),
                         spare_parts: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item, index: None }));
+                    operations.push(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Equipment(item), index: None }));
                 }
                 "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
                     let (a, b) = normalize_pair(&element_ids[0], &element_ids[1]);
@@ -512,7 +513,7 @@ pub mod behavior {
     //#endregion 📐️Template
 
     //#region 📄️ReportRecord
-    /// 📝️ Builds a report and the `CreateReportRecord` mutation that persists it as a `ReportRecord`.
+    /// 📝️ Builds a report and the `CreateRegisterRow` mutation for its report record that persists it as a `ReportRecord`.
     pub fn build_report_and_record(program: &ProgramSnapshot, kind: ReportKind) -> (crate::standards::v1::subsets::any::schema::inferences::ProgramReport, ProgramMutation) {
         let report = build_report(program, kind);
         let report_record = ReportRecord {
@@ -536,12 +537,12 @@ pub mod behavior {
             expiry_date: None,
             related_decision_ids: Vec::new(),
         };
-        (report, ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record, index: None }))
+        (report, ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::ReportRecord(report_record), index: None }))
     }
     //#endregion 📄️ReportRecord
 
     //#region 🔬️AnalysisRecord
-    /// 📝️ Runs analysis and the `CreateAnalysisRecord` mutation that persists it as an `AnalysisRecord`.
+    /// 📝️ Runs analysis and the `CreateRegisterRow` mutation for its analysis record that persists it as an `AnalysisRecord`.
     pub fn run_analysis_and_record(program: &ProgramSnapshot, kind: AnalysisKind) -> (crate::standards::v1::subsets::any::schema::inferences::AnalysisResult, ProgramMutation) {
         let result = run_analysis(program, kind);
         let analysis_record = AnalysisRecord {
@@ -565,7 +566,7 @@ pub mod behavior {
             recommendations: result.findings.clone(),
             raw_result_ref: None,
         };
-        (result, ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record, index: None }))
+        (result, ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::AnalysisRecord(analysis_record), index: None }))
     }
     //#endregion 🔬️AnalysisRecord
 

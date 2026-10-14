@@ -1,7 +1,7 @@
 
-use super::*;
-use crate::editor::block3d::terminology::block3d_labels;
-use crate::editor::block3d::unit_tests::context::{new_app, render as render_body};
+use crate::panels::inspection::*;
+use semio_s_artifact_block_3d_editor_terminology::block3d_labels;
+use crate::unit_tests::context::{new_app, render as render_body};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]

@@ -1,0 +1,20 @@
+[
+ {
+  "from": "crate::standards::v1::subsets::any::schema::mutations",
+  "to": "crate::standards::v1::subsets::any::schema::diff",
+  "items": [
+   "LowpolySelectionMotion",
+   "lowpoly_selection_motion_diff",
+   "lowpoly_selection_moves",
+   "lowpoly_selection_normal_channels",
+   "lowpoly_selection_vertex_violation"
+  ]
+ },
+ {
+  "from": "crate::standards::v1::subsets::any::schema::mutations",
+  "to": "crate::standards::v1::subsets::any::schema::mutations::set_vertex_positions::inverse",
+  "items": [
+   "lowpoly_selection_motion_inverse"
+  ]
+ }
+]

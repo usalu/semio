@@ -1,8 +1,7 @@
 //! 📛️ Energy model mutation — `RenamePlantLoop`: Sets one plant loop's identity field.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RenamePlantLoop {
     pub new_name: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_plant_loop(id: crate::model::EntityId, new_name: String) -> EnergyModelMutation {
-    EnergyModelMutation::RenamePlantLoop(RenamePlantLoop { id, new_name })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn rename_plant_loop<Op: From<RenamePlantLoop>>(id: crate::model::EntityId, new_name: String) -> Op {
+    RenamePlantLoop { id, new_name }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RenamePlantLoop {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RenamePlantLoop
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RenamePlantLoop>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "plant-loop", kind: "rename-plant-loop", record: "RenamedPlantLoop" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

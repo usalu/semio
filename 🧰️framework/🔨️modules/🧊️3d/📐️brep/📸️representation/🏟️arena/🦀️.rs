@@ -24,7 +24,7 @@ pub trait ArenaId: Copy + Eq + std::hash::Hash + std::fmt::Debug {
 macro_rules! define_id {
     ($name:ident, $tag:literal) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
         pub struct $name {
             index: u32,
             generation: u32,
@@ -65,7 +65,7 @@ semio_framework_value::artifact_retire_leaf!(VertexId, EdgeId, CoedgeId, LoopId,
 // #region 🔖️Store
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 struct Slot<T> {
     generation: u32,
     value: Option<T>,
@@ -84,7 +84,7 @@ impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
 /// `T` only — `Id` never needs to be (de)serializable itself, it only appears inside a zero-sized
 /// `PhantomData` marker.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Store<T, Id> {
     slots: semio_framework_value::list::PagedList<Slot<T>,{usize::MAX}>,
     free_head: Option<u32>,

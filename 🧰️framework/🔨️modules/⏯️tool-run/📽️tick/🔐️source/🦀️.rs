@@ -1,6 +1,7 @@
 //! 🔐️ Operation and trace children retain the same original Tick until funded handback.
 use super::{ToolRunTick,ToolRunTracePage};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::shared::sealed::{SealedShared,SharedIssuer}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ToolRunTickSource{original:SealedShared<ToolRunTick>}

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "owner": "semio-framework-io-sqlite-model",
+  "dependencies": [
+    "semio-framework-value"
+  ],
+  "sourceMaximumBytes": 262144
+}

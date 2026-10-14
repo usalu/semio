@@ -1,8 +1,7 @@
 //! 🎞️ Energy model mutation — `DeleteTimeSeriesSchedule`: Removes one measured series. Refused while any consumer still resolves its id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteTimeSeriesSchedule {
     pub id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_time_series_schedule(id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteTimeSeriesSchedule(DeleteTimeSeriesSchedule { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_time_series_schedule<Op: From<DeleteTimeSeriesSchedule>>(id: crate::schedule::ScheduleId) -> Op {
+    DeleteTimeSeriesSchedule { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteTimeSeriesSchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteTimeSeriesSchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteTimeSeriesSchedule> + From<crate::CreateTimeSeriesSchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "time-series-schedule", kind: "delete-time-series-schedule", record: "DeletedTimeSeriesSchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

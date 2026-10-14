@@ -1,12 +1,12 @@
 //! ⚓️ `change-permanents` inverse — removes the collection's new rows, then inserts the base rows in order; the rows are stored in reverse, as the store replays inverses reversed.
 
-use super::ChangePermanents;
-use crate::mutations::insert_permanent::InsertPermanent;
-use crate::mutations::remove_permanent::RemovePermanent;
-use crate::{En1990Mutation, En1990Snapshot};
+use crate::change_permanents::ChangePermanents;
+use crate::insert_permanent::InsertPermanent;
+use crate::remove_permanent::RemovePermanent;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
-pub fn inverse(mutation: &ChangePermanents, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    let removed = mutation.new_permanents.iter().map(|_| En1990Mutation::RemovePermanent(RemovePermanent { index: 0 }));
-    let inserted = base.permanents.iter().cloned().enumerate().map(|(index, item)| En1990Mutation::InsertPermanent(InsertPermanent { index: Some(index), item }));
+pub fn inverse<Op>(mutation: &ChangePermanents, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_permanent::RemovePermanent> + From<crate::insert_permanent::InsertPermanent> {
+    let removed = mutation.new_permanents.iter().map(|_| Op::from(RemovePermanent { index: 0 }));
+    let inserted = base.permanents.iter().cloned().enumerate().map(|(index, item)| Op::from(InsertPermanent { index: Some(index), item }));
     Ok(removed.chain(inserted).rev().collect())
 }

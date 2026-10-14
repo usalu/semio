@@ -2,10 +2,11 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-    use crate::standards::v1::subsets::any::schema::{sync_typed_attributes_into_records};
-    use crate::standards::v1::subsets::any::schema::snapshot::{attributes_from_records};
-    use crate::{all_conforming_blatt_examples, conforming_blatt_dataset, conforming_valve_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS, SheetAttributes, Vdi3805Snapshot};
+    use semio_s_artifact_norm_vdi3805_inferences::evaluate;
+    use semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records;
+    use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
+    use crate::{all_conforming_blatt_examples, conforming_blatt_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS};
+    use semio_s_artifact_norm_vdi3805_model::{conforming_valve_dataset, SheetAttributes, Vdi3805Snapshot};
     use std::path::PathBuf;
     use std::process::Command;
 
@@ -47,7 +48,7 @@ mod tests {
                 let id = oc["id"].as_str().unwrap_or("");
                 let pass = oc["pass"].as_bool().unwrap_or(false);
                 if id == "structure" {
-                    let rust_struct_ok = report.checks.iter().any(|c| c.id.starts_with("vdi3805.1.structure") && c.status != crate::document::CheckStatus::Fail);
+                    let rust_struct_ok = report.checks.iter().any(|c| c.id.starts_with("vdi3805.1.structure") && c.status != semio_s_plugin_norm_compliance::CheckStatus::Fail);
                     // structure Pass means no Fail with structure prefix after filtering… use complies for structure errors
                     let has_struct_fail = report.failing().any(|c| c.id.contains("structure"));
                     assert_eq!(!has_struct_fail, pass, "{name} structure oracle={pass} rust_fail={}", has_struct_fail);

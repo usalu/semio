@@ -12,10 +12,10 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use crate::app_contract::ArtifactApp;
-use crate::bounded_ownership::ArtifactFixedQueue;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
 use crate::history_view::HistoryView;
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactSnapshotCloseLease;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
 
 /// 📤️ Per-chunk byte cap of the segmented-download lane. Mirror of the ONE schema-owned chunk
 /// contract — `🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json` +
@@ -33,7 +33,7 @@ pub(crate) const ARTIFACT_OUTPUT_CHUNK_BYTES: usize = 4_096;
 /// a notice in the app that asked for it and never a shard-worker fault.
 pub(crate) const ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES: usize = 33_554_432;
 
-const ARTIFACT_OUTPUT_METADATA_BYTES: usize = 4_096;
+pub(crate) const ARTIFACT_OUTPUT_METADATA_BYTES: usize = 4_096;
 
 const ARTIFACT_SEGMENTED_HANDLE_ENCODING: &str = "semio-segmented-handle-v1";
 
@@ -167,6 +167,18 @@ impl ArtifactOutputChunks {
         self.inner.slots
     }
 
+    pub fn take_chunk_original(&self,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        cx.original_source_parent()?;
+        if receiver.is_some()||*terminal{return Ok(true)}
+        if !self.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original media chunk source is not sealed").into())}
+        let bytes=std::mem::size_of::<Vec<u8>>()+4*std::mem::size_of::<usize>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        let mut state=match self.inner.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};
+        *receiver=state.chunks.pop();*terminal=receiver.is_none();self.inner.remaining.store(state.chunks.len(),std::sync::atomic::Ordering::Release);
+        if let Some(chunk)=receiver.as_ref(){let remaining=self.inner.bytes_remaining.load(std::sync::atomic::Ordering::Acquire);self.inner.bytes_remaining.store(remaining.checked_sub(chunk.len()).expect("original queued media extent"),std::sync::atomic::Ordering::Release)}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+
     pub fn take_chunk(&self) -> Result<Option<Vec<u8>>, Fault> {
         if !self.inner.sealed.load(std::sync::atomic::Ordering::Acquire) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-unsealed"), "segmented output cannot be consumed before it is sealed"));
@@ -195,6 +207,8 @@ impl ArtifactOutputChunks {
     fn is_sealed(&self) -> bool {
         self.inner.sealed.load(std::sync::atomic::Ordering::Acquire)
     }
+
+    pub(crate) fn original_identity(&self)->usize{std::sync::Arc::as_ptr(&self.inner)as usize}
 
     pub(crate) fn same_operation(&self, other: &Self) -> bool {
         std::sync::Arc::ptr_eq(&self.inner, &other.inner)
@@ -238,6 +252,7 @@ pub struct ArtifactDownloadOutput {
     pub encoding: Option<String>,
     pub chunks: ArtifactOutputChunks,
     media_export_handle: Option<ArtifactMediaExportHandle>,
+    media_export_metadata: Option<(MediaType,String)>,
 }
 
 impl ArtifactDownloadOutput {
@@ -249,23 +264,26 @@ impl ArtifactDownloadOutput {
         if filename.len() > ARTIFACT_OUTPUT_METADATA_BYTES || mime_type.len() > ARTIFACT_OUTPUT_METADATA_BYTES || marker_bytes.is_none_or(|bytes| bytes > ARTIFACT_OUTPUT_METADATA_BYTES) || !chunks.is_sealed() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-metadata"), "segmented download metadata is oversized or its chunks are unsealed"));
         }
-        Ok(Self { filename, mime_type, encoding, chunks, media_export_handle: None })
+        Ok(Self { filename, mime_type, encoding, chunks, media_export_handle: None,media_export_metadata:None })
     }
 
-    pub(crate) fn from_media_export(handle: ArtifactMediaExportHandle, mime_type: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
-        let mut output = Self::new(String::new(), mime_type, None, chunks)?;
-        output.media_export_handle = Some(handle);
-        Ok(output)
+    pub(crate) fn receive_media_export_original(handle:&mut Option<ArtifactMediaExportHandle>,source:&mut Option<ArtifactMediaExportPoll>,receiver:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        cx.original_source_parent()?;
+        if receiver.is_some(){return if handle.is_none()&&source.is_none(){Ok(true)}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"download receiving cannot overwrite another original output").into())}}
+        let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"download receiving requires its retained terminal media result").into())};
+        if handle.is_none()||result.schema.len()>ARTIFACT_OUTPUT_METADATA_BYTES||result.mime_type.is_empty()||result.mime_type.len()>128||!result.chunks.is_sealed(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"download receiving requires complete original media metadata and sealed chunks").into())}
+        let bytes=std::mem::size_of::<Self>()+std::mem::size_of::<ArtifactMediaExportPoll>()+std::mem::size_of::<ArtifactMediaExportHandle>();let grant=cx.retained_grant();
+        if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        let Some(ArtifactMediaExportPoll::Complete(result))=source.take()else{unreachable!()};
+        *receiver=Some(Self{filename:String::new(),mime_type:result.mime_type,encoding:None,chunks:result.chunks,media_export_handle:handle.take(),media_export_metadata:Some((result.media_type,result.schema))});
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
+
+    pub(crate) fn owns_media_export_loan(&self, handle: ArtifactMediaExportHandleLoan<'_>)->bool{self.media_export_handle.as_ref().is_some_and(|original|original.original_loan()==handle)}
 
     pub(crate) fn owns_media_export(&self, handle: &ArtifactMediaExportHandle) -> bool {
         self.media_export_handle.as_ref() == Some(handle)
-    }
-
-    /// 🧪️ Test-only door to the media-export constructor the SDK keeps private.
-    #[cfg(test)]
-    fn test_from_media_export(handle: ArtifactMediaExportHandle, mime_type: impl Into<String>, chunks: ArtifactOutputChunks) -> Result<Self, Fault> {
-        Self::from_media_export(handle, mime_type, chunks)
     }
 
     #[cfg(test)]
@@ -414,13 +432,13 @@ impl<A:ArtifactApp> ArtifactMediaExportRequestRetirement<A>{
  pub(crate) fn terminal_is_empty(&self)->bool{self.snapshot.is_none()&&self.lease.is_none()&&self.outputs.is_none()&&self.outputs_close.is_none()&&self.metadata.is_none()&&self.metadata_close.is_none()}
  pub(crate) fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
   let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};if self.snapshot.is_some(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<std::sync::Arc<A::Snapshot>>(),..one})}if let Some(lease)=self.lease.as_ref(){return Ok(if lease.terminal_is_empty(){one}else{lease.retirement_demands()})}
-  if self.outputs.is_some()||self.outputs_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.outputs,&self.outputs_close,body)}if self.metadata.is_some()||self.metadata_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}Ok(one)
+  if self.outputs.is_some()||self.outputs_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.outputs,&self.outputs_close,body)}if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}Ok(one)
  }
  pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
-  let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+  let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,..Default::default()};
   if let Some(snapshot)=self.snapshot.as_ref(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained media request lost its paired original snapshot supplier"))}self.snapshot.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item}))}
   if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}return lease.close_step(grant)}
-  if self.outputs.is_some()||self.outputs_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.outputs,&mut self.outputs_close,grant)}if self.metadata.is_some()||self.metadata_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant)}Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
+  if self.outputs.is_some()||self.outputs_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.outputs,&mut self.outputs_close,grant)}if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant)}Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
  }
 }
 impl<A:ArtifactApp> Drop for ArtifactMediaExportRequestRetirement<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retained media request requires its original paid close")}}
@@ -464,8 +482,12 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportHandl
     fn controlled_retirement_supported()->bool{<String as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
+/// 📬️ A funded terminal publication owns its exact status metadata independently of the download.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct ArtifactMediaExportPublishedStatus{pub mime_type:String,pub total_bytes:u64}
+
 /// 📡️ Result of advancing one submitted media export by at most one worker slice.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,semio_framework_value::RetireOwned)]
 pub enum ArtifactMediaExportPoll {
     Running { applied_progress: u64, checkpoint_available: bool },
     Complete(ArtifactMediaExportResult),
@@ -496,3 +518,6 @@ pub(crate) use original_publication_tests::original_completion_result_receiving_
 
 #[cfg(any(test,feature="media-turn-testing"))]
 pub(crate) use original_publication_tests::original_handle_receiving_and_physical_close;
+
+#[cfg(any(test,feature="media-turn-testing"))]
+pub(crate) use original_publication_tests::original_download_receiving_chunk_and_physical_close;

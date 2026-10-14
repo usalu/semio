@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "resource",
+  "id": "resource-a"
+}

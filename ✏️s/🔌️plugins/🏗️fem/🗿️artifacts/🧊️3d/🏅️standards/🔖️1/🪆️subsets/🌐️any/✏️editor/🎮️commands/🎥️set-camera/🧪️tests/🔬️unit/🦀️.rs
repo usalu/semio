@@ -1,6 +1,14 @@
-use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, render};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_framework_os_kernel::Viewport3dOrbit;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::context::{dispatch, fem3d_app, render};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_action_writes_config_not_artifact_mutations() {

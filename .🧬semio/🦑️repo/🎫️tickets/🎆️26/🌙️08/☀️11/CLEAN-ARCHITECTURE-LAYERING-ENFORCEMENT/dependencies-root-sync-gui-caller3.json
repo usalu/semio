@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "row": {
+    "name": "📥️deps javascript",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo dependencies sync --scope .",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "3_dev",
+      "order": -46
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:sync\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "f970ec2611015a92c3216ae1d9e3fc378aa7994ec80597542c2086f192e581ce",
+  "openingSourceSha256": "b9f069249419dcb262b8ed857b01ecda2961bccb0181d2c259905cde17690d0c",
+  "reason": "Actual sync2 refused stale three-argument queue retirement receiving; concurrent defining caller is now canonical two-argument and closed selector-free",
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

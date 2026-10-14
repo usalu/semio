@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-2d-text-font"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🔤️ SFNT admission, cmap, metrics, glyph outlines and kerning over original font bytes."
+
+[package.metadata.semio]
+role = "framework"
+id = "2d-text-font"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_2d_text_font"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-2d-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+ttf-parser = "0.25.1"
+tiny-skia = "0.11.4"
+rustybuzz = "0.20.1"
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-testing = { path = "../../🧪️testing/📦️packages/🦀️rust" }

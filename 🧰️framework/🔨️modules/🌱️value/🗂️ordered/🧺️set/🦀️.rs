@@ -1,7 +1,7 @@
 //! 🧺️ Immutable ordered string membership over the codebase-owned retained map.
 
 use super::{Iter, LookupCursor, OrderedMap, Retirement, RetirementStep, UpdateCursor, RetainedCloneGrant};
-use super::super::{DslValue, FromValue, ToValue, ValueError};
+
 
 //#region 🧺️OrderedSet
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -51,28 +51,7 @@ impl FromIterator<String> for OrderedSet {
 impl<const N: usize> From<[String; N]> for OrderedSet { fn from(values: [String; N]) -> Self { values.into_iter().collect() } }
 //#endregion 🧺️OrderedSet
 
-//#region 🔁️ValueCodec
-/// 🔁️ Mirrors the hand-written `Serialize`/`Deserialize` below: a plain string array.
-#[path = "🚦️native/🦀️.rs"]
-mod native_controlled;
 
-impl ToValue for OrderedSet {
-    fn to_value_controlled(&self, control: &mut crate::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { native_controlled::encode(self, control) }
-    fn to_value(&self) -> DslValue {
-        DslValue::Array(self.iter().map(|value| DslValue::String(value.clone())).collect())
-    }
-}
-
-impl FromValue for OrderedSet {
-    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode(value, control) }
-    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::new()) }
-    fn retire_decoded(self) { self.retire_cold() }
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let DslValue::Array(items) = value else { return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected an array for OrderedSet")) };
-        items.into_iter().map(String::from_value).collect()
-    }
-}
-//#endregion 🔁️ValueCodec
 
 //#region 🔀️ArrayWire
 /// 🧊️ Gated (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/02): `ToValue`/

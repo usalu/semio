@@ -5,21 +5,21 @@ use std::ops::Deref;
 use serde::{Serialize, de::DeserializeOwned};
 use std::fmt::Debug;
 
-struct Held<M: RetainedCloneEntries>(RetainedCloneSource<M>);
+struct Held<M: RetainedClone>(RetainedCloneSource<M>);
 
-impl<M: RetainedCloneEntries> Held<M> {
+impl<M: RetainedClone> Held<M> {
     fn new(owner: M) -> Self {
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneSource::<M>::constructor_copy_bytes(), maximum_capacity_bytes: RetainedCloneSource::<M>::owned_constructor_capacity_bytes::<()>(), maximum_depth: 1, ..Default::default() };
         Self(RetainedCloneSource::admit_owned(owner, (), grant).unwrap_or_else(|_| panic!("standard collection source admission")).0)
     }
 }
 
-impl<M: RetainedCloneEntries> Deref for Held<M> {
+impl<M: RetainedClone> Deref for Held<M> {
     type Target = RetainedCloneSource<M>;
     fn deref(&self) -> &Self::Target { &self.0 }
 }
 
-impl<M: RetainedCloneEntries> Drop for Held<M> {
+impl<M: RetainedClone> Drop for Held<M> {
     fn drop(&mut self) {
         if std::thread::panicking() { return; }
         for _ in 0..100_000 {
@@ -63,7 +63,7 @@ fn clone_exactly<M: RetainedCloneEntries + Clone + PartialEq + Debug + Serialize
                     assert_eq!(cursor.advance(source.borrow(), denied).unwrap().progress(), RetainedCloneProgress::default());
                 }
                 if demand.copy_bytes > 0 {
-                    assert_eq!(cursor.advance(source.borrow(), RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }).unwrap().progress(), RetainedCloneProgress::default(), "copy demand {demand:?} must be binding");
+                    let smaller=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant};let selected=cursor.advance_demands(source.borrow(),smaller.maximum_copy_bytes).unwrap();let step=cursor.advance(source.borrow(),smaller).unwrap();assert!(step.progress().fits(smaller));assert!(step.progress().copied_bytes<=selected.copy_bytes);if selected.copy_bytes>smaller.maximum_copy_bytes{assert_eq!(step.progress(),RetainedCloneProgress::default(),"selected atomic copy demand {selected:?} must be binding");}
                 }
                 quoted += 1;
                 grant
@@ -150,4 +150,9 @@ fn standard_collection_scalar_clones_are_fully_quoted_turn_by_turn() {
     let set: BTreeSet<u32> = (0..9).collect();
     let (turns, quoted) = clone_exactly(set.clone(), &serde_json::to_value(&set).unwrap(), |value| value);
     assert_eq!(turns, quoted);
+}
+
+#[test]
+fn reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=Held::new(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(cursor.advance(source.borrow(),grant).unwrap().progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum,maximum_depth:selected.depth,..Default::default()};let step=cursor.advance(source.borrow(),grant).unwrap();assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();assert_eq!(cursor.output.as_deref().unwrap(),prefix);let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();assert_eq!(cursor.output.as_deref().unwrap(),oracle);close_all::<String>(&mut cursor);eprintln!("[DEBUG] Actual reselected UTF8 copy requested={requested} admitted={maximum} copied={} exactPrefix={prefix}",step.progress().copied_bytes);}
 }

@@ -48,6 +48,33 @@ def without_tests(text):
     return "".join(out)
 
 
+def mounted(root):
+    """📎️ A test target's root plus every file it mounts through `#[path]`, recursively."""
+    seen, stack = [], [root]
+    while stack:
+        path = os.path.normpath(stack.pop())
+        if path in seen or not os.path.exists(path):
+            continue
+        seen.append(path)
+        for m in re.finditer(r'#\[path\s*=\s*"([^"]+\.rs)"\]', open(path, encoding="utf-8").read()):
+            stack.append(os.path.join(os.path.dirname(path), m.group(1)))
+    return seen
+
+
+def lib_name(key, value, monolith_dir, rows, artifact):
+    if not isinstance(value, dict) or "package" in value:
+        return key.replace("-", "_")
+    if "path" in value:
+        manifest = os.path.join(monolith_dir, value["path"], "Cargo.toml")
+    elif value.get("workspace") and isinstance(rows.get(key), dict) and "path" in rows[key] and "package" not in rows[key]:
+        manifest = os.path.join(artifact, rows[key]["path"], "Cargo.toml")
+    else:
+        return key.replace("-", "_")
+    text = open(manifest, encoding="utf-8").read() if os.path.exists(manifest) else ""
+    m = re.search(r'(?ms)^\[lib\][^\[]*?^name\s*=\s*"([^"]+)"', text)
+    return m.group(1) if m else key.replace("-", "_")
+
+
 def row(name, value, features=None, dev=False):
     parts = ["workspace = true"]
     feats = list(value.get("features", [])) if isinstance(value, dict) else []
@@ -79,12 +106,18 @@ def main():
     aliases = config.get("aliases", {})
     externs = {}
     for key in list(deps) + list(devs):
-        externs.setdefault(key, key.replace("-", "_"))
+        externs.setdefault(key, lib_name(key, deps.get(key, devs.get(key)), monolith_dir, rows, artifact))
     family = {name: name.replace("-", "_") for name in plan}
     package_dir = {name: (monolith_dir if name == config["crate"].replace("_", "-") else os.path.join(artifact, plan[name]["owner"], "📦️packages/🦀️rust")) for name in plan}
     new_rows = []
     for key in list(deps) + list(devs):
         value = deps.get(key, devs.get(key))
+        if key not in rows and (isinstance(value, str) or (isinstance(value, dict) and "version" in value and "path" not in value and not value.get("workspace"))):
+            entry = {"version": value if isinstance(value, str) else value["version"]}
+            if isinstance(value, dict) and value.get("default-features") is False:
+                entry["default-features"] = False
+            rows[key] = entry
+            new_rows.append((key, entry))
         if isinstance(value, dict) and "path" in value and key not in rows:
             absolute = os.path.normpath(os.path.join(monolith_dir, value["path"]))
             entry = {"path": os.path.relpath(absolute, artifact)}
@@ -107,7 +140,7 @@ def main():
         lib_text = "\n".join(without_tests(fc.strip(open(os.path.join(artifact, f), encoding="utf-8").read())) for f in info["lib"])
         lib_full = "\n".join(fc.strip(open(os.path.join(artifact, f), encoding="utf-8").read()) for f in info["lib"])
         test_text = "\n".join(fc.strip(open(os.path.join(artifact, f), encoding="utf-8").read()) for f in info["test"])
-        test_text += "\n" + "\n".join(fc.strip(open(os.path.join(artifact, f), encoding="utf-8").read()) for t in tests.get(name, []) for f in [t["file"]])
+        test_text += "\n" + "\n".join(fc.strip(open(f, encoding="utf-8").read()) for t in tests.get(name, []) for f in mounted(os.path.join(artifact, t["file"])))
         test_text += "\n" + lib_full
         own = family[name]
         normal, dev = [], []

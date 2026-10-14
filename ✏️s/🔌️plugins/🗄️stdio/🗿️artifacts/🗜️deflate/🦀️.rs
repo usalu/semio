@@ -1,4 +1,5 @@
 //! 🎪 `stdio.deflate` artifact — stdio reference format.
+use semio_framework_plugin::PluginBuilder;
 
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
@@ -57,7 +58,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
 /// replaces the old side-effecting `crate::engine::register()`, which the
-/// plugin root called unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
+/// plugin root called unconditionally before `PluginBuilder::new(...)` was even constructed. Mirrors
 /// `🔋️energy`'s `s.model` exemplar exactly: a headless library artifact with zero `ArtifactApp`s,
 /// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
 /// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<DeflateSnapshot,

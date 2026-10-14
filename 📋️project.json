@@ -2578,21 +2578,29 @@
           "STORYBOOK_PORT": "6010"
         }
       },
-      "cache": true,
-      "outputs": [
-        "{workspaceRoot}/dist/{options.env.SEMIO_BUILD_MODE}/storybook"
-      ],
+      "cache": false,
+      "outputs": [],
       "inputs": [
         "production",
         "^production",
         "{workspaceRoot}/.storybook/**/*",
         {
           "env": "STORYBOOK_SCOPE"
-        },
-        {
-          "env": "STORYBOOK_OUTPUT_DIR"
         }
-      ]
+      ],
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     },
     "cpp": {
       "executor": "repo:script",

@@ -1,8 +1,8 @@
 //! Mutation unit smoke — vocabulary kinds.
 
-use crate::standards::v1::subsets::any::schema::mutations::{KINDS,Din4108Mutation};
+use crate::{KINDS, Din4108Mutation};
 
-use crate::Din4108Snapshot;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn kinds_are_unique() {

@@ -1,8 +1,7 @@
 //! 🔷️ Energy model mutation — `ChangeGlazingMaterialThickness`: Sets pane thickness (m) on one glazing material, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeGlazingMaterialThickness {
     pub new_thickness_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_glazing_material_thickness(id: crate::model::EntityId, new_thickness_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeGlazingMaterialThickness(ChangeGlazingMaterialThickness { id, new_thickness_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_glazing_material_thickness<Op: From<ChangeGlazingMaterialThickness>>(id: crate::model::EntityId, new_thickness_m: f64) -> Op {
+    ChangeGlazingMaterialThickness { id, new_thickness_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeGlazingMaterialThickness {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeGlazingMaterialThickness
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialThickness>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "glazing-material", kind: "change-glazing-material-thickness", record: "ChangedGlazingMaterialThickness" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

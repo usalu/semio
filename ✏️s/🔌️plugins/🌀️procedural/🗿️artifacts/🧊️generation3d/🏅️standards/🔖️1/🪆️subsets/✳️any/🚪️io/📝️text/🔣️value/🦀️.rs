@@ -603,7 +603,7 @@ pub enum Generation3dMutation {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::create_widget::CreateWidget;
+use semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -614,7 +614,7 @@ pub struct CreateWidget {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget;
+use semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -624,7 +624,7 @@ pub struct UpdateWidget {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::delete_widget::DeleteWidget;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget::DeleteWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -634,7 +634,7 @@ pub struct DeleteWidget {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::connect_synapse::ConnectSynapse;
+use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -645,7 +645,7 @@ pub struct ConnectSynapse {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::update_synapse::UpdateSynapse;
+use semio_s_artifact_procedural_3d_mut_synapses::update_synapse::UpdateSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -655,7 +655,7 @@ pub struct UpdateSynapse {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::disconnect_synapse::DisconnectSynapse;
+use semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse::DisconnectSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -665,7 +665,7 @@ pub struct DisconnectSynapse {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::move_widget::MoveWidget;
+use semio_s_artifact_procedural_3d_mut_widgets::move_widget::MoveWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -676,7 +676,7 @@ pub struct MoveWidget {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::delete_widget_position::DeleteWidgetPosition;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget_position::DeleteWidgetPosition;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -686,7 +686,7 @@ pub struct DeleteWidgetPosition {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::update_camera::UpdateCamera;
+use semio_s_artifact_procedural_3d_mut_document::update_camera::UpdateCamera;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -696,7 +696,7 @@ pub struct UpdateCamera {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::change_schema::ChangeSchema;
+use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -706,7 +706,7 @@ pub struct ChangeSchema {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::create_generation::CreateGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::create_generation::CreateGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -717,7 +717,7 @@ pub struct CreateGeneration {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::delete_generation::DeleteGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::delete_generation::DeleteGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -727,7 +727,7 @@ pub struct DeleteGeneration {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::rename_generation::RenameGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -738,7 +738,7 @@ pub struct RenameGeneration {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::change_generation_value::ChangeGenerationValue;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -750,7 +750,7 @@ pub struct ChangeGenerationValue {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::change_slider_value::ChangeSliderValue;
+use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::ChangeSliderValue;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -761,7 +761,7 @@ pub struct ChangeSliderValue {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -774,7 +774,7 @@ pub struct DragTransforms {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::rotate_transforms::RotateTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::rotate_transforms::RotateTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -788,7 +788,7 @@ pub struct RotateTransforms {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::scale_transforms::ScaleTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::scale_transforms::ScaleTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -801,7 +801,7 @@ pub struct ScaleTransforms {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::move_nodes::MoveNodes;
+use semio_s_artifact_procedural_3d_mut_widgets::move_nodes::MoveNodes;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -813,9 +813,9 @@ pub struct MoveNodes {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::ChangeWidgetInput;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputPlane;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::ChangeWidgetInput;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -855,7 +855,7 @@ pub struct ChangeWidgetInput {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::select_generation::SelectGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -865,7 +865,7 @@ pub struct SelectGeneration {
 }
 }
 
-use semio_s_artifact_procedural_3d_mutations::change_generation_preview::ChangeGenerationPreview;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_preview::ChangeGenerationPreview;
 
 value_codec! {
 #[derive(ToValue, FromValue)]

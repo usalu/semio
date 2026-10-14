@@ -7,10 +7,12 @@
 
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_step::{
-    schema::snapshot::{StepEntity, StepFileName, StepFileSchema, StepHeader, StepValue},
-    StepSnapshot,
-};
+use semio_s_artifact_stdio_step::schema::snapshot::StepEntity;
+use semio_s_artifact_stdio_step::schema::snapshot::StepFileName;
+use semio_s_artifact_stdio_step::schema::snapshot::StepFileSchema;
+use semio_s_artifact_stdio_step::schema::snapshot::StepHeader;
+use semio_s_artifact_stdio_step::schema::snapshot::StepValue;
+use semio_s_artifact_stdio_step::StepSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId::ANY };
@@ -79,7 +81,7 @@ impl ArtifactSerializer for SemioCadToStep {
             }
         }
         let header = StepHeader { file_description: Default::default(), file_name: StepFileName { name: "semio-cad-export".into(), ..Default::default() }, file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } };
-        Ok(StepSnapshot { schema: semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities })
+        Ok(StepSnapshot { schema: semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities })
     }
 }
 //#endregion 🔖️Serializer

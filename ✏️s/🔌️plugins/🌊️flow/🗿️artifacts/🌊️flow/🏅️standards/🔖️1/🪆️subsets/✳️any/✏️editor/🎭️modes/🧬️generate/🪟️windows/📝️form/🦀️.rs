@@ -1,5 +1,6 @@
 //! 📝️ Generate-mode window — the input form for the active generation.
 
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};
@@ -134,7 +135,7 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
 }
 
 pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient: &FlowWindowTransient, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
-    let spec = crate::editor::flow::with_live_host_snapshot(snapshot, flow_host_snapshot_to_form_spec);
+    let spec = crate::editor::flow::with_live_host_snapshot(snapshot, |source| flow_host_snapshot_to_form_spec(source, &PlaybookFlowFormProducer));
     let mut generation_owner = transient.generation().map_err(|error| PluginAssemblyError::new("ui.generate-form", error.into_message()))?;
     let generation = generation_owner.as_mut();
     let Some(active) = selected_generation(&generation) else {

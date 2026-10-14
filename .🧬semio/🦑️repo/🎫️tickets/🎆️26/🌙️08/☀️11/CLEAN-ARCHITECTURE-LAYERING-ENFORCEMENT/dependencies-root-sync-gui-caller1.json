@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "row": {
+    "name": "📥️deps javascript",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo dependencies sync --scope .",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "3_dev",
+      "order": -46
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:sync\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "9687ae186a81c8dc90dd4d3735a2acb67f76379a8e600a962a6b55c60de3deca",
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1",
+  "arguments": [
+    "dependencies",
+    "sync",
+    "--scope",
+    "."
+  ],
+  "initialAuthorityInputs": {
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:sync\",\"maximumElapsedMilliseconds\":600000}",
+    "SEMIO_SCRIPT_CAPABILITIES": null,
+    "SEMIO_BUILD_MODE": null,
+    "CARGO_NET_OFFLINE": null
+  }
+}

@@ -27,7 +27,7 @@ use crate::artifact_registration::PluginRuntimeRegistry;
 use crate::artifact_registration::WireArtifactMutationPlanRequest;
 use crate::artifact_registration::WireArtifactMutationPlanResult;
 use crate::reserved_jobs::join_framework_shared_action_dispositions;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::surface_contract::ArtifactCodecTableV1;
 
 

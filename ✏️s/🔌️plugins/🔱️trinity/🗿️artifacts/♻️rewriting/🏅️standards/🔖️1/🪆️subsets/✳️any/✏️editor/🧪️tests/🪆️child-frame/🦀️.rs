@@ -27,10 +27,10 @@ async fn full_frame_app()->RichFrameApp{
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()};
  parent.working_graph.content=store::os_store::artifact_child::ArtifactChild::new(logical.clone(),ArtifactRef{artifact_id:target.clone(),dialect:dialect.clone()});
  app.test_parent_store_mut().dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_working_graph(parent.working_graph)],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("declare actual owner identity");
- let mut envelope=store::os_store::document_materialize::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None);
+ let mut envelope=store::os_store::document_materialize::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
  envelope.dialect=Some(dialect.clone());
- let mut child=store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
- store::install_funded_member_store_owners(&mut child).expect("funded member catalog");
+ let mut child=store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
+ store::install_funded_member_store_owners(&mut child,&::semio_s_artifact_stdio_contract::SemioMemberStoreProducer::<SemioGraphSnapshot,SemioGraphMutation>::new()).expect("funded member catalog");
  app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child))).await.expect("publish complete member");
  app
 }

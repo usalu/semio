@@ -1,5 +1,5 @@
-use super::super::*;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use crate::broken::*;
+use semio_s_artifact_norm_iso16757_inferences::evaluate;
 use pack::snapshot::ArtifactDsl;
 
 #[test]
@@ -11,7 +11,7 @@ fn example_id_is_stable() {
 
 #[test]
 fn broken_dsl_decodes_and_fails() {
-    let document = <crate::Iso16757Snapshot as ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("decode broken DSL");
+    let document = <semio_s_artifact_norm_iso16757_model::Iso16757Snapshot as ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("decode broken DSL");
     let report = evaluate(&document);
     assert!(!report.complies(), "broken must not comply");
     assert!(report.failing().count() >= 2, "broken must yield ≥2 fails");

@@ -6,7 +6,8 @@
 //! default camera is used instead), no selection: a viewer emits no mutations by construction
 //! (`ViewEmit`), so this render duplicates the small, pure structural layer instead of sharing it.
 
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;

@@ -20,5 +20,5 @@ fn a_value_patch_yields_one_absolute_leaf_per_moving_slider() {
 /// 🐢️ A value patch repaints only what one slider value invalidates, whether it is a scrub tick or a one-shot.
 #[test]
 fn a_value_patch_declares_the_narrow_scope() {
-    assert_ne!(crate::editor::generation3d::commands::node_graph_edit::slider_gesture_ui_scope(), semio_framework::kernel::UiDirtyScope::Full, "a slider value must not repaint the whole shell");
+    assert_ne!(semio_s_artifact_procedural_3d_node_graph_edit::slider_gesture_ui_scope(), semio_framework::kernel::UiDirtyScope::Full, "a slider value must not repaint the whole shell");
 }

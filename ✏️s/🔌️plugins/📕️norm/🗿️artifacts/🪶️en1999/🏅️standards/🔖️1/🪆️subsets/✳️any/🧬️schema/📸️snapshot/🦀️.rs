@@ -1,6 +1,14 @@
 //! ✨️ EN 1999 snapshot — aluminium structure subject (SI: m, N, Pa, °C).
 
-use crate::document::AnnexChoice;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️SubjectEntities
@@ -310,8 +318,6 @@ pub struct En1999Snapshot {
 }
 
 //#endregion 🔖️Snapshot
-
-
 
 fn is_zero_f64(v: &f64) -> bool { *v == 0.0 }
 fn is_non_tube_od(v: &f64) -> bool { *v == 0.0 }
@@ -704,17 +710,20 @@ impl En1999Snapshot {
     }
 }
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1999", "EN 1999", EN1999_DOCUMENT_SCHEMA)
+}
 
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1999_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1999", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
-
-
-
-
-
-
-
-//#endregion 🌉️ExternalCodecBridge
-
+pub const EN1999_DOCUMENT_SCHEMA: &str = "semio.norm.en1999/v1";

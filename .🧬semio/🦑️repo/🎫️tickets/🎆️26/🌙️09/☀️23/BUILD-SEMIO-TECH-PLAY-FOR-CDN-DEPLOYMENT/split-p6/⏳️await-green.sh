@@ -6,7 +6,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"; LOG="/Users/ueli/Documents/semio/.🧬sem
 END=$(( $(date +%s) + LIMIT ))
 while :; do
   "$HERE/🦀️cargo.sh" "$TAG" "$@"
-  UP=$(grep -E '^error: could not compile' "$LOG" | grep -v "\`$PREFIX" | head -3)
+  UP=$(grep -aE '^error: could not compile' "$LOG" | grep -v "$PREFIX" | head -3)
   if [ -z "$UP" ]; then echo "upstream green"; exit 0; fi
   echo "upstream red: $UP"
   [ "$(date +%s)" -ge "$END" ] && exit 3

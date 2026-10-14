@@ -1,4 +1,5 @@
 //! 🌦️ Complete lexical EPW receiving retains every original table, index and partial native field.
+use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use super::{EpwSnapshot,EpwLocation,EpwDataPeriods,EpwDataPeriod,EpwRecord};
 use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -45,7 +46,7 @@ fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&EpwSnapshot>,po
  for(index,position)in frame.ordered[1].iter().copied().enumerate(){let row=&records[position];if let Some(source)=source{for(column,value)in source.records[index].fields().into_iter().enumerate(){equal(value,text(row,column+3)?,port)?}}else{port.work(2,size_of::<EpwRecord>())?;frame.snapshot.records.push(EpwRecord::default());for column in 0..35{let value=frame.snapshot.records.last_mut().unwrap().field_at_mut(column).unwrap();copy(text(row,column+3)?,value,port,3)?}}port.control.checkpoint(port.phase(),index+1,records.len())?}Ok(())
 }
 
-impl semio_framework_os_kernel::io::control::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
+impl semio_framework_os_kernel::sqlite_snapshot::receiving::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
 pub(super)fn project_receiving(source:&EpwSnapshot,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|project(source,frame,port),|frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})))}
 pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<EpwSnapshot>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,None,port),|frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
 pub(super)fn validate_decoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}

@@ -12,14 +12,14 @@
 //! `Snapshot -> Value` manifest-projection pure fn living in `🧬️schema/💡️inferences/`), so the math
 //! belongs here beside its one real consumer instead of behind an engine facade.
 
-use semio_s_artifact_puzzle_3d::{flatten_objects, Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
+use {semio_s_artifact_puzzle_3d_inferences::flatten::flatten_objects, semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_VERTICAL_V_EXTRA};
 use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by
 // puzzle3d's own low-level geometry, re-exported here so `flat_position::FlattenPose`/`FlattenPlane`
 // keep resolving for any caller reaching through this slug's own name.
-pub use semio_s_artifact_puzzle_3d::{FlattenPlane, FlattenPose};
+pub use {semio_s_artifact_puzzle_3d_inferences::flatten::FlattenPlane, semio_s_artifact_puzzle_3d_inferences::flatten::FlattenPose};
 
 //#region 🔖️SnapshotToObjectGraph
 fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
@@ -39,8 +39,8 @@ fn part_to_object(part: &Puzzle5dPart) -> Puzzle3dObject {
         origin: part.part_3d.origin,
         orientation: part.part_3d.orientation,
         scale: part.part_3d.scale.as_ref().map(|scale| match scale {
-            Puzzle5dScale::Uniform(value) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Uniform(*value),
-            Puzzle5dScale::Vec3(value) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Vec3(*value),
+            Puzzle5dScale::Uniform(value) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(*value),
+            Puzzle5dScale::Vec3(value) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3(*value),
         }),
         mesh_url: part.part_3d.mesh_url.clone(),
         vortices: part.grips.iter().map(grip_to_vortex).collect(),

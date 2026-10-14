@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-solid`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,16 +19,16 @@ pub struct AddSolid {
     pub base_z: Option<f64>,
     pub layers: Option<u32>,
     pub mesh_size: Option<f64>,
-    pub axis: Option<crate::FemAxis>,
+    pub axis: Option<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis>,
 }
 
 /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`/`axis`
 /// defaulted to `0.0`/`1`/`0.5`/`Z` when unspecified — mirrors the pre-migration `handle_action` defaults.
 pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
+    let id = semio_s_fem_app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
-    let solid = crate::FemSolid {
+    let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid {
         id,
         name: "Solid".into(),
         outline,
@@ -40,5 +40,5 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         material_id: payload.material_id.clone(),
         axis: payload.axis.unwrap_or_default(),
     };
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
 }

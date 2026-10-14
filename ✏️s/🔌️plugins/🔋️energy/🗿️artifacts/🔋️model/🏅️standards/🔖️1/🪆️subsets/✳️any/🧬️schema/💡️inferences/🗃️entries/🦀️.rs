@@ -8,7 +8,7 @@
 //! every field always present) rather than treating the body as an opaque, possibly-malformed byte
 //! string.
 
-#[cfg(test)] use crate::EnergyModelSnapshot;
+#[cfg(test)] use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Entries

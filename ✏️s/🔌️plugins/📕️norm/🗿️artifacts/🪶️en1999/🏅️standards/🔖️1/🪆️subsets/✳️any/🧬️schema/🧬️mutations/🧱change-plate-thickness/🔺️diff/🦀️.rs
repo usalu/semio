@@ -1,8 +1,8 @@
 //! 🔺️ `change-plate-thickness` diff.
 
-use crate::mutations::change_plate_thickness::ChangePlateThickness;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999SectionsRows, En1999SectionsPatch, En1999SectionsElementsRows, En1999SectionsElementsPatch};
+use crate::change_plate_thickness::ChangePlateThickness;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999SectionsRows, En1999SectionsPatch, En1999SectionsElementsRows, En1999SectionsElementsPatch};
 
 pub fn diff(payload: &ChangePlateThickness, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     let Some(section) = base.sections.iter().find(|s| s.id == payload.section_id) else {

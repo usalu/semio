@@ -1,12 +1,12 @@
 //! ↩️ `change-fatigue-details` inverse.
 
-use crate::mutations::change_fatigue_details::ChangeFatigueDetails;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_fatigue_details::ChangeFatigueDetails;
 
-pub fn inverse(_payload: &ChangeFatigueDetails, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeFatigueDetails, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_fatigue_details::ChangeFatigueDetails> {
     Ok((|| {
-    vec![En1999Mutation::ChangeFatigueDetails(ChangeFatigueDetails { fatigue_details: base.fatigue_details.clone() })]
+    vec![Op::from(ChangeFatigueDetails { fatigue_details: base.fatigue_details.clone() })]
 
     })())
 }

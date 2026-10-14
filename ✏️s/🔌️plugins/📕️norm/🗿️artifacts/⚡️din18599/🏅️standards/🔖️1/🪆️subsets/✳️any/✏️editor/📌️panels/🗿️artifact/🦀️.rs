@@ -1,7 +1,7 @@
 //! 📄️ DIN V 18599 play app panel — the document headline: family, check count, worst utilization, verdict.
 
-use crate::document::NormHost;
-use crate::editor::din18599::DinV18599Family;
+use semio_s_plugin_norm_compliance::NormHost;
+use crate::DinV18599Family;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -14,13 +14,13 @@ pub const BODY_ARTIFACT: &str = "norm.din18599.play.artifact";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_ARTIFACT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"), PanelGroup::Workbench, BODY_ARTIFACT)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_ARTIFACT_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Artefakt"), PanelGroup::Workbench, BODY_ARTIFACT)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<DinV18599Family>, locale: semio_framework_ui_locale::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_summary(host, locale)
+    semio_s_plugin_norm_app_surface::render_summary(host, locale)
 }
 //#endregion 🔖️Render
 

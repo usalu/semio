@@ -1,6 +1,6 @@
-use crate::artifact_schema::evaluate_structure;
-use crate::standards::v1::subsets::any::io::text::snapshot::decode_en1995_dsl;
-use crate::En1995Snapshot;
+use semio_s_artifact_norm_en1995_schema::evaluate_structure;
+use semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 fn decoded() -> En1995Snapshot {
     decode_en1995_dsl(crate::overloaded_footbridge::PRIMARY_TEXT).expect("overloaded-footbridge DSL decodes")

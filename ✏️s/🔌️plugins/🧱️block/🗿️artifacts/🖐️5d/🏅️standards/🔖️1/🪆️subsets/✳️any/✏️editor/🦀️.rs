@@ -8,17 +8,25 @@
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
-use crate::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
-use crate::editor::block5d::commands::patch_part_kind;
-use crate::editor::block5d::commands::{add_grip, remove_grip};
-use crate::editor::block5d::commands::{add_grip_kind, remove_grip_kind};
-use crate::editor::block5d::commands::{edit, set_active_example};
-use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
-use crate::editor::block5d::modes::edit as edit_mode;
-use crate::editor::block5d::modes::edit::windows::{board, world};
-use crate::editor::block5d::panels::{document as document_panel, inspection as inspection_panel};
-use crate::editor::block5d::terminology::block5d_labels;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_5d_mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
+use crate::commands::patch_part_kind;
+use crate::commands::{add_grip, remove_grip};
+use crate::commands::{add_grip_kind, remove_grip_kind};
+use crate::commands::{edit, set_active_example};
+use crate::config::{Block5dConfig, Block5dConfigMutation};
+use crate::modes::edit as edit_mode;
+use crate::modes::edit::windows::{board, world};
+use crate::panels::{document as document_panel, inspection as inspection_panel};
+use crate::terminology::block5d_labels;
 use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, InteractiveJobClassification, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -68,7 +76,6 @@ pub fn block5d_action(action: &str, args: Option<semio_framework_plugin::UiValue
     semio_framework_plugin::ActionFactory::new(BLOCK5D_PLAY_APP_ID).action(action, args)
 }
 
-
 /// 🏷️ Admits one fixed UI contract label — the type every contract node builder takes, distinct from
 /// the SDK's retained authoring `Label`.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
@@ -91,7 +98,6 @@ pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
 pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
     semio_framework_plugin::UiValue::Number(value.into())
 }
-
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -352,14 +358,14 @@ impl ArtifactEditor for Block5dPlayApp {
     type ConfigMutation = Block5dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = crate::editor::block5d::presence::Block5dPresence;
-    type PresenceMutation = crate::editor::block5d::presence::Block5dPresenceMutation;
+    type Presence = crate::presence::Block5dPresence;
+    type PresenceMutation = crate::presence::Block5dPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
     type Command = Block5dCommand;
 
-    const DIALECT: Dialect = crate::BLOCK5D_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_block_5d_model::BLOCK5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
     /// 🗃️ The exact retirement catalog every retained publication folds against — without it the first
@@ -446,7 +452,7 @@ impl ArtifactEditor for Block5dPlayApp {
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::block5d::config::schema::app_schema_descriptor())
+        Some(crate::config::schema::app_schema_descriptor())
     }
 
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
@@ -454,7 +460,7 @@ impl ArtifactEditor for Block5dPlayApp {
     /// `mesh_url` instead of the all-`Default` empty part kind — see
     /// `crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot`.
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot()
+        semio_s_artifact_block_5d_io::text::snapshot::default_block5d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -551,7 +557,7 @@ impl ArtifactEditor for Block5dPlayApp {
             let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle5d_catalog_fragment(doc.snapshot);
+        let fragment = semio_s_artifact_block_5d_io_write::puzzle_catalog::puzzle5d_catalog_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -569,7 +575,7 @@ impl ArtifactEditor for Block5dPlayApp {
 /// (untouched, already wired in `🦀️.rs`'s Examples region) is the modern, role-agnostic
 /// replacement surface for app-level example registration.
 pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::BLOCK5D_DIALECT)
+    Editor::builder(semio_s_artifact_block_5d_model::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
@@ -636,3 +642,40 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️Mounts
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "👥️presence/🦀️.rs"]
+pub mod presence;
+#[path = "🗣️terminology/🦀️.rs"]
+pub mod terminology;
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/🌱️add-grip/🦀️.rs"]
+    pub mod add_grip;
+    #[path = "🎮️commands/🔘️add-grip-kind/🦀️.rs"]
+    pub mod add_grip_kind;
+    #[path = "🎮️commands/🎨️edit/🦀️.rs"]
+    pub mod edit;
+    #[path = "🎮️commands/🏷️patch-part-kind/🦀️.rs"]
+    pub mod patch_part_kind;
+    #[path = "🎮️commands/➖️remove-grip/🦀️.rs"]
+    pub mod remove_grip;
+    #[path = "🎮️commands/🗑️remove-grip-kind/🦀️.rs"]
+    pub mod remove_grip_kind;
+    #[path = "🎮️commands/🎬️set-active-example/🦀️.rs"]
+    pub mod set_active_example;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+}
+//#endregion 🪢️Mounts

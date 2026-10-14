@@ -53,38 +53,43 @@ mod tests_reattaches_the_shape_reference_to_a_new_plan;
 #[path = "📎replace-references/🧪️tests/🔄️swaps/🦀️.rs"]
 mod tests_swaps_the_shape_reference_list;
 #[cfg(test)]
-#[path = "🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs"]
-mod tests_rehandles_the_occupied_shape_slot;
-#[cfg(test)]
-#[path = "🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot/🦀️.rs"]
-mod tests_vacates_the_shape_slot;
-#[cfg(test)]
-#[path = "🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs"]
-mod tests_rehandles_the_occupied_building_slot;
-#[cfg(test)]
-#[path = "💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs"]
-mod tests_vacates_the_building_slot;
-#[cfg(test)]
-#[path = "⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs"]
-mod tests_rehandles_the_occupied_energy_slot;
-#[cfg(test)]
-#[path = "🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs"]
-mod tests_vacates_the_energy_slot;
-#[cfg(test)]
-#[path = "🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs"]
-mod tests_rehandles_the_occupied_structure_classic_slot;
-#[cfg(test)]
-#[path = "💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs"]
-mod tests_vacates_the_structure_classic_slot;
-#[cfg(test)]
 #[path = "📐️create-drawing/🧪️tests/📐️appends-drawing-2/🦀️.rs"]
 mod tests_appends_drawing_2;
 #[cfg(test)]
 #[path = "🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs"]
 mod tests_removes_drawing_1;
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+                            pub mod mutations;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+                            pub mod mutations;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
 //#endregion 🧩️Modules
 
-use semio_s_artifact_cad_cad_model::diff::CadDiff;
+use semio_s_artifact_cad_cad_model_diff::CadDiff;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -181,3 +186,6 @@ use semio_s_artifact_cad_cad_mut_references::replace_references;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub mod tests;
 //#endregion 🧪️Tests
+
+/// 🧬️ The mutation facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

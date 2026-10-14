@@ -1,8 +1,30 @@
+//! 
 
-use super::*;
-use crate::editor::puzzle3d::precompute::Puzzle3dCollision;
-use crate::editor::puzzle3d::precompute::geometry::{precompute_work_clock, precompute_work_done};
-use crate::standards::v1::subsets::any::schema::ObjectKindRepresentation;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_precompute_brush::*;
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind, ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d};
+use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
+use semio_s_plugin_puzzle_jobs::JobTurn;
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, StepContext};
+use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, ToolRunJobPort};
+use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
+use std::collections::HashMap;
+use std::marker::PhantomData;
+use std::sync::Arc;
+
+
+use semio_s_artifact_puzzle_3d_precompute::Puzzle3dCollision;
+use semio_s_artifact_puzzle_3d_precompute_geometry::{precompute_work_clock, precompute_work_done};
+use semio_s_artifact_puzzle_3d_model::ObjectKindRepresentation;
 
 #[test]
 fn fill_distribution_excludes_zero_weight_vortices() {
@@ -517,7 +539,7 @@ fn apply_brush_placement_to_snapshot_rejects_duplicate_attraction_target() {
 /// ⏯️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C — the brush candidate search is a read-only
 /// tool run: every candidate it tests is a trace record, every verdict reaches the instance's link, and the job
 /// follows the link's target. The scene and the laws are read from `🧫️fixtures/🎞️brush-suggestions-run.json`.
-use crate::editor::puzzle3d::session::Puzzle3dInstanceOperationOwner;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
 
@@ -543,7 +565,7 @@ fn brush_search_kind(id: &str, url: &str) -> ObjectKind {
 
 /// 📦️ Half height of the app's fallback box, the host's collision body while its own mesh is unregistered.
 fn brush_search_host_half_height() -> f64 {
-    f64::from(crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
+    f64::from(semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
 }
 
 /// 🧪️ The scene_snapshot scene: one host vortex on the bottom face of the host's (fallback box) body, two compatible kinds that
@@ -602,7 +624,7 @@ fn brush_run_link<R>(owner: &ArtifactInstanceOperationOwnerHandle, apply: impl F
 }
 
 fn brush_run_job(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32) -> BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner> {
-    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
+    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
 }
 
 fn brush_run_never() -> Option<u64> {
@@ -612,7 +634,7 @@ fn brush_run_never() -> Option<u64> {
 /// 🚦️ One job step with `fuel` units and no deadline, its retained tick page decoded and returned to its ledger.
 fn brush_run_step(job: &mut BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner>, fuel: u64) -> Option<ToolRunTick> {
     let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), brush_run_never, &mut sequence, crate::puzzle_job::testing::test_progress());
+    let mut context = StepContext::new(OperationId(91), Generation(1), StepBudget::new(fuel, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), brush_run_never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
     brush_run_settle(job.turn(&mut context))
 }
 
@@ -808,23 +830,23 @@ fn a_closing_brush_suggestions_job_retires_only_its_own_result() {
     port.wake();
     let mut second = brush_run_job(&owner, &port, brush_search_scene(false), brush_search_lane(), brush_search_meshes, 1);
     BrushRunMirror::new(1).drive(&mut second, &port, u64::MAX);
-    crate::puzzle_job::testing::close_job(&mut first);
+    semio_s_plugin_puzzle_jobs::testing::close_job(&mut first);
     assert_eq!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).map(|found| found.writer)), Some((1, 1)), "the successor's result survives");
-    crate::puzzle_job::testing::close_job(&mut second);
+    semio_s_plugin_puzzle_jobs::testing::close_job(&mut second);
     assert!(brush_run_link(&owner, |link| link.found(BRUSH_SEARCH_TARGET).is_none()), "the last writer's close retires its result");
 }
 
 fn brush_run_example_scene(document: &str) -> (SceneConfig, Vec<String>, Vec<String>) {
     let text = match document {
-        "nakagin" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
-        "concrete-forest" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        "nakagin" => std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads"),
+        "concrete-forest" => std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio")).expect("committed example reads"),
         other => panic!("unknown example document {other}"),
     };
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
-    let envelope = crate::editor::puzzle3d::snapshot::scene_from_snapshot(&snapshot, Default::default(), "brush");
-    let scene = crate::editor::puzzle3d::session::scene_config(&envelope).expect("scene config");
+    let snapshot = semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&text).expect("example parses");
+    let envelope = semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot(&snapshot, Default::default(), "brush");
+    let scene = semio_s_artifact_puzzle_3d_editor_session::scene_config(&envelope).expect("scene config");
     let targets = scene.scene_snapshot.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
-    (scene, crate::editor::puzzle3d::session::mesh_lane(&envelope.scene_snapshot), targets)
+    (scene, semio_s_artifact_puzzle_3d_editor_session::mesh_lane(&envelope.scene_snapshot), targets)
 }
 
 fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
@@ -838,8 +860,6 @@ fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 /// lies inside a body (coincident hulls, where `contact` reads 0) collides. Every decisive verdict must agree.
 #[test]
 fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
-    use parry3d::query::PointQuery;
-    use parry3d::shape::Shape;
     let scene_snapshot: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run scene_snapshot");
     let law = &scene_snapshot["laws"]["parryOracle"];
     let identity = parry3d::math::Isometry::identity();
@@ -848,9 +868,9 @@ fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     for document in law["documents"].as_array().expect("documents") {
         let (scene, lane, targets) = brush_run_example_scene(document["document"].as_str().expect("document"));
         let tolerance = scene.contact_tolerance;
-        let (positions, _) = crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers();
+        let (positions, _) = semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers();
         let hull = |pose: &Pose3d| {
-            let points: Vec<parry3d::math::Point<f32>> = positions.chunks(3).map(|vertex| pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]))).map(|world| parry3d::math::Point::new(world.x(), world.y(), world.z())).collect();
+            let points: Vec<parry3d::math::Point<f32>> = positions.chunks(3).map(|vertex| pose.transform_point(&semio_s_artifact_puzzle_3d_precompute_geometry::Point3d::new(vertex[0], vertex[1], vertex[2]))).map(|world| parry3d::math::Point::new(world.x(), world.y(), world.z())).collect();
             parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
         };
         let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
@@ -912,8 +932,8 @@ fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() 
         while !port.is_waiting() {
             let mut sequence = 0;
             let start = precompute_work_done();
-            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget, crate::puzzle_job::testing::unbounded_grant()).expect("budget");
-            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence, crate::puzzle_job::testing::test_progress());
+            let step_budget = StepBudget::from_duration(semio_framework_job::INTERACTIVE_LANE_FUEL, start, budget, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()).expect("budget");
+            let mut context = StepContext::new(OperationId(92), Generation(1), step_budget, root_cancel_token(), precompute_work_clock, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
             let outcome = job.turn(&mut context);
             worst = worst.max(precompute_work_done() - start);
             drop(brush_run_settle(outcome));

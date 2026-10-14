@@ -1,7 +1,6 @@
 //! ⚡️ Block5d artifact — OpText/OpBinary codecs + grammar for `Block5dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
-
+use semio_s_artifact_block_5d_mutations::Block5dMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,7 +28,6 @@ impl protocol::OpText for Block5dMutation {
         semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
-
 
 //#endregion 🔖️HandcraftedOpCodecs
 

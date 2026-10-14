@@ -1,15 +1,21 @@
 use super::*;
-use crate::schema::{
-    mutations::{docx_top_level_run_at, insert_table_row, insert_xml_node, remove_table_row, remove_xml_node, replace_xml_node, set_paragraph_style, set_run_formatting},
-    snapshot::{DocxBlock, DocxDocument},
-};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_run_at;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_table_row;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_xml_node;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::remove_table_row;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::remove_xml_node;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::replace_xml_node;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_paragraph_style;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_formatting;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
 }
 
-fn run(snapshot: &DocxSnapshot) -> crate::schema::mutations::DocxEditableRun {
+fn run(snapshot: &DocxSnapshot) -> semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxEditableRun {
     docx_top_level_run_at(snapshot, 0, 0).expect("canonical first run")
 }
 
@@ -33,10 +39,10 @@ async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
 fn initial_document_matches_the_neutral_empty_paragraph_snapshot_and_renders_one_target() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌱️initial-document/🔣️.json")).unwrap();
     let snapshot = <DocxEditor as ArtifactEditor>::initial_snapshot();
-    let targets = crate::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
+    let targets = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
     assert_eq!(targets.len(), fixture["body"].as_array().unwrap().len());
     assert_eq!(targets[0].text, fixture["editableTarget"]["text"].as_str().unwrap());
-    assert_eq!(targets[0].kind, crate::schema::mutations::DocxTextTargetKind::EmptyParagraph);
+    assert_eq!(targets[0].kind, semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind::EmptyParagraph);
     assert_eq!(main::editable_pages(&snapshot).unwrap().len(), 1);
     assert_eq!(main::render(&snapshot, semio_framework_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
 }
@@ -107,9 +113,9 @@ fn formatting_mutation_preserves_explicit_off_rejects_stale_addresses_and_elides
     let target = run(&snapshot);
     let explicit_off = build_set_run_formatting_mutation(&snapshot, &target.address, false, false, false).expect("valid direct override").expect("missing properties are not equivalent to explicit off");
     let mut formatted = snapshot.clone();
-    crate::schema::mutations::apply_docx_mutation(&mut formatted, &explicit_off);
+    semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_docx_mutation(&mut formatted, &explicit_off);
     let address = run(&formatted).address;
-    assert_eq!(crate::schema::mutations::docx_run_formatting(&formatted, &address).unwrap(), DocxRunFormatting { bold: Some(false), italic: Some(false), underline: Some(false) });
+    assert_eq!(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting(&formatted, &address).unwrap(), DocxRunFormatting { bold: Some(false), italic: Some(false), underline: Some(false) });
     assert!(build_set_run_formatting_mutation(&formatted, &address, false, false, false).expect("valid no-op").is_none());
     let mut stale = target.address;
     stale.revision = "0000000000000000".into();
@@ -118,7 +124,7 @@ fn formatting_mutation_preserves_explicit_off_rejects_stale_addresses_and_elides
 
 #[test]
 fn inherited_bold_and_explicit_off_remain_distinct_through_saved_quick_xml_oracle() {
-    use crate::schema::snapshot::DocxStyle;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
     use quick_xml::{events::Event, reader::Reader};
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     use std::io::Read;
@@ -132,11 +138,11 @@ fn inherited_bold_and_explicit_off_remain_distinct_through_saved_quick_xml_oracl
     let command = &fixture["command"];
     let mutation =
         build_set_run_formatting_mutation(&snapshot, &target.address, command["bold"].as_bool().unwrap(), command["italic"].as_bool().unwrap(), command["underline"].as_bool().unwrap()).unwrap().expect("explicit off overrides inherited formatting");
-    crate::schema::mutations::apply_docx_mutation(&mut snapshot, &mutation);
+    semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_docx_mutation(&mut snapshot, &mutation);
     let address = run(&snapshot).address;
     assert_eq!(docx_run_formatting(&snapshot, &address).unwrap(), DocxRunFormatting { bold: Some(false), italic: Some(false), underline: Some(false) });
 
-    let bytes = crate::engine::encode_docx(&snapshot).unwrap();
+    let bytes = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&snapshot).unwrap();
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
     let mut read_part = |path: &str| {
         let mut xml = String::new();
@@ -291,14 +297,14 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     let xml_payload = String::from_utf8(vec![xml_fill; xml_payload_bytes]).expect("retained XML ASCII payload");
     let mut imported = snapshot_with_blocks(vec![DocxBlock::paragraph(before_text), DocxBlock::paragraph(xml_payload)]);
     imported.opc.set_part(part_path, content_type, vec![fill; part_bytes]).expect("large retained OPC fixture owner");
-    let imported = crate::engine::decode_docx(&crate::engine::encode_docx(&imported).expect("large retained DOCX fixture saves")).expect("large retained DOCX fixture imports");
+    let imported = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(&crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&imported).expect("large retained DOCX fixture saves")).expect("large retained DOCX fixture imports");
     assert_eq!(imported.opc.part_bytes(part_path).expect("imported retained part").len(), part_bytes);
     let address = run(&imported).address;
     assert!(imported.xml_part(&address.part_path).expect("imported retained XML main part").document.materialization_owned_bytes().expect("retained XML owned bytes measure") > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     let mutation = build_set_page_mutation(&imported, &address, after_text).expect("large retained DOCX mutation validates").expect("large retained DOCX mutation changes text");
 
     let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_DOCX_DOCUMENT_SCHEMA, "docx-retained-opc-lifecycle", imported, None);
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<DocxSnapshot, DocxMutation>().expect("funded DOCX Store owners")).map_err(|(error, _)| error).expect("DOCX Store owners install");
     let factory = <DocxEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("registered DOCX routed preparation factory");
     let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 64 };
@@ -361,7 +367,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     assert!(publication.terminal_is_empty());
     drop(publication);
 
-    let saved = crate::engine::encode_docx(store.snapshot_ref()).expect("published retained DOCX saves");
+    let saved = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(store.snapshot_ref()).expect("published retained DOCX saves");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(&saved)).expect("third-party ZIP oracle opens retained DOCX");
     let mut oracle_bytes = Vec::new();
     archive.by_name(part_path).expect("third-party ZIP oracle finds retained part").read_to_end(&mut oracle_bytes).expect("third-party ZIP oracle reads retained part");
@@ -371,7 +377,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     archive.by_name(&address.part_path).expect("third-party ZIP oracle finds retained XML part").read_to_end(&mut oracle_bytes).expect("third-party ZIP oracle reads retained XML part");
     assert_eq!(oracle_bytes.iter().filter(|byte| **byte == xml_fill).count(), xml_payload_bytes);
     drop(archive);
-    let reopened = crate::engine::decode_docx(&saved).expect("published retained DOCX reopens");
+    let reopened = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(&saved).expect("published retained DOCX reopens");
     assert_eq!(run(&reopened).text, after_text);
     let reopened_part = reopened.opc.part_bytes(part_path).expect("reopened retained part");
     assert_eq!(reopened_part.len(), part_bytes);
@@ -441,7 +447,7 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
 
 #[semio_framework_async_macros::async_test]
 async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
-    use crate::schema::mutations::docx_run_formatting;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting;
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("format me")]);
@@ -455,22 +461,22 @@ async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, true, true, false)), &meta, &mut identity).await).unwrap();
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let formatted_address = run(&app.snapshot().unwrap()).address;
-    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &formatted_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
+    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &formatted_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
-    let bytes = crate::engine::encode_docx(&app.snapshot().unwrap()).expect("formatted DOCX saves");
-    let reopened = crate::engine::decode_docx(&bytes).expect("formatted DOCX reopens");
+    let bytes = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&app.snapshot().unwrap()).expect("formatted DOCX saves");
+    let reopened = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(&bytes).expect("formatted DOCX reopens");
     let reopened_address = run(&reopened).address;
-    assert_eq!(docx_run_formatting(&reopened, &reopened_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
+    assert_eq!(docx_run_formatting(&reopened, &reopened_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), opened);
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let redone_address = run(&app.snapshot().unwrap()).address;
-    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
+    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
     semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, false, false, false)), &meta, &mut identity).await).unwrap();
     assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err());
-    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
+    assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 

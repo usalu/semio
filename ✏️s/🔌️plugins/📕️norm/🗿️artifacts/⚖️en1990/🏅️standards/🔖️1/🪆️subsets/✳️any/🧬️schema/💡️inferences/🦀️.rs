@@ -1,6 +1,14 @@
 //! 💡️ En1990 inference schema — outline + full basis-of-design evaluate().
 
-use crate::En1990Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -84,13 +92,11 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-#[cfg(test)] use crate::document::{DesignSituation};
-use crate::standards::v1::subsets::any::schema::{
-    check_reliability_index_for, combination_6_11, combination_6_12b, combination_equ_for, combination_geo_a24c, combination_sls_char, combination_sls_frequent,
-    combination_sls_quasi_permanent, combination_str_geo_610a_for, combination_str_geo_610b_for, k_fi, resolve_psi_category, ActionSet, NaDe, NaEn, NationalAnnex, NationalAnnexes,
-};
-use crate::{Member, MemberEffect};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use semio_s_plugin_norm_compliance::DesignSituation;
+use semio_s_artifact_norm_en1990_checks::{check_reliability_index_for, combination_6_11, combination_6_12b, combination_equ_for, combination_geo_a24c, combination_sls_char, combination_sls_frequent, combination_sls_quasi_permanent, combination_str_geo_610a_for, combination_str_geo_610b_for, k_fi, resolve_psi_category, ActionSet, NaDe, NaEn, NationalAnnexes};
+use semio_s_plugin_norm_compliance::NationalAnnex;
+use semio_s_artifact_norm_en1990_model::{Member, MemberEffect};
 
 fn copy(en: impl Into<String>, de: impl Into<String>) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
@@ -500,7 +506,6 @@ fn push_fat<A: NationalAnnex>(report: &mut CheckReport, annex: &A, document: &En
     report.push(builder.build());
 }
 
-
 fn is_bridge(kind: &str) -> bool {
     matches!(kind, "road_bridge" | "footbridge" | "rail_bridge")
 }
@@ -579,7 +584,7 @@ fn push_uls_equ_stab<A: NationalAnnex>(report: &mut CheckReport, annex: &A, docu
 }
 
 fn push_design_working_life(report: &mut CheckReport, document: &En1990Snapshot) {
-    use crate::standards::v1::subsets::any::schema::design_working_life_indicative;
+    use semio_s_artifact_norm_en1990_checks::design_working_life_indicative;
     let (lo, hi) = design_working_life_indicative(document.design_working_life_category);
     let years = document.design_working_life_years;
     let bridge = is_bridge(&document.structure_kind);
@@ -606,10 +611,10 @@ fn push_design_working_life(report: &mut CheckReport, document: &En1990Snapshot)
         format!("Projekt {}: Kategorie {} indikativ [{lo:.0}; {hi:.0}] a; angegeben {years:.0} a.", document.project_id, document.design_working_life_category),
     ));
     if years_ok {
-        years_builder = years_builder.status(crate::document::CheckStatus::Pass);
+        years_builder = years_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
     } else {
         let required_years = if bridge { 100.0 } else { hi };
-        years_builder = years_builder.status(crate::document::CheckStatus::Fail).remedy(Remedy::exactly(
+        years_builder = years_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::exactly(
             years_subject,
             q_dim(years),
             q_dim(required_years),
@@ -639,10 +644,10 @@ fn push_design_working_life(report: &mut CheckReport, document: &En1990Snapshot)
         format!("Projekt {}: angegebene Kategorie {}; Brücken erfordern Tabelle 2.1 / A2 Kategorie 5 (100 a).", document.project_id, document.design_working_life_category),
     ));
     if cat_ok {
-        cat_builder = cat_builder.status(crate::document::CheckStatus::Pass);
+        cat_builder = cat_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
     } else {
         let target = if bridge { 5u8 } else { 4u8 };
-        cat_builder = cat_builder.status(crate::document::CheckStatus::Fail).remedy(Remedy::one_of(
+        cat_builder = cat_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::one_of(
             cat_subject,
             vec![target.to_string()],
             copy(
@@ -659,7 +664,7 @@ fn push_design_working_life(report: &mut CheckReport, document: &En1990Snapshot)
 }
 
 fn push_annex_b_dsl_il(report: &mut CheckReport, document: &En1990Snapshot) {
-    use crate::standards::v1::subsets::any::schema::annex_b_dsl_il_for_rc;
+    use semio_s_artifact_norm_en1990_checks::annex_b_dsl_il_for_rc;
     let (dsl_req, il_req) = annex_b_dsl_il_for_rc(document.reliability_class);
     for (id, path, declared, required, title_en, title_de) in [
         ("en1990.annex-b.dsl", "supervisionLevel", document.supervision_level.as_str(), dsl_req, "Design supervision level vs RC", "Überwachungsstufe gegenüber RC"),
@@ -674,9 +679,9 @@ fn push_annex_b_dsl_il(report: &mut CheckReport, document: &En1990Snapshot) {
                 format!("Angegeben {declared} für RC{}; Anhang B empfiehlt {required}.", document.reliability_class),
             ));
         if ok {
-            builder = builder.status(crate::document::CheckStatus::Pass);
+            builder = builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
         } else {
-            builder = builder.status(crate::document::CheckStatus::Fail).remedy(Remedy::one_of(
+            builder = builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::one_of(
                 subject,
                 vec![required.to_string()],
                 copy(
@@ -831,7 +836,7 @@ fn push_k_fi(report: &mut CheckReport, document: &En1990Snapshot) {
         subject.clone(),
         copy("Declared K_FI vs consequence class", "Deklariertes K_FI gegenüber Schadensfolgeklasse"),
     )
-    .status(if (declared - expected).abs() < 1e-9 { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail })
+    .status(if (declared - expected).abs() < 1e-9 { semio_s_plugin_norm_compliance::CheckStatus::Pass } else { semio_s_plugin_norm_compliance::CheckStatus::Fail })
     .annex(document.annex)
     .explanation(copy(
         format!("Declared K_FI = {declared:.2}; tabulated for CC{} = {expected:.2}", document.consequence_class),
@@ -929,7 +934,7 @@ fn push_duplicate_ids(report: &mut CheckReport, document: &En1990Snapshot, table
             format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
             format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
         ))
-        .status(crate::document::CheckStatus::Fail);
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail);
         builder = builder.remedy(Remedy::one_of(
             subject,
             if options.is_empty() { vec![format!("{id}-unique")] } else { options },
@@ -958,7 +963,7 @@ fn push_dangling_ref(report: &mut CheckReport, document: &En1990Snapshot, check_
             format!("'{current}' does not reference an existing target; dependent combination checks for this row must not Pass."),
             format!("'{current}' verweist auf kein vorhandenes Ziel; abhängige Kombinationsnachweise für diese Zeile dürfen nicht bestehen."),
         ))
-        .status(crate::document::CheckStatus::Fail)
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
         .remedy(Remedy::one_of(
             subject,
             opts,
@@ -1042,7 +1047,7 @@ fn push_member_unassessable(report: &mut CheckReport, document: &En1990Snapshot,
             format!("Member '{}' has broken or missing action wiring; ULS/SLS combination checks are not assessed as Pass.", member.id),
             format!("Bauteil '{}' hat fehlerhafte oder fehlende Wirkungseinbindung; ULS/SLS-Kombinationsnachweise gelten nicht als bestanden.", member.id),
         ))
-        .status(crate::document::CheckStatus::Fail)
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
         .remedy(Remedy::one_of(
             SubjectRef::new(&member.id, &path, member_label(member)),
             member_ids(document),
@@ -1114,5 +1119,10 @@ mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
 
 //#region 🔁️Re-exports
-pub use super::outline::En1990Outline;
+pub use crate::outline::En1990Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

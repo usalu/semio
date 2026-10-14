@@ -46,7 +46,7 @@ export class InventoryScript extends Script {
     const manifests = registry.contributions.flatMap((contribution) => contribution.mutationManifests.map((manifest) => ({ contribution, manifest }))).filter(({ manifest }) => matchesTarget(manifest, selectors));
     if (manifests.length === 0) {
       console.error("[inventory] no mutation manifest matches the selection — declare one in the owner's 🔮️oracles collection");
-      process.exit(1);
+      {process.exitCode=1;return;}
     }
     let failed = 0;
     for (const { contribution, manifest } of manifests) {
@@ -93,6 +93,6 @@ export class InventoryScript extends Script {
       for (const id of equality.manifestOnly) console.error(`[inventory] ${coordinate}: manifest-only ${id}`);
       if (drift > 0) failed += 1;
     }
-    if (failed > 0) process.exit(1);
+    if (failed > 0) {process.exitCode=1;return;}
   }
 }

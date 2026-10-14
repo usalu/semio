@@ -14,10 +14,35 @@ pub mod snapshot {
     pub use component::*;
 }
 #[path = "."]
-pub mod diff {
-    #[path = "🔺️diff/🦀️.rs"]
-    mod component;
-    pub use component::*;
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "../🚪️io/🪶️sqlite/🦀️.rs"]
+                        pub mod sqlite;
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+                            pub mod snapshot;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+                            pub mod snapshot;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
 }
 //#endregion 🧩️Modules
 
@@ -134,34 +159,7 @@ impl CadArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.cad.cad` — twenty handcrafted schema leaves.
-pub fn cad_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.cad.cad",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
+
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 
@@ -181,3 +179,6 @@ pub use crate::snapshot::CadCamera;
 pub use crate::snapshot::CadNode;
 pub use crate::snapshot::CadReferenceList;
 //#endregion 🔁️Re-exports
+
+/// 🧬️ The artifact facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const ARTIFACT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };

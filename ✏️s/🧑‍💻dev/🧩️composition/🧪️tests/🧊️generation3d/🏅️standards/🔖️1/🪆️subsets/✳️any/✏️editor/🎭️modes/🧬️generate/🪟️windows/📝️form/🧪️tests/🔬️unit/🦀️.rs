@@ -1,7 +1,9 @@
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{add_generation, update_generation_values};
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
 use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dApp};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn generate_form_hints_without_a_selected_generation() {
@@ -15,7 +17,7 @@ async fn first_slider_question(app: &mut Generation3dApp) -> (String, String, f6
     dispatch(app, Generation3dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     let read = snapshot(app);
     let generation_id = read.generation.generations.first().expect("addGeneration seeds one generation").id.clone();
-    let spec = flow_host_snapshot_to_form_spec(&read.host_snapshot);
+    let spec = flow_host_snapshot_to_form_spec(&read.host_snapshot, &PlaybookFlowFormProducer);
     let question = spec
         .steps
         .iter()

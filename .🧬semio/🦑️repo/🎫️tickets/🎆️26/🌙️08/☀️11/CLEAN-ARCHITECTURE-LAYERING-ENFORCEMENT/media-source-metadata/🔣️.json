@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "owner": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+      "project": "@semio-tech/layout-layout-rs",
+      "target": "test-media-adoption-source",
+      "expectedExecution": {
+        "version": 1,
+        "kind": "source"
+      },
+      "expectedInputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️testing/📥️source/**/*",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🟦️.ts",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ],
+      "expectedOptions": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-media-adoption-source"
+      },
+      "expectedOutputs": [],
+      "expectedDependsOn": [],
+      "expectedCache": false
+    },
+    {
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
+      "project": "@semio-tech/framework-plugin",
+      "target": "test-media-turn-source",
+      "expectedExecution": {
+        "version": 1,
+        "kind": "source"
+      },
+      "expectedInputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*"
+      ],
+      "expectedOptions": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-media-turn-source"
+      },
+      "expectedOutputs": [],
+      "expectedDependsOn": [],
+      "expectedCache": false
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 //! 🧪️ Collection semantic SQLite laws measure original boxed and partial receiving custody.
+use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::super::CollectionSnapshot;
 use semio_framework_os_kernel::{io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};

@@ -1,8 +1,9 @@
 use super::*;
-use crate::schema::mutations::insert_style;
-use crate::schema::snapshot::DocxStyle;
-use crate::standards::v_ecma_376::subsets::base::schema::inferences::DocxInference;
-use crate::{DocxMutation, DocxSnapshot};
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_style;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+use semio_s_artifact_stdio_docx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::DocxInference;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use protocol::Inference;
 
 use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
@@ -33,15 +34,15 @@ impl SubsetRoundtripSpec for DocxAnyRoundtrip {
     }
 
     async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
-        crate::engine::decode_docx(asset.bytes).map_err(|e| e.to_string())
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(asset.bytes).map_err(|e| e.to_string())
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-        crate::engine::encode_docx(snapshot).map_err(|e| e.to_string())
+        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|e| e.to_string())
     }
 
     async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-        crate::engine::decode_docx(bytes).map_err(|e| e.to_string())
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|e| e.to_string())
     }
 
     async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
@@ -53,7 +54,7 @@ impl SubsetRoundtripSpec for DocxAnyRoundtrip {
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-        crate::engine::decode_docx(bytes).map(|_| ()).map_err(|e| vec![e.to_string()])
+        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map(|_| ()).map_err(|e| vec![e.to_string()])
     }
 
     async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

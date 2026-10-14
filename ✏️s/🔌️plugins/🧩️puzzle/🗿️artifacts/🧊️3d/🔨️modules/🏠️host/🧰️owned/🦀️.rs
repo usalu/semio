@@ -1,7 +1,12 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::Puzzle3dSnapshot;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 
@@ -12,7 +17,7 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 /// `Puzzle3dPlayApp::build_document_store_owners` hands the host, so both entry points record edits
 /// under one authority instead of two.
 pub async fn puzzle3d_store(envelope: Puzzle3dEnvelope, actor: protocol::ActorId) -> Result<Puzzle3dStore, String> {
-    let mut store = Puzzle3dStore::new(envelope, actor).await.map_err(|error| format!("puzzle3d store construction refused: {error:?}"))?;
+    let mut store = Puzzle3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await.map_err(|error| format!("puzzle3d store construction refused: {error:?}"))?;
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Puzzle3dSnapshot, Puzzle3dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
     store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)

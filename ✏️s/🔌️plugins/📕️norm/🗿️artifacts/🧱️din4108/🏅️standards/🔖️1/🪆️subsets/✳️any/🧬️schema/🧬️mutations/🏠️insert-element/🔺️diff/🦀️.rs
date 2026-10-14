@@ -1,9 +1,9 @@
 //! 🏠️ `insert-element` diff — inserts the row at its position; a position past the list's end inserts it last as a
 //! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertElement;
-use crate::diff::{Din4108Diff, Din4108ElementDelta};
-use crate::Din4108Snapshot;
+use crate::insert_element::InsertElement;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &InsertElement, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.elements.iter().any(|existing| existing.id == payload.element.id) {

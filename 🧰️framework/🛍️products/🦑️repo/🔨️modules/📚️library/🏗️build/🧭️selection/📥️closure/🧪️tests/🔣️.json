@@ -1,0 +1,112 @@
+{
+  "request": {
+    "version": 1,
+    "tasks": [
+      "app:publish"
+    ],
+    "mode": "release",
+    "excludeDependencies": false,
+    "maximumTasks": 64
+  },
+  "projects": {
+    "app": {
+      "dependsOn": [
+        "build",
+        {
+          "target": "build",
+          "projects": [
+            "other"
+          ]
+        }
+      ]
+    },
+    "other": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "bridge": {},
+    "leaf": {
+      "dependsOn": []
+    }
+  },
+  "dependencies": [
+    {
+      "source": "other",
+      "target": "bridge"
+    },
+    {
+      "source": "bridge",
+      "target": "leaf"
+    }
+  ],
+  "expected": [
+    "app:build:release",
+    "app:publish:release",
+    "leaf:build:release",
+    "other:build:release"
+  ],
+  "selectors": [
+    {
+      "patterns": [
+        "*",
+        "!app",
+        "app"
+      ],
+      "expected": [
+        "app",
+        "bridge",
+        "leaf",
+        "other"
+      ]
+    },
+    {
+      "patterns": [
+        "app",
+        "!app"
+      ],
+      "expected": []
+    },
+    {
+      "patterns": [
+        "!app"
+      ],
+      "expected": [
+        "bridge",
+        "leaf",
+        "other"
+      ]
+    },
+    {
+      "patterns": [
+        "tag:subset"
+      ],
+      "expected": [
+        "app",
+        "other"
+      ]
+    },
+    {
+      "patterns": [
+        "name:app"
+      ],
+      "expected": [
+        "app"
+      ]
+    },
+    {
+      "patterns": [
+        "directory:leaf"
+      ],
+      "expected": [
+        "leaf"
+      ]
+    }
+  ],
+  "unsupportedTargetPatterns": [
+    "build?",
+    "build[12]",
+    "{build,publish}",
+    "@(build|publish)"
+  ]
+}

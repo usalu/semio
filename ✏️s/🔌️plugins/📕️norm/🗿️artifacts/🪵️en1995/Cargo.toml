@@ -3,6 +3,26 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️effects/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️actions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️joint-actions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️footbridges/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️fasteners/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️stability/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️connections/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️plates/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️members/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -80,6 +100,99 @@ path = "../../⚖️compliance/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-plugin-norm-results-config]
 path = "../../🪟️results/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-checks]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-inferences]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-actions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️actions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-connections]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️connections/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-effects]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️effects/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-fasteners]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️fasteners/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-footbridges]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️footbridges/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-geometry]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-joint-actions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️joint-actions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-members]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️members/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-plates]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪚️plates/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mut-stability]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️stability/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-mutation-vectors]
+path = "../../../../🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

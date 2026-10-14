@@ -5,12 +5,16 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{
-    cell_address::{xlsx_cell_address, xlsx_cell_target_revision, xlsx_cell_vacancy_address},
-    insert_cell, edit_rules, set_cell,
-};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
-use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_target_revision;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_vacancy_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_cell;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_cell;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;

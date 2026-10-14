@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
@@ -30,7 +30,7 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 /// ever run. The production adapter `VcsArtifactApp<ViewerApp<Block3dViewer>>` under the app's own
 /// manifest is what the runtime mounts, so it is what these laws run against.
 mod context {
-    use super::*;
+    use crate::tests::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewerApp};
 
@@ -78,7 +78,7 @@ mod context {
 /// snapshot would leave its `World3d` window blank forever.
 #[semio_framework_async_macros::async_test]
 async fn viewer_boots_with_at_least_one_representation() {
-    let app = context::app().await;
+    let app = crate::tests::context::app().await;
     let snapshot = app.snapshot().expect("snapshot");
     assert!(!snapshot.representations.is_empty(), "the viewer must boot with a renderable document");
     assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()));
@@ -94,7 +94,7 @@ async fn viewer_boots_with_at_least_one_representation() {
 /// about a codec.
 #[semio_framework_async_macros::async_test]
 async fn noop_command_round_trips_and_never_mutates() {
-    let mut app = context::app().await;
+    let mut app = crate::tests::context::app().await;
     let before = app.snapshot().expect("snapshot");
     assert_eq!(protocol::OpBinary::decode_op(&protocol::OpBinary::encode_op(&Block3dViewCommand::Noop).expect("encode")).map(|command: Block3dViewCommand| command), Ok(Block3dViewCommand::Noop), "the sole command round-trips through its own wire form");
     let refused = app.dispatch_typed(Block3dViewCommand::Noop, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;

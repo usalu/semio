@@ -2,7 +2,8 @@
 //! installed into the plugin's process-wide flow extension registry one page at a time. Read-only
 //! by construction: the registry is runtime state, not a store lane at all.
 
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};

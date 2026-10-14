@@ -1,7 +1,7 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::editor::en1998::unit_tests::context;
-use crate::standards::v1::subsets::any::schema::na_de::{GroundCombo, SeismicZone};
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use crate::unit_tests::context;
+use semio_s_artifact_norm_en1998_schema::na_de::{GroundCombo, SeismicZone};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

@@ -4,9 +4,23 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact mutation.
 //! Must not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
-use crate::viewer::model::modes::view;
-use crate::viewer::model::modes::view::windows::{model as model_window, simulation, structure, zones};
-use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_artifact_energy_model_mutations as mutations;
+extern crate semio_s_plugin_energy_engine_scene as scene;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+#[cfg(test)]
+extern crate semio_s_artifact_energy_model_examples as examples;
+
+use crate::modes::view;
+use crate::modes::view::windows::{model as model_window, simulation, structure, zones};
+use crate::mutations::EnergyModelMutation;
+use crate::snapshot::{EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -285,13 +299,13 @@ impl ArtifactViewer for EnergyModelViewer {
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::energy_child_restore_projection(snapshot)
+        crate::snapshot::energy_child_restore_projection(snapshot)
     }
 
     /// 🌱️ Both composed children derive from the model — see `crate::energy_genesis_child_pack`.
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::energy_genesis_child_pack(snapshot, slot, child_id)
+        crate::snapshot::energy_genesis_child_pack(snapshot, slot, child_id)
     
 })())
 }
@@ -465,3 +479,29 @@ pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️Facets
+#[path = "👥️presence/🧬️schema/🦀️.rs"]
+pub mod presence;
+pub mod config {
+    #[path = "../🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+pub mod modes {
+    pub mod view {
+        #[path = "../../🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        pub mod windows {
+            #[path = "../../../🎭️modes/👁️view/🪟️windows/🧊️model/🦀️.rs"]
+            pub mod model;
+            #[path = "../../../🎭️modes/👁️view/🪟️windows/⚡️simulation/🦀️.rs"]
+            pub mod simulation;
+            #[path = "../../../🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️.rs"]
+            pub mod structure;
+            #[path = "../../../🎭️modes/👁️view/🪟️windows/📊️zones/🦀️.rs"]
+            pub mod zones;
+        }
+    }
+}
+//#endregion 🧩️Facets

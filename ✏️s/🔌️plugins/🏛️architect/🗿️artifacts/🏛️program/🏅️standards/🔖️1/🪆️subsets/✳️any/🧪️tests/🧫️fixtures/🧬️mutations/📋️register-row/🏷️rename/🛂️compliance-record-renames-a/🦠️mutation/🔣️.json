@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "complianceRecord",
+  "id": "compliance-record-a",
+  "newName": "Renamed Compliance Record A"
+}

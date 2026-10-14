@@ -1,5 +1,12 @@
 //! 👥️ Block3dPresence — shareable live ephemeral state + mutations.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 
 use pack::snapshot::ArtifactPack;
 
@@ -128,3 +135,8 @@ impl protocol::OpBinary for Block3dPresenceMutation {
         Err(protocol::ProtocolError::Malformed { what: "no-presence-mutation", offset: 0, detail: "no presence mutations exist".into() })
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️Mounts

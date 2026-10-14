@@ -1,10 +1,10 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::artifact_schema::inferences::evaluate;
-use crate::document::AnnexChoice;
-use crate::editor::en1991::unit_tests::context;
-use crate::standards::v1::subsets::any::schema::part_1_1;
-use crate::{En1991Snapshot, FloorArea};
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use semio_s_artifact_norm_en1991_inferences::evaluate;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use crate::unit_tests::context;
+use semio_s_artifact_norm_en1991_checks::part_1_1;
+use semio_s_artifact_norm_en1991_model::{En1991Snapshot, FloorArea};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

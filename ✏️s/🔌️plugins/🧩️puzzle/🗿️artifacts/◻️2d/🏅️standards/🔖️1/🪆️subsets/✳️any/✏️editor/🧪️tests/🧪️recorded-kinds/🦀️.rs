@@ -26,10 +26,10 @@ fn snapshot_of(board: Value) -> Puzzle2dPlaySnapshot {
 }
 
 fn emit_for(snapshot: &Puzzle2dPlaySnapshot, action: &str, args: Value, selected: &[&str]) -> Emit<Puzzle2dMutation, Puzzle2dConfigMutation> {
-    let command = Puzzle2dCommand::from_action(action, Some(args), Some(overview::WINDOW_KIND_ID.to_string()));
+    let command = Puzzle2dCommand::from_action(action, Some(args), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: selected.iter().map(|id| id.to_string()).collect(), anchor_id: None };
-    let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
-    puzzle2d_dispatch_emit(&command, snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None)
+    let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+    puzzle2d_dispatch_emit(&command, snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None)
         .unwrap_or_else(|fault| panic!("{action} emits: {fault:?}"))
         .0
 }

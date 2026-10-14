@@ -1,5 +1,5 @@
 //! ⚙️ 2D geometry kernel primitives: path segments and the shared point/error vocabulary consumed
-//! by the [`crate::booleans`]/[`crate::trace`] pure-function kernels and by any external caller
+//! by the `semio-framework-2d-booleans`/`semio-framework-2d-trace` pure-function kernels and by any external caller
 //! (e.g. the `🖍️draw` plugin) that needs planar-boolean or bitmap-autotrace geometry.
 //!
 //! 🪦 The store-specific scene-graph vocabulary (`DrawingKernel`, `DrawingHandle`, `DrawingKind`,

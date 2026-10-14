@@ -7,26 +7,26 @@
 //!
 //! Only `name` changes: the id `wind` every combination term resolves through is untouched, so a rename orphans nothing.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/🏷️renames/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries the committed model from `before` to exactly the committed `after`.
@@ -75,7 +75,7 @@ fn inverse_restores_before() {
 /// 🎯️ The declared outcome holds: applied, with no diagnostic at all.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"), "change-load-case-name/renames-the-wind-case-1ac4f5: this vector declares an applied outcome");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "change-load-case-name/renames-the-wind-case-1ac4f5: a clean application raises no diagnostic, got {:?}", produced.messages());
@@ -86,23 +86,23 @@ fn declared_outcome_holds() {
 fn produces_committed_diff() {
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
-    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-load-case-name/renames-the-wind-case-1ac4f5: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-load-case-name/renames-the-wind-case-1ac4f5: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed delta on `before` reproduces the committed `after` on its own.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-load-case-name/renames-the-wind-case-1ac4f5: committed diff did not carry before to after");
 }
@@ -110,14 +110,14 @@ fn committed_diff_applies_to_after() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-load-case-name/renames-the-wind-case-1ac4f5: committed {label} JSON is not canonical");
     }
     let reencoded = semio_framework_value::ToValue::to_value(&mutation());
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-load-case-name/renames-the-wind-case-1ac4f5: committed mutation JSON is not canonical");
 }
 

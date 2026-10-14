@@ -1,0 +1,53 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "monolith": "semio_s_artifact_procedural_3d_mutations",
+ "package": "semio-s-artifact-procedural-3d-mut-widgets",
+ "description": "Procedural generation3d widget mutation leaves: create, update, delete and move widgets, drop their position, set slider values and inputs and shift nodes",
+ "owner": "🧩️widgets",
+ "moves": [
+  {
+   "from": "create_widget",
+   "to": "create_widget"
+  },
+  {
+   "from": "update_widget",
+   "to": "update_widget"
+  },
+  {
+   "from": "delete_widget",
+   "to": "delete_widget"
+  },
+  {
+   "from": "move_widget",
+   "to": "move_widget"
+  },
+  {
+   "from": "delete_widget_position",
+   "to": "delete_widget_position"
+  },
+  {
+   "from": "change_slider_value",
+   "to": "change_slider_value"
+  },
+  {
+   "from": "change_widget_input",
+   "to": "change_widget_input"
+  },
+  {
+   "from": "move_nodes",
+   "to": "move_nodes"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "doc": "🧩️ Generation3d widget mutation leaves: create, update, delete and move widgets, drop their position, set slider values and inputs and shift nodes. Every leaf is generic over the dispatch enum."
+}

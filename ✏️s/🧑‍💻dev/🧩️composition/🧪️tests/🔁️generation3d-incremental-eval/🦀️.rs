@@ -21,9 +21,10 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
 use semio_framework_os_flow::neural::{ColdRetire as _, Registry};
 use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_payload, PreviewInteractionMarks};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor::preview_payload;
+use semio_s_artifact_procedural_3d_editor::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use serde::Deserialize;
@@ -152,7 +153,7 @@ fn hex_column_host() -> FlowHost {
     operators_installed();
     let Generation3dSnapshot { host_snapshot, generation } = parse_dsl(HEX_COLUMN_DSL).expect("the hex column dsl parses");
     generation.retire_cold();
-    let mut host = FlowHost::from_host_snapshot(host_snapshot).with_geometry_port(geometry_session().port());
+    let mut host = FlowHost::from_host_snapshot(host_snapshot).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY).with_geometry_port(geometry_session().port());
     host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
     host
 }

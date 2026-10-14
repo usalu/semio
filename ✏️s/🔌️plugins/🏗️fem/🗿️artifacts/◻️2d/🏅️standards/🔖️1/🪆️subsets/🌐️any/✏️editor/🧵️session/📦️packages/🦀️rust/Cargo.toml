@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-fem-2d-editor-session"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 2d mounted editor session"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-fem-2d-editor-model-window = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-fem-analyses = { workspace = true }
+semio-s-fem-analyses-assembly = { workspace = true }
+semio-s-fem-analyses-model = { workspace = true }
+semio-s-fem-elements2d = { workspace = true }
+semio-s-fem-mesh = { workspace = true }
+semio-s-fem-model = { workspace = true }
+semio-s-fem-sparse-pcg = { workspace = true }
+semio-s-fem-static = { workspace = true }

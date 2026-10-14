@@ -5,8 +5,8 @@
 //! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️drag-frames/🚫️rejects/` (contract D1), authored by
 //! the independent implementation `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️w3-t-layout-author-vectors.py`.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-frames/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
@@ -87,5 +87,5 @@ fn moves_nothing_and_has_nothing_to_undo() {
     assert_eq!(expected_after(), before(), "drag-frames/rejects-missing-frames: a vector that moves nothing commits two equal snapshots");
     assert!(mutation().inverse(&before()).expect("valid retained mutation inverse fixture").is_empty(), "drag-frames/rejects-missing-frames: nothing moved, so nothing is undone");
     assert!(DIFF_ABSENT.is_empty(), "drag-frames/rejects-missing-frames: the D6 sentinel must stay empty");
-    assert_eq!(mutation().diff(&before()).diff(), &crate::LayoutDiff::default(), "drag-frames/rejects-missing-frames: a refusal carries the default diff");
+    assert_eq!(mutation().diff(&before()).diff(), &semio_s_artifact_layout_layout_diff::LayoutDiff::default(), "drag-frames/rejects-missing-frames: a refusal carries the default diff");
 }

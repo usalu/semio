@@ -1,8 +1,8 @@
 //! 🌡️ `change-layer-lambda` diff — patches the layer's `lambda` inside its element; a missing element or layer is a `mutation.invariant`.
 
-use super::ChangeLayerLambda;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
-use crate::Din4108Snapshot;
+use crate::change_layer_lambda::ChangeLayerLambda;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeLayerLambda, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

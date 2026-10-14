@@ -1,6 +1,6 @@
-use super::*;
-use crate::document::AnnexChoice;
-use crate::{CompositeBeam, CompositeColumn, CompositeSlab};
+use crate::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1994_model::{CompositeBeam, CompositeColumn, CompositeSlab};
 use protocol::{Mutation, SemanticMutation};
 
 fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {

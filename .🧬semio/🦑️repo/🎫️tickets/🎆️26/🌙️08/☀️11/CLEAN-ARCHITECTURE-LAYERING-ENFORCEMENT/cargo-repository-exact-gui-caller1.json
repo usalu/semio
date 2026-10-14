@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "row": {
+    "type": "node-terminal",
+    "name": "Repo Cache Repository Exact Cargo (Prototype)",
+    "request": "launch",
+    "command": "bun repo run repo:test-repository-exact-cargo --configuration=prototype",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:exact-cargo:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"],\"selection\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"]]}",
+      "SEMIO_BUILD_MODE": "prototype",
+      "CARGO_NET_OFFLINE": "false",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/repository-exact/prototype"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.84097
+    }
+  },
+  "seedSha256": "662a8af87f7cad0d17895d560b6bad4cfcc6a26d20e3fb428ba918f4a6f04568",
+  "launchSha256": "382597060d4c7328cde1b805cf98e16e6aba2aba733e2a55ef87bbdf505fd44b",
+  "outputRedirectOnly": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/cx-gui1",
+  "sourceObservations": {
+    "kind": "read-only-source-observation-not-authority",
+    "files": [
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts",
+        "sha256": "672eb83e1565fb48d1f08344375ba5ff0ad4fa2a38f4755a53b3734a6cc53af2",
+        "bytes": 7613
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json",
+        "sha256": "62a23334db82ddce703c572e2b1b4c64db3834ede50d4ce8c545de6c7c5f9746",
+        "bytes": 5020
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+        "sha256": "845f8d0ae6a172f0fd03dbda80cbd0add6ec890a89a22d39a7da8eb3c655404f",
+        "bytes": 4663
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+        "sha256": "ea8e30c813775f311159f72ccda0d864e7a180c17e054bb2a574eb464442d813",
+        "bytes": 4274
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🟦️.ts",
+        "sha256": "6ee2ef94ea9d531c4fed170d2a8dfaa02d0d5b9f3f6c815f305f52c84b7ea9fb",
+        "bytes": 14295
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts",
+        "sha256": "ec4d91529e26a00791e41947437648b51cadcc393607d9dad9d45ca9e1d7f50f",
+        "bytes": 958
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+        "sha256": "e63d4c190640acb7b193b84e51840149b718822215bf16efe95a01fa89aa56f9",
+        "bytes": 29055
+      }
+    ]
+  },
+  "qualification": "Initial authored GUI input; no process or test acceptance inferred"
+}

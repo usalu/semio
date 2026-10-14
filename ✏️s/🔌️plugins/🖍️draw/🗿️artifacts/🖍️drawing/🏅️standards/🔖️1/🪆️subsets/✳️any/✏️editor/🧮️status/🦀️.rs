@@ -1,5 +1,6 @@
 //! 🧮️ Projects window status from document counts and framework-owned selection.
-use super::{drawing_manifest_action, WindowEngagement, WindowEngagementInput, WindowEngagementStatus};
+use super::drawing_manifest_action;
+use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementStatus};
 use crate::terminology::DrawingPlayLabels;
 use std::collections::HashMap;
 

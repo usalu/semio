@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "commands": [
+    {
+      "name": "direct outer script",
+      "command": "bun ./📜️script.ts test",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "nested script token retains outer owner",
+      "command": "bun ./📜️script.ts command --cwd child -- bun ./📜️script.ts test",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "Bun run outer script",
+      "command": "bun run ./📜️script.ts test",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "quoted outer path",
+      "command": "bun \"./space owner/📜️script.ts\" test",
+      "cwd": ".",
+      "arguments": [],
+      "entry": "space owner/📜️script.ts"
+    },
+    {
+      "name": "workspace placeholder",
+      "command": "bun \"{workspaceRoot}/owner/📜️script.ts\" test",
+      "cwd": ".",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "project placeholder",
+      "command": "node \"{projectRoot}/📜️script.ts\" test",
+      "cwd": ".",
+      "arguments": [],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "forwarded literal entry",
+      "command": "bun",
+      "cwd": "owner",
+      "arguments": [
+        "./📜️script.ts",
+        "test"
+      ],
+      "entry": "owner/📜️script.ts"
+    },
+    {
+      "name": "non-runtime script-shaped data",
+      "command": "cargo metadata --manifest-path ./📜️script.ts",
+      "cwd": "owner",
+      "arguments": [],
+      "entry": null
+    }
+  ],
+  "refusals": [
+    {
+      "name": "source escapes repository",
+      "command": "bun ../../📜️script.ts",
+      "cwd": "owner",
+      "arguments": []
+    },
+    {
+      "name": "shell operator",
+      "command": "bun ./📜️script.ts; echo unsafe",
+      "cwd": "owner",
+      "arguments": []
+    }
+  ],
+  "sourceCases": [
+    {
+      "name": "declared nested same-name child and transitive imports",
+      "missing": null,
+      "accepted": true
+    },
+    {
+      "name": "missing selected outer script",
+      "missing": "wrapper/📜️script.ts",
+      "accepted": false
+    },
+    {
+      "name": "missing declared child script",
+      "missing": "owner/📜️script.ts",
+      "accepted": false
+    },
+    {
+      "name": "missing declared child transitive import",
+      "missing": "owner/leaf.ts",
+      "accepted": false
+    },
+    {
+      "name": "missing selected native manifest",
+      "missing": "owner/Cargo.toml",
+      "accepted": false
+    },
+    {
+      "name": "missing selected execution declaration",
+      "missing": "owner/execution.json",
+      "accepted": false
+    }
+  ],
+  "source": {
+    "files": {
+      "wrapper/📜️script.ts": "import './outer.ts'; export const wrapper=true;",
+      "wrapper/outer.ts": "export const outer=true;",
+      "owner/📜️script.ts": "import './leaf.ts'; export const owner=true;",
+      "owner/leaf.ts": "export const leaf=true;",
+      "owner/Cargo.toml": "[package]\nname=\"fixture\"\nversion=\"0.1.0\"\n[package.metadata.semio]\ncargo-execution=\"execution.json\"\n"
+    },
+    "command": "bun ./wrapper/📜️script.ts command -- bun ./📜️script.ts test",
+    "cwd": ".",
+    "declaration": {
+      "version": 1,
+      "operations": [
+        {
+          "command": {
+            "program": "bun",
+            "cwd": ".",
+            "arguments": [
+              "{workspaceRoot}/wrapper/📜️script.ts",
+              "command",
+              "--",
+              "bun",
+              "./📜️script.ts",
+              "test"
+            ],
+            "tail": "none"
+          },
+          "request": {
+            "version": 1,
+            "kind": "tests",
+            "manifest": "owner/Cargo.toml",
+            "cwd": "owner",
+            "packages": [
+              "fixture"
+            ],
+            "arguments": []
+          },
+          "continuation": {
+            "program": "bun",
+            "cwd": "owner",
+            "arguments": [
+              "./📜️script.ts",
+              "test"
+            ],
+            "tail": "none"
+          }
+        }
+      ]
+    },
+    "required": [
+      "owner/Cargo.toml",
+      "owner/execution.json",
+      "wrapper/📜️script.ts",
+      "wrapper/outer.ts",
+      "owner/📜️script.ts",
+      "owner/leaf.ts"
+    ]
+  }
+}

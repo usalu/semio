@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -31,7 +32,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 📚️ The navbar dropdown reads `RasterPlayApp::examples()`, the artifact catalogue `.editor`
 /// stamps onto the manifest.
 pub fn plugin() -> Result<Plugin<RasterApps>, PluginAssemblyError> {
-    Plugin::<RasterApps>::builder("raster")
+    PluginBuilder::<_, RasterApps>::new("raster")
         .label("Raster")
         .version("0.1.0")
         .package_id("semio:raster")

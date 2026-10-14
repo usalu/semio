@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1995Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -62,8 +70,8 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ `En1995Snapshot -> CheckReport` — full timber-structure evaluation.
-pub fn evaluate(document: &En1995Snapshot) -> crate::document::CheckReport {
-    crate::artifact_schema::evaluate_structure(document.annex, &document.members, &document.connections)
+pub fn evaluate(document: &En1995Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+    semio_s_artifact_norm_en1995_schema::evaluate_structure(document.annex, &document.members, &document.connections)
 }
 //#endregion 🔖️ComplianceReport
 
@@ -73,5 +81,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Outline type lives in the sibling `🧾outline/` slug.
-pub use super::outline::En1995Outline;
+pub use crate::outline::En1995Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

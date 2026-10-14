@@ -1,12 +1,12 @@
 //! ↩️ `update-renewables` inverse.
 
-use crate::mutations::update_renewables::UpdateRenewables;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::update_renewables::UpdateRenewables;
 
-pub fn inverse(_payload: &UpdateRenewables, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &UpdateRenewables, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_renewables::UpdateRenewables> {
     Ok((|| {
-    vec![Din18599Mutation::UpdateRenewables(UpdateRenewables { new_renewables: base.renewables.clone() })]
+    vec![Op::from(UpdateRenewables { new_renewables: base.renewables.clone() })]
 
     })())
 }

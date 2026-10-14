@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/framework-2d-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-2d-js:test"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

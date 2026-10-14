@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn original_mesh_tessellation_corner_emission_prices_exact_atomic_output(){
     use crate::test_support::observe_tessellation_system as observe;
-    use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
+    use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let mut job=MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law));while !job.buffer_reservation_complete(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:job.next_buffer_capacity_byte_demand(0).unwrap(),maximum_release_bytes:0,maximum_depth:job.next_buffer_depth_demand().unwrap()};assert!(job.reserve_buffer_step(grant).unwrap().progress().fits(grant));}while !job.metadata_capture_complete(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:job.next_metadata_depth_demand().unwrap()};assert!(job.capture_metadata_step(grant).unwrap().progress().fits(grant));}while job.phase!=7{job.advance().unwrap();}job});

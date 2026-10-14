@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/machine:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/machine:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

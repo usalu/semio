@@ -1,10 +1,10 @@
 //! Inverse for `change-self-weight-assumed-gk`.
-use super::ChangeSelfWeightAssumedGk;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(payload: &ChangeSelfWeightAssumedGk, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_self_weight_assumed_gk::ChangeSelfWeightAssumedGk;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(payload: &ChangeSelfWeightAssumedGk, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_self_weight_assumed_gk::ChangeSelfWeightAssumedGk> {
     Ok((|| {
     if payload.index >= base.self_weight_elements.len() { return Vec::new(); }
-    vec![En1991Mutation::ChangeSelfWeightAssumedGk(ChangeSelfWeightAssumedGk { index: payload.index, new_assumed_gk: base.self_weight_elements[payload.index].assumed_gk })]
+    vec![Op::from(ChangeSelfWeightAssumedGk { index: payload.index, new_assumed_gk: base.self_weight_elements[payload.index].assumed_gk })]
 
     })())
 }

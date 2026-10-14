@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `CreateNode`.
 use super::CreateNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodeInsertion, Fem3dNodesDelta};
-use crate::standards::v1::subsets::any::schema::mutations::{invariant,node_breach};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodeInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::node_breach;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateNode, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

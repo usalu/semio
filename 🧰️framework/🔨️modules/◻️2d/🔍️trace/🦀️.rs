@@ -1,5 +1,5 @@
 //! 🔍️ Pixel-cell contours with bounded grants, topology checks and private publication.
-use crate::engine::{DrawingError,PathSegment,Vec2};
+use semio_framework_2d_engine::{DrawingError,PathSegment,Vec2};
 use semio_framework_value::numeric_scratch::NumericIndex;
 
 #[derive(Clone,Copy,Debug)]
@@ -162,7 +162,7 @@ impl<M:AsRef<[u8]>> BitmapTraceJob<M> {
  pub fn into_result(self)->Result<Vec<PathSegment>,BitmapTraceError> {self.result()?;Ok(self.output)}
  pub fn cancel(&mut self) {self.cancelled=true;}
 }
-pub type BitmapTraceRetirementProgress=crate::retirement::WorkRetirementProgress;
+pub type BitmapTraceRetirementProgress=semio_framework_2d_retire::WorkRetirementProgress;
 /// 🧹️ Owns the actual typed trace storage until separately funded physical close.
 pub struct BitmapTraceRetirement<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned>{owner:semio_framework_value::retirement::controlled::ControlledRetirement<BitmapTraceJob<M>>,work:u64}
 impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> BitmapTraceRetirement<M>{
@@ -172,7 +172,7 @@ impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> BitmapTraceRe
  pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owner.next_capacity_byte_demand(copy)}
  pub fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owner.next_release_byte_demand()}
  pub fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owner.next_depth_demand()}
- pub fn advance(&mut self,items:usize)->Result<BitmapTraceRetirementProgress,BitmapTraceError>{crate::retirement::advance_physical_work(&mut self.owner,&mut self.work,items).map_err(|_|BitmapTraceError::Invalid("Bitmap trace physical close refused"))}
+ pub fn advance(&mut self,items:usize)->Result<BitmapTraceRetirementProgress,BitmapTraceError>{semio_framework_2d_retire::advance_physical_work(&mut self.owner,&mut self.work,items).map_err(|_|BitmapTraceError::Invalid("Bitmap trace physical close refused"))}
 }
 impl<M:AsRef<[u8]>+semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for BitmapTraceRetirement<M>{
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.owner),semio_framework_value::retirement::deferred(self.work)])}

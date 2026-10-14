@@ -1,6 +1,6 @@
-use crate::document::CheckStatus;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::En1992Snapshot;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use crate::evaluate;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[test]
 fn default_evaluate_covers_parts() {

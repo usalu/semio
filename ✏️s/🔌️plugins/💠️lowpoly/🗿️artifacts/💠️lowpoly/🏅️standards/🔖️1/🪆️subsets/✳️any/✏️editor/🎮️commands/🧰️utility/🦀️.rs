@@ -1,10 +1,10 @@
 //! 🧰️ Lowpoly per-utility parameter writes.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetUtilityParamsEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::editor::lowpoly::view::utility_params_value;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetUtilityParamsEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_view::utility_params_value;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

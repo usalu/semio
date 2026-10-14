@@ -16,14 +16,18 @@
 //!
 //! @see ../../../🚪️io/🦀️.rs — `document_io`, the composition point this command calls.
 //! @see ../🛑️cancel-preview-eval/🦀️.rs — the cancellation this export's expensive half rides on.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_s_artifact_procedural_3d_preview_eval::export_meshes_from_evaluation;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-document")]
@@ -72,7 +76,7 @@ pub fn retained_meshes(
     session: &FlowEvalSession,
     widget_id: Option<&str>,
 ) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
-    let meshes = crate::editor::generation3d::export_meshes_from_session(doc.snapshot, cfg.snapshot, session, widget_id);
+    let meshes = crate::export_meshes_from_session(doc.snapshot, cfg.snapshot, session, widget_id);
     meshes.map(Some)
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_EXPORT), error.to_string()))
 }
@@ -82,3 +86,17 @@ pub fn retained_meshes(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔖️MeshBridge
+/// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
+pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> Result<semio_framework_plugin::MeshData, semio_framework_diagnostic::TextError> {
+    semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes(&export_meshes_from_session(snapshot, cfg, session, None)?)
+}
+
+/// 🎨️ Retains each prepared surface and its authored channel set for format diagnostics and export.
+pub fn export_meshes_from_session(snapshot: &Generation3dSnapshot, _cfg: &Generation3dConfig, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+    export_meshes_from_evaluation(&snapshot.host_snapshot, session, widget_id)
+}
+
+
+//#endregion 🔖️MeshBridge

@@ -407,7 +407,7 @@ fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u6
 
 async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBootstrapPair) {
     ensure_demo_codec_registered().await;
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None);
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
     drop(envelope.into_owners());
     let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
@@ -622,7 +622,7 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
     const RIGHT: &str = "hub.v1.2222222222222222222222222222222222222222222222222222222222222222";
-    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None);
+    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut left = crate::os_store::test_support::plain_test_store(genesis()).await;
     let mut right = crate::os_store::test_support::plain_test_store(genesis()).await;
     let mut shared = sample_operation_envelope("shared-edit", 1).await;
@@ -924,7 +924,7 @@ async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, 
 //#region 🧪️SyncSession
 #[semio_framework_async_macros::async_test]
 async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     receive_under_fixture_identity(&mut session, sample_operation_envelope("edit-1", 5).await).await.expect("receive");
@@ -935,7 +935,7 @@ async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
 
 #[tokio::test]
 async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     let first = sample_operation_envelope("edit-1", 5).await;
@@ -1428,7 +1428,7 @@ mod actor_tests {
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
     async fn demo_envelope(document_id: &str) -> crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
+        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
     }
 
     async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
@@ -2239,7 +2239,7 @@ mod actor_tests {
         let channels =
             host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
         let mut events = host.subscribe(&fixture.document_id).await;
-        let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None)).await;
+        let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
@@ -2455,7 +2455,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
-    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await;
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply e2");
@@ -2466,7 +2466,7 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
 
     let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
     let mut reloaded = crate::os_store::test_support::plain_test_store(parsed.envelope).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
@@ -2493,11 +2493,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
-    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
+    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_text(seed.envelope()).await.expect("print document text");
     storage.write("demo", "demo", &files).await.expect("write");
 
-    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2507,7 +2507,7 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
     assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
     let _ = parsed.into_snapshot();
 
@@ -2545,12 +2545,12 @@ async fn folder_text_storage_round_trips_pack() {
     let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
     assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
-    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
+    let mut seed = crate::os_store::test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let files = print_document_pack(seed.envelope()).await.expect("print document pack");
     let dsl_mirror = seed.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
-    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
+    let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
@@ -2560,12 +2560,12 @@ async fn folder_text_storage_round_trips_pack() {
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
     let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
-    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).await.unwrap_or_else(|error| panic!("parse text: {error}"));
+    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
     assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
     let _ = parsed_text.into_snapshot();
 
     let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
-    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
+    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
     assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
     let _ = parsed_pack.into_snapshot();
 
@@ -2573,7 +2573,7 @@ async fn folder_text_storage_round_trips_pack() {
     let dsl_mirror2 = store.envelope().vcs.genesis.facts().snapshot().print_dsl();
     storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
     let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
-    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
     assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
     let _ = parsed_pack2.into_snapshot();
 

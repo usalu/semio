@@ -22,6 +22,8 @@ name = "semio-io-sqlite-snapshot-oracle"
 path = "../../🧪️tests/🧭️oracle/🦀️.rs"
 
 [dependencies]
+semio-framework-io-sqlite-model.workspace = true
+semio-framework-io-control.workspace = true
 semio-framework-value.workspace = true
 
 [dev-dependencies]

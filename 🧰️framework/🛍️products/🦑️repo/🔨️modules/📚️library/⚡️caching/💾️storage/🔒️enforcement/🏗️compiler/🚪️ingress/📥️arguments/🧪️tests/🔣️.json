@@ -1,0 +1,176 @@
+{
+  "context": {
+    "version": 1,
+    "compilerConfiguration": "/repo/.cargo/config.toml",
+    "buildDirectory": "/owned/build",
+    "targetDirectory": "/owned/target"
+  },
+  "cases": [
+    {
+      "name": "plain",
+      "args": [
+        "fetch",
+        "--locked"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "known-target",
+      "args": [
+        "build",
+        "--target-dir",
+        "/owned/target"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "known-inline-target",
+      "args": [
+        "build",
+        "--target-dir=/owned/target"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "foreign-target",
+      "args": [
+        "build",
+        "--target-dir",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "foreign-inline-target",
+      "args": [
+        "metadata",
+        "--target-dir=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing-target",
+      "args": [
+        "build",
+        "--target-dir"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "known-config",
+      "args": [
+        "metadata",
+        "--config",
+        "/repo/.cargo/config.toml"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "known-build-config",
+      "args": [
+        "build",
+        "--config=build.build-dir=\"/owned/build\""
+      ],
+      "accepted": true
+    },
+    {
+      "name": "known-target-config",
+      "args": [
+        "build",
+        "--config",
+        "build.target-dir=\"/owned/target\""
+      ],
+      "accepted": true
+    },
+    {
+      "name": "foreign-file-config",
+      "args": [
+        "metadata",
+        "--config",
+        "/outside/config.toml"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "foreign-inline-config",
+      "args": [
+        "update",
+        "--config=source.crates-io.replace-with=\"outside\""
+      ],
+      "accepted": false
+    },
+    {
+      "name": "foreign-build-config",
+      "args": [
+        "build",
+        "--config",
+        "build.build-dir=\"/outside\""
+      ],
+      "accepted": false
+    },
+    {
+      "name": "missing-config",
+      "args": [
+        "update",
+        "--config"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "binary-arguments",
+      "args": [
+        "run",
+        "--",
+        "--target-dir",
+        "/outside",
+        "--config=/outside"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "artifact-copy-redirection",
+      "args": [
+        "build",
+        "--artifact-dir",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "inline-artifact-copy-redirection",
+      "args": [
+        "build",
+        "--artifact-dir=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "lock-publication-redirection",
+      "args": [
+        "update",
+        "--lockfile-path",
+        "/outside/Cargo.lock"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "install-root-redirection",
+      "args": [
+        "install",
+        "owned",
+        "--root",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "inline-install-root-redirection",
+      "args": [
+        "install",
+        "owned",
+        "--root=/outside"
+      ],
+      "accepted": false
+    }
+  ]
+}

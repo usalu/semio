@@ -1,0 +1,254 @@
+{
+ "crates": {
+  "semio-framework-2d-engine": {
+   "folder": "⚙️engine",
+   "description": "⚙️ 2D geometry kernel vocabulary: path segments, points and the operation error.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-value-derive"
+   ]
+  },
+  "semio-framework-2d-retire": {
+   "folder": "🧹️retire",
+   "description": "🧹️ Work-granted physical retirement counters and the geometry job close owner.",
+   "deps": [
+    "semio-framework-value"
+   ]
+  },
+  "semio-framework-2d-compute": {
+   "folder": "🧮️compute",
+   "description": "🧮️ Neutral content-addressed computational engine cache, keys, handles and ephemeral representations.",
+   "deps": [
+    "semio-framework-hash"
+   ],
+   "dev": [
+    "serde_json",
+    "blake3"
+   ]
+  },
+  "semio-framework-2d-path-flatten": {
+   "folder": "🛤️path/📏️flatten",
+   "description": "📏️ Bounded path flattening into closed contours.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine",
+    "semio-framework-2d-retire"
+   ],
+   "dev": [
+    "serde_json"
+   ]
+  },
+  "semio-framework-2d-path-stroke": {
+   "folder": "🛤️path/🖊️stroke",
+   "description": "🖊️ Bounded polyline stroking with joins and caps.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine",
+    "semio-framework-2d-retire"
+   ],
+   "dev": [
+    "serde_json",
+    "semio-framework-pixels"
+   ]
+  },
+  "semio-framework-2d-booleans": {
+   "folder": "🔀️booleans",
+   "description": "🔀️ Planar polygon and path booleans under bounded work grants.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine",
+    "semio-framework-2d-retire",
+    "semio-framework-2d-path-flatten"
+   ],
+   "dev": [
+    "serde_json"
+   ]
+  },
+  "semio-framework-2d-regions": {
+   "folder": "🧱️regions",
+   "description": "🧱️ Region booleans and offsets over planar booleans.",
+   "deps": [
+    "semio-framework-2d-engine",
+    "semio-framework-2d-booleans"
+   ],
+   "dev": [
+    "serde_json"
+   ]
+  },
+  "semio-framework-2d-trace": {
+   "folder": "🔍️trace",
+   "description": "🔍️ Bitmap autotrace into path segments under bounded work grants.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine",
+    "semio-framework-2d-retire"
+   ],
+   "dev": [
+    "serde_json"
+   ]
+  },
+  "semio-framework-2d-text": {
+   "folder": "📝️text",
+   "description": "📝️ Explicit line layout and the font-independent text extent.",
+   "deps": [
+    "semio-framework-value"
+   ],
+   "dev": [
+    "serde_json"
+   ]
+  },
+  "semio-framework-2d-text-font": {
+   "folder": "📝️text/🔤️font",
+   "description": "🔤️ SFNT admission, cmap, metrics, glyph outlines and kerning over original font bytes.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine"
+   ],
+   "dev": [
+    "serde_json",
+    "ttf-parser",
+    "tiny-skia",
+    "rustybuzz",
+    "semio-framework-trace",
+    "semio-framework-2d-text-font-testing"
+   ]
+  },
+  "semio-framework-2d-text-font-testing": {
+   "folder": "📝️text/🔤️font/🧪️testing",
+   "description": "🧰️ Dev-only font family test support: authored font bytes and heap-witnessed funded close.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-trace"
+   ]
+  },
+  "semio-framework-2d-text-font-catalog": {
+   "folder": "📝️text/🔤️font/📇️catalog",
+   "description": "📇️ Shipped font families and their progressive catalog admission.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-text-font",
+    "semio-framework-font-anta-latin-ext-regular",
+    "semio-framework-font-anta-latin-regular",
+    "semio-framework-font-anta-math-regular",
+    "semio-framework-font-anta-symbols-regular",
+    "semio-framework-font-kelly-slab-cyrillic-regular",
+    "semio-framework-font-kelly-slab-latin-ext-regular",
+    "semio-framework-font-kelly-slab-latin-regular",
+    "semio-framework-font-noto-emoji-activities-regular",
+    "semio-framework-font-noto-emoji-faces-regular",
+    "semio-framework-font-noto-emoji-flags-regular",
+    "semio-framework-font-noto-emoji-food-regular",
+    "semio-framework-font-noto-emoji-joined-forms-regular",
+    "semio-framework-font-noto-emoji-nature-regular",
+    "semio-framework-font-noto-emoji-objects-regular",
+    "semio-framework-font-noto-emoji-people-regular",
+    "semio-framework-font-noto-emoji-regions-regular",
+    "semio-framework-font-noto-emoji-supplement-regular",
+    "semio-framework-font-noto-emoji-symbols-regular",
+    "semio-framework-font-noto-emoji-travel-regular",
+    "semio-framework-font-share-tech-mono-latin-regular"
+   ],
+   "dev": [
+    "serde_json",
+    "ttf-parser",
+    "semio-framework-trace",
+    "semio-framework-2d-text-font-testing"
+   ]
+  },
+  "semio-framework-2d-text-font-shape-unicode": {
+   "folder": "📝️text/🔤️font/🧵️shape/🌐️unicode",
+   "description": "🌐️ Pinned Unicode record admission, property and mapping probes, normalization, graphemes and bidi.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-text-font",
+    "semio-framework-unicode-properties",
+    "semio-framework-unicode-mappings"
+   ],
+   "dev": [
+    "serde_json",
+    "semio-framework-trace",
+    "semio-framework-2d-text-font-testing"
+   ]
+  },
+  "semio-framework-2d-text-font-shape": {
+   "folder": "📝️text/🔤️font/🧵️shape",
+   "description": "🧵️ OpenType lookup selection, substitution, ligatures, marks, contexts and cluster face mapping.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-text-font",
+    "semio-framework-2d-text-font-shape-unicode"
+   ],
+   "dev": [
+    "serde_json",
+    "ttf-parser",
+    "rustybuzz",
+    "semio-framework-trace",
+    "semio-framework-2d-text-font-testing",
+    "semio-framework-2d-text-font-catalog"
+   ]
+  },
+  "semio-framework-2d-text-font-run": {
+   "folder": "📝️text/🔤️font/🧵️run",
+   "description": "🏃️ Shaped multiline outline runs over admitted fonts and Unicode.",
+   "deps": [
+    "semio-framework-value",
+    "semio-framework-2d-engine",
+    "semio-framework-2d-text-font",
+    "semio-framework-2d-text-font-shape-unicode",
+    "semio-framework-2d-text-font-shape"
+   ],
+   "dev": [
+    "serde_json",
+    "ttf-parser",
+    "tiny-skia",
+    "rustybuzz",
+    "semio-framework-trace",
+    "semio-framework-2d-text-font-testing"
+   ]
+  },
+  "semio-framework-unicode-properties": {
+   "folder": "📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🏷️properties",
+   "description": "🏷️ Pinned Unicode shaping record head and property ranges asset.",
+   "deps": []
+  },
+  "semio-framework-unicode-mappings": {
+   "folder": "📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings",
+   "description": "🔁️ Pinned Unicode decomposition, composition, mirroring and bracket tables asset.",
+   "deps": []
+  }
+ },
+ "external": {
+  "semio-framework-value": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+  "semio-framework-value-derive": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+  "semio-framework-hash": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust",
+  "semio-framework-trace": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
+  "semio-framework-pixels": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust",
+  "semio-framework-font-anta-latin-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-anta-latin-ext-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-anta-math-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-anta-symbols-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-kelly-slab-latin-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-kelly-slab-latin-ext-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-kelly-slab-cyrillic-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-share-tech-mono-latin-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-regions-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-flags-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-symbols-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-objects-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-activities-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-travel-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-food-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-nature-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-people-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-faces-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-joined-forms-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust",
+  "semio-framework-font-noto-emoji-supplement-regular": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust"
+ },
+ "thirdParty": {
+  "serde_json": "{ workspace = true }",
+  "blake3": "\"1.8.2\"",
+  "ttf-parser": "\"0.25.1\"",
+  "tiny-skia": "\"0.11.4\"",
+  "rustybuzz": "\"0.20.1\""
+ }
+}

@@ -1,8 +1,7 @@
 //! 📍️ Block2d mutation — `MoveHandle`: a rim-handle's polar position (`angle`+`radius` together).
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 📍️ `move-handle` payload.
@@ -20,19 +19,19 @@ pub struct MoveHandle {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_handle(id: String, new_angle: f64, new_radius: f64) -> Block2dMutation {
-    Block2dMutation::MoveHandle(MoveHandle { id, new_angle, new_radius })
+pub fn move_handle<Op: From<crate::move_handle::MoveHandle>>(id: String, new_angle: f64, new_radius: f64) -> Op {
+    Op::from(MoveHandle { id, new_angle, new_radius })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for MoveHandle {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for MoveHandle where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::move_handle::MoveHandle> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "handle", kind: "move-handle", record: "MovedHandle" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::move_handle::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::move_handle::inverse::inverse(self, base)?
     
     })
 }
@@ -44,3 +43,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for MoveHandle {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

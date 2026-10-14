@@ -708,6 +708,7 @@ impl RetainedOrderedMapInsertProgress {
 
 /// 🧯 Owns one exclusive unpublished workspace through completion or bounded cancellation.
 #[derive(crate::RetireOwned)]
+#[value(crate="crate")]
 struct InsertWorkspace<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{map:RetainedOrderedMap<K,V>,key:K,value:V}
 struct InsertState<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> {
     map: Option<RetainedOrderedMap<K, V>>,

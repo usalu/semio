@@ -1,5 +1,6 @@
 //! ♻️ Original refold alias batches retain their native snapshot roots until exact admission.
-use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+pub use semio_framework_value_control_contract::*;
+pub use semio_framework_value_retirement::ErasedSnapshotRetirement;
 use std::{mem::{ManuallyDrop,size_of,size_of_val},sync::Arc};
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 
@@ -71,3 +72,7 @@ impl<P> Drop for OriginalAliasBatch<P>{fn drop(&mut self){assert!(std::thread::p
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
+mod allocation_testing;

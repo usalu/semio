@@ -1,0 +1,389 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+ "crate": "semio_s_artifact_block_2d",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-block-2d-model",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "Block 2d model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-block-2d-diff",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "Block 2d diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-block-2d-mutations",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 2d mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-block-2d-schema",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "Block 2d artifact schema and descriptor"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-block-2d-inferences",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "Block 2d inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-block-2d-io",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "Block 2d io: composition, builder, analyzer and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-block-2d-examples",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "examples",
+   "description": "Block 2d example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-block-2d-editor",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::block2d",
+   "description": "Block 2d editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-block-2d-viewer",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::block2d",
+   "description": "Block 2d viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-block-2d",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d",
+   "prefix": "",
+   "description": "Block 2d artifact",
+   "role": "artifact"
+  },
+  "mut-node-kind": {
+   "package": "semio-s-artifact-block-2d-mut-node-kind",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️node-kind",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 2d node kind mutation leaves"
+  },
+  "mut-handles": {
+   "package": "semio-s-artifact-block-2d-mut-handles",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handles",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 2d handles mutation leaves"
+  },
+  "mut-meta": {
+   "package": "semio-s-artifact-block-2d-mut-meta",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 2d meta mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✳️any/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✏️rename\\-node\\-kind/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-node\\-kind\\-label/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔀️change\\-node\\-kind\\-variant/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📃️change\\-node\\-kind\\-description/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖼️change\\-node\\-kind\\-icon/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-node\\-kind\\-unit/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖌️update\\-presentation/",
+   "mut-node-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌱️create\\-handle\\-kind/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🗑️delete\\-handle\\-kind/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✒️rename\\-handle\\-kind/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔖️change\\-handle\\-kind\\-label/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎨️change\\-handle\\-kind\\-color/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔌️change\\-handle\\-kind\\-default\\-wire/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌿️create\\-handle/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❌️delete\\-handle/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📍️move\\-handle/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧷️change\\-handle\\-handle\\-kind/",
+   "mut-handles"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️add\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧩️add\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚫️remove\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/👤️add\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚷️remove\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎥️move\\-camera2d/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔍️scale\\-camera2d/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💬️change\\-meta\\-description/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "◻️2d/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️node-kind/🦀️.rs",
+   "text": "//! 🔷️ Block 2d node kind mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handles/🦀️.rs",
+   "text": "//! 🔌️ Block 2d handles mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/🦀️.rs",
+   "text": "//! 📋️ Block 2d meta mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ Block 2d example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ Block 2d's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_mutation_vectors::assert_committed_vectors::<semio_s_artifact_block_2d_model::Block2dSnapshot, semio_s_artifact_block_2d_mutations::Block2dMutation>(&root, || {}).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub(?:\\([^)]*\\))?\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "[ \\t]*#\\[cfg\\(test\\)\\]\\s*#\\[path = \\\"[^\\\"]*🧬️mutations/[^/\\\"]+/🧪️tests/[^\\\"]+\\\"\\]\\s*mod \\w+;\\n",
+     ""
+    ]
+   ]
+  }
+ ],
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [],
+ "move_mods": [],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-block-2d-model"
+    ]
+   }
+  ]
+ },
+ "generated": {},
+ "root_to_map": {
+  "pilot_languages": "io"
+ },
+ "root_to_extra": [],
+ "generic_leaves": {
+  "enum": "Block2dMutation",
+  "snapshot": "Block2dSnapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::Block2dDiff",
+  "mutations_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "✏️rename-node-kind",
+   "🏷️change-node-kind-label",
+   "🔀️change-node-kind-variant",
+   "📃️change-node-kind-description",
+   "🖼️change-node-kind-icon",
+   "📐️change-node-kind-unit",
+   "🖌️update-presentation",
+   "🌱️create-handle-kind",
+   "🗑️delete-handle-kind",
+   "✒️rename-handle-kind",
+   "🔖️change-handle-kind-label",
+   "🎨️change-handle-kind-color",
+   "🔌️change-handle-kind-default-wire",
+   "🌿️create-handle",
+   "❌️delete-handle",
+   "📍️move-handle",
+   "🧷️change-handle-handle-kind",
+   "➕️add-compatibility-rule",
+   "➖️remove-compatibility-rule",
+   "🧩️add-attribute",
+   "🚫️remove-attribute",
+   "👤️add-author",
+   "🚷️remove-author",
+   "🎥️move-camera2d",
+   "🔍️scale-camera2d",
+   "💬️change-meta-description"
+  ]
+ }
+}

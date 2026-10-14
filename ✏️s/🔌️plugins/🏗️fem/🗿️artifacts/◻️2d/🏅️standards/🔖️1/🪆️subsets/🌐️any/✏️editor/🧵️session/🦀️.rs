@@ -3,7 +3,12 @@
 use semio_s_fem_analyses::{FemJobGraph, FemJobStage, FemStagePlan};
 use semio_s_fem_analyses_assembly::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction};
 use semio_s_fem_analyses_model::AnalysisModel;
-use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dLiveVisual;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dMountedVisualLease;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dVisualFreshness;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dVisualJob;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::RegionVisualQuality;
 use semio_s_fem_mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use semio_s_fem_model::Element;
 use semio_s_fem_sparse_pcg::{PcgJob, PcgJobConstruction};
@@ -1490,7 +1495,7 @@ impl MountedState {
                     let base = self.visual_field_cursor * 3;
                     let Some(tx) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base)) else { return self.fail(b"fem2d.visual-tx-scalar".to_vec()) };
                     let Some(ty) = self.pcg.as_ref().and_then(|job| job.visual_scalar(base + 1)) else { return self.fail(b"fem2d.visual-ty-scalar".to_vec()) };
-                    let field = crate::editor::fem2d::modes::edit::windows::model::NodeLiveField {
+                    let field = semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField {
                         node_id: node.id.clone(),
                         displacement: [tx.displacement, ty.displacement],
                         residual: [tx.residual, ty.residual],
@@ -1722,7 +1727,7 @@ impl MountedState {
                         self.visual.fields.pop();
                         return session_pending(1, 0);
                     }
-                    let bytes = self.visual.fields.capacity() * size_of::<crate::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
+                    let bytes = self.visual.fields.capacity() * size_of::<semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return session_pending(0, 0);

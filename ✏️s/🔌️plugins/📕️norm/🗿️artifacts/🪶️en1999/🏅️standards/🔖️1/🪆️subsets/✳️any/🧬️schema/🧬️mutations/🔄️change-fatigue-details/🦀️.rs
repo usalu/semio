@@ -1,9 +1,9 @@
 //! 🦎 `change-fatigue-details` mutation leaf.
 
-use crate::diff::En1999Diff;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
-use crate::snapshot::FatigueDetail;
+use semio_s_artifact_norm_en1999_diff::En1999Diff;
+
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_model::FatigueDetail;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,7 +15,7 @@ pub struct ChangeFatigueDetails {
     pub fatigue_details: Vec<FatigueDetail>,
 }
 
-impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueDetails {
+impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeFatigueDetails where Op: protocol::Mutation<En1999Snapshot, Diff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_fatigue_details::ChangeFatigueDetails> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "fatigue-details",
@@ -24,12 +24,12 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueDet
     };
 
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
-        super::diff::diff(self, base)
+        crate::change_fatigue_details::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_fatigue_details::inverse::inverse(self, base)?
     
     })
 }
@@ -38,3 +38,10 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueDet
         semio_framework_ui_locale::LocalizedLabel::native("Change fatigue detail categories", "Kerbfälle ändern")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

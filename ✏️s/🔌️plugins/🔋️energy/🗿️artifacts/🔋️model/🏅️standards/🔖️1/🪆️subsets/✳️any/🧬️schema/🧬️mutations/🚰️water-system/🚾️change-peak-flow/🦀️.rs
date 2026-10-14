@@ -1,8 +1,7 @@
 //! 🚾️ Energy model mutation — `ChangeWaterSystemPeakFlow`: Sets peak flow (L/s) on one water system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeWaterSystemPeakFlow {
     pub new_peak_flow_l_s: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_water_system_peak_flow(id: crate::model::EntityId, new_peak_flow_l_s: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeWaterSystemPeakFlow(ChangeWaterSystemPeakFlow { id, new_peak_flow_l_s })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_water_system_peak_flow<Op: From<ChangeWaterSystemPeakFlow>>(id: crate::model::EntityId, new_peak_flow_l_s: f64) -> Op {
+    ChangeWaterSystemPeakFlow { id, new_peak_flow_l_s }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeWaterSystemPeakFlow {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeWaterSystemPeakFlow
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeWaterSystemPeakFlow>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "water-system", kind: "change-water-system-peak-flow", record: "ChangedWaterSystemPeakFlow" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

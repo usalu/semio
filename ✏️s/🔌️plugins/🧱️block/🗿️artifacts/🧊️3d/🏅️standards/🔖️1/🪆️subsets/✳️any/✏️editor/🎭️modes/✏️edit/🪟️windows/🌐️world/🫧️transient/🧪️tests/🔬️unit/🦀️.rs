@@ -1,4 +1,4 @@
-use super::*;
+use crate::edit::windows::world::transient::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use std::collections::BTreeMap;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};

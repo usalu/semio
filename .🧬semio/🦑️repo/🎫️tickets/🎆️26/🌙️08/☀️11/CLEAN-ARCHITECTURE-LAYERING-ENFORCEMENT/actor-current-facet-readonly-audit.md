@@ -1,0 +1,21 @@
+# Actor Current Facet Read-Only Audit
+
+Inspected actual defining Source on 2026-10-14. No runtime, bundler, test, initializer or semantic probe was launched. No Source edit was made. This report is not test acceptance.
+
+## Facet and Owner Rosters
+
+The public-facets fixture has exactly seven facets, and its schema requires seven unique enum items. Python JSON comparison established that the facet enum equals all seven current authored fixture rows. Codec now lists exactly five runtime exports: ACTOR_CODEC_REFUSAL, actorCodecAnswer, admitActorCodecAnswerV1, actorCodecRuntimeSourceV1, actorComponentCodecSchema. Its five type exports remain ShardCodecRequest, ShardCodecDocumentPair, ShardCodecSuccess, ShardCodecAnswer, ActorCodecExports. The defining ./codec facade explicitly reexports these four runtime functions/constants, five types and the single defining JSON schema. The actual package exports map has the same seven subpaths.
+
+The actual public-facets test parses named reexports, resolves each schema/implementation owner, separates runtime/type symbols through independent SQLite rosters, checks imported module runtime keys, package resolution and function identity. The two added runtime helpers are represented in both schema enum and fixture. No stale codec symbol roster was identified.
+
+The owner-boundary fixture and schema have matching exact source-owner enum17 and entrypoint enum10. They include defining codec tests, codec public facade and liveness facade. The source collector recursively inspects Actor .ts/.tsx including new nested codec code. Defining codec leaf has zero imports. ShardClient imports admission/type names from its local codec leaf; Product materialization imports only the first-party Actor codec facade. The owner-boundary production Bun.build uses packages external and denies resolutions containing Products; it also scans string/import syntax and resolves first-party package owners. New lexical helpers introduce no product-owner import.
+
+## Serialization and Structural Laws
+
+Actual serializer emits a top-level const ObjectBindingPattern for admitActorCodecAnswerV1 and actorCodecAnswer:codecAnswer, initialized by invoking the whole serialized createActorCodecBoundaryV1 factory. The factory closes over its Uint8Array brand getter, exact-field/mirror helpers and both related functions; it uses only built-ins. Its returned object property names remain canonical even when compiler identifier minification changes lexical variables. The leaf test explicitly transforms the defining TypeScript with esbuild minifyIdentifiers and evaluates the resulting factory serializer in another VM before checking original byte identity and wrong-operation refusal. This test is authored but was not run by this audit.
+
+The actual Product lifetime structural law now selects top-level VariableStatements with an ObjectBindingPattern containing either admission or codecAnswer, requires one resulting arm, and evaluates that complete statement. It does not assume an old standalone actorCodecAnswer.toString arm or a namedConst identifier declaration. The selected statement includes the entire factory expression and therefore its helper ownership. Independent TypeScript preprocessing checks that statement has no imports. Actual syntax is compatible with this selection.
+
+Product materialization inserts actorCodecRuntimeSourceV1() once, binds codec calls directly to codecAnswer, and the worker relay remains the original actor.api.codec call. Defining renderer directly returns handle.codec for hash/mirror and has no local codecBytes/codecMirror reconstruction. ShardClient requests transport unknown and admits its original returned owner through operation-correlated admission. No duplicate runtime answer helper was found in these inspected consumers.
+
+The generic default ShardCodecAnswer remains the closed union of Uint8Array, document-pair and readonly string tuple successes plus Uint8Array fault. The existing compile-time Equal assertion still checks that default closed answer. No concrete structural or roster defect was identified in this current snapshot. Actual registered Actor acceptance remains necessary; prior semantic probes do not establish it.

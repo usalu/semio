@@ -403,5 +403,119 @@
       "expectedSource": false,
       "expectedReceiver": true
     }
+  ],
+  "downloadReceiving": {
+    "phases": [
+      "handleMetadata",
+      "statusMetadata",
+      "outputReceiving",
+      "registryPublication"
+    ],
+    "fields": [
+      "mediaType",
+      "schema",
+      "mimeType",
+      "chunks",
+      "handle"
+    ],
+    "cases": [
+      {
+        "id": "handle-denied",
+        "deniedPhase": 0,
+        "sameSource": true,
+        "occupied": false,
+        "expectedPhases": []
+      },
+      {
+        "id": "status-denied",
+        "deniedPhase": 1,
+        "sameSource": true,
+        "occupied": false,
+        "expectedPhases": [
+          "handleMetadata"
+        ]
+      },
+      {
+        "id": "output-denied",
+        "deniedPhase": 2,
+        "sameSource": true,
+        "occupied": false,
+        "expectedPhases": [
+          "handleMetadata",
+          "statusMetadata"
+        ]
+      },
+      {
+        "id": "registry-denied",
+        "deniedPhase": 3,
+        "sameSource": true,
+        "occupied": false,
+        "expectedPhases": [
+          "handleMetadata",
+          "statusMetadata",
+          "outputReceiving"
+        ]
+      },
+      {
+        "id": "foreign-equal-business-ids",
+        "deniedPhase": 4,
+        "sameSource": false,
+        "occupied": false,
+        "expectedPhases": []
+      },
+      {
+        "id": "occupied",
+        "deniedPhase": 4,
+        "sameSource": true,
+        "occupied": true,
+        "expectedPhases": []
+      },
+      {
+        "id": "paid",
+        "deniedPhase": 4,
+        "sameSource": true,
+        "occupied": false,
+        "expectedPhases": [
+          "handleMetadata",
+          "statusMetadata",
+          "outputReceiving",
+          "registryPublication"
+        ]
+      }
+    ]
+  },
+  "chunkReceiving": [
+    {
+      "id": "denied",
+      "funded": false,
+      "busy": false,
+      "empty": false,
+      "expectedOwner": "queue",
+      "terminal": false
+    },
+    {
+      "id": "busy",
+      "funded": true,
+      "busy": true,
+      "empty": false,
+      "expectedOwner": "queue",
+      "terminal": false
+    },
+    {
+      "id": "paid",
+      "funded": true,
+      "busy": false,
+      "empty": false,
+      "expectedOwner": "receiver",
+      "terminal": false
+    },
+    {
+      "id": "eof",
+      "funded": true,
+      "busy": false,
+      "empty": true,
+      "expectedOwner": "empty",
+      "terminal": true
+    }
   ]
 }

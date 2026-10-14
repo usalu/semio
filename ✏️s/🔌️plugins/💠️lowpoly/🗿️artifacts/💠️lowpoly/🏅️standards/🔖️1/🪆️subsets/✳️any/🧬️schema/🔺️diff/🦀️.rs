@@ -1,7 +1,44 @@
 //! 🧬️ Lowpoly diff schema — sparse edits over the artifact: a positional object row delta whose patches carry the object's own
 //! field patch, an ordered list of paint-layer edits and an ordered list of selection motions applied to its mesh.
 
-use crate::{LowpolyObject, LowpolyPaintLayer, LowpolySnapshot};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::{MutationDiff, Patchable};
 
@@ -32,7 +69,7 @@ pub struct LowpolyObjectPatchEntry {
     pub patch: LowpolyObjectPatch,
     pub paint_layers: Option<LowpolyPaintLayersDelta>,
     pub mesh_vertices: Vec<LowpolyVertexPosition>,
-    pub mesh_attributes: Vec<crate::LowpolyMeshAttribute>,
+    pub mesh_attributes: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute>,
 }
 
 /// 🖌️ Ordered paint-layer edits under an object patch (layers are addressed by index and carry no identity).
@@ -76,7 +113,6 @@ pub struct LowpolyPaintLayerPatch {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::LowpolyObjectPatch;
 //#endregion 🔁️Re-exports
 
 
@@ -97,9 +133,9 @@ impl protocol::list_delta::RowPatch<LowpolyObject> for LowpolyObjectPatchEntry {
                 mesh.set_attribute(channel.name.clone(), attribute).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-target", "the mesh attribute channel does not fit the mesh").at(["meshAttributes".to_string(), index.to_string()]))?;
             }
             mesh.recompute_normals().map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-motion", "the vertex positions degenerate the mesh").at(["meshVertices"]))?;
-            let state = crate::LowpolyMeshState::from_mesh(mesh);
+            let state = semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState::from_mesh(mesh);
             if self.patch.mesh.is_none() {
-                row.mesh = Some(crate::managed_mesh_child_handle(&row.id, &state));
+                row.mesh = Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&row.id, &state));
             }
             row.mesh_state = Some(state);
         }
@@ -111,7 +147,7 @@ impl protocol::list_delta::RowPatch<LowpolyObject> for LowpolyObjectPatchEntry {
         let mut mesh_vertices: Vec<LowpolyVertexPosition> = if replaced { Vec::new() } else { self.mesh_vertices.iter().filter(|row| later.mesh_vertices.iter().all(|overwritten| overwritten.vertex != row.vertex)).cloned().collect() };
         mesh_vertices.extend(later.mesh_vertices.iter().cloned());
         mesh_vertices.sort_by_key(|row| row.vertex);
-        let mut mesh_attributes: Vec<crate::LowpolyMeshAttribute> = if replaced { Vec::new() } else { self.mesh_attributes.iter().filter(|row| later.mesh_attributes.iter().all(|overwritten| overwritten.name != row.name)).cloned().collect() };
+        let mut mesh_attributes: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute> = if replaced { Vec::new() } else { self.mesh_attributes.iter().filter(|row| later.mesh_attributes.iter().all(|overwritten| overwritten.name != row.name)).cloned().collect() };
         mesh_attributes.extend(later.mesh_attributes.iter().cloned());
         mesh_attributes.sort_by(|left, right| left.name.cmp(&right.name));
         let paint_layers = match (self.paint_layers.take(), later.paint_layers) {
@@ -418,13 +454,219 @@ pub fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<PixelR
 
 /// 🏗️ Mesh-vertex field delta: the absolute positions the named vertices of the object's managed mesh move to, and the absolute
 /// content of the Normal channels the same motion rewrote.
-pub fn diff_mesh_vertices(object_id: String, mesh_vertices: Vec<LowpolyVertexPosition>, mesh_attributes: Vec<crate::LowpolyMeshAttribute>) -> LowpolyDiff {
+pub fn diff_mesh_vertices(object_id: String, mesh_vertices: Vec<LowpolyVertexPosition>, mesh_attributes: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute>) -> LowpolyDiff {
     diff_object_entry(object_id, LowpolyObjectPatchEntry { mesh_vertices, mesh_attributes, ..Default::default() })
 }
 //#endregion 🔖️Builders
 
-use crate::schema::PixelRun;
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🧲️SelectionMotion
+/// 🧲️ What one relative selection leaf (`move-selection`, `rotate-selection`, `scale-selection`) does to the vertices it
+/// names on one object's persisted mesh: an offset, a turn by `angle` radians about `axis` through `pivot`, or per-axis
+/// `factor`s about `pivot` — the parameters the gesture stated, never the geometry it left behind, so the leaf replays
+/// onto whatever mesh the object holds by then (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §17.6).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LowpolySelectionMotion {
+    Offset([f32; 3]),
+    Turn { pivot: [f32; 3], axis: [f32; 3], angle: f32 },
+    Stretch { pivot: [f32; 3], factor: [f32; 3] },
+}
+impl LowpolySelectionMotion {
+    /// 🫥️ Whether the motion leaves every vertex where it is: no offset, no angle, unit factors.
+    pub fn is_identity(&self) -> bool {
+        match self {
+            Self::Offset(offset) => *offset == [0.0; 3],
+            Self::Turn { angle, .. } => *angle == 0.0,
+            Self::Stretch { factor, .. } => *factor == [1.0; 3],
+        }
+    }
+
+    /// 🚫️ Whether the motion's own parameters degenerate any mesh: a non-finite offset, axis, pivot, angle or factor, a zero-length
+    /// axis, a zero factor.
+    pub fn is_degenerate(&self) -> bool {
+        match self {
+            Self::Offset(offset) => offset.iter().any(|value| !value.is_finite()),
+            Self::Turn { pivot, axis, angle } => axis.iter().chain(pivot.iter()).any(|value| !value.is_finite()) || !angle.is_finite() || axis.iter().map(|value| f64::from(*value)).fold(0.0_f64, f64::hypot) == 0.0,
+            Self::Stretch { pivot, factor } => factor.iter().chain(pivot.iter()).any(|value| !value.is_finite()) || factor.contains(&0.0),
+        }
+    }
+
+    /// 📍️ Where `point` ends up under this motion, computed in `f64` and narrowed to `f32` exactly as the mesh kernel does; `None`
+    /// when the result is not finite.
+    pub fn position_of(&self, point: [f32; 3]) -> Option<[f32; 3]> {
+        let point = point.map(f64::from);
+        let moved: [f64; 3] = match *self {
+            Self::Offset(offset) => std::array::from_fn(|axis| point[axis] + f64::from(offset[axis])),
+            Self::Turn { pivot, axis, angle } => {
+                let axis = axis.map(f64::from);
+                let length = axis[0].hypot(axis[1]).hypot(axis[2]);
+                let [x, y, z] = axis.map(|value| value / length);
+                let pivot = pivot.map(f64::from);
+                let (c, s) = (f64::from(angle).cos(), f64::from(angle).sin());
+                let t = 1.0 - c;
+                let [px, py, pz] = std::array::from_fn::<_, 3, _>(|axis| point[axis] - pivot[axis]);
+                let rx = (t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz;
+                let ry = (t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz;
+                let rz = (t * x * z - s * y) * px + (t * y * z + s * x) * py + (t * z * z + c) * pz;
+                [pivot[0] + rx, pivot[1] + ry, pivot[2] + rz]
+            }
+            Self::Stretch { pivot, factor } => std::array::from_fn(|axis| f64::from(pivot[axis]) + (point[axis] - f64::from(pivot[axis])) * f64::from(factor[axis])),
+        };
+        let narrowed = moved.map(|value| value as f32);
+        narrowed.iter().all(|value| value.is_finite()).then_some(narrowed)
+    }
+
+    /// 🏷️ The history label of moving `vertices` (every vertex when 0) of `object_id`: "Move 2 vertices of "obj-1" by
+    /// (0.5, 0, 0)" / "2 Eckpunkte von "obj-1" um (0,5; 0; 0) verschieben", and the rotate and scale twins.
+    pub fn label(&self, object_id: &str, vertices: usize) -> semio_framework_ui_locale::LocalizedLabel {
+        let number = |value: f32, german: bool| {
+            let text = format!("{}", (f64::from(value) * 1_000.0).round() / 1_000.0);
+            if german { text.replace('.', ",") } else { text }
+        };
+        let triple = |values: &[f32; 3], german: bool| values.iter().map(|value| number(*value, german)).collect::<Vec<_>>().join(if german { "; " } else { ", " });
+        let (en, de) = match vertices {
+            0 => (format!("\"{object_id}\""), format!("\"{object_id}\"")),
+            1 => (format!("1 vertex of \"{object_id}\""), format!("1 Eckpunkt von \"{object_id}\"")),
+            count => (format!("{count} vertices of \"{object_id}\""), format!("{count} Eckpunkte von \"{object_id}\"")),
+        };
+        match self {
+            Self::Offset(offset) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
+            Self::Turn { axis, angle, .. } => {
+                let degrees = angle.to_degrees();
+                semio_framework_ui_locale::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
+            }
+            Self::Stretch { factor, .. } => semio_framework_ui_locale::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
+        }
+    }
+}
+impl LowpolySelectionMotion {
+    /// 🧭️ The matrix the mesh kernel's `map_vertices` applies to the Normal-semantic attribute channels of the selected vertices:
+    /// the rotation for a turn, the inverse scale for a stretch; `None` for an offset, which leaves normals alone.
+    fn normal_matrix(&self) -> Option<[[f64; 3]; 3]> {
+        match *self {
+            Self::Offset(_) => None,
+            Self::Turn { axis, angle, .. } => {
+                let axis = axis.map(f64::from);
+                let length = axis[0].hypot(axis[1]).hypot(axis[2]);
+                let [x, y, z] = axis.map(|value| value / length);
+                let (c, s) = (f64::from(angle).cos(), f64::from(angle).sin());
+                let t = 1.0 - c;
+                Some([[t * x * x + c, t * x * y - s * z, t * x * z + s * y], [t * x * y + s * z, t * y * y + c, t * y * z - s * x], [t * x * z - s * y, t * y * z + s * x, t * z * z + c]])
+            }
+            Self::Stretch { factor, .. } => Some([[1.0 / f64::from(factor[0]), 0.0, 0.0], [0.0, 1.0 / f64::from(factor[1]), 0.0], [0.0, 0.0, 1.0 / f64::from(factor[2])]]),
+        }
+    }
+}
+/// 🧭️ The Normal-semantic attribute channels a relative selection motion rewrites, as whole absolute channels: every sample of every
+/// Normal channel whose vertex is among `selected` is multiplied by the motion's normal matrix and normalised, the others stay —
+/// exactly the mesh kernel's `map_vertices` (`🧰️framework/🔨️modules/🧊️3d/🥽️mesh`), read from the BASE state and the motion alone.
+/// Only the channels whose content actually changes are returned; `None` when the motion degenerates a channel.
+pub fn lowpoly_selection_normal_channels(state: &semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState, selected: &[u32], motion: &LowpolySelectionMotion) -> Option<Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute>> {
+    let Some(matrix) = motion.normal_matrix() else {
+        return Some(Vec::new());
+    };
+    let ids: std::collections::BTreeSet<usize> = selected.iter().map(|id| *id as usize).collect();
+    let mut channels = Vec::new();
+    for attribute in state.attributes.iter().filter(|attribute| attribute.semantic == semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeSemantic::Normal) {
+        let length = attribute.indices.as_ref().map_or(attribute.values.len(), Vec::len);
+        let mut values = Vec::new();
+        let mut indices = Vec::new();
+        let mut samples: std::collections::BTreeMap<(u32, bool), u32> = std::collections::BTreeMap::new();
+        for domain in 0..length {
+            let vertex = if attribute.domain == semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeDomain::Corner { state.halfedges.get(domain)?.vertex as usize } else { domain };
+            let affected = ids.contains(&vertex);
+            let source = attribute.indices.as_ref().map_or(domain as u32, |indices| indices[domain]);
+            let sample = match samples.get(&(source, affected)) {
+                Some(sample) => *sample,
+                None => {
+                    let original = attribute.values.get(source as usize)?.as_array()?;
+                    let mut components = [0.0_f64; 3];
+                    for axis in 0..3 {
+                        components[axis] = original.get(axis)?.as_f64()?;
+                    }
+                    if affected {
+                        components = [0, 1, 2].map(|axis| matrix[axis][0] * components[0] + matrix[axis][1] * components[1] + matrix[axis][2] * components[2]);
+                        let norm = components[0].hypot(components[1]).hypot(components[2]);
+                        components = components.map(|value| value / norm);
+                        if components.iter().any(|value| !value.is_finite() || !(*value as f32).is_finite()) {
+                            return None;
+                        }
+                    }
+                    let sample = values.len() as u32;
+                    values.push(semio_framework_value::DslValue::Array(components.into_iter().map(semio_framework_value::DslValue::float).collect()));
+                    samples.insert((source, affected), sample);
+                    sample
+                }
+            };
+            indices.push(sample);
+        }
+        let rewritten = semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute { name: attribute.name.clone(), domain: attribute.domain, semantic: attribute.semantic, interpolation: attribute.interpolation, values, indices: Some(indices) };
+        if rewritten != *attribute {
+            channels.push(rewritten);
+        }
+    }
+    Some(channels)
+}
+/// 🪪️ The vertex-set half of every selection leaf's own invariant: each vertex named at most once.
+pub fn lowpoly_selection_vertex_violation(vertex_ids: &[u32]) -> Option<String> {
+    let mut seen = std::collections::BTreeSet::new();
+    vertex_ids.iter().find(|id| !seen.insert(**id)).map(|twice| format!("Vertex {twice} is named more than once."))
+}
+/// 📍️ The `(vertex, new position, base position)` rows of every vertex among `present` (ascending, each once) the invariant-clean
+/// `motion` actually moves, computed from the BASE vertex positions and the motion alone; `None` when the motion degenerates the mesh.
+pub fn lowpoly_selection_moves(state: &semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState, present: &[u32], motion: &LowpolySelectionMotion) -> Option<Vec<(u32, [f32; 3], [f32; 3])>> {
+    if motion.is_degenerate() {
+        return None;
+    }
+    let sorted: std::collections::BTreeSet<u32> = present.iter().copied().collect();
+    let rows = sorted.into_iter().map(|id| {
+        let base = state.vertices[id as usize].position;
+        motion.position_of(base).map(|position| (id, position, base))
+    });
+    Some(rows.collect::<Option<Vec<_>>>()?.into_iter().filter(|(_, position, base)| position.map(f32::to_bits) != base.map(f32::to_bits)).collect())
+}
+/// 🔺️ The sparse diff of applying an invariant-clean `motion` to `vertex_ids` (every vertex when empty) of `object_id`'s
+/// persisted mesh: one absolute position row per vertex the motion actually moves, computed from the BASE vertex positions and
+/// the motion alone — no mesh is cloned or edited, and the mesh handle is re-derived by the central applier. Each leaf's diff
+/// refuses its own payload invariant first; here Fatal `invariant` is a motion that degenerates the mesh, Error `target-missing`
+/// an absent object, mesh or every named vertex, Warning `partial` the named vertices it skips and Warning `no-op` a motion that
+/// moves nothing.
+pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, vertex_ids: &[u32], motion: &LowpolySelectionMotion) -> protocol::MutationOutcome<LowpolyDiff> {
+    let Some(object) = base.objects.iter().find(|object| object.id == object_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" does not exist."), [object_id.to_string()]);
+    };
+    let Some(state) = object.mesh.as_ref().and(object.mesh_state.as_ref()) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" carries no mesh."), [object_id.to_string()]);
+    };
+    let count = u32::try_from(state.vertices.len()).unwrap_or(u32::MAX);
+    let (present, skipped): (Vec<u32>, Vec<u32>) = if vertex_ids.is_empty() { ((0..count).collect(), Vec::new()) } else { vertex_ids.iter().partition(|id| **id < count) };
+    if present.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named vertices exists on object \"{object_id}\".", vertex_ids.len()), [object_id.to_string()]);
+    }
+    let partial = (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} named vertices skipped (not on object \"{object_id}\"): {skipped:?}", skipped.len(), vertex_ids.len())).at([object_id.to_string()]));
+    let no_op = || protocol::MutationMessage::warning("mutation.no-op", format!("The motion moves no vertex of object \"{object_id}\".")).at([object_id.to_string()]);
+    if motion.is_identity() {
+        return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
+    }
+    let degenerate = || protocol::MutationOutcome::fatal("mutation.invariant", format!("The motion degenerates the mesh of object \"{object_id}\"."), [object_id.to_string()]);
+    let Some(moved) = lowpoly_selection_moves(state, &present, motion) else {
+        return degenerate();
+    };
+    let Some(channels) = lowpoly_selection_normal_channels(state, &present, motion) else {
+        return degenerate();
+    };
+    let rows: Vec<LowpolyVertexPosition> = moved.into_iter().map(|(vertex, position, _)| LowpolyVertexPosition { vertex, position }).collect();
+    if rows.is_empty() && channels.is_empty() {
+        return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
+    }
+    protocol::MutationOutcome::new(crate::diff_mesh_vertices(object_id.to_string(), rows, channels)).absorb_messages(partial)
+}
+//#endregion 🧲️SelectionMotion
+
+/// 🔺️ The diff facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

@@ -1,7 +1,7 @@
 //! 🖌️ `cycle-candidate` command.
 
-use crate::editor::puzzle3d::snapshot::puzzle3d_brush_target_vortex;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_brush_target_vortex;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🔁️ `cycleBrushCandidate`/`cycleBrushCandidateBack` share one arm — the default step is the

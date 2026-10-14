@@ -17,9 +17,16 @@
 
 use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
-use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
-use semio_s_artifact_stdio_docx::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableCell;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

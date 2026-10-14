@@ -18,7 +18,8 @@ members = [
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔣️json/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust",
-    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🧾️code/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust",
@@ -139,8 +140,6 @@ path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/�
 [workspace.dependencies.semio-s-artifact-stdio-dwg-model]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-code]
-path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🧾️code/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-exports-graphql]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust"
@@ -202,6 +201,12 @@ path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️ex
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-rust]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-typescript]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

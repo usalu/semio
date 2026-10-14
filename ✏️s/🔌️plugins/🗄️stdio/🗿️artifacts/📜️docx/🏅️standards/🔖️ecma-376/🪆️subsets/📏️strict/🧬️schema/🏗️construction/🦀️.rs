@@ -1,5 +1,7 @@
 //! 🏗️ Typed strict WordprocessingML document construction.
-use crate::{DocxSnapshot, schema::snapshot::{DocxDocument, DocxXmlPart}};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
 use crate::standards::v_ecma_376::subsets::strict::schema::conformance::STRICT_REL_BASE;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
@@ -43,7 +45,7 @@ pub fn document_to_strict_xml(doc: &DocxDocument) -> XmlDocument {
         .body
         .iter()
         .filter_map(|block| match block {
-            crate::schema::snapshot::DocxBlock::Paragraph(p) => Some(p),
+            semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(p) => Some(p),
             _ => None,
         })
         .map(|p| {

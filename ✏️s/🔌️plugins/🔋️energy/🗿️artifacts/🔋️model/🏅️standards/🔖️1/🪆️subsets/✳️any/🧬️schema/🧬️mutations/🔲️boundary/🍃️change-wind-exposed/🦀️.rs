@@ -1,8 +1,7 @@
 //! 🍃️ Energy model mutation — `ChangeSurfaceWindExposed`: Sets whether the outside face uses the wind-driven exterior convection correlation or the sheltered one.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSurfaceWindExposed {
     pub new_wind_exposed: bool,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_surface_wind_exposed(id: crate::model::EntityId, new_wind_exposed: bool) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSurfaceWindExposed(ChangeSurfaceWindExposed { id, new_wind_exposed })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_surface_wind_exposed<Op: From<ChangeSurfaceWindExposed>>(id: crate::model::EntityId, new_wind_exposed: bool) -> Op {
+    ChangeSurfaceWindExposed { id, new_wind_exposed }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSurfaceWindExposed {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceWindExposed
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceWindExposed>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-wind-exposed", record: "ChangedSurfaceWindExposed" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

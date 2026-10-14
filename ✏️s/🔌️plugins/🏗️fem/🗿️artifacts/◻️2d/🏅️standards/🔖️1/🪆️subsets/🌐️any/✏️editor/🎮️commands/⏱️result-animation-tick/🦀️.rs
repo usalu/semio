@@ -16,7 +16,8 @@
 
 use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
 use crate::editor::fem2d::commands::set_result_animation::{rearm_effect, resting_step, FemPlaybackStep, FemPlaybackTransport};
-use crate::editor::fem2d::modes::edit::windows::results::transient::{addressed_to, FemPlaybackClock};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -60,7 +61,4 @@ pub fn handle_window(_payload: &ResultAnimationTick, _doc: &ArtifactView<'_, Fem
 //#endregion 🔖️ResultAnimationTick
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

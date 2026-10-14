@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Process3dSnapshot;
+use crate::snapshot::Process3dSnapshot;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`pack::snapshot::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -46,9 +46,6 @@ pub fn print_dsl(document: &Process3dSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -59,8 +56,8 @@ pub type Process3dSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
+use crate::snapshot::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -94,8 +91,8 @@ impl pack::snapshot::ArtifactDsl for Process3dSnapshot {
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
+use crate::snapshot::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -134,8 +131,8 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
+use crate::snapshot::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -149,27 +146,27 @@ use store::mounted_pack_rt as mounted;
 
 #[allow(unused_imports)]
 mod snapshot_wire3_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
+use crate::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::StockQuantity, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use pack::snapshot::ArtifactDsl;
-use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
+use crate::{standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-pub fn default_document() -> crate::Process3dSnapshot {
-    crate::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
+pub fn default_document() -> crate::snapshot::Process3dSnapshot {
+    crate::snapshot::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
-pub fn plate_document() -> crate::Process3dSnapshot {
-    crate::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
+pub fn plate_document() -> crate::snapshot::Process3dSnapshot {
+    crate::snapshot::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 
 /// 🌲️ The concrete forest example: the reused hexagonal-cut concrete forest piece processed by every
 /// machine of the concrete catalog.
-pub fn concrete_forest_document() -> crate::Process3dSnapshot {
-    crate::Process3dSnapshot::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
+pub fn concrete_forest_document() -> crate::snapshot::Process3dSnapshot {
+    crate::snapshot::Process3dSnapshot::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 }
 pub use snapshot_wire3_codec::*;

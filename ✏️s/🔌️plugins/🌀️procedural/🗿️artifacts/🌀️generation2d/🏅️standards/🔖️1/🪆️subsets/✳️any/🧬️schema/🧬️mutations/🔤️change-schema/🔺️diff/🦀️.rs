@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeSchema` — a real scalar-field write on the fixture (never a
 //! whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff};
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 pub fn diff(payload: &super::ChangeSchema, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     if base.host_snapshot.schema == payload.schema {

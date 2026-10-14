@@ -2,9 +2,12 @@
 //! ABSOLUTE `change-slider-value` a slider press commits and the RELATIVE `move-nodes` a node drag commits — outcome codes
 //! from the frozen vocabulary, exact inverses, labels in English and German, wire witnesses, and time travel: an edited
 //! gesture leaf replays its downstream exactly like a fresh fold of the edited log.
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use protocol::Mutation;
 
-use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
+use semio_s_artifact_procedural_2d_mutations::*;
+use semio_s_artifact_procedural_2d_model::empty_generation2d_snapshot;
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
 
 /// 🧱️ A base with one slider and one note, both placed, and one unplaced slider.
@@ -76,7 +79,7 @@ fn a_node_drag_moves_placed_nodes_relative_to_their_base_position() {
     use semio_framework_diagnostic::Severity::Error;
 use semio_framework_diagnostic::Severity::Fatal;
 use semio_framework_diagnostic::Severity::Warning;
-use crate::central_apply::{apply_generation2d_mutation};
+use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
     let base = base();
     let applied = applied_and_restored(&move_nodes(vec!["height".into(), "note".into()], 40.0, -12.5), &base);
     assert_eq!(applied.host_snapshot.layout.get("height").map(|layout| (layout.x, layout.y)), Some((50.0, 7.5)));
@@ -142,13 +145,13 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
     let log = vec![move_nodes(vec!["height".into()], 5.0, 5.0), change_slider_value("height", 7.5), move_nodes(vec!["height".into(), "note".into()], -1.0, 2.0)];
     for (edited_at, edited) in [(0, move_nodes(vec!["height".into(), "note".into()], 40.0, -12.5)), (1, change_slider_value("height", 2.5))] {
         let base = base();
-        let mut store = crate::store_fixture::document_store(base.clone()).await;
+        let mut store = semio_s_artifact_procedural_2d_testkit::store_fixture::document_store(base.clone()).await;
         for mutation in &log {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids[edited_at].clone();
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let preview_base = store.state_before(&target, &drafts).expect("the preview base folds");
         let preview = preview_base.as_ref().clone();
         if let Ok(state) = std::sync::Arc::try_unwrap(preview_base) {
@@ -169,7 +172,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         for state in [preview, before, fresh, base] {
             state.retire_cold();
         }
-        crate::store_fixture::close(store);
+        semio_s_artifact_procedural_2d_testkit::store_fixture::close(store);
     }
 }
 //#endregion ⏪️TimeTravel

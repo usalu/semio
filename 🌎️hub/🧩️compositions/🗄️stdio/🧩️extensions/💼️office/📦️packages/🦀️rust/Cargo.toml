@@ -21,8 +21,26 @@ path = "../../🦀️.rs"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies
 semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-docx-base = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }
+semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-docx-strict = { workspace = true }
+semio-s-artifact-stdio-docx-strict-mutations = { workspace = true }
+semio-s-artifact-stdio-docx-transitional = { workspace = true }
 semio-s-artifact-stdio-pptx = { workspace = true }
+semio-s-artifact-stdio-pptx-base = { workspace = true }
+semio-s-artifact-stdio-pptx-base-model = { workspace = true }
+semio-s-artifact-stdio-pptx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-pptx-strict = { workspace = true }
+semio-s-artifact-stdio-pptx-strict-mutations = { workspace = true }
+semio-s-artifact-stdio-pptx-transitional = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-xlsx-base = { workspace = true }
+semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
+semio-s-artifact-stdio-xlsx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-xlsx-strict = { workspace = true }
+semio-s-artifact-stdio-xlsx-strict-mutations = { workspace = true }
+semio-s-artifact-stdio-xlsx-transitional = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

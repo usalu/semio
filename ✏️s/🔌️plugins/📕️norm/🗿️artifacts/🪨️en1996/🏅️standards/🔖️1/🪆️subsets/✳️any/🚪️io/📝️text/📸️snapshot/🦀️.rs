@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::En1996Snapshot;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 /// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`pack::snapshot::ArtifactDsl`):
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
@@ -37,7 +37,7 @@ pub type En1996SnapshotText = String;
 
 /// 🖼️ Write committed DSL + pack assets for the catalogue examples (invoked by 📜️script.ts).
 pub fn write_committed_example_assets(assets_root: &std::path::Path) -> std::io::Result<()> {
-    use crate::En1996Snapshot;
+    use semio_s_artifact_norm_en1996_model::En1996Snapshot;
     for (folder, doc) in [
         ("🧱️loadbearing-wall", En1996Snapshot::compliant_clay_wall()),
         ("❌️multi-fail-masonry", En1996Snapshot::noncompliant_multi_fail()),
@@ -53,10 +53,10 @@ pub fn write_committed_example_assets(assets_root: &std::path::Path) -> std::io:
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::{AnnexChoice, DesignSituation};
-use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1996_model::*;
+use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
+use semio_s_artifact_norm_en1996_model::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
 use framework_schema::ArtifactSchema;
 
 pub fn encode_en1996_snapshot_json(snapshot: &En1996Snapshot) -> String {
@@ -75,20 +75,17 @@ pub fn encode_en1996_dsl(snapshot: &En1996Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::{AnnexChoice, DesignSituation};
-use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1996_model::*;
+use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
+use semio_s_artifact_norm_en1996_model::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
 use framework_schema::ArtifactSchema;
 
-
-
-
 }
-#[cfg(test)] pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text En1996Snapshot, extension="en1996", envelope_id="norm.en1996");
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1996Snapshot, extension="en1996", envelope_id="norm.en1996");

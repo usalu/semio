@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `DeleteLoadCase`.
 use super::DeleteLoadCase;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCaseRemoval};
-use crate::standards::v1::subsets::any::schema::mutations::{load_case_referrers,target_referenced};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCaseRemoval;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::load_case_referrers;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteLoadCase, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

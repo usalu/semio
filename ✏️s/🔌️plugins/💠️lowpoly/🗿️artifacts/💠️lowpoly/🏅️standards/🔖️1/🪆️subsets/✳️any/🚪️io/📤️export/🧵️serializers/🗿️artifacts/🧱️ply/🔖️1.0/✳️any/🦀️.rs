@@ -7,8 +7,8 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: geometry survives with n-gons kept; object boundaries, names and paint
 //! do not.
-use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::mesh_geometry::world_parts;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_ply::engine::encode_ply;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use semio_s_artifact_stdio_ply::PlySnapshot;
@@ -32,11 +32,11 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<PlySnapshot, semio_framew
         let count_kind = if max_corners > 255 { PlyScalarType::UInt } else { PlyScalarType::UChar };
         ply.elements.push(PlyElement {
             name: "vertex".into(),
-            count: u64::try_from(vertex_rows.len()).map_err(|_| crate::standards::v1::subsets::any::io::mesh_geometry::text_error("PLY vertex occurrence count exceeds u64"))?,
+            count: u64::try_from(vertex_rows.len()).map_err(|_| crate::mesh_geometry::text_error("PLY vertex occurrence count exceeds u64"))?,
             properties: ["x", "y", "z"].iter().map(|n| PlyProperty::Scalar { name: (*n).into(), kind: PlyScalarType::Float }).collect(),
             rows: vertex_rows,
         });
-        ply.elements.push(PlyElement { name: "face".into(), count: u64::try_from(face_rows.len()).map_err(|_| crate::standards::v1::subsets::any::io::mesh_geometry::text_error("PLY face occurrence count exceeds u64"))?, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind, value_kind: PlyScalarType::Int }], rows: face_rows });
+        ply.elements.push(PlyElement { name: "face".into(), count: u64::try_from(face_rows.len()).map_err(|_| crate::mesh_geometry::text_error("PLY face occurrence count exceeds u64"))?, properties: vec![PlyProperty::List { name: "vertex_indices".into(), count_kind, value_kind: PlyScalarType::Int }], rows: face_rows });
     }
     Ok(ply)
 }

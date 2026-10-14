@@ -1,8 +1,8 @@
 //! 🔺️ `specify-dhw-system` sparse diff.
 
-use crate::mutations::specify_dhw_system::SpecifyDhwSystem;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599DhwPatch};
+use crate::specify_dhw_system::SpecifyDhwSystem;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599DhwPatch};
 
 pub fn diff(payload: &SpecifyDhwSystem, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

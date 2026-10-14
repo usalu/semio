@@ -1,8 +1,7 @@
 //! 🔖️ Block2d mutation — `ChangeHandleKindLabel`: a handle-kind catalog row's `label`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 🔖️ `change-handle-kind-label` payload.
@@ -19,19 +18,19 @@ pub struct ChangeHandleKindLabel {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_handle_kind_label(id: String, new_label: String) -> Block2dMutation {
-    Block2dMutation::ChangeHandleKindLabel(ChangeHandleKindLabel { id, new_label })
+pub fn change_handle_kind_label<Op: From<crate::change_handle_kind_label::ChangeHandleKindLabel>>(id: String, new_label: String) -> Op {
+    Op::from(ChangeHandleKindLabel { id, new_label })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKindLabel {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeHandleKindLabel where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_handle_kind_label::ChangeHandleKindLabel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "handle-kind", kind: "change-handle-kind-label", record: "ChangedHandleKindLabel" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_handle_kind_label::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_handle_kind_label::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeHandleKi
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

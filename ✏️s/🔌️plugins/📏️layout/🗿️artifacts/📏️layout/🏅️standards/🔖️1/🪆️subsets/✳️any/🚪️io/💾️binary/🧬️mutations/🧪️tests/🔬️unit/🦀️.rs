@@ -1,6 +1,6 @@
 use crate::LayoutMutation;
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::mutations::rename_layout;
+use crate::binary::*;
+use semio_s_artifact_layout_layout_mutations_content::rename_layout;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
@@ -12,11 +12,11 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_binary_round_trips_a_store_with_applied_operations() {
-    use crate::LAYOUT_DOCUMENT_SCHEMA;
+    use semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
 
-    let initial = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let envelope: crate::host::owned::LayoutEnvelope = store::os_store::document_materialize::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
-    let mut doc_store = crate::host::owned::new_layout_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let initial = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    let envelope: semio_s_artifact_layout_layout_host::LayoutEnvelope = store::os_store::document_materialize::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut doc_store = semio_s_artifact_layout_layout_host::new_layout_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "Renamed".into() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply rename");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;

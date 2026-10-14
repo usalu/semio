@@ -1,79 +1,88 @@
 //! 🧬️ En1995 artifact — document mutation dispatch for the hierarchical timber subject
 //! (members ⊃ characteristic actions, connections ⊃ connection actions).
 
-use crate::{En1995Diff, En1995Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1995_diff::En1995Diff;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
+pub use crate::edit_rules::EDIT_RULES;
 
 //#region 🔖️Mutations
-use super::change_annex;
-use super::insert_member;
-use super::remove_member;
-use super::change_member_label_en;
-use super::change_member_label_de;
-use super::change_member_role;
-use super::change_member_strength_class;
-use super::change_member_service_class;
-use super::change_member_support;
-use super::change_member_b;
-use super::change_member_h;
-use super::change_member_span;
-use super::change_member_support_length;
-use super::change_member_bearing_length;
-use super::change_member_buckling_length_y;
-use super::change_member_buckling_length_z;
-use super::change_member_restraint_spacing;
-use super::change_member_notch_depth;
-use super::change_member_notch_distance;
-use super::change_member_m_crit;
-use super::change_member_mass_kg_per_m;
-use super::change_member_mass_kg_per_m2;
-use super::change_member_damping_xi;
-use super::change_member_fire_duration;
-use super::change_member_bridge_n_obs;
-use super::change_member_bridge_tl_years;
-use super::change_member_bridge_beta;
-use super::change_member_bridge_a;
-use super::change_member_bridge_b;
-use super::change_member_bridge_crowd;
-use super::insert_member_action;
-use super::remove_member_action;
-use super::change_member_action_kind;
-use super::change_member_action_category;
-use super::change_member_load_duration;
-use super::change_member_action_q_line;
-use super::change_member_action_f_point;
-use super::change_member_action_mk;
-use super::change_member_action_vk;
-use super::change_member_action_nk;
-use super::change_member_action_ntk;
-use super::change_member_action_fc90_k;
-use super::insert_connection;
-use super::remove_connection;
-use super::change_connection_label_en;
-use super::change_connection_label_de;
-use super::change_connection_fastener_type;
-use super::change_connection_strength_class;
-use super::change_connection_service_class;
-use super::change_connection_diameter;
-use super::change_connection_number;
-use super::change_connection_rows;
-use super::change_connection_spacing;
-use super::change_connection_edge_distance;
-use super::change_connection_end_distance;
-use super::change_connection_t1;
-use super::change_connection_t2;
-use super::change_connection_steel_plate;
-use super::change_connection_plate_thickness;
-use super::change_connection_shear_planes;
-use super::change_connection_fuk;
-use super::insert_connection_action;
-use super::remove_connection_action;
-use super::change_connection_action_kind;
-use super::change_connection_load_duration;
-use super::change_connection_action_fk;
+use semio_s_artifact_norm_en1995_mut_members::change_annex;
+use semio_s_artifact_norm_en1995_mut_members::insert_member;
+use semio_s_artifact_norm_en1995_mut_members::remove_member;
+use semio_s_artifact_norm_en1995_mut_members::change_member_label_en;
+use semio_s_artifact_norm_en1995_mut_members::change_member_label_de;
+use semio_s_artifact_norm_en1995_mut_members::change_member_role;
+use semio_s_artifact_norm_en1995_mut_members::change_member_strength_class;
+use semio_s_artifact_norm_en1995_mut_members::change_member_service_class;
+use semio_s_artifact_norm_en1995_mut_members::change_member_support;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_b;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_h;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_span;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_support_length;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_bearing_length;
+use semio_s_artifact_norm_en1995_mut_stability::change_member_buckling_length_y;
+use semio_s_artifact_norm_en1995_mut_stability::change_member_buckling_length_z;
+use semio_s_artifact_norm_en1995_mut_stability::change_member_restraint_spacing;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_notch_depth;
+use semio_s_artifact_norm_en1995_mut_geometry::change_member_notch_distance;
+use semio_s_artifact_norm_en1995_mut_stability::change_member_m_crit;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_mass_kg_per_m;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_mass_kg_per_m2;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_damping_xi;
+use semio_s_artifact_norm_en1995_mut_members::change_member_fire_duration;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_n_obs;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_tl_years;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_beta;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_a;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_b;
+use semio_s_artifact_norm_en1995_mut_footbridges::change_member_bridge_crowd;
+use semio_s_artifact_norm_en1995_mut_actions::insert_member_action;
+use semio_s_artifact_norm_en1995_mut_actions::remove_member_action;
+use semio_s_artifact_norm_en1995_mut_actions::change_member_action_kind;
+use semio_s_artifact_norm_en1995_mut_actions::change_member_action_category;
+use semio_s_artifact_norm_en1995_mut_actions::change_member_load_duration;
+use semio_s_artifact_norm_en1995_mut_actions::change_member_action_q_line;
+use semio_s_artifact_norm_en1995_mut_actions::change_member_action_f_point;
+use semio_s_artifact_norm_en1995_mut_effects::change_member_action_mk;
+use semio_s_artifact_norm_en1995_mut_effects::change_member_action_vk;
+use semio_s_artifact_norm_en1995_mut_effects::change_member_action_nk;
+use semio_s_artifact_norm_en1995_mut_effects::change_member_action_ntk;
+use semio_s_artifact_norm_en1995_mut_effects::change_member_action_fc90_k;
+use semio_s_artifact_norm_en1995_mut_connections::insert_connection;
+use semio_s_artifact_norm_en1995_mut_connections::remove_connection;
+use semio_s_artifact_norm_en1995_mut_connections::change_connection_label_en;
+use semio_s_artifact_norm_en1995_mut_connections::change_connection_label_de;
+use semio_s_artifact_norm_en1995_mut_connections::change_connection_fastener_type;
+use semio_s_artifact_norm_en1995_mut_connections::change_connection_strength_class;
+use semio_s_artifact_norm_en1995_mut_connections::change_connection_service_class;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_diameter;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_number;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_rows;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_spacing;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_edge_distance;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_end_distance;
+use semio_s_artifact_norm_en1995_mut_plates::change_connection_t1;
+use semio_s_artifact_norm_en1995_mut_plates::change_connection_t2;
+use semio_s_artifact_norm_en1995_mut_plates::change_connection_steel_plate;
+use semio_s_artifact_norm_en1995_mut_plates::change_connection_plate_thickness;
+use semio_s_artifact_norm_en1995_mut_plates::change_connection_shear_planes;
+use semio_s_artifact_norm_en1995_mut_fasteners::change_connection_fuk;
+use semio_s_artifact_norm_en1995_mut_joint_actions::insert_connection_action;
+use semio_s_artifact_norm_en1995_mut_joint_actions::remove_connection_action;
+use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_action_kind;
+use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_load_duration;
+use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_action_fk;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -219,20 +228,33 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::En1995Mutation;
+    use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+
+/// 🧮️ Applies `mutation` to `base`, returning the next snapshot and every diagnostic the mutation raised.
+pub fn apply_en1995_mutation(base: &En1995Snapshot, mutation: &En1995Mutation) -> Result<(En1995Snapshot, Vec<String>), String> {
+    let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(mutation, base);
+    let messages = outcome.messages().iter().map(|message| format!("{message:?}")).collect();
+    let next = protocol::apply_diff(outcome.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((next, messages))
+}
+/// ↩️ The mutation list that undoes `mutation` applied to `base`.
+pub fn inverse_en1995_mutation(mutation: &En1995Mutation, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1995Mutation as protocol::Mutation<En1995Snapshot>>::inverse(mutation, base)?
+
+    })
+}
+}
+pub use crate::mutation_bridge::*;

@@ -5,8 +5,8 @@
 //! the default selection merge mode dropdown is gone — merge is a per-gesture `interactionSelect` arg
 //! (modifier-driven) in the framework's model now, with no equivalent "default" setting.
 
-use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use {crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
+use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 use {semio_framework_plugin::plugin_app_close_prelude::ActionBinding, semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::Component, semio_framework_plugin::plugin_app_close_prelude::NumberStepperProps, semio_framework_plugin::plugin_app_close_prelude::Trigger};
 use semio_framework_plugin::ActionFactory;
 use semio_framework_ui_locale::LocalizedLabel;

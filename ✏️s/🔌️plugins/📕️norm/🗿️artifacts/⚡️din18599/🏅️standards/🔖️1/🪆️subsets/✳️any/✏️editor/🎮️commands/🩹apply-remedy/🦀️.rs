@@ -1,7 +1,7 @@
 //! Norm command — `apply-remedy`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,6 +16,6 @@ pub struct ApplyRemedy {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ApplyRemedy, doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din18599Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_apply_remedy::<crate::editor::din18599::DinV18599Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| crate::mutations::resolve_edit(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_apply_remedy::<crate::DinV18599Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| semio_s_artifact_norm_din18599_mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

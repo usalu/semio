@@ -15,7 +15,7 @@
       "const": "renameRegisterRow"
     },
     "register": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterKey",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json#/$defs/RegisterKey",
       "x-semio-ui": {
         "widget": "enum",
         "role": "target",

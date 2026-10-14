@@ -17,9 +17,16 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{insert_xml_part_diff, remove_xml_part_diff, retarget_attribute_values_diff, root_attribute_diff, root_children_diff, root_edits_diff, xml_part_positions};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_xml_part_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::remove_xml_part_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::retarget_attribute_values_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
 #[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;

@@ -25,26 +25,26 @@ pub use surface::MeshSurfaceJob;
 
 /// 🌉️ Encodes original ordered UV membership as the declared array of vertex ids.
 mod u32_membership_bridge {
-    pub fn to_value(set: &super::HistoryFoldSet<u32>) -> dsl_core::value::DslValue {
+    pub fn to_value(set: &super::HistoryFoldSet<u32>) -> semio_framework_value::DslValue {
         let mut ids: Vec<&u32> = set.iter().collect();
         ids.sort_unstable();
-        dsl_core::value::DslValue::Array(ids.into_iter().map(dsl_core::value::ToValue::to_value).collect())
+        semio_framework_value::DslValue::Array(ids.into_iter().map(semio_framework_value::ToValue::to_value).collect())
     }
-    pub fn from_value(value: dsl_core::value::DslValue) -> Result<super::HistoryFoldSet<u32>, dsl_core::value::ValueError> {
-        <Vec<u32> as dsl_core::value::FromValue>::from_value(value).map(|items| items.into_iter().collect())
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<super::HistoryFoldSet<u32>, semio_framework_value::ValueError> {
+        <Vec<u32> as semio_framework_value::FromValue>::from_value(value).map(|items| items.into_iter().collect())
     }
 }
 
 #[cfg(test)]
 mod attribute_serde_bridge {
-    use protocol::value::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
     pub fn serialize<T:ToValue,S: serde::Serializer>(value: &T, serializer: S) -> Result<S::Ok,S::Error> {
         serde_json::Value::from(value.to_value()).serialize(serializer)
     }
     pub fn deserialize<'de,T:FromValue,D:serde::Deserializer<'de>>(deserializer:D)->Result<T,D::Error> {
         let value = serde_json::Value::deserialize(deserializer)?;
-        T::from_value(protocol::value::DslValue::from(value)).map_err(serde::de::Error::custom)
+        T::from_value(semio_framework_value::DslValue::from(value)).map_err(serde::de::Error::custom)
     }
 }
 
@@ -55,7 +55,7 @@ mod attribute_serde_bridge {
 // array's own (blanket) `ToValue`/`FromValue`, matching serde's own newtype-struct default.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct Vec3(pub [f32; 3]);
 
 impl Vec3 {
@@ -115,28 +115,28 @@ impl Vec3 {
 // 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vec3` above for the `transparent` newtype pattern.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct VertexId(pub u32);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct HalfEdgeId(pub u32);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct FaceId(pub u32);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct EdgeId(pub u32);
 
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub enum WeldMode {
     Center,
     First,
@@ -146,7 +146,7 @@ pub enum WeldMode {
 pub use semio_framework_mesh_engine::{HistoryFoldIndex,HistoryFoldSet, MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshAttributeInterpolation, MeshTexture};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub enum MirrorAxis {
     X,
     Y,
@@ -162,7 +162,7 @@ pub enum MeshKernelError {
     DegenerateOperation,
     EmptySelection,
     InvalidInput(String),
-    Retained(protocol::value::ValueError),
+    Retained(semio_framework_value::ValueError),
 }
 
 impl std::fmt::Display for MeshKernelError {
@@ -186,7 +186,7 @@ pub type MeshResult<T> = Result<T, MeshKernelError>;
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshVertex {
     pub position: [f32; 3],
     pub normal: Option<[f32; 3]>,
@@ -201,7 +201,7 @@ fn default_uv() -> [f32; 2] {
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct HalfEdge {
     pub vertex: u32,
     pub twin: Option<u32>,
@@ -214,7 +214,7 @@ pub struct HalfEdge {
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshFace {
     pub halfedge: u32,
     pub smooth: bool,
@@ -225,7 +225,7 @@ pub struct MeshFace {
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshTransfer {
     #[value(default)]
     #[cfg_attr(test, serde(default))]
@@ -235,7 +235,7 @@ pub struct MeshTransfer {
     pub attributes: HistoryFoldIndex<String,MeshAttribute>,
     #[value(default)]
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
-    pub materials: HistoryFoldIndex<String,protocol::value::DslValue>,
+    pub materials: HistoryFoldIndex<String,semio_framework_value::DslValue>,
     #[value(default)]
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     pub textures: HistoryFoldIndex<String,MeshTexture>,
@@ -269,7 +269,7 @@ pub struct MeshTransfer {
 
 #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct HalfedgeMesh {
     vertices: Vec<MeshVertex>,
     halfedges: Vec<HalfEdge>,
@@ -282,44 +282,44 @@ pub struct HalfedgeMesh {
     attributes: HistoryFoldIndex<String,MeshAttribute>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
-    materials: HistoryFoldIndex<String,protocol::value::DslValue>,
+    materials: HistoryFoldIndex<String,semio_framework_value::DslValue>,
     #[cfg_attr(test, serde(default, with = "attribute_serde_bridge"))]
     #[value(default)]
     textures: HistoryFoldIndex<String,MeshTexture>,
 }
 
-protocol::value::artifact_retire_leaf!(Vec3);
-impl protocol::value::retirement::RetireOwned for HalfedgeMesh {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.vertices),protocol::value::retirement::deferred(self.halfedges),protocol::value::retirement::deferred(self.faces),protocol::value::retirement::deferred(self.uv_seams),protocol::value::retirement::deferred(self.attributes),protocol::value::retirement::deferred(self.materials),protocol::value::retirement::deferred(self.textures)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.vertices),protocol::value::retirement::deferred_birth_bytes_for(&self.halfedges),protocol::value::retirement::deferred_birth_bytes_for(&self.faces),protocol::value::retirement::deferred_birth_bytes_for(&self.uv_seams),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes),protocol::value::retirement::deferred_birth_bytes_for(&self.materials),protocol::value::retirement::deferred_birth_bytes_for(&self.textures)])}
+semio_framework_value::artifact_retire_leaf!(Vec3);
+impl semio_framework_value::retirement::RetireOwned for HalfedgeMesh {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.vertices),semio_framework_value::retirement::deferred(self.halfedges),semio_framework_value::retirement::deferred(self.faces),semio_framework_value::retirement::deferred(self.uv_seams),semio_framework_value::retirement::deferred(self.attributes),semio_framework_value::retirement::deferred(self.materials),semio_framework_value::retirement::deferred(self.textures)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertices),semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedges),semio_framework_value::retirement::deferred_birth_bytes_for(&self.faces),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uv_seams),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attributes),semio_framework_value::retirement::deferred_birth_bytes_for(&self.materials),semio_framework_value::retirement::deferred_birth_bytes_for(&self.textures)])}
     fn controlled_retirement_supported()->bool {true}
 }
-impl protocol::value::retirement::RetireOwned for MeshVertex {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.position),protocol::value::retirement::deferred(self.normal),protocol::value::retirement::deferred(self.halfedge)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.position),protocol::value::retirement::deferred_birth_bytes_for(&self.normal),protocol::value::retirement::deferred_birth_bytes_for(&self.halfedge)])}
+impl semio_framework_value::retirement::RetireOwned for MeshVertex {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.position),semio_framework_value::retirement::deferred(self.normal),semio_framework_value::retirement::deferred(self.halfedge)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.position),semio_framework_value::retirement::deferred_birth_bytes_for(&self.normal),semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedge)])}
     fn controlled_retirement_supported()->bool {true}
 }
-impl protocol::value::retirement::RetireOwned for HalfEdge {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.vertex),protocol::value::retirement::deferred(self.twin),protocol::value::retirement::deferred(self.next),protocol::value::retirement::deferred(self.face),protocol::value::retirement::deferred(self.uv)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.vertex),protocol::value::retirement::deferred_birth_bytes_for(&self.twin),protocol::value::retirement::deferred_birth_bytes_for(&self.next),protocol::value::retirement::deferred_birth_bytes_for(&self.face),protocol::value::retirement::deferred_birth_bytes_for(&self.uv)])}
+impl semio_framework_value::retirement::RetireOwned for HalfEdge {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.vertex),semio_framework_value::retirement::deferred(self.twin),semio_framework_value::retirement::deferred(self.next),semio_framework_value::retirement::deferred(self.face),semio_framework_value::retirement::deferred(self.uv)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertex),semio_framework_value::retirement::deferred_birth_bytes_for(&self.twin),semio_framework_value::retirement::deferred_birth_bytes_for(&self.next),semio_framework_value::retirement::deferred_birth_bytes_for(&self.face),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uv)])}
     fn controlled_retirement_supported()->bool {true}
 }
-impl protocol::value::retirement::RetireOwned for MeshFace {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.halfedge),protocol::value::retirement::deferred(self.smooth),protocol::value::retirement::deferred(self.flipped)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.halfedge),protocol::value::retirement::deferred_birth_bytes_for(&self.smooth),protocol::value::retirement::deferred_birth_bytes_for(&self.flipped)])}
+impl semio_framework_value::retirement::RetireOwned for MeshFace {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.halfedge),semio_framework_value::retirement::deferred(self.smooth),semio_framework_value::retirement::deferred(self.flipped)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.halfedge),semio_framework_value::retirement::deferred_birth_bytes_for(&self.smooth),semio_framework_value::retirement::deferred_birth_bytes_for(&self.flipped)])}
     fn controlled_retirement_supported()->bool {true}
 }
-impl protocol::value::retirement::RetireOwned for MeshTransfer {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.positions),protocol::value::retirement::deferred(self.normals),protocol::value::retirement::deferred(self.colors),protocol::value::retirement::deferred(self.indices),protocol::value::retirement::deferred(self.uvs),protocol::value::retirement::deferred(self.face_ids),protocol::value::retirement::deferred(self.vertex_ids),protocol::value::retirement::deferred(self.edge_positions),protocol::value::retirement::deferred(self.edge_ids),protocol::value::retirement::deferred(self.edge_uvs),protocol::value::retirement::deferred(self.edge_is_seam),protocol::value::retirement::deferred(self.attributes),protocol::value::retirement::deferred(self.materials),protocol::value::retirement::deferred(self.textures)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.positions),protocol::value::retirement::deferred_birth_bytes_for(&self.normals),protocol::value::retirement::deferred_birth_bytes_for(&self.colors),protocol::value::retirement::deferred_birth_bytes_for(&self.indices),protocol::value::retirement::deferred_birth_bytes_for(&self.uvs),protocol::value::retirement::deferred_birth_bytes_for(&self.face_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.vertex_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_positions),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_uvs),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_is_seam),protocol::value::retirement::deferred_birth_bytes_for(&self.attributes),protocol::value::retirement::deferred_birth_bytes_for(&self.materials),protocol::value::retirement::deferred_birth_bytes_for(&self.textures)])}
+impl semio_framework_value::retirement::RetireOwned for MeshTransfer {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.positions),semio_framework_value::retirement::deferred(self.normals),semio_framework_value::retirement::deferred(self.colors),semio_framework_value::retirement::deferred(self.indices),semio_framework_value::retirement::deferred(self.uvs),semio_framework_value::retirement::deferred(self.face_ids),semio_framework_value::retirement::deferred(self.vertex_ids),semio_framework_value::retirement::deferred(self.edge_positions),semio_framework_value::retirement::deferred(self.edge_ids),semio_framework_value::retirement::deferred(self.edge_uvs),semio_framework_value::retirement::deferred(self.edge_is_seam),semio_framework_value::retirement::deferred(self.attributes),semio_framework_value::retirement::deferred(self.materials),semio_framework_value::retirement::deferred(self.textures)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.positions),semio_framework_value::retirement::deferred_birth_bytes_for(&self.normals),semio_framework_value::retirement::deferred_birth_bytes_for(&self.colors),semio_framework_value::retirement::deferred_birth_bytes_for(&self.indices),semio_framework_value::retirement::deferred_birth_bytes_for(&self.uvs),semio_framework_value::retirement::deferred_birth_bytes_for(&self.face_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.vertex_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_positions),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_uvs),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_is_seam),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attributes),semio_framework_value::retirement::deferred_birth_bytes_for(&self.materials),semio_framework_value::retirement::deferred_birth_bytes_for(&self.textures)])}
     fn controlled_retirement_supported()->bool {true}
 }
 
 impl HalfedgeMesh {
     /// 🧩️ Transfer all seven kernel owners directly to an individually typed persisted model.
-    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HistoryFoldSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,protocol::value::DslValue>,HistoryFoldIndex<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
+    pub fn into_owned_parts(self)->(Vec<MeshVertex>,Vec<HalfEdge>,Vec<MeshFace>,HistoryFoldSet<u32>,HistoryFoldIndex<String,MeshAttribute>,HistoryFoldIndex<String,semio_framework_value::DslValue>,HistoryFoldIndex<String,MeshTexture>){(self.vertices,self.halfedges,self.faces,self.uv_seams,self.attributes,self.materials,self.textures)}
     /// 🥽️ Editable literal topology enters the kernel without a serialized mesh document.
-    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HistoryFoldSet<u32>,attributes:HistoryFoldIndex<String,MeshAttribute>,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
+    pub fn from_owned_parts(vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,uv_seams:HistoryFoldSet<u32>,attributes:HistoryFoldIndex<String,MeshAttribute>,materials:HistoryFoldIndex<String,semio_framework_value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->Self{Self{vertices,halfedges,faces,uv_seams,attributes,materials,textures}}
     pub fn empty() -> Self {
         Self { vertices: Vec::new(), halfedges: Vec::new(), faces: Vec::new(), uv_seams: HistoryFoldSet::new(), attributes: HistoryFoldIndex::new(), materials:HistoryFoldIndex::new(),textures:HistoryFoldIndex::new() }
     }
@@ -328,12 +328,12 @@ impl HalfedgeMesh {
     pub fn attributes(&self) -> &HistoryFoldIndex<String,MeshAttribute> { &self.attributes }
 
     /// 🎨️ Material references and texture bytes belong to this same owned mesh payload.
-    pub fn materials(&self)->&HistoryFoldIndex<String,protocol::value::DslValue> { &self.materials }
+    pub fn materials(&self)->&HistoryFoldIndex<String,semio_framework_value::DslValue> { &self.materials }
     /// 🖼️ Authored texture records are retained without external resource ownership.
     pub fn textures(&self)->&HistoryFoldIndex<String,MeshTexture> { &self.textures }
 
     /// 📦️ Admits material and texture records before dependent face channels.
-    pub fn set_surface_assets(&mut self,materials:HistoryFoldIndex<String,protocol::value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->MeshResult<()> {
+    pub fn set_surface_assets(&mut self,materials:HistoryFoldIndex<String,semio_framework_value::DslValue>,textures:HistoryFoldIndex<String,MeshTexture>)->MeshResult<()> {
         semio_framework_mesh_engine::validate_mesh_surface_assets(&materials,&textures).map_err(MeshKernelError::InvalidInput)?;
         if self.attributes.values().filter(|attribute|attribute.semantic==MeshAttributeSemantic::Material).flat_map(|attribute|&attribute.values).any(|value|value.as_str().is_none_or(|name|!materials.contains_key(name))) { return Err(MeshKernelError::InvalidInput("undefined mesh face material".into())); }
         self.materials=materials;self.textures=textures;
@@ -670,7 +670,7 @@ impl HalfedgeMesh {
                     let sample=if let Some(sample)=samples.get(&(source,affected)) {*sample}else {
                         let original=attribute.values[source as usize].as_array().unwrap();let mut normal=[0,1,2].map(|axis|original[axis].as_f64().unwrap());
                         if affected {normal=[0,1,2].map(|axis|matrix[axis][0]*normal[0]+matrix[axis][1]*normal[1]+matrix[axis][2]*normal[2]);let length=normal[0].hypot(normal[1]).hypot(normal[2]);normal=normal.map(|value|value/length);if normal.iter().any(|value|!value.is_finite() || !(*value as f32).is_finite()) {return Err(MeshKernelError::DegenerateOperation);}}
-                        let sample=values.len() as u32;values.push(protocol::value::DslValue::Array(normal.into_iter().map(protocol::value::DslValue::float).collect()));samples.insert((source,affected),sample);sample
+                        let sample=values.len() as u32;values.push(semio_framework_value::DslValue::Array(normal.into_iter().map(semio_framework_value::DslValue::float).collect()));samples.insert((source,affected),sample);sample
                     };indices.push(sample);
                 }
                 normal_channels.insert(name.clone(),MeshAttribute {domain:attribute.domain,semantic:attribute.semantic,interpolation:attribute.interpolation,values,indices:Some(indices)});
@@ -753,7 +753,7 @@ impl HalfedgeMesh {
     }
 
     pub fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
-        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
+        let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
     }
 
     /// Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
@@ -761,14 +761,14 @@ impl HalfedgeMesh {
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
     pub fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize> {
-        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
+        let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
     }
 
     /// Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     pub fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
-        let mut job=self.orient_faces_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
+        let mut job=self.orient_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
     }
 
     /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
@@ -777,7 +777,7 @@ impl HalfedgeMesh {
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
     /// Returns the number of holes filled.
     pub fn fill_holes(&mut self) -> MeshResult<usize> {
-        let mut job=self.fill_holes_job()?;loop {match job.step(256,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
+        let mut job=self.fill_holes_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
     }
 
     /// 🪞 Reflects geometry on one side of the axis plane and welds its seam.
@@ -1167,7 +1167,7 @@ pub struct MeshTessellationJob {
     attribute_slot:usize,
     attribute_stage:u8,
     attribute_pending:Option<(String,MeshAttribute)>,
-    attribute_original_indices:Option<protocol::value::retirement::controlled::ControlledRetirement<Option<Vec<u32>>>>,
+    attribute_original_indices:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Option<Vec<u32>>>>,
     attribute_receipt:tessellation_attribute_projection::MeshAttributeReceipt,
     face_receipt:tessellation_face_preparation::MeshFaceReceipt,
     triangle_pending:Option<tessellation_normal_work::TriangleFrame>,
@@ -1186,9 +1186,9 @@ impl MeshTessellationJob {
     pub fn with_preview_capacity(mesh: HalfedgeMesh, maximum_preview_bytes: usize) -> Self { let mut job = Self::new(mesh); job.maximum_preview_bytes = maximum_preview_bytes; job }
     pub(super) fn selected(mesh: HalfedgeMesh, faces: HistoryFoldSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
     /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
-    pub fn retirement_birth_bytes(&self)->usize {protocol::value::retirement::owned_retirement_birth_bytes::<Self>()}
-    pub fn into_retirement(self,grant:protocol::value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,protocol::value::retained_clone::RetainedCloneProgress),(protocol::value::ValueError,Self)> {
-        protocol::value::retirement::admit_owned_retirement(self,grant)
+    pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
+    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)> {
+        semio_framework_value::retirement::admit_owned_retirement(self,grant)
     }
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
     pub(super) fn take_source(&mut self)->HalfedgeMesh { std::mem::replace(&mut self.mesh,HalfedgeMesh::empty()) }
@@ -1197,7 +1197,7 @@ impl MeshTessellationJob {
     fn halfedge(&self, local: usize) -> u32 { self.hes[if self.mesh.faces[self.face].flipped { self.hes.len() - 1 - local } else { local }] }
     fn corner_uv(&self,id:u32)->[f64;2] {
         let edge=&self.mesh.halfedges[id as usize];
-        self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>id as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>edge.vertex as usize,MeshAttributeDomain::Edge=>id as usize})).and_then(protocol::value::DslValue::as_array).map_or(edge.uv.map(f64::from),|value|[0,1].map(|axis|value[axis].as_f64().unwrap()))
+        self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>id as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>edge.vertex as usize,MeshAttributeDomain::Edge=>id as usize})).and_then(semio_framework_value::DslValue::as_array).map_or(edge.uv.map(f64::from),|value|[0,1].map(|axis|value[axis].as_f64().unwrap()))
     }
     fn corner(&mut self, local: usize) {
         let data=self.corner_data(local,[self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Normal),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Color)]);
@@ -1341,11 +1341,11 @@ impl HalfedgeMesh {
 
     pub fn tessellate(&self) -> MeshResult<MeshTransfer> {
         let mut job=MeshTessellationJob::new(self.clone());
-        loop {let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:job.next_normal_capacity_byte_demand(128).map_err(MeshKernelError::Retained)?,maximum_release_bytes:job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?,maximum_depth:job.next_normal_depth_demand().map_err(MeshKernelError::Retained)?};match job.step(grant).map_err(MeshKernelError::Retained)?.0 {MeshTessellationStep::Done(transfer)=>return Ok(transfer),MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh tessellation cancelled".into()))}}
+        loop {let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:job.next_normal_capacity_byte_demand(128).map_err(MeshKernelError::Retained)?,maximum_release_bytes:job.next_normal_release_byte_demand().map_err(MeshKernelError::Retained)?,maximum_depth:job.next_normal_depth_demand().map_err(MeshKernelError::Retained)?};match job.step(grant).map_err(MeshKernelError::Retained)?.0 {MeshTessellationStep::Done(transfer)=>return Ok(transfer),MeshTessellationStep::Working(_)=>{},MeshTessellationStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh tessellation cancelled".into()))}}
     }
 
     /// 🧵 Reads one authored UV sample through its canonical corner identity.
-    pub fn corner_uv(&self,corner:EdgeId)->MeshResult<[f32;2]> {let edge=self.halfedges.get(corner.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;if let Some(attribute)=self.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv) {let id=match attribute.domain {MeshAttributeDomain::Vertex=>edge.vertex,MeshAttributeDomain::Face=>edge.face.ok_or(MeshKernelError::InvalidHandle)?,_=>corner.0};let value=attribute.value_at(id as usize).and_then(protocol::value::DslValue::as_array).ok_or(MeshKernelError::InvalidHandle)?;return Ok([value[0].as_f64().unwrap()as f32,value[1].as_f64().unwrap()as f32]);}Ok(edge.uv)}
+    pub fn corner_uv(&self,corner:EdgeId)->MeshResult<[f32;2]> {let edge=self.halfedges.get(corner.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;if let Some(attribute)=self.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv) {let id=match attribute.domain {MeshAttributeDomain::Vertex=>edge.vertex,MeshAttributeDomain::Face=>edge.face.ok_or(MeshKernelError::InvalidHandle)?,_=>corner.0};let value=attribute.value_at(id as usize).and_then(semio_framework_value::DslValue::as_array).ok_or(MeshKernelError::InvalidHandle)?;return Ok([value[0].as_f64().unwrap()as f32,value[1].as_f64().unwrap()as f32]);}Ok(edge.uv)}
 
     pub fn to_obj(&self) -> MeshResult<String> {
         let mut export = MeshObjExport::new();
@@ -1511,9 +1511,9 @@ mod tessellation_polygon_tests;
 #[path="🧪️tests/🔬️tessellation/🎨️channels/🦀️.rs"]
 mod tessellation_channel_tests;
 
-protocol::value::artifact_retire_leaf!(VertexId,EdgeId,FaceId);
-impl protocol::value::retirement::RetireOwned for MeshTessellationJob {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::sequence(vec![protocol::value::retirement::deferred(self.mesh),protocol::value::retirement::deferred(self.output),protocol::value::retirement::deferred(self.hes),protocol::value::retirement::deferred(self.points),protocol::value::retirement::deferred(self.projected),protocol::value::retirement::deferred(self.links),protocol::value::retirement::deferred(self.edge_seen),protocol::value::retirement::deferred(self.selected_faces),protocol::value::retirement::deferred(self.corner_ids),protocol::value::retirement::deferred(self.attribute_name),protocol::value::retirement::deferred(self.attribute_indices),protocol::value::retirement::deferred(self.attribute_pending),protocol::value::retirement::deferred(self.attribute_original_indices)])}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::sequence_birth_bytes(&[protocol::value::retirement::deferred_birth_bytes_for(&self.mesh),protocol::value::retirement::deferred_birth_bytes_for(&self.output),protocol::value::retirement::deferred_birth_bytes_for(&self.hes),protocol::value::retirement::deferred_birth_bytes_for(&self.points),protocol::value::retirement::deferred_birth_bytes_for(&self.projected),protocol::value::retirement::deferred_birth_bytes_for(&self.links),protocol::value::retirement::deferred_birth_bytes_for(&self.edge_seen),protocol::value::retirement::deferred_birth_bytes_for(&self.selected_faces),protocol::value::retirement::deferred_birth_bytes_for(&self.corner_ids),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_name),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_indices),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_pending),protocol::value::retirement::deferred_birth_bytes_for(&self.attribute_original_indices)])}
+semio_framework_value::artifact_retire_leaf!(VertexId,EdgeId,FaceId);
+impl semio_framework_value::retirement::RetireOwned for MeshTessellationJob {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.mesh),semio_framework_value::retirement::deferred(self.output),semio_framework_value::retirement::deferred(self.hes),semio_framework_value::retirement::deferred(self.points),semio_framework_value::retirement::deferred(self.projected),semio_framework_value::retirement::deferred(self.links),semio_framework_value::retirement::deferred(self.edge_seen),semio_framework_value::retirement::deferred(self.selected_faces),semio_framework_value::retirement::deferred(self.corner_ids),semio_framework_value::retirement::deferred(self.attribute_name),semio_framework_value::retirement::deferred(self.attribute_indices),semio_framework_value::retirement::deferred(self.attribute_pending),semio_framework_value::retirement::deferred(self.attribute_original_indices)])}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.mesh),semio_framework_value::retirement::deferred_birth_bytes_for(&self.output),semio_framework_value::retirement::deferred_birth_bytes_for(&self.hes),semio_framework_value::retirement::deferred_birth_bytes_for(&self.points),semio_framework_value::retirement::deferred_birth_bytes_for(&self.projected),semio_framework_value::retirement::deferred_birth_bytes_for(&self.links),semio_framework_value::retirement::deferred_birth_bytes_for(&self.edge_seen),semio_framework_value::retirement::deferred_birth_bytes_for(&self.selected_faces),semio_framework_value::retirement::deferred_birth_bytes_for(&self.corner_ids),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attribute_name),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attribute_indices),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attribute_pending),semio_framework_value::retirement::deferred_birth_bytes_for(&self.attribute_original_indices)])}
     fn controlled_retirement_supported()->bool {true}
 }

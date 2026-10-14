@@ -216,7 +216,7 @@ test("new finite interpretation declarations satisfy strict TypeScript without a
 
 test("exact finite consumer route preserves the canonical semantic leaf, its neutral artifact route and its cache refusal", () => {
   const registration = vector.registration, project = JSON.parse(readFileSync(join(root, registration.projectPath), "utf8"));
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", cache: registration.cache, options: { cwd: dirname(registration.projectPath), command: registration.command } });
+  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", cache: registration.cache, options: { cwd: dirname(registration.projectPath), command: registration.command } });
   const routerText = readFileSync(join(root, registration.routerPath), "utf8"), router = ts.createSourceFile(registration.routerPath, routerText, ts.ScriptTarget.Latest, true);
   const branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node) => { if (ts.isIfStatement(node) && node.expression.getText(router) === 'segments[0] === "' + registration.route + '"') branches.push(node); ts.forEachChild(node, visit); };

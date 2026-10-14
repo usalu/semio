@@ -75,7 +75,7 @@ async fn local_steps_cost_o_change_however_long_the_history() {
     let corpus: Corpus = serde_json::from_str(include_str!("../🧫️fixtures/⚡️hot-path/🔣️.json")).expect("hot path corpus");
     assert_eq!(corpus.schema, "semio.store.hot-path/v1");
     for vector in &corpus.vectors {
-        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None)).await;
+        let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
         let started = std::time::Instant::now();
         for n in 0..vector.warmup {
             apply(&mut store, n as i32, &mut identity).await;

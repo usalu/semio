@@ -1,27 +1,28 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-frame`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::layout::modes::edit::windows::blueprint::config::current;
-use crate::mutations::change_frame_columns::ChangeFrameColumns;
-use crate::mutations::change_frame_fill::ChangeFrameFill;
-use crate::mutations::change_frame_stroke::ChangeFrameStroke;
-use crate::mutations::change_frame_wrap_mode::ChangeFrameWrapMode;
-use crate::mutations::change_link_path::ChangeLinkPath;
-use crate::mutations::edit_story::EditStory;
-use crate::mutations::move_frame::MoveFrame;
-use crate::mutations::resize_frame::ResizeFrame;
-use crate::mutations::rotate_frame::RotateFrame;
-use crate::mutations::update_text_frame::UpdateTextFrame;
-use crate::mutations::set_frame_flags::SetFrameFlags;
-use crate::mutations::set_frame_layer::SetFrameLayer;
-use crate::mutations::set_drawing_text::{drawing_text_index, is_drawing_kind, SetDrawingText};
-use crate::mutations::set_story_runs::SetStoryRuns;
-use crate::mutations::set_page_overrides::SetPageOverrides;
-use crate::mutations::update_link::UpdateLink;
-use crate::mutations::reorder_frame::ReorderFrame;
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::text_to_rgba;
-use crate::{Frame, LayoutSnapshot, Page, PageOverride, TextStyleRun};
+use crate::modes::edit::windows::blueprint::config::current;
+use semio_s_artifact_layout_layout_mutations_frames::change_frame_columns::ChangeFrameColumns;
+use semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill;
+use semio_s_artifact_layout_layout_mutations_frames::change_frame_stroke::ChangeFrameStroke;
+use semio_s_artifact_layout_layout_mutations_frames::change_frame_wrap_mode::ChangeFrameWrapMode;
+use semio_s_artifact_layout_layout_mutations_content::change_link_path::ChangeLinkPath;
+use semio_s_artifact_layout_layout_mutations_content::edit_story::EditStory;
+use semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame;
+use semio_s_artifact_layout_layout_mutations_frames::resize_frame::ResizeFrame;
+use semio_s_artifact_layout_layout_mutations_frames::rotate_frame::RotateFrame;
+use semio_s_artifact_layout_layout_mutations_frames::update_text_frame::UpdateTextFrame;
+use semio_s_artifact_layout_layout_mutations_frames::set_frame_flags::SetFrameFlags;
+use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
+use semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::{drawing_text_index, is_drawing_kind, SetDrawingText};
+use semio_s_artifact_layout_layout_mutations_content::set_story_runs::SetStoryRuns;
+use semio_s_artifact_layout_layout_mutations_content::set_page_overrides::SetPageOverrides;
+use semio_s_artifact_layout_layout_mutations_content::update_link::UpdateLink;
+use semio_s_artifact_layout_layout_mutations_frames::reorder_frame::ReorderFrame;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::text_to_rgba;
+use semio_s_artifact_layout_layout_model::{Frame, Page, PageOverride, TextStyleRun};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -50,7 +51,7 @@ fn inherited_override(document: &LayoutSnapshot, page: &Page, page_id: &str, fra
     let Some(parent_id) = &page.parent_page_id else { return Ok(Emit::default()) };
     let Some(parent) = document.parent_pages.iter().find(|parent| parent.id == *parent_id) else { return Ok(Emit::default()) };
     let Some(frame) = parent.frames.iter().find(|frame| frame.id() == frame_id) else { return Ok(Emit::default()) };
-    if crate::layer_locked(document, page, frame.layer_id()) || (frame.locked() && !matches!(field, "locked" | "visible" | "open")) {
+    if semio_s_artifact_layout_layout_model::layer_locked(document, page, frame.layer_id()) || (frame.locked() && !matches!(field, "locked" | "visible" | "open")) {
         return Ok(Emit::default());
     }
     let mut overrides = page.overrides.clone();
@@ -123,7 +124,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
         return inherited_override(document, page, &page_id, &payload.frame_id, &payload.field, &payload.value);
     };
-    if crate::layer_locked(document, page, frame.layer_id()) {
+    if semio_s_artifact_layout_layout_model::layer_locked(document, page, frame.layer_id()) {
         return Ok(Emit::default());
     }
     if frame.locked() && !matches!(payload.field.as_str(), "locked" | "visible" | "open") {
@@ -311,7 +312,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
         "open" => {
             let Frame::Image { link_id, .. } = frame else { return Ok(Emit::default()) };
             let Some(link) = document.links.iter().find(|link| link.id == *link_id) else { return Ok(Emit::default()) };
-            let Some((standard, subset, schema)) = crate::editor::layout::panels::catalogue::native_open(&link.artifact_kind) else { return Ok(Emit::default()) };
+            let Some((standard, subset, schema)) = crate::native_open(&link.artifact_kind) else { return Ok(Emit::default()) };
             if link.artifact_ref.trim().is_empty() {
                 return Ok(Emit::default());
             }
@@ -340,7 +341,7 @@ mod open_tests {
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 
     fn emit_open(kind: &str, artifact_ref: &str, frame_id: &str) -> Emit<LayoutMutation, NoConfigMutation> {
-        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+        let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         document.links[0].artifact_kind = kind.into();
         document.links[0].artifact_ref = artifact_ref.into();
         let config = NoConfig::default();
@@ -381,8 +382,8 @@ mod open_tests {
 
     #[test]
     fn every_placeable_kind_can_open_its_editor() {
-        for (_, _, kind) in crate::editor::layout::panels::catalogue::NATIVE_PLACEMENTS {
-            assert!(crate::editor::layout::panels::catalogue::native_open(kind).is_some(), "{kind}");
+        for (_, _, kind) in crate::NATIVE_PLACEMENTS {
+            assert!(crate::native_open(kind).is_some(), "{kind}");
         }
     }
 
@@ -398,9 +399,9 @@ mod open_tests {
             styles: Vec::new(),
             layers: vec![DrawLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] } }],
         };
-        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+        let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         document.links[0].artifact_kind = "s.draw.drawing".into();
-        document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+        document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
         let config = NoConfig::default();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -412,9 +413,9 @@ mod open_tests {
 
     #[test]
     fn a_locked_frame_keeps_its_geometry_and_can_still_unlock() {
-        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+        let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         match document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").unwrap() {
-            crate::Frame::Rect { locked, .. } => *locked = Some(true),
+            semio_s_artifact_layout_layout_model::Frame::Rect { locked, .. } => *locked = Some(true),
             _ => panic!("rect"),
         }
         let config = NoConfig::default();

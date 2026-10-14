@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "row": {
+    "type": "node-terminal",
+    "name": "Repo Cache Exact Cargo Storage (Prototype)",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-process:test-exact-cargo-storage --configuration=prototype",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"process:exact-cargo-storage:caller\",\"maximumElapsedMilliseconds\":300000}",
+      "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"]]}",
+      "SEMIO_BUILD_MODE": "prototype",
+      "CARGO_NET_OFFLINE": "false",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/exact-storage/prototype"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.84096
+    }
+  },
+  "seedSha256": "e42bcf84247af3615fd4147b209fdb1bb2972e8feb384de43236ebc98a015c9c",
+  "launchSha256": "ba1e371a8966825dc28f6092c129abb8593c0377a4ed55841580e21965a9b98f",
+  "outputRedirectOnly": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/ce-gui1",
+  "sourceObservations": {
+    "kind": "read-only-source-observation-not-authority",
+    "files": [
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+        "sha256": "b1d7a1b2cb349227ec65ae40fe82f7146c634a89020a25e6e270435d32e9005a",
+        "bytes": 11091
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts",
+        "sha256": "672eb83e1565fb48d1f08344375ba5ff0ad4fa2a38f4755a53b3734a6cc53af2",
+        "bytes": 7613
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json",
+        "sha256": "62a23334db82ddce703c572e2b1b4c64db3834ede50d4ce8c545de6c7c5f9746",
+        "bytes": 5020
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+        "sha256": "db4f687c701a1303598a447dbde298cca41d298906ec81c7269c8d50331aac01",
+        "bytes": 11226
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+        "sha256": "7c47f6200912f4887b29c964bba7509ff7268cca61408a28a519728c55bc878b",
+        "bytes": 26463
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+        "sha256": "5123e07cc873d3b5f242c91aadcd2daaa69b8a50fe74c918c4d190d53e4893df",
+        "bytes": 15801
+      },
+      {
+        "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts",
+        "sha256": "cc501a83cf9890e1343041f22d6564687645ae36f947d4863a6dc1ea88c1692b",
+        "bytes": 5799
+      }
+    ]
+  },
+  "qualification": "Initial authored GUI input; no process or test acceptance inferred"
+}

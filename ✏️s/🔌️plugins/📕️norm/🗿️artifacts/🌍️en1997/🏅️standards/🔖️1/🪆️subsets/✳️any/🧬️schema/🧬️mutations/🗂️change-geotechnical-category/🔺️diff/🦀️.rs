@@ -1,6 +1,6 @@
-use super::ChangeGeotechnicalCategory;
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
+use crate::change_geotechnical_category::ChangeGeotechnicalCategory;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 pub fn diff(payload: &ChangeGeotechnicalCategory, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !(1..=3).contains(&payload.new_geotechnical_category) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "geotechnical category must be 1..3", Vec::<String>::new());

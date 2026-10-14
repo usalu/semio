@@ -24,22 +24,33 @@
 //! relocate `io_declaration()` there as `io()` (verbatim rename), add the typed leaves, and swap
 //! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
 
-use crate::standards::v1::subsets::any::schema;
-use {crate::Puzzle3dMutation, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
-use crate::editor::puzzle3d as editor;
-use crate::viewer::puzzle3d as viewer;
+use semio_s_artifact_puzzle_3d_model as schema;
+use {semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
+use semio_s_artifact_puzzle_3d_editor as editor;
+use semio_s_artifact_puzzle_3d_viewer as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::puzzle3d::concrete_forest::SOURCE.clone(), crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.clone()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![semio_s_artifact_puzzle_3d_examples::concrete_forest::SOURCE.clone(), semio_s_artifact_puzzle_3d_examples::nakagin_capsule_tower::SOURCE.clone()]).as_slice()
+}
+
+/// 🧬️ Descriptor for `s.puzzle.puzzle3d` — the twenty handcrafted schema leaves, five per facet, each owned by its facet crate.
+pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+        id: "s.puzzle.puzzle3d",
+        artifact: semio_s_artifact_puzzle_3d_model::SCHEMA_LEAVES,
+        snapshot: semio_s_artifact_puzzle_3d_model::snapshot::SCHEMA_LEAVES,
+        diff: semio_s_artifact_puzzle_3d_diff::SCHEMA_LEAVES,
+        mutations: semio_s_artifact_puzzle_3d_mutations::SCHEMA_LEAVES,
+    }
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::puzzle3d_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![semio_s_artifact_puzzle_3d_inferences::puzzle3d_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
@@ -63,7 +74,7 @@ fn io_declaration() -> IoDeclaration {
 pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: PUZZLE3D_DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::puzzle3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        schema: SchemaDeclaration { descriptor: puzzle3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
         viewer: viewer_surface::<viewer::Puzzle3dViewer, PA>(viewer::create_puzzle3d_viewer()),
         editor: editor_surface::<editor::Puzzle3dPlayApp, PA>(editor::create_puzzle3d_app()),

@@ -1,0 +1,122 @@
+{
+  "scope": "targeted-authored-surface-diagnostic",
+  "workspace": {
+    "project": "workspace",
+    "root": ".",
+    "manifest": "📋️project.json"
+  },
+  "library": {
+    "project": "@semio-tech/repo-lib",
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+    "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"
+  },
+  "target": "test-build-surfaces",
+  "configurations": {
+    "prototype": { "execution": { "env": { "SEMIO_BUILD_MODE": "prototype" } } },
+    "release": { "execution": { "env": { "SEMIO_BUILD_MODE": "release" } } }
+  },
+  "ownerCommandArguments": [
+    "bun",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts",
+    "owner-command",
+    "--cwd",
+    "{projectRoot}",
+    "--",
+    "bun",
+    "{workspaceRoot}/{projectRoot}/📜️script.ts",
+    "test",
+    "build-surfaces"
+  ],
+  "tools": [
+    "nx",
+    "bazel"
+  ],
+  "maximumElapsedMilliseconds": 120000,
+  "publicOptions": [
+    "--exclude-dependencies",
+    "--skip-cache"
+  ],
+  "coverageAdmissionCases": [
+    {
+      "id": "all",
+      "selection": {
+        "kind": "all"
+      },
+      "accepted": true
+    },
+    {
+      "id": "selected",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "@semio-tech/repo-lib",
+            "target": "test-build-surfaces"
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing",
+      "accepted": false
+    },
+    {
+      "id": "malformed",
+      "version": 0,
+      "accepted": false
+    }
+  ],
+  "finalRuntimeGuardCases": [
+    {
+      "id": "missing-argv",
+      "args": [],
+      "message": "Expected nx|bazel"
+    },
+    {
+      "id": "relative-pin",
+      "args": [
+        "bazel",
+        "relative.json",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "message": "Expected nx|bazel"
+    },
+    {
+      "id": "foreign-pin",
+      "args": [
+        "bazel",
+        "/not-read.json",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "environment": {
+        "SEMIO_BUILD_GRAPH_PATH": "/foreign.json"
+      },
+      "message": "Original production-selected pin handoff required"
+    },
+    {
+      "id": "missing-reuse",
+      "args": [
+        "bazel",
+        "/not-read.json",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "environment": {
+        "SEMIO_BUILD_REUSE_GRAPH": "false"
+      },
+      "message": "Original production-selected reuse required"
+    },
+    {
+      "id": "inherited-wire",
+      "args": [
+        "bazel",
+        "/not-read.json",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{}"
+      },
+      "message": "Standalone runtime must issue its own original matching-backend envelope"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
-use super::*;
-use crate::mutations::En1995Mutation;
+use semio_s_artifact_norm_en1995_diff::*;
+use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
 use protocol::{apply_diff, DiffAlgebra, Mutation as _, MutationDiff};
 
 /// 🔺️ A member-scoped change patches only that member's field; annex and connections stay untouched.
 #[semio_framework_async_macros::async_test]
 async fn change_mutation_diff_updates_only_its_field() {
     let base = En1995Snapshot::default();
-    let mutation = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 });
+    let mutation = En1995Mutation::ChangeMemberH(semio_s_artifact_norm_en1995_mut_geometry::change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 });
     let outcome = mutation.diff(&base);
     let diff = outcome.diff();
     assert!(diff.annex.is_none() && diff.connections.is_empty());
@@ -22,15 +22,15 @@ async fn change_mutation_diff_updates_only_its_field() {
 async fn absorb_coalesces_per_key_and_keeps_the_sequential_result() {
     let base = En1995Snapshot::default();
     let member_id = base.members[0].id.clone();
-    let mut first = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.5 }).diff(&base).diff().clone();
+    let mut first = En1995Mutation::ChangeMemberH(semio_s_artifact_norm_en1995_mut_geometry::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.5 }).diff(&base).diff().clone();
     let mid = apply_diff(&first, &base).expect("first applies");
-    let second = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.6 }).diff(&mid).diff().clone();
-    let third = En1995Mutation::ChangeAnnex(crate::mutations::change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }).diff(&mid).diff().clone();
+    let second = En1995Mutation::ChangeMemberH(semio_s_artifact_norm_en1995_mut_geometry::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.6 }).diff(&mid).diff().clone();
+    let third = En1995Mutation::ChangeAnnex(semio_s_artifact_norm_en1995_mut_members::change_annex::ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En }).diff(&mid).diff().clone();
     first.absorb(second);
     first.absorb(third);
     assert_eq!(first.members.modified.len(), 1, "patch∘patch is one patch");
     let applied = apply_diff(&first, &base).expect("absorbed diff applies");
-    assert_eq!(applied.annex, crate::document::AnnexChoice::En);
+    assert_eq!(applied.annex, semio_s_plugin_norm_compliance::AnnexChoice::En);
     assert!((applied.members[0].h_m - 0.6).abs() < 1e-12);
 }
 

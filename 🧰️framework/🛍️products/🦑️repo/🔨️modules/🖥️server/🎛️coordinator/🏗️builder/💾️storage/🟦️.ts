@@ -1,0 +1,14 @@
+import {join,isAbsolute} from "node:path";
+import {mkdir,mkdtemp,rm} from "node:fs/promises";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireMaterializedPathV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+
+/** 🗂️ Owns coordinator output, warm compiler state and isolated live scratch in one fixed product filesystem. */
+export function nextStorageLayoutV1(root:string,mode:string):{output:string;state:string;temporary:string}{if(!isAbsolute(root)||validateJsonSchemaSubset(schema,mode).length)throw Error("Closed Next storage intent required");const owner=join(root,schema.definitions.Protocol.const.root,mode);return {output:requireMaterializedPathV1(join(owner,"out")),state:requireMaterializedPathV1(join(owner,"state")),temporary:requireMaterializedPathV1(join(owner,"tmp"))};}
+
+/** 🎟️ Keeps the issued enforcing product image alive through the original Next operation. */
+export async function withNextStorageV1<T>(workspace:string,mode:string,invocation:ScriptInvocation,body:(store:RepositoryCacheStoreV1,layout:ReturnType<typeof nextStorageLayoutV1>,temporary:string)=>Promise<T>):Promise<T>{return withRepositoryCacheStoreV1(workspace,"products",invocation,async store=>{const layout=nextStorageLayoutV1(store.root,mode);for(const path of Object.values(layout))requireNativeStoragePathV1(store.root,path);await store.recheck();await mkdir(layout.temporary,{recursive:true});const temporary=await mkdtemp(join(layout.temporary,"n-"));try{return await body(store,layout,temporary);}finally{await rm(temporary,{recursive:true,force:true});}});}

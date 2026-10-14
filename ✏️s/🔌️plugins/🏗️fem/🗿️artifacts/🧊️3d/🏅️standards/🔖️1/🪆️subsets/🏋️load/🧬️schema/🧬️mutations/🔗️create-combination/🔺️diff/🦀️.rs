@@ -1,9 +1,13 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::CreateCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationInsertion, Fem3dCombinationsDelta, Fem3dDiff};
-use crate::standards::v1::subsets::any::schema::mutations::{combination_breach,invariant,resolve_combination_terms};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::combination_breach;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

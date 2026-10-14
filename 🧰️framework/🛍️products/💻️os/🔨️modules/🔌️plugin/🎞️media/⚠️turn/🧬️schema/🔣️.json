@@ -16,7 +16,9 @@
     "snapshotPreparation",
     "producerPreparation",
     "completionPublication",
-    "handleReceiving"
+    "handleReceiving",
+    "downloadReceiving",
+    "chunkReceiving"
   ],
   "properties": {
     "version": {
@@ -477,6 +479,117 @@
             "type": "boolean"
           },
           "expectedReceiver": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "downloadReceiving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phases",
+        "fields",
+        "cases"
+      ],
+      "properties": {
+        "phases": {
+          "const": [
+            "handleMetadata",
+            "statusMetadata",
+            "outputReceiving",
+            "registryPublication"
+          ]
+        },
+        "fields": {
+          "const": [
+            "mediaType",
+            "schema",
+            "mimeType",
+            "chunks",
+            "handle"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "deniedPhase",
+              "sameSource",
+              "occupied",
+              "expectedPhases"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "deniedPhase": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              },
+              "sameSource": {
+                "type": "boolean"
+              },
+              "occupied": {
+                "type": "boolean"
+              },
+              "expectedPhases": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                  "enum": [
+                    "handleMetadata",
+                    "statusMetadata",
+                    "outputReceiving",
+                    "registryPublication"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "chunkReceiving": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "funded",
+          "busy",
+          "empty",
+          "expectedOwner",
+          "terminal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "funded": {
+            "type": "boolean"
+          },
+          "busy": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "expectedOwner": {
+            "enum": [
+              "queue",
+              "receiver",
+              "empty"
+            ]
+          },
+          "terminal": {
             "type": "boolean"
           }
         }

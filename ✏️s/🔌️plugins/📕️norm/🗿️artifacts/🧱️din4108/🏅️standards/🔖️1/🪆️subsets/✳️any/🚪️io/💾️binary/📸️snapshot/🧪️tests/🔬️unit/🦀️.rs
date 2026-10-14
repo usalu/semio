@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::binary::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_pack_equivalence() {

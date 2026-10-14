@@ -4,10 +4,12 @@
 //! and files the filled image exactly like a painted stroke's, so a history edit of the colour or the selection replays
 //! on whatever base it lands on. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
-use crate::mutations::fill_region::{fill_color_invariant, fill_operation};
-use crate::mutations::paint_stroke::{canvas, painted, repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, Painted, RasterSelectionSpan, Refusal, RASTER_PAINT_TARGETS};
-use crate::diff::RasterDiff;
-use crate::{RasterMutation, RasterSnapshot};
+use crate::fill_region::{fill_color_invariant, fill_operation};
+use semio_s_artifact_raster_raster_diff::{canvas, painted, Painted, Refusal};
+use crate::paint_stroke::{repainted_diff, repainted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan, RASTER_PAINT_TARGETS};
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::fill_in_place;
 use semio_framework_pixels::RasterImage;
 
@@ -24,15 +26,15 @@ pub struct FillSelection {
 }
 
 /// 🏗️ Builder — fills the whole image of `layer_id`'s `target` with `color`.
-pub fn fill_selection(layer_id: impl Into<String>, target: &str, color: [f64; 4]) -> RasterMutation {
-    RasterMutation::FillSelection(FillSelection { layer_id: layer_id.into(), target: target.to_string(), color: color.to_vec(), selection: None })
+pub fn fill_selection<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::fill_selection::FillSelection> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion>>(layer_id: impl Into<String>, target: &str, color: [f64; 4]) -> Op {
+    Op::from(FillSelection { layer_id: layer_id.into(), target: target.to_string(), color: color.to_vec(), selection: None })
 }
 //#endregion 🔖️Payload
 
 //#region 🫗️Fill
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary, unit colour channels, ordered selection runs), checked
 /// again before any pixel moves; the first one broken, as the field it names.
-pub(crate) fn invariant(payload: &FillSelection) -> Result<(), (&'static str, String)> {
+pub fn invariant(payload: &FillSelection) -> Result<(), (&'static str, String)> {
     if !RASTER_PAINT_TARGETS.contains(&payload.target.as_str()) {
         return Err(("target", format!("Fill target \"{}\" is neither pixels nor mask.", payload.target)));
     }
@@ -75,7 +77,7 @@ pub fn diff(payload: &FillSelection, base: &RasterSnapshot) -> protocol::Mutatio
 //#region 🔖️Inverse
 /// ↩️ The steps that undo the fill on `base` — the same restoration a painted stroke's inverse runs. Nothing when the fill
 /// changed nothing.
-pub fn inverse(payload: &FillSelection, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::fill_selection::FillSelection> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion>>(payload: &FillSelection, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
     if invariant(payload).is_err() {
         return Ok(Vec::new());
@@ -88,14 +90,14 @@ pub fn inverse(payload: &FillSelection, base: &RasterSnapshot) -> Result<Vec<Ras
 //#endregion 🔖️Inverse
 
 //#region 🔖️Kind
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for FillSelection {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for FillSelection where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::fill_selection::FillSelection> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "selection", kind: "fill-selection", record: "FilledSelection" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse(self, base)?
     

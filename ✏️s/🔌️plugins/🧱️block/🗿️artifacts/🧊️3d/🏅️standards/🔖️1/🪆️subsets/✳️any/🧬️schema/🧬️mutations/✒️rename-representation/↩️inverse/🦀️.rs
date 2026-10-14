@@ -1,13 +1,12 @@
 //! ↩️ Inverse for `RenameRepresentation`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RenameRepresentation, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::rename_representation::RenameRepresentation, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::rename_representation::RenameRepresentation> {
     Ok((|| {
     match base.representations.iter().find(|item| item.id == payload.id) {
-        Some(existing) => vec![super::super::rename_representation::rename_representation(payload.id.clone(), existing.name.clone())],
+        Some(existing) => vec![crate::rename_representation::rename_representation(payload.id.clone(), existing.name.clone())],
         None => Vec::new(),
     }
 

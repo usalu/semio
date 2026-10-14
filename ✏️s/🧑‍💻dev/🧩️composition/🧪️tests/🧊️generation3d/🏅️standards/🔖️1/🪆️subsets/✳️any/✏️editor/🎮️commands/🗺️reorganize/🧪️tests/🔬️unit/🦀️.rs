@@ -1,7 +1,7 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::node_graph_edit::NodeGraphEdit;
+use semio_s_artifact_procedural_3d_node_graph_edit::NodeGraphEdit;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use crate::editor_domain::editor_laws::context;
 
 /// 📍️ The deliberately degenerate layout every assertion below starts from: every widget pinned to
@@ -69,7 +69,7 @@ async fn reorganize_leaves_no_two_widgets_sharing_one_position() {
 #[test]
 fn reorganize_is_reachable_by_menu_and_by_keyboard_in_both_languages() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     let action = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|kind| kind.actions.iter())).find(|action| action.id == "reorganize").expect("reorganize action");
     let label = serde_json::to_string(&action.label).expect("reorganize label json");
     assert!(label.contains("Reorganize") && label.contains("Neu anordnen"), "reorganize needs both declared languages: {label}");

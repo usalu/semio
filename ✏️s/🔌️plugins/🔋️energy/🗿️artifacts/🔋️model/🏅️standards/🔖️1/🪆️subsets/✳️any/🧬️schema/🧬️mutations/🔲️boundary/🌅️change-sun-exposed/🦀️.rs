@@ -1,8 +1,7 @@
 //! 🌅️ Energy model mutation — `ChangeSurfaceSunExposed`: Sets whether the outside face receives beam and diffuse solar at all.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSurfaceSunExposed {
     pub new_sun_exposed: bool,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_surface_sun_exposed(id: crate::model::EntityId, new_sun_exposed: bool) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSurfaceSunExposed(ChangeSurfaceSunExposed { id, new_sun_exposed })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_surface_sun_exposed<Op: From<ChangeSurfaceSunExposed>>(id: crate::model::EntityId, new_sun_exposed: bool) -> Op {
+    ChangeSurfaceSunExposed { id, new_sun_exposed }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSurfaceSunExposed {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceSunExposed
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceSunExposed>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-sun-exposed", record: "ChangedSurfaceSunExposed" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,9 @@
 //! 🧬️ Fem3d diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
-use crate::{element_id, load_id, Fem3dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use crate::standards::v1::subsets::any::schema::structure::{element_id, load_id};
+use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::list_delta::RowPatch;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};

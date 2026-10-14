@@ -31,7 +31,7 @@ def leaves(prefix, body):
 mp = json.load(open(sys.argv[1], encoding="utf-8")); head = sys.argv[2]
 def target(name):
     t = mp[name]
-    if head != "crate" and t.startswith("crate::"): t = head + t[5:]
+    if "::" not in head and head != "crate" and t.startswith("crate::"): t = head + t[5:]
     return t
 for path in sys.argv[3:]:
     s = open(path, encoding="utf-8").read(); orig = s

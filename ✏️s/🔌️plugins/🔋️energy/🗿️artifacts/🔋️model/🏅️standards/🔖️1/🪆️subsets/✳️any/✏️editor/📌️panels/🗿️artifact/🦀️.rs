@@ -19,13 +19,13 @@
 //! last in its own `ScheduleId` space, which would collide with `EntityId` on the wire) is rendered
 //! READ-ONLY, so the tree never hands the inspector a target it cannot resolve back.
 
-use crate::editor::model::interaction::{
+use crate::editor_interaction::{
     energy_target_id, EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_CONSTRUCTION, ENERGY_GRANULARITY_FENESTRATION, ENERGY_GRANULARITY_GAS_MATERIAL, ENERGY_GRANULARITY_GLAZING_MATERIAL, ENERGY_GRANULARITY_HVAC, ENERGY_GRANULARITY_LOAD,
     ENERGY_GRANULARITY_MATERIAL, ENERGY_GRANULARITY_SHADING, ENERGY_GRANULARITY_SPACE, ENERGY_GRANULARITY_SURFACE, ENERGY_GRANULARITY_THERMOSTAT, ENERGY_GRANULARITY_ZONE, ENERGY_MODEL_INTERACTION_DOMAIN,
 };
-use crate::editor::model::{energy_model_action, surface_class_id, ui_label, ENERGY_MODEL_EDITOR_CONTROLLER_ID};
+use crate::editor_commands::{energy_model_action, surface_class_id, ui_label, ENERGY_MODEL_EDITOR_CONTROLLER_ID};
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Space, Surface, Zone};
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;

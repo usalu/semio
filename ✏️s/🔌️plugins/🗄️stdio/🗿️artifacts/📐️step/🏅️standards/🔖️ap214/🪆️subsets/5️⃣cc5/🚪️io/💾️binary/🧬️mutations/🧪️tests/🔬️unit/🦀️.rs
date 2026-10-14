@@ -6,7 +6,7 @@ use semio_framework_value::{FromValue, ToValue};
 
 #[test]
 fn class_native_committed_intents_have_canonical_codecs_and_exact_semantics() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧫️fixtures/🎛️history-inputs");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|directory| directory.join("📜️artifact-definition.json").is_file()).expect("artifact root").join("🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧫️fixtures/🎛️history-inputs");
     let mut directories: Vec<_> = std::fs::read_dir(root).unwrap().map(|entry| entry.unwrap().path()).collect();
     directories.sort();
     assert_eq!(directories.len(), 5);
@@ -14,8 +14,8 @@ fn class_native_committed_intents_have_canonical_codecs_and_exact_semantics() {
         let wire = std::fs::read_to_string(directory.join("🦠️mutation/🔣️.json")).unwrap();
         let parsed = semio_framework_pack_json::parse(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let fixture = semio_framework_pack_json::to_dsl_value(&parsed);
-        let before = crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("before").unwrap().clone()).unwrap();
-        let after = crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("after").unwrap().clone()).unwrap();
+        let before = semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("before").unwrap().clone()).unwrap();
+        let after = semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("after").unwrap().clone()).unwrap();
         let mutation = StepCc5Mutation::from_value(fixture.get("mutation").unwrap().clone()).unwrap();
         assert_eq!(StepCc5Mutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let binary = mutation.encode_op().unwrap();

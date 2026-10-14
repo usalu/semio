@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeEquipmentGainRadiantFraction` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, EquipmentGainPatch, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, EquipmentGainPatch, ModelPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeEquipmentGainRadiantFraction, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

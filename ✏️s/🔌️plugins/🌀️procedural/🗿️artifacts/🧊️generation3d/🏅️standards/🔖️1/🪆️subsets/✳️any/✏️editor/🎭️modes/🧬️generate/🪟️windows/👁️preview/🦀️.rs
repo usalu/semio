@@ -1,20 +1,20 @@
 //! 👁️ Generation3d play app — the generation output-preview window (generate mode): a tessellated
 //! preview of the patched fixture's evaluated geometry.
 
-use crate::editor::generation3d::config::Generation3dConfig;
-use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::show_mode_measure;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::editor::generation3d::preview_camera_json;
-use crate::editor::generation3d::preview_payload;
-use crate::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_camera_json;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
-use crate::editor::generation3d::PreviewInteractionMarks;
-use crate::editor::generation3d::PreviewPayload;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewPayload;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
-use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
-use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::generation_by_id;
 use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;

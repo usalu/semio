@@ -102,10 +102,5 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
-
-
 #[path = "🛡️subset/🦀️.rs"]
 pub(crate) mod subset;

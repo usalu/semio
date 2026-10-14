@@ -4,7 +4,7 @@
 //! puzzle2d's flatten pipeline) — it is a single flat catalog of rim placements — so this is a
 //! plain whole-snapshot derivation, not a per-entity `InferredField` chain.
 
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the node kind's local (rim) space.

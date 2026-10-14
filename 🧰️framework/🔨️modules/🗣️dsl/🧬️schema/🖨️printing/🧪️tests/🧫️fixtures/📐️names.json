@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "two words",
+      "printed": "\"two words\""
+    },
+    {
+      "name": "line\nword",
+      "printed": "\"line\\nword\""
+    },
+    {
+      "name": "a\"b",
+      "printed": "\"a\\\"b\""
+    },
+    {
+      "name": "",
+      "printed": "\"\""
+    }
+  ]
+}

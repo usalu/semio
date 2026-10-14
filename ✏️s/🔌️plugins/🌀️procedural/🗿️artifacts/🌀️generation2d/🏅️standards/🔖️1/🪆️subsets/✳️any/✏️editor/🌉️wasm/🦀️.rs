@@ -5,8 +5,8 @@
 //! no engine entry, no `wasm` script target — see
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store

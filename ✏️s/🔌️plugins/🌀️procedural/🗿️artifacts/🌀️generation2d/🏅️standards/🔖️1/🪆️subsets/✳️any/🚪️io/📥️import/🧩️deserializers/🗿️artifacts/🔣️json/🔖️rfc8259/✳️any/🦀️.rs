@@ -3,7 +3,7 @@
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see the paired export
 //! leaf's doc comment and w5b-close-report.md): `JsonSnapshot::to_serde_value`/stdio's own real
 //! `parse_json_text` do the structural conversion — no hand-rolled bridge needed here.
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::{JsonSnapshot};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;

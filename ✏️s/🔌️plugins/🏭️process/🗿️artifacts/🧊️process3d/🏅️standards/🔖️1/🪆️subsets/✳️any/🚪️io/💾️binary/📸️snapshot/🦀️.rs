@@ -6,8 +6,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
+use crate::snapshot::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -43,8 +43,8 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 #[path = "."]
 mod mounted_snapshot_codec {
 #[cfg(test)] use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessStep, Stock, WorkingSolid, Workshop, WorkshopMachine};
+use crate::snapshot::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 #[cfg(test)] use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -594,14 +594,14 @@ pub use mounted_snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
+use crate::*;
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::StockQuantity, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use pack::snapshot::ArtifactDsl;
-use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
+use crate::{standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, standards::v1::subsets::any::io::component::text::snapshot::PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
 }
 #[cfg(test)] pub use snapshot_wire_codec::*;

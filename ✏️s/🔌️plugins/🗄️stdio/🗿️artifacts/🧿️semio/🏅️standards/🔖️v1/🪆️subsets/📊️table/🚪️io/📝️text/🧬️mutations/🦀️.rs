@@ -142,9 +142,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

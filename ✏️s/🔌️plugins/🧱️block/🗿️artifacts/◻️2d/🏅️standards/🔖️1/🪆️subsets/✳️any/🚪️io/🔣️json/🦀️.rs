@@ -1,5 +1,5 @@
 //! 🔣️ Literal Block2d JSON words retain all IEEE states independently of native scalar printing.
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -55,7 +55,7 @@ pub(crate) fn to_json_text(source: &Block2dSnapshot) -> String {
 }
 
 /// 📥️ Reconstructs only the declared closed binary64 transport fields.
-pub(crate) fn from_json_text(text: &str) -> Result<Block2dSnapshot, String> {
+pub fn from_json_text(text: &str) -> Result<Block2dSnapshot, String> {
     let mut value: DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     if let Some((_, presentation)) = members(&mut value)?.iter_mut().find(|(key, _)| key == "presentation") {
         for (key, number) in members(presentation)? {

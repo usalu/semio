@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::din16798::unit_tests::context;
+use crate::panels::catalogue::*;
+use crate::unit_tests::context;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]

@@ -5,8 +5,8 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-jack-document-contract": "bun repo run @semio-tech/trinity-jack-rs:verify-jack-document-contract",
-    "verify-jack-query-ownership": "bun repo run @semio-tech/trinity-jack-rs:verify-jack-query-ownership"
+    "verify-jack-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-jack-rs:verify-jack-document-contract",
+    "verify-jack-query-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/trinity-jack-rs:verify-jack-query-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

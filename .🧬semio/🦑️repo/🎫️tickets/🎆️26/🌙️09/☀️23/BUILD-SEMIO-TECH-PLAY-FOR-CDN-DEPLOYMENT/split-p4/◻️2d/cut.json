@@ -1,0 +1,344 @@
+{
+ "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+ "crate": "semio_s_artifact_puzzle_2d",
+ "aggregator": "semio-s-artifact-puzzle-2d",
+ "crates": [
+  {
+   "package": "semio-s-plugin-puzzle-jobs",
+   "module": "puzzle_job",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs",
+   "files": [
+    "🧩️puzzle/🎮️commands/📤️jobs/"
+   ]
+  },
+  {
+   "package": "semio-s-plugin-puzzle-retained",
+   "module": "retained_command",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs",
+   "files": [
+    "🧩️puzzle/🎮️commands/🧵️retained/"
+   ]
+  },
+  {
+   "package": "semio-s-plugin-puzzle-board-scene",
+   "module": "board_scene",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🎲️board/🎬️scene/🦀️.rs",
+   "files": [
+    "🧩️puzzle/🔨️modules/🎲️board/🎬️scene/"
+   ],
+   "description": "Puzzle board scene shared by the 2d and 5d artifacts"
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-model",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🦀️\\.rs$",
+    "✳️any/🧬️schema/📸️snapshot/",
+    "✳️any/🧬️schema/🧪️tests/",
+    "✳️any/🚪️io/(📝️text|💾️binary|🪶️sqlite)/📸️snapshot/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-diff",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🔺️diff/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/🔺️diff/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-prepare",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎮️prepare/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/(⚑️flag|🎮️prepare|🔤️text|🧵️canonical|🏷️literal-id-inverse)/",
+    "✳️any/🧬️schema/🧬️mutations/[^/]+/[^/]+/🎮️prepare/"
+   ],
+   "new_root": "//! 🎮️ Puzzle2d mutation preparation — the bounded, retained preparation of each prepared leaf (candidate, plan and inverse\n//! cursors), the shared flag and text preparations, the literal-id inverse and the canonical field roles."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-node",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🟢️node/"
+   ],
+   "new_root": "//! 🟢️ Puzzle2d node mutations — creating and deleting a node and editing its kind, anchor, text, icon, visibility, lock, root flag and geometry."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-pose",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🧭️pose/"
+   ],
+   "new_root": "//! 🧭️ Puzzle2d pose mutations — moving and scaling a node."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-handle",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🔌️handle/"
+   ],
+   "new_root": "//! 🔌️ Puzzle2d handle mutations — adding, removing and replacing a node's handles and connecting or disconnecting two handles."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-edge",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/〰️edge/"
+   ],
+   "new_root": "//! 〰️ Puzzle2d edge mutations — an edge's kind, visibility, lock, tips and geometry."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-region",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🌍️region/"
+   ],
+   "new_root": "//! 🌍️ Puzzle2d target-region mutations — creating, deleting, moving, resizing, labelling, hiding and locking a target region."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-catalog",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/📚️catalog/"
+   ],
+   "new_root": "//! 📚️ Puzzle2d catalog mutations — the manifest id, kind compatibility and the kind catalogs."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations-selection",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/✋️selection/"
+   ],
+   "new_root": "//! ✋️ Puzzle2d selection mutations — dragging, rotating and scaling a selection of nodes and target regions."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-mutations",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-host",
+   "module": "host::owned",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "files": [
+    "◻️2d/🔨️modules/🏠️host/"
+   ],
+   "description": "Puzzle 2d document-store authority"
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-inferences",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/💡️inferences/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/💡️inferences/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-io",
+   "module": "standards::v1::subsets::any::io",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "files": [
+    "✳️any/🚪️io/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-examples",
+   "module": "examples::puzzle2d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "files": [
+    "✳️any/📚️examples/"
+   ],
+   "new_root": "//! 📚️ Puzzle2d examples — the authored boards the example picker opens: concrete forest and the Nakagin capsule tower."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-precompute-fill",
+   "module": "editor::puzzle2d::precompute::fill",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+   "files": [
+    "⏳️precompute/🪣️fill/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-snapshot",
+   "module": "editor::puzzle2d::snapshot",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs",
+   "files": [
+    "✏️editor/📸️snapshot/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-config",
+   "module": "editor::puzzle2d::config",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "files": [
+    "✏️editor/🎚️config/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-presence",
+   "module": "editor::puzzle2d::presence",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+   "files": [
+    "✏️editor/👥️presence/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-window",
+   "module": "editor::puzzle2d::window",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+   "files": [
+    "✏️editor/🪟️window/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-terminology",
+   "module": "editor::puzzle2d::terminology",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs",
+   "files": [
+    "✏️editor/🗣️terminology/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-recorder",
+   "module": "editor::puzzle2d::recorder",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📼️recorder/🦀️.rs",
+   "files": [
+    "✏️editor/📼️recorder/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-engine",
+   "module": "editor::puzzle2d::engine",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs",
+   "files": [
+    "✏️editor/⚙️engine/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-session",
+   "module": "editor::puzzle2d::session",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎟️session/🦀️.rs",
+   "files": [
+    "✏️editor/🎟️session/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-commands-document",
+   "module": "editor::puzzle2d::commands",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🧊️document/"
+   ],
+   "new_root": "//! 🧊️ Puzzle2d document commands — the actions that edit the board: nodes, edges, target regions, selections, imports and exports."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-commands-runtime",
+   "module": "editor::puzzle2d::commands",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🎛️runtime/"
+   ],
+   "new_root": "//! 🎛️ Puzzle2d runtime commands — the actions that steer the session: engagements, suggestions, brush, grid, level of detail and camera."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-dispatch",
+   "module": "editor::puzzle2d::dispatch",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🦀️\\.rs$"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-modes",
+   "module": "editor::puzzle2d::modes::edit",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+   "files": [
+    "✏️editor/🎭️modes/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor-panels",
+   "module": "editor::puzzle2d::panels",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "files": [
+    "✏️editor/📌️panels/"
+   ],
+   "new_root": "//! 📌️ Puzzle2d panels — catalogue, artifact, inspection and settings."
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-retained",
+   "module": "editor::puzzle2d::retained",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs",
+   "files": [
+    "✏️editor/🧵️retained/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-editor",
+   "module": "editor::puzzle2d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "files": [
+    "✳️any/✏️editor/",
+    "◻️2d/🤖️generated/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d-viewer",
+   "module": "viewer::puzzle2d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "files": [
+    "✳️any/👁️viewer/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-2d",
+   "module": "",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+   "files": [],
+   "description": "Puzzle 2d artifact"
+  }
+ ],
+ "moves": [],
+ "facade_files": [],
+ "facade_import_files": [],
+ "header": [
+  "#![allow(clippy::result_large_err)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_os_kernel as vcs;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+  "🌎️hub/🧩️compositions/🧩️puzzle",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "workspace": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d",
+ "plugin_workspace": "✏️s/🔌️plugins/🧩️puzzle",
+ "consumer_manifests": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+  "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+  "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.toml",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/Cargo.toml"
+ ]
+}

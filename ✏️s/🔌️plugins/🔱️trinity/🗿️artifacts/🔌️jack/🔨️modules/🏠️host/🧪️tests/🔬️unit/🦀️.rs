@@ -23,12 +23,12 @@ async fn nakagin_document_text_round_trips_store_with_applied_operation() {
 
 /// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
 fn create_document_envelope_for_test() -> store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None)
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 use store::os_store::document_materialize::create_document_envelope;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None);
+    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     JackStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 

@@ -1,5 +1,6 @@
 mod tests {
     use super::*;
+    use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
     use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::tsv::v_iana::any::export_registers_tsv;
@@ -133,7 +134,7 @@ mod tests {
         let program = sample_plugin();
         assert!(!program.adjacencies.is_empty(), "sample_plugin must carry adjacencies for this fidelity case");
         let csv = export_registers_csv(&program).expect("csv export");
-        let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element.clone(), index: None })).collect();
+        let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::ProgramElement(element.clone()), index: None })).collect();
         let reloaded = import_registers_csv(&fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &elements), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());
         for expected in &program.adjacencies {
@@ -189,7 +190,7 @@ mod tests {
         let import = import_registers_csv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import");
         assert!(!import.mutations.is_empty());
         assert_eq!(fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &import.mutations), import.snapshot, "folding the emitted mutations through the central applier reproduces the imported program");
-        assert!(import.mutations.iter().all(|mutation| matches!(mutation, ProgramMutation::CreateProgramElement(_) | ProgramMutation::CreateStakeholder(_) | ProgramMutation::CreateRequirement(_) | ProgramMutation::CreateRelationship(_) | ProgramMutation::ConnectAdjacency(_) | ProgramMutation::CreateKnowledgeRecord(_) | ProgramMutation::CreateBenchmarkRecord(_))), "an import into an empty program only creates rows");
+        assert!(import.mutations.iter().all(|mutation| matches!(mutation, ProgramMutation::CreateRegisterRow(_) | ProgramMutation::ConnectAdjacency(_))), "an import into an empty program only creates rows");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -197,7 +198,7 @@ mod tests {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("csv export");
         let import = import_registers_csv(&program, &csv, MergeStrategy::Replace).expect("csv import");
-        assert!(import.mutations.iter().any(|mutation| matches!(mutation, ProgramMutation::DeleteProgramElement(_))), "replace removes the matching rows with delete mutations");
+        assert!(import.mutations.iter().any(|mutation| matches!(mutation, ProgramMutation::DeleteRegisterRow(row) if row.register == RegisterKey::ProgramElement)), "replace removes the matching rows with delete mutations");
         assert_eq!(fold(&program, &import.mutations), import.snapshot);
         assert_eq!(import.snapshot.elements.len(), program.elements.len());
     }

@@ -1,13 +1,13 @@
 //! ↩️ `change-reliability-class` inverse.
 
-use super::ChangeReliabilityClass;
-use crate::En1990Mutation;
-use crate::En1990Snapshot;
+use crate::change_reliability_class::ChangeReliabilityClass;
 
-pub fn inverse(mutation: &ChangeReliabilityClass, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+
+pub fn inverse<Op>(mutation: &ChangeReliabilityClass, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_reliability_class::ChangeReliabilityClass> {
     Ok((|| {
     let _ = mutation;
-    vec![En1990Mutation::ChangeReliabilityClass(ChangeReliabilityClass { new_reliability_class: base.reliability_class })]
+    vec![Op::from(ChangeReliabilityClass { new_reliability_class: base.reliability_class })]
 
     })())
 }

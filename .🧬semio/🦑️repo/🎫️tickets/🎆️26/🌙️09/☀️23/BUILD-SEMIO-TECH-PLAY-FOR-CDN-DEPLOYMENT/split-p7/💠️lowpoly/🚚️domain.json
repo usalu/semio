@@ -1,0 +1,36 @@
+{
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+   "from_module": "crate",
+   "to": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_module": "crate::standards::v1::subsets::any::schema::snapshot",
+   "root_relative": [
+    "standards",
+    "schema",
+    "diff",
+    "mutations",
+    "snapshot",
+    "examples",
+    "editor",
+    "viewer",
+    "host"
+   ],
+   "items": [
+    "LOWPOLY_PAINT_TEXTURE_SIZE",
+    "LOWPOLY_DOCUMENT_SCHEMA",
+    "empty_paint_pixels",
+    "LowpolyTransform",
+    "LowpolyPaintLayer",
+    "mesh_child_handle",
+    "managed_mesh_child_handle",
+    "LowpolyObject",
+    "LowpolySelectionTargets",
+    "LowpolySelection",
+    "LowpolyObjectPatch",
+    "LOWPOLY_DIALECT",
+    "artifact_kind"
+   ]
+  }
+ ]
+}

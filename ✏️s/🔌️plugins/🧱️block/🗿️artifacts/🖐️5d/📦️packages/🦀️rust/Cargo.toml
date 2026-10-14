@@ -16,39 +16,28 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-block-5d-io-write = { workspace = true }
+semio-s-artifact-block-5d-io-read = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-s-plugin-block-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
-semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust" }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { workspace = true }
-semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-zip = { workspace = true }
-pack = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
+semio-s-artifact-block-5d-editor = { workspace = true }
+semio-s-artifact-block-5d-examples = { workspace = true }
+semio-s-artifact-block-5d-io = { workspace = true }
+semio-s-artifact-block-5d-model = { workspace = true }
+semio-s-artifact-block-5d-schema = { workspace = true }
+semio-s-artifact-block-5d-viewer = { workspace = true }
 
 [dev-dependencies]
-semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust", features = ["test-serde"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-serde = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-value = { workspace = true }
+semio-s-artifact-block-5d-mutations = { workspace = true }
+semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }

@@ -1,6 +1,24 @@
 //! ✏️ Process 3d play app — the `edit` mode: the single-window workpiece authoring layout.
 
-use crate::editor::process3d::modes::edit::windows::workpiece;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod windows {
+    #[path = "."]
+    pub mod workpiece {
+        #[path = "🪟️windows/🪚️workpiece/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod options {
+            #[path = "🪟️windows/🪚️workpiece/☑️options/☀️sun/🦀️.rs"]
+            pub mod sun;
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use crate::windows::workpiece;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;

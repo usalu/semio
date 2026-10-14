@@ -47,6 +47,18 @@
         "command": "bun ./📜️script.ts generation-root-policy",
         "forwardAllArgs": true
       }
+    },
+    "test-flow-forms": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-flow-forms",
+        "forwardAllArgs": true
+      }
     }
   }
 }

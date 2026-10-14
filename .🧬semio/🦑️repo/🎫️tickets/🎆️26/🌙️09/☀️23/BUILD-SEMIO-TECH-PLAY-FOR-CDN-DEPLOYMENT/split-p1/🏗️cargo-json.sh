@@ -1,12 +1,12 @@
 #!/bin/bash
-# 🏗️ Lane-P1 cargo invocation emitting rustc JSON diagnostics (for the fix tools) through the fleet slot and private dirs;
-# JSON lines go to `⚡️cache/p1/logs/<tag>.json`, the human summary of errors to stdout.
+# 🏗️ Lane-P1 cargo invocation emitting rustc JSON diagnostics (for the fix tools) through the fleet usage line (K0 launcher,
+# shared store); JSON lines go to `split-p1/🗑️generated/cargo/<tag>.json`, the human summary of errors to stdout.
 # usage: 🏗️cargo-json.sh <tag> <cargo args...>
 TAG=$1; shift
-ROOT="/Users/ueli/Documents/semio"; P1="$ROOT/.🧬semio/🦑️repo/⚡️cache/p1"; mkdir -p "$P1/logs"
-export CARGO_TARGET_DIR="$P1/target" CARGO_BUILD_BUILD_DIR="$P1/build" CARGO_TERM_COLOR=never CARGO_INCREMENTAL=0
+ROOT="/Users/ueli/Documents/semio"; P1="$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p1/🗑️generated"; mkdir -p "$P1/cargo"
+unset CARGO_TARGET_DIR CARGO_BUILD_BUILD_DIR; export CARGO_TERM_COLOR=never
 cd "$ROOT" || exit 2
-bash "$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "p1-$TAG" -- cargo "$@" --message-format=json > "$P1/logs/$TAG.json" 2> "$P1/logs/$TAG.stderr"
+bash "$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "p1-$TAG" -- cargo "$@" --message-format=json > "$P1/cargo/$TAG.json" 2> "$P1/cargo/$TAG.stderr"
 rc=$?
 python3 -c "
 import json,sys,collections
@@ -19,5 +19,5 @@ for l in open(sys.argv[1],encoding='utf-8'):
         if m['level']=='error': c[(m.get('code') or {}).get('code')]+=1
         elif m['level']=='warning': w+=1
 print('rc=$rc errors',sum(c.values()),dict(c),'warnings',w)
-" "$P1/logs/$TAG.json"
+" "$P1/cargo/$TAG.json"
 exit $rc

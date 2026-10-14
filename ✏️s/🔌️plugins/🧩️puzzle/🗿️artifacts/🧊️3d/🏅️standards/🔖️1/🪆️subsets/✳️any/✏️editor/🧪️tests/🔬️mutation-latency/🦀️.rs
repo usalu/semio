@@ -1,4 +1,4 @@
-use super::unit_tests::context::*;
+use crate::context::*;
 use super::*;
 use std::time::Instant;
 
@@ -104,7 +104,7 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
     let large = &*NAKAGIN_EXAMPLE_SNAPSHOT;
     assert!(large.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", large.objects.len());
-    let before = crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(large).expect("host fixture admits");
+    let before = semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(large).expect("host fixture admits");
     let first = large.objects[0].id.clone();
     let second = large.objects[1].id.clone();
     let no_vortices = std::collections::HashSet::new();
@@ -141,7 +141,7 @@ async fn b44_measures_the_turns_one_mutation_settles_in() {
 /// runtime grants them.
 async fn mutation_turns(app: &mut Puzzle3dApp) -> usize {
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection");
+    select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection");
     let (result, settled) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("delete dispatches");
     settled.turns
@@ -216,7 +216,7 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
     let set_camera_us = started.elapsed().as_micros();
     let victim = first_object_id(app);
     let started = Instant::now();
-    let _ = select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await;
+    let _ = select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await;
     let select_us = started.elapsed().as_micros();
     let started = Instant::now();
     let _ = dispatch(app, "deleteSelection", None, None).await;
@@ -295,11 +295,11 @@ impl std::fmt::Display for Puzzle3dTurnCensus {
 async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurnCensus {
     let objects = object_count(app);
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
+    select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
     let (result, translated) = dispatch_reporting_with_items(app, "translateSelection", Some(&json!({ "ids": [victim.as_str()], "dx": 3.5, "dy": 0.0, "dz": 0.0 })), None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("translate dispatches");
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
+    select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
     let (result, deleted) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("delete dispatches");
     Puzzle3dTurnCensus {
@@ -390,7 +390,7 @@ fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     let mut moved_fixture = large.clone();
     moved_fixture.scene_snapshot.objects[11].origin[1] += 2.25;
     let moved = scene_config(&moved_fixture).expect("the moved document builds an engine scene");
-    let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &moved);
+    let invalidation = semio_s_artifact_puzzle_3d_precompute::Puzzle3dSceneInvalidation::between(&base, &moved);
     let vortices = large.scene_snapshot.objects[11].vortices.len();
     assert!(!invalidation.plan, "a pose edit changes no fill-plan member, so it must not fall back to the whole-scene rebuild");
     assert!(!invalidation.topology, "a pose edit adds and removes no object, so the fill preparation must not restart");
@@ -400,7 +400,7 @@ fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     let mut removed_fixture = large.clone();
     let removed = removed_fixture.scene_snapshot.objects.remove(0);
     let shortened = scene_config(&removed_fixture).expect("the shortened document builds an engine scene");
-    let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &shortened);
+    let invalidation = semio_s_artifact_puzzle_3d_precompute::Puzzle3dSceneInvalidation::between(&base, &shortened);
     assert!(invalidation.topology, "a removal moves the object topology, so the fill preparation restarts");
     assert!(!invalidation.plan, "a removal still changes no fill-plan member");
     assert_eq!(invalidation.stale.len(), removed.vortices.len(), "deleting the FIRST of {} objects invalidates only its own targets — an index-addressed diff would invalidate the whole tail", large.scene_snapshot.objects.len());
@@ -408,7 +408,7 @@ fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     let mut replanned_fixture = large.clone();
     replanned_fixture.runtime.contact_tolerance += 0.25;
     let replanned = scene_config(&replanned_fixture).expect("the replanned document builds an engine scene");
-    assert!(crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &replanned).plan, "a fill-plan member change invalidates every candidate and must take the whole-scene rebuild");
+    assert!(semio_s_artifact_puzzle_3d_precompute::Puzzle3dSceneInvalidation::between(&base, &replanned).plan, "a fill-plan member change invalidates every candidate and must take the whole-scene rebuild");
 }
 
 /// 🗺️ Wave B54 LAW: the engine ITSELF keeps the candidates of the objects a pose edit did not touch.

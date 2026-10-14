@@ -1,13 +1,13 @@
 //! ✏️ EN 1991 play app — the `edit` mode: the inputs/results authoring layout.
 
-use crate::editor::en1991::modes::edit::windows::{inputs, results};
+use crate::modes::edit::windows::{inputs, results};
 use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::en1991::create_en1991_app`. Every norm app declares
 /// the same single `edit` mode, so its shape is constructed once in `crate::document::app`.
 pub fn definition() -> ModeDefinition {
-    crate::app_surface::edit_mode_definition()
+    semio_s_plugin_norm_app_surface::edit_mode_definition()
 }
 
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
@@ -22,3 +22,13 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📥️inputs/🦀️.rs"]
+    pub mod inputs;
+    #[path = "🪟️windows/📊️results/🦀️.rs"]
+    pub mod results;
+}
+//#endregion 🪢️Mounts

@@ -1,6 +1,6 @@
 //! 🖋️ Logical SpreadsheetML namespace stamping.
 
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use super::{STRICT_R_NS, STRICT_SML_NS};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 

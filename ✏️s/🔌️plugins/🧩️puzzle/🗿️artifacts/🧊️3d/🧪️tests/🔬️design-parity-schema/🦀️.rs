@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::*;
 
 #[test]
 fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {

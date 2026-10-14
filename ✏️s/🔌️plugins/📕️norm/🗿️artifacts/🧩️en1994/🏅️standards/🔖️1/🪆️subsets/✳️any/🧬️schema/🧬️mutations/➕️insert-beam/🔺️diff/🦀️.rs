@@ -1,7 +1,7 @@
 //! Diff for `insert-beam`.
-use super::InsertBeam;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994BeamsRows, En1994BeamsInserted};
+use crate::insert_beam::InsertBeam;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows, En1994BeamsInserted};
 
 pub fn diff(payload: &InsertBeam, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.index > base.beams.len() {

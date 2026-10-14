@@ -5,7 +5,7 @@
 //! that edit and emits no mutations by construction (`ViewEmit`). Uses the frozen `ImageWindowKit`
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
-use crate::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 
@@ -41,8 +41,8 @@ pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
 
 /// 🌉️ Uses the same compositor and PNG encoder as pixel export and image ports.
 fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
-    let image=crate::standards::v1::subsets::any::io::raster_composite_image(document).ok()?;
-    let bytes=crate::standards::v1::subsets::any::io::png_bytes_from_semio_image(&image).ok()?;
+    let image=semio_s_artifact_raster_raster_io::raster_composite_image(document).ok()?;
+    let bytes=semio_s_artifact_raster_raster_io::png_bytes_from_semio_image(&image).ok()?;
     Some(ImageView { width:image.width, height:image.height, mime:"image/png".into(), base64:base64_codec::base64_standard_encode(bytes) })
 }
 //#endregion 🔖️Render

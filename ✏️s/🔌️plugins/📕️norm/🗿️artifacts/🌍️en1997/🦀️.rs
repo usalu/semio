@@ -10,13 +10,6 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_plugin_norm_app_surface as app_surface;
-pub use semio_s_plugin_norm_compliance as document;
-pub use semio_s_plugin_norm_results_config as results_window_config;
-pub use semio_s_plugin_norm_compliance::impl_norm_artifact_record;
-pub use semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory;
-pub use semio_s_plugin_norm_results_config::norm_results_window_config_owner;
-
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
@@ -25,201 +18,8 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
     semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    app_surface::artifact_kind_spec("en1997", "EN 1997", EN1997_DOCUMENT_SCHEMA)
-}
-
-/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
-/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
-/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
-pub const EN1997_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1997", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
-pub const EN1997_DOCUMENT_SCHEMA: &str = "semio.norm.en1997/v1";
-
 // #region 🔖️Types
-/// 🪨 Stratigraphic soil layer with characteristic parameters (SI).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct SoilLayer {
-    pub id: String,
-    pub soil_type: String,
-    #[dsl(unit = "m")]
-    pub depth_top: f64,
-    #[dsl(unit = "m")]
-    pub depth_bottom: f64,
-    pub gamma: f64,
-    pub gamma_prime: f64,
-    pub phi_prime_deg: f64,
-    #[dsl(unit = "Pa")]
-    pub cohesion_effective: f64,
-    #[dsl(unit = "Pa")]
-    pub cohesion_undrained: f64,
-    #[dsl(unit = "Pa")]
-    pub oedometric_modulus: f64,
-    pub poisson_ratio: f64,
-    #[dsl(unit = "Pa")]
-    pub cpt_qc: f64,
-    pub spt_n: f64,
-}
 
-/// 🏋️ Characteristic permanent/variable actions for one design situation.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct FoundationLoadCase {
-    pub id: String,
-    pub design_situation: String,
-    #[dsl(unit = "N")]
-    pub vertical_permanent: f64,
-    #[dsl(unit = "N")]
-    pub vertical_variable: f64,
-    #[dsl(unit = "N")]
-    pub horizontal_permanent: f64,
-    #[dsl(unit = "N")]
-    pub horizontal_variable: f64,
-    #[dsl(unit = "J")]
-    pub moment_permanent: f64,
-    #[dsl(unit = "J")]
-    pub moment_variable: f64,
-}
-
-/// 🦶️ Spread foundation (pad/strip) geometry and actions.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct SpreadFoundation {
-    pub id: String,
-    #[dsl(unit = "m")]
-    pub width: f64,
-    #[dsl(unit = "m")]
-    pub length: f64,
-    #[dsl(unit = "m")]
-    pub embedment: f64,
-    pub base_inclination_deg: f64,
-    #[dsl(unit = "m")]
-    pub settlement_limit: f64,
-    #[dsl(table)]
-    pub load_cases: Vec<FoundationLoadCase>,
-}
-
-/// 🧪 Pile load-test or CPT/table-derived calculated resistance profile.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct PileTestProfile {
-    pub id: String,
-    #[dsl(unit = "N")]
-    pub shaft_resistance: f64,
-    #[dsl(unit = "N")]
-    pub base_resistance: f64,
-}
-
-/// 🏗️ Deep foundation pile or pile group.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Pile {
-    pub id: String,
-    pub pile_type: String,
-    #[dsl(unit = "m")]
-    pub diameter: f64,
-    #[dsl(unit = "m")]
-    pub length: f64,
-    pub count: u32,
-    pub alpha_s: f64,
-    #[dsl(unit = "Pa")]
-    pub unit_shaft_resistance: f64,
-    #[dsl(unit = "Pa")]
-    pub unit_base_resistance: f64,
-    #[dsl(unit = "N")]
-    pub compression_permanent: f64,
-    #[dsl(unit = "N")]
-    pub compression_variable: f64,
-    #[dsl(unit = "N")]
-    pub tension_permanent: f64,
-    #[dsl(unit = "N")]
-    pub tension_variable: f64,
-    #[dsl(table)]
-    pub test_profiles: Vec<PileTestProfile>,
-}
-
-/// 🧱 Retaining wall geometry and surcharge.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct RetainingWall {
-    pub id: String,
-    #[dsl(unit = "m")]
-    pub height: f64,
-    #[dsl(unit = "m")]
-    pub embedment: f64,
-    #[dsl(unit = "m")]
-    pub base_width: f64,
-    #[dsl(unit = "m")]
-    pub stem_thickness: f64,
-    pub backfill_phi_deg: f64,
-    pub backfill_gamma: f64,
-    pub wall_friction_deg: f64,
-    /// 🧱 active | atRest | increasedActive (DIN 4085 earth-pressure regime).
-    pub earth_pressure_mode: String,
-    /// 🧱 free | rigid | propped (DIN 4085 wall-movement class).
-    pub wall_movement: String,
-    /// 🧱 Overconsolidation ratio for Jáky K₀.
-    pub ocr: f64,
-    /// 🧱 Stem/base concrete unit weight γ_c [N/m³].
-    pub concrete_gamma: f64,
-    #[dsl(unit = "Pa")]
-    pub surcharge: f64,
-    #[dsl(unit = "N")]
-    pub vertical_permanent: f64,
-    #[dsl(unit = "N")]
-    pub horizontal_permanent: f64,
-}
-
-/// ⛰️ Slope geometry for overall stability (GEO-3).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Slope {
-    pub id: String,
-    pub angle_deg: f64,
-    #[dsl(unit = "m")]
-    pub height: f64,
-    #[dsl(unit = "m")]
-    pub length: f64,
-    pub governing_layer_id: String,
-}
-
-/// 💧 Uplift / heave verification case (§10 UPL/HYD).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct UpliftCase {
-    pub id: String,
-    #[dsl(unit = "N")]
-    pub permanent_stabilizing: f64,
-    #[dsl(unit = "N")]
-    pub permanent_destabilizing: f64,
-    #[dsl(unit = "N")]
-    pub variable_destabilizing: f64,
-    #[dsl(unit = "Pa")]
-    pub pore_pressure: f64,
-    #[dsl(unit = "Pa")]
-    pub total_stress: f64,
-}
 //#endregion 🔖️Types
 
 //#region 🪪️Declaration
@@ -256,11 +56,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(artifact_schema::en1997_artifact_schema_descriptor())
-        .inferences([standards::v1::subsets::any::schema::inferences::en1997_artifact_inference_descriptor()])
-        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .schema(semio_s_artifact_norm_en1997_schema::en1997_artifact_schema_descriptor())
+        .inferences([semio_s_artifact_norm_en1997_inferences::en1997_artifact_inference_descriptor()])
+        .composers(semio_s_artifact_norm_en1997_io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::en1997::En1997PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_norm_en1997_editor::En1997PlayApp>>()
         .try_build()
 }
 
@@ -268,7 +68,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `OnceLock`-backed `io_registry::entries()` convention below.
 fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    #[cfg(test)] use crate::standards::v1::subsets::any::schema::{diff, mutations, snapshot};
+    #[cfg(test)] use semio_s_artifact_norm_en1997_schema::{diff, mutations, snapshot};
     static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -277,28 +77,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "en1997.document",
                     extension: Some("en1997"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1997_io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1997_io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1997_io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1997_io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1997.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "en1997.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1997_io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1997_io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1997_io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1997_io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1997.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "en1997.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1997_io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1997_io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("en1997.diff"),
@@ -309,8 +109,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1997_io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1997_io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1997.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -319,8 +119,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1997_io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1997_io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1997.spr"),
                 },
             ]
@@ -330,411 +130,19 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#endregion 🪪️Declaration
 
-#[path = "."]
-pub mod standards {
-    #[path = "."]
-    pub mod v1 {
-        #[path = "."]
-        pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod change_annex {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_geotechnical_category {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-geotechnical-category/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-geotechnical-category/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️change-geotechnical-category/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_design_situation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-design-situation/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-design-situation/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-design-situation/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_design_approach {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-design-approach/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_groundwater_level {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-groundwater-level/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-groundwater-level/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧change-groundwater-level/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_investigation_depth {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-investigation-depth/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-investigation-depth/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️change-investigation-depth/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_footing_width {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-footing-width/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-footing-width/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-footing-width/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_footing_embedment {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-footing-embedment/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-footing-embedment/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-footing-embedment/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_pile_length {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-length/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-length/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-pile-length/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_pile_count {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-pile-count/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-pile-count/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-pile-count/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_wall_base_width {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-wall-base-width/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-wall-base-width/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-wall-base-width/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_slope_angle {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️change-slope-angle/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️change-slope-angle/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️change-slope-angle/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_layer_phi_prime {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-phi-prime/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-phi-prime/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-layer-phi-prime/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_layer_oedometric_modulus {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-layer-oedometric-modulus/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-layer-oedometric-modulus/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-layer-oedometric-modulus/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod insert_layer {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-layer/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod remove_layer {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod insert_footing {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-footing/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-footing/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕insert-footing/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod remove_footing {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-footing/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-footing/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-footing/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod insert_pile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥insert-pile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥insert-pile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥insert-pile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod remove_pile {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤remove-pile/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤remove-pile/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📤remove-pile/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                    }
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
-            }
-        }
-    }
-}
-
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod artifact_schema {
-    pub use super::standards::v1::subsets::any::schema::*;
-}
 
-pub mod diff {
-    pub use crate::standards::v1::subsets::any::schema::diff::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::diff::*;
-    }
-
-}
-pub mod mutations {
-    pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::mutations::*;
-    }
-
-}
-pub mod snapshot {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    pub mod schema {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-    }
-
-}
-pub use crate::standards::v1::subsets::any::schema::diff::En1997Diff;
-pub use crate::standards::v1::subsets::any::schema::mutations::En1997Mutation;
-pub use crate::standards::v1::subsets::any::schema::snapshot::En1997Snapshot;
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod compliant {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️compliant/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod noncompliant {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚨️noncompliant/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod en1997 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
-            pub mod evaluate;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
-            pub mod selected_check;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
-            pub mod set_field;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
-            pub mod insert_item;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
-            pub mod remove_item;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
-            pub mod apply_remedy;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
-                    pub mod inputs;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
-                    pub mod results;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
-        }
-    }
-}
-
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod en1997 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
-                    pub mod report;
-                }
-            }
-        }
-    }
-}
-
-pub use crate::standards::v1::subsets::any::io::{En1997BuilderConstruction, En1997Parts, En1997AnalyzerAnalysis, En1997BuilderFacets, En1997Builder, En1997Analyzer, En1997Composer};
+//#region 🪢️Mounts
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs"]
+mod checks_compliance;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"]
+mod diff_unit;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️regen-assets/🦀️.rs"]
+mod model_regen_assets;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod sqlite_snapshot_tests;
+//#endregion 🪢️Mounts

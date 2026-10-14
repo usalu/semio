@@ -169,7 +169,7 @@ pub(crate) mod context {
     /// edit in the log is still applied.
     pub async fn seeded_envelope(instance: &VcsApp) -> SeededEnvelope {
         let files = instance.document_pack().await.expect("document pack");
-        SeededEnvelope(Some(store::os_store::text_format::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope))
+        SeededEnvelope(Some(store::os_store::text_format::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse document pack").envelope))
     }
     
     /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch

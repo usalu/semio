@@ -1,9 +1,9 @@
 //! Inverse for `change-structure-kind`.
-use super::ChangeStructureKind;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeStructureKind, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_structure_kind::ChangeStructureKind;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeStructureKind, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_structure_kind::ChangeStructureKind> {
     Ok((|| {
-    vec![En1991Mutation::ChangeStructureKind(ChangeStructureKind { new_structure_kind: base.structure_kind })]
+    vec![Op::from(ChangeStructureKind { new_structure_kind: base.structure_kind })]
 
     })())
 }

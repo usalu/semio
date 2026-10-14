@@ -27,10 +27,10 @@ fn labels() -> &'static Puzzle2dLabels {
 fn scaled_scene(kinds: usize) -> Puzzle2dScene {
     let rows: Vec<Value> = (0..kinds).map(|index| json!({ "id": format!("kind-{index}"), "name": format!("Kind {index}") })).collect();
     Puzzle2dScene {
-        board_snapshot: json!({ "schema": crate::editor::puzzle2d::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [], "meta": { "kindCatalogs": { "nodes": rows, "handles": [], "edges": [] } } }),
+        board_snapshot: json!({ "schema": crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [], "meta": { "kindCatalogs": { "nodes": rows, "handles": [], "edges": [] } } }),
         runtime: crate::editor::puzzle2d::config::Puzzle2dPlayRuntime::default(),
         active_utility: String::new(),
-        interaction: crate::editor::puzzle2d::Puzzle2dInteractionSnapshot::default(),
+        interaction: crate::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot::default(),
     }
 }
 

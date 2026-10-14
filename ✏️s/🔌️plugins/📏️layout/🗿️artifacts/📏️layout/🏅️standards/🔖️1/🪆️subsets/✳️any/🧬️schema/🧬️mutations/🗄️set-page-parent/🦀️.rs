@@ -1,8 +1,10 @@
 //! 🗄️ `set-page-parent` — assigns or clears the parent page of a page.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,10 +19,10 @@ pub struct SetPageParent {
     pub parent_page_id: Option<String>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageParent {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageParent where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_parent::SetPageParent> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-parent", kind: "set-page-parent", record: "SetPageParent" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_parent(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_page_parent(self, base)? 
     })
 }
@@ -43,10 +45,10 @@ pub fn diff_set_page_parent(payload: &SetPageParent, base: &LayoutSnapshot) -> p
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { parent_page_id: Some(payload.parent_page_id.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_page_parent(payload: &SetPageParent, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_page_parent<Op: From<crate::set_page_parent::SetPageParent>>(payload: &SetPageParent, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::SetPageParent(SetPageParent { id: page.id.clone(), parent_page_id: page.parent_page_id.clone() })]
+    vec![Op::from(SetPageParent { id: page.id.clone(), parent_page_id: page.parent_page_id.clone() })]
 
     })())
 }

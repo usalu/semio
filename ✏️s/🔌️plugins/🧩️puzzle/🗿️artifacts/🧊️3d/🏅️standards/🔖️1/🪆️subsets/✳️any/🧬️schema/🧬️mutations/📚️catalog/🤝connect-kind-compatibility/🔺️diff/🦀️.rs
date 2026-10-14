@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — appends one row to `meta.kindCompatibility`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dKindCompatibilityDelta, Puzzle3dMetaPatch};
-use {crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility, crate::Puzzle3dSnapshot};
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dKindCompatibilityDelta, Puzzle3dMetaPatch};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ConnectKindCompatibility, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

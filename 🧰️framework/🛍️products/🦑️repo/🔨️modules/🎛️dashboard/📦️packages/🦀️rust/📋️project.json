@@ -9,10 +9,16 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
       },
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"
-      ]
+      "cache": false,
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",
@@ -195,6 +201,35 @@
         "forwardAllArgs": true
       },
       "cache": false
+    },
+    "compile": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts compile"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-dashboard",
+            "scope": "binary",
+            "binary": "semio",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "build-script-run"
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

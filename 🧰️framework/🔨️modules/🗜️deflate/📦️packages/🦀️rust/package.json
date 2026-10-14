@@ -5,8 +5,8 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-ownership": "bun repo run @semio-tech/framework-deflate-rs:test-ownership",
-    "test-native": "bun repo run @semio-tech/framework-deflate-rs:test-native"
+    "test-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-deflate-rs:test-ownership",
+    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-deflate-rs:test-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

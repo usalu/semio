@@ -18,10 +18,10 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-process-process3d = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-s-artifact-process-process3d-model = { workspace = true }
 
 [dev-dependencies]
 serde_json.workspace = true

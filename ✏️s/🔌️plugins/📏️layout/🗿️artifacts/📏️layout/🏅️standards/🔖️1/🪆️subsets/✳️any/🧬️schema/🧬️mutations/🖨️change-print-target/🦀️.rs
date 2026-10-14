@@ -1,7 +1,8 @@
 //! 🖨️ `change-print-target` — sets the document's `print_target` scalar (`None` clears it).
 
-use crate::mutations::LayoutMutation;
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,12 +17,12 @@ pub struct ChangePrintTarget {
     pub new_print_target: Option<String>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePrintTarget where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_print_target::ChangePrintTarget> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "print-target", kind: "change-print-target", record: "ChangedPrintTarget" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_print_target(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_print_target(self, base)?
     
@@ -48,15 +49,21 @@ pub fn diff_change_print_target(payload: &ChangePrintTarget, base: &LayoutSnapsh
     if base.print_target == payload.new_print_target {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Print target is already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { print_target: Some(crate::standards::v1::subsets::any::schema::diff::PrintTargetChange { target: payload.new_print_target.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { print_target: Some(semio_s_artifact_layout_layout_diff::PrintTargetChange { target: payload.new_print_target.clone() }), ..Default::default() })
 }
 //#endregion 🖨️ChangePrintTarget
 
 //#region 🖨️ChangePrintTarget
-pub fn inverse_change_print_target(_payload: &ChangePrintTarget, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_print_target<Op: From<crate::change_print_target::ChangePrintTarget>>(_payload: &ChangePrintTarget, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::ChangePrintTarget(ChangePrintTarget { new_print_target: base.print_target.clone() })]
+    vec![Op::from(ChangePrintTarget { new_print_target: base.print_target.clone() })]
 
     })())
 }
 //#endregion 🖨️ChangePrintTarget
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🖨️sets/🦀️.rs"]
+mod tests_sets_a_cmyk_print_target;
+//#endregion 🪢️TaxonomyMounts

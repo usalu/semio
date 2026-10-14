@@ -84,7 +84,7 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         })
         .await;
     let mut shell_events = shell_host.subscribe("shared-doc").await;
-    let shell_envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
+    let shell_envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
     shell_store.install_document_store_owners_exact(probe_store_owners());
     shell_store.attach_backbone(store::os_store::backbone::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");

@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/space-space:build",
-    "check": "bun repo run @semio-tech/space-space:check",
-    "test": "bun repo run @semio-tech/space-space:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/space-space:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/space-space:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/space-space:test"
   },
   "exports": {
     ".": {

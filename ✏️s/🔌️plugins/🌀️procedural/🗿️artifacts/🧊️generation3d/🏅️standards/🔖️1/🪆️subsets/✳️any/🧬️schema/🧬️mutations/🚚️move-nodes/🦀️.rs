@@ -4,7 +4,6 @@
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_items;
 use crate::generation3d_label_number;
-use crate::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -19,18 +18,21 @@ pub struct MoveNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_nodes(ids: Vec<String>, dx: f64, dy: f64) -> Generation3dMutation {
-    Generation3dMutation::MoveNodes(MoveNodes { ids, dx, dy })
+pub fn move_nodes<Op: From<MoveNodes>>(ids: Vec<String>, dx: f64, dy: f64) -> Op {
+    Op::from(MoveNodes { ids, dx, dy })
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for MoveNodes {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for MoveNodes
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::move_widget::MoveWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "nodes", kind: "move-nodes", record: "MovedNodes" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::move_nodes::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::move_nodes::inverse::inverse(self, base)?
     

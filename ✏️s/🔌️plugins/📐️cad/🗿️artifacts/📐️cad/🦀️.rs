@@ -1,6 +1,6 @@
-//! 📐️ CAD artifact aggregator — the `s.cad.cad` definition, its declaration (schema, inferences, composers, languages and
-//! the editor document codec) and the full-stack activation tests. Every domain facet lives in its own family crate
-//! (`semio-s-artifact-cad-cad-*`): model, mutations, inferences, io, play, editor, viewer and their parts.
+//! 📐️ CAD artifact aggregator — the `s.cad.cad` definition, its declaration (schema descriptor assembled from the
+//! facet-owned leaves, inferences, composers, languages and the editor document codec) and the full-stack activation
+//! tests. Every domain facet lives in its own family crate (`semio-s-artifact-cad-cad-*`).
 
 #[cfg(test)]
 #[path = "🧪️tests/🚀️activation/🦀️.rs"]
@@ -23,28 +23,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "cad.document",
                     extension: Some("cad"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(semio_s_artifact_cad_cad_io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_cad_cad_io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_cad_cad_io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_cad_cad_io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "cad.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(semio_s_artifact_cad_cad_io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_cad_cad_io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_cad_cad_io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_cad_cad_io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "cad.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(semio_s_artifact_cad_cad_io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_cad_cad_io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_cad_cad_model_diff::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_cad_cad_model_diff::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("cad.diff"),
@@ -55,8 +55,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_cad_cad_io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_cad_cad_io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -65,8 +65,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_cad_cad_io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_cad_cad_io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("cad.spr"),
                 },
             ]
@@ -110,7 +110,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(semio_s_artifact_cad_cad_model::cad_artifact_schema_descriptor())
+        .schema(crate::cad_artifact_schema_descriptor())
         .inferences([semio_s_artifact_cad_cad_inferences::cad_artifact_inference_descriptor()])
         .composers(semio_s_artifact_cad_cad_io::io_registry::entries())
         .languages(pilot_languages())
@@ -118,3 +118,14 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
+
+/// 🧬️ Descriptor for `s.cad.cad`, assembled from the facet-owned schema leaves.
+pub fn cad_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    semio_framework_schema_registry::ArtifactSchemaDescriptor {
+        id: "s.cad.cad",
+        artifact: semio_s_artifact_cad_cad_model::ARTIFACT_LEAVES,
+        snapshot: semio_s_artifact_cad_cad_model::snapshot::SNAPSHOT_LEAVES,
+        diff: semio_s_artifact_cad_cad_model_diff::DIFF_LEAVES,
+        mutations: semio_s_artifact_cad_cad_mutations::MUTATION_LEAVES,
+    }
+}

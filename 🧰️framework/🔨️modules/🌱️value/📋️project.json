@@ -93,6 +93,28 @@
         "command": "bun ./📜️script.ts test scalar-retained",
         "forwardAllArgs": true
       }
+    },
+    "test-std-copy-selection": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value",
+        "command": "bun ./📜️script.ts test std-copy-selection",
+        "forwardAllArgs": true
+      }
+    },
+    "test-clone-source-custody": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value",
+        "command": "bun ./📜️script.ts test clone-source-custody",
+        "forwardAllArgs": true
+      }
     }
   }
 }

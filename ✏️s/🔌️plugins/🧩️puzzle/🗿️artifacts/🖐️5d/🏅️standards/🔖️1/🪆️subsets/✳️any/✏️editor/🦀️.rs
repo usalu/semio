@@ -39,7 +39,7 @@ use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use crate::editor::puzzle5d::panels::{catalogue, artifact as artifact_panel, inspection, settings as settings_panel};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
+use semio_s_artifact_puzzle_3d_editor::Puzzle3dInstanceOperationOwner;
 use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
 use crate::editor::puzzle5d::terminology::{puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
 use crate::editor::puzzle5d::window as window_ownership;
@@ -388,7 +388,7 @@ pub struct Puzzle5dPart3d {
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dPart {
     pub id: String,
-    #[value(rename = "partKind")]
+    #[value(default, rename = "partKind", skip_serializing_if = "String::is_empty")]
     pub part_kind: String,
     #[value(default)]
     pub anchor: Puzzle5dPartAnchor,
@@ -631,7 +631,7 @@ pub(crate) fn puzzle5d_inspector_nudge(args: Option<&Value>) -> Option<world3d::
         field => {
             let mut offset = [0.0; 3];
             offset[puzzle5d_axis_index(field, "origin")?] = delta;
-            Some(Puzzle5dSelectionMotion::World(semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionMotion::Drag { offset }))
+            Some(Puzzle5dSelectionMotion::World(semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion::Drag { offset }))
         }
     }
 }
@@ -3262,7 +3262,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
     /// transaction over the gesture's own part ids (else the selected parts) and the selected target volumes.
     pub fn commit_gumball(&mut self, verb: &str, args: Option<&Value>) {
         let targets = [mesh_selection_ids(args, &self.selected_part_ids()), self.selected_ids(PUZZLE5D_GRANULARITY_TARGET_VOLUME)].concat();
-        if let Some(record) = semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord::from_gumball(verb, args, targets) {
+        if let Some(record) = semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord::from_gumball(verb, args, targets) {
             self.commit_selection(verb, vec![world3d::utilities::transform::Puzzle5dSelectionRecord::world(record)]);
         }
     }
@@ -3292,7 +3292,7 @@ impl<'a> Puzzle5dActionCtx<'a> {
 
     /// 🔗️ Runs `apply` on this instance's brush suggestions link; `None` without an instance owner or while the
     /// owner is busy.
-    pub fn brush_suggestions<R>(&self, apply: impl FnOnce(&mut semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsLink) -> R) -> Option<R> {
+    pub fn brush_suggestions<R>(&self, apply: impl FnOnce(&mut semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsLink) -> R) -> Option<R> {
         self.instance_owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(apply(&mut owner.brush_suggestions))).ok()
     }
 
@@ -4015,7 +4015,7 @@ impl Puzzle5dTransformWork {
 
     /// 🎬️ The gesture this command states on `document`, `None` when it states none.
     fn read(&self, command: &Puzzle5dCommand, document: &Puzzle5dSnapshot, config: &Puzzle5dConfig, interaction: &protocol::InteractionState) -> Option<Puzzle5dTransformGesture> {
-        use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord;
+        use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord;
         use world3d::utilities::transform::{Puzzle5dRelocateScan, Puzzle5dSelectionRecord};
         let args = command.args();
         match self.tool_id {
@@ -8216,7 +8216,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// 🚦️ Starts, wakes or aborts the brush suggestions run for the grip the link points at.
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
+        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
     }
 
 

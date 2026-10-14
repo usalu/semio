@@ -5,21 +5,21 @@
 //!
 //! Unit factors scale nothing: a declared no-op.
 
-use super::laws;
+use crate::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🦠️mutation/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⏸️still/🎯️outcome/🔣️.json").leak());
 
 /// ⛔️ The refused or no-op motion leaves the document byte-identical and emits the declared diagnostic.
 #[test]
 fn refusal_leaves_the_document_untouched() {
-    laws::refusal(BEFORE, MUTATION, AFTER, OUTCOME);
+    laws::refusal(*BEFORE, *MUTATION, *AFTER, *OUTCOME);
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    laws::canonical(BEFORE, AFTER, MUTATION, None);
+    laws::canonical(*BEFORE, *AFTER, *MUTATION, None);
 }

@@ -1,6 +1,6 @@
 use super::*;
-use crate::primitives::{make_cone, make_cylinder, make_planar_face_from_points, make_sphere, make_torus};
-use crate::sweep::{extrude_face, revolve_face};
+use semio_framework_3d_brep_construction::primitives::{make_cone, make_cylinder, make_planar_face_from_points, make_sphere, make_torus};
+use semio_framework_3d_brep_sweep::{extrude_face, revolve_face};
 use semio_framework_3d_brep_analysis::{manifold_report, mass_properties, topology_counts, validity, ShapeScope, Watertightness};
 use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_vector::matrix::Affine3;

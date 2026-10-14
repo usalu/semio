@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../.."
-name = "semio-s-artifact-procedural-3d-host-envelope"
+name = "semio-s-artifact-procedural-3d-envelope"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -25,8 +25,14 @@ semio-s-artifact-procedural-3d-host = { workspace = true }
 semio-s-artifact-procedural-3d-io-binary = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-mut-document = { workspace = true }
+semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
+semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
+semio-s-artifact-procedural-3d-mut-transforms = { workspace = true }
+semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-3d-mutations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+

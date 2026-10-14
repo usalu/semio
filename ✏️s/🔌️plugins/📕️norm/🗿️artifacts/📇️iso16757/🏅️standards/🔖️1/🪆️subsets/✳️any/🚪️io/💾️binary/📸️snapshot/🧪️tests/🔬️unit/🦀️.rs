@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::binary::snapshot::*;
 
 #[test]
 // 🪲️ Blocked on the same confirmed upstream `pack` crate bug as `architect/spine/rs/lib.rs`'s

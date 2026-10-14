@@ -2,8 +2,8 @@
 //! vortex, then re-`connect-vortices`es every attraction BASE shows touching it (severed cascade).
 //! Missing target ⇒ `Vec::new()`.
 use super::mutation::RemoveObjectVortex;
-use crate::standards::v1::subsets::any::schema::mutations::{AddObjectVortex, ConnectVortices};
-use crate::Puzzle3dSnapshot;
+use {crate::add_object_vortex::mutation::AddObjectVortex, crate::connect_vortices::mutation::ConnectVortices};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<RemoveObjectVortex> + From<AddObjectVortex> + From<ConnectVortices>>(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -16,9 +16,9 @@ pub fn inverse<Op: From<RemoveObjectVortex> + From<AddObjectVortex> + From<Conne
     };
     let index = object.vortices.iter().position(|v| v.id == payload.vortex_id);
     let full_id = format!("{}:{}", payload.object_id, payload.vortex_id);
-    let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::add_object_vortex::mutation::add_object_vortex(payload.object_id.clone(), vortex.clone(), index)];
+    let mut mutations = vec![crate::add_object_vortex::mutation::add_object_vortex(payload.object_id.clone(), vortex.clone(), index)];
     for (at, attraction) in base.attractions.iter().enumerate().filter(|(_, attraction)| attraction.attracting == full_id || attraction.attracted == full_id) {
-        mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices::mutation::connect_vortices(
+        mutations.push(crate::connect_vortices::mutation::connect_vortices(
             attraction.id.clone(),
             attraction.attracting.clone(),
             attraction.attracted.clone(),

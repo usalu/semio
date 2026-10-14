@@ -1,0 +1,15 @@
+{
+  "scope":"production-all-parent-public-nested-runtime",
+  "tools":["nx","bazel"],
+  "maximumElapsedMilliseconds":120000,
+  "parentProject":"workspace",
+  "target":"@semio-tech/repo-lib:test-build-surfaces",
+  "childOptions":["--exclude-dependencies","--skip-cache"],
+  "guards":[
+    {"id":"missing-argv","args":[],"message":"Expected nx|bazel"},
+    {"id":"relative-pin","args":["nx","relative.json","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],"message":"Expected nx|bazel"},
+    {"id":"foreign-pin","args":["nx","/not-read.json","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],"environment":{"SEMIO_BUILD_GRAPH_PATH":"/foreign.json"},"message":"Original all-workspace pin handoff required"},
+    {"id":"missing-reuse","args":["nx","/not-read.json","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],"environment":{"SEMIO_BUILD_REUSE_GRAPH":"false"},"message":"Original all-workspace reuse required"},
+    {"id":"inherited-wire","args":["nx","/not-read.json","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],"environment":{"SEMIO_SCRIPT_PROCESS_INVOCATION":"{}"},"message":"Standalone nested runtime must issue its own original matching-backend envelope"}
+  ]
+}

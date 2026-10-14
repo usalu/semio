@@ -1,0 +1,15 @@
+{
+ "lib": "semio_s_artifact_puzzle_3d_model",
+ "lib_root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+ "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+ "parent_module": "io::sqlite::snapshot",
+ "rewrites": [["use crate::io::sqlite::snapshot::Puzzle3dSnapshot;", "use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;"],
+              ["use crate::*;", "use semio_s_artifact_puzzle_3d_model::*;"],
+              ["use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;", "use super::*;"],
+              ["semio_s_artifact_puzzle_3d_editor_session::Puzzle3dPlayApp", "semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp"],
+              ["use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};", "use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};\nuse semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;"]],
+ "targets": [
+  {"name": "snapshot-sqlite", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/🗃️snapshot-sqlite/🦀️.rs", "doc": "🗃️ Puzzle3d SQLite snapshot laws — native capability, typed and play codecs, all 23 domain tables, independent edits and the populated public app forms.",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs", "module": "tests", "pub": true, "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"}]}
+ ]
+}

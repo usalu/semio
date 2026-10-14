@@ -1,0 +1,17 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-io-sqlite-model"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Relational SQLite schema model and original native control"
+[package.metadata.semio]
+role = "framework"
+id = "io-sqlite-model"
+[lints]
+workspace = true
+[lib]
+name = "semio_framework_io_sqlite_model"
+path = "🦀️.rs"
+[dependencies]
+semio-framework-value.workspace = true

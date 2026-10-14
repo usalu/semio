@@ -1,8 +1,7 @@
 //! 🧨️ Energy model mutation — `DeleteConstruction`: Removes one construction. Refused while any surface still names it, because a surface without a construction has no heat path at all.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteConstruction {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_construction(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteConstruction(DeleteConstruction { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_construction<Op: From<DeleteConstruction>>(id: crate::model::EntityId) -> Op {
+    DeleteConstruction { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteConstruction {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteConstruction
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteConstruction> + From<crate::CreateConstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "construction", kind: "delete-construction", record: "DeletedConstruction" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

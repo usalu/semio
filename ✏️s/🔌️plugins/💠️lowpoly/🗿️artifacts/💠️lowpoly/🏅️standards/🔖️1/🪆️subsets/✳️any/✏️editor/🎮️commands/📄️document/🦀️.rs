@@ -3,17 +3,17 @@
 //! via `reset_document_effect` (a `Effect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
 //! replace has no `Mutation`-enum representative.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
-    match crate::standards::v1::subsets::any::io::text::lowpoly_json_decode::<LowpolySnapshot>(json) {
-        Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
+    match semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode::<LowpolySnapshot>(json) {
+        Ok(parsed) => Emit { effects: vec![semio_s_artifact_lowpoly_lowpoly_kit::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
     }
 }
@@ -53,7 +53,4 @@ pub mod replace_snapshot_json {
 //#endregion 🔖️ReplaceSnapshotJson
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

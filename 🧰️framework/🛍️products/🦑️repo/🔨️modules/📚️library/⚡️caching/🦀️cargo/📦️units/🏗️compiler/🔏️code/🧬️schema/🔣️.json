@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "digest",
+    "sourceDigest",
+    "program",
+    "programDigest",
+    "programBytes",
+    "receipt",
+    "receiptDigest",
+    "receiptBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "program": {
+      "type": "string",
+      "pattern": "^\\.cache/b/t/m/rc/[a-f0-9]{64}/entry\\.mjs$"
+    },
+    "programDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "programBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8388608
+    },
+    "receipt": {
+      "type": "string",
+      "pattern": "^\\.cache/b/t/m/rc/[a-f0-9]{64}/receipt\\.json$"
+    },
+    "receiptDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "receiptBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576
+    }
+  }
+}

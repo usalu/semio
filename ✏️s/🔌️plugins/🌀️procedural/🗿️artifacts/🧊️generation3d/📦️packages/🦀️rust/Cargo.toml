@@ -16,63 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-artifact-procedural-3d-examples = { workspace = true }
-semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
-semio-s-artifact-procedural-3d-host-initialization = { workspace = true }
-semio-s-artifact-procedural-3d-host-envelope = { workspace = true }
-semio-s-artifact-procedural-3d-host = { workspace = true }
-semio-s-artifact-procedural-3d-geometry-service = { workspace = true }
-semio-s-artifact-procedural-3d-io = { workspace = true }
-semio-s-artifact-procedural-3d-io-binary = { workspace = true }
-semio-s-artifact-procedural-3d-io-sqlite = { workspace = true }
-semio-s-artifact-procedural-3d-io-text = { workspace = true }
-semio-s-artifact-procedural-3d-io-geometry = { workspace = true }
-semio-s-artifact-procedural-3d-io-export = { workspace = true }
-semio-s-artifact-procedural-3d-io-import = { workspace = true }
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
 semio-s-procedural-core-generation-sqlite = { workspace = true }
 semio-s-procedural-core-semantic-ui = { workspace = true }
-semio-s-artifact-procedural-3d-inferences = { workspace = true }
-semio-s-artifact-procedural-3d-geometry = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-uv = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-shading = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-inspect = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-repair = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-edit = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-component = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-transform = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-convert = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-primitive = { workspace = true }
-semio-s-artifact-procedural-3d-brep-topology = { workspace = true }
-semio-s-artifact-procedural-3d-brep-evaluate = { workspace = true }
-semio-s-artifact-procedural-3d-brep-intersect = { workspace = true }
-semio-s-artifact-procedural-3d-brep-transform = { workspace = true }
-semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
-semio-s-artifact-procedural-3d-brep-boolean = { workspace = true }
-semio-s-artifact-procedural-3d-brep-solid = { workspace = true }
-semio-s-artifact-procedural-3d-brep-surface = { workspace = true }
-semio-s-artifact-procedural-3d-brep-primitive = { workspace = true }
-semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
-semio-s-artifact-procedural-3d-brep-sources = { workspace = true }
-semio-s-artifact-procedural-3d-analysis-check = { workspace = true }
-semio-s-artifact-procedural-3d-analysis-measure = { workspace = true }
-semio-s-artifact-procedural-3d-math-list = { workspace = true }
-semio-s-artifact-procedural-3d-math-vector = { workspace = true }
-semio-s-artifact-procedural-3d-math-arithmetic = { workspace = true }
-semio-s-artifact-procedural-3d-math-values = { workspace = true }
-semio-s-artifact-procedural-3d-mesh-support = { workspace = true }
-semio-s-artifact-procedural-3d-phased-job = { workspace = true }
-semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
-semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
-semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
-semio-s-artifact-procedural-3d-mutations = { workspace = true }
-semio-s-artifact-procedural-3d-terminology = { workspace = true }
-semio-s-artifact-procedural-3d-model = { workspace = true }
-semio-framework-3d-brep-vector.workspace = true
-semio-framework-3d-brep-tolerance.workspace = true
-semio-framework-3d-brep-surface.workspace = true
-semio-framework-3d-brep-curve.workspace = true
 semio-framework-3d-brep-analysis = { workspace = true }
 semio-framework-3d-brep-intersect = { workspace = true }
 semio-framework-3d-brep-tessellation = { workspace = true }
@@ -118,9 +64,6 @@ semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-# 🔺️ `conversion-mesh` mounts `s.stdio.semio@v1/mesh`'s own tested per-format bridges
-# (`SemioMeshTo{Stl,Obj,Ply,Gltf,Las,Dwg}` and their inverses), which every 🚪️io mesh leaf composes
-# instead of re-deriving a file grammar — ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
@@ -130,8 +73,6 @@ semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
-# 🛠️ Gestures are `🔄️machine` statecharts folded by the tool-machine runner (design §5, §13); `statechart!` expands to
-# `machine::…`, hence the rename.
 machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-os-flow = { workspace = true }
@@ -139,6 +80,26 @@ semio-framework-os-infinite = { workspace = true }
 semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-styling = { workspace = true }
+semio-s-artifact-procedural-3d-add-widget = { workspace = true }
+semio-s-artifact-procedural-3d-delete-selection = { workspace = true }
+semio-s-artifact-procedural-3d-editor = { workspace = true }
+semio-s-artifact-procedural-3d-editor-commands = { workspace = true }
+semio-s-artifact-procedural-3d-editor-panels = { workspace = true }
+semio-s-artifact-procedural-3d-export-document = { workspace = true }
+semio-s-artifact-procedural-3d-flow-eval-tick = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-service = { workspace = true }
+semio-s-artifact-procedural-3d-import-document = { workspace = true }
+semio-s-artifact-procedural-3d-inferences = { workspace = true }
+semio-s-artifact-procedural-3d-io = { workspace = true }
+semio-s-artifact-procedural-3d-mode-edit = { workspace = true }
+semio-s-artifact-procedural-3d-mode-generate = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-node-graph-edit = { workspace = true }
+semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
+semio-s-artifact-procedural-3d-rotate-selection = { workspace = true }
+semio-s-artifact-procedural-3d-scale-selection = { workspace = true }
+semio-s-artifact-procedural-3d-set-contributions = { workspace = true }
+semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
@@ -147,29 +108,43 @@ proc-macro2 = "1"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
-# 🧮️ The heap witness the guest-memory laws weigh the contributions install path with — test-only,
-# never a `[dependencies]` entry: a production guest reads its own footprint with `memory.size`.
 semio-framework-trace = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
-# 🔬️ Headless example-geometry harness (`[[test]] example-geometry`): the flow host + the two
-# packaged flow extensions whose operators every bundled example's `neuron-kind` chain resolves to.
-# Test-only — the artifact crate itself never links a geometry kernel.
-semio-framework-os-flow = { workspace = true }
-# ⚖️ Third-party differential oracle for the same harness — `parry3d` recomputes every tessellated
-# example's volume, centre of mass, and bounding box from the triangle soup our kernel emitted, so a
-# committed expected-stat is never only our own arithmetic. Test-only, never a `[dependencies]`
-# entry, never reachable from a production target (same standing as `semio-framework-3d`'s).
 parry3d = "0.17"
-# 🪪️ Third-party oracle for the preview evaluation run's node entity key (FNV-1a 64) — test-only.
 fnv = "1.0.7"
+semio-s-artifact-procedural-3d-editor-config = { workspace = true }
+semio-s-artifact-procedural-3d-envelope = { workspace = true }
+semio-s-artifact-procedural-3d-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-host = { workspace = true }
+semio-s-artifact-procedural-3d-initialization = { workspace = true }
+semio-s-artifact-procedural-3d-io-binary = { workspace = true }
+semio-s-artifact-procedural-3d-io-export = { workspace = true }
+semio-s-artifact-procedural-3d-io-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-io-import = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
+semio-s-artifact-procedural-3d-mut-document = { workspace = true }
+semio-s-artifact-procedural-3d-mut-transforms = { workspace = true }
+semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-s-artifact-procedural-3d-testkit = { workspace = true }
+semio-s-artifact-procedural-3d-transforms = { workspace = true }
+semio-s-artifact-procedural-3d-viewer-commands = { workspace = true }
 
-# 🧪️ Emoji file names never compile as an implicit `tests/` target, so the example-geometry lane is
-# declared with an explicit ASCII name and a package-root-relative path.
+[[test]]
+name = "editor-routes"
+path = "../../🧪️tests/🔬️editor-routes/🦀️.rs"
 
-# 🔁️ The 🚪️io round-trip lane: one committed unit cube through all nine format leaves, with
-# `parry3d` as the third-party check on every recovered mesh. Its per-format cases live beside the
-# leaves they exercise; this entry point only mounts them (see that file's own doc comment).
+[[test]]
+name = "mutation-laws"
+path = "../../🧪️tests/🔬️mutation-laws/🦀️.rs"
+
+[[test]]
+name = "host-laws"
+path = "../../🧪️tests/🔬️host-laws/🦀️.rs"
+
 [[test]]
 name = "io-round-trip"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🦀️.rs"
@@ -182,3 +157,4 @@ path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪�
 semio-framework-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-hash = { workspace = true }
+

@@ -1,6 +1,6 @@
-use crate::diff::{En1992Diff, En1992MembersRows, En1992MembersPatch, En1992MembersActionsRows, En1992MembersActionsPatch};
-use super::ChangeActionNk;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::{En1992Diff, En1992MembersRows, En1992MembersPatch, En1992MembersActionsRows, En1992MembersActionsPatch};
+use crate::change_action_nk::ChangeActionNk;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &ChangeActionNk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let Some(m) = base.members.iter().find(|m| m.id == payload.member_id) else {

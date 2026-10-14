@@ -1,5 +1,5 @@
 use protocol::{OpText,OpBinary};
-use super::*;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
@@ -9,7 +9,7 @@ fn namespace_formatting_fixture() -> serde_json::Value {
 
 fn namespace_formatting_snapshot(case: &serde_json::Value) -> DocxSnapshot {
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument { body: Vec::new(), styles: vec![DocxStyle { id: "Heading".into(), name: "Heading title".into(), based_on: Some("Normal".into()) }] });
+    let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument { body: Vec::new(), styles: vec![DocxStyle { id: "Heading".into(), name: "Heading title".into(), based_on: Some("Normal".into()) }] });
     snapshot.xml_part_mut("word/document.xml").unwrap().replace_document(xml_document_from_text(case["documentXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot.xml_part_mut("word/styles.xml").unwrap().replace_document(xml_document_from_text(case["stylesXml"].as_str().unwrap()).unwrap()).unwrap();
     snapshot
@@ -95,7 +95,7 @@ fn namespace_formatting_and_style_edits_preserve_qualified_attributes_and_invers
             assert_eq!(props.len(), 1, "{}: {output}", case["id"]);
             assert!(props[0].1.contains(&("val".to_string(), value.to_string())), "{}: {output}", case["id"]);
         }
-        let reopened = crate::engine::decode_docx(&crate::engine::encode_docx(&after).unwrap()).unwrap();
+        let reopened = semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(&semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&after).unwrap()).unwrap();
         assert_eq!(reopened, after);
         apply_addressed(&mut after, &prepared.inverse).unwrap();
         assert_eq!(after, before);
@@ -130,7 +130,7 @@ fn apply(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) {
 
 #[semio_framework_async_macros::async_test]
 async fn block_run_style_and_part_mutations_apply_and_inverse() {
-    let mut base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
+    let mut base = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("first"),
             DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("cell")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
@@ -217,7 +217,7 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
 
 #[test]
 fn invalid_paragraph_style_and_last_table_row_removal_are_atomic() {
-    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
+    let base = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("body"),
             DocxBlock::Table(DocxTable { rows: vec![DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph("only row")], ..Default::default() }], ..Default::default() }], ..Default::default() }),
@@ -272,7 +272,7 @@ fn identical_run_insertion_invalidates_the_original_canonical_address() {
 
 #[test]
 fn canonical_xml_addresses_support_empty_and_default_namespaces_and_reject_unbound_prefixes() {
-    use crate::schema::snapshot::DocxXmlPart;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
     use quick_xml::events::Event;
     use quick_xml::reader::Reader;
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
@@ -415,8 +415,8 @@ async fn top_level_table_projection_matches_independent_xml_text_order() {
     }
     let expected: Vec<Vec<String>> = serde_json::from_value(fixture["blocks"].clone()).unwrap();
     assert_eq!(oracle, expected.iter().flatten().cloned().collect::<Vec<_>>());
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
-    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
+    let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
+    let part_path = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(xml).unwrap()).unwrap();
     assert_eq!(docx_top_level_block_count(&snapshot).unwrap(), expected.len());
     for (block, runs) in expected.iter().enumerate() {
@@ -439,8 +439,8 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/✍️empty-paragraphs/🔣️.json")).unwrap();
     let replacement = fixture["replacement"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
-        let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
+        let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument::default());
+        let part_path = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
         snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(case["xml"].as_str().unwrap()).unwrap()).unwrap();
         let before = snapshot.clone();
         let expected_blocks: Vec<Vec<String>> = serde_json::from_value(case["blocks"].clone()).unwrap();
@@ -508,8 +508,8 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         let mut expected: Vec<Vec<String>> = serde_json::from_value(case["blocks"].clone()).unwrap();
         expected[block][item] = replacement.into();
         assert_eq!(actual, expected.into_iter().flatten().collect::<Vec<_>>());
-        let saved = crate::engine::encode_docx(&snapshot).unwrap();
-        let reopened = crate::engine::decode_docx(&saved).unwrap();
+        let saved = semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&snapshot).unwrap();
+        let reopened = semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(&saved).unwrap();
         assert_eq!(reopened.xml_part(&part_path).unwrap().document, snapshot.xml_part(&part_path).unwrap().document);
         apply_addressed(&mut snapshot, &prepared.inverse).unwrap();
         assert_eq!(snapshot, before);
@@ -530,7 +530,7 @@ async fn every_demo_kind_satisfies_the_inverse_sum_law() {
 #[semio_framework_async_macros::async_test]
 async fn removing_a_middle_member_is_restored_at_its_original_position() {
     let row = |text: &str| DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph(text)], ..Default::default() }], ..Default::default() };
-    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
+    let base = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![DocxBlock::paragraph("a"), DocxBlock::paragraph("b"), DocxBlock::paragraph("c"), DocxBlock::Table(DocxTable { rows: vec![row("r0"), row("r1"), row("r2")], ..Default::default() })],
         styles: vec![
             DocxStyle { id: "One".into(), name: "One".into(), based_on: None },

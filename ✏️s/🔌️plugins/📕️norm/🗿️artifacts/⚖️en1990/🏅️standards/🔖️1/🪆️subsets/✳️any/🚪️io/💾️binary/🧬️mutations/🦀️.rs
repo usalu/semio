@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::En1990Mutation;
+use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -20,14 +20,14 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1990Mutation, protocol::ProtocolError
 }
 
 mod native_codec {
-use crate::artifact_schema::mutations::En1990Mutation;
+use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 
 impl protocol::OpBinary for En1990Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::encode::<crate::En1990Snapshot, _>(include_str!("📡️.protocol.semio"), self)
+        semio_s_artifact_norm_contract::payload_op_binary::encode::<semio_s_artifact_norm_en1990_model::En1990Snapshot, _>(include_str!("📡️.protocol.semio"), self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        semio_s_artifact_norm_contract::payload_op_binary::decode::<crate::En1990Snapshot, _>(include_str!("📡️.protocol.semio"), bytes)
+        semio_s_artifact_norm_contract::payload_op_binary::decode::<semio_s_artifact_norm_en1990_model::En1990Snapshot, _>(include_str!("📡️.protocol.semio"), bytes)
     }
 }
 }

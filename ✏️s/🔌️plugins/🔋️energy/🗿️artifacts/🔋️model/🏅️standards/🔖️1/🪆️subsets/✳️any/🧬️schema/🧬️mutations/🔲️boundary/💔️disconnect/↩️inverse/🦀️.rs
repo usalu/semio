@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `DisconnectSurfaces` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::DisconnectSurfaces, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::DisconnectSurfaces, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::DisconnectSurfaces> + From<crate::ConnectSurfaces>,
+{
     Ok((|| {
     match base.model.adjacency_pairs.iter().enumerate().find(|(_, item)| (item.surface_a_id, item.surface_b_id) == (payload.surface_a_id, payload.surface_b_id) || (item.surface_a_id, item.surface_b_id) == (payload.surface_b_id, payload.surface_a_id)) {
         Some((index, existing)) => vec![vocabulary::connect_surfaces(existing.surface_a_id, existing.surface_b_id, Some(index as u32))],

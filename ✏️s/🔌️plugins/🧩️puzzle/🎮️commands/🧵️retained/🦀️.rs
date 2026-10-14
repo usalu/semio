@@ -1,7 +1,15 @@
 //! 🧵️ Fixed-capacity retained command session shared by Puzzle 2d, 3d, and 5d.
 
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_job::{StepContext};
-#[cfg(test)] use semio_framework_job::{InteractiveJobCloseStep};
+#[cfg(any(test, feature = "testing"))] use semio_framework_job::{InteractiveJobCloseStep};
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactApp, Emit, Fault, ViewModel};
@@ -56,7 +64,7 @@ pub type PuzzleCommandExtent<A> = fn(&<A as ArtifactApp>::Command, &<A as Artifa
 
 /// 📋️ One literal progress step whose `{"en":…,"de":…}` preview is assembled at compile time.
 #[macro_export]
-macro_rules! puzzle_progress_step {
+pub macro_rules! puzzle_progress_step {
     ($stage:expr, $en:literal, $de:literal) => {
         semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Progress { stage: $stage, preview: concat!("{\"en\":\"", $en, "\",\"de\":\"", $de, "\"}").as_bytes() }
     };
@@ -93,7 +101,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+    pub fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
@@ -136,7 +144,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
         step_demands::<A>(size_of::<Self>())
     }
 
-    fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
+    pub fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("puzzle-command-noop-repeated"));
@@ -155,7 +163,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
 //#endregion 🧵️Work
 
 /// 🧪️ Drives a puzzle command work turn by turn the way the framework's retained command job does.
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub mod testing {
     use super::*;
     use semio_framework_job::{Generation, OperationId, StepBudget};
@@ -163,7 +171,7 @@ pub mod testing {
     use semio_framework_plugin::{AppOperationContext, HistoryView};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
-    pub use crate::puzzle_job::testing::unbounded_grant;
+    pub use semio_s_plugin_puzzle_jobs::testing::unbounded_grant;
 
     /// 🧾️ One work step as a test reads it: the progress preview split into its two languages, an emission, or a segmented download.
     pub enum PuzzleCommandWorkStep<A: ArtifactApp> {

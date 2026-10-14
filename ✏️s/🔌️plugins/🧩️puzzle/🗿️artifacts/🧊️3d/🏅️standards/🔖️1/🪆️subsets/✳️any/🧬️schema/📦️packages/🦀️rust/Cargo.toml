@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle3d artifact schema"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[features]
+testing = ["dep:serde", "dep:serde_json"]
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

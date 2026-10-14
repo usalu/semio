@@ -1,10 +1,11 @@
 //! 🔍️ Layout inspector: document summary, then editable document, page, and frame fields.
 
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
-use crate::editor::layout::terminology::LayoutLabels;
-use crate::editor::layout::{layout_action, ui_label, ui_value_map, ui_value_text, LayoutInteractionSnapshot};
-use crate::standards::v1::subsets::any::schema::rgba_to_hex;
-use crate::{Frame, LayoutSnapshot, Page, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig;
+use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_label, ui_value_map, ui_value_text, LayoutInteractionSnapshot};
+use semio_s_artifact_layout_layout_model::rgba_to_hex;
+use semio_s_artifact_layout_layout_model::{Frame, Page, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
@@ -84,7 +85,7 @@ fn selection_frame(document: &LayoutSnapshot, page_id: &str, frame: &Frame) -> F
     }
     let Some(page_override) = page.overrides.iter().find(|item| item.object_id == frame.id()) else { return frame.clone() };
     let mut resolved = frame.clone();
-    crate::standards::v1::subsets::any::schema::apply_page_override(&mut resolved, page_override);
+    semio_s_artifact_layout_layout_model::apply_page_override(&mut resolved, page_override);
     resolved
 }
 
@@ -151,10 +152,10 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
             let shown = if runs.is_empty() { 1 } else { runs.len().min(4) };
             for index in 0..shown {
                 let (start, end) = runs.get(index).map(|run| (byte_chars(&content, run.start), byte_chars(&content, run.end))).unwrap_or((0, content.chars().count()));
-                if let Some(key) = crate::editor::layout::commands::patch_frame::style_range_key(index, true) {
+                if let Some(key) = semio_s_artifact_layout_layout_editor_commands::patch_frame::style_range_key(index, true) {
                     rows.push(Field { key, label: labels.style_start.clone(), value: number(start), kind: InputKind::Number });
                 }
-                if let Some(key) = crate::editor::layout::commands::patch_frame::style_range_key(index, false) {
+                if let Some(key) = semio_s_artifact_layout_layout_editor_commands::patch_frame::style_range_key(index, false) {
                     rows.push(Field { key, label: labels.style_end.clone(), value: number(end), kind: InputKind::Number });
                 }
             }
@@ -171,9 +172,9 @@ fn frame_fields(frame: &Frame, document: &LayoutSnapshot, labels: &LayoutLabels)
             rows.push(Field { key: "linkHeight", label: labels.link_height, value: height, kind: InputKind::Number });
             rows.push(Field { key: "dpi", label: labels.dpi, value: dpi, kind: InputKind::Number });
             rows.push(Field { key: "colorProfile", label: labels.color_profile, value: profile, kind: InputKind::Text });
-            if crate::mutations::set_drawing_text::is_drawing_kind(&link.map(|link| link.artifact_kind.as_str()).unwrap_or("")) {
-                for (index, text) in crate::mutations::set_drawing_text::drawing_labels(document).into_iter().enumerate() {
-                    let Some(key) = crate::mutations::set_drawing_text::drawing_text_field(index) else { break };
+            if semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::is_drawing_kind(&link.map(|link| link.artifact_kind.as_str()).unwrap_or("")) {
+                for (index, text) in semio_s_artifact_layout_layout_model::drawing_labels(document).into_iter().enumerate() {
+                    let Some(key) = semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::drawing_text_field(index) else { break };
                     rows.push(Field { key, label: labels.drawing_text.clone(), value: text, kind: InputKind::Text });
                 }
             }
@@ -466,7 +467,7 @@ pub fn render(document: &LayoutSnapshot, config: &LayoutWindowConfig, interactio
             if !link.artifact_kind.is_empty() {
                 frame_rows.try_push(tree_item_desc("layout-play-inspector.frame.artifact", ui_label(labels.artifact.as_str())?, Some(format!("{} {}", link.artifact_kind, link.artifact_ref)))?).map_err(|_| admit())?;
             }
-            if crate::editor::layout::panels::catalogue::native_open(&link.artifact_kind).is_some() && !link.artifact_ref.trim().is_empty() {
+            if semio_s_artifact_layout_layout_editor_commands::native_open(&link.artifact_kind).is_some() && !link.artifact_ref.trim().is_empty() {
                 frame_rows.try_push(frame_button(frame_id, page_id, "open", labels.open_source)?).map_err(|_| admit())?;
             }
         }

@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pptx-strict-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧬️ The pptx ecma-376 strict mutation vocabulary with its text and binary codecs."
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+serde_json = { workspace = true }
+semio-s-artifact-stdio-pptx-base-model = { workspace = true }
+semio-s-artifact-stdio-pptx-base-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+quick-xml = "0.42"
+semio-framework-async-macros = { workspace = true }

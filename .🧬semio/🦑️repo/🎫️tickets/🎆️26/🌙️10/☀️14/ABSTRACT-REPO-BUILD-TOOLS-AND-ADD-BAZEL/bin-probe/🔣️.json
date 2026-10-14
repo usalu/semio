@@ -1,0 +1,15 @@
+{
+  "version":1,
+  "maximumElapsedMilliseconds":120000,
+  "root":{"name":"fixture-cli-root","private":true,"workspaces":["p"],"dependencies":{"@fixture/cli-owner":"workspace:*"}},
+  "owner":{"name":"@fixture/cli-owner","version":"1.0.0","bin":{"repo":"../📜️script.ts"},"scripts":{"probe":"bun repo --help"}},
+  "entry":"#!/usr/bin/env bun\nconsole.log('[DEBUG] Actual fixture CLI entry '+JSON.stringify({cwd:process.cwd(),argv:process.argv.slice(1),path:import.meta.path,lifecycle:process.env.npm_lifecycle_event}));\n",
+  "installArguments":["install","--ignore-scripts","--no-save"],
+  "projectedMember":"w/0",
+  "routing": {
+    "members":["packages/space owner","🧪/a/b"],
+    "arguments":["--tool=bazel","run","fixture:test","--","two words","literal$()","quote\"tail","caller value"],
+    "commandArguments":"--tool=bazel run fixture:test -- \"two words\" 'literal$()' 'quote\"tail'",
+    "callerArgument":"caller value"
+  }
+}

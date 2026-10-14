@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "directory",
+    "maximumEntries"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "maximumEntries": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    }
+  }
+}

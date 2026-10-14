@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "userProfile",
+  "id": "user-profile-a"
+}

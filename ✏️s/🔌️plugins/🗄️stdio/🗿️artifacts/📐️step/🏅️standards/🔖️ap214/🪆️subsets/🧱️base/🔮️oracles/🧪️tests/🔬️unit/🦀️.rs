@@ -1,11 +1,14 @@
 use super::{oracle_apply_mutation, oracle_round_trip, project_step_ap214_any};
 use semio_repo_test_host::{parse_json, Json};
 
-const FIXTURE: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
+/// 🧫️ The real committed AP214 fixture, read at test runtime.
+fn fixture() -> Vec<u8> {
+    crate::committed("../../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp")
+}
 
 /// 🧾️ The case's own `Examples` rows — the `StepValue` leaf wire payloads the scenarios run.
 fn feature_rows() -> Vec<(String, Json)> {
-    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/📐️mutate-step-ap214/🥒️.feature"))
+    semio_repo_test_host::law::feature_rows(&crate::committed_text("../../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/📐️mutate-step-ap214/🥒️.feature"))
 }
 fn spec(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
@@ -53,7 +56,7 @@ fn inverse(kind: &str) -> Json {
 
 #[test]
 fn parses_the_real_fixture_and_projects_it() {
-    let projection = project_step_ap214_any(FIXTURE).expect("project real fixture");
+    let projection = project_step_ap214_any(&fixture()).expect("project real fixture");
     assert_eq!(entity_count(&projection), 1396.0);
     match projection.get("fileSchema") {
         Some(Json::Array(items)) => assert_eq!(items, &vec![Json::String("AUTOMOTIVE_DESIGN".to_string())]),
@@ -64,20 +67,20 @@ fn parses_the_real_fixture_and_projects_it() {
 
 #[test]
 fn round_trip_is_not_byte_identical_but_reparses() {
-    let output = oracle_round_trip(FIXTURE).expect("identity round trip");
-    assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
-    assert_eq!(project_step_ap214_any(&output).unwrap(), project_step_ap214_any(FIXTURE).unwrap());
+    let output = oracle_round_trip(&fixture()).expect("identity round trip");
+    assert_ne!(output, fixture(), "our own writer must not reproduce the source writer's exact bytes");
+    assert_eq!(project_step_ap214_any(&output).unwrap(), project_step_ap214_any(&fixture()).unwrap());
 }
 
 /// ⚖️ Every row of the case — its leaf wire payload, exactly as the scenario runs it — must move the
 /// projection, and its inverse must restore it.
 #[test]
 fn every_feature_row_moves_the_projection_and_its_inverse_restores_it() {
-    let pristine = project_step_ap214_any(FIXTURE).unwrap();
+    let pristine = project_step_ap214_any(&fixture()).unwrap();
     let rows = feature_rows();
     assert_eq!(rows.len(), 9, "one row per declared StepMutation kind");
     for (kind, params) in rows {
-        let mutated = oracle_apply_mutation(FIXTURE, &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
+        let mutated = oracle_apply_mutation(&fixture(), &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         assert_ne!(project_step_ap214_any(&mutated).unwrap(), pristine, "{kind} left the projection unchanged");
         let undo = inverse(&kind);
         let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("inverse {kind} failed: {error}"));
@@ -88,14 +91,14 @@ fn every_feature_row_moves_the_projection_and_its_inverse_restores_it() {
 #[test]
 fn insert_entity_writes_its_wire_reals() {
     let (_, row) = feature_rows().into_iter().find(|(kind, _)| kind == "insert-entity").expect("insert-entity row");
-    let projection = project_step_ap214_any(&oracle_apply_mutation(FIXTURE, &spec("insert-entity", row)).unwrap()).unwrap();
+    let projection = project_step_ap214_any(&oracle_apply_mutation(&fixture(), &spec("insert-entity", row)).unwrap()).unwrap();
     assert_eq!(entity_count(&projection), 1397.0);
     assert_eq!(args_of(&projection, 9001.0)[1], projected("aggregate", Json::Array(vec![projected("real", Json::Number(1.0)), projected("real", Json::Number(2.0)), projected("real", Json::Number(3.0))])));
 }
 
 #[test]
 fn entity_1394_real_args_are_as_expected() {
-    let args = args_of(&project_step_ap214_any(FIXTURE).expect("project"), 1394.0);
+    let args = args_of(&project_step_ap214_any(&fixture()).expect("project"), 1394.0);
     assert_eq!(args.len(), 2);
     assert_eq!(args[0], projected("string", Json::String(String::new())));
     assert!(matches!(args[1].get("v"), Some(Json::Array(values)) if matches!(values.first(), Some(Json::Object(_)))));
@@ -105,7 +108,7 @@ fn entity_1394_real_args_are_as_expected() {
 fn entity_arg_rows_change_the_arity_they_claim() {
     let arity = |kind: &str| {
         let (_, row) = feature_rows().into_iter().find(|(id, _)| id == kind).unwrap();
-        args_of(&project_step_ap214_any(&oracle_apply_mutation(FIXTURE, &spec(kind, row)).unwrap()).unwrap(), 1394.0)
+        args_of(&project_step_ap214_any(&oracle_apply_mutation(&fixture(), &spec(kind, row)).unwrap()).unwrap(), 1394.0)
     };
     assert_eq!(arity("insert-entity-arg")[2], projected("enum", Json::String("T".to_string())));
     assert_eq!(arity("remove-entity-arg").len(), 1);
@@ -114,5 +117,5 @@ fn entity_arg_rows_change_the_arity_they_claim() {
 
 #[test]
 fn unknown_kind_is_an_error_not_a_silent_no_op() {
-    assert!(oracle_apply_mutation(FIXTURE, &spec("no-mutation", Json::Object(Vec::new()))).is_err());
+    assert!(oracle_apply_mutation(&fixture(), &spec("no-mutation", Json::Object(Vec::new()))).is_err());
 }

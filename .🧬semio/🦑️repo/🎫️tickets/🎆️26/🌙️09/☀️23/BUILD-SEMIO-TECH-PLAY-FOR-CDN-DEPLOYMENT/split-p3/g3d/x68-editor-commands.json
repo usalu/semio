@@ -1,0 +1,32 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-editor-commands",
+ "description": "Procedural generation3d editor commands: the remaining command payloads and the mesh-selection edits",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+ "moves": [
+  {
+   "from": "editor::generation3d::commands",
+   "to": ""
+  },
+  {
+   "from": "editor::generation3d::edit_mesh_selection",
+   "to": "edit_mesh_selection"
+  },
+  {
+   "from": "editor::generation3d::knife_mesh_selection",
+   "to": "knife_mesh_selection"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith",
+ "doc": "🎮️ Generation3d editor commands: the command payloads not split into their own crates, and the mesh-selection edits."
+}

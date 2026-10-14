@@ -16,7 +16,7 @@ async fn definition_declares_every_granularity_once() {
 
 #[semio_framework_async_macros::async_test]
 async fn entity_kind_resolves_the_bestest_families_and_refuses_strangers() {
-    let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::examples::bestest_600::model(), None);
+    let snapshot = crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::examples::bestest_600::model(), None);
     let model = &snapshot.model;
     let zone = energy_target_id(model.zones[0].id);
     let surface = energy_target_id(model.surfaces[0].id);

@@ -1,5 +1,6 @@
-use crate::{En1991Mutation, En1991Snapshot};
-use super::KINDS;
+use crate::En1991Mutation;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use crate::KINDS;
 
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {

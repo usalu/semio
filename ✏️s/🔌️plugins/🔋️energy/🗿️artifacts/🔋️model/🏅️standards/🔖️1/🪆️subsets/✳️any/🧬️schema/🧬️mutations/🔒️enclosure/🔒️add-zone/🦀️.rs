@@ -1,8 +1,7 @@
 //! 🔒️ Energy model mutation — `AddThermalEnclosureZone`: Puts one zone inside a thermal enclosure.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct AddThermalEnclosureZone {
     pub zone_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_thermal_enclosure_zone(id: crate::model::EntityId, index: u32, zone_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::AddThermalEnclosureZone(AddThermalEnclosureZone { id, index, zone_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn add_thermal_enclosure_zone<Op: From<AddThermalEnclosureZone>>(id: crate::model::EntityId, index: u32, zone_id: crate::model::EntityId) -> Op {
+    AddThermalEnclosureZone { id, index, zone_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddThermalEnclosureZone {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddThermalEnclosureZone
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddThermalEnclosureZone> + From<crate::RemoveThermalEnclosureZone>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "thermal-enclosure", kind: "add-thermal-enclosure-zone", record: "AddedThermalEnclosureZone" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

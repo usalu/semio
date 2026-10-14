@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/stdio-gltf:build",
-    "check": "bun repo run @semio-tech/stdio-gltf:check",
-    "test": "bun repo run @semio-tech/stdio-gltf:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-gltf:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-gltf:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-gltf:test"
   },
   "exports": {
     ".": {

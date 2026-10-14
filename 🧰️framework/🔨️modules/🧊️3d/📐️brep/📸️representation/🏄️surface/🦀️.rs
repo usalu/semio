@@ -29,7 +29,7 @@ use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 /// 🗺️ A parametric surface `S(u, v)`. Domain and periodicity are documented per variant; as with
 /// [`semio_framework_3d_brep_curve::Curve3`], a face's *used* trim domain is stored by the topology layer, not here.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub enum Surface {
     /// 🗺️ `frame.origin + u·frame.x + v·frame.y`. Domain `(-∞, ∞) × (-∞, ∞)`.
     Plane { frame: Frame3 },

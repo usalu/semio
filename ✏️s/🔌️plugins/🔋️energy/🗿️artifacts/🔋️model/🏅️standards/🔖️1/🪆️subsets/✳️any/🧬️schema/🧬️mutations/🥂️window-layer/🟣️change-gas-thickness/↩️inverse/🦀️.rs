@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeGasMaterialThickness` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeGasMaterialThickness, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeGasMaterialThickness, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ChangeGasMaterialThickness>,
+{
     Ok((|| {
     match base.model.gas_materials.iter().find(|item| item.id == payload.id) {
         Some(item) if item.thickness_m != payload.new_thickness_m && payload.new_thickness_m.is_finite() && payload.new_thickness_m > 0.0 => vec![vocabulary::change_gas_material_thickness(payload.id, item.thickness_m)],

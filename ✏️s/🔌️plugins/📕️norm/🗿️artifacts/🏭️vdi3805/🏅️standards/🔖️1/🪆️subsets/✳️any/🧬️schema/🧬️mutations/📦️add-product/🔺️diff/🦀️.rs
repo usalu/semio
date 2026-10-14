@@ -1,8 +1,8 @@
 //! 🔺️ `add-product` — sparse diff construction; the derived `catalog.index` follows in `Vdi3805Diff::apply`.
 
-use super::AddProduct;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805ProductsRows};
+use crate::add_product::AddProduct;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805ProductsRows};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate article number is `mutation.duplicate-id`; an explicit index past the end

@@ -2,7 +2,7 @@
 
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::derive_brush_mesh;
+use semio_s_artifact_puzzle_3d_precompute::derive_brush_mesh;
 
 /// 🧊️ The ONE install: real GLB geometry the browser round-tripped for one mesh url, derived into puzzle
 /// 3d's process-wide mesh store, which the brush suggestions and fill runs read. Answers whether the store

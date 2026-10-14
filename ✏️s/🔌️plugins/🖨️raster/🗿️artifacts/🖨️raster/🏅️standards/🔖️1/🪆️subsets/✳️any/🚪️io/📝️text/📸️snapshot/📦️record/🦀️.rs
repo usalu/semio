@@ -1,5 +1,6 @@
 //! 🖨️ Literal Raster native forest and complete intrinsic parameter entities.
-use crate::{RasterSnapshot,RasterLayerNode,RasterLayerMask,RasterTransform,RasterOwnedMap,RasterAssetChild};
+use crate::snapshot::RasterSnapshot;
+use crate::{RasterLayerNode, RasterLayerMask, RasterOwnedMap, RasterAssetChild};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -7,7 +8,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKi
 fn limit(kind:ValueRefusalKind,message:&str)->ValueError{ValueError::new(kind,message)}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(extension="raster")]
-pub(crate) struct RasterNativeDocument{
+pub struct RasterNativeDocument{
  schema:String,
  id:String,
  title:Option<String>,
@@ -81,7 +82,7 @@ fn forecast(s:&RasterSnapshot,maximum:usize,control:&mut NativeEncodeControl<'_>
 }
 fn mask_copy(mask:&RasterLayerMask,control:&mut NativeEncodeControl<'_>)->Result<RasterLayerMask,ValueError>{Ok(RasterLayerMask{enabled:mask.enabled,linked:mask.linked,invert:mask.invert,width:mask.width,height:mask.height,image_key:mask.image_key.as_deref().map(|v|control.copy_text(v)).transpose()?,transform:mask.transform.clone()})}
 impl RasterNativeDocument{
- pub(crate) fn from_snapshot(s:&RasterSnapshot,maximum_rows:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,ValueError>{
+ pub fn from_snapshot(s:&RasterSnapshot,maximum_rows:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,ValueError>{
  let plan=forecast(s,maximum_rows,control)?;control.begin_stage(plan.units(s.assets.len())?)?;
  let mut output=Self{schema:control.copy_text(&s.schema)?,id:control.copy_text(&s.id)?,title:s.title.as_deref().map(|v|control.copy_text(v)).transpose()?,layers:control.allocate_vec(plan.layers)?,assets:control.allocate_vec(s.assets.len())?,values:control.allocate_vec(plan.values)?,items:control.allocate_vec(plan.items)?,members:control.allocate_vec(plan.members)?};
  for(key,child)in s.assets.iter(){let d=&child.target.dialect;output.assets.push(RasterNativeAsset{key:control.copy_text(key)?,child:store::os_store::artifact_child::ArtifactChild::new(control.copy_text(&child.child_id)?,semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:control.copy_text(&d.artifact_kind)?,standard:control.copy_text(&d.standard)?,subset:control.copy_text(&d.subset)?},artifact_id:control.copy_text(&child.target.artifact_id)?})});control.step()?;}
@@ -114,13 +115,13 @@ impl Drop for Values{fn drop(&mut self){for value in &mut self.0{if let Some(val
 struct Layers(Vec<Option<RasterLayerNode>>);
 impl Drop for Layers{fn drop(&mut self){for node in &mut self.0{if let Some(node)=node.take(){crate::retire_raster_layers(vec![node]);}}}}
 struct Snapshot(Option<RasterSnapshot>);
-impl Drop for Snapshot{fn drop(&mut self){if let Some(s)=self.0.take(){crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(s);}}}
+impl Drop for Snapshot{fn drop(&mut self){if let Some(s)=self.0.take(){crate::snapshot::retire_raster_snapshot(s);}}}
 struct Parameters(RasterOwnedMap<semio_framework_value::DslValue>);
 impl Drop for Parameters{fn drop(&mut self){while let Some((_,value))=self.0.take_last_entry(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}self.0.retire();}}
 fn slots<T>(count:usize,control:&mut NativeDecodeControl<'_>)->Result<Vec<Option<T>>,ValueError>{let mut slots=control.allocate_vec(count)?;slots.resize_with(count,||None);Ok(slots)}
 fn keys_before(a:&str,b:&str,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{control.scoped_stage(|control| -> Result<bool,ValueError>{let length=a.len().min(b.len());control.begin_stage(length)?;let mut offset=0;while offset<length{let end=offset.saturating_add(65536).min(length);let order=a.as_bytes()[offset..end].cmp(&b.as_bytes()[offset..end]);control.advance(end-offset)?;if order!=std::cmp::Ordering::Equal{return Ok(order==std::cmp::Ordering::Less)}offset=end;}Ok(a.len()<b.len())})}
 impl RasterNativeDocument{
- pub(crate) fn into_snapshot(self,maximum_rows:usize,control:&mut NativeDecodeControl<'_>)->Result<RasterSnapshot,ValueError>{
+ pub fn into_snapshot(self,maximum_rows:usize,control:&mut NativeDecodeControl<'_>)->Result<RasterSnapshot,ValueError>{
  let mut rows=1usize.checked_add(self.assets.len()).ok_or_else(||limit(ValueRefusalKind::WorkLimit,"Raster native row overflow"))?;
  for row in &self.layers{rows=rows.checked_add(10+usize::from(row.mask.is_some())*8).and_then(|v|v.checked_add(row.parameters.len())).ok_or_else(||limit(ValueRefusalKind::WorkLimit,"Raster native row overflow"))?;}
  for row in &self.values{rows=rows.checked_add(match row.kind.as_str(){"null"=>1,"float"=>3,_=>2}).ok_or_else(||limit(ValueRefusalKind::WorkLimit,"Raster native row overflow"))?;}
@@ -154,8 +155,8 @@ impl RasterNativeDocument{
  if self.assets.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster asset native map capacity"))}for asset in self.assets{let map=&mut snapshot.0.as_mut().unwrap().assets;if let Some((previous,_))=map.entry_at(map.len().saturating_sub(1)){if !keys_before(previous,&asset.key,control)?{return Err(invalid("Raster asset native key order"))}}if map.page_required_for_insert(&asset.key){control.charge(RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes())?;map.admit_one_page().map_err(|reason|limit(ValueRefusalKind::OwnershipLimit,reason))?;}map.insert_pre_admitted(asset.key,asset.child).map_err(|e|invalid(e.reason))?;control.step()?;}
  if values.0.iter().any(Option::is_some)||layers.0.iter().any(Option::is_some){return Err(invalid("Raster orphan native entity"))}Ok(snapshot.0.take().unwrap())
  }
- pub(crate) fn ordinary(s:&RasterSnapshot)->Self{Self::from_snapshot(s,usize::MAX,&mut NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("literal Raster native projection")}
- pub(crate) fn ordinary_snapshot(self)->Result<RasterSnapshot,ValueError>{self.into_snapshot(usize::MAX,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true))}
+ pub fn ordinary(s:&RasterSnapshot)->Self{Self::from_snapshot(s,usize::MAX,&mut NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("literal Raster native projection")}
+ pub fn ordinary_snapshot(self)->Result<RasterSnapshot,ValueError>{self.into_snapshot(usize::MAX,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true))}
 }
 struct EncodedMembers(Vec<(String,semio_framework_value::DslValue)>);
 impl Drop for EncodedMembers{fn drop(&mut self){while let Some((_,value))=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}

@@ -372,7 +372,7 @@ impl ArtifactEditor for BmpEditor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_BMP_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_BMP_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         bmp_editor_command_id(command)

@@ -42,7 +42,7 @@ pub use distance::{point_distance, shape_distance, ClosestPair, PointDistance};
 
 /// 🧭️ What kind of shape a [`ShapeScope`] names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum ShapeKind {
     Vertex,
@@ -126,7 +126,7 @@ impl ShapeScope {
 /// A part that does not apply to the shape (the volume of an open shell, the faces of an edge) is
 /// `None` or empty and its reason is listed in `unavailable`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeAnalysis {
     pub kind: ShapeKind,
     pub mass: Option<ShapeMassProperties>,

@@ -2,7 +2,77 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📦️packages/🦀️rust" ]
+members = [
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust",
+  "📦️packages/🦀️rust",
+]
 exclude = [
   "**/🏅️standards/**",
   "**/👽️guest/**",
@@ -234,6 +304,265 @@ path = "../../🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/📦️pac
 
 [workspace.dependencies.semio-s-plugin-energy-engine-airflow-network]
 path = "../../🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async-macros]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
+[workspace.dependencies.pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+package = "semio-framework-pack"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-snapshot]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-inferences]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-site]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-run]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-zone]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-space]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-surface]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-boundary]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-fenestration]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-glazing]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-shading-device]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-shading]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-material]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-finish]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-window-layer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-construction]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-people-gain]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-lighting-gain]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-equipment-gain]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-infiltration]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-leakage]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-ventilation]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-thermostat]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-humidistat]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-ideal-loads]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-zone-equipment]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-daylight-zone]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-sizing]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-room-air]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-setpoint]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-air-loop]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-plant-loop]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-outdoor-air]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-load-center]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-pv-system]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-battery]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-shw-system]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-solar-thermal]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-refrigeration]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-water-system]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-fault]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-space-list]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-enclosure]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-fixed-schedule]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-day-schedule]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-week-schedule]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-year-schedule]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mut-time-series]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-mutation-fixtures]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-wire]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📡️wire/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-retirement]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪜️retirement/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-restore]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️restore/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-import]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-export]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-session]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-config]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-results]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-interaction]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-diff-splice]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-diff-patch]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde]
 version = "1.0.228"

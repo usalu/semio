@@ -1,10 +1,15 @@
 //! 🧬️ En1992 snapshot — complete reinforced/prestressed concrete structure subject (SI).
 
-use crate::document::AnnexChoice;
-use crate::{
-    Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition,
-    TightnessClass,
-};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -42,8 +47,6 @@ pub struct En1992Snapshot {
     #[state(artifact)]
     pub anchors: Vec<Anchor>,
 }
-
-
 
 impl Default for En1992Snapshot {
     fn default() -> Self {
@@ -387,18 +390,397 @@ impl En1992Snapshot {
 
 //#endregion 🔖️Snapshot
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_compliance;
 
+/// 🏗️ Fire resistance rating (EN 1992-1-2 tabulated data).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum FireRating {
+    R30,
+    R60,
+    R90,
+    R120,
+}
 
+/// 💧️ Tightness class per EN 1992-3 Table 7.105.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum TightnessClass {
+    Tc0,
+    Tc1,
+    Tc2,
+}
 
+/// 🧱 Member typology for EN 1992 checks.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum MemberKind {
+    Beam,
+    Slab,
+    Column,
+    Wall,
+    FlatSlab,
+    RibbedSlab,
+    TensionMember,
+    Bridge,
+    LiquidRetaining,
+}
 
+/// 📍 Support condition for span/deflection rules.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum SupportCondition {
+    SimplySupported,
+    Continuous,
+    Cantilever,
+    Fixed,
+}
 
+/// 🌦 Exposure class (EN 1992-1-1 Table 4.1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum ExposureClass {
+    X0,
+    Xc1,
+    Xc2,
+    Xc3,
+    Xc4,
+    Xd1,
+    Xd2,
+    Xd3,
+    Xs1,
+    Xs2,
+    Xs3,
+    Xf1,
+    Xf2,
+    Xf3,
+    Xf4,
+    Xa1,
+    Xa2,
+    Xa3,
+}
 
+/// 🪨 Concrete grade — editable f_ck; Table 3.1 derived properties via methods.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ConcreteGrade {
+    pub id: String,
+    pub name: String,
+    pub f_ck: f64,
+}
 
+impl ConcreteGrade {
+    /// 📘 Construct from cylinder strength f_ck [Pa].
+    pub fn from_f_ck(id: impl Into<String>, name: impl Into<String>, f_ck: f64) -> Self {
+        Self { id: id.into(), name: name.into(), f_ck }
+    }
+    pub fn f_ck_cube(&self) -> f64 {
+        let fck_mpa = self.f_ck / 1.0e6;
+        match fck_mpa.round() as i32 {
+            12 => 15.0e6, 16 => 20.0e6, 20 => 25.0e6, 25 => 30.0e6, 30 => 37.0e6,
+            35 => 45.0e6, 40 => 50.0e6, 45 => 55.0e6, 50 => 60.0e6, 55 => 67.0e6,
+            60 => 75.0e6, 70 => 85.0e6, 80 => 95.0e6, 90 => 105.0e6, 100 => 115.0e6,
+            _ => self.f_ck * 1.25,
+        }
+    }
+    pub fn f_cm(&self) -> f64 { self.f_ck + 8.0e6 }
+    pub fn f_ctm(&self) -> f64 {
+        let fck_mpa = self.f_ck / 1.0e6;
+        if fck_mpa <= 50.0 { 0.30 * fck_mpa.powf(2.0 / 3.0) * 1.0e6 }
+        else { 2.12 * (1.0 + (self.f_cm() / 1.0e6) / 10.0).ln() * 1.0e6 }
+    }
+    pub fn f_ctk_005(&self) -> f64 { 0.7 * self.f_ctm() }
+    pub fn e_cm(&self) -> f64 { 22.0e3 * ((self.f_cm() / 1.0e6) / 10.0).powf(0.3) * 1.0e6 }
+    pub fn eps_c2(&self) -> f64 {
+        let fck = self.f_ck / 1.0e6;
+        if fck <= 50.0 { 2.0e-3 } else { (2.0 + 0.085 * (fck - 50.0).powf(0.53)) * 1.0e-3 }
+    }
+    pub fn eps_cu2(&self) -> f64 {
+        let fck = self.f_ck / 1.0e6;
+        if fck <= 50.0 { 3.5e-3 } else { (2.6 + 35.0 * ((90.0 - fck) / 100.0).powf(4.0)) * 1.0e-3 }
+    }
+    pub fn eps_c3(&self) -> f64 {
+        let fck = self.f_ck / 1.0e6;
+        if fck <= 50.0 { 1.75e-3 } else { (1.75 + 0.55 * ((fck - 50.0) / 40.0)) * 1.0e-3 }
+    }
+    pub fn eps_cu3(&self) -> f64 { self.eps_cu2() }
+    pub fn n_parabola(&self) -> f64 {
+        let fck = self.f_ck / 1.0e6;
+        if fck <= 50.0 { 2.0 } else { 1.4 + 23.4 * ((90.0 - fck) / 100.0).powf(4.0) }
+    }
+}
 
+/// 🔩 Ductility class A/B/C (EN 1992-1-1 Annex C).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum DuctilityClass {
+    A,
+    B,
+    C,
+}
 
+impl DuctilityClass {
+    /// 📏 Annex C Table C.1 minima (k, ε_uk).
+    pub fn table_c1_minima(self) -> (f64, f64) {
+        match self {
+            Self::A => (1.05, 0.025),
+            Self::B => (1.08, 0.050),
+            Self::C => (1.15, 0.075),
+        }
+    }
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🔩 Reinforcing steel — editable f_yk, ductility class, k, ε_uk (checked vs Table C.1).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ReinforcementGrade {
+    pub id: String,
+    pub name: String,
+    pub f_yk: f64,
+    pub e_s: f64,
+    pub ductility: DuctilityClass,
+    pub k: f64,
+    pub eps_uk: f64,
+}
 
+impl ReinforcementGrade {
+    pub fn b500a(id: impl Into<String>) -> Self {
+        Self { id: id.into(), name: "B500A".into(), f_yk: 500.0e6, e_s: 200.0e9, ductility: DuctilityClass::A, k: 1.05, eps_uk: 0.025 }
+    }
+    pub fn b500b(id: impl Into<String>) -> Self {
+        Self { id: id.into(), name: "B500B".into(), f_yk: 500.0e6, e_s: 200.0e9, ductility: DuctilityClass::B, k: 1.08, eps_uk: 0.050 }
+    }
+    pub fn b500c(id: impl Into<String>) -> Self {
+        Self { id: id.into(), name: "B500C".into(), f_yk: 550.0e6, e_s: 200.0e9, ductility: DuctilityClass::C, k: 1.15, eps_uk: 0.075 }
+    }
+}
 
+/// 🧵 Prestressing steel (f_pk, f_p0_1k in Pa).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PrestressSteel {
+    pub id: String,
+    pub name: String,
+    pub f_pk: f64,
+    pub f_p0_1k: f64,
+}
+
+/// ➖ Longitudinal bar layer (diameter / lengths in m).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct BarLayer {
+    pub id: String,
+    pub diameter: f64,
+    pub count: u32,
+    pub position: String,
+    pub anchorage_length: f64,
+    pub lap_length: f64,
+    pub bond_condition: String,
+    pub aggregate_size: f64,
+}
+
+/// ➰ Shear reinforcement (spacing/diameter in m).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Stirrups {
+    pub diameter: f64,
+    pub spacing: f64,
+    pub legs: u32,
+}
+
+/// 🕳️ Punching geometry — u₀/u₁/β derived from column size + position (lengths m, asw m²/m).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PunchingSpec {
+    pub column_width: f64,
+    pub column_depth: f64,
+    pub column_position: String,
+    pub asw: f64,
+}
+
+/// 🗜️ Prestress — force N, area m², eccentricity m, long-term loss ratio → P_m,∞.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PrestressSpec {
+    pub force: f64,
+    pub area: f64,
+    pub eccentricity: f64,
+    pub loss_ratio: f64,
+}
+
+/// 🔥 Fire exposure (axis distance in m).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FireSpec {
+    pub rating: FireRating,
+    pub axis_distance: f64,
+    pub column_method: String,
+    pub slab_system: String,
+}
+
+/// 📊 Characteristic load case (EN 1990) — line loads N/m or external characteristic effects N / N·m.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct LoadCaseActions {
+    pub id: String,
+    pub kind: String,
+    pub category: String,
+    pub source: String,
+    pub g_k_line: f64,
+    pub q_k_line: f64,
+    pub point_force: f64,
+    pub m_k: f64,
+    pub n_k: f64,
+    pub v_k: f64,
+    pub t_k: f64,
+    pub v_k_punch: f64,
+}
+
+/// 🏛️ Reinforced/prestressed concrete member.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct RcMember {
+    pub id: String,
+    pub label_en: String,
+    pub label_de: String,
+    pub kind: MemberKind,
+    pub concrete_grade_id: String,
+    pub reinforcement_grade_id: String,
+    pub prestress_steel_id: String,
+    pub exposure: ExposureClass,
+    pub width: f64,
+    pub height: f64,
+    pub effective_depth: f64,
+    pub cover: f64,
+    pub span: f64,
+    pub support: SupportCondition,
+    pub buckling_length: f64,
+    #[dsl(table)]
+    pub longitudinal: Vec<BarLayer>,
+    pub stirrups: Option<Stirrups>,
+    pub punching: Option<PunchingSpec>,
+    pub prestress: Option<PrestressSpec>,
+    pub fire: Option<FireSpec>,
+    #[dsl(table)]
+    pub actions: Vec<LoadCaseActions>,
+    pub use_fem: bool,
+    pub udl: f64,
+    pub deflection_sensitive: bool,
+    pub tightness: Option<TightnessClass>,
+    pub hd_over_h: f64,
+    pub liquid_sigma_s: f64,
+    pub liquid_rho_p_eff: f64,
+    pub liquid_f_ct_eff: f64,
+    pub liquid_s_r_max: f64,
+    pub bridge_sigma_c: f64,
+    pub bridge_delta_sigma_s: f64,
+}
+
+impl RcMember {
+    /// ➕ Tension steel area from bottom/top layers tagged bottom (m²).
+    pub fn a_s_tension(&self) -> f64 {
+        self.longitudinal
+            .iter()
+            .filter(|l| l.position == "bottom" || l.position == "tension")
+            .map(|l| l.count as f64 * std::f64::consts::PI * (l.diameter * 0.5).powi(2))
+            .sum()
+    }
+
+    /// ➗ Longitudinal reinforcement ratio ρ_l = A_s/(b·d).
+    pub fn rho_l(&self) -> f64 {
+        let bd = self.width * self.effective_depth;
+        if bd <= 0.0 {
+            0.0
+        } else {
+            self.a_s_tension() / bd
+        }
+    }
+
+    /// ➰ A_sw / s from stirrups (m²/m).
+    pub fn asw_per_s(&self) -> f64 {
+        let Some(s) = &self.stirrups else {
+            return 0.0;
+        };
+        if s.spacing <= 0.0 {
+            return 0.0;
+        }
+        s.legs as f64 * std::f64::consts::PI * (s.diameter * 0.5).powi(2) / s.spacing
+    }
+
+    /// 🏷️ Localized subject label.
+    pub fn subject_label(&self) -> document::LocalizedCopy {
+        document::LocalizedCopy::new(self.label_en.clone(), self.label_de.clone())
+    }
+}
+
+/// ⚓️ Fastening (EN 1992-4) — lengths m, stresses Pa, forces N.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Anchor {
+    pub id: String,
+    pub h_ef: f64,
+    pub cracked: bool,
+    pub f_uk: f64,
+    pub f_yk: f64,
+    pub a_s: f64,
+    pub d: f64,
+    pub c1: f64,
+    pub f_ck: f64,
+    #[dsl(table)]
+    pub actions: Vec<LoadCaseActions>,
+}
+
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1992", "EN 1992", EN1992_DOCUMENT_SCHEMA)
+}
+
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1992_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1992", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+pub const EN1992_DOCUMENT_SCHEMA: &str = "semio.norm.en1992/v1";

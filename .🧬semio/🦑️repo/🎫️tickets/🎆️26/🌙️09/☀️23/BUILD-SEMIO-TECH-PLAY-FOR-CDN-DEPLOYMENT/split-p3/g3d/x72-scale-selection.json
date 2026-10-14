@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+ "monolith": "semio_s_artifact_procedural_3d_editor_commands",
+ "package": "semio-s-artifact-procedural-3d-scale-selection",
+ "description": "Procedural generation3d scale-selection command",
+ "owner": "📏️scale-selection",
+ "moves": [
+  {
+   "from": "scale_selection",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+}

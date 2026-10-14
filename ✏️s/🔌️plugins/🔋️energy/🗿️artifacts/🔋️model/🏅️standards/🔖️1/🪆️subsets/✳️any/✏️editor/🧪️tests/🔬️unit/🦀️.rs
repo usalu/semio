@@ -161,7 +161,7 @@ fn populated_model() -> crate::model::Model {
 }
 
 fn snapshot_of(model: &crate::model::Model) -> EnergyModelSnapshot {
-    crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
+    crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
 }
 
 fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> crate::model::Model {
@@ -590,7 +590,7 @@ async fn simulation_app() -> EnergyEditorApp {
     model.run_period.end_day = period["endDay"].as_u64().unwrap() as u8;
     let snapshot = snapshot_of(&model);
     let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
+    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
     let spr = store::os_store::text_format::print_document_spr(&envelope).await.expect("fixture spr");
     let mut app = dispatchable_app().await;
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fixture document loads");
@@ -1157,7 +1157,7 @@ async fn the_material_property_verb_refuses_the_four_bad_payloads() {
     assert_eq!(refusal(&snapshot, &material_property(10, "reflectance", "0.5")), "app.command.invalid-payload", "a property this record does not have is refused");
     assert_eq!(refusal(&snapshot, &material_property(9_999, "name", "Ghost")), "mutation.target-missing");
     let held = inspector_model().materials[0].roughness;
-    assert!(emitted_kinds(&snapshot, &material_property(10, "roughness", crate::editor::model::surface_roughness_id(held))).is_empty(), "an unchanged roughness opens no revision");
+    assert!(emitted_kinds(&snapshot, &material_property(10, "roughness", crate::editor_commands::surface_roughness_id(held))).is_empty(), "an unchanged roughness opens no revision");
 }
 
 /// 🧱️ `set-construction-property`'s five shapes, each landing on the list kind the vocabulary really
@@ -1430,7 +1430,7 @@ fn painted_bands(body: &str) -> std::collections::BTreeSet<usize> {
     fn channel_present(body: &str, channel: f64) -> bool {
         [format!("{channel:.3}"), format!("{channel:.4}"), format!("{channel:.5}"), format!("{channel}")].iter().any(|text| body.contains(text.as_str()))
     }
-    crate::editor::model::results::legend_bands().iter().enumerate().filter(|(_, hex)| crate::editor::model::results::hex_to_rgb01(hex).iter().all(|channel| channel_present(body, *channel))).map(|(index, _)| index).collect()
+    crate::editor_results::legend_bands().iter().enumerate().filter(|(_, hex)| crate::editor_results::hex_to_rgb01(hex).iter().all(|channel| channel_present(body, *channel))).map(|(index, _)| index).collect()
 }
 
 /// 🎨️ THE recolour law (W1-D §10). Every hop between the kernel accumulator and a painted surface is
@@ -1448,13 +1448,13 @@ fn painted_bands(body: &str) -> std::collections::BTreeSet<usize> {
 #[semio_framework_async_macros::async_test]
 async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
     use semio_framework_plugin::PluginApp as _;
-    use crate::editor::model::results::ResultField;
+    use crate::editor_config::ResultField;
 
     // 🪟️ The refresh half. `ToolRunLedger::dirty_scope()` unions `entry.window_bodies`, which the driver
     // builds as `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` — an id no
     // window kind declares is silently FILTERED AWAY and the body then never redraws on a tick.
     let def = definition();
-    let declared = crate::energy_simulation_session::energy_simulation_run_definition().windows;
+    let declared = crate::session::energy_simulation_run_definition().windows;
     assert!(!declared.is_empty(), "the run declares no windows, so no tick can mark a body dirty");
     for window_kind_id in &declared {
         assert!(def.window_kinds.iter().any(|kind| &kind.id == window_kind_id), "the run declares window kind {window_kind_id}, which this editor never registers — the driver drops it and the body never redraws on a tick");

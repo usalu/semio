@@ -1,8 +1,8 @@
 //! 🧭️ Raster play app — the navigator window: the small overview/minimap surface.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::raster_scene;
-use crate::RasterSnapshot as RasterDocument;
+use crate::config::RasterConfig;
+use crate::raster_scene;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;

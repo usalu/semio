@@ -12,10 +12,10 @@ pub struct DrawingTextFootprint {
 
 #[derive(Default)]
 pub struct DrawingTextFootprintCursor {
-    owner: Option<usize>,
-    index: usize,
-    totals: DrawingTextFootprint,
-    phase: u8,
+    pub owner: Option<usize>,
+    pub index: usize,
+    pub totals: DrawingTextFootprint,
+    pub phase: u8,
 }
 
 impl DrawingTextFootprintCursor {
@@ -69,26 +69,26 @@ pub struct DrawingLayerFootprint {
 
 #[derive(Default)]
 pub struct DrawingLayerFootprintCursor {
-    owner: Option<usize>,
-    field: usize,
-    child: usize,
-    text: DrawingTextFootprintCursor,
-    totals: DrawingLayerFootprint,
-    phase: u8,
+    pub owner: Option<usize>,
+    pub field: usize,
+    pub child: usize,
+    pub text: DrawingTextFootprintCursor,
+    pub totals: DrawingLayerFootprint,
+    pub phase: u8,
 }
 
 impl DrawingLayerFootprintCursor {
-    fn add(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
+    pub fn add(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
         self.totals.items = self.totals.items.checked_add(items).ok_or("drawing-store.layer-footprint-item-overflow")?;
         self.totals.backing_bytes = self.totals.backing_bytes.checked_add(bytes).ok_or("drawing-store.layer-footprint-byte-overflow")?;
         Ok(())
     }
 
-    fn list<T, const N: usize>(&mut self, value: &semio_framework_value::list::PagedList<T, N>) -> Result<(), &'static str> {
+    pub fn list<T, const N: usize>(&mut self, value: &semio_framework_value::list::PagedList<T, N>) -> Result<(), &'static str> {
         self.add(value.capacity().checked_add(1).ok_or("drawing-store.layer-footprint-item-overflow")?, value.allocated_bytes())
     }
 
-    fn lists(&mut self, source: &DrawingLayerNode) -> Result<(), &'static str> {
+    pub fn lists(&mut self, source: &DrawingLayerNode) -> Result<(), &'static str> {
         self.add(1, 0)?;
         let base = semio_s_artifact_draw_drawing_model::layer_base(source);
         if let Some(FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. }) = base.attributes.fill.as_ref() { self.list(stops)?; }
@@ -103,7 +103,7 @@ impl DrawingLayerFootprintCursor {
         Ok(())
     }
 
-    fn field(source: &DrawingLayerNode, index: usize) -> Option<&PagedUtf8<{usize::MAX}>> {
+    pub fn field(source: &DrawingLayerNode, index: usize) -> Option<&PagedUtf8<{usize::MAX}>> {
         let base = semio_s_artifact_draw_drawing_model::layer_base(source);
         match index {
             0 => Some(&base.id),
@@ -121,7 +121,7 @@ impl DrawingLayerFootprintCursor {
         }
     }
 
-    fn text(&mut self, value: &PagedUtf8<{usize::MAX}>) -> Result<bool, &'static str> {
+    pub fn text(&mut self, value: &PagedUtf8<{usize::MAX}>) -> Result<bool, &'static str> {
         if !self.text.step(value, 1)? { return Ok(false); }
         let totals = self.text.totals().ok_or("drawing-store.layer-footprint-text-incomplete")?;
         self.add(totals.chunks.checked_add(1).ok_or("drawing-store.layer-footprint-item-overflow")?, totals.backing_bytes)?;
@@ -181,14 +181,14 @@ pub enum DrawingRecordFootprintSource<'a> {
 }
 
 impl<'a> DrawingRecordFootprintSource<'a> {
-    fn identity(self) -> (u8, usize, usize) {
+    pub fn identity(self) -> (u8, usize, usize) {
         match self {
             Self::Snapshot(value) => (0, value as *const _ as usize, 0),
             Self::Asset(key, value) => (1, key as *const _ as usize, value as *const _ as usize),
         }
     }
 
-    fn field(self, index: usize) -> Option<&'a PagedUtf8<{usize::MAX}>> {
+    pub fn field(self, index: usize) -> Option<&'a PagedUtf8<{usize::MAX}>> {
         match self {
             Self::Snapshot(value) => match index { 0 => Some(&value.schema), 1 => Some(&value.id), 2 => value.title.as_ref(), _ => None },
             Self::Asset(key, _) => if index==0 {Some(key)} else {None},
@@ -198,15 +198,15 @@ impl<'a> DrawingRecordFootprintSource<'a> {
 
 #[derive(Default)]
 pub struct DrawingRecordFootprintCursor {
-    owner: Option<(u8, usize, usize)>,
-    field: usize,
-    text: DrawingTextFootprintCursor,
-    totals: DrawingLayerFootprint,
-    phase: u8,
+    pub owner: Option<(u8, usize, usize)>,
+    pub field: usize,
+    pub text: DrawingTextFootprintCursor,
+    pub totals: DrawingLayerFootprint,
+    pub phase: u8,
 }
 
 impl DrawingRecordFootprintCursor {
-    fn add(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
+    pub fn add(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
         self.totals.items = self.totals.items.checked_add(items).ok_or("drawing-store.record-footprint-item-overflow")?;
         self.totals.backing_bytes = self.totals.backing_bytes.checked_add(bytes).ok_or("drawing-store.record-footprint-byte-overflow")?;
         Ok(())
@@ -269,11 +269,11 @@ impl DrawingRecordFootprintCursor {
 
 #[derive(Default)]
 pub struct DrawingTextDigestCursor {
-    footprint: DrawingTextFootprintCursor,
-    tag: Option<u16>,
-    chunk: usize,
-    offset: usize,
-    phase: u8,
+    pub footprint: DrawingTextFootprintCursor,
+    pub tag: Option<u16>,
+    pub chunk: usize,
+    pub offset: usize,
+    pub phase: u8,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -341,12 +341,12 @@ pub struct DrawingTextEqualityStep {
 
 #[derive(Default)]
 pub struct DrawingTextEqualityCursor {
-    owners: Option<(usize, usize)>,
-    chunks: [usize; 2],
-    offsets: [usize; 2],
-    remaining: usize,
-    result: Option<bool>,
-    closed: bool,
+    pub owners: Option<(usize, usize)>,
+    pub chunks: [usize; 2],
+    pub offsets: [usize; 2],
+    pub remaining: usize,
+    pub result: Option<bool>,
+    pub closed: bool,
 }
 
 impl DrawingTextEqualityCursor {

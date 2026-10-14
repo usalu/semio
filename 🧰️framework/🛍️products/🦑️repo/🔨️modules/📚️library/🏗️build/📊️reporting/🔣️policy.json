@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "maximumReportBytes": 16777216,
+  "maximumRetainedBytes": 67108864,
+  "maximumReports": 64
+}

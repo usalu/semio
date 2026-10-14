@@ -20,9 +20,9 @@ mod loft;
 #[path = "🌀️revolve/🦀️.rs"]
 mod revolve;
 
-use {crate::primitives::make_planar_face_from_wire, semio_framework_3d_brep_representation::topology::Wire};
-use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::transform::transform_face;
+use {semio_framework_3d_brep_construction::primitives::make_planar_face_from_wire, semio_framework_3d_brep_representation::topology::Wire};
+use semio_framework_3d_brep_construction::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::FaceId;
 use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
@@ -427,6 +427,10 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, axis: (Pnt3, Vec3), radiu
 }
 
 // #endregion 🔖️Sweep
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -2,9 +2,11 @@
 //! surface-neutral chain in `🧵️preview-eval`. The addressing law, the payload shape, the tick core
 //! and the tessellate producer all live there, shared verbatim with `👁️viewer`; what is editor-only
 //! is what this file keeps — the generate-mode fixture patch and the editor `Emit` type.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
@@ -16,10 +18,10 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FRAMEWORK_TO
 /// 🪟️ The BODY one preview window kind renders — the thing a chain hop's refresh has to name, as
 /// opposed to the window kind its payload is addressed by.
 pub(crate) fn preview_body_key(window_kind_id: &str) -> &'static str {
-    if window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
-        crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW
+    if window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
+        semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW
     } else {
-        crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW
+        semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW
     }
 }
 
@@ -31,8 +33,8 @@ pub(crate) fn preview_body_key(window_kind_id: &str) -> &'static str {
 pub(crate) fn chain_ui_scope(window_kind_id: &str, census_moved: bool) -> UiDirtyScope {
     preview_eval::chain_ui_scope(
         preview_body_key(window_kind_id),
-        Some(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN),
-        &[crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT, FRAMEWORK_TOOL_RUN_BODY_KEY],
+        Some(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN),
+        &[semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT, FRAMEWORK_TOOL_RUN_BODY_KEY],
         census_moved,
     )
 }
@@ -63,7 +65,7 @@ pub fn evaluate(
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
-    let generate = window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
+    let generate = window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     let mut patched = None;
     if generate {
         let mut state = doc.snapshot.generation.as_state().clone();

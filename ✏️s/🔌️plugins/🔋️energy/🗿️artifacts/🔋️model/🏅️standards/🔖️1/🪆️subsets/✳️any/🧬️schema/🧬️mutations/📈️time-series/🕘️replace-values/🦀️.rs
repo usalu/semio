@@ -1,8 +1,7 @@
 //! 🕘️ Energy model mutation — `ReplaceTimeSeriesScheduleValues`: Swaps a measured series' whole body. The samples are one measurement, not independent scalars, so they move together.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ReplaceTimeSeriesScheduleValues {
     pub new_values: Vec<f64>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_time_series_schedule_values(id: crate::schedule::ScheduleId, new_values: Vec<f64>) -> EnergyModelMutation {
-    EnergyModelMutation::ReplaceTimeSeriesScheduleValues(ReplaceTimeSeriesScheduleValues { id, new_values })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn replace_time_series_schedule_values<Op: From<ReplaceTimeSeriesScheduleValues>>(id: crate::schedule::ScheduleId, new_values: Vec<f64>) -> Op {
+    ReplaceTimeSeriesScheduleValues { id, new_values }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceTimeSeriesScheduleValues {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceTimeSeriesScheduleValues
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceTimeSeriesScheduleValues>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "time-series-schedule", kind: "replace-time-series-schedule-values", record: "ReplacedTimeSeriesScheduleValues" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

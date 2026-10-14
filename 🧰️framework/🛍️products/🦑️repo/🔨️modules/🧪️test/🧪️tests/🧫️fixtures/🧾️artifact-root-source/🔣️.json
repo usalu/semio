@@ -19,5 +19,37 @@
   "marker": {
     "testId": "artifact-root-owner::fixture",
     "cacheKey": "source-v1"
+  },
+  "storage": {
+    "partition": "diagnostics",
+    "directory": "tests",
+    "unissued": false,
+    "released": false,
+    "sharedBlocksRetirement": true,
+    "runIsolation": true
+  },
+  "retention": {
+    "version": 1,
+    "maximumRetainedBytes": 4096,
+    "maximumRuns": 1,
+    "activeRetained": true,
+    "releasedRemoved": true,
+    "shards": [
+      {
+        "task": "0942285751e2c21d31a6dff8",
+        "byte": 9,
+        "shard": 9
+      },
+      {
+        "task": "3d66c376e8033e55e75cd019",
+        "byte": 61,
+        "shard": 13
+      },
+      {
+        "task": "ff0000000000000000000000",
+        "byte": 255,
+        "shard": 15
+      }
+    ]
   }
 }

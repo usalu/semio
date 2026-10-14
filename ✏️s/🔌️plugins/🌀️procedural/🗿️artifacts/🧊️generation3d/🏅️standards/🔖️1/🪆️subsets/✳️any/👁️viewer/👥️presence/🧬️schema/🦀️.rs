@@ -15,5 +15,5 @@ pub struct Generation3dViewPresence {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::viewer::generation3d::config::Generation3dViewCamera;
+
 //#endregion 🔁️Re-exports

@@ -62,9 +62,19 @@
       "accepted": true
     }
   ],
-  "guardedDemand": {"copyBytes":1,"capacityBytes":24,"releaseBytes":16,"depth":14},
+  "guardedDemand": {
+    "copyBytes": 1,
+    "capacityBytes": 24,
+    "releaseBytes": 16,
+    "depth": 14
+  },
   "snapshotCase": {
     "text": "original/🐚",
     "reservedCapacity": 8192
+  },
+  "reservation": {
+    "maximumTurns": 4,
+    "expectedSlot": true,
+    "expectedPhysicalReceipt": true
   }
 }

@@ -1,12 +1,12 @@
 //! Inverse for `remove-tank`.
-use super::RemoveTank;
-use crate::{En1998Mutation, En1998Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::insert_tank;
+use crate::remove_tank::RemoveTank;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use crate::insert_tank;
 
-pub fn inverse(payload: &RemoveTank, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RemoveTank, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_tank::InsertTank> {
     Ok((|| {
     match base.tanks.get(payload.index) {
-        Some(item) => vec![En1998Mutation::InsertTank(insert_tank::InsertTank { index: Some(payload.index), tank: item.clone() })],
+        Some(item) => vec![Op::from(insert_tank::InsertTank { index: Some(payload.index), tank: item.clone() })],
         None => Vec::new(),
     }
 

@@ -1,8 +1,8 @@
 //! 🧪️ Export retains exact pixels, bounded output and cancellation without document edits.
 use super::*;
-use crate::standards::v1::subsets::any::schema::{snapshot::retire_raster_snapshot};
-use crate::standards::v1::subsets::any::schema::create_pixel_layer;
-use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
+use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
+use semio_s_artifact_raster_raster_model::create_pixel_layer;
+use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 
 fn close_work(work:&mut ImageExportWork) {
     work.closing=true;
@@ -14,9 +14,9 @@ fn close_work(work:&mut ImageExportWork) {
 
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
     let mut encoder=PngEncodeJob::new(semio_framework_pixels::RasterImage {width,height,pixels}).unwrap();while !encoder.advance().unwrap().done {}
-    let asset=crate::RasterImageAsset {mime:"image/png".into(),data:encoder.into_result().unwrap().data};
-    let mut document=empty_raster_snapshot();document.assets.insert("image".into(),crate::mint_raster_asset_child("image",&asset)).unwrap();
-    let mut layer=create_pixel_layer("Export",width,height);if let crate::RasterLayerNode::Pixel {image_key,..}=&mut layer {*image_key=Some("image".into());}document.layers.push(layer);document
+    let asset=semio_s_artifact_raster_raster_model::RasterImageAsset {mime:"image/png".into(),data:encoder.into_result().unwrap().data};
+    let mut document=empty_raster_snapshot();document.assets.insert("image".into(),semio_s_artifact_raster_raster_io::mint_raster_asset_child("image",&asset)).unwrap();
+    let mut layer=create_pixel_layer("Export",width,height);if let semio_s_artifact_raster_raster_model::RasterLayerNode::Pixel {image_key,..}=&mut layer {*image_key=Some("image".into());}document.layers.push(layer);document
 }
 
 #[test]
@@ -54,9 +54,9 @@ fn export_cancels_every_stage_and_refuses_an_empty_document() {
 #[semio_framework_async_macros::async_test]
 async fn retained_image_export_completes_or_cancels_without_mutating_history() {
     use semio_framework_plugin::{PluginApp,ArtifactMediaExportPoll};
-    use crate::editor::raster::unit_tests::context;
+    use crate::unit_tests::context;
     let mut app=context::app().await;
-    context::dispatch(&mut app,crate::editor::raster::RasterCommand::AddLayer(crate::editor::raster::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
+    context::dispatch(&mut app,crate::RasterCommand::AddLayer(crate::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();
     let handle=app.submit_media_export("image:out").await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
     for _ in 0..100000 {semio_framework_async::yield_once().await;match app.poll_media_export(&handle).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
@@ -80,19 +80,23 @@ fn export_progress_uses_neutral_localized_stage_labels() {
 #[semio_framework_async_macros::async_test]
 async fn retained_export_refuses_a_superseded_document_and_retires_its_output() {
     use semio_framework_plugin::{PluginApp,ArtifactMediaExportPoll};
-    use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,patch_layer}};
+    use crate::unit_tests::context;
+    use crate::RasterCommand;
+    use crate::commands::{add_layer, patch_layer};
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
-    let document=app.snapshot().unwrap();let id=crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();retire_raster_snapshot(document);
+    let document=app.snapshot().unwrap();let id=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();retire_raster_snapshot(document);
     let handle=app.submit_media_export("image:out").await.unwrap();
     context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id,field:"name".into(),value:"Changed during export".into()})).await;
     let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match app.poll_media_export(&handle).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
-    assert!(refused);let document=app.snapshot().unwrap();assert_eq!(crate::standards::v1::subsets::any::schema::layer_name(&document.layers[0]),"Changed during export");retire_raster_snapshot(document);
+    assert!(refused);let document=app.snapshot().unwrap();assert_eq!(semio_s_artifact_raster_raster_model::layer_name(&document.layers[0]),"Changed during export");retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn png_command_download_survives_operation_retirement_and_preserves_history() {
     use semio_framework_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane};
-    use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png}};
+    use crate::unit_tests::context;
+    use crate::RasterCommand;
+    use crate::commands::{add_layer, export_png};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
     let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
@@ -121,7 +125,9 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
 #[semio_framework_async_macros::async_test]
 async fn cancelled_png_command_never_publishes_a_download_or_changes_history() {
     use semio_framework_plugin::{PluginApp,artifact_app_laws,app::{TypedOperationResultLane,ArtifactDocumentAuthority}};
-    use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png}};
+    use crate::unit_tests::context;
+    use crate::RasterCommand;
+    use crate::commands::{add_layer, export_png};
     for cancel_after in [0,8] {
         let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
         let before=app.snapshot().unwrap();let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());
@@ -144,7 +150,10 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
     use semio_framework_plugin::artifact_app_laws;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_ui_locale::Locale;
-    use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png},panels::document::RASTER_PLAY_BODY_LAYERS};
+    use crate::unit_tests::context;
+    use crate::RasterCommand;
+    use crate::commands::{add_layer, export_png};
+    use crate::panels::document::RASTER_PLAY_BODY_LAYERS;
     fn find_identity(value:&serde_json::Value)->Option<serde_json::Value> {match value{serde_json::Value::Object(map)=>{if map.get("operationId").is_some_and(serde_json::Value::is_string)&&map.get("generation").is_some_and(serde_json::Value::is_string){return Some(value.clone());}map.values().find_map(find_identity)},serde_json::Value::Array(items)=>items.iter().find_map(find_identity),_=>None}}
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());app.dispatch_typed(RasterCommand::ExportPng(export_png::ExportPng {}),&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
@@ -163,7 +172,7 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
 #[test]
 fn export_snapshot_installed_supplier_returns_each_actual_shared_owner(){
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactorySharedRetirement};use std::sync::Arc;
-    let snapshot=Arc::new(crate::standards::v1::subsets::any::schema::raster_image_test_snapshot());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<crate::RasterSnapshot>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::RasterSnapshot>::default());
+    let snapshot=Arc::new(semio_s_artifact_raster_raster_model::testing::raster_image_test_snapshot());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>::default());
     let mut owners=[FactorySharedRetirement::new(snapshot.clone(),factory.clone()),FactorySharedRetirement::new(snapshot,factory)];
     for owner in &mut owners{for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());let step=owner.close_step(grant).unwrap();assert!(step.progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty())}
 }

@@ -2,10 +2,10 @@
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::*;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::Block3dWorldWindowTransient;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::SetBrushPreview;
+use crate::edit::windows::world::transient::io::text::mutations::*;
+use crate::edit::windows::world::transient::mutations::*;
+use crate::edit::windows::world::transient::Block3dWorldWindowTransient;
+use crate::edit::windows::world::transient::mutations::set_brush_preview::SetBrushPreview;
 
 impl protocol::OpText for Block3dWorldWindowTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -31,10 +31,10 @@ impl protocol::OpText for Block3dWorldWindowTransientMutation {
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {
-use super::*;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::*;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::Block3dWorldWindowTransient;
-use crate::editor::block3d::modes::edit::windows::world::transient::component::mutations::SetBrushPreview;
+use crate::edit::windows::world::transient::io::text::mutations::*;
+use crate::edit::windows::world::transient::mutations::*;
+use crate::edit::windows::world::transient::Block3dWorldWindowTransient;
+use crate::edit::windows::world::transient::mutations::set_brush_preview::SetBrushPreview;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`protocol::apply_diff`) and the mutation's own inverse over `Block3dWorldWindowTransient`.
@@ -44,4 +44,4 @@ pub fn block3d_world_window_transient_mutation_report_json(base_json: &str, muta
     store::os_store::test_support::mutation_report_json::<Block3dWorldWindowTransient, Block3dWorldWindowTransientMutation>(base_json, mutation_json, after_json)
 }
 }
-pub use mutations_wire_codec::*;
+pub use crate::edit::windows::world::transient::io::text::mutations::mutations_wire_codec::*;

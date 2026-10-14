@@ -1,10 +1,11 @@
 //! 📝️ Genuine caller-owned text and admitted fonts resolve a paged multiline glyph scene.
-use super::{AdmittedFont,FontSource,FontOutlineLimits,FontProgress,font_advance,reserve_slot,outline::{GlyphOutline,GlyphOutlineCursor},kerning::FontKerningCursor};
-use super::shape::{FontLookup,FontLookupPlanCursor,mark::FontMarkCursor,face::{FontClusterFaceCursor,FontClusterMapping,FontMappedScalar},layout::FontClusterLayoutCursor,unicode::{UnicodeLayout,normalize::{UnicodeNormalizationCursor,NormalizedScalar},cluster::{UnicodeGraphemeCursor,UnicodeCluster}}};
-use super::shape::class::FontGlyphClassCursor;
-use super::shape::unicode::UnicodePropertyCursor;
-use super::shape::unicode::bidi::{UnicodeBidiCursor,UnicodeBidiOutput,UnicodeBidiDirection};
-use crate::PathSegment;
+use semio_framework_2d_text_font::{AdmittedFont,FontSource,FontOutlineLimits,FontProgress,font_advance,reserve_slot,outline::{GlyphOutline,GlyphOutlineCursor},kerning::FontKerningCursor};
+use semio_framework_2d_text_font_shape::{FontLookup,FontLookupPlanCursor,mark::FontMarkCursor,face::{FontClusterFaceCursor,FontClusterMapping,FontMappedScalar},layout::FontClusterLayoutCursor};
+use semio_framework_2d_text_font_shape_unicode::{UnicodeLayout,normalize::{UnicodeNormalizationCursor,NormalizedScalar},cluster::{UnicodeGraphemeCursor,UnicodeCluster}};
+use semio_framework_2d_text_font_shape::class::FontGlyphClassCursor;
+use semio_framework_2d_text_font_shape_unicode::UnicodePropertyCursor;
+use semio_framework_2d_text_font_shape_unicode::bidi::{UnicodeBidiCursor,UnicodeBidiOutput,UnicodeBidiDirection};
+use semio_framework_2d_engine::PathSegment;
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 #[derive(Clone,Copy)]
 pub struct FontRunStyle{pub size:f64,pub origin:[f64;2],pub line_height:f64,pub kerning:bool}
@@ -51,3 +52,6 @@ impl FontOutlineRunCursor{
  pub fn take_result(&mut self)->Result<FontOutlineRun,String>{self.result()?;Ok(self.owners.output.take().unwrap())}
  pub fn cancel(&mut self){self.cancelled=true;}
 }
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

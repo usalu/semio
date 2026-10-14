@@ -13,6 +13,7 @@
     "./vitest": "./🧪️testing/🧪️vitest/🟦️.ts",
     "./cargo-test": "./🧪️testing/🦀️cargo/🟦️.ts",
     "./cargo-laws": "./🧪️testing/🦀️laws/🟦️.ts",
+    "./cargo-execution": "./🧪️testing/🦀️execution/🟦️.ts",
     "./artifact-files": "./📦️artifacts/🗂️files/🟦️.ts",
     "./artifact-publication": "./📦️artifacts/📤️publication/🟦️.ts",
     "./native-build": "./📦️artifacts/🏗️native-build/🟦️.ts",
@@ -34,7 +35,7 @@
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "scripts": {
-    "test-cargo-build-lease": "bun repo run @semio-tech/framework-process:test-cargo-build-lease",
-    "test-native-artifact-publication": "bun repo run @semio-tech/framework-process:test-native-artifact-publication"
+    "test-cargo-build-lease": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-cargo-build-lease",
+    "test-native-artifact-publication": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-process:test-native-artifact-publication"
   }
 }

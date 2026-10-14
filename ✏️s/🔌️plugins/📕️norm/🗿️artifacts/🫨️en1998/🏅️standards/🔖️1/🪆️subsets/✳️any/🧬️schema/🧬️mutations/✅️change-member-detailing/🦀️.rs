@@ -1,6 +1,6 @@
 //! ✅️ `change-member-detailing` mutation leaf.
 
-use crate::{En1998Mutation, En1998Snapshot};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -14,7 +14,7 @@ pub struct ChangeMemberDetailing {
     pub new_detailing_compatible_with_q: bool,
 }
 
-impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMemberDetailing {
+impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeMemberDetailing where Op: protocol::Mutation<En1998Snapshot, Diff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_member_detailing::ChangeMemberDetailing> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "member-detailing",
@@ -22,12 +22,12 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMemberDeta
         record: "ChangeMemberDetailing",
     };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<En1998Mutation as protocol::Mutation<En1998Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1998Snapshot>>::Diff> {
+        crate::change_member_detailing::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_member_detailing::inverse::inverse(self, base)?
     
     })
 }
@@ -38,3 +38,10 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMemberDeta
         vec!["change-member-detailing".into()]
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

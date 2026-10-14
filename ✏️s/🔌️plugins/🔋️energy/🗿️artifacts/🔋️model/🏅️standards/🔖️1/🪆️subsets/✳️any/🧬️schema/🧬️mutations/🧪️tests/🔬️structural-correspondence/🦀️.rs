@@ -6,7 +6,7 @@ use protocol::SemanticMutation;
 /// which lives at `✳️any/🔮️oracles/🔣️.json`, never at a flat `🔣️oracle.json`.
 #[test]
 fn direct_owner_descriptors_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..");
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&catalog_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral oracle catalog must be valid JSON");
     let catalog_kinds: Vec<String> = catalog["mutationCatalogs"][0]["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("catalog kind is a string").to_string()).collect();

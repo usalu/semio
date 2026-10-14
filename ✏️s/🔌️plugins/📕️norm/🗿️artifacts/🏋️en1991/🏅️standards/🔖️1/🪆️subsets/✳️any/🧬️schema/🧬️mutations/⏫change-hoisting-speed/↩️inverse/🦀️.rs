@@ -1,9 +1,9 @@
 //! Inverse for `change-hoisting-speed`.
-use super::ChangeHoistingSpeed;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeHoistingSpeed, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_hoisting_speed::ChangeHoistingSpeed;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeHoistingSpeed, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_hoisting_speed::ChangeHoistingSpeed> {
     Ok((|| {
-    vec![En1991Mutation::ChangeHoistingSpeed(ChangeHoistingSpeed { new_hoisting_speed: base.hoisting_speed })]
+    vec![Op::from(ChangeHoistingSpeed { new_hoisting_speed: base.hoisting_speed })]
 
     })())
 }

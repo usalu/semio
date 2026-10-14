@@ -7,35 +7,35 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::LowpolyDiff;
-use crate::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-paint-layer/✖️switches/🎯️outcome/🔣️.json").leak());
 
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.
 fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
-    crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
+    semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
 }
 
 /// 🔒️ Re-encodes through the same codec so canonicality assertions compare like with like.
 fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
+    serde_json::from_str(&semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
 }
 
 fn before() -> LowpolySnapshot {
-    from_json(BEFORE)
+    from_json(*BEFORE)
 }
 fn expected_after() -> LowpolySnapshot {
-    from_json(AFTER)
+    from_json(*AFTER)
 }
 fn mutation() -> LowpolyMutation {
-    from_json(MUTATION)
+    from_json(*MUTATION)
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -61,14 +61,14 @@ async fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (side, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: LowpolySnapshot = from_json(text);
         let reencoded = to_json(&decoded);
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-paint-layer-blend-mode/switches-the-base-layer-to-multiply: committed {side} JSON is not canonical");
     }
     let reencoded = to_json(&mutation());
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-paint-layer-blend-mode/switches-the-base-layer-to-multiply: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +76,7 @@ async fn committed_json_is_canonical() {
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
         outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
@@ -117,16 +117,16 @@ async fn produces_committed_diff() {
     let base = before();
     let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation(), &base);
     let produced = to_json(raised.diff());
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-paint-layer-blend-mode/switches-the-base-layer-to-multiply: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: LowpolyDiff = from_json(DIFF);
+    let decoded: LowpolyDiff = from_json(*DIFF);
     let reencoded = to_json(&decoded);
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-paint-layer-blend-mode/switches-the-base-layer-to-multiply: committed diff JSON is not canonical");
 }
 
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of what `change-paint-layer-blend-mode` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: LowpolyDiff = from_json(DIFF);
+    let decoded: LowpolyDiff = from_json(*DIFF);
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-paint-layer-blend-mode/switches-the-base-layer-to-multiply: committed diff did not carry before to after");
 }

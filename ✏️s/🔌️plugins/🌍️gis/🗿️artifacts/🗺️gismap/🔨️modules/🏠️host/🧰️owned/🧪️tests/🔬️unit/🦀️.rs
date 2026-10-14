@@ -39,8 +39,8 @@ fn install_gis_map_owners(store: &mut store::ArtifactStore<GisMapSnapshot, GisMa
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_text_round_trips_through_store() {
     let initial = empty_gis_map_snapshot();
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     install_gis_map_owners(&mut store);
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -49,7 +49,7 @@ async fn gis_map_document_text_round_trips_through_store() {
 }
 
 fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisMapStoreInitializationAuthority {
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -240,7 +240,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
 
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         let expected = snapshot.clone();
-        let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None);
+        let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
         let mut authority = GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));

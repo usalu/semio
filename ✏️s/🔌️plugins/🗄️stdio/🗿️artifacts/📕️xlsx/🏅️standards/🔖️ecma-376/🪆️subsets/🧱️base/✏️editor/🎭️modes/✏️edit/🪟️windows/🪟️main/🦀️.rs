@@ -1,10 +1,14 @@
 //! 📊️ Windowed per-worksheet spreadsheet grids with revision-bound occupied and vacant cells.
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::render_xlsx_cell_value;
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::{xlsx_cell_address, xlsx_worksheet_address, XLSX_MAX_COLUMN, XLSX_MAX_ROW};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet};
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_worksheet_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::XLSX_MAX_COLUMN;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::XLSX_MAX_ROW;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_framework_plugin::app::{editable_table_window_row_at, tree_window_item, tree_window_section, TableWindowKit, WindowKit, WindowedEditableTableCell};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;

@@ -1,13 +1,13 @@
 //! ↩️ `change-bridge-sls` inverse.
 
-use super::ChangeBridgeSls;
-use crate::En1990Mutation;
-use crate::En1990Snapshot;
+use crate::change_bridge_sls::ChangeBridgeSls;
 
-pub fn inverse(mutation: &ChangeBridgeSls, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+
+pub fn inverse<Op>(mutation: &ChangeBridgeSls, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_bridge_sls::ChangeBridgeSls> {
     Ok((|| {
     let _ = mutation;
-    vec![En1990Mutation::ChangeBridgeSls(ChangeBridgeSls { new_bridge_sls: base.bridge_sls.clone() })]
+    vec![Op::from(ChangeBridgeSls { new_bridge_sls: base.bridge_sls.clone() })]
 
     })())
 }

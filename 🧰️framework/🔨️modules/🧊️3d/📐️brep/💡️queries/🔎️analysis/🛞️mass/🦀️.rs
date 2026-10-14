@@ -10,7 +10,7 @@ use semio_framework_3d::inertia::{combine, principal_inertia, InertiaPiece, Prin
 
 /// 🛞️ Volume, centroid and inertia about the centroid at unit density, with the principal frame.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct VolumetricMass {
     pub volume: f64,
     pub centroid: [f64; 3],
@@ -21,7 +21,7 @@ pub struct VolumetricMass {
 
 /// ⚖️ What a shape weighs: its boundary area, and its enclosed mass when it encloses volume.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeMassProperties {
     pub area: f64,
     pub area_centroid: Option<[f64; 3]>,

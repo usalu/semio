@@ -72,7 +72,7 @@ pub(crate) mod context {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
-        let envelope = store::os_store::document_materialize::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
+        let envelope = store::os_store::document_materialize::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print jack document pack");
         retire_writer_envelope(envelope);
         semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load jack");
@@ -177,7 +177,7 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot = crate::schema::empty_writer_snapshot();
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
-    let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     crate::host::owned::retire_writer_envelope(envelope);
     wire
 }

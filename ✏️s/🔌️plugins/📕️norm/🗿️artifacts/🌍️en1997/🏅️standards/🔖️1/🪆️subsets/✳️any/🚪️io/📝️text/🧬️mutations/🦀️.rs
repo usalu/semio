@@ -6,14 +6,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::document::AnnexChoice;
-use crate::artifact_schema::mutations::En1997Mutation;
-use crate::artifact_schema::mutations::{
-    change_annex, change_design_approach, change_design_situation, change_footing_embedment, change_footing_width, change_geotechnical_category, change_groundwater_level,
-    change_investigation_depth, change_layer_oedometric_modulus, change_layer_phi_prime, change_pile_count, change_pile_length, change_slope_angle, change_wall_base_width,
-    insert_footing, insert_layer, insert_pile, remove_footing, remove_layer, remove_pile,
-};
-use crate::{Pile, SoilLayer, SpreadFoundation};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
+use semio_s_artifact_norm_en1997_mut_design::{change_annex, change_design_approach, change_design_situation, change_geotechnical_category, change_groundwater_level, change_investigation_depth};
+use semio_s_artifact_norm_en1997_mut_foundations::{change_footing_embedment, change_footing_width, change_pile_count, change_pile_length, change_wall_base_width, insert_footing, insert_pile, remove_footing, remove_pile};
+use semio_s_artifact_norm_en1997_mut_ground::{change_layer_oedometric_modulus, change_layer_phi_prime, change_slope_angle, insert_layer, remove_layer};
+use semio_s_artifact_norm_en1997_model::{Pile, SoilLayer, SpreadFoundation};
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -73,7 +71,6 @@ impl OpText for En1997MutationDsl {
         semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
-
 
 //#endregion 🔖️HandcraftedOpCodecs
 
@@ -143,7 +140,6 @@ impl OpText for En1997Mutation {
     }
 }
 
-
 //#endregion 🔖️OpText
 
 //#region 🧪️Tests
@@ -154,37 +150,37 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::change_geotechnical_category;
-use crate::standards::v1::subsets::any::schema::mutations::change_design_situation;
-use crate::standards::v1::subsets::any::schema::mutations::change_design_approach;
-use crate::standards::v1::subsets::any::schema::mutations::change_groundwater_level;
-use crate::standards::v1::subsets::any::schema::mutations::change_investigation_depth;
-use crate::standards::v1::subsets::any::schema::mutations::change_footing_width;
-use crate::standards::v1::subsets::any::schema::mutations::change_footing_embedment;
-use crate::standards::v1::subsets::any::schema::mutations::change_pile_length;
-use crate::standards::v1::subsets::any::schema::mutations::change_pile_count;
-use crate::standards::v1::subsets::any::schema::mutations::change_wall_base_width;
-use crate::standards::v1::subsets::any::schema::mutations::change_slope_angle;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_phi_prime;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_oedometric_modulus;
-use crate::standards::v1::subsets::any::schema::mutations::insert_layer;
-use crate::standards::v1::subsets::any::schema::mutations::remove_layer;
-use crate::standards::v1::subsets::any::schema::mutations::insert_footing;
-use crate::standards::v1::subsets::any::schema::mutations::remove_footing;
-use crate::standards::v1::subsets::any::schema::mutations::insert_pile;
-use crate::standards::v1::subsets::any::schema::mutations::remove_pile;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1997_mutations::*;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_mut_design::change_annex;
+use semio_s_artifact_norm_en1997_mut_design::change_geotechnical_category;
+use semio_s_artifact_norm_en1997_mut_design::change_design_situation;
+use semio_s_artifact_norm_en1997_mut_design::change_design_approach;
+use semio_s_artifact_norm_en1997_mut_design::change_groundwater_level;
+use semio_s_artifact_norm_en1997_mut_design::change_investigation_depth;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_width;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_embedment;
+use semio_s_artifact_norm_en1997_mut_foundations::change_pile_length;
+use semio_s_artifact_norm_en1997_mut_foundations::change_pile_count;
+use semio_s_artifact_norm_en1997_mut_foundations::change_wall_base_width;
+use semio_s_artifact_norm_en1997_mut_ground::change_slope_angle;
+use semio_s_artifact_norm_en1997_mut_ground::change_layer_phi_prime;
+use semio_s_artifact_norm_en1997_mut_ground::change_layer_oedometric_modulus;
+use semio_s_artifact_norm_en1997_mut_ground::insert_layer;
+use semio_s_artifact_norm_en1997_mut_ground::remove_layer;
+use semio_s_artifact_norm_en1997_mut_foundations::insert_footing;
+use semio_s_artifact_norm_en1997_mut_foundations::remove_footing;
+use semio_s_artifact_norm_en1997_mut_foundations::insert_pile;
+use semio_s_artifact_norm_en1997_mut_foundations::remove_pile;
 
 /// 📥️ Decodes one committed mutation JSON document into [`En1997Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1997_mutation_json(text: &str) -> Result<En1997Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

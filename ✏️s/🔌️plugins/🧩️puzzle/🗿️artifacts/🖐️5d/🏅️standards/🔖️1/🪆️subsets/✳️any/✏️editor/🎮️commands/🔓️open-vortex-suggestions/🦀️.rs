@@ -4,7 +4,7 @@
 use crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush::run_effects;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects;
 
 /// 💡️ Opens the suggestion menu over the grip `fullId` WITHOUT arming the brush: as its own floating popup,
 /// or — `submenu: true` — as the regular context menu's "suggest" submenu, which the host opens the moment

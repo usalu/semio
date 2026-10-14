@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-editor-presence",
+ "description": "Procedural generation3d editor presence: the shared ephemeral collaborator presence, its mutations and codecs",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+ "moves": [
+  {
+   "from": "editor::generation3d::presence",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith"
+}

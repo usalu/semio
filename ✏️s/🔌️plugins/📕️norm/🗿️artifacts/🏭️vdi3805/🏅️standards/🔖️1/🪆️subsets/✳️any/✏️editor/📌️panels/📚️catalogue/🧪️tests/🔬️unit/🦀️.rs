@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::vdi3805::unit_tests::context;
+use crate::panels::catalogue::*;
+use crate::unit_tests::context;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -34,8 +34,8 @@ fn renders_reference_tables_with_examples() {
     let cop = tables.iter().find(|t| t.id == "heat-pump-cop").expect("COP table");
     let max_cell = cop.rows.iter().find(|r| r.id == "max").expect("max row").cells.get(1).expect("value");
     match max_cell {
-        crate::app_surface::CatalogueCell::Number { value, .. } => {
-            assert!((*value - crate::SHEET_NUMERIC_BOUNDS_53_COP.1).abs() < 1e-12, "catalogue COP max must equal evaluate const");
+        semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => {
+            assert!((*value - semio_s_artifact_norm_vdi3805_model::SHEET_NUMERIC_BOUNDS_53_COP.1).abs() < 1e-12, "catalogue COP max must equal evaluate const");
         }
         _ => panic!("COP max must be numeric"),
     };

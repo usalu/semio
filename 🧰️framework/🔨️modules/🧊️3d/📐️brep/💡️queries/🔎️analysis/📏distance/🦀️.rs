@@ -19,7 +19,7 @@ use semio_framework_3d_brep_vector::Pnt3;
 
 /// 📍 The nearest pair of points between two shapes.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ClosestPair {
     pub distance: f64,
     pub point_a: [f64; 3],
@@ -28,7 +28,7 @@ pub struct ClosestPair {
 
 /// 🧲 The nearest point of a shape to a query point; `signed` is negative inside a solid or compound.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct PointDistance {
     pub distance: f64,
     pub closest: [f64; 3],

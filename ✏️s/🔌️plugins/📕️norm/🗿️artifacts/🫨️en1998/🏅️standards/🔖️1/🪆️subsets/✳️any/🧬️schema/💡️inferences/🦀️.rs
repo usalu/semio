@@ -1,8 +1,16 @@
 //! 💡️ En1998 inference schema + full seismic evaluate with remedies.
 
-use crate::En1998Snapshot;
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::standards::v1::subsets::any::schema::{na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1998_schema::{na_de, part_1, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -64,7 +72,6 @@ fn q_press(pa: f64) -> Quantity { Quantity::new(QuantityKind::Pressure, pa) }
 fn q_mom(nm: f64) -> Quantity { Quantity::new(QuantityKind::Moment, nm) }
 
 fn lc(en: &str, de: &str) -> LocalizedCopy { LocalizedCopy::new(en, de) }
-
 
 fn id_sel(collection: &str, id: &str) -> String {
     format!("{collection}[id={id}]")
@@ -161,7 +168,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
                     SubjectRef::new("", "site.aGr", lc("Reference PGA a_gR", "Bezugsspitzenwert a_gR")),
                     lc("DE a_gR derived from seismic zone", "DE a_gR aus Erdbebenzone"),
                 )
-                .status(crate::document::CheckStatus::Warning)
+                .status(semio_s_plugin_norm_compliance::CheckStatus::Warning)
                 .annex(annex)
                 .explanation(lc(
                     &format!("DE annex derives a_gR={derived} m/s² from zone; site.aGr={:.3} is ignored for spectrum.", document.site.a_gr),
@@ -190,7 +197,6 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
                 .build(),
         );
     }
-
 
     for building in &document.buildings {
         let bid = &building.id;
@@ -229,7 +235,6 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
             _ => part_1::t1_from_ct(building.ct, total_height),
         };
 
-
         {
             let using_given = building.t1_method.to_ascii_lowercase() == "given";
             let mut tg = CheckResult::assess(
@@ -246,7 +251,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
                 &format!("t1Verfahren={}, t1Given={:.3} s, T1={t1:.3} s", building.t1_method, building.t1_given_s),
             ));
             if !using_given && building.t1_given_s > 0.05 {
-                tg = tg.status(crate::document::CheckStatus::Fail).remedy(Remedy::at_most(
+                tg = tg.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::at_most(
                     SubjectRef::new(bid, format!("{bpath}.t1GivenS"), lc("Given T1", "Vorgegebenes T1")),
                     q_len(building.t1_given_s),
                     q_len(0.0),
@@ -384,7 +389,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
             )
             .utilization(q_len(building.plan_width_m), q_len(building.plan_length_m.max(0.01)))
             .annex(annex)
-            .status(if ok { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail })
+            .status(if ok { semio_s_plugin_norm_compliance::CheckStatus::Pass } else { semio_s_plugin_norm_compliance::CheckStatus::Fail })
             .explanation(lc(
                 &format!("plan width Lx={:.2} m, plan length Ly={:.2} m", building.plan_width_m, building.plan_length_m),
                 &format!("Grundrissbreite Lx={:.2} m, Grundrisslänge Ly={:.2} m", building.plan_width_m, building.plan_length_m),
@@ -459,7 +464,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
                 lc("Lateral force method applicability", "Anwendbarkeit des Kraftgrössenverfahrens"),
             )
             .utilization(q_dim(if lfm_ok { 0.5 } else { 0.95 }), q_dim(1.0))
-            .status(if lfm_ok { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Warning })
+            .status(if lfm_ok { semio_s_plugin_norm_compliance::CheckStatus::Pass } else { semio_s_plugin_norm_compliance::CheckStatus::Warning })
             .annex(annex)
             .explanation(lc(
                 &format!("T1={t1:.3}s (method={}, t1Given={:.3}s), TC={tc:.3}s, elevationRegular={}", building.t1_method, building.t1_given_s, building.elevation_regular),
@@ -859,7 +864,7 @@ if member.role.to_ascii_lowercase() == "beam" {
                     .annex(annex)
                     .explanation(lc(&format!("ρ={:.4}, limits [{rho_min:.4}, {rho_max:.4}]", member.rho), &format!("ρ={:.4}, Grenzen [{rho_min:.4}, {rho_max:.4}]", member.rho)));
                     if !ok_rho {
-                        c = c.status(crate::document::CheckStatus::Fail);
+                        c = c.status(semio_s_plugin_norm_compliance::CheckStatus::Fail);
                     }
                     if member.rho + 1e-12 < rho_min {
                         c = c.remedy(Remedy::at_least(
@@ -878,7 +883,6 @@ if member.role.to_ascii_lowercase() == "beam" {
                     }
                     report.push(c.build());
 
-
                     {
                         let mut sc = CheckResult::assess(
                             format!("en1998.1.{bid}.member.{}.rc.noSteelClass", member.id),
@@ -894,7 +898,7 @@ if member.role.to_ascii_lowercase() == "beam" {
                             &format!("Stahl-Querschnittsklasse={} (muss 0 für Stahlbeton sein)", member.steel_section_class),
                         ));
                         if member.steel_section_class != 0 {
-                            sc = sc.status(crate::document::CheckStatus::Fail).remedy(Remedy::exactly(
+                            sc = sc.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::exactly(
                                 SubjectRef::new(bid, format!("{mpath}.steelSectionClass"), lc("Steel section class", "Stahl-Querschnittsklasse")),
                                 q_dim(member.steel_section_class as f64),
                                 q_dim(0.0),
@@ -1044,14 +1048,14 @@ if member.role.to_ascii_lowercase() == "beam" {
                     &format!("Beansprucht={}, Wandanteil={:.3}, erforderlich≥{:.3}", claiming, building.masonry_wall_area_ratio, limit),
                 ));
                 if claiming && building.masonry_wall_area_ratio + 1e-12 < limit {
-                    m = m.status(crate::document::CheckStatus::Fail).remedy(Remedy::at_least(
+                    m = m.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::at_least(
                         SubjectRef::new(bid, format!("{bpath}.masonryWallAreaRatio"), lc("Wall area ratio", "Wandflächenanteil")),
                         q_dim(building.masonry_wall_area_ratio),
                         q_dim(limit),
                         lc(&format!("Increase masonry wall area ratio to at least {limit:.3}."), &format!("Mauerwerks-Wandanteil auf mindestens {limit:.3} erhöhen.")),
                     ));
                 } else {
-                    m = m.status(crate::document::CheckStatus::Pass);
+                    m = m.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
                 }
                 report.push(m.build());
             }
@@ -1065,7 +1069,6 @@ if member.role.to_ascii_lowercase() == "beam" {
     evaluate_towers(&mut report, document, &annex_params, gamma_i, a_g, s, tb, tc, td);
     report
 }
-
 
 fn push_duplicate_ids(report: &mut CheckReport, annex: AnnexChoice, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
     let mut counts = std::collections::BTreeMap::<String, usize>::new();
@@ -1093,7 +1096,7 @@ fn push_duplicate_ids(report: &mut CheckReport, annex: AnnexChoice, table: &str,
                 &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
                 &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
             ))
-            .status(crate::document::CheckStatus::Fail)
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
             .remedy(Remedy::one_of(
                 subject,
                 free,
@@ -1161,7 +1164,7 @@ fn evaluate_bridges(report: &mut CheckReport, document: &En1998Snapshot, annex_p
                 &format!("Periodenverhältnis={:.3}, q_isol={q_isol:.3}", bridge.period_ratio),
             ));
             if bridge.period_ratio < 1.0 {
-                pr = pr.status(crate::document::CheckStatus::Fail).remedy(Remedy::at_least(
+                pr = pr.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::at_least(
                     SubjectRef::new(&bridge.id, format!("{}.periodRatio", id_sel("bridges", &bridge.id)), lc("Period ratio", "Periodenverhältnis")),
                     q_dim(bridge.period_ratio),
                     q_dim(1.0),
@@ -1219,7 +1222,7 @@ fn evaluate_assessments(report: &mut CheckReport, document: &En1998Snapshot, ann
                 let building_ids: Vec<String> = document.buildings.iter().map(|b| b.id.clone()).collect();
                 let opts = if building_ids.is_empty() { vec![format!("{}-missing", a.supported_building_id)] } else { building_ids };
                 href = href
-                    .status(crate::document::CheckStatus::Fail)
+                    .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
                     .remedy(Remedy::one_of(
                         SubjectRef::new(&a.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
                         opts,
@@ -1355,7 +1358,7 @@ fn evaluate_foundations_walls(report: &mut CheckReport, document: &En1998Snapsho
                 let building_ids: Vec<String> = document.buildings.iter().map(|b| b.id.clone()).collect();
                 let opts = if building_ids.is_empty() { vec![format!("{}-missing", f.supported_building_id)] } else { building_ids };
                 href = href
-                    .status(crate::document::CheckStatus::Fail)
+                    .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
                     .remedy(Remedy::one_of(
                         SubjectRef::new(&f.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
                         opts,
@@ -1395,7 +1398,7 @@ fn evaluate_foundations_walls(report: &mut CheckReport, document: &En1998Snapsho
                 SubjectRef::new(&f.id, format!("{path}.kFoundation"), lc(&f.id, &f.id)),
                 lc("Foundation radiation damping ξ", "Abstrahlungsdämpfung ξ der Gründung"),
             )
-            .status(crate::document::CheckStatus::Pass)
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Pass)
             .utilization(q_dim(xi), q_dim(1.0))
             .annex(annex)
             .explanation(lc(&format!("ξ={xi:.3} from k_f/k_s",), &format!("ξ={xi:.3} aus k_f/k_s")))
@@ -1458,4 +1461,9 @@ mod tests;
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 
-pub use super::outline::En1998Outline;
+pub use crate::outline::En1998Outline;
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

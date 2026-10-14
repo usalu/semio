@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeDomain` — patches the document `domain`.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

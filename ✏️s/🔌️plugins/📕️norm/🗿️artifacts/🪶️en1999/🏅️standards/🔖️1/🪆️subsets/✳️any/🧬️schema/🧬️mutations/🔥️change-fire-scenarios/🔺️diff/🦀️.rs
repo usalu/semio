@@ -1,8 +1,8 @@
 //! 🔺️ `change-fire-scenarios` diff.
 
-use crate::mutations::change_fire_scenarios::ChangeFireScenarios;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999FireScenariosRows};
+use crate::change_fire_scenarios::ChangeFireScenarios;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999FireScenariosRows};
 
 pub fn diff(payload: &ChangeFireScenarios, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.fire_scenarios == &payload.fire_scenarios {

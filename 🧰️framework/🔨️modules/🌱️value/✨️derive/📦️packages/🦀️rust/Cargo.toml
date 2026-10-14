@@ -9,6 +9,7 @@ description = "Proc-macros for #[derive(ToValue, FromValue)] with #[value(...)] 
 [package.metadata.semio]
 role = "framework"
 id = "value-derive"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

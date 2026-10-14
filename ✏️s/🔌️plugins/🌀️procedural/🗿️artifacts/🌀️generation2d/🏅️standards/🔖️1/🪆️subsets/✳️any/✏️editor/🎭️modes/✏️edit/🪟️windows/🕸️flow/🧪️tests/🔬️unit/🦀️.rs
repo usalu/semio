@@ -1,5 +1,10 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN;
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_plugin::NodeGraphScene;
+use semio_framework_plugin::SurfaceKind;
+use semio_s_artifact_procedural_2d_mode_edit::windows::flow::*;
+use crate::app_fixture::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_main_graph_scene() {
@@ -25,7 +30,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     );
     assert!(scene.capabilities_json.as_deref().is_some_and(|capabilities| capabilities.contains("flow")));
     let domain = scene.interaction_domain.as_ref().expect("flow window must stamp NodeGraphInteractionDomain");
-    assert_eq!(domain.id, crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN);
+    assert_eq!(domain.id, semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN);
     assert!(!domain.node_target_prefix.is_empty());
     assert!(!domain.edge_target_prefix.is_empty());
     assert!(!domain.handle_target_prefix.is_empty());
@@ -41,7 +46,7 @@ async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
 /// main window's `selection` field.
 #[test]
 fn render_paints_the_selection_it_is_handed() {
-    let document = crate::Generation2dSnapshot::default();
+    let document = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot::default();
     let config = config::Generation2dMainWindowConfig::default();
     let session = FlowEvalSession::new();
     let selection = vec!["slider".into(), "rect".into()];

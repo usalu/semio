@@ -19,7 +19,7 @@
 //! Every helper below is a read-only TWIN of the sibling surface's own — duplicated, never imported
 //! (`policyViewerPurityBreaches` forbids a viewer file importing through `✏️editor`).
 
-use crate::viewer::generation3d::config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_framework_pack_json::{Object, Value};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::world3d_scene;
@@ -156,7 +156,7 @@ impl Generation3dViewMarks {
 /// legal for a viewer — it is mounted at the ARTIFACT level (`crate::preview_eval`), never reached
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 

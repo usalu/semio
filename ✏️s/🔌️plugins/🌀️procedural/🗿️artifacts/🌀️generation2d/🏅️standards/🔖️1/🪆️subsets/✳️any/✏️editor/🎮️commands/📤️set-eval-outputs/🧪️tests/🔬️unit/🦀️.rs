@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, snapshot_read};
-use crate::editor::generation2d::Generation2dCommand;
+use semio_s_artifact_procedural_2d_editor_commands::set_eval_outputs::*;
+use crate::app_fixture::{app, close, dispatch, snapshot_read};
+use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_eval_outputs_does_not_mutate_the_document() {

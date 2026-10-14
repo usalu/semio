@@ -19,7 +19,7 @@ path = "🦀️.rs"
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-graph.workspace = true
+semio-framework-graph-manifest.workspace = true
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-s-artifact-flow-flow = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

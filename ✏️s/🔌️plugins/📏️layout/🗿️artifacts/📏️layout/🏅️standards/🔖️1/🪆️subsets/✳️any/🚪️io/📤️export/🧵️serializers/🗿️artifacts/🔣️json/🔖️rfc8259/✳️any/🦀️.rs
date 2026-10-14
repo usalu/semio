@@ -1,5 +1,5 @@
 //! 🧾️ Serialize layout through the first-party JSON artifact codec.
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::{JsonSnapshot};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
 

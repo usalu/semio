@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type Process3dDiffText = String;
 //#endregion 🚚️Carrier
 
-impl semio_framework_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::Process3dDiff {
+impl semio_framework_os_kernel::DiffText for crate::Process3dDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

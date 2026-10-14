@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "validationRecord",
+  "id": "validation-record-a",
+  "newName": "Renamed Validation Record A"
+}

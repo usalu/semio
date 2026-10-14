@@ -1,7 +1,7 @@
 //! 🧪️ `set-format` inverse law: every demo mutation of this kind that the committed base accepts is undone by its own inverse
 //! rows, replayed last-to-first, and those rows' diffs sum to the negative of the forward diff.
 
-use super::*;
+use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::tests::*;
 
 #[semio_framework_async_macros::async_test]
 async fn demo_mutations_of_this_kind_invert_and_sum_to_the_negative_diff() {

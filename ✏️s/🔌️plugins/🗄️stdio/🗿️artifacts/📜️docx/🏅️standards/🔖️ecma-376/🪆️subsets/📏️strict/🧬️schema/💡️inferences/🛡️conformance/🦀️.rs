@@ -1,8 +1,8 @@
 //! 🛡️ Logical Docx Strict conformance facts and diagnostics.
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_framework_diagnostic::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use semio_s_artifact_stdio_xml::schema::snapshot::markup_facts::XmlMarkupFacts;
-use crate::schema::snapshot::DocxXmlPart;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
 //#region 🔖️Namespaces

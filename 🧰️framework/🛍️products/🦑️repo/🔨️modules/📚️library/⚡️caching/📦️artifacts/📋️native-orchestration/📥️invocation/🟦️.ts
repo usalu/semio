@@ -1,5 +1,6 @@
 import schema from "./🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {cargoExecutionSchemaV1,type CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import callerSchema from "../../../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import buildCallerSchema from "../../../../🏗️build/🧬️schema/📥️caller.json";
 import {resolve} from "node:path";
@@ -17,11 +18,12 @@ export interface NativeOwnerCapabilities {
   readonly transport: Readonly<{ maximumBytes: number; maximumLines: number }>;
   readonly child: Readonly<{ maximumElapsedMilliseconds: number }>;
   readonly network: Readonly<{ offline: boolean }>;
+  readonly cargoExecutionBackend?:CargoExecutionBackendV1;
 }
 
 /** 🔐️ Refuses missing caller grants before native input or child acquisition. */
 export function readNativeOwnerCapabilities(value: unknown): NativeOwnerCapabilities {
-  if (validateJsonSchemaSubset(schema, value).length) throw Error("Original native caller capabilities required");
+  if (validateJsonSchemaSubset(schema, value,schema,[cargoExecutionSchemaV1]).length) throw Error("Original native caller capabilities required");
   return value as NativeOwnerCapabilities;
 }
 

@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `DeleteConstantSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, ScheduleSetPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteConstantSchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

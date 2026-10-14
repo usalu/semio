@@ -1,0 +1,115 @@
+{
+ "about": "B0 ownership rules, first match wins. Sources: 📓️2026-10-14-split-wave-brief.md (lanes), 📓️2026-10-14-split-f1.md §1/§6 (F1 scope and skips), 📓️2026-10-14-split-p9.md (P9 scope), 📓️2026-10-14-wave-e2b-plugin.md, 📓️2026-10-14-wave-e4-3d-architect-bim.md, 📓️2026-10-14-peer-scope-map.md §1 and the lane instruction (peer fleet A: kernel, UI, history, directory, store, value, dsl, geometry; brief adds job and pack). Coordinator/U1 input 2026-10-15: peer A also owns replication, semio-framework, actor, tool-run; semio-framework-2d belongs to X2D.",
+ "rules": [
+  {
+   "lane": "E3b",
+   "status": "owned",
+   "name": "^semio-s-artifact-stdio-(pdf|dwg|gltf|step)(-|$)"
+  },
+  {
+   "lane": "E4",
+   "status": "owned",
+   "name": "^semio-s-artifact-(bim|architect)-|^semio-framework-3d(-|$)"
+  },
+  {
+   "lane": "E2b",
+   "status": "owned (extraction not started)",
+   "manifest": "💻️os/🔨️modules/🔌️plugin/"
+  },
+  {
+   "lane": "X2D",
+   "status": "owned (coordinator/U1 2026-10-15)",
+   "name": "^semio-framework-2d$"
+  },
+  {
+   "lane": "peer A",
+   "status": "owned (fleet A per coordinator/U1 2026-10-15)",
+   "name": "^(semio-framework|semio-framework-replication|semio-framework-actor|semio-framework-tool-run)$"
+  },
+  {
+   "lane": "peer A",
+   "status": "owned (fleet A)",
+   "name": "^semio-framework-(os-kernel|os-kernel-db|ui|ui-.*|job|pack|pack-.*|value|value-.*|dsl|dsl-.*|geometry|geometry-.*)$"
+  },
+  {
+   "lane": "peer A",
+   "status": "owned (fleet A)",
+   "manifest": "🔨️modules/(🏪️store|📇️directory)/|📡️spr/📜️history/"
+  },
+  {
+   "lane": "peer A",
+   "status": "owned (fleet A per peer map / F1 §6)",
+   "name": "^semio-framework-(canvas|os-renderer-wgpu)$"
+  },
+  {
+   "lane": "peer Storage",
+   "status": "owned (fleet A Storage, F1 §6)",
+   "name": "^semio-framework-io-sqlite-snapshot$"
+  },
+  {
+   "lane": "F1",
+   "status": "skipped by F1 (CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT active)",
+   "name": "^(semio-framework-os-infinite|semio-framework-artifact-infinite-dag|semio-framework-os-flow|semio-framework-artifact-flow-flow|semio-hub-space)$"
+  },
+  {
+   "lane": "F1",
+   "status": "skipped by F1 (fleet A consumers)",
+   "name": "^(semio-framework|semio-framework-replication|semio-framework-surface|semio-framework-compiler)$"
+  },
+  {
+   "lane": "F1",
+   "status": "skipped by F1 (not started)",
+   "name": "^(semio-framework-tool-run|semio-framework-os|semio-framework-artifact-workflow-workflow)$"
+  },
+  {
+   "lane": "P1",
+   "status": "owned",
+   "manifest": "🔌️plugins/🔋️energy/|🧩️compositions/🔋️energy/"
+  },
+  {
+   "lane": "P2",
+   "status": "owned (done in source)",
+   "manifest": "🔌️plugins/📸️remodel/|🧩️compositions/📸️remodel/"
+  },
+  {
+   "lane": "P3",
+   "status": "owned",
+   "manifest": "🔌️plugins/🌀️procedural/|🧩️compositions/🌀️procedural/"
+  },
+  {
+   "lane": "P4",
+   "status": "owned",
+   "manifest": "🔌️plugins/🧩️puzzle/|🧩️compositions/🧩️puzzle/"
+  },
+  {
+   "lane": "P5",
+   "status": "owned",
+   "manifest": "🔌️plugins/🏗️fem/|🧩️compositions/🏗️fem/"
+  },
+  {
+   "lane": "P6",
+   "status": "owned",
+   "manifest": "🔌️plugins/(🖍️draw|📏️layout|🗒️note|🖨️raster)/|🧩️compositions/(🖍️draw|📏️layout|🗒️note|🖨️raster)/"
+  },
+  {
+   "lane": "P7",
+   "status": "owned",
+   "manifest": "🔌️plugins/(📐️cad|🏭️process|💠️lowpoly|🌍️gis)/|🧩️compositions/(📐️cad|🏭️process|💠️lowpoly|🌍️gis)/"
+  },
+  {
+   "lane": "P7",
+   "status": "owned per brief (P7 measured it, no cut yet)",
+   "manifest": "🔌️plugins/(🎞️animate|🎥️shooting|📋️forms)/|🧩️compositions/(🎞️animate|🎥️shooting|📋️forms)/"
+  },
+  {
+   "lane": "P8",
+   "status": "owned",
+   "manifest": "🔌️plugins/🗄️stdio/|🧩️compositions/🗄️stdio/"
+  },
+  {
+   "lane": "P9",
+   "status": "owned",
+   "manifest": "^✏️s/🔌️plugins/|^🌎️hub/🧩️compositions/"
+  }
+ ]
+}

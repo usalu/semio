@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/📸️snapshot/⬅️before/🔣️.json");

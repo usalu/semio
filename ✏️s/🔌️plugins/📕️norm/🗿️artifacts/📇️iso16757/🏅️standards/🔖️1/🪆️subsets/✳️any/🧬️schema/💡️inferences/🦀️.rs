@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::Iso16757Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -74,21 +82,18 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ Full ISO 16757 compliance report — Parts 1/2/4/5 over the complete catalogue subject.
-#[path = "⚖️checks/🦀️.rs"]
-mod checks;
 
-pub fn evaluate(document: &Iso16757Snapshot) -> crate::document::CheckReport {
-    checks::evaluate_all(document)
+pub fn evaluate(document: &Iso16757Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+    semio_s_artifact_norm_iso16757_checks::evaluate_all(document)
 }
 //#endregion 🔖️ComplianceReport
 
-//#region 🧪️ComplianceReportTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
-mod compliance_report_tests;
-//#endregion 🧪️ComplianceReportTests
-
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::Iso16757Outline;
+pub use crate::outline::Iso16757Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

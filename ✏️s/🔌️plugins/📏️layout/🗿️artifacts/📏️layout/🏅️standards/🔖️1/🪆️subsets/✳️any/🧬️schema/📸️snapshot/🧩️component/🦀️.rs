@@ -1,5 +1,7 @@
 //! 🧩️ Literal Layout child metadata and guarded inline Drawing field ownership.
-use crate::{store,LayoutDrawingChild,SemioDrawingSnapshot};
+use semio_framework_os_kernel;
+use crate::LayoutDrawingChild;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_framework_value::{DecodedValue,FromValue,ToValue,ValueError,ValueRefusalKind};
 
 pub fn spec<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{

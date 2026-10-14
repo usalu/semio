@@ -1,0 +1,23 @@
+# Product Actor Integration Original GUI Capture
+
+Inspected both current launch.json and authored launch seed. The exact existing row is `🌉️Plugin Host · General Actor Integration Source`, command `bun repo run @semio-tech/framework-plugin-host:test-original-actor-boundary-source`, group4_gate/order900.8277. Its finite initial policy is plugin-host:original-actor-boundary:caller,600000ms; its old raw `{}` capability override is absent. The owning OriginalActorBoundarySourceScript retains seven exact integration law files and two sequential30000ms phases, strict types and Bun source. No phase or initial budget was changed.
+
+## Actual Initial Caller and Source
+
+The retained input `product-actor-integration-inputs/📜️script.ts` rejected inherited process invocation, capability or private custody. It captured the actual row and launch SHA in `product-actor-integration-gui-caller1.json`, applied only output/artifact redirection to this ticket, called the defining configured createBuildBootstrapCapabilitiesV1 once before the first envelope, retained the complete returned object, and passed that same unchanged full JSON to the untouched registered argv. No capabilities were constructed or altered.
+
+The actual full factory selected Nx/prototype with configured network.offline=false; its seven fields tool/workspaceRoot/arguments/selection/buildMode/native/launches are retained in `🗑️generated/product-actor-integration-current/factory.json`. The registered child PID3900 started `2026-10-14T19:36:33.815Z`, controlling exec session93839. These identify this capture; generic phases do not establish a lease holder. The source snapshot input `product-actor-integration-source-inputs1.json` records18 paths read during the running capture: exact seven mounted laws, owner script, codec owner/schema/facade/receiving fields and changed General/Product codec laws. These snapshots document reads, not fresh graph authority or assertion acceptance.
+
+The generated lifetime law is mounted in this route. The separate component-codec-reply generated worker law and General codec suite are not directly mounted here and cannot be qualified by a successful unrelated subset. Root's parallel Actor12 route was not duplicated. Codec/Product sources were held throughout this capture; concurrent logical owners remain responsible for their own files.
+
+## Actual Terminal and Qualification
+
+Actual console records immutable generation `50954f5302d671e30baa0e8c64007e80631b27adf99ed9991b15ead97a2bbadf` reused. This is the received genuine identity, with no inference about why it differs from the earlier6b generation and no new initializer by this owner. The route then reports build:catalog-manifests. At349s the strict/source phases and assertion runner had not begun. Original600000ms remains bound.
+
+The capture is terminal: exit1, recorder elapsed600424ms under unchanged initial600000ms. Exact console refuses `Original Script deadline refused` at checkScriptInvocation:38:194, from graph/🟦️.ts:256:460, through closeBuildOwnerAdmissionV1 at admission/🟦️.ts:50:72. This is graph owner-admission closure deadline evidence, not a failed Product assertion or an inferred invalid registry identity.
+
+The retained phase receipt records selected-source-inputs20, selected-compile-imports328, catalog-manifests142, cargo-owners74, commands complete1, and cargo-targets57. These are progress-event counts, not numbers of projects or proof of complete source closure. Neither plugin-host types/source phase began, no Bun-test startup appeared and zero assertion markers were collected. Therefore the seven Product laws, generated codec lifetime law, separate generated worker request laws and General/native consumer acceptance remain unqualified by this capture.
+
+The full unchanged actual factory SHA is `ba534b355867bb68e7c106922115d434762aa8baf79164c0526c9d9c2d54ca13`; result.json, current.log and phase-receipt.json retain the exact terminal. The18 read-during-capture source snapshots matched terminal bytes in source-terminal-comparison.json. That comparison does not substitute for actual fresh graph authority or assertions. This owner made no Source edits during capture and performed no raw Bun/Cargo/ticket Nx, graph reuse flag, unsafe all-scope fallback, storage reset, offline/quota override, Source reissuance, extra capture or foreign process action.
+
+Root received the exact closure/deadline diagnostic for its ScopeHigh owner. Codec/Product capture hold can release after this terminal receipt; no duplicate route or initializer was started. Earlier pure semantic/oracle probes and immutable dependency reuse do not establish this actual Product source acceptance.

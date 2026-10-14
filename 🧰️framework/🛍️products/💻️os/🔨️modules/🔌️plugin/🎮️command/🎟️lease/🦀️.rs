@@ -69,7 +69,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M> {
     }
     fn close_original_tool_lease(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         let demand=self.original_tool_lease_close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_items==0||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if grant.maximum_items==0||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if self.pending_tool_lease_admission.is_none(){if let Some((permit,identity))=self.pending_media_import_permit.take(){
             let FrameworkReservedCommitPermit{operation,lease,..}=permit;let instance=lease.key.app_instance_id;
             *self.pending_tool_lease_admission=Some(OriginalToolLeaseAdmission{source:ManuallyDrop::new(None),verb:ManuallyDrop::new(None),operation:Some(operation),lease:ManuallyDrop::new(Some(lease)),retirement:ManuallyDrop::new(None),instance,identity,keyed:true,copied:true,returning:true});

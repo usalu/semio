@@ -1,8 +1,7 @@
 //! 🎥 Block5d mutation — `MoveCamera2d`: the 2D-projection window camera's `x`/`y` pan position.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🎥 `move-camera2d` payload.
@@ -19,19 +18,19 @@ pub struct MoveCamera2d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_camera2d(new_x: f64, new_y: f64) -> Block5dMutation {
-    Block5dMutation::MoveCamera2d(MoveCamera2d { new_x, new_y })
+pub fn move_camera2d<Op: From<crate::move_camera2d::MoveCamera2d>>(new_x: f64, new_y: f64) -> Op {
+    Op::from(MoveCamera2d { new_x, new_y })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveCamera2d {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for MoveCamera2d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::move_camera2d::MoveCamera2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "camera2d", kind: "move-camera2d", record: "MovedCamera2d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::move_camera2d::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::move_camera2d::inverse::inverse(self, base)?
     
     })
 }
@@ -40,3 +39,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for MoveCamera2d {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

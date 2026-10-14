@@ -1,6 +1,6 @@
-use crate::document::CheckStatus;
-use crate::artifact_schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::io::text::snapshot::decode_en1991_dsl;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_en1991_inferences::evaluate;
+use semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_dsl;
 
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_decodes_and_evaluates() {

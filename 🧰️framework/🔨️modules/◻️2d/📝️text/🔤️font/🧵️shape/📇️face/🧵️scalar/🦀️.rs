@@ -1,5 +1,7 @@
 //! 🧬️ Font-dependent canonical fallback probes original Unicode decomposition without reconstructing text.
-use super::{FontMappedScalar,super::{super::{FontFace,FontCmapCursor,FontReader,FontProgress},unicode::{UnicodeLayout,UnicodeMapping,UnicodeMappingCursor,UnicodePropertyCursor,normalize::NormalizedScalar}}};
+use super::FontMappedScalar;
+use semio_framework_2d_text_font::{FontFace,FontCmapCursor,FontReader,FontProgress};
+use semio_framework_2d_text_font_shape_unicode::{UnicodeLayout,UnicodeMapping,UnicodeMappingCursor,UnicodePropertyCursor,normalize::NormalizedScalar};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy)]
 struct Pending{scalar:u32,depth:usize}

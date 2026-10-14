@@ -1,8 +1,8 @@
 //! 🔀️ `reorder-members`.
 
-use crate::diff::En1992Diff;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,14 +15,21 @@ pub struct ReorderMembers {
     pub to_index: usize,
 }
 
-impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ReorderMembers {
+impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ReorderMembers where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::reorder_members::ReorderMembers> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "member", kind: "reorder-members", record: "ReorderedMembers" };
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::reorder_members::diff::diff(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::reorder_members::inverse::inverse(self, base)? 
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move member #{} to #{}", self.from_index, self.to_index), &format!("Bauteil von #{} nach #{} verschieben", self.from_index, self.to_index))
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

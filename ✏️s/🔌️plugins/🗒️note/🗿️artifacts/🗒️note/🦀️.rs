@@ -1,5 +1,6 @@
 //! 📝️ Note artifact — the document entity this plugin's app edits: an infinite-canvas block tree
 //! (text/image/table/math/ink/group blocks).
+use semio_framework_plugin::PluginBuilder;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -35,7 +36,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.note.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
         ("s.note.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
         // 🐛️ Pre-existing gap (found while verifying ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-
-        // PLUGIN-RUNTIME E2-builder-descriptor's proof migration: `Plugin::builder("note")...
+        // PLUGIN-RUNTIME E2-builder-descriptor's proof migration: `PluginBuilder::new("note")...
         // try_build()` was silently failing assembly — `PluginAssemblyError{code:"artifact-
         // definition.runtime-capability", message:"no declared composer capability owns the
         // runtime claims"}` — never surfaced before because nothing checked `try_build()`'s

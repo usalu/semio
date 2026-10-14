@@ -1,9 +1,9 @@
 //! Inverse for `change-assumed-crane-wheel`.
-use super::ChangeAssumedCraneWheel;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAssumedCraneWheel, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_assumed_crane_wheel::ChangeAssumedCraneWheel;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAssumedCraneWheel, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_assumed_crane_wheel::ChangeAssumedCraneWheel> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAssumedCraneWheel(ChangeAssumedCraneWheel { new_assumed_crane_wheel: base.assumed_crane_wheel })]
+    vec![Op::from(ChangeAssumedCraneWheel { new_assumed_crane_wheel: base.assumed_crane_wheel })]
 
     })())
 }

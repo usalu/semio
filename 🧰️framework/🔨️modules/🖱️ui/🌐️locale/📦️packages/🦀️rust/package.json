@@ -2,10 +2,10 @@
   "name": "@semio-tech/ui-locale-rs",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache",
-    "test-quick": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache -- quick",
-    "test-long": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache -- long",
-    "test-exhaustive": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache -- exhaustive"
+    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache",
+    "test-quick": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache -- quick",
+    "test-long": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache -- long",
+    "test-exhaustive": "bun --cwd \"../../../../../..\" repo run @semio-tech/ui-locale-rs:test --skip-cache -- exhaustive"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

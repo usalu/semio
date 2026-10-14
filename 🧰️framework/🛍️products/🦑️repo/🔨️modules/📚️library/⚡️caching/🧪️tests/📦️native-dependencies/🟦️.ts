@@ -21,7 +21,7 @@ export async function testNativeDependencies(workspace: string, output: string):
   for (const value of Object.values(graph.metafile.outputs) as { imports: { path: string }[] }[]) for (const dependency of value.imports) assert.ok(dependency.path.startsWith("node:"), dependency.path);
   const { prepareDependencies, NativeDependenciesScript } = await import(pathToFileURL(join(workspace, fixture.entry)).href);
   const { runNativeDependencyToolV1 } = await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
-  const storage={version:1 as const,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program};
+  const storage={version:1 as const,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program};
   const root = mkdtempSync(join(output, "native-sync-")), controller = new AbortController(),started=performance.now(),progress:string[]=[];
   const remaining=()=>fixture.originalNativeControl.maximumElapsedMilliseconds-(performance.now()-started),publish=async(event:unknown)=>{progress.push(JSON.stringify(event));await setImmediate();},continuation=async()=>{progress.push("yield");await setImmediate();};
   const controlFor=(signal:AbortSignal)=>({signal,remainingMilliseconds:remaining,publish,yieldContinuation:continuation});

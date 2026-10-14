@@ -1,6 +1,7 @@
 //! 🎭️ Set local mask coverage for alpha painting.
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, SetMaskValueEdit};
-use crate::{RasterMutation,RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation, SetMaskValueEdit};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_value_derive::{FromValue,ToValue};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

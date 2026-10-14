@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, snapshot_read};
-use crate::editor::generation2d::Generation2dCommand;
+use semio_s_artifact_procedural_2d_editor_commands::add_widget::*;
+use crate::app_fixture::{app, close, dispatch, snapshot_read};
+use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_widget_emits_op_and_grows_document() {

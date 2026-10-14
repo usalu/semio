@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::En1997Snapshot;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 /// 📄️ The `default` example document, handcrafted in the `.en1997` DSL — a shallow footing +
 /// pile worked example (bearing, sliding, settlement, pile axial, ground investigation depth)
@@ -36,10 +36,10 @@ pub type En1997SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1997_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1997_model::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
 pub fn encode_en1997_snapshot_json(snapshot: &En1997Snapshot) -> String {
@@ -58,20 +58,17 @@ pub fn encode_en1997_dsl(snapshot: &En1997Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1997_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1997_model::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
-
-
-
 }
-#[cfg(test)] pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text En1997Snapshot, extension="en1997", envelope_id="norm.en1997");
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1997Snapshot, extension="en1997", envelope_id="norm.en1997");

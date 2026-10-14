@@ -1,5 +1,16 @@
 use super::*;
-use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 
@@ -36,7 +47,7 @@ fn solid_slab_doc() -> Fem3dSnapshot {
         elements: vec![],
         materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
         sections: vec![],
-        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: crate::FemAxis::Z }],
+        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
         supports: vec![
             FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
             FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
@@ -191,7 +202,7 @@ async fn analysis_settings_update_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn solid_create_replace_and_delete_round_trip() {
     let base = solid_slab_doc();
-    let updated = FemSolid { id: "sol1".into(), name: "Slab Updated".into(), outline: base.solids[0].outline.clone(), holes: vec![], base_z: 0.0, height: 0.8, layers: 2, mesh_size: 0.5, material_id: "concrete".into(), axis: crate::FemAxis::Z };
+    let updated = FemSolid { id: "sol1".into(), name: "Slab Updated".into(), outline: base.solids[0].outline.clone(), holes: vec![], base_z: 0.0, height: 0.8, layers: 2, mesh_size: 0.5, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z };
     let after_replace = round_trip(&base, &Fem3dMutation::ReplaceSolid(replace_solid::ReplaceSolid { id: "sol1".into(), new_solid: updated }));
     assert_eq!(after_replace.solids[0].height, 0.8);
     round_trip(&after_replace, &Fem3dMutation::DeleteSolid(delete_solid::DeleteSolid { id: "sol1".into() }));
@@ -247,7 +258,7 @@ async fn fem3d_op_text_round_trips_every_variant() {
             layers: 2,
             mesh_size: 0.5,
             material_id: "concrete".into(),
-            axis: crate::FemAxis::Z,
+            axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z,
         }, index: None,
     }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem3dMutation::DeleteSolid(delete_solid::DeleteSolid { id: "sol1".into() }));

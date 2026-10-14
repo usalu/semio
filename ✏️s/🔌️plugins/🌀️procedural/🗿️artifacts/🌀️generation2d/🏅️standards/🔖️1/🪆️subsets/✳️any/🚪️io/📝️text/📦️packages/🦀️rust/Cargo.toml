@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-2d-io-text"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d text codecs: snapshot, diff, mutation and inference text and the controlled native SQLite binding"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-mut-document = { workspace = true }
+semio-s-artifact-procedural-2d-mut-generations = { workspace = true }
+semio-s-artifact-procedural-2d-mut-synapses = { workspace = true }
+semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
+semio-s-artifact-procedural-2d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }
+semio-s-artifact-procedural-2d-testkit = { workspace = true }
+

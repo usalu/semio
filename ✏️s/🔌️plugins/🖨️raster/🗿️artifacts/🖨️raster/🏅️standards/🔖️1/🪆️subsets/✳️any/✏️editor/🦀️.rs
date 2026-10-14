@@ -5,23 +5,31 @@
 //! dispatches through the single typed `RasterCommand` channel via `app_commands!` — mirrors
 //! `shooting_ui`'s B1 pilot.
 
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
 #[path="📤️export/🦀️.rs"]
 mod media_export;
 
 #[path="🖱️selection/🦀️.rs"]
-pub(crate) mod layer_selection;
+pub mod layer_selection;
 
 #[cfg(test)]
 #[path="💾️document/🧪️tests/🦀️.rs"]
 mod document_tests;
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::editor::raster::modes::edit;
-use crate::editor::raster::modes::edit::windows::{composite, navigator};
-use crate::editor::raster::presence::{RasterPresence, RasterPresenceMutation};
-use crate::editor::raster::terminology::raster_play_labels;
-use crate::op::RasterMutation;
-use crate::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
+use crate::config::{RasterConfig, RasterConfigMutation};
+use crate::modes::edit;
+use crate::modes::edit::windows::{composite, navigator};
+use crate::presence::{RasterPresence, RasterPresenceMutation};
+use crate::terminology::raster_play_labels;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -84,7 +92,7 @@ use semio_framework_2d::compute::EngineHandles;
 
 /// 🌱️ Load effect for a whole document: example switches, JSON loads and imports replace the document through the
 /// artifact's load path, never as mutation rows or history.
-pub(crate) fn raster_reset_document_effect(document: &RasterSnapshot) -> semio_framework_plugin::Effect {
+pub fn raster_reset_document_effect(document: &RasterSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RasterSnapshot as ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(&document.id.to_string(), RASTER_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
@@ -108,7 +116,7 @@ pub const RASTER_INTERACTION_GRANULARITY: &str = "layer";
 /// `moveLayer` (which decodes a drop target back into an id). More than one consumer, but this is UI row
 /// encoding, not artifact data, so it stays app-level rather than in `crate::schema`.
 pub fn layer_row_id(layer: &RasterLayerNode) -> String {
-    crate::standards::v1::subsets::any::schema::layer_node_id(layer).to_string()
+    semio_s_artifact_raster_raster_model::layer_node_id(layer).to_string()
 }
 
 pub fn mask_row_id(target_id: &str) -> String {
@@ -139,7 +147,7 @@ fn document_sync_json(document: &RasterSnapshot) -> String {
 /// omitted rather than serialized as an empty/garbage blob (documented staleness gap, matches every
 /// other exemplar in this ticket).
 fn assets_json_from_document(document: &RasterSnapshot) -> String {
-    let resolved: std::collections::BTreeMap<String, crate::RasterImageAsset> = document.assets.keys().filter_map(|asset_id| crate::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
+    let resolved: std::collections::BTreeMap<String, semio_s_artifact_raster_raster_model::RasterImageAsset> = document.assets.keys().filter_map(|asset_id| semio_s_artifact_raster_raster_io::raster_asset(&document.assets, asset_id).map(|asset| (asset_id.clone(), asset))).collect();
     let object: semio_framework_pack_json::Object = resolved.into_iter().map(|(id, asset)| (id, semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&asset)))).collect();
     semio_framework_pack_json::to_string(&Value::Object(object))
 }
@@ -400,11 +408,11 @@ semio_framework_plugin::app_commands! {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::editor::raster::commands::{set_active_example,export_png,set_paint_target,set_mask_value,set_fill_tolerance,set_pixel_selection};
-use crate::editor::raster::commands::{mask_from_selection,flatten_layers,merge_down,paint_stroke,fill_region,apply_filter,transform_image,fill_selection};
-use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
-use crate::editor::raster::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
-use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
+use crate::commands::{set_active_example, export_png, set_paint_target, set_mask_value, set_fill_tolerance, set_pixel_selection};
+use crate::commands::{mask_from_selection, flatten_layers, merge_down, paint_stroke, fill_region, apply_filter, transform_image, fill_selection};
+use crate::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
+use crate::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
+use crate::commands::{set_camera, set_camera_zoom, set_composite_viewport};
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
@@ -502,7 +510,7 @@ fn raster_retained_extent(command: &RasterCommand, snapshot: &RasterSnapshot, _i
     if !RASTER_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return None;
     }
-    let items = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
+    let items = semio_s_artifact_raster_raster_model::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
     (items <= RASTER_RETAINED_WORK_ITEMS).then_some(1)
 }
 
@@ -636,7 +644,7 @@ struct RasterStorePreparation {
     prepared: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>>,
     /// 🧮 The clone-free stepwise apply (`RasterOneItemApply`), live from the first `advance` until
     /// the post snapshot is handed over, or closed through its own retirement on cancel/fault.
-    apply: std::mem::ManuallyDrop<Option<crate::host::owned::RasterOneItemApply>>,
+    apply: std::mem::ManuallyDrop<Option<semio_s_artifact_raster_raster_host::RasterOneItemApply>>,
     mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<RasterMutation>>>>,
     snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<RasterSnapshot>>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -711,7 +719,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
-        let item_count = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
+        let item_count = semio_s_artifact_raster_raster_model::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -757,7 +765,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Rast
             let base = self.base.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its exact base root"))?;
             let authority = self.authority.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its Store authority"))?;
             let mutation = self.mutation.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its mutation owner"))?;
-            let apply = self.apply.get_or_insert_with(crate::host::owned::RasterOneItemApply::new);
+            let apply = self.apply.get_or_insert_with(semio_s_artifact_raster_raster_host::RasterOneItemApply::new);
             let (post, progress) = apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL, grant.retained_grant())?;
             receipt = progress;
             let Some(post) = post else {
@@ -1018,10 +1026,10 @@ impl RasterImportJob {
                 return false;
             };
             let index = snapshot.layers.len();
-            crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json).map(|(asset_id, asset, layer)| {
+            semio_s_artifact_raster_raster_io::raster_image_layer_and_asset(media_json).map(|(asset_id, asset, layer)| {
                 vec![
-                    RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
-                    RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
+                    RasterMutation::AddLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+                    RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
                 ]
             })
         };
@@ -1239,12 +1247,12 @@ impl ArtifactEditor for RasterPlayApp {
 
     /// ⏳️ The layers panel renders the live operations with their Cancel controls; nothing else shows them.
     fn operation_progress_scope() -> semio_framework::kernel::UiDirtyScope {
-        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![crate::panels::document::RASTER_PLAY_BODY_LAYERS.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
     }
 
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::art_raster_demo::source()]
+        vec![semio_s_artifact_raster_raster_examples::art_raster_demo::source()]
     }
     type Snapshot = RasterSnapshot;
     type Mutation = RasterMutation;
@@ -1259,7 +1267,7 @@ impl ArtifactEditor for RasterPlayApp {
 
     type Command = RasterCommand;
 
-    const DIALECT: Dialect = crate::RASTER_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_raster_raster_model::RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields.
@@ -1343,15 +1351,15 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::raster_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_raster_raster_host::raster_envelope_decode_owner_bundle())
     }
 
     fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::host::owned::raster_document_store_owners_source_demands()
+        semio_s_artifact_raster_raster_host::raster_document_store_owners_source_demands()
     }
 
     fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::host::owned::raster_document_store_owners_admission(grant))
+        Some(semio_s_artifact_raster_raster_host::raster_document_store_owners_admission(grant))
     }
 
     fn build_document_store_initialization_job(
@@ -1360,7 +1368,7 @@ impl ArtifactEditor for RasterPlayApp {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::owned::raster_document_store_initialization_job(envelope, operation, generation, actor))
+        Ok(semio_s_artifact_raster_raster_host::raster_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1382,7 +1390,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// one-turn retirement in `👥️presence/🦀️.rs`), the transient lane is `NoTransient` — the same
     /// rows forms/process3d declare.
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(crate::editor::raster::presence::raster_presence_store_disposer())
+        Some(crate::presence::raster_presence_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -1424,7 +1432,7 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::raster::config::schema::app_schema_descriptor())
+        Some(crate::config::schema::app_schema_descriptor())
     }
 
     /// 📄️ Boots on the constant EMPTY shell `empty_raster_snapshot()` (zero layers, zero assets) —
@@ -1435,7 +1443,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
     /// (2026-09-16).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()
+        semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1447,7 +1455,6 @@ impl ArtifactEditor for RasterPlayApp {
         if request.as_ref().is_some_and(|request|request.port!="image:out"||request.tool_id!=media_export::TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster media producer requires its exact registered output port").into())}
         media_export::RasterImageExportJob::admit_original(request,body,cx)
     }
-
 
 
     fn interaction_topology(doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
@@ -1478,10 +1485,10 @@ impl ArtifactEditor for RasterPlayApp {
         let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
-        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(png_base64).map_err(|error| MediaError::Payload(port.to_string(), error))?;
+        let (asset_id, asset, layer) = semio_s_artifact_raster_raster_io::raster_image_layer_and_asset(png_base64).map_err(|error| MediaError::Payload(port.to_string(), error))?;
         Ok(Emit::mutations(vec![
-            RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
-            RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
+            RasterMutation::AddLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+            RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
         ]))
     }
 
@@ -1550,7 +1557,7 @@ impl ArtifactEditor for RasterPlayApp {
         };
         let rendered = render_raster_body(body_key, doc, preview.as_ref(), cfg, view_state, &interaction.selection(RASTER_INTERACTION_DOMAIN).ids, interaction.hover(RASTER_INTERACTION_DOMAIN, "pointer").ids.first().map(String::as_str));
         if let Some(preview) = preview {
-            crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(preview);
+            semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(preview);
         }
         rendered
 
@@ -1569,13 +1576,13 @@ fn render_raster_body(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, pr
         let node = match body_key {
             composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility, selected_ids, hovered_id)?,
             navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility, selected_ids, hovered_id)?,
-            crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels, &windows)?,
-            crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels, &windows)?,
-            crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels, &windows)?,
-            crate::editor::raster::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::editor::raster::panels::inspection::render(document, config, selected_ids, labels)?,
+            crate::panels::document::RASTER_PLAY_BODY_LAYERS => crate::panels::document::render(document, config, labels, &windows)?,
+            crate::panels::masks::RASTER_PLAY_BODY_MASKS => crate::panels::masks::render(document, config, labels, &windows)?,
+            crate::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::panels::catalogue::render(labels, &windows)?,
+            crate::panels::inspection::RASTER_PLAY_BODY_PROPERTIES => crate::panels::inspection::render(document, config, selected_ids, labels)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "raster unknown-body label admission failed"))?,
         };
-        let node=if body_key==crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS&&!doc.operations().is_empty() {
+        let node=if body_key==crate::panels::document::RASTER_PLAY_BODY_LAYERS&&!doc.operations().is_empty() {
             use semio_framework_plugin::{Buildable,HasBase,HasChildren};
             let progress=semio_framework_plugin::app::operation_progress::operation_progress_controls(doc.operations(),RASTER_PLAY_CONTROLLER_ID,view_state.locale)?;
             semio_framework_ui_contract::column().try_id("raster.layers.with-progress").map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress container"))?.try_children([progress,node]).map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress children"))?.try_build().map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity","raster progress build"))?
@@ -1634,8 +1641,8 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 
 /// 🖼️ Publishes the canonical layer composite as a PNG image port payload.
 pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
-    let image=crate::standards::v1::subsets::any::io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
-    let bytes=crate::standards::v1::subsets::any::io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let image=semio_s_artifact_raster_raster_io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let bytes=semio_s_artifact_raster_raster_io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
     let png_base64=base64_codec::base64_standard_encode(bytes);
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
@@ -1661,8 +1668,8 @@ fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group:
 /// 📚️ The navbar dropdown reads `RasterPlayApp::examples()`, which `.editor` stamps onto the
 /// manifest. The catalogue lives on the artifact, not on the plugin root.
 pub fn create_raster_app() -> AppDefinition {
-    Editor::builder(crate::RASTER_DIALECT).document(["semio", "raster"])
-            .artifact_kind(crate::artifact_kind())
+    Editor::builder(semio_s_artifact_raster_raster_model::RASTER_DIALECT).document(["semio", "raster"])
+            .artifact_kind(semio_s_artifact_raster_raster_io::artifact_kind())
             // 🖼️ `2d.image` — the interchange kind `image:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
             // Wave 2 port recipe); `shooting`'s `photos:out` already declares the identical shape — a
             // harmless duplicate registration (registry dedupes by id).
@@ -1686,10 +1693,10 @@ pub fn create_raster_app() -> AppDefinition {
             .window_kind_def(composite::definition())
             .window_kind_def(navigator::definition())
             .default_layout(edit::layout())
-            .panel_tab_def(crate::editor::raster::panels::document::definition())
-            .panel_tab_def(crate::editor::raster::panels::catalogue::definition())
-            .panel_tab_def(crate::editor::raster::panels::masks::definition())
-            .panel_tab_def(crate::editor::raster::panels::inspection::definition())
+            .panel_tab_def(crate::panels::document::definition())
+            .panel_tab_def(crate::panels::catalogue::definition())
+            .panel_tab_def(crate::panels::masks::definition())
+            .panel_tab_def(crate::panels::inspection::definition())
             // ✏️ Palette-visible content operations. `setSnapshot` — the old whole-document replace —
             // stays gone (`🎮️commands/📃️document/🦀️.rs` records why); `setActiveExample` is back as a
             // real, undoable batch of `RasterMutation`s rather than a snapshot swap, so it is an
@@ -1841,7 +1848,7 @@ pub fn create_raster_app() -> AppDefinition {
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️fill-tool-transactions/🦀️.rs"]
 mod fill_tool_transactions;
@@ -1850,3 +1857,99 @@ mod fill_tool_transactions;
 mod stroke_stream_transactions;
 
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/➕️add-layer/🦀️.rs"]
+    pub mod add_layer;
+    #[path = "🎮️commands/🌈️apply-filter/🦀️.rs"]
+    pub mod apply_filter;
+    #[path = "🎮️commands/🗑️delete-layer/🦀️.rs"]
+    pub mod delete_layer;
+    #[path = "🎮️commands/📃️document/🦀️.rs"]
+    pub mod document;
+    #[path = "🎮️commands/📥️drop-layer-kind/🦀️.rs"]
+    pub mod drop_layer_kind;
+    #[path = "🎮️commands/📋️duplicate-layer/🦀️.rs"]
+    pub mod duplicate_layer;
+    #[path = "🎮️commands/📤️export-png/🦀️.rs"]
+    pub mod export_png;
+    #[path = "🎮️commands/🪣️fill-region/🦀️.rs"]
+    pub mod fill_region;
+    #[path = "🎮️commands/🫗️fill-selection/🦀️.rs"]
+    pub mod fill_selection;
+    #[path = "🎮️commands/🥞️flatten-layers/🦀️.rs"]
+    pub mod flatten_layers;
+    #[path = "🎮️commands/🎭️mask-from-selection/🦀️.rs"]
+    pub mod mask_from_selection;
+    #[path = "🎮️commands/🫳️merge-down/🦀️.rs"]
+    pub mod merge_down;
+    #[path = "🎮️commands/🚚️move-layer/🦀️.rs"]
+    pub mod move_layer;
+    #[path = "🎮️commands/🖌️paint-stroke/🦀️.rs"]
+    pub mod paint_stroke;
+    #[path = "🎮️commands/🩹️patch-layer/🦀️.rs"]
+    pub mod patch_layer;
+    #[path = "🎮️commands/🧵️patch-layers/🦀️.rs"]
+    pub mod patch_layers;
+    #[path = "🎮️commands/🎬️set-active-example/🦀️.rs"]
+    pub mod set_active_example;
+    #[path = "🎮️commands/🎨️set-brush-color/🦀️.rs"]
+    pub mod set_brush_color;
+    #[path = "🎮️commands/🖌️set-brush-hardness/🦀️.rs"]
+    pub mod set_brush_hardness;
+    #[path = "🎮️commands/🌫️set-brush-opacity/🦀️.rs"]
+    pub mod set_brush_opacity;
+    #[path = "🎮️commands/📏️set-brush-size/🦀️.rs"]
+    pub mod set_brush_size;
+    #[path = "🎮️commands/📷️set-camera/🦀️.rs"]
+    pub mod set_camera;
+    #[path = "🎮️commands/🔭️set-camera-zoom/🦀️.rs"]
+    pub mod set_camera_zoom;
+    #[path = "🎮️commands/🖥️set-composite-viewport/🦀️.rs"]
+    pub mod set_composite_viewport;
+    #[path = "🎮️commands/🌊️set-fill-tolerance/🦀️.rs"]
+    pub mod set_fill_tolerance;
+    #[path = "🎮️commands/👓️set-layer-visible/🦀️.rs"]
+    pub mod set_layer_visible;
+    #[path = "🎮️commands/🎭️set-mask-value/🦀️.rs"]
+    pub mod set_mask_value;
+    #[path = "🎮️commands/🎭️set-paint-target/🦀️.rs"]
+    pub mod set_paint_target;
+    #[path = "🎮️commands/🎯️set-pixel-selection/🦀️.rs"]
+    pub mod set_pixel_selection;
+    #[path = "🎮️commands/👁️toggle-layer-visible/🦀️.rs"]
+    pub mod toggle_layer_visible;
+    #[path = "🎮️commands/🔄️transform-image/🦀️.rs"]
+    pub mod transform_image;
+}
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/🛍️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+    #[path = "📌️panels/🎭️masks/🦀️.rs"]
+    pub mod masks;
+}
+#[path = "👥️presence/🦀️.rs"]
+pub mod presence;
+#[path = "🎯️selection/🦀️.rs"]
+pub mod selection;
+#[path = "🗣️terminology/🦀️.rs"]
+pub mod terminology;
+#[path = "🌉️wasm/🦀️.rs"]
+pub mod wasm;
+//#endregion 🪢️TaxonomyMounts

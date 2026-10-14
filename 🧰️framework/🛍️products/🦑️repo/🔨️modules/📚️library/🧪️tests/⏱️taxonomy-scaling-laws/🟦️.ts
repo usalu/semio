@@ -135,4 +135,5 @@ test("unsupported path literals are found in one linear pass exactly as the orig
     expect(scan.quoted(content), JSON.stringify(content)).toEqual(oracle(quoted, content));
     expect(scan.paths(content), JSON.stringify(content)).toEqual(oracle(paths, content));
   }
+  for (const content of [`x${":a".repeat(4000)}(`, `x${"=b.c".repeat(3000)}]`, `${" a:b/".repeat(3000)}(`, `k:${"a".repeat(8000)}.b(`]) expect(scan.paths(content)).toEqual(oracle(paths, content));
 });

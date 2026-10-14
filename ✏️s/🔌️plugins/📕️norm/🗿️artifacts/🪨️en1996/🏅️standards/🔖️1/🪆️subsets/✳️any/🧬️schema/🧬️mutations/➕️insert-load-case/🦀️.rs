@@ -1,5 +1,5 @@
 //! ➕️insert-load-case
-use crate::{En1996Mutation, En1996Snapshot};
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -10,22 +10,22 @@ use crate::{En1996Mutation, En1996Snapshot};
 pub struct InsertLoadCase {
     pub wall_index: usize,
     pub index: usize,
-    pub load_case: crate::WallLoadCase,
+    pub load_case: semio_s_artifact_norm_en1996_model::WallLoadCase,
 }
 
-impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for InsertLoadCase {
+impl<Op> protocol::MutationKind<En1996Snapshot, Op> for InsertLoadCase where Op: protocol::Mutation<En1996Snapshot, Diff = semio_s_artifact_norm_en1996_diff::En1996Diff> + From<crate::remove_load_case::RemoveLoadCase> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert",
         entity: "load-case",
         kind: "insert-load-case",
         record: "InsertedLoadCase",
     };
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<En1996Mutation as protocol::Mutation<En1996Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1996Snapshot>>::Diff> {
+        crate::insert_load_case::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::insert_load_case::inverse::inverse(self, base)?
     
     })
 }
@@ -34,6 +34,9 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for InsertLoadCase {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/✅apply/🦀️.rs"]
-mod named_test;
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

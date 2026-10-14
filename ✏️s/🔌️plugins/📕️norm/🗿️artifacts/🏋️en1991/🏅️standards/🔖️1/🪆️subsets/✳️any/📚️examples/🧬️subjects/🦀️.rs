@@ -1,6 +1,6 @@
 //! 🧬️ Named example subjects for EN 1991 (design-load assumptions).
 
-use crate::{AccidentalCase, AccidentalExplosion, AccidentalImpact, En1991Snapshot, FireMode, FloorArea, RoofArea, SelfWeightElement, StructureKind, WindFace};
+use semio_s_artifact_norm_en1991_model::{AccidentalCase, AccidentalExplosion, AccidentalImpact, En1991Snapshot, FireMode, FloorArea, RoofArea, SelfWeightElement, StructureKind, WindFace};
 
 /// 🏢 Realistic DE office building — no bridge traffic, no fire scenario.
 pub fn de_office_compliant() -> En1991Snapshot {
@@ -71,7 +71,7 @@ pub fn de_fire_parametric_compliant() -> En1991Snapshot {
     let mut s = En1991Snapshot::default();
     s.structure_kind = StructureKind::Building;
     s.fire_mode = FireMode::Parametric;
-    s.fire_curve = crate::part_1_2::FireCurve::Parametric;
+    s.fire_curve = semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric;
     s.fire_duration = 3600.0;
     s.fire_compartment_area = 100.0;
     s.fire_compartment_height = 3.0;
@@ -79,12 +79,12 @@ pub fn de_fire_parametric_compliant() -> En1991Snapshot {
     s.fire_thermal_inertia = 1160.0;
     s.fire_occupancy = "office".into();
     s.fire_load_density_qf = 420.0e6;
-    use crate::standards::v1::subsets::any::schema::part_1_2 as fire;
+    use semio_s_artifact_norm_en1991_checks::part_1_2 as fire;
     let o = fire::compartment_opening_factor(s.fire_compartment_area, s.fire_compartment_height);
     s.fire_opening_factor = o;
     let theta = fire::parametric_gas_temp_k(s.fire_duration, o, s.fire_thermal_inertia);
     s.assumed_gas_temperature = theta + 50.0;
-    let alpha_c = fire::alpha_c_for_curve(crate::part_1_2::FireCurve::Parametric);
+    let alpha_c = fire::alpha_c_for_curve(semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric);
     s.assumed_h_net = fire::h_net_w_m2(theta, 293.15, alpha_c, 1.0, 0.8, 1.0) + 100.0;
     let qfd = fire::design_fire_load_j_m2(s.fire_load_density_qf, s.annex, &s.fire_occupancy, 0.8);
     s.assumed_qf_d = qfd + 1.0e6;

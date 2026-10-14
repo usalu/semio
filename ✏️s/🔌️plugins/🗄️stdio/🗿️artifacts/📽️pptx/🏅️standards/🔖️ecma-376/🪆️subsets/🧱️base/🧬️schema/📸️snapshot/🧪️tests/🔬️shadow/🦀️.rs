@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn logical_snapshot_and_facets_have_no_shadow_state() {

@@ -3,8 +3,8 @@
 //! `world3d_projection_measures` builder. Shared by every window instance of the one puzzle3d window
 //! kind; each instance keeps its own `Puzzle3dCamera::projection` (see `🦀️config.rs`).
 
-use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::snapshot::puzzle3d_action;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 /// 🧭️ The projection select + its parameter sliders for the materialized window's camera.

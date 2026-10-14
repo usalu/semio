@@ -1,6 +1,7 @@
 //! 📸️ Original immutable entity versions publish through caller-funded private clone and edit workspaces.
 use super::{EntityMap,ToolRunEntityEdit,ToolRunEntityEditKind,ToolRunEntityEditGrant,ToolRunEntityEditProgress};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ordered_map::RetainedOrderedMapCloneCursor},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ordered_map::RetainedOrderedMapCloneCursor},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
+use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 use std::mem::{ManuallyDrop,size_of};
 
 #[derive(semio_framework_value::RetireOwned)]

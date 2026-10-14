@@ -1,0 +1,152 @@
+{
+ "base": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "steps": [
+  {
+   "op": "move",
+   "from": "🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "start": "pub const GENERATION_2D_SCHEMA: &str",
+   "end": "//#endregion 🔖️ArtifactKind",
+   "before": "//#region 🧪️Tests"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "use semio_framework_artifact_flow_flow::Widget;\n"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "after": "use ::semio_framework_schema::ArtifactSchema;\n",
+   "text": "use semio_framework_artifact_flow_flow::Widget;\nuse {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "start": "//#region 🔖️Constants",
+   "end": "pub const GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX: &str = \"generation2d-play-document.handle.\";\n",
+   "before": "//#region 🧪️Tests"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "start": "//#region 🔖️HostGestures",
+   "end": "//#endregion 🔖️HostGestures",
+   "before": "//#region 🧪️Tests"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "after": "use semio_framework_artifact_flow_flow::FlowHostSnapshot;\n",
+   "text": "use semio_framework_os_flow::FlowHost;\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs",
+   "start": "pub fn split_endpoint(endpoint: &str)",
+   "end": "    (nodes, edges)\n}"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "text": "use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "text": "use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs",
+   "after": "use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};\n",
+   "text": "use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;\nuse semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs",
+   "text": "pub fn prepare_command(command: &Generation2dCommand, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> Option<Generation2dGenerationCommandResult> {\n    match command {\n        Generation2dCommand::AddGeneration(_) => Some(handle_generation(\"addGeneration\", None, doc, cfg)),\n        Generation2dCommand::RemoveGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), semio_framework_value::DslValue::String(payload.id.clone()))]);\n            Some(handle_generation(\"removeGeneration\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::RenameGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), semio_framework_value::DslValue::String(payload.id.clone())), (\"name\".into(), semio_framework_value::DslValue::String(payload.name.clone()))]);\n            Some(handle_generation(\"renameGeneration\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::UpdateGenerationValues(payload) => {\n            let args = semio_framework_value::DslValue::object([\n                (\"generationId\".into(), payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String)),\n                (\"questionId\".into(), semio_framework_value::DslValue::String(payload.question_id.clone())),\n                (\"value\".into(), payload.value.clone()),\n            ]);\n            Some(handle_generation(\"updateGenerationValues\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::SelectGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), payload.id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);\n            Some(handle_generation(\"selectGeneration\", Some(&args), doc, cfg))\n        }\n        _ => None,\n    }\n}\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs",
+   "text": "use crate::editor::generation2d::Generation2dCommand;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "after": "//#region 🔖️Manifest\n",
+   "text": "/// 🧬️ Routes a generation command of the editor's command enum to the shared generation transition.\npub fn prepare_command(command: &Generation2dCommand, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> Option<generation::Generation2dGenerationCommandResult> {\n    match command {\n        Generation2dCommand::AddGeneration(_) => Some(generation::handle_generation(\"addGeneration\", None, doc, cfg)),\n        Generation2dCommand::RemoveGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), semio_framework_value::DslValue::String(payload.id.clone()))]);\n            Some(generation::handle_generation(\"removeGeneration\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::RenameGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), semio_framework_value::DslValue::String(payload.id.clone())), (\"name\".into(), semio_framework_value::DslValue::String(payload.name.clone()))]);\n            Some(generation::handle_generation(\"renameGeneration\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::UpdateGenerationValues(payload) => {\n            let args = semio_framework_value::DslValue::object([\n                (\"generationId\".into(), payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String)),\n                (\"questionId\".into(), semio_framework_value::DslValue::String(payload.question_id.clone())),\n                (\"value\".into(), payload.value.clone()),\n            ]);\n            Some(generation::handle_generation(\"updateGenerationValues\", Some(&args), doc, cfg))\n        }\n        Generation2dCommand::SelectGeneration(payload) => {\n            let args = semio_framework_value::DslValue::object([(\"id\".into(), payload.id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);\n            Some(generation::handle_generation(\"selectGeneration\", Some(&args), doc, cfg))\n        }\n        _ => None,\n    }\n}\n\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "text": "/// 🎯️ Which session each preview window kind evaluates — the editor's roster for the `previewEval` run.\nconst GENERATION2D_PREVIEW_TARGETS: &[(&str, PreviewEvalTarget)] = &[(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, PreviewEvalTarget::Document), (generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, PreviewEvalTarget::Generation)];\n\n/// 🎯️ The target a preview window kind evaluates, or `None` for every other kind.\npub(crate) fn generation2d_preview_target(kind: &str) -> Option<PreviewEvalTarget> {\n    GENERATION2D_PREVIEW_TARGETS.iter().find(|(candidate, _)| *candidate == kind).map(|(_, target)| *target)\n}\n\n/// 🪟️ Every attached preview window, in roster order — the windows the `previewEval` run evaluates.\npub(crate) fn generation2d_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<PreviewEvalWindow<'_>> {\n    crate::preview_eval::attached_preview_windows(view, GENERATION2D_PREVIEW_TARGETS)\n}\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🦀️.rs",
+   "after": "pub use crate::preview_eval::FlowEvalTick;\n",
+   "text": "\n/// 🎯️ Which session each preview window kind evaluates — the editor's roster for the `previewEval` run.\nconst GENERATION2D_PREVIEW_TARGETS: &[(&str, PreviewEvalTarget)] = &[(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, PreviewEvalTarget::Document), (generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, PreviewEvalTarget::Generation)];\n\n/// 🎯️ The target a preview window kind evaluates, or `None` for every other kind.\npub fn generation2d_preview_target(kind: &str) -> Option<PreviewEvalTarget> {\n    GENERATION2D_PREVIEW_TARGETS.iter().find(|(candidate, _)| *candidate == kind).map(|(_, target)| *target)\n}\n\n/// 🪟️ Every attached preview window, in roster order — the windows the `previewEval` run evaluates.\npub fn generation2d_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<PreviewEvalWindow<'_>> {\n    crate::preview_eval::attached_preview_windows(view, GENERATION2D_PREVIEW_TARGETS)\n}\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🦀️.rs",
+   "after": "use crate::Generation2dSnapshot;\n",
+   "text": "use crate::editor::generation2d::modes::edit::windows::preview as edit_preview;\nuse crate::editor::generation2d::modes::generate::windows::preview as generate_preview;\nuse crate::preview_eval::PreviewEvalWindow;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "after": "use crate::preview_eval::{PreviewEvalRunLink, PreviewEvalRunOwner, PreviewEvalSessions, PreviewEvalTarget, PreviewEvalWindow};\n",
+   "text": "use crate::editor::generation2d::commands::flow_eval_tick::{generation2d_preview_target, generation2d_preview_windows};\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "text": "\n/// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and\n/// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the\n/// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.\npub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> Effect {\n    let pack = <Generation2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);\n    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(\"generation2d\", GENERATION_2D_SCHEMA));\n    Effect::LoadDocument { pack, spr }\n}\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+   "after": "use semio_framework_value_derive::{FromValue, ToValue};\n",
+   "text": "use semio_framework_plugin::Effect;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+   "after": "    None\n}\n",
+   "text": "\n/// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and\n/// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the\n/// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.\npub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> Effect {\n    let pack = <Generation2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);\n    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(\"generation2d\", GENERATION_2D_SCHEMA));\n    Effect::LoadDocument { pack, spr }\n}\n"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod tests;\n"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+   "text": "use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;\nuse super::*;\nuse crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;\n\n#[test]\nfn default_snapshot_parses_the_bundled_example() {\n    let snapshot = Generation2dSnapshotRead::new(default_snapshot());\n    assert!(!snapshot.host_snapshot.widgets.is_empty());\n}\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+   "after": null,
+   "text": "use super::*;\n\n#[test]\nfn artifact_kind_schema_matches_the_document_schema() {\n    assert_eq!(artifact_kind().schema, GENERATION_2D_SCHEMA);\n}\n\n#[test]\nfn widget_id_covers_every_widget_kind() {\n    let widgets = vec![\n        Widget::Neuron { id: \"w-neuron\".into(), neuron_kind: \"math.add\".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },\n        Widget::InputSlider { id: \"w-slider\".into(), label: \"Width\".into(), value: 1.0, min: 0.0, max: 2.0, step: 0.5 },\n        Widget::InputNote { id: \"w-note\".into(), text: String::new() },\n        Widget::InputImage { id: \"w-image\".into(), src: String::new() },\n        Widget::Variable { id: \"w-variable\".into(), name: \"value\".into(), schema: \"dictionary\".into() },\n        Widget::OutputPreview { id: \"w-preview\".into(), preview: Default::default(), expanded: Default::default() },\n        Widget::OutputAction { id: \"w-action\".into(), action: String::new() },\n        Widget::OutputExport { id: \"w-export\".into(), format: \"svg\".into() },\n        Widget::Cluster { id: \"w-cluster\".into(), name: String::new(), tree: Default::default(), flow: Default::default() },\n    ];\n    for widget in &widgets {\n        assert!(!widget_id(widget).is_empty());\n    }\n}\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "after": "use pack::snapshot::ArtifactDsl;\n",
+   "text": "use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;\n\n#[test]\nfn default_snapshot_parses_the_bundled_example() {\n    let snapshot = Generation2dSnapshotRead::new(default_snapshot());\n    assert!(!snapshot.host_snapshot.widgets.is_empty());\n}\n"
+  }
+ ]
+}

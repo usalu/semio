@@ -4,6 +4,7 @@ import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../
 import { parseSchemaRecord } from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseBinary64, type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
+export type { RegisterKey, RegisterRow } from "./🗄️registers/🗂️catalog/🟦️.ts";
 
 //#region 🔖️Entities
 /** 🧬️ Register entity types, mirrored field-for-field from `🗄️registers/🦀️.rs` and

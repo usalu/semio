@@ -1,9 +1,9 @@
-use super::ChangeWallLabelDe;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-pub fn inverse(payload: &ChangeWallLabelDe, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::change_wall_label_de::ChangeWallLabelDe;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+pub fn inverse<Op>(payload: &ChangeWallLabelDe, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_wall_label_de::ChangeWallLabelDe> {
     Ok((|| {
-    if payload.index >= base.walls.len() { Vec::new() } else { vec![En1996Mutation::ChangeWallLabelDe(ChangeWallLabelDe { index: payload.index, new_label_de: base.walls[payload.index].label_de.clone() })] }
+    if payload.index >= base.walls.len() { Vec::new() } else { vec![Op::from(ChangeWallLabelDe { index: payload.index, new_label_de: base.walls[payload.index].label_de.clone() })] }
 
     })())
 }

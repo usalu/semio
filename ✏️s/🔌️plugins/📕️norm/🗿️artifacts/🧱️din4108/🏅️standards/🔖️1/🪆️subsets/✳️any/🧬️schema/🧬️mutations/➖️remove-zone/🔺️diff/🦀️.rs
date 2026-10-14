@@ -1,8 +1,8 @@
 //! ➖️ `remove-zone` diff — removes the row at the index; an index past the list's end is a `mutation.invariant`.
 
-use super::RemoveZone;
-use crate::diff::{Din4108Diff, Din4108ZoneDelta};
-use crate::Din4108Snapshot;
+use crate::remove_zone::RemoveZone;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ZoneDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &RemoveZone, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if payload.index >= base.zones.len() {

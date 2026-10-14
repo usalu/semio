@@ -18,4 +18,5 @@ semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️module
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-process-process3d = { path = "../🗿️artifacts/🧊️process3d/📦️packages/🦀️rust" }
+semio-s-artifact-process-process3d-model = { path = "../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-process-process3d-mutations = { path = "../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

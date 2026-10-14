@@ -7,12 +7,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::schema::mutations::Process3dMutation;
-use crate::schema::mutations::{
-    change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
-    replace_step_measure, replace_stock_solid,
-};
-use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
+use crate::Process3dMutation;
+use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
+use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
+use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::StepOrigin, snapshot::WorkshopMachine};
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -177,25 +176,25 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use crate::*;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
-use crate::standards::v1::subsets::any::schema::mutations::change_machine_icon;
-use crate::standards::v1::subsets::any::schema::mutations::change_step_enabled;
-use crate::standards::v1::subsets::any::schema::mutations::change_step_origin;
-use crate::standards::v1::subsets::any::schema::mutations::change_stock_label;
-use crate::standards::v1::subsets::any::schema::mutations::create_machine;
-use crate::standards::v1::subsets::any::schema::mutations::create_step;
-use crate::standards::v1::subsets::any::schema::mutations::delete_machine;
-use crate::standards::v1::subsets::any::schema::mutations::delete_step;
-use crate::standards::v1::subsets::any::schema::mutations::move_stock;
-use crate::standards::v1::subsets::any::schema::mutations::rename_machine;
-use crate::standards::v1::subsets::any::schema::mutations::rename_step;
-use crate::standards::v1::subsets::any::schema::mutations::reorder_steps;
-use crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities;
-use crate::standards::v1::subsets::any::schema::mutations::replace_step_measure;
-use crate::standards::v1::subsets::any::schema::mutations::replace_stock_solid;
+use semio_s_artifact_process_process3d_mut_machines::change_machine_icon;
+use semio_s_artifact_process_process3d_mut_steps::change_step_enabled;
+use semio_s_artifact_process_process3d_mut_steps::change_step_origin;
+use semio_s_artifact_process_process3d_mut_stock::change_stock_label;
+use semio_s_artifact_process_process3d_mut_machines::create_machine;
+use semio_s_artifact_process_process3d_mut_steps::create_step;
+use semio_s_artifact_process_process3d_mut_machines::delete_machine;
+use semio_s_artifact_process_process3d_mut_steps::delete_step;
+use semio_s_artifact_process_process3d_mut_stock::move_stock;
+use semio_s_artifact_process_process3d_mut_machines::rename_machine;
+use semio_s_artifact_process_process3d_mut_steps::rename_step;
+use semio_s_artifact_process_process3d_mut_steps::reorder_steps;
+use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities;
+use semio_s_artifact_process_process3d_mut_steps::replace_step_measure;
+use semio_s_artifact_process_process3d_mut_stock::replace_stock_solid;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///

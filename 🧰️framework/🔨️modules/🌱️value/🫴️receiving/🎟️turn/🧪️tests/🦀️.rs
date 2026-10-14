@@ -1,5 +1,5 @@
 //! 🎟️ Original whole-owner ceilings bound retained turns before address-space arithmetic.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+use crate::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
 use std::cell::Cell;
 fn amount(value:&serde_json::Value)->usize{match value.as_str(){Some("addressSpace")=>isize::MAX as usize,Some("unsignedMaximum")=>usize::MAX,None=>usize::try_from(value.as_u64().unwrap()).unwrap(),_=>unreachable!()}}
 macro_rules! turn_authority_law{

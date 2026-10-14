@@ -89,7 +89,7 @@ import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type W
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import type { ShardCodecAnswer, ShardCodecRequest, ShardCodecSuccess } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
+import type { ActorCodecRequest, ActorCodecSuccess } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -1253,7 +1253,7 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   /** 🧬️ Calls this program's component `codec` interface on a live instance's actor, serialized with
    * its turns: the browser twin of the native `OwnedComponentDocumentCodec`. A guest fault rejects
    * with the fault's display message; a program with no live instance refuses. */
-  readonly codec: (request: ShardCodecRequest) => Promise<ShardCodecSuccess>;
+  readonly codec: <Request extends ActorCodecRequest>(request: Request) => Promise<ActorCodecSuccess<Request["operation"]>>;
   /** 👥️ The last `AppFrame::Ephemeral` this instance's guest appended to an answer (`AppChannelClient.ephemeral`),
    * or `null` — what the shell's presence heartbeat carries as the peer's app presence pack and interaction. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
@@ -1951,7 +1951,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     takeOperationPublications,
     codec: async (request) => {
       const actorId = codecActorId();
-      const answer: ShardCodecAnswer = await submitActorWork(actorId, () => shardClient.codec(actorId, request));
+      const answer = await submitActorWork(actorId, () => shardClient.codec(actorId, request));
       if ("fault" in answer) throw new Error(`actor-codec.${request.operation}(${request.artifactKind}): ${faultDisplayMessage(Array.from(answer.fault), decodePackValue)}`);
       return answer.ok;
     },
@@ -2071,23 +2071,11 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     readAppDocumentArchive: (instanceId) => handle.readAppDocumentArchive(instanceId),
     readHistory: (instanceId) => handle.readHistory(instanceId).then((patch) => JSON.stringify(patch, (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value))),
     readAppDocumentIdentity: (instanceId) => handle.readAppDocumentIdentity(instanceId).then((identity) => JSON.stringify(identity)),
-    codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
-    codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),
+    codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }),
+    codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }),
     ephemeralSnapshot: (instanceId) => handle.ephemeralSnapshot(instanceId),
     takeOperationPublications: (instanceId) => JSON.stringify(handle.takeOperationPublications(instanceId), (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value)),
   };
-}
-
-/** 🧬️ The byte answer of a `codec` export, refused unless it is exactly bytes. */
-function codecBytes(value: unknown, operation: string): Uint8Array {
-  if (!(value instanceof Uint8Array)) throw new Error(`actor-codec.${operation}.answer-not-bytes`);
-  return value;
-}
-
-/** 📥️ The `tuple<string, string>` answer of `codec.print-mirror`. */
-function codecMirror(value: unknown): readonly [string, string] {
-  if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== "string" || typeof value[1] !== "string") throw new Error("actor-codec.print-mirror.answer-not-a-mirror");
-  return [value[0], value[1]];
 }
 
 /** 📤️ The ONE projection of an `InvocationResponse` onto the JSON string

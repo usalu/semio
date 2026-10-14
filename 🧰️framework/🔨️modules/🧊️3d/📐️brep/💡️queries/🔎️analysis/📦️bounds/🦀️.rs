@@ -18,7 +18,7 @@ use std::f64::consts::{PI, TAU};
 
 /// 📦️ Axis-aligned bounds. `exact` is `false` when a NURBS curve or face made them approximate.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

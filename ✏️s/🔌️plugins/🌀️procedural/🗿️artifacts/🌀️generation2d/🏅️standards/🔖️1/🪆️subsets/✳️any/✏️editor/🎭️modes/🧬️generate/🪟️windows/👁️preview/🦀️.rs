@@ -1,8 +1,8 @@
 //! 👁️ Generation2d play app — the generation output-preview window (generate mode).
 
-use crate::editor::generation2d::terminology::Generation2dLabels;
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::io::text::snapshot::generation_preview_layers;
+use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_layers;
 use semio_framework_plugin::built_text_node;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
@@ -59,7 +59,4 @@ pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

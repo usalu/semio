@@ -1,6 +1,6 @@
 //! 📍️ Actual unhinted GPOS mark-to-base anchor authority advances under original font byte custody.
 use super::FontLookup;
-use super::super::{FontFace,FontProgress,FontReader,kerning::Index};
+use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,kerning::Index};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct FontMarkAttachment{pub x:i32,pub y:i32}

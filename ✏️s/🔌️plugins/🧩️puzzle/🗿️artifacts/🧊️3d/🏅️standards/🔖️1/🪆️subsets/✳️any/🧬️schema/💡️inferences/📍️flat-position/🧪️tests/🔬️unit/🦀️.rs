@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::dsl::InferredField;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 use store::{InferenceCache, InferenceCacheConfig};
 
 //#region 🧸️Fixtures
@@ -13,7 +13,7 @@ fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Ve
     Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor, origin, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, vortices, hidden: false, locked: false }
 }
 
-pub(crate) fn chain_snapshot() -> Puzzle3dSnapshot {
+pub fn chain_snapshot() -> Puzzle3dSnapshot {
     // root -A- mid -B- leaf: a 3-object chain so an ancestor change propagates to a grandchild.
     let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let mut mid = object("mid", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0]), vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
@@ -22,7 +22,7 @@ pub(crate) fn chain_snapshot() -> Puzzle3dSnapshot {
     let attraction_a = Puzzle3dAttraction { id: "a1".into(), attracting: "root:top".into(), attracted: "mid:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.0, y: 0.0 };
     let attraction_b = Puzzle3dAttraction { id: "a2".into(), attracting: "mid:top".into(), attracted: "leaf:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 1.0 };
     Puzzle3dSnapshot {
-        schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.to_string(),
+        schema: semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA.to_string(),
         domain: "architecture".into(),
         meta: Default::default(),
         objects: vec![root, mid, leaf],

@@ -488,11 +488,11 @@ pub fn from_kernel_segment(segment: &semio_framework_2d::PathSegment) -> PathSeg
     }
 }
 
-fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_framework_2d::PathSegment> {
+pub fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_framework_2d::PathSegment> {
     segments.iter().map(to_kernel_segment).collect()
 }
 
-fn from_kernel_segments(segments: &[semio_framework_2d::PathSegment]) -> Vec<PathSegment> {
+pub fn from_kernel_segments(segments: &[semio_framework_2d::PathSegment]) -> Vec<PathSegment> {
     segments.iter().map(from_kernel_segment).collect()
 }
 

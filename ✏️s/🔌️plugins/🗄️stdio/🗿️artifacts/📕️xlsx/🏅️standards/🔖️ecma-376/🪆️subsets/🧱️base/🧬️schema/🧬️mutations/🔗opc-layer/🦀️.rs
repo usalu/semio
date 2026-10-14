@@ -2,7 +2,7 @@
 //! written or removed relationship of an owner, the written or removed `[Content_Types].xml` entry — with the after-list position an inserted row takes.
 
 use super::*;
-use crate::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcOwnerPatch, OpcOwnerRow, OpcOwnerRemoval, OpcOwnersDelta, OpcRelationshipPatch, OpcRelationshipsDelta};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship};

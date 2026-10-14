@@ -10,7 +10,7 @@ pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutat
 pub type TrinityGraphStore = ArtifactStore<JackSnapshot, TrinityGraphMutation>;
 
 pub fn create_trinity_graph_envelope(id: &str, snapshot: JackSnapshot) -> TrinityGraphEnvelope {
-    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, snapshot, None)
+    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 
 /// 🔐️ Opens a Jack store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

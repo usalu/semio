@@ -102,21 +102,26 @@ macro_rules! semio_snapshot_retirement {
 
 /// 🗝️ Implements one subset's member store owner: retained snapshots open through the framework's bounded pack decoder
 /// unless `open = <decoder>` names the subset's own streaming decoder; the crate that owns the mutation type invokes it.
+pub struct SemioMemberStoreProducer<P,M>(::std::marker::PhantomData<fn()->(P,M)>);
+impl<P,M> Copy for SemioMemberStoreProducer<P,M> {}
+impl<P,M> Clone for SemioMemberStoreProducer<P,M> {fn clone(&self)->Self{*self}}
+impl<P,M> SemioMemberStoreProducer<P,M> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
+
 #[macro_export]
 macro_rules! semio_member_owner {
     ($snapshot:ty, $mutation:ty) => {
-        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::PackMemberSnapshotOpen<$snapshot>);
+        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::ProducedMemberSnapshotOpen<$snapshot,::semio_framework_os_kernel::ArtifactPackSnapshotDecoder<$snapshot>>);
     };
     ($snapshot:ty, $mutation:ty, open = $open:ty) => {
-        impl ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreOwner<$mutation> for $snapshot {
+        impl ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer<$snapshot,$mutation> for $crate::SemioMemberStoreProducer<$snapshot,$mutation> {
             type SnapshotOpen = $open;
 
-            fn member_store_owners_birth_demand() -> Result<::semio_framework_value::retained_clone::RetainedCloneBirthDemand, ::semio_framework_value::ValueError> {
-                ::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<Self, $mutation>()
+            fn member_store_owners_birth_demand(&self) -> Result<::semio_framework_value::retained_clone::RetainedCloneBirthDemand, ::semio_framework_value::ValueError> {
+                ::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<$snapshot, $mutation>()
             }
 
-            fn member_store_owners(grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(::semio_framework_os_kernel::os_store::document_store_owners::DocumentStoreOwners<Self, $mutation>, ::semio_framework_value::retained_clone::RetainedCloneProgress), ::semio_framework_os_kernel::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, $mutation>> {
-                ::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners::<Self, $mutation>(grant)
+            fn member_store_owners(&self,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(::semio_framework_os_kernel::os_store::document_store_owners::DocumentStoreOwners<$snapshot, $mutation>, ::semio_framework_value::retained_clone::RetainedCloneProgress), ::semio_framework_os_kernel::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<$snapshot, $mutation>> {
+                ::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners::<$snapshot, $mutation>(grant)
             }
         }
     };

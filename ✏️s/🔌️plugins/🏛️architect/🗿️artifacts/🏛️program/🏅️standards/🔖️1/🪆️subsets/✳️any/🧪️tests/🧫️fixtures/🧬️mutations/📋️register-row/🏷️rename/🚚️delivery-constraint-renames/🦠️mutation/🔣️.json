@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "deliveryConstraint",
+  "id": "delivery-constraint-a",
+  "newName": "Renamed Delivery Constraint A"
+}

@@ -6,15 +6,35 @@
     "build": {
       "executor": "repo:script",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build"
-      }
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-languages",
+            "scope": "package",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "proc-macro",
+                "build-script",
+                "build-script-run"
+              ]
+            }
+          }
+        }
+      },
+      "cache": false
     },
     "test": {
       "executor": "repo:script",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udde3\ufe0flanguages/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test"
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
       }
     }
   }

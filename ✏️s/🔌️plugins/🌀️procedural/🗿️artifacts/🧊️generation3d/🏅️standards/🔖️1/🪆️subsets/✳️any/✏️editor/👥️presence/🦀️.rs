@@ -4,8 +4,12 @@
 //! broadcast automatically via the framework's typed `PresenceInteraction` (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_generation3d_app`'s
 //! `.interaction(...)` declaration.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
-use crate::editor::generation3d::config::Generation3dPreviewCamera;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dPreviewCamera;
 use protocol::Mutation;
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -267,3 +271,6 @@ impl protocol::OpBinary for Generation3dPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

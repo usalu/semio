@@ -4,8 +4,8 @@
 //! lists. A closed group stamps its total and materialises nothing. Component rows drag
 //! `application/x-flow-widget`.
 
-use crate::editor::generation2d::terminology::Generation2dLabels;
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
@@ -26,7 +26,7 @@ use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 pub const GENERATION2D_PLAY_BODY_CATALOGUE: &str = "generation2d.play.catalogue";
 pub const GENERATION2D_PLAY_CATALOGUE_SECTION: &str = "procedural2d-play-catalogue.widgets";
 /// 🖱️ MIME `tree_item_with_action_draggable` stores the widget descriptor under.
-const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
+pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -130,7 +130,4 @@ pub fn render(labels: &Generation2dLabels, windows: &TreeWindows<'_>) -> semio_f
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

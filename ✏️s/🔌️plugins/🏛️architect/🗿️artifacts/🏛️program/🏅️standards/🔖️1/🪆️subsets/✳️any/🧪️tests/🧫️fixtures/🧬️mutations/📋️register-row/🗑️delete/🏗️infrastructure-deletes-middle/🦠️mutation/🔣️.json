@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "infrastructureRequirement",
+  "id": "infrastructure-requirement-a"
+}

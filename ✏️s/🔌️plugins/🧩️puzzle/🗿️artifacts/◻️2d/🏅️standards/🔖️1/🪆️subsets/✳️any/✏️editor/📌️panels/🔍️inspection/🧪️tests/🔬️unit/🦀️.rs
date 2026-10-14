@@ -29,7 +29,7 @@ fn selected_scene(ids: usize) -> Puzzle2dScene {
         board_snapshot: semio_framework_pack_json::json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": nodes, "edges": [] }),
         runtime: crate::editor::puzzle2d::config::Puzzle2dPlayRuntime::default(),
         active_utility: String::new(),
-        interaction: Puzzle2dInteractionSnapshot { granularity: crate::editor::puzzle2d::PUZZLE2D_GRANULARITY_NODE.into(), selected: (0..ids).map(|index| format!("node-{index}")).collect(), ..Default::default() },
+        interaction: Puzzle2dInteractionSnapshot { granularity: crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE.into(), selected: (0..ids).map(|index| format!("node-{index}")).collect(), ..Default::default() },
     }
 }
 

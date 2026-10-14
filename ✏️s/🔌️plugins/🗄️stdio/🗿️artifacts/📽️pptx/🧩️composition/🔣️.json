@@ -12,8 +12,8 @@
       "order": 6,
       "variant": "PptxEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor",
-      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::create_pptx_editor",
+      "type": "semio_s_artifact_stdio_pptx_base::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor",
+      "factory": "semio_s_artifact_stdio_pptx_base::editor::pptx::standards::v_ecma_376::subsets::base::create_pptx_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "pptx_editor",
@@ -25,8 +25,8 @@
       "order": 7,
       "variant": "PptxViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer",
-      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::create_pptx_viewer",
+      "type": "semio_s_artifact_stdio_pptx_base::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer",
+      "factory": "semio_s_artifact_stdio_pptx_base::viewer::pptx::standards::v_ecma_376::subsets::base::create_pptx_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -35,8 +35,8 @@
       "order": 8,
       "variant": "PptxStrictEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor",
-      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_editor",
+      "type": "semio_s_artifact_stdio_pptx_strict::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor",
+      "factory": "semio_s_artifact_stdio_pptx_strict::editor::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "pptx_strict_editor",
@@ -48,8 +48,8 @@
       "order": 9,
       "variant": "PptxStrictViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer",
-      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_viewer",
+      "type": "semio_s_artifact_stdio_pptx_strict::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer",
+      "factory": "semio_s_artifact_stdio_pptx_strict::viewer::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -58,8 +58,8 @@
       "order": 10,
       "variant": "PptxTransitionalEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor",
-      "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_editor",
+      "type": "semio_s_artifact_stdio_pptx_transitional::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_pptx_transitional::editor::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "pptx_transitional_editor",
@@ -71,15 +71,22 @@
       "order": 11,
       "variant": "PptxTransitionalViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer",
-      "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_viewer",
+      "type": "semio_s_artifact_stdio_pptx_transitional::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_pptx_transitional::viewer::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
   "catalogPackage": null,
-  "symbolPackages": [],
+  "symbolPackages": [
+    "semio-s-artifact-stdio-pptx-base",
+    "semio-s-artifact-stdio-pptx-base-model",
+    "semio-s-artifact-stdio-pptx-base-mutations",
+    "semio-s-artifact-stdio-pptx-strict",
+    "semio-s-artifact-stdio-pptx-strict-mutations",
+    "semio-s-artifact-stdio-pptx-transitional"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-office",
@@ -121,18 +128,18 @@
   "mutationDescriptors": [
     {
       "name": "PptxMutation",
-      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
-      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation"
+      "snapshot": "semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation"
     },
     {
       "name": "PptxStrictMutation",
-      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
-      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::strict::schema::mutations::PptxStrictMutation"
+      "snapshot": "semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::PptxStrictMutation"
     },
     {
       "name": "PptxTransitionalMutation",
-      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
-      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::PptxTransitionalMutation"
+      "snapshot": "semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::PptxTransitionalMutation"
     }
   ],
   "mutationCoordinates": [

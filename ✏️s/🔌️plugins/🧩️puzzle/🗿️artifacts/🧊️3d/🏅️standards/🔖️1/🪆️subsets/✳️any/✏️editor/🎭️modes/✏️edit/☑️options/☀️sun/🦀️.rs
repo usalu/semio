@@ -2,8 +2,8 @@
 //! delegated wholesale to the framework's shared `world3d_sun_measures` builder. Per window
 //! instance: each keeps its own `WorldSunConfig` (see `🦀️config.rs`).
 
-use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::snapshot::puzzle3d_action;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action;
 use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
 
 /// 🌞️ The sun toggle plus its azimuth/elevation/intensity sliders.

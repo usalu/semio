@@ -1,6 +1,6 @@
 //! 🔋️ Handcrafted Energy model entities and ordered structural ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use crate::model::*;
 use crate::schedule::ScheduleId;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}};
@@ -80,9 +80,6 @@ pub fn reconstruct(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->R
  let snapshot=EnergyModelSnapshot{schema:r.text(root,1)?,model:m,structure:read_child(&mut r,"energy_structure_child")?,zones:read_child(&mut r,"energy_zones_child")?,referenced_model:read_link(&mut r,"energy_referenced_model_link")?,weather_link:read_link(&mut r,"energy_weather_link")?};r.finish()?;Ok(snapshot)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🛬️native/🦀️.rs"]

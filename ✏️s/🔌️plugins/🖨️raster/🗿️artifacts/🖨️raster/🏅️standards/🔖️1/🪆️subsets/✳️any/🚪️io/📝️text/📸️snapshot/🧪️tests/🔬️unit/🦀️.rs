@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::io::text::snapshot::*;
 use crate::RasterOwnedMap;
 use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
@@ -72,22 +72,22 @@ fn representative_raster_document() -> RasterSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
-    let fixture = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
+    let fixture = crate::testing::raster_image_test_snapshot();
     // 🧊️ Cold twin: a raster document owns fixed-capacity maps whose `Drop` fails closed, so the
     // helper's own decoded value is handed back to the artifact's retirement seam.
-    store::os_store::test_support::assert_dsl_round_trip_cold(&fixture, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    store::os_store::test_support::assert_dsl_round_trip_cold(&fixture, crate::snapshot::retire_raster_snapshot);
     let printed = print_dsl(&fixture);
     let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");
     assert_eq!(reparsed.id, fixture.id);
     // 🧹️ Both documents own a populated asset pool and a populated `params` map, so they reach the
     // artifact's retirement seam rather than `RasterOwnedMap`'s fail-closed `Drop`.
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(reparsed);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(fixture);
+    crate::snapshot::retire_raster_snapshot(reparsed);
+    crate::snapshot::retire_raster_snapshot(fixture);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn raster_dsl_round_trips_representative_document() {
     let document = representative_raster_document();
-    store::os_store::test_support::assert_dsl_round_trip_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    store::os_store::test_support::assert_dsl_round_trip_cold(&document, crate::snapshot::retire_raster_snapshot);
+    crate::snapshot::retire_raster_snapshot(document);
 }

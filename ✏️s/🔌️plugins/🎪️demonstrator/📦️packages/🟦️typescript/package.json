@@ -7,9 +7,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/cad-js:test",
-    "generate": "bun repo run @semio-tech/cad-js:generate",
-    "fixture": "bun repo run @semio-tech/cad-js:fixture"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/cad-js:test",
+    "generate": "bun --cwd \"../../../../..\" repo run @semio-tech/cad-js:generate",
+    "fixture": "bun --cwd \"../../../../..\" repo run @semio-tech/cad-js:fixture"
   },
   "exports": {
     ".": "./🟦️.ts"

@@ -1,0 +1,24 @@
+[
+ {
+  "from": "crate::editor::lowpoly",
+  "to": "crate::editor::lowpoly::kit",
+  "items": [
+   "LOWPOLY_PLAY_APP_ID",
+   "LOWPOLY_PLAY_CONTROLLER_ID",
+   "lowpoly_action",
+   "lowpoly_window_action",
+   "lowpoly_window_engagement",
+   "lowpoly_window_engagement_with_selection",
+   "lowpoly_window_measures",
+   "paint_utility_params_group",
+   "reset_document_effect",
+   "ui_label",
+   "ui_value_bool",
+   "ui_value_list",
+   "ui_value_map",
+   "ui_value_number",
+   "ui_value_text",
+   "utility_param_slider"
+  ]
+ }
+]

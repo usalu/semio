@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `MoveCamera3d`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::MoveCamera3d, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::move_camera3d::MoveCamera3d, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if payload.new_position.iter().any(|c| !c.is_finite()) || payload.new_target.iter().any(|c| !c.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera position {:?} / target {:?} is not finite.", payload.new_position, payload.new_target), ["camera3d"]);
     }

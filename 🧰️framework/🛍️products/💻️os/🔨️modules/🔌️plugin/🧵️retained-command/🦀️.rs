@@ -878,7 +878,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         if !self.closing{return Ok(InteractiveJobCloseStep::Blocked)}
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        let step=crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
+        let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{
             let step=self.close_one_original(same,loan)?;
             let step=match step{InteractiveJobCloseStep::Pending{progress}=>crate::PluginLifecycleStep::Progress(progress),InteractiveJobCloseStep::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original retained command awaits child custody"},InteractiveJobCloseStep::Complete{progress}=>crate::PluginLifecycleStep::Complete(progress)};
             Ok((step,self.terminal_is_empty()))

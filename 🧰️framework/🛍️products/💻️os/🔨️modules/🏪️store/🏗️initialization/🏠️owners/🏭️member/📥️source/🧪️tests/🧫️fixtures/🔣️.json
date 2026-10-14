@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "exact-current-owned-declarations",
+      "change": null,
+      "accepted": true
+    },
+    {
+      "id": "missing-producer",
+      "change": {
+        "removeRole": "producer"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalog",
+      "change": {
+        "removeRole": "catalog"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-opening",
+      "change": {
+        "removeRole": "opening"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-store",
+      "change": {
+        "removeRole": "store"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-valueFactory",
+      "change": {
+        "removeRole": "valueFactory"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-readRetirement",
+      "change": {
+        "removeRole": "readRetirement"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-editRetirement",
+      "change": {
+        "removeRole": "editRetirement"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-messageLedger",
+      "change": {
+        "removeRole": "messageLedger"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-storeLaws",
+      "change": {
+        "removeRole": "storeLaws"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalogLaws",
+      "change": {
+        "removeRole": "catalogLaws"
+      },
+      "accepted": false
+    },
+    {
+      "id": "producer-default-body",
+      "change": {
+        "role": "producer",
+        "from": "fn member_store_owners_birth_demand(&self)->Result<RetainedCloneBirthDemand,ValueError>;",
+        "to": "fn member_store_owners_birth_demand(&self)->Result<RetainedCloneBirthDemand,ValueError>{todo!()}"
+      },
+      "accepted": false
+    },
+    {
+      "id": "producer-open-owner",
+      "change": {
+        "role": "producer",
+        "from": "type SnapshotOpen:MemberSnapshotOpenOperation<Snapshot=P>;",
+        "to": "type SnapshotOpen;"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-catalog-source-price",
+      "change": {
+        "role": "opening",
+        "from": "bytes.checked_add(source.capacity_bytes)",
+        "to": "bytes.checked_add(0)"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-progress-extent",
+      "change": {
+        "role": "opening",
+        "from": "progress.retained_capacity_bytes == source_capacity",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-progress-grant",
+      "change": {
+        "role": "opening",
+        "from": "progress.fits(source_grant)",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-ticket-admission",
+      "change": {
+        "role": "store",
+        "from": "if !owners.constructor_is_complete()",
+        "to": "if false"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-original-tickets",
+      "change": {
+        "role": "store",
+        "from": "*self.factory_retirement_tickets = owners.take_factory_retirement_tickets();",
+        "to": "*self.factory_retirement_tickets = Default::default();"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-original-disposer",
+      "change": {
+        "role": "store",
+        "from": "*self.owned_disposer = owners.store_disposer.take();",
+        "to": "*self.owned_disposer = None;"
+      },
+      "accepted": false
+    },
+    {
+      "id": "funded-producer-selection",
+      "change": {
+        "role": "catalog",
+        "from": "producer.member_store_owners_birth_demand()?",
+        "to": "Default::default()"
+      },
+      "accepted": false
+    },
+    {
+      "id": "cursor-terminal-witness",
+      "change": {
+        "role": "store",
+        "from": "self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "fixed-message-ledger",
+      "change": {
+        "role": "messageLedger",
+        "from": "pub const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192;",
+        "to": "pub const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = usize::MAX;"
+      },
+      "accepted": false
+    },
+    {
+      "id": "catalog-owner-refusal-retained",
+      "change": {
+        "role": "catalog",
+        "from": "owners: Some(owners), progress",
+        "to": "owners: None, progress"
+      },
+      "accepted": false
+    },
+    {
+      "id": "initial-source-loan-lost",
+      "change": {
+        "role": "opening",
+        "from": "source_loan: ManuallyDrop<Option<OriginalCallerSourceLoan>>",
+        "to": "source_loan: Option<OriginalCallerSourceLoan>"
+      },
+      "accepted": false
+    },
+    {
+      "id": "initial-source-return-before-empty",
+      "change": {
+        "role": "opening",
+        "from": "if !self.payload_terminal_is_empty()",
+        "to": "if false"
+      },
+      "accepted": false
+    },
+    {
+      "id": "create-wrapper-bypass",
+      "change": {
+        "role": "store",
+        "from": "install_funded_member_store_owners(&mut store,catalog)?;",
+        "to": "Ok::<(), VcsError>(())?;",
+        "occurrence": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-wrapper-bypass",
+      "change": {
+        "role": "store",
+        "from": "install_funded_member_store_owners(&mut store,catalog)?;",
+        "to": "Ok::<(), VcsError>(())?;",
+        "occurrence": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "cursor-current-refusal-owner-lost",
+      "change": {
+        "role": "store",
+        "from": "self.current = std::mem::ManuallyDrop::new(original); Err(error)",
+        "to": "Err(error)"
+      },
+      "accepted": false
+    },
+    {
+      "id": "envelope-owned-completion-forged",
+      "change": {
+        "role": "readRetirement",
+        "from": "self.vcs.is_none() && self.messages.is_none() && self.metadata.is_none() && self.active.is_none()",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "edit-retirement-direct-drop",
+      "change": {
+        "role": "editRetirement",
+        "from": "self.edit.is_none() && self.active.is_none() && self.pending_mutation.is_none() && self.mutation_factory.is_none() && self.closing_factory.is_none()",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "ledger-backing-proof-lost",
+      "change": {
+        "role": "messageLedger",
+        "from": "self.active.is_none() && self.original.len == 0 && self.original.backing_is_empty()",
+        "to": "self.active.is_none() && self.original.len == 0"
+      },
+      "accepted": false
+    },
+    {
+      "id": "comment-cannot-supply-missing-production-owner",
+      "change": {
+        "role": "store",
+        "from": "*self.owned_disposer = owners.store_disposer.take();",
+        "to": "*self.owned_disposer = None; /* *self.owned_disposer = owners.store_disposer.take(); */"
+      },
+      "accepted": false
+    },
+    {
+      "id": "vcs-drop-witness-forged",
+      "change": {
+        "role": "readRetirement",
+        "from": "let empty = self.vcs.is_none() && self.active.is_none() && self.initial_snapshot_factory.is_none() && self.mutation_factory.is_none() && self.closing_factories.iter().all(Option::is_none);",
+        "to": "let empty = true;"
+      },
+      "accepted": false
+    },
+    {
+      "id": "envelope-drop-witness-forged",
+      "change": {
+        "role": "readRetirement",
+        "from": "assert!(std::thread::panicking() || self.ownership_is_empty(), \"whole envelope",
+        "to": "assert!(true, \"whole envelope"
+      },
+      "accepted": false
+    },
+    {
+      "id": "edit-drop-witness-forged",
+      "change": {
+        "role": "editRetirement",
+        "from": "assert!(std::thread::panicking() || (self.edit.is_none() && self.active.is_none() && self.pending_mutation.is_none() && self.mutation_factory.is_none() && self.closing_factory.is_none()),",
+        "to": "assert!(true,"
+      },
+      "accepted": false
+    },
+    {
+      "id": "message-drop-witness-forged",
+      "change": {
+        "role": "messageLedger",
+        "from": "assert!(std::thread::panicking() || self.terminal_is_empty(),",
+        "to": "assert!(true,"
+      },
+      "accepted": false
+    },
+    {
+      "id": "backbone-grant-lost",
+      "change": {
+        "role": "store",
+        "from": "ArtifactStoreBackboneRetirement::admit_attached(&mut self.member_inbox, &mut self.backbone, grant)",
+        "to": "unreachable!()"
+      },
+      "accepted": false
+    },
+    {
+      "id": "catalog-drop-witness-forged",
+      "change": {
+        "role": "catalog",
+        "from": "assert!(std::thread::panicking() || self.uninstalled_owners_terminal_is_empty(),",
+        "to": "assert!(true,"
+      },
+      "accepted": false
+    }
+  ],
+  "inputCases": [
+    {
+      "id": "body-extra-authority",
+      "path": [
+        "producer",
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "input-extra-authority",
+      "path": [
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "removed-singular-extension-field",
+      "path": [
+        "extension"
+      ],
+      "value": {},
+      "accepted": false
+    },
+    {
+      "id": "extensions-must-be-array",
+      "path": [
+        "extensions"
+      ],
+      "value": null,
+      "accepted": false
+    }
+  ]
+}

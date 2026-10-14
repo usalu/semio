@@ -1,7 +1,15 @@
 //! 🧬️ Block3d diff schema — a field-sparse, id-keyed delta over the artifact: sub-documents carry field patches, id-keyed lists carry
 //! removed/added/patched rows (never a whole row, list or sub-document copy). `absorb` coalesces per field and per id, `inverse` restores exact base values.
 
-use crate::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
 use semio_s_plugin_block::{BlockAttributesDelta, BlockAuthorsDelta, BlockCamera3dPatch, BlockCompatibilityDelta, BlockKindIdentityPatch, BlockMetaPatch, BlockOptionalText, BlockPatchError, BlockRepresentationsDelta, block_patch, block_patch_absorb, block_patch_apply, block_patch_inverse, block_patch_is_empty};
 use ::semio_framework_schema::ArtifactSchema;
 
@@ -74,8 +82,8 @@ impl protocol::MutationDiff<Block3dSnapshot> for Block3dDiff {
         next.meta = block_patch_apply(&self.meta, &base.meta, "meta").map_err(lift)?;
         next.representations = self.representations.commit_onto(&base.representations, capability).map_err(|error| error.under(["representations"]))?;
         if !self.vortex_kinds.is_empty() {
-            let kinds = self.vortex_kinds.commit_onto(&crate::vortex_kinds_of(base), capability).map_err(|error| error.under(["vortexKinds"]))?;
-            crate::set_vortex_kinds(&mut next, &kinds);
+            let kinds = self.vortex_kinds.commit_onto(&semio_s_artifact_block_3d_model::vortex_kinds_of(base), capability).map_err(|error| error.under(["vortexKinds"]))?;
+            semio_s_artifact_block_3d_model::set_vortex_kinds(&mut next, &kinds);
         }
         next.vortices = self.vortices.commit_onto(&base.vortices, capability).map_err(|error| error.under(["vortices"]))?;
         next.compatibility = self.compatibility.commit_onto(&base.compatibility, capability).map_err(|error| error.under(["compatibility"]))?;
@@ -107,7 +115,7 @@ impl protocol::DiffAlgebra<Block3dSnapshot> for Block3dDiff {
             camera3d: block_patch_inverse(&self.camera3d, &base.camera3d),
             meta: block_patch_inverse(&self.meta, &base.meta),
             representations: self.representations.inverse(&base.representations),
-            vortex_kinds: self.vortex_kinds.inverse(&crate::vortex_kinds_of(base)),
+            vortex_kinds: self.vortex_kinds.inverse(&semio_s_artifact_block_3d_model::vortex_kinds_of(base)),
             vortices: self.vortices.inverse(&base.vortices),
             compatibility: self.compatibility.inverse(&base.compatibility),
             attributes: self.attributes.inverse(&base.attributes),
@@ -134,3 +142,8 @@ impl protocol::DiffAlgebra<Block3dSnapshot> for Block3dDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

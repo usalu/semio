@@ -1,8 +1,8 @@
 //! 🌙 `change-zone-night-ventilation` diff — patches the row's `night_ventilation`; an id the document does not hold is a `mutation.invariant`.
 
-use super::ChangeZoneNightVentilation;
-use crate::diff::{Din4108Diff, Din4108ZoneDelta, Din4108ZonePatch};
-use crate::Din4108Snapshot;
+use crate::change_zone_night_ventilation::ChangeZoneNightVentilation;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ZoneDelta, Din4108ZonePatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeZoneNightVentilation, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(row) = base.zones.iter().find(|row| row.id == payload.zone_id) else {

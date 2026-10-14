@@ -12,8 +12,8 @@
       "order": 0,
       "variant": "StepAnyEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_any::StepAnyEditor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_any::create_step_any_editor",
+      "type": "semio_s_artifact_stdio_step_base_editor::editor::step_any::StepAnyEditor",
+      "factory": "semio_s_artifact_stdio_step_base_editor::editor::step_any::create_step_any_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_any_editor",
@@ -25,8 +25,8 @@
       "order": 1,
       "variant": "StepAnyViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_any::StepAnyViewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_any::create_step_any_viewer",
+      "type": "semio_s_artifact_stdio_step_base_editor::viewer::step_any::StepAnyViewer",
+      "factory": "semio_s_artifact_stdio_step_base_editor::viewer::step_any::create_step_any_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -35,8 +35,8 @@
       "order": 2,
       "variant": "StepCc1Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc1::StepCc1Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc1::create_step_cc1_editor",
+      "type": "semio_s_artifact_stdio_step_cc1_editor::editor::step_cc1::StepCc1Editor",
+      "factory": "semio_s_artifact_stdio_step_cc1_editor::editor::step_cc1::create_step_cc1_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc1_editor",
@@ -48,8 +48,8 @@
       "order": 3,
       "variant": "StepCc1Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc1::StepCc1Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc1::create_step_cc1_viewer",
+      "type": "semio_s_artifact_stdio_step_cc1_editor::viewer::step_cc1::StepCc1Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc1_editor::viewer::step_cc1::create_step_cc1_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -58,8 +58,8 @@
       "order": 4,
       "variant": "StepCc2Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc2::StepCc2Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc2::create_step_cc2_editor",
+      "type": "semio_s_artifact_stdio_step_cc2_editor::editor::step_cc2::StepCc2Editor",
+      "factory": "semio_s_artifact_stdio_step_cc2_editor::editor::step_cc2::create_step_cc2_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc2_editor",
@@ -71,8 +71,8 @@
       "order": 5,
       "variant": "StepCc2Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc2::StepCc2Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc2::create_step_cc2_viewer",
+      "type": "semio_s_artifact_stdio_step_cc2_editor::viewer::step_cc2::StepCc2Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc2_editor::viewer::step_cc2::create_step_cc2_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -81,8 +81,8 @@
       "order": 6,
       "variant": "StepCc3Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc3::StepCc3Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc3::create_step_cc3_editor",
+      "type": "semio_s_artifact_stdio_step_cc3_editor::editor::step_cc3::StepCc3Editor",
+      "factory": "semio_s_artifact_stdio_step_cc3_editor::editor::step_cc3::create_step_cc3_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc3_editor",
@@ -94,8 +94,8 @@
       "order": 7,
       "variant": "StepCc3Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc3::StepCc3Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc3::create_step_cc3_viewer",
+      "type": "semio_s_artifact_stdio_step_cc3_editor::viewer::step_cc3::StepCc3Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc3_editor::viewer::step_cc3::create_step_cc3_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -104,8 +104,8 @@
       "order": 8,
       "variant": "StepCc4Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc4::StepCc4Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc4::create_step_cc4_editor",
+      "type": "semio_s_artifact_stdio_step_cc4_editor::editor::step_cc4::StepCc4Editor",
+      "factory": "semio_s_artifact_stdio_step_cc4_editor::editor::step_cc4::create_step_cc4_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc4_editor",
@@ -117,8 +117,8 @@
       "order": 9,
       "variant": "StepCc4Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc4::StepCc4Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc4::create_step_cc4_viewer",
+      "type": "semio_s_artifact_stdio_step_cc4_editor::viewer::step_cc4::StepCc4Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc4_editor::viewer::step_cc4::create_step_cc4_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -127,8 +127,8 @@
       "order": 10,
       "variant": "StepCc5Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc5::StepCc5Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc5::create_step_cc5_editor",
+      "type": "semio_s_artifact_stdio_step_cc5_editor::editor::step_cc5::StepCc5Editor",
+      "factory": "semio_s_artifact_stdio_step_cc5_editor::editor::step_cc5::create_step_cc5_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc5_editor",
@@ -140,8 +140,8 @@
       "order": 11,
       "variant": "StepCc5Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc5::StepCc5Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc5::create_step_cc5_viewer",
+      "type": "semio_s_artifact_stdio_step_cc5_editor::viewer::step_cc5::StepCc5Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc5_editor::viewer::step_cc5::create_step_cc5_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -150,8 +150,8 @@
       "order": 12,
       "variant": "StepCc6Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_step::editor::step_cc6::StepCc6Editor",
-      "factory": "semio_s_artifact_stdio_step::editor::step_cc6::create_step_cc6_editor",
+      "type": "semio_s_artifact_stdio_step_cc6_editor::editor::step_cc6::StepCc6Editor",
+      "factory": "semio_s_artifact_stdio_step_cc6_editor::editor::step_cc6::create_step_cc6_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "step_cc6_editor",
@@ -163,15 +163,31 @@
       "order": 13,
       "variant": "StepCc6Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_step::viewer::step_cc6::StepCc6Viewer",
-      "factory": "semio_s_artifact_stdio_step::viewer::step_cc6::create_step_cc6_viewer",
+      "type": "semio_s_artifact_stdio_step_cc6_editor::viewer::step_cc6::StepCc6Viewer",
+      "factory": "semio_s_artifact_stdio_step_cc6_editor::viewer::step_cc6::create_step_cc6_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
   "catalogPackage": null,
-  "symbolPackages": [],
+  "symbolPackages": [
+    "semio-s-artifact-stdio-step-snapshot",
+    "semio-s-artifact-stdio-step-mutations",
+    "semio-s-artifact-stdio-step-base-editor",
+    "semio-s-artifact-stdio-step-cc1",
+    "semio-s-artifact-stdio-step-cc2",
+    "semio-s-artifact-stdio-step-cc3",
+    "semio-s-artifact-stdio-step-cc4",
+    "semio-s-artifact-stdio-step-cc5",
+    "semio-s-artifact-stdio-step-cc6",
+    "semio-s-artifact-stdio-step-cc1-editor",
+    "semio-s-artifact-stdio-step-cc2-editor",
+    "semio-s-artifact-stdio-step-cc3-editor",
+    "semio-s-artifact-stdio-step-cc4-editor",
+    "semio-s-artifact-stdio-step-cc5-editor",
+    "semio-s-artifact-stdio-step-cc6-editor"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-cad",
@@ -261,38 +277,38 @@
   "mutationDescriptors": [
     {
       "name": "StepMutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::StepMutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation"
     },
     {
       "name": "StepCc1Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc1::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation"
     },
     {
       "name": "StepCc2Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation"
     },
     {
       "name": "StepCc3Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc3::standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation"
     },
     {
       "name": "StepCc4Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc4::schema::mutations::StepCc4Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::schema::mutations::StepCc4Mutation"
     },
     {
       "name": "StepCc5Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation"
     },
     {
       "name": "StepCc6Mutation",
-      "snapshot": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
-      "mutation": "semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation"
+      "snapshot": "semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot",
+      "mutation": "semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation"
     }
   ],
   "mutationCoordinates": [

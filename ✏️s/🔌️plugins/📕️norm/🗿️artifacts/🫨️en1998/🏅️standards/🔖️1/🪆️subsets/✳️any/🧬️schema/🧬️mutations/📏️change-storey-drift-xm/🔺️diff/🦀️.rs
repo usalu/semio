@@ -1,8 +1,8 @@
 //! 📏️ `change-storey-drift-xm` diff — patches the one field of the nested row at the indexes; a missing building or storey is a `mutation.target-missing`.
 
-use super::ChangeStoreyDriftXM;
-use crate::diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff, En1998StoreyDelta, En1998StoreyPatch};
-use crate::En1998Snapshot;
+use crate::change_storey_drift_xm::ChangeStoreyDriftXM;
+use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff, En1998StoreyDelta, En1998StoreyPatch};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeStoreyDriftXM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     let Some(building) = base.buildings.get(payload.building_index) else {

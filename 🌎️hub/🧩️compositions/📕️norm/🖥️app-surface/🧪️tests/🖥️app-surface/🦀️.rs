@@ -193,21 +193,21 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
     }
     assert_eq!(identities, fixture.expected.identities);
     assert_norm_pair! {
-        semio_s_artifact_norm_din4108 => (semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp, semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer),
-        semio_s_artifact_norm_din16798 => (semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp, semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer),
-        semio_s_artifact_norm_din18599 => (semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp, semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer),
-        semio_s_artifact_norm_en1990 => (semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer),
-        semio_s_artifact_norm_en1991 => (semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer),
-        semio_s_artifact_norm_en1992 => (semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer),
+        semio_s_artifact_norm_din4108 => (semio_s_artifact_norm_din4108_editor::Din4108PlayApp, semio_s_artifact_norm_din4108_viewer::Din4108Viewer),
+        semio_s_artifact_norm_din16798 => (semio_s_artifact_norm_din16798_editor::Din16798PlayApp, semio_s_artifact_norm_din16798_viewer::Din16798Viewer),
+        semio_s_artifact_norm_din18599 => (semio_s_artifact_norm_din18599_editor::Din18599PlayApp, semio_s_artifact_norm_din18599_viewer::Din18599Viewer),
+        semio_s_artifact_norm_en1990 => (semio_s_artifact_norm_en1990_editor::En1990PlayApp, semio_s_artifact_norm_en1990_viewer::En1990Viewer),
+        semio_s_artifact_norm_en1991 => (semio_s_artifact_norm_en1991_editor::En1991PlayApp, semio_s_artifact_norm_en1991_viewer::En1991Viewer),
+        semio_s_artifact_norm_en1992 => (semio_s_artifact_norm_en1992_editor::En1992PlayApp, semio_s_artifact_norm_en1992_viewer::En1992Viewer),
         semio_s_artifact_norm_en1993 => (semio_s_artifact_norm_en1993_editor::En1993PlayApp, semio_s_artifact_norm_en1993_viewer::En1993Viewer),
-        semio_s_artifact_norm_en1994 => (semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer),
-        semio_s_artifact_norm_en1995 => (semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer),
-        semio_s_artifact_norm_en1996 => (semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer),
-        semio_s_artifact_norm_en1997 => (semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp, semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer),
-        semio_s_artifact_norm_en1998 => (semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp, semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer),
-        semio_s_artifact_norm_en1999 => (semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp, semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer),
-        semio_s_artifact_norm_iso16757 => (semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp, semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer),
-        semio_s_artifact_norm_vdi3805 => (semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer),
+        semio_s_artifact_norm_en1994 => (semio_s_artifact_norm_en1994_editor::En1994PlayApp, semio_s_artifact_norm_en1994_viewer::En1994Viewer),
+        semio_s_artifact_norm_en1995 => (semio_s_artifact_norm_en1995_editor::En1995PlayApp, semio_s_artifact_norm_en1995_viewer::En1995Viewer),
+        semio_s_artifact_norm_en1996 => (semio_s_artifact_norm_en1996_editor::En1996PlayApp, semio_s_artifact_norm_en1996_viewer::En1996Viewer),
+        semio_s_artifact_norm_en1997 => (semio_s_artifact_norm_en1997_editor::En1997PlayApp, semio_s_artifact_norm_en1997_viewer::En1997Viewer),
+        semio_s_artifact_norm_en1998 => (semio_s_artifact_norm_en1998_editor::En1998PlayApp, semio_s_artifact_norm_en1998_viewer::En1998Viewer),
+        semio_s_artifact_norm_en1999 => (semio_s_artifact_norm_en1999_editor::En1999PlayApp, semio_s_artifact_norm_en1999_viewer::En1999Viewer),
+        semio_s_artifact_norm_iso16757 => (semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp, semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer),
+        semio_s_artifact_norm_vdi3805 => (semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer),
     }
 }
 //#endregion 🧵️RetainedCohort

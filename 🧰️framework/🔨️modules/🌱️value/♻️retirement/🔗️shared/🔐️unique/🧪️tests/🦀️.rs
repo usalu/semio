@@ -1,5 +1,5 @@
 use super::*;
-use crate::value::observe_retirement_allocations as observe;
+use crate::allocation_testing::observe_retirement_allocations as observe;
 #[test]
 fn shared_unique_original_arc_retires_despite_weak_aliases_and_credits_actual_frame(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

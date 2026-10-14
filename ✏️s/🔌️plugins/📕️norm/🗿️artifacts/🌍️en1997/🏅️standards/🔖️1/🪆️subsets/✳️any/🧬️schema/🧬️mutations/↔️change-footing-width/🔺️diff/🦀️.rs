@@ -1,6 +1,6 @@
-use super::ChangeFootingWidth;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997FootingsRows, En1997FootingsPatch};
+use crate::change_footing_width::ChangeFootingWidth;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997FootingsRows, En1997FootingsPatch};
 
 pub fn diff(payload: &ChangeFootingWidth, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_width.is_finite() || payload.new_width <= 0.0 {

@@ -1,14 +1,14 @@
 //! 🧪️ Keyed-diff algebra of En1992: same-key coalescing and the negative diff, over real mutation diffs.
 
-use super::En1992Diff;
-use crate::mutations::change_action_vk::ChangeActionVk;
-use crate::mutations::change_member_height::ChangeMemberHeight;
-use crate::mutations::change_member_width::ChangeMemberWidth;
-use crate::mutations::insert_member::InsertMember;
-use crate::mutations::remove_member::RemoveMember;
-use crate::mutations::reorder_members::ReorderMembers;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+use semio_s_artifact_norm_en1992_mut_resistance::change_action_vk::ChangeActionVk;
+use semio_s_artifact_norm_en1992_mut_members::change_member_height::ChangeMemberHeight;
+use semio_s_artifact_norm_en1992_mut_members::change_member_width::ChangeMemberWidth;
+use semio_s_artifact_norm_en1992_mut_members::insert_member::InsertMember;
+use semio_s_artifact_norm_en1992_mut_members::remove_member::RemoveMember;
+use semio_s_artifact_norm_en1992_mut_members::reorder_members::ReorderMembers;
+use semio_s_artifact_norm_en1992_mutations::En1992Mutation;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn diff_of(mutation: &En1992Mutation, base: &En1992Snapshot) -> En1992Diff {

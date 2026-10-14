@@ -1,10 +1,11 @@
 //! 🖼️ 🖼️ Raster play app commands command — `move-layer`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::mutations::reorder_layers;
-use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::{find_layer, locate_layer};
-use crate::{RasterLayerNode, RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations_layers::reorder_layers;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{find_layer, locate_layer};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,8 +34,8 @@ fn resolve_drop(payload: &MoveLayer, document: &RasterSnapshot) -> Result<Option
         let (parent, index) = locate_layer(&document.layers, &payload.target_row_id).unwrap();
         (parent, index + usize::from(payload.drop_position == "after"))
     };
-    crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,&payload.layer_id,true).map_err(Fault::from)?;
-    if let Some(parent)=&parent_id {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,parent,false).map_err(Fault::from)?;}
+    semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,&payload.layer_id,true).map_err(Fault::from)?;
+    if let Some(parent)=&parent_id {semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,parent,false).map_err(Fault::from)?;}
     if source_parent == parent_id && source_index < index { index -= 1; }
     if source_parent == parent_id && source_index == index { return Ok(None); }
     Ok(Some(reorder_layers::mutation::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index }))

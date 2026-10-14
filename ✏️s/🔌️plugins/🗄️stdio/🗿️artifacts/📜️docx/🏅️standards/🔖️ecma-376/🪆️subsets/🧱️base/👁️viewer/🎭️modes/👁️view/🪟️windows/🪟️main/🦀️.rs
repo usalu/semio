@@ -3,8 +3,8 @@
 //! mutation-capable surface — the same block-to-page mapping, no edit affordances
 //! (`window_kind()`, the read-only variant, not the editable one).
 
-use crate::schema::snapshot::DocxBlock;
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

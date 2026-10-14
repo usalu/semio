@@ -7,10 +7,10 @@
 //! `AppBuilder::interaction`) now own the mesh domain's selection/granularity/mode entirely; see
 //! `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region for the target-id/selection-resolution boundary.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit, SetActivePaintLayerEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit, SetActivePaintLayerEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -56,7 +56,4 @@ pub mod set_active_paint_layer {
 //#endregion 🔖️SetActivePaintLayer
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

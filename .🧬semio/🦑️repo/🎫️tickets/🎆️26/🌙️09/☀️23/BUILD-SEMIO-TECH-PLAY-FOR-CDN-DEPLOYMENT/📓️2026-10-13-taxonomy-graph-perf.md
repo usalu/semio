@@ -286,3 +286,142 @@ Recommendation: the planner should turn both into violations (per-file "overlapp
   - `🧪️run-tests.sh`
   - `🔁️baseline-swap.sh`
   - `🧩️closure-names.py`
+
+---
+
+## 9. Phase 2 (2026-10-13 → 2026-10-15)
+
+Phase 2 asked for: taxonomy report < 60 s; graph < 20 s cold and < 2 s unchanged (later: < 20 s for the whole `bun repo run` warm path); a content-addressed token store; parallel tokenisation; one shared pass; both gate blockers fixed at the root; blockers reported as violations; proof of identity, no regressions, timings.
+
+The tree moved by about 24 h during the phase. Two peer tickets landed under it:
+- `☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL` put Nx behind `bun repo …`. It moved graph construction and the observation module to `📚️library/🏗️build/`, and it absorbed the graph seal into its frozen authorizers.
+- `☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES` moved graph facts into the fixed `.cache/b/g` volume.
+
+Every timing below was measured on that moving tree, while peers were editing.
+
+### 9.1 Outcome
+
+| Target | Result | Met? |
+|---|---|---|
+| Taxonomy report < 60 s | Full-tree verdict in **795.8 s** (`clean=false violations=181041`, no abort). The store namespace was cold, so the digest pass of 95 s is included. The same tree took 2,172.6 s before the last three fixes (§9.3 R5–R7). The phase-2 start was 1,710.9 s, and the real gate earlier timed out at 3,600 s. | No |
+| Real gate completes with a verdict | The in-process `verifyTaxonomy` completes. `bun repo run workspace:verify-taxonomy-report` was not re-run on the final code; graph assembly is the blocker (next row). | Partly |
+| Warm graph < 20 s / unchanged < 2 s | On a quiet tree the earlier seal path measured 8.4 s wall (Nx cached-graph read 1.7 s plus file-map hydration 2.9 s). On today's tree `bun repo show projects` never reaches a published graph: each attempt is discarded when a peer edits an observed file (§9.4). | No |
+| Blockers become violations | Done: `reference-edit-conflict`, `frozen-coordinate-evidence-invalid`, `affected-path-state-conflict`, and new `nested-cargo-catalog-invalid` | Yes |
+| Both named blockers fixed at the root | Done (§9.2). A third blocker of the same class appeared on the moved tree and was fixed the same way. | Yes |
+
+Final full-run phases (r4, 2026-10-14 19:00, load 25–45):
+
+| Phase | Time |
+|---|---:|
+| source observation | 57 s |
+| directories | 28 s |
+| files | 160 s |
+| reference digests (cold namespace) | 95 s |
+| inventory references | 42 s |
+| inventory complete | 43 s |
+| plan references | **330 s** (was 1,709 s in r3) |
+| plan complete | 4 s |
+| **total** | **795.8 s** |
+
+### 9.2 Blockers: root causes
+
+1. **`Reference edit preimage mismatch at .vscode/🔣️.json:embedded-argv:…@5180952`.**
+   - Root cause: the embedded-argv tokenizer. It was not stale tokens, a concurrent regeneration, or offset math on multibyte text.
+   - The word regex ran over raw JSON string text, escapes included. For `\"/🧰️framework/.config/nextest.toml\"` it emitted two overlapping tokens: one at `/` and one a character later that ended in the escape's `\`. Two edits on overlapping spans meant the second edit's preimage no longer matched once the first was applied.
+   - Fix: escape-aware word scan (`EMBEDDED_ESCAPED_ARGUMENT_WORD`; escapes split words and are never part of a token) plus an anchored path rule per word.
+   - Differential over 488 files:
+     - 44,612 tokens removed: 21,972 escape-spanning and 22,640 word-internal root fragments. None of the removals had another cause.
+     - 13,085 whole-word paths added.
+     - Partial overlaps went from 6,609 to 0.
+     - In `launch.json`, overlapping pairs went from 39,260 to 0.
+   - Planner: a file whose edits still conflict is reported as `reference-edit-conflict` instead of throwing.
+2. **Stale digest of `🧼️remaining-package-purity-authority/🔣️.json`.**
+   - Cause: codemod commit `251fa724c4a` rewrote the paths inside this frozen historical record. The pre-codemod bytes (`c3e39ed5…`) match the registered digest.
+   - The content change was not legitimate, because frozen evidence must stay byte-identical. So the bytes were restored instead of re-registered. The 4 owning test files passed on the restored bytes.
+   - A peer later moved fixture enrolment out of `🔣️taxonomy.json` (`🧭️fixture-placement`, `🧫️frozen-seal-ledger`). The planner law now uses a live contract (`draw-evidence-sol-fleet-s1`).
+3. **New on the moved tree: `Nested Cargo catalog digest drift`.** It aborted inventory.
+   - The Bazel ticket renamed `nxProjectName` → `projectName` and `bun nx run` → `bun repo run` inside the digest-locked `📽️nested-cargo-package-projection` catalog without re-registering it. Discovery already requires `projectName`, so the change was legitimate.
+   - It is re-registered through the owning seal ledger: a reseal row with two `moves` (replay verified byte-exact back to `e2749b7d…`), and `🔣️taxonomy.json` now carries `755055da…`.
+   - Inventory now reports any refused catalog as `nested-cargo-catalog-invalid` and plans without it. Apply-side readers still refuse.
+
+### 9.3 What was built and fixed in phase 2
+
+- **R1, content-addressed record store** (`⚡️caching/🗃️records`, schema, fixture, laws 3/3: Ajv, fast-glob, a random model over two handles).
+  - Packs are published by rename, and every value is digest-verified, so a damaged record reads as a miss.
+  - The namespace is the normalizer's module source closure, so any tokenizer edit starts empty. Sibling namespaces older than 1 h are pruned.
+- **R2, reference digests instead of tokens.**
+  - Per leaf, the store keeps resolution queries, opaque candidates and reach signatures for supported and unsupported tokens. A full token store measured 2.4 GB, so tokens are not stored.
+  - Inventory resolves queries. The planner skips staying files whose digest cannot reach a moved target.
+  - Phase 2 added the exact query test `referenceDigestResolvesInto`, gated per query by the same reach the planner applies to tokens. The law "a query resolves exactly like its token" is in `🧲️reference-reach` (32,194 checks).
+  - Digests are computed once and shared between inventory and plan. On a store miss the computed tokens are reused instead of re-tokenised (`storedReferenceAnalysis`). This removed 4 s from first-plan time in small fixtures.
+- **R3, parallel digests.**
+  - Bounded Bun workers claim leaves largest-first from one shared cursor, 8 at a time. Before, a static interleave left one worker tokenising giant files for 10+ minutes while the others idled.
+  - Cold digest pass: 1,339 s → **95–121 s**.
+- **R4, leaf stamps (racy-git rule) and stamp hints** for the plan preimage check and the Nx per-file records (unchanged from the earlier phase-2 work).
+- **R5, retained-substring leak.**
+  - JavaScriptCore substrings and template ropes keep their whole source string alive (measured: 100 slices of 5 MB strings retain 477 MiB, an exact UTF-16 copy retains 5 MiB).
+  - Every edit's `oldValue`/`newValue` and every violation message kept its whole file alive. The plan heap reached **24.8 GB** and swapped.
+  - Fix: exact UTF-16 copies in `violation()` and for planned edits. The plan RSS now oscillates between 0.6 and 10 GB and is reclaimed.
+- **R6, quadratic path scanner.**
+  - `pathLiteralMatches` searched for `/` with an unbounded `indexOf` from every candidate start. It also rescanned the same run from every `:`/`=` inside it.
+  - It now uses monotone run, word, suffix, slash and dot cursors, which makes it amortised linear.
+  - The 20,000-case regex law still passes, plus four new adversarial long-run cases.
+  - In the profile, the unsupported tokenizer went from 430 s to 69 s.
+- **R7, the planner's covered-candidate check** went from O(candidates × tokens) to per-target buckets.
+- **R8, JSC backtrack limit.** `quotedLiteralMatches` replaces the original regex.
+  - Over 130,460 tracked files, the path scanner equals its regex everywhere.
+  - The quoted scanner differs from the regex only in the 156 files whose literals exceed JSC's 638,976-step backtrack limit. There `matchAll` silently stopped early: 155 of them match the abort model exactly, and in 1 the regex never aborted, so scanner and regex agree.
+  - This is an intentional correctness fix.
+- **R9, small regressions found during proof and fixed:**
+  - the eager `@iarna/toml/package.json` lookup broke copied plugins; it is now lazy;
+  - incoming prefilter double-tokenisation;
+  - closure registrations in `🥤️`, `🫙️`, `🪡️`, `🛫️` (new peer helper `taxonomyFixturePayloadPath`, plus fixture dir names in fake schemas);
+  - fixture paths after the peer move to `🧪️tests/🧫️fixtures`;
+  - `🥤️` now expects the neutral executor `repo:script`.
+
+### 9.4 `bun repo run` / graph assembly (profiled, not yet fixed)
+
+**Measured:**
+- Each attempt walks 76–77 k files and 61 k directories (4–14 s), hashes membership (0.6–6 s), then infers 1,026–1,031 projects one after another, at 0.04–4 s each (Rust projects 1–4 s).
+- A cold pass needs about 25 min.
+- Per-project records (`.cache/b/g/m/inference/np`) are reused only partially between attempts: 44 of 140 under 100 ms. Most projects observe shared tooling sources, such as the command-import closures of `⚡️caching/🦀️cargo/📜️script.ts` and the `🏃️process` modules, and peers edit those all day.
+- Any mid-attempt edit ends the attempt (`Conflicting inference observations`, a peer's half-written `Cargo.toml` failing `Observed TOML parse refused`, or a membership change). After 9 attempts it fails with "keeps changing".
+
+**Observed:**
+- 2026-10-14 17:xx: three attempts, ending after 66, 322 and 140 projects.
+- `repo show projects` run 1: 1,030 s, exit 1, a peer's half-applied export.
+- Run 2: 2,224 s, exit 1, the same cause.
+- 2026-10-15 00:xx at load 8: the run exited 1 after 880 s with 4 refreshes and 0 projects completed. A peer's syntactically broken `Cargo.toml` (`Observed TOML parse refused`) ended attempts 1 and 2, then `Conflicting inference observations` ended the next.
+
+That is why `os-hub:unit-census-check` sat 24 min in project assembly.
+
+**Root-cause direction (fleet B's code, not changed here):**
+- Make project records depend on the *analysis result* of shared closures (import lists), not their bytes, so editing a library file that does not change its imports keeps every project record valid.
+- Recompute only stale projects to a fixpoint instead of restarting whole attempts.
+- Infer projects in parallel workers.
+- For `bun repo run <p>:<t>`, assemble only the selected project's dependency closure.
+
+### 9.5 Identity and tests
+
+- **Identity:**
+  - Scoped `.vscode` verdict, current code vs a no-skip oracle mirror (skip, reach gating and incoming prefilter disabled): **identical** (18,433 violations, the `launch.json` move).
+  - The R5–R8 changes are value-preserving: R5 copies are exact, R6 and R8 are proven against the regexes, and R7 checks the same predicate. The full-tree verdicts r3 (179,902) and r4 (181,041) differ only by about 50 min of peer tree churn. No same-tree old/new full verdict pair was possible on a tree that never stood still.
+- **Tests, run on the final code:**
+  - `🪡️planner-blockers` 5/0
+  - `⏱️taxonomy-scaling-laws` 8/0
+  - `🧲️reference-reach` 2/0
+  - `🛫️preflight-reference-basis` 30/0
+  - `🥤️rust-finite-target-consumption` 86/0
+  - `🕰️historical-json-source-encoding` 26/0
+  - `💥️nested-cargo-collision-authority` passed in the same run as 🕰️ (51/0 combined)
+  - records 3/0
+  - seal 2/0 (earlier)
+- **Failing on peer fixture relocation, not on this change:** `🎟️` (missing `🧬️schema/🎟️…`), `❄️` (`📚️library/🧫️fixtures/…` gone), `📈️`, `🫙️` (unsafe test workspace / moved fixture imports).
+- **The 141-file sweep from 2026-10-13** (2,221/332) has no regression attributable to this change. Every difference against the baseline was traced to load timeouts, peer renames or peer fixture moves (listed in the transcript classification).
+- **`🧹️normalization/🟦️.ts` type-checks** except for one peer error at `removalAuthorityPaths` (`never.catalogPath`).
+
+### 9.6 What remains for < 60 s
+
+- **Plan references (330 s) are mostly genuine work.** About 23 k files must move (6.5 k moves / 129 k edits), and they are fully re-tokenised. Applying the normalisation removes most of it.
+- **Files (160 s) and source observation (57 s)** are the next per-file costs.
+- **The store namespace is the whole normalizer closure,** so any edit to the 880 kB normalizer, by anyone, re-digests everything (95–121 s now). Splitting the tokenizers into their own module would key the store on them alone.

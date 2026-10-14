@@ -1,9 +1,9 @@
 //! 🧵️ Lowpoly play app commands — UV unwrap + seam marking (`unwrapActive`/`markUvSeam`/`clearSeam`).
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::map_kernel_err, editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_3d::mesh::EdgeId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
@@ -70,7 +70,4 @@ pub mod clear_seam {
 //#endregion 🔖️ClearSeam
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

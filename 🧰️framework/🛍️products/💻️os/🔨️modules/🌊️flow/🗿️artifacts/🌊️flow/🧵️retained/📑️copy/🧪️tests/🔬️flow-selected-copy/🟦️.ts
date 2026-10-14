@@ -31,7 +31,16 @@ export function flowSelectedCopySelfTests(): number {
     const pointer = test.pointer === "" ? document : test.pointer.slice(1).split("/").reduce((value: any, key: string) => value[key], document);
     if (stable(pointer) !== stable(copied)) throw new Error("Flow selected copy fixture pointer disagrees");
   }
+  const intakeSchema=JSON.parse(readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🔨️modules/🧵️job/📥️snapshot/🧬️schema/🔣️.json"),"utf8"));
+  const intakeCorpus=JSON.parse(readFileSync(join(base,"📑️copy/🧪️tests/🧫️fixtures/📥️intake.json"),"utf8"));
+  const admitIntake=ajv.compile(intakeSchema);assert.equal(admitIntake(intakeCorpus),true);
+  const altered=structuredClone(intakeCorpus);altered.cases[0].expected.sameSourceAllocation=false;assert.equal(admitIntake(altered),false);probes+=2;
   const source = readFileSync(join(base, "📑️copy/🦀️.rs"), "utf8");
+  const intakeOwner=readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🔨️modules/🧵️job/📥️snapshot/🧬️schema/🦀️.rs"),"utf8");
+  assert.ok(intakeOwner.includes("pub trait OriginalSnapshotIntake<S>:Send"));assert.ok(intakeOwner.includes("fn take(&mut self)->Option<S>"));
+  assert.ok(source.includes("semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot> for FlowHostSnapshotCopy<R>"));
+  assert.ok(!intakeOwner.includes("semio_framework_artifact_")&&!source.includes("pub trait FlowHostSnapshotIntake"));probes+=4;
+
   assert.ok(source.includes("factory_close:Option<Box<dyn semio_framework_value::FactoryRetirementTicket>>"),"the original parent retains the actual partially prepared ticket");
   assert.ok(source.includes("state.factory_source=rejected.original"));assert.ok(source.includes("state.factory_close=rejected.ticket"));assert.ok(source.includes("rejected.error.with_retained_progress(rejected.progress)"));
   assert.ok(source.includes("factory.factory_retirement_copy_byte_demand()"));probes+=5;

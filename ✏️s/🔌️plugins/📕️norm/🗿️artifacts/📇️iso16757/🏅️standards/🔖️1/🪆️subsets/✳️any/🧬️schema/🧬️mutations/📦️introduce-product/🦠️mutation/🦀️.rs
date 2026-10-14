@@ -1,6 +1,7 @@
 //! 📦️ `introduce-product` — brings a new id-keyed catalogue product into existence.
 
-use crate::{part_1::Product, Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::part_1::Product;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,17 +15,17 @@ pub struct IntroduceProduct {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for IntroduceProduct {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProduct where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_product::mutation::RetireProduct> {
     const SEMANTICS: protocol::SemanticDescriptor =
 
         protocol::SemanticDescriptor { verb: "insert", entity: "product", kind: "introduce-product", record: "IntroducedProduct" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::introduce_product::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::introduce_product::inverse::inverse(self, base)?
     
     })
 }

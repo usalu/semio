@@ -1,12 +1,12 @@
 use super::*;
-use crate::editor::fem2d::transient::FemGumballTransient;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
 use pack::snapshot::ArtifactDsl;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 #[test]
@@ -56,8 +56,8 @@ fn ticks_compose_into_one_net_leaf() {
 }
 
 /// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
-fn drive(transient: &FemGumballTransient, window: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> crate::editor::fem2d::transient::FemGumballDrive<Fem2dMutation> {
-    crate::editor::fem2d::transient::fem_gumball_drive::<Fem2dGumballTool>(transient, window, "translateSelection", phase, tick, "seed", base).expect("the gumball tool accepts the dispatch")
+fn drive(transient: &FemGumballTransient, window: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballDrive<Fem2dMutation> {
+    semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive::<Fem2dGumballTool>(transient, window, "translateSelection", phase, tick, "seed", base).expect("the gumball tool accepts the dispatch")
 }
 
 /// 💾️ LAW: a one-shot dispatch is ONE committed transaction holding the one leaf, and leaves no transient behind.
@@ -129,7 +129,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let base = demo();
     let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["n1".to_string()], motion).expect("the selection moves geometry"));
     let log = [tick(Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 }), tick(Fem2dGumballMotion::Scale { sx: 2.0, sy: 1.0 }), tick(Fem2dGumballMotion::Rotate { angle: 0.5 })];
-    let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     for mutation in &log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");

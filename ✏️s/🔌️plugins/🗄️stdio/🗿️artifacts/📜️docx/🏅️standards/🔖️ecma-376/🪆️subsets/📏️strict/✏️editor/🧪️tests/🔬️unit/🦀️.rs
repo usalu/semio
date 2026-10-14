@@ -1,8 +1,10 @@
 use super::*;
-use crate::schema::diff::DocxBlockPath;
-use crate::schema::mutations::{docx_block_run_address, docx_xml_address};
-use crate::schema::snapshot::{DocxBlock, DocxDocument};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_block_run_address;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_xml_address;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn snapshot_with_blocks(body: Vec<DocxBlock>) -> DocxSnapshot {
     build_minimal_docx(DocxDocument { body, styles: Vec::new() })
@@ -37,12 +39,12 @@ async fn create_docx_strict_editor_builds_a_definition_for_the_editor_role() {
 #[test]
 fn initial_strict_document_is_conformant_and_renders_one_empty_paragraph_target() {
     let snapshot = <DocxStrictEditor as ArtifactEditor>::initial_snapshot();
-    assert!(crate::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance(&snapshot)
+    assert!(semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance(&snapshot)
         .iter()
         .all(|diagnostic| !matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)));
-    let targets = crate::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
+    let targets = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
     assert_eq!(targets.len(), 1);
-    assert_eq!(targets[0].kind, crate::schema::mutations::DocxTextTargetKind::EmptyParagraph);
+    assert_eq!(targets[0].kind, semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind::EmptyParagraph);
     assert_eq!(targets[0].text, "");
     assert_eq!(main::render(&snapshot, semio_framework_plugin::UiPublicationRevision(23)).unwrap().children.len(), 1);
 }
@@ -63,14 +65,14 @@ async fn set_page_replaces_paragraph_text_through_an_addressed_revision() {
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("hello")]);
     let address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
     let mutation = build_set_page_mutation(&snapshot, &address, "goodbye").expect("valid edit").expect("changed edit");
-    let DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: actual, text }) = &mutation else { panic!("expected SetRunText") };
+    let DocxMutation::SetRunText(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text::SetRunText { address: actual, text }) = &mutation else { panic!("expected SetRunText") };
     assert_eq!(actual, &address);
     assert_eq!(text, "goodbye");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_page_rejects_a_non_text_target() {
-    let snapshot = snapshot_with_blocks(vec![DocxBlock::Table(crate::schema::snapshot::DocxTable::default())]);
+    let snapshot = snapshot_with_blocks(vec![DocxBlock::Table(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable::default())]);
     let address = docx_xml_address(&snapshot, "word/document.xml", vec![0, 0]).expect("table address");
     assert!(build_set_page_mutation(&snapshot, &address, "text").is_err());
 }

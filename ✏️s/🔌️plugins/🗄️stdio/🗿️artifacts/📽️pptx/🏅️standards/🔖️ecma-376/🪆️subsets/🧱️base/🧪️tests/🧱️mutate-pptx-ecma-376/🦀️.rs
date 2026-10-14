@@ -86,10 +86,12 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
-    use semio_s_artifact_stdio_pptx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation;
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_s_artifact_stdio_pptx_test_oracle::standards::v_ecma_376::subsets::base::project_pptx_mutation;
     use semio_repo_test_host::law::wire_operation;
 

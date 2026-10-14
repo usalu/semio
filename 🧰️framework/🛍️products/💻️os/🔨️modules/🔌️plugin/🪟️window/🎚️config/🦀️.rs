@@ -1,7 +1,7 @@
 //! 🎚️ Exact-window persisted-local configuration with independent event-stream authority.
 
-use crate::store_lifecycle::ArtifactOwnedDisposer;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use std::any::Any;
@@ -44,8 +44,8 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     const MAXIMUM_PREPARATION_DEPTH: usize;
     fn build_retained_edit() -> Arc<Self::Edit>;
 
-    fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
-    fn build_snapshot_retirement_factory()->Arc<dyn store::SnapshotRetirementFactory<Self::State>>{Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<Self::State>::default())}
+    fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}
+    fn build_snapshot_retirement_factory()->Arc<dyn store::SnapshotRetirementFactory<Self::State>>{Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<Self::State>::default())}
     fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, ValueError>;
     fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
@@ -62,7 +62,7 @@ pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<
 }
 
 pub fn bounded_window_config_store_disposer<O: WindowConfigOwner>() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<O::State, O::Mutation>>> {
-    crate::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
+    semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
 }
 
 #[cfg(test)]
@@ -183,7 +183,7 @@ pub(crate) struct WindowConfigAuthority {
     pub revision: [u8; 32],
     pub snapshot: WindowConfigSnapshot,
     pending_snapshot:Option<WindowConfigSnapshot>,
-    retired_snapshots:semio_framework_value::retirement::queue::RetirementQueue,
+    retired_snapshots:semio_framework_value::retirement_queue::RetirementQueue,
 }
 
 pub(crate) trait ErasedWindowConfigPublication: Send {
@@ -396,7 +396,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
         if !self.partitions.contains_key(window_id) {
             let id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
             let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &id, O::State::default(), None).await;
-            let config = store::ConfigStore::new(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
+            let config = store::ConfigStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
             self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None });
         }
         let partition = self.partitions.get_mut(window_id).expect("initialized window config partition remains owned");

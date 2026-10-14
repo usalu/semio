@@ -132,28 +132,28 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "fem.fem2d",
                     extension: Some("fem2d"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "fem.fem2d.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "fem.fem2d.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.diff"),
@@ -164,8 +164,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("fem2d.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -174,14 +174,29 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("fem2d.spr"),
                 },
             ]
         })
         .as_slice()
 }
+
+//#region 🔖️ResetDocument
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (file import,
+/// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
+/// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
+/// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
+/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
+/// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot) -> semio_framework::kernel::Effect {
+    let pack = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA));
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
+}
+//#endregion 🔖️ResetDocument
 
 //#region 🔖️IoDeclaration
 /// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
@@ -237,15 +252,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
-
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
-
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;

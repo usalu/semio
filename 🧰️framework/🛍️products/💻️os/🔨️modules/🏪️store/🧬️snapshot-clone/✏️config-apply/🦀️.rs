@@ -178,7 +178,7 @@ pub const CONFIG_APPLY_MAXIMUM_PREPARATION_DEPTH: usize = 64;
 /// 🏭️ Builds the store's one-item preparation factory for a config lane from its field-set mutation.
 pub fn config_apply_preparation_factory<S, M>() -> Arc<dyn ArtifactStoreOneItemPreparationFactory<S, M>>
 where S: RetainedClone, M: ConfigApplyMutation<S> + ArtifactCanonicalJsonTree {
-    let mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<M>::default());
-    let snapshot: Arc<dyn SnapshotRetirementFactory<S>> = Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<S>::default());
+    let mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<M>::default());
+    let snapshot: Arc<dyn SnapshotRetirementFactory<S>> = Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<S>::default());
     Arc::new(RetainedClonePreparationFactory::new(Arc::new(ConfigApplyEdit::<S, M>::new()), mutation, snapshot, CONFIG_APPLY_MAXIMUM_PREPARATION_DEPTH).expect("config apply declares a nonzero preparation depth"))
 }

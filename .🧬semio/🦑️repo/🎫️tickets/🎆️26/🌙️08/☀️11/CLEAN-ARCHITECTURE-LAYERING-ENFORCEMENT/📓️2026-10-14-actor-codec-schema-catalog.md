@@ -1,0 +1,5 @@
+# Actor Codec Schema Metadata
+
+The physical domain move had rebound catalog IDs and paths but retained stale export lists and a former schema hash. Actual defining discovery exports every valid $defs key and hashes exact raw bytes. Root hand-authored the current Actor-only catalog row and matching Markdown row, preserving all concurrent unrelated entries. The current 8 definitions and SHA-256 5e58aa102b88677ebc213e6269b2725e55f4fececd5fd36f6b7fe5fb3a870732 correspond to the settled request-schema source. The schema-document index already resolves the exact actor/codec URI to this current owner.
+
+Exact before/after metadata and source bytes are recorded in actor-codec-schema-catalog-inputs.json. This is a source metadata correction and current consistency read, not registered taxonomy/discovery/typegen acceptance. No generator/migration/source copies, compatibility IDs or new runtime dependency were introduced. New graph selection schema catalog entries remain under their defining execution owner.

@@ -1,4 +1,9 @@
-use super::*;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::ActionKind;
 
@@ -18,7 +23,7 @@ fn set_active_example_loads_default_fixture_3d() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+    let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
@@ -31,7 +36,7 @@ fn set_active_example_loads_default_fixture_3d() {
 /// emit operations" guard would otherwise reject it.
 #[test]
 fn set_active_example_is_declared_as_operation_3d() {
-    let definition = crate::editor::fem3d::create_fem3d_app();
+    let definition = semio_s_artifact_fem_3d_editor::editor::fem3d::create_fem3d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     assert!(matches!(action.kind, ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
@@ -44,7 +49,7 @@ fn set_active_example_does_not_publish_app_or_window_config() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+    let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     assert!(emit.config_mutations.is_empty());
     assert!(emit.window_config_mutations.is_empty());
 }

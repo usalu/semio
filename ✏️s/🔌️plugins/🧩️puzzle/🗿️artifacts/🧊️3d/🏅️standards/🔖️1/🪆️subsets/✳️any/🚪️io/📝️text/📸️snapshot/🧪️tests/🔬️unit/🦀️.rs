@@ -1,13 +1,13 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource, crate::standards::v1::subsets::any::schema::Puzzle3dScale, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
+use crate::io::text::snapshot::*;
+use {crate::Puzzle3dAttraction, crate::Puzzle3dKindCompatibility, crate::Puzzle3dMeta, crate::Puzzle3dObject, crate::Puzzle3dReference, crate::Puzzle3dReferenceSource, crate::Puzzle3dScale, crate::Puzzle3dTargetVolume, crate::Puzzle3dVortex};
 
 /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
 /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
 /// through `print_dsl`/`parse_dsl` exactly.
 #[test]
 fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
-    for dsl_text in [PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, PUZZLE3D_NAKAGIN_EXAMPLE_TEXT] {
-        let projection = parse_dsl(dsl_text).expect("example scene_snapshot parses as dsl");
+    for dsl_text in [std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio")).expect("committed example reads"), std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")] {
+        let projection = parse_dsl(&dsl_text).expect("example scene_snapshot parses as dsl");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
     }
@@ -49,30 +49,7 @@ fn puzzle3d_projection_dsl_round_trips() {
         hidden: false,
     });
     projection.meta =
-        Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::standards::v1::subsets::any::schema::Puzzle3dCompatSpecificity::Vortex }] };
+        Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::Puzzle3dCompatSpecificity::Vortex }] };
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
 }
-
-//#region 🔖️CommandEnvelopeTests
-/// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): proves
-/// `Puzzle3dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
-/// file's existing dsl/pack round-trip laws (same pattern as `dag`'s own
-/// `command_envelope_round_trip_holds_for_an_applied_operation`).
-#[semio_framework_async_macros::async_test]
-async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
-    use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-    use crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA;
-    use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
-
-    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
-    let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    (store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.expect("apply");
-    let envelope = store.envelope();
-    let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
-    (semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()))).await;
-    close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
-}
-//#endregion 🔖️CommandEnvelopeTests

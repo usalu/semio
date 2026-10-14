@@ -1,9 +1,9 @@
 //! Inverse for `insert-roofs`.
-use super::InsertRoofs;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(payload: &InsertRoofs, _base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::insert_roofs::InsertRoofs;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(payload: &InsertRoofs, _base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_roofs::RemoveRoofs> {
     Ok((|| {
-    vec![En1991Mutation::RemoveRoofs(crate::mutations::remove_roofs::RemoveRoofs { index: payload.index })]
+    vec![Op::from(crate::remove_roofs::RemoveRoofs { index: payload.index })]
 
     })())
 }

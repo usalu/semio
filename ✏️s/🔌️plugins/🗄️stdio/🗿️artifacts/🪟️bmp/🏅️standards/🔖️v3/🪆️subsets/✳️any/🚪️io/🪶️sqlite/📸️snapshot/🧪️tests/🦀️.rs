@@ -33,7 +33,7 @@ async fn sqlite_snapshot_typed_file_round_trip_preserves_owned_gap_samples_and_t
     use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use store::sqlite_snapshot::SnapshotEncoding;
 
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
         .label("BMP canonical SQLite")
         .version("0.0.1")
         .package_id("semio:stdio")

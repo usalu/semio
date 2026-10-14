@@ -2,6 +2,14 @@ import type {NativeOwnerCapabilities} from "../../⚡️caching/📦️artifacts
 
 /** 🧬️ Validates the closed repository JSON contract. */
 export function conformsOwnerContractV1(contract:Readonly<Record<string,unknown>>,value:unknown):boolean;
+/** 🔤️ Parses literal process arguments without evaluating shell syntax. */
+export function literalCommandTokensV1(command:string):string[];
+/** 🧭️ Names an outer script's exact process and physical Source binding. */
+export interface BoundBuildCommandV1 {readonly program:string;readonly arguments:readonly string[];readonly cwd:string;readonly script:string|null;readonly command:string}
+/** 📥️ Declares the complete literal command binding input. */
+export interface BuildCommandBindingV1 {readonly command:string;readonly workspaceRoot:string;readonly workingDirectory:string;readonly projectRoot:string;readonly arguments:readonly string[]}
+/** 📜️ Resolves the first runtime script while retaining all remaining literal arguments. */
+export function bindBuildCommandV1(command:string,workspaceRoot:string,workingDirectory:string,projectRoot:string,arguments_?:readonly string[]):BoundBuildCommandV1;
 /** 📜️ Parses one discovered literal native command into its schema-owned authority. */
 export function declaredNativeOwnerCommandV1(manifest:string,workingDirectory:string,command:string):NativeOwnerCapabilities["command"];
 /** 📤️ Encodes the closed literal argument envelope. */

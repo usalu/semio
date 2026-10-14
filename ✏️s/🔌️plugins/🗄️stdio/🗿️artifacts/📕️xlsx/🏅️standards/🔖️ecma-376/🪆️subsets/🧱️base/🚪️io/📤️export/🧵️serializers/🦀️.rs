@@ -1,7 +1,7 @@
 //! 🧵️ SpreadsheetML physical package serialization.
 
-use crate::schema::refusal::XlsxError;
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -1,8 +1,7 @@
 //! 🤝️ Energy model mutation — `ConnectSurfaces`: Creates the adjacency relationship between two existing surfaces. `AdjacencyPair` carries no id of its own, so the pair itself is the address, unordered — connecting B to A when A is already connected to B is a duplicate. The row lands at its ascending `(a, b)` position so `disconnect` ∘ `connect` restores the document exactly.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct ConnectSurfaces {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_surfaces(surface_a_id: crate::model::EntityId, surface_b_id: crate::model::EntityId, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::ConnectSurfaces(ConnectSurfaces { surface_a_id, surface_b_id, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn connect_surfaces<Op: From<ConnectSurfaces>>(surface_a_id: crate::model::EntityId, surface_b_id: crate::model::EntityId, index: Option<u32>) -> Op {
+    ConnectSurfaces { surface_a_id, surface_b_id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ConnectSurfaces {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ConnectSurfaces
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ConnectSurfaces> + From<crate::DisconnectSurfaces>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "surfaces", kind: "connect-surfaces", record: "ConnectedSurfaces" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

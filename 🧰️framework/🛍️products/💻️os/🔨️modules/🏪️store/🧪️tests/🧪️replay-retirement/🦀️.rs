@@ -220,14 +220,14 @@ impl Mutation<DemoSnapshot> for FailClosedOp {
     }
 }
 
-impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,FailClosedOp> for crate::os_store::tests::DemoMemberStoreProducer<FailClosedOp> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<FailClosedOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, FailClosedOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, FailClosedOp>> {
         super::fixture_authoring_member_owners::<FailClosedOp>(grant)
     }
 }
@@ -260,7 +260,7 @@ impl ArtifactCanonicalJson for FailClosedOp {
 #[semio_framework_async_macros::async_test]
 async fn a_refused_apply_retires_everything_its_replay_built() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️replay-retirement/🔣️.json")).expect("the corpus parses");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, FailClosedOp>("demo/v1", "replay-retirement", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
     fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![FailClosedOp::of(DemoMutation::SetN(SetN { n: 1 }), Fault::None)], transaction: None }).await.expect("a clean edit applies");
     for case in corpus["cases"].as_array().expect("cases") {

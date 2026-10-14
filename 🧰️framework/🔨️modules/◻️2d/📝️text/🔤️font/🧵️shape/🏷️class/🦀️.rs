@@ -1,5 +1,5 @@
 //! 🏷️ Genuine original GDEF glyph classes use bounded ordered source probes.
-use super::super::{FontReader,FontFace,kerning::Index};
+use semio_framework_2d_text_font::{FontReader,FontFace,kerning::Index};
 #[derive(Clone,Copy)]
 pub struct FontGlyphClassCursor{face:FontFace,glyph:u16,started:bool,probe:Option<Index>,output:Option<u16>}
 semio_framework_value::artifact_retire_leaf!(FontGlyphClassCursor);

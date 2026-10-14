@@ -74,7 +74,7 @@ fn sqlite_snapshot_gis_terrain_exact_profile_and_resource_admission(){let(_,valu
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_gisterrain_real_declaration_public_typed_io() {
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("gis").label("GIS SQLite declaration").version("0.0.1").package_id("semio:gis").artifact(crate::declaration().unwrap()).try_build().unwrap();
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("gis").label("GIS SQLite declaration").version("0.0.1").package_id("semio:gis").artifact(crate::declaration().unwrap()).try_build().unwrap();
     let dialect=ArtifactDialect{artifact_kind:"s.gis.gisterrain".into(),standard:"1".into(),subset:"*".into()};
     let (_,snapshot)=fixture();
     let limits=SqliteDatabaseLimits::default();

@@ -86,7 +86,7 @@ fn brep_selected_solid_operations_match_independent_physical_volumes() {
 fn brep_preview_component_picks_preserve_lossless_face_and_edge_labels() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     let source = semio_framework_pack_json::parse(&fixture["transfer"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
+    let transfer = <MeshTransfer as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)).unwrap();
     let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
     assert_eq!(serde_json::json!(mesh.face_ids), fixture["expected"]["faceIds"]);
     assert_eq!(serde_json::json!(mesh.edge_ids), fixture["expected"]["edgeIds"]);
@@ -835,7 +835,7 @@ fn every_degenerate_affine_transform_is_refused() {
 /// 🛂️ Analytic reference tables cannot claim geometry without matching picking buffers.
 #[test]
 fn brep_preview_component_reference_tables_refuse_missing_picking_buffers() {
-    use protocol::value::FromValue;
+    use semio_framework_value::FromValue;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     for row in fixture["referenceRefusals"].as_array().unwrap() {
         let input=serde_json::json!({"componentReferences":row["references"]});
@@ -848,7 +848,7 @@ fn brep_preview_component_reference_tables_refuse_missing_picking_buffers() {
 /// 🚧️ Malformed analytic ranges are refused before allocating picking buffers.
 #[test]
 fn brep_preview_component_ranges_refuse_incomplete_or_overlapping_groups() {
-    use protocol::value::FromValue;
+    use semio_framework_value::FromValue;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎯️component-picking/🔣️.json")).unwrap();
     for row in fixture["refusals"].as_array().unwrap() {
         let mut source=fixture["transfer"].clone();
@@ -922,7 +922,7 @@ fn brep_preview_vertices_resolve_original_topology_without_sampling_guesses() {
 fn brep_merged_preview_preserves_original_component_ranges() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️mesh-transfer-merge/🔣️.json")).unwrap();
     let wire = semio_framework_pack_json::parse(&fixture["merged"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let transfer = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&wire)).unwrap();
+    let transfer = <MeshTransfer as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&wire)).unwrap();
     let mesh = mesh_data_from_mesh_transfer(&transfer).unwrap();
     assert_eq!(serde_json::json!(mesh.face_ids),fixture["expected"]["faceIds"]);
     assert_eq!(serde_json::json!(mesh.edge_ids),fixture["expected"]["edgeIds"]);
@@ -947,7 +947,7 @@ fn brep_original_vertex_ranges_refuse_malformed_coverage_and_labels() {
         let mut source = raw.clone();
         source["vertex_groups"][refusal["row"].as_u64().unwrap() as usize][refusal["field"].as_str().unwrap()] = refusal["value"].clone();
         let source = semio_framework_pack_json::parse(&source.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        if let Ok(transfer) = <MeshTransfer as protocol::value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)) { assert!(mesh_data_from_mesh_transfer(&transfer).is_err(),"refusal {refusal}"); }
+        if let Ok(transfer) = <MeshTransfer as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&source)) { assert!(mesh_data_from_mesh_transfer(&transfer).is_err(),"refusal {refusal}"); }
     }
     println!("[DEBUG] originalVertexRangeRefusals cases=6 independentSerdeFixture=true");
 }

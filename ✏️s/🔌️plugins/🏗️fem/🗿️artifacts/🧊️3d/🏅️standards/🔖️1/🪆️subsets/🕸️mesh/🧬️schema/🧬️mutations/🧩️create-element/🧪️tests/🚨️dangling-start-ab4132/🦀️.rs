@@ -12,25 +12,25 @@
 //!
 //! `create-element` resolves start, end, material and section in that order; the start node is the first to miss, so it is the one reported.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/🦠️mutation/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/🚨️dangling-start-ab4132/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ A refused mutation leaves the document byte-identical to the committed `after`, which is the
@@ -49,7 +49,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-element/dangling-start-ab4132: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-element/dangling-start-ab4132: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "create-element/dangling-start-ab4132: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "create-element/dangling-start-ab4132: the refusal is reported as mutation.target-missing");
@@ -68,7 +68,7 @@ fn inverse_has_the_declared_shape() {
 /// 🎯️ The declared outcome — status, code, level and path — is exactly what the diff builder emits.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(semio_framework_value::DslValue::as_str), Some("rejected"), "create-element/dangling-start-ab4132: this vector declares a rejected outcome");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
@@ -80,14 +80,14 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-element/dangling-start-ab4132: committed {label} JSON is not canonical");
     }
     let reencoded = semio_framework_value::ToValue::to_value(&mutation());
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-element/dangling-start-ab4132: committed mutation JSON is not canonical");
 }
 

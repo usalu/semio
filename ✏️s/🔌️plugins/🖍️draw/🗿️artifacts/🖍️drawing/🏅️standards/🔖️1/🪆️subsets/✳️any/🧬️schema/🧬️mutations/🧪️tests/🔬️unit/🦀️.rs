@@ -247,7 +247,7 @@ fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
 /// fresh fold of the edited log, and an overwrite finalizes exactly that state. Returns the report.
 async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], index: usize, edited: &DrawingMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     for mutation in log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
@@ -335,7 +335,7 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
         references(&serde_json::from_str(schema).expect("leaf schema"), &mut found);
         assert!(!found.is_empty(), "{schema}");
         for reference in found {
-            assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(semio_s_artifact_draw_drawing_editor::DRAWING_INTERACTION_DOMAIN), Some(semio_s_artifact_draw_drawing_editor::DRAWING_INTERACTION_GRANULARITY)), "{reference}");
+            assert_eq!((reference["domain"].as_str(), reference["granularity"].as_str()), (Some(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN), Some(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY)), "{reference}");
         }
     }
 }

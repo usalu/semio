@@ -109,10 +109,13 @@ fn stamp_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
-    use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::{apply_xlsx_strict_mutation, stamp_conformance_class_mutations, XlsxStrictMutation};
-    use semio_s_artifact_stdio_xlsx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+    use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::apply_xlsx_strict_mutation;
+    use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::stamp_conformance_class_mutations;
+    use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::XlsxStrictMutation;
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::strict::project_package;
     use semio_repo_test_host::law::wire_operation;
 

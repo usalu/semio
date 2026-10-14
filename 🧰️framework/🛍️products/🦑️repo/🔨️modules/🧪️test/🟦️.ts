@@ -17,6 +17,7 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
+import {repositoryTestArtifactRootV1,repositoryTestArtifactPathV1,requireRepositoryTestArtifactRetirementV1} from "./💾️storage/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -1004,8 +1005,7 @@ export function testId(owner: string, caseSlug: string, scenario: string, implem
 //#region ⚡️Cache
 /** ⚡️ Root of every generated test artifact. Nothing outside this tree is ever written or deleted. */
 export function testCacheRoot(repoRoot: string): string {
-  const configured = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
-  return configured ? resolve(repoRoot, configured) : repoCacheDirectory(repoRoot, testTaxonomy(repoRoot).testOutputCacheDirName);
+  return repositoryTestArtifactRootV1(repoRoot);
 }
 
 /** ⚡️ One of the six generated output roots (`work`, `hosts`, `oracles`, `results`, `diffs`, `reports`). */
@@ -1018,14 +1018,14 @@ export function testCacheDir(repoRoot: string, child: string): string {
     // this only rejects what would escape the two path segments it becomes (`/`, `.`, `..`, empty, NUL).
     const segments = scope.split("/");
     if (segments.length !== 2 || segments.some((segment) => segment === "" || segment === "." || segment === ".." || segment.includes("\0") || segment.includes("\\") || segment.includes(":"))) throw new Error(`invalid test output scope ${JSON.stringify(scope)}`);
-    return join(testCacheRoot(repoRoot), "tasks", scope, child);
+    return repositoryTestArtifactPathV1(repoRoot,child);
   }
-  return join(testCacheRoot(repoRoot), child);
+  return repositoryTestArtifactPathV1(repoRoot,child);
 }
 
 /** 🏷️ Agent-scoped scratch root for non-Cargo per-agent state (e.g. Python's pycache); Cargo output lives in the one shared cargo cache instead. */
 export function agentCacheRoot(repoRoot: string, agentId = process.env.SEMIO_AGENT_ID ?? "local"): string {
-  return repoCacheDirectory(repoRoot, "agents", agentId.replace(/[^A-Za-z0-9._-]+/g, "_"));
+  return repositoryTestArtifactPathV1(repoRoot,"agents",digest(agentId).slice(0,24));
 }
 
 /** 🧾️ Ownership marker written into every generated output root; only marked trees are deletable. */
@@ -1036,6 +1036,7 @@ export function markOutputDir(repoRoot: string, absDir: string, marker: Omit<Out
   const taxonomy = testTaxonomy(repoRoot);
   const root = resolve(testCacheRoot(repoRoot));
   if (!resolve(absDir).startsWith(root + sep) && resolve(absDir) !== root) throw new Error(`refusing to mark ${absDir}: outside the test cache root`);
+  repositoryTestArtifactPathV1(repoRoot,relative(root,absDir));
   let rootAncestor = root;
   while (!existsSync(rootAncestor)) rootAncestor = dirname(rootAncestor);
   let targetAncestor = resolve(absDir);
@@ -2398,6 +2399,7 @@ function countTree(abs: string): { files: number; bytes: number } {
  * followed — so no tracked fixture, no source file and no excluded path can be reached from here.
  */
 export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?: boolean; over?: number; liveTestIds?: ReadonlySet<string> } = {}): TestCleanReport {
+  if(!opts.dry)requireRepositoryTestArtifactRetirementV1(repoRoot);
   const dry = opts.dry ?? false;
   const taxonomy = testTaxonomy(repoRoot);
   const root = resolve(testCacheRoot(repoRoot));
@@ -2407,8 +2409,9 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
   const protectedPaths = [relative(repoRoot, repoCacheDirectory(repoRoot)).split(sep).join("/")];
   if (!existsSync(root)) return { dry, removals, protectedPaths, skippedUnmarked, retained };
 
-  for (const child of taxonomy.testOutputChildDirs) {
-    const childRoot = join(root, child);
+  const runs=readdirSync(root,{withFileTypes:true}).filter(entry=>entry.isDirectory()&&!entry.isSymbolicLink()&&/^[a-f0-9]{16}$/u.test(entry.name));
+  for(const run of runs) for (const child of taxonomy.testOutputChildDirs) {
+    const childRoot = repositoryTestArtifactPathV1(repoRoot,run.name,child);
     if (!existsSync(childRoot)) continue;
     for (const entry of readdirSync(childRoot, { withFileTypes: true })) {
       if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
@@ -7246,6 +7249,7 @@ export function markReferencedBlobs(repoRoot: string, registry: OracleRegistry):
  * symlink out of it — the two failure modes that turn a cleaner into a data-loss incident.
  */
 export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts: { dry?: boolean; olderThanMs?: number; overBytes?: number; agent?: string; retention?: readonly RetentionClass[]; nowMs?: number } = {}): GcReport {
+  if(opts.dry===false)requireRepositoryTestArtifactRetirementV1(repoRoot);
   const dry = opts.dry !== false;
   const nowMs = opts.nowMs ?? Date.now();
   const cacheRoot = resolve(testCacheRoot(repoRoot));
@@ -7255,7 +7259,7 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   // sits behind a symlink — `/var` → `/private/var` on macOS is the ordinary case, not the attack —
   // while still letting a cache root that is symlinked OUT of the repository through unexamined.
   const resolvedCacheRoot = realpathSync(cacheRoot);
-  const resolvedMetaRoot = realpathSync(resolve(getRepoMetaDir(repoRoot)));
+  const resolvedMetaRoot = realpathSync(testCacheRoot(repoRoot));
   if (resolvedCacheRoot !== resolvedMetaRoot && !resolvedCacheRoot.startsWith(resolvedMetaRoot + sep)) {
     throw new Error(`refusing to collect: ${cacheRoot} resolves to ${resolvedCacheRoot}, outside the repository cache at ${resolvedMetaRoot}`);
   }

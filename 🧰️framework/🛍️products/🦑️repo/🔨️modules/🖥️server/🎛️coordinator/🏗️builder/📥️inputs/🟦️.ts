@@ -1,0 +1,9 @@
+import {configuredSourceInputsV1,type ConfiguredSourceInputsV1} from "../../../../📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts";
+import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withBuildFileMembershipV1} from "../../../../📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts";
+import policy from "./🔣️policy.json" with {type:"json"};
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+/** 🗂️ Receives a complete actual coordinator Source closure while route membership and dependency custody remain current. */
+export async function withCoordinatorNextInputsV1<T>(workspace:string,invocation:ScriptInvocation,body:(inputs:ConfiguredSourceInputsV1)=>Promise<T>):Promise<T>{checkScriptInvocation(invocation);if(validateJsonSchemaSubset(schema,policy).length)throw Error("Closed coordinator input policy required");return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,()=>withBuildFileMembershipV1(workspace,{version:1,directory:policy.root+"/"+policy.routes,maximumEntries:policy.maximumFiles*2},invocation,async membership=>{const inputs=await configuredSourceInputsV1(workspace,{version:1,entries:membership.files,project:policy.root+"/"+policy.project,packages:{},externalDependencies:policy.externalDependencies,maximumFiles:policy.maximumFiles,maximumBytes:policy.maximumBytes},invocation),recheck=async()=>{checkScriptInvocation(invocation);await membership.recheck();await inputs.recheck();};await recheck();const result=await body(Object.freeze({...inputs,recheck}));await recheck();return result;}));}

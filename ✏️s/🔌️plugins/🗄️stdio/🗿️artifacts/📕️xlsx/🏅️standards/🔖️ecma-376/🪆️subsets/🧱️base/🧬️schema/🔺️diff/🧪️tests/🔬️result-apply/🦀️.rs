@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]
 async fn rejects_missing_part_target_without_mutating_base() {

@@ -42,6 +42,156 @@
       "consumer": "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
       "canonical": "pub use semio_framework_dsl_record_model::*;",
       "definition": "pub enum FieldValue {"
+    },
+    {
+      "producer": "semio-framework-dsl-lexical",
+      "consumer": "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_dsl_lexical::{lexer,trust};",
+      "definition": "pub mod lexer;"
+    },
+    {
+      "producer": "semio-framework-geometry-primitives",
+      "consumer": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_geometry_primitives::*;",
+      "definition": "pub struct Point {"
+    },
+    {
+      "producer": "semio-framework-geometry-vector",
+      "consumer": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_geometry_vector as vector;",
+      "definition": "pub type Xyz = [f64; 3];"
+    },
+    {
+      "producer": "semio-framework-geometry-bulge",
+      "consumer": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_geometry_bulge as bulge;",
+      "definition": "pub struct BulgeSeg {"
+    },
+    {
+      "producer": "semio-framework-geometry-skeleton",
+      "consumer": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_geometry_skeleton as skeleton;",
+      "definition": "pub struct Skeleton {"
+    },
+    {
+      "producer": "semio-framework-geometry-solids",
+      "consumer": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_geometry_solids::{loops, mesh, placement, triangulation};",
+      "definition": "pub mod mesh;"
+    },
+    {
+      "producer": "semio-framework-dsl-notation",
+      "consumer": "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
+      "canonical": "pub use semio_framework_dsl_notation as notation;",
+      "definition": "pub struct EdgeNode {"
+    },
+    {
+      "producer": "semio-framework-dsl-record-emission",
+      "consumer": "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
+      "canonical": "pub use semio_framework_dsl_record_emission::*;",
+      "definition": "pub struct Writer {"
+    },
+    {
+      "producer": "semio-framework-value-control-contract",
+      "consumer": "../../🔨️modules/🌱️value/⚠️refusal/🦀️.rs",
+      "canonical": "pub use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};",
+      "definition": "pub struct ValueError {"
+    },
+    {
+      "producer": "semio-framework-value-allocation-return",
+      "consumer": "../../🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "canonical": "pub use semio_framework_value_allocation_return as allocation_return;",
+      "definition": "pub struct ParentAllocationReturn<const N:usize>"
+    },
+    {
+      "producer": "semio-framework-value-paged-list",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_paged_list::list;",
+      "definition": "pub mod list;"
+    },
+    {
+      "producer": "semio-framework-value-retirement",
+      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_value_retirement::retirement;",
+      "definition": "pub mod retirement;"
+    },
+    {
+      "producer": "semio-framework-value-factory",
+      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_value_factory as factory;",
+      "definition": "pub trait FactoryPayloadRetirement"
+    },
+    {
+      "producer": "semio-framework-value-shared-issuance",
+      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_value_shared_issuance as shared_issuance;",
+      "definition": "pub struct SealedShared<T:Send+Sync+'static>"
+    },
+    {
+      "producer": "semio-framework-value-retirement-queue",
+      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_value_retirement_queue as retirement_queue;",
+      "definition": "pub struct RetirementQueue"
+    },
+    {
+      "producer": "semio-framework-value-original-aliases",
+      "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_value_original_aliases::OriginalAliasBatch;",
+      "definition": "pub struct OriginalAliasBatch<P>"
+    },
+    {
+      "producer": "semio-framework-value-native-encoding",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_native_encoding::native_encoding;",
+      "definition": "pub mod native_encoding;"
+    },
+    {
+      "producer": "semio-framework-value-native-decoding",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_native_decoding::native_decoding;",
+      "definition": "pub mod native_decoding;"
+    },
+    {
+      "producer": "semio-framework-value-paged-text",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_paged_text::paged_text;",
+      "definition": "pub mod paged_text;"
+    },
+    {
+      "producer": "semio-framework-value-ordered",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_ordered::ordered;",
+      "definition": "pub mod ordered;"
+    },
+    {
+      "producer": "semio-framework-value-clone-source",
+      "consumer": "../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "canonical": "pub use semio_framework_value_clone_source::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneBorrowAuthority,RetainedCloneSource,RetainedCloneSourceTake,RetainedOwnedProjection};",
+      "definition": "pub struct RetainedCloneRef"
+    },
+    {
+      "producer": "semio-framework-value-intrinsic",
+      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
+      "canonical": "pub use semio_framework_value_intrinsic::{DslValue,DslValueSource,Number,JsonInteger,json_integer,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};",
+      "definition": "pub mod value;"
+    },
+    {
+      "producer": "semio-framework-value-retained-clone",
+      "consumer": "../../🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "canonical": "pub use semio_framework_value_retained_clone::retained_clone::*;",
+      "definition": "pub mod retained_clone;"
+    },
+    {
+      "producer": "semio-framework-value-retained-map",
+      "consumer": "../../🔨️modules/🌱️value/🧬️retained-clone/🦀️.rs",
+      "canonical": "pub use semio_framework_value_retained_map::ordered_map;",
+      "definition": "pub mod ordered_map;"
+    },
+    {
+      "producer": "semio-framework-mutation-diff",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_mutation_diff::{KeyedRow,KeyedRows,keyed_rows_apply,keyed_rows_inverse,keyed_rows_changing,keyed_rows_absorb};",
+      "definition": "pub mod diff;"
     }
   ],
   "mutationOwners": [

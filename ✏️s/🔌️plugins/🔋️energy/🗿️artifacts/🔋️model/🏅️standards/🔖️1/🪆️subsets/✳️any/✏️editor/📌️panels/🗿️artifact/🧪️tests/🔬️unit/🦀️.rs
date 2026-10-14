@@ -1,9 +1,9 @@
 use super::*;
-use crate::ENERGY_MODEL_DOCUMENT_SCHEMA;
+use crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 fn snapshot_of(model: &Model) -> EnergyModelSnapshot {
-    crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
+    crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
 }
 
 /// 🧫️ ANSI/ASHRAE 140 case 600 — one zone, six surfaces, two windows, the material/glazing/gas

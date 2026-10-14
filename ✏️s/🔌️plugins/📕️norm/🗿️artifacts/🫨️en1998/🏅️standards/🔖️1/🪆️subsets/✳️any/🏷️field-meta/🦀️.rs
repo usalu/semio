@@ -1,6 +1,6 @@
 //! 🏷️ EN 1998 NormFieldMeta lookup for the structured Inputs editor (B2 hook).
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 /// 🏷️ Family field-metadata table — wire values keep codes; labels are localized prose.
 pub fn en1998_field_meta(path: &str) -> Option<NormFieldMeta> {
@@ -95,7 +95,6 @@ macro_rules! m {
         NormFieldMeta { label_en: $en, label_de: $de, unit: None, choices: Some($c) }
     };
 }
-
 
 const IMPOSED_CAT: &[NormFieldChoice] = &[
     NormFieldChoice { value: "A", label_en: "Residential (A)", label_de: "Wohnen (A)" },

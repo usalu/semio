@@ -542,7 +542,7 @@ impl ArtifactEditor for WavEditor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_WAV_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())

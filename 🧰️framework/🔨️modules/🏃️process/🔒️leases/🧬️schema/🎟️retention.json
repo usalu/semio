@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "resource",
+    "maximumDatabaseBytes",
+    "maximumClaimsPerTurn"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "resource": {
+      "const": "queue-claim-catalog"
+    },
+    "maximumDatabaseBytes": {
+      "const": 16384
+    },
+    "maximumClaimsPerTurn": {
+      "const": 256
+    }
+  }
+}

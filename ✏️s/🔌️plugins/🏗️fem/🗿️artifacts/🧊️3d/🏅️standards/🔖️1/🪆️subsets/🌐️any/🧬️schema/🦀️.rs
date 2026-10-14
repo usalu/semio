@@ -34,8 +34,8 @@ pub struct Fem3dArtifact {
 
 impl Fem3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::Fem3dSnapshot {
-        crate::Fem3dSnapshot {
+    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+        crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
             materials: self.materials.clone(),
@@ -49,7 +49,7 @@ impl Fem3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, preserving the authored document fields.
-    pub fn from_snapshot(snapshot: crate::Fem3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -64,7 +64,7 @@ impl Fem3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::Fem3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.materials = snapshot.materials;
@@ -78,46 +78,14 @@ impl Fem3dArtifact {
 }
 //#endregion 🔖️Conversions
 
-//#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.fem.fem3d` — twenty handcrafted schema leaves.
-pub fn fem3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.fem.fem3d",
-        artifact: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
-        },
-        snapshot: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
-//#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 
 //#endregion 🏗️DerivedConstruction
 
 //#region 🌱️DerivedEmpty
 /// 🌱️ An empty `Fem3dSnapshot` — the app's genesis document and every test fixture's blank baseline.
-pub fn empty_fem3d_snapshot() -> crate::Fem3dSnapshot {
-    crate::Fem3dSnapshot::default()
+pub fn empty_fem3d_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+    crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::default()
 }
 //#endregion 🌱️DerivedEmpty
 
@@ -130,14 +98,14 @@ pub fn empty_fem3d_snapshot() -> crate::Fem3dSnapshot {
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
-pub use crate::FemAnalysisSettings;
+pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::FemCombination;
-pub use crate::FemElement;
-pub use crate::FemLoadCase;
-pub use crate::FemMaterial;
-pub use crate::FemNode;
-pub use crate::FemSection;
-pub use crate::FemSolid;
-pub use crate::FemSupport;
+pub use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+pub use crate::standards::v1::subsets::any::schema::structure::FemElement;
+pub use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+pub use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
+pub use crate::standards::v1::subsets::any::schema::structure::FemNode;
+pub use crate::standards::v1::subsets::any::schema::structure::FemSection;
+pub use crate::standards::v1::subsets::any::schema::structure::FemSolid;
+pub use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 //#endregion 🔁️Re-exports

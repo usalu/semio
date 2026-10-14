@@ -1,5 +1,24 @@
-use super::*;
-use crate::editor::process3d::unit_tests::context;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_process_process3d_panels::document::*;
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
+use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessStep};
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::row_target;
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
@@ -20,7 +39,7 @@ async fn document_panel_lists_stock_and_steps() {
 /// record since wave 4, not the unresolvable `steps` child handle.
 #[semio_framework_async_macros::async_test]
 async fn document_panel_lists_every_step_payload_in_order() {
-    use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+    use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let scene = ProcessWorkingScene {
         stock: Stock::default(),
         steps: vec![
@@ -30,7 +49,7 @@ async fn document_panel_lists_every_step_payload_in_order() {
         ],
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default());
-    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
     // node's `BuiltChildren` only serialises through the retained page transport.
     let rendered = project(&fixture, &semio_framework_plugin::TreeWindows::unhosted());
@@ -63,7 +82,7 @@ fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
 
 /// 🌾️ A 180-step timeline — an order of magnitude past any viewport.
 fn oversized_document() -> Process3dSnapshot {
-    use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+    use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let scene = ProcessWorkingScene {
         stock: Stock::default(),
         steps: (0..180)
@@ -85,7 +104,7 @@ fn project(document: &Process3dSnapshot, windows: &semio_framework_plugin::TreeW
 
 /// 🔎️ The projected body at the viewer's replay cursor `resolved_up_to`.
 fn project_at(document: &Process3dSnapshot, resolved_up_to: Option<usize>, windows: &semio_framework_plugin::TreeWindows<'_>) -> String {
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(document, resolved_up_to, labels, windows).expect("document tree renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("document projection")
 }
@@ -160,7 +179,7 @@ async fn document_rows_declare_their_granularity_and_pick_through_the_tree() {
 /// document renders differently for two viewers and never changes itself.
 #[semio_framework_async_macros::async_test]
 async fn steps_past_the_viewers_cursor_render_pending() {
-    use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+    use semio_s_artifact_process_process3d_model::{snapshot::process_working_scene_to_snapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.02, pose: Default::default() } };
     let fixture = process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: vec![step("a"), step("b"), step("c")] }, Workshop::default());
     assert_eq!(project_at(&fixture, None, &semio_framework_plugin::TreeWindows::unhosted()).matches("pending").count(), 0, "an unset cursor resolves every step");

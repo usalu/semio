@@ -1,9 +1,10 @@
 //! 🎬️ 🖼️ Raster play app commands command — `set-active-example`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::io::text::snapshot::raster_example_document;
-use crate::{RasterLayerNode, RasterOwnedMap, RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_examples::raster_example_document;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterOwnedMap};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,19 +26,19 @@ fn drain_owned_map<V>(map: &mut RasterOwnedMap<V>) {
 
 /// 🎞️ Media a committed example declares but its `.dsl.semio` carrier cannot carry — the same split
 /// `📸️remodel`'s `example_media_operations` uses for synthetic-orbit frame PNGs.
-pub(crate) fn example_media(example_id: &str) -> Vec<(String, crate::SemioImageSnapshot)> {
-    if example_id != crate::examples::art_raster_demo::ID {
+pub fn example_media(example_id: &str) -> Vec<(String, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot)> {
+    if example_id != semio_s_artifact_raster_raster_examples::art_raster_demo::ID {
         return Vec::new();
     }
-    vec![("semio-emblem".to_owned(), crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&crate::examples::art_raster_demo::emblem_image_asset()).expect("curated image decodes"))]
+    vec![("semio-emblem".to_owned(), semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&semio_s_artifact_raster_raster_examples::art_raster_demo::emblem_image_asset()).expect("curated image decodes"))]
 }
 
 /// 🌱️ The registered example as a complete document, its declared media already planted in the asset pool.
-pub(crate) fn example_document(example_id: &str) -> Option<RasterSnapshot> {
+pub fn example_document(example_id: &str) -> Option<RasterSnapshot> {
     let mut document = raster_example_document(example_id)?;
     for (asset_id, image) in example_media(example_id) {
         if !document.assets.contains_key(&asset_id) {
-            let handle = crate::mint_raster_image_child(&asset_id, &image);
+            let handle = semio_s_artifact_raster_raster_model::mint_raster_image_child(&asset_id, &image);
             if document.assets.insert(asset_id, handle).is_err() {
                 dismantle(document);
                 return None;
@@ -49,7 +50,7 @@ pub(crate) fn example_document(example_id: &str) -> Option<RasterSnapshot> {
 
 /// 🔍️ Whether the open pool already resolves every pixel the example's media declares.
 fn example_media_present(example_id: &str, current: &RasterSnapshot) -> bool {
-    example_media(example_id).iter().all(|(asset_id, _)| crate::raster_asset(&current.assets, asset_id).is_some())
+    example_media(example_id).iter().all(|(asset_id, _)| semio_s_artifact_raster_raster_io::raster_asset(&current.assets, asset_id).is_some())
 }
 
 /// 🧹️ Dismantles a document that is not handed on: the asset pool is drained and the layer forest released before the drop.
@@ -73,7 +74,7 @@ fn release_layer_forest(layers: Vec<RasterLayerNode>) {
 /// unknown id must not destroy the open document. The shell replays `setActiveExample` on every boot, so a document that
 /// already carries the example's forest and media is left alone.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
-    for layer in &doc.snapshot.layers {crate::standards::v1::subsets::any::schema::require_layer_edit(&doc.snapshot.layers,crate::standards::v1::subsets::any::schema::layer_node_id(layer),true).map_err(Fault::from)?;}
+    for layer in &doc.snapshot.layers {semio_s_artifact_raster_raster_model::require_layer_edit(&doc.snapshot.layers,semio_s_artifact_raster_raster_model::layer_node_id(layer),true).map_err(Fault::from)?;}
     let Some(example) = example_document(&payload.example_id) else {
         return Ok(Emit::default());
     };
@@ -81,7 +82,7 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>
         dismantle(example);
         return Ok(Emit::default());
     }
-    let effect = crate::editor::raster::raster_reset_document_effect(&example);
+    let effect = crate::raster_reset_document_effect(&example);
     dismantle(example);
     Ok(Emit { effects: vec![effect], ..Default::default() })
 }

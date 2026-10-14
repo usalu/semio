@@ -2,6 +2,7 @@ use super::*;
 use crate::native_encoding::{NativeEncodeControl,NativeEncodeProgress};
 
 #[derive(crate::ToValue,serde::Serialize,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",rename_all="camelCase")]
 #[serde(rename_all="camelCase")]
 struct OutputEntry{label:String,samples:Vec<i64>,optional:Option<bool>}
@@ -24,21 +25,26 @@ fn controlled_value_encoding_large_copy_and_collection_cancel_before_publication
 }
 
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",rename_all="camelCase")]
 #[serde(rename_all="camelCase")]
 struct OutputShape{#[value(rename="title")]#[serde(rename="title")]name:String,#[value(flatten)]#[serde(flatten)]entry:OutputEntry,#[value(skip)]#[serde(skip)]hidden:std::marker::PhantomData<()>,#[value(skip_serializing_if="Option::is_none")]#[serde(skip_serializing_if="Option::is_none")]absent:Option<String>}
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind",content="payload",rename_all="snake_case")]
 #[serde(tag="kind",content="payload",rename_all="snake_case")]
 enum OutputAdjacent{Empty,Item(OutputEntry),Named{value:String}}
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind",rename_all="snake_case")]
 #[serde(tag="kind",rename_all="snake_case")]
 enum OutputInternal{Empty,Item(OutputEntry),Named{value:String}}
 #[derive(crate::ToValue,serde::Serialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 enum OutputExternal{Empty,Item(OutputEntry),Named{value:String}}
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",transparent)]
 #[serde(transparent)]
 struct OutputTransparent{value:Vec<String>}
@@ -62,11 +68,14 @@ fn ordinary_output(value:&String)->DslValue{ORDINARY_OUTPUT.fetch_add(1,std::syn
 fn explicit_output(value:&String,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{value.to_value_controlled(control)}
 #[derive(crate::ToValue)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct MissingOutputBridge{#[value(serialize_with="ordinary_output")]value:String}
 #[derive(crate::ToValue)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct ExplicitOutputBridge{#[value(serialize_with="ordinary_output",serialize_controlled_with="explicit_output")]value:String}
 #[derive(crate::ToValue)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct OctetOutputBridge{#[value(with="crate::bytes",serialize_controlled_with="crate::bytes::to_value_controlled")]value:Vec<u8>,#[value(with="crate::bytes::optional",serialize_controlled_with="crate::bytes::optional::to_value_controlled")]optional:Option<Vec<u8>>}
 #[test]
@@ -90,8 +99,10 @@ struct RefusedOutput;
 impl ToValue for RefusedOutput{fn to_value(&self)->DslValue{panic!("ordinary output must not execute")}}
 #[derive(crate::ToValue)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct PartialOutput{first:DslValue,later:RefusedOutput}
 #[derive(crate::ToValue)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 enum NestedOutput{End,Next(Box<NestedOutput>)}
 #[test]
@@ -109,18 +120,22 @@ fn controlled_value_encoding_paths_match_platform_lossy_primitive_without_unadmi
 
 #[derive(crate::ToValue,serde::Serialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct OutputSkipOnly{#[value(skip)]#[serde(skip)]field:RefusedOutput}
 #[test]
 fn controlled_value_encoding_skipped_fields_allocate_no_output_slots(){let source=OutputSkipOnly{field:RefusedOutput};let mut callback=|_|true;let mut control=NativeEncodeControl::new(0,&mut callback);assert_eq!(source.to_value_controlled(&mut control).unwrap(),DslValue::Object(vec![]));assert_eq!(control.owned_bytes(),0);assert_output_reference(&source);}
 
 #[derive(crate::ToValue,serde::Serialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 enum OutputBindingExternal{Named{control:String,__output:String,__wrapper:String,__payload:String,__tag:String,__semio_field_control:String,__semio_encoding_field_0:String,__source_field_0:String}}
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind")]
 #[serde(tag="kind")]
 enum OutputBindingInternal{Named{control:String,__output:String,__wrapper:String,__payload:String,__tag:String,__semio_field_control:String,__semio_encoding_field_0:String,__source_field_0:String}}
 #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind",content="payload")]
 #[serde(tag="kind",content="payload")]
 enum OutputBindingAdjacent{Named{control:String,__output:String,__wrapper:String,__payload:String,__tag:String,__semio_field_control:String,__semio_encoding_field_0:String,__source_field_0:String}}
@@ -136,6 +151,7 @@ fn controlled_value_encoding_field_bindings_preserve_independent_serde_identity(
 
 #[derive(crate::ToValue,serde::Serialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 enum OutputReserved{Reserved{__output:String,__wrapper:String,entries:String}}
 #[test]
 fn controlled_value_encoding_named_fields_do_not_shadow_producer_bindings(){assert_output_reference(&OutputReserved::Reserved{__output:"first".into(),__wrapper:"second".into(),entries:"third".into()});}
@@ -143,6 +159,7 @@ fn controlled_value_encoding_named_fields_do_not_shadow_producer_bindings(){asse
 mod output_namespace_identity{
  struct Result;
  #[derive(crate::ToValue,serde::Serialize)]
+#[value(crate="crate")]
  #[value(crate="crate",tag="kind",content="payload")]
  #[serde(tag="kind",content="payload")]
  enum Output{Named{control:String}}

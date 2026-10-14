@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pptx-base-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧬️ The pptx ecma-376 base mutation vocabulary with its text and binary codecs."
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-artifact-stdio-pptx-base-model = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

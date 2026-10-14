@@ -6,4 +6,4 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 pub type En1997DiffText = String;
 
-semio_framework_os_kernel::diff_text!(crate::standards::v1::subsets::any::schema::diff::En1997Diff);
+semio_framework_os_kernel::diff_text!(semio_s_artifact_norm_en1997_diff::En1997Diff);

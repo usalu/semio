@@ -1,8 +1,16 @@
 //! 🧬️ Puzzle3d diff schema — sparse typed delta over the artifact: per-field entity patches and id-keyed collection deltas.
 
-use crate::standards::v1::subsets::any::schema::Puzzle3dArtifact;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs, crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource, crate::standards::v1::subsets::any::schema::Puzzle3dScale, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
-use crate::Puzzle3dSnapshot;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_model::Puzzle3dArtifact;
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 use protocol::list_delta::RowPatch;
@@ -185,7 +193,6 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
     <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
 }
 //#endregion 🔖️Algebra
-
 
 impl RowPatch<Puzzle3dVortex> for Puzzle3dVortexPatch {
     fn commit_into(&self, item: &mut Puzzle3dVortex, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -678,3 +685,30 @@ impl DiffAlgebra<Puzzle3dSnapshot> for Puzzle3dDiff {
         self.artifact.is_none() && self.schema.is_none() && self.domain.is_none() && self.meta.as_ref().is_none_or(|patch| patch.is_empty()) && self.objects.as_ref().is_none_or(Puzzle3dObjectsDelta::is_empty) && self.attractions.as_ref().is_none_or(Puzzle3dAttractionsDelta::is_empty) && self.target_volumes.as_ref().is_none_or(Puzzle3dTargetVolumesDelta::is_empty) && self.references.as_ref().is_none_or(Puzzle3dReferencesDelta::is_empty)
     }
 }
+
+//#region 🔖️SchemaLeaves
+/// 🧬️ The diff facet's five handcrafted schema leaves.
+pub const SCHEMA_LEAVES: ::semio_framework_schema_registry::FacetLeaves = ::semio_framework_schema_registry::FacetLeaves {
+    rust: include_str!("🦀️.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: include_str!("🔗️.graphql"),
+    json_schema: include_str!("🔣️.json"),
+    proto: include_str!("🛰️.proto"),
+};
+//#endregion 🔖️SchemaLeaves
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+        pub mod diff;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+        pub mod diff;
+    }
+}
+//#endregion 🌳️Modules

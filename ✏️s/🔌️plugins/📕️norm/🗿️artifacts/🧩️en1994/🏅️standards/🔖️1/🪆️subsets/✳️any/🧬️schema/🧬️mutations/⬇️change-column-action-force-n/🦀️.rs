@@ -1,6 +1,6 @@
 //! `change-column-action-force-n` mutation leaf.
 
-use crate::{En1994Mutation, En1994Snapshot};
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -15,15 +15,15 @@ pub struct ChangeColumnActionForceN {
     pub new_n_k_n: f64,
 }
 
-impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeColumnActionForceN {
+impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeColumnActionForceN where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_column_action_force_n::ChangeColumnActionForceN> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "column-action-force-n", kind: "change-column-action-force-n", record: "ChangedColumnActionForceN" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+        crate::change_column_action_force_n::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_column_action_force_n::inverse::inverse(self, base)?
     
     })
 }
@@ -32,3 +32,10 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeColumnActi
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

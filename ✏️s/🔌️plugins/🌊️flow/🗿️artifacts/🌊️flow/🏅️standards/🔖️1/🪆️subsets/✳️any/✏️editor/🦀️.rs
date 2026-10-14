@@ -9,6 +9,7 @@
 //! This file is a routing table: `handle` → `FlowCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
     open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_active_example, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode,
@@ -435,7 +436,7 @@ fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowC
         }
         Err(_) => live,
     };
-    let mut host = FlowHost::from_host_snapshot(patched_fixture);
+    let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     let preview = host.evaluate().unwrap_or_default();
     host.retire_cold();
@@ -468,7 +469,7 @@ fn generation_window_transient(
         _ => return Ok(None),
     };
     let live = snapshot.to_host_snapshot();
-    let spec = flow::forms_bridge::flow_host_snapshot_to_form_spec(&live);
+    let spec = flow::forms_bridge::flow_host_snapshot_to_form_spec(&live, &PlaybookFlowFormProducer);
     live.retire_cold();
     let mut generation_owner = current.generation().map_err(|error| Fault::from(error.into_message()))?;
     let generation = generation_owner.as_mut();
@@ -2626,7 +2627,7 @@ pub(crate) fn cold_grant() -> semio_framework_value::RetainedCloneGrant {
 
 /// 🏠️ Seeds a host from `live` and installs `session`'s converged baseline under the cold grant.
 pub fn host_with_session(live: semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> FlowHost {
-    match flow_host_with_session(FlowHost::from_host_snapshot(live), session, cold_grant()) {
+    match flow_host_with_session(FlowHost::from_host_snapshot(live).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, cold_grant()) {
         Ok((host, _)) => host,
         Err((error, host)) => {
             host.retire_cold();

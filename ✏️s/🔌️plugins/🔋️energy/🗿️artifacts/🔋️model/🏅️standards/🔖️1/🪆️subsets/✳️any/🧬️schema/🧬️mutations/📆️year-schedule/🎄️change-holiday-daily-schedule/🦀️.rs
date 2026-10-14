@@ -1,8 +1,7 @@
 //! 🎄️ Energy model mutation — `ChangeAnnualScheduleHolidayDailySchedule`: Re-points — or clears, with a null — the profile a year uses on the dates it holds as holidays.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeAnnualScheduleHolidayDailySchedule {
     pub new_holiday_daily_schedule_id: Option<crate::schedule::ScheduleId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_annual_schedule_holiday_daily_schedule(id: crate::schedule::ScheduleId, new_holiday_daily_schedule_id: Option<crate::schedule::ScheduleId>) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeAnnualScheduleHolidayDailySchedule(ChangeAnnualScheduleHolidayDailySchedule { id, new_holiday_daily_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_annual_schedule_holiday_daily_schedule<Op: From<ChangeAnnualScheduleHolidayDailySchedule>>(id: crate::schedule::ScheduleId, new_holiday_daily_schedule_id: Option<crate::schedule::ScheduleId>) -> Op {
+    ChangeAnnualScheduleHolidayDailySchedule { id, new_holiday_daily_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeAnnualScheduleHolidayDailySchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeAnnualScheduleHolidayDailySchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeAnnualScheduleHolidayDailySchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annual-schedule", kind: "change-annual-schedule-holiday-daily-schedule", record: "ChangedAnnualScheduleHolidayDailySchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

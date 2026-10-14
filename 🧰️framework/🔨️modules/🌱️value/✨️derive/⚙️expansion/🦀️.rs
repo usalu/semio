@@ -2351,3 +2351,6 @@ fn controlled_to_body(input:&DeriveInput,container:&ContainerAttrs,c:&syn::Path)
 #[path="../🧵️canonical/🦀️.rs"]
 mod canonical_tree;
 pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{canonical_tree::expand(input)}
+
+/// 🧭️ Resolves the authored value namespace for an actual typed generator owner.
+pub(crate) fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}

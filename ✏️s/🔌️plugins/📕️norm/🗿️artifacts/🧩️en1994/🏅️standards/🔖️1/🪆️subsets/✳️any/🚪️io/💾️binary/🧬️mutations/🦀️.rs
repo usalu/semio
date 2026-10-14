@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::En1994Mutation;
+use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -20,7 +20,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1994Mutation, protocol::ProtocolError
 }
 
 mod native_codec {
-use crate::artifact_schema::mutations::En1994Mutation;
+use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
 use protocol::OpText;
 
 impl protocol::OpBinary for En1994Mutation {

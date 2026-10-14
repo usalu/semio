@@ -156,8 +156,8 @@ fn close_reload_counted_store(store:&mut store::ArtifactStore<TestSnapshot,Reloa
 async fn a_long_history_reloads_one_operation_per_initializer_step() {
     use crate::test_app_mutation_fixture::SetCount;
     let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance;
-    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
-    let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("source store");
+    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut source = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_operation_wire(store::ArtifactOperationWire::canonical());
     store::install_unscheduled_catalog(&mut source, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("source owners");
     for value in 1..=240 {
@@ -168,11 +168,11 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let inputs = vec![store::os_store::store_schema::SupersedeInput { target: first, replacement: Some(ReloadCountedOp(TestMutation::SetCount(SetCount { value: 1000 }))) }];
     Box::pin(source.dispatch(store::os_store::store_schema::ArtifactCommand::Supersede { scope: None, inputs },&mut identity)).await.expect("a supersession");
     let files = Box::pin(store::os_store::text_format::print_document_pack(source.envelope())).await.expect("source pair prints");
-    let envelope = Box::pin(store::os_store::text_format::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses").into_envelope();
-    let mut whole = Box::pin(store::ArtifactStore::new(Box::pin(store::os_store::text_format::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr)).await.expect("the pair parses again").into_envelope(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("a store loaded in one piece");
+    let envelope = Box::pin(store::os_store::text_format::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await.expect("the pair parses").into_envelope();
+    let mut whole = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(Box::pin(store::os_store::text_format::parse_document_pack::<TestSnapshot, ReloadCountedOp>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await.expect("the pair parses again").into_envelope(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("a store loaded in one piece");
     store::install_unscheduled_catalog(&mut whole, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("whole owners");
     let (operation, generation) = (semio_framework_job::OperationId(97), semio_framework_job::Generation(0));
-    let mut job = bounded_document_store_initialization_job(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation, source.local_actor_id().clone());
+    let mut job = bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation, source.local_actor_id().clone());
     let mut sequence = 0u64;
     let mut steps = 0usize;
     let mut folded = 0;

@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/mutation-diff",
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff"
+      }
+    }
+  }
+}

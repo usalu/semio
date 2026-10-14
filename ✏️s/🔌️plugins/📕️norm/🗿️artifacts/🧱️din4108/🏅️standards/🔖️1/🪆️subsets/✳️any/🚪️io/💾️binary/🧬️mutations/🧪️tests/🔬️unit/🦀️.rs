@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::artifact_schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
-use crate::Din4108Snapshot;
+use crate::binary::mutations::*;
+use semio_s_artifact_norm_din4108_mut_building::change_airtightness_n50::ChangeAirtightnessN50;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
@@ -12,7 +12,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
-    let envelope = store::os_store::document_materialize::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     let mutation = Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 1.2 });
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");

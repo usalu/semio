@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "filename",
+    "capacityBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "filename": {
+      "const": "metadata-headroom.bin"
+    },
+    "capacityBytes": {
+      "const": 4194304
+    }
+  }
+}

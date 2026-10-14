@@ -1,7 +1,7 @@
 //! ➕️ `insert-paint-layer` — places a new paint layer into an object's ordered (compositing-order)
 //! layer list at a FINAL-state index; layers have no stable id, only position.
 
-use crate::{LowpolyMutation, LowpolyPaintLayer, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
@@ -14,13 +14,16 @@ pub struct InsertPaintLayer {
     pub layer: LowpolyPaintLayer,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for InsertPaintLayer {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for InsertPaintLayer
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::remove_paint_layer::RemovePaintLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "paint-layer", kind: "insert-paint-layer", record: "InsertedPaintLayer" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

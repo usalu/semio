@@ -20,17 +20,17 @@ impl ArtifactInstanceOperationOwner for MediaOwner {
     fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::RetirementDemand { release_bytes: if self.closed { 0 } else { self.label.capacity() }, depth: usize::from(!self.closed), ..Default::default() })
     }
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::bounded_ownership::PluginLifecycleFailure> {
-        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::bounded_ownership::PluginLifecycleFailure> {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if !self.closed && (grant.maximum_items == 0 || grant.maximum_release_bytes < self.label.capacity()) {
-            return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()));
+            return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()));
         }
         let released_bytes = self.label.capacity();
         self.label = String::new();
         self.closed = true;
-        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
+        Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
     }
     fn terminal_is_empty(&self) -> bool {
         self.closed && self.label.is_empty()
@@ -41,8 +41,8 @@ pub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {
     Box::new(MediaOwner { label: label.into(), closed: false })
 }
 
-fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize) -> crate::bounded_ownership::PluginLifecycleStep {
-    let grant = crate::bounded_ownership::plugin_demand_grant(owner.retirement_demands(0).expect("owner close quote"));
+fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize) -> semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep {
+    let grant = semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(owner.retirement_demands(0).expect("owner close quote"));
     owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, ..grant }).expect("owner close turn")
 }
 
@@ -80,7 +80,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let context_port = fixture["contextPort"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(case["owner"].as_str().unwrap()));
-        assert_eq!(close_owner(&supplied, 0), crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "an unfunded close turn yields without releasing the owner");
+        assert_eq!(close_owner(&supplied, 0), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "an unfunded close turn yields without releasing the owner");
         assert!(!supplied.terminal_is_empty().unwrap());
         let editor = payload(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
         let viewer = payload(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
@@ -88,7 +88,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
         assert_eq!(viewer, case["expected"]);
         validator.validate_json(&editor.to_string()).unwrap();
         validator.validate_json(&viewer.to_string()).unwrap();
-        assert!(matches!(close_owner(&supplied, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
+        assert!(matches!(close_owner(&supplied, 1), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
         assert!(supplied.terminal_is_empty().unwrap());
         assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
         assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
@@ -99,7 +99,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::tool_contract::EmptyArtifactInstanceOperationOwner));
     assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
     assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
-    assert!(matches!(close_owner(&foreign, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
+    assert!(matches!(close_owner(&foreign, 1), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
     let default_port = fixture["defaultPort"].as_str().unwrap();
     let supplied = ArtifactInstanceOperationOwnerHandle::new(owner("defaults"));
     let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
@@ -115,7 +115,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     }
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
-    assert!(matches!(close_owner(&supplied, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
+    assert!(matches!(close_owner(&supplied, 1), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
     let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     editor

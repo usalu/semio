@@ -3,14 +3,27 @@
 //! leaves zero trace; two gestures are two transactions; and a gesture edited in history replays its downstream exactly
 //! like a fresh fold of the edited log.
 
-use super::*;
-use crate::editor::lowpoly::unit_tests::context::{act, app, committed_edits, dispatch};
-use crate::editor::lowpoly::LowpolyCommand;
-use crate::{LowpolyMutation, LOWPOLY_DOCUMENT_SCHEMA};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_commands::transform::*;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::lowpoly_tool_emit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_view::try_build_doc;
+use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{move_selection::MoveSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
+use semio_framework_3d::mesh::VertexId;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use crate::context::{act, app, committed_edits, dispatch};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::PluginApp;
 
 /// 🧾️ The applied document rows of the session history, newest last.
-async fn edit_rows(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp) -> Vec<semio_framework::kernel::HistoryEntry> {
+async fn edit_rows(app: &mut crate::context::LowpolyApp) -> Vec<semio_framework::kernel::HistoryEntry> {
     app.0.history_snapshot().await.expect("history snapshot").upserts.into_iter().filter(|entry| entry.kind == "mutation" && entry.applied).collect()
 }
 
@@ -55,9 +68,9 @@ async fn a_still_gesture_leaves_zero_trace_and_two_gestures_are_two_transactions
 #[semio_framework_async_macros::async_test]
 async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let base = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let object_id = base.objects[0].id.clone();
-    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new(store::os_store::document_materialize::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<LowpolySnapshot, LowpolyMutation>());
     let moved = |offset: [f32; 3]| LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), offset });
     let log = [moved([1.0, 0.0, 0.0]), LowpolyMutation::ScaleSelection(ScaleSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), pivot: [0.0; 3], factor: [2.0, 1.0, 1.0] }), LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: vec![0], offset: [0.0, 0.5, 0.0] })];
@@ -89,14 +102,14 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
 }
 
 /// ⏪️ One `historyEdit*` verb from the Model window; a refused verb fails the law.
-async fn history_edit(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp, verb: &str, args: serde_json::Value) {
+async fn history_edit(app: &mut crate::context::LowpolyApp, verb: &str, args: serde_json::Value) {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = app.0.handle_action(verb, Some(&args), &crate::editor::lowpoly::unit_tests::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = app.0.handle_action(verb, Some(&args), &crate::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
 /// ⏳️ Drives the history edit's replay until `done` holds for its stage (absent = time travel closed).
-async fn pump(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
+async fn pump(app: &mut crate::context::LowpolyApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
     for _ in 0..10_000 {
         let stage = app.0.history_snapshot().await.expect("history").time_travel.map(|status| status.stage);
         if done(stage) {
@@ -113,8 +126,8 @@ async fn pump(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp,
 /// and the overwrite replays the move onto exactly those vertices, equal to a fresh fold of the edited log.
 #[semio_framework_async_macros::async_test]
 async fn use_selection_retargets_a_vertex_move_onto_the_selected_vertices() {
-    use crate::editor::lowpoly::unit_tests::context::select;
-    use crate::editor::lowpoly::view::document_target_row_id;
+    use crate::context::select;
+    use semio_s_artifact_lowpoly_lowpoly_view::document_target_row_id;
     let mut a = app().await;
     let base = a.snapshot().expect("projection").clone();
     let object_id = base.objects[0].id.clone();
@@ -142,10 +155,10 @@ async fn use_selection_retargets_a_vertex_move_onto_the_selected_vertices() {
 /// row names its number for a reference of the same granularity, every other pairing names nothing.
 #[test]
 fn mesh_rows_name_the_references_of_their_granularity() {
-    use crate::editor::lowpoly::LowpolyPlayApp;
+    use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyPlayApp;
     use semio_framework_plugin::ArtifactEditor;
     let kinds = |kind: &str| vec![kind.to_string()];
-    let row = |object: &str, granularity: &str, id: u32| crate::editor::lowpoly::view::document_target_row_id(object, granularity, id);
+    let row = |object: &str, granularity: &str, id: u32| semio_s_artifact_lowpoly_lowpoly_view::document_target_row_id(object, granularity, id);
     assert_eq!(LowpolyPlayApp::selection_reference_id(&kinds("vertex"), &row("obj-1", "vertex", 12)), Some("12".to_string()));
     assert_eq!(LowpolyPlayApp::selection_reference_id(&kinds("face"), &row("obj-1", "face", 3)), Some("3".to_string()));
     assert_eq!(LowpolyPlayApp::selection_reference_id(&kinds("vertex"), &row("obj-1", "face", 3)), None, "a face row names no vertex");

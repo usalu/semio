@@ -2,7 +2,7 @@
 
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::editor::fem2d::interaction::fem2d_load_owner;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -56,7 +56,4 @@ pub fn handle(payload: &PatchLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: 
 //#endregion 🔖️PatchLoad
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

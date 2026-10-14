@@ -1,5 +1,6 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 use semio_framework_plugin::UiAssemblyResult;
 
 /// 🧯️ Surfaces a retained-ownership refusal as a plugin fault carrying its message.
@@ -52,6 +53,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NoDraft;
 use semio_framework_plugin::NoDraftMutation;
 use semio_framework_plugin::Plugin;
+use semio_framework_plugin::PluginBuilder;
 use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::WorldSunConfig;
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
@@ -512,7 +514,7 @@ impl ModuleGeometryOwner {
 
     fn host(&self, snapshot: FlowHostSnapshot) -> Result<FlowHost, Fault> {
         let registry = self.registry.as_ref().ok_or_else(|| Fault::from("playbook.module.procedural.geometry-closed"))?;
-        Ok(FlowHost::from_host_snapshot(snapshot).with_operator_registry(registry.clone()).with_geometry_port(self.session.port()))
+        Ok(FlowHost::from_host_snapshot(snapshot).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY).with_operator_registry(registry.clone()).with_geometry_port(self.session.port()))
     }
 }
 
@@ -793,7 +795,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, pare
         return text_node(format!("Unknown learning example: {slug}"));
     };
     let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.learning-program", error.to_string()))?;
-    let spec = flow_host_snapshot_to_form_spec(&host_snapshot);
+    let spec = flow_host_snapshot_to_form_spec(&host_snapshot, &PlaybookFlowFormProducer);
     // 🧊️ `spec` is an OWNED form projection, so the decoded learning program is done here — closed, never
     // dropped (see `evaluated_preview_payload`). Retired BEFORE the `?`-returning body below so no
     // early exit can leak it.
@@ -1223,7 +1225,7 @@ fn solid_format_arg() -> ActionArgDef {
 }
 
 pub fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
-    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID)
+    PluginBuilder::<_, ProceduralModuleApps>::new(MODULE_PLUGIN_ID)
         .label("Playbook Module Procedural")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:playbook-module-procedural")

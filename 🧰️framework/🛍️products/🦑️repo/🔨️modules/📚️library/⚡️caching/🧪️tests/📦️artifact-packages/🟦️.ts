@@ -19,7 +19,7 @@ export class ArtifactPackageContractScript extends BundleScript {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
     for (const accepted of fixture.accepted) assert.ok(validate(accepted), JSON.stringify(validate.errors));
     for (const rejected of fixture.rejected) assert.equal(validate(rejected.value), false, `Negative fixture accepted: ${rejected.id}`);
-    const contract = artifactPackageInventory(this.repoRoot, await loadBuildGraphV1(this.repoRoot, this.invocation, { reuse: true }));
+    const contract = artifactPackageInventory(this.repoRoot, await loadBuildGraphV1(this.repoRoot, this.invocation, { selection: {kind: "all"}, reuse: true }));
     assert.ok(validate(contract), JSON.stringify(validate.errors));
     const cargoNames = new Set<string>(),
       projectNames = new Set<string>();

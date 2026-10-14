@@ -1,8 +1,7 @@
 //! 🔄️ Energy model mutation — `ChangeInfiltrationDesignFlowAch`: Sets design flow (air changes per hour) on one infiltration, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeInfiltrationDesignFlowAch {
     pub new_design_flow_ach: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_infiltration_design_flow_ach(id: crate::model::EntityId, new_design_flow_ach: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeInfiltrationDesignFlowAch(ChangeInfiltrationDesignFlowAch { id, new_design_flow_ach })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_infiltration_design_flow_ach<Op: From<ChangeInfiltrationDesignFlowAch>>(id: crate::model::EntityId, new_design_flow_ach: f64) -> Op {
+    ChangeInfiltrationDesignFlowAch { id, new_design_flow_ach }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeInfiltrationDesignFlowAch {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeInfiltrationDesignFlowAch
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeInfiltrationDesignFlowAch>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration", kind: "change-infiltration-design-flow-ach", record: "ChangedInfiltrationDesignFlowAch" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

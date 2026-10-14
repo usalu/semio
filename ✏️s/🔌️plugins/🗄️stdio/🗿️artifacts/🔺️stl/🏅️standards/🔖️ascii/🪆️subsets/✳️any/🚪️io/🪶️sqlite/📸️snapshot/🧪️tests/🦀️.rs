@@ -152,7 +152,7 @@ fn sqlite_snapshot_stl_typed_guard_compares_full_state_and_accepts_independent_s
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_stl_real_owned_declaration_public_and_erased_io(){
  use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("STL owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("STL owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.stl".into(),standard:"ascii".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
  let(_,mut snapshot)=fixture();snapshot.schema="actual registered STL intermediate".into();snapshot.solid_name="owned 世界\0 solid".into();snapshot.triangles[0].normal[0]=f64::from_bits(0xfff0000000001234);snapshot.triangles[0].vertices[2][2]=-0.0;
  let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();

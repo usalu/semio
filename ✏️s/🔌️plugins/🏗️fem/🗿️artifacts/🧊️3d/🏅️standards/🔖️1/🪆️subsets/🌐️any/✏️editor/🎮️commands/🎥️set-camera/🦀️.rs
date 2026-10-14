@@ -1,9 +1,11 @@
 //! 🎥️ 🎥️ FEM 3D app commands command — `set-camera`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::fem3d::modes::edit::windows::{model, results};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{Fem3dSnapshot, Viewport3dOrbit};
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_framework_os_kernel::Viewport3dOrbit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -39,6 +41,3 @@ pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: 
     Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

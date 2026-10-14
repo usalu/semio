@@ -10,6 +10,11 @@ description = "Product-neutral lexical tokens, explicit grammar recognition, pro
 role = "framework"
 id = "dsl"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 

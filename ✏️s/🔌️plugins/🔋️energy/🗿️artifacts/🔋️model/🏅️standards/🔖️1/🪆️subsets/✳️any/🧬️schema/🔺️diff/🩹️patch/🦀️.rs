@@ -3,7 +3,13 @@
 //! removed, inserted and modified rows. Every patch composes (`absorb`), negates against its base (`inverse`)
 //! and reads the base row by row for its negative.
 
-use super::splice::{Splice, SpliceFault};
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_s_artifact_energy_model_diff_splice as diff_splice;
+
+use crate::diff_splice::{Splice, SpliceFault};
 use std::fmt::Debug;
 use protocol::MutationApplyError;
 use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError};

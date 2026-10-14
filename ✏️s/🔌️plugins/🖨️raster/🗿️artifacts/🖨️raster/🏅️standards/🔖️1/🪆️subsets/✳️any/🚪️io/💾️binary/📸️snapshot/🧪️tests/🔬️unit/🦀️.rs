@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::mutations::create_layer;
-use crate::op::RasterMutation;
+use crate::io::binary::snapshot::*;
+use semio_s_artifact_raster_raster_mutations_layers::create_layer;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use crate::RasterOwnedMap;
 use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
@@ -12,24 +12,24 @@ async fn mask_asset_and_transform_round_trip_through_text_and_pack() {
         let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&mask)).unwrap();
         assert_eq!(actual["imageKey"],case["mask"]["imageKey"]);
         for field in ["x","y","a","b","c","d"] {assert_eq!(actual["transform"][field].as_f64(),case["mask"]["transform"][field].as_f64());}
-        let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document();
+        let mut document=crate::io::text::snapshot::snapshot_wire_codec::empty_raster_document();
         if let RasterLayerNode::Pixel {mask:target,..}=&mut document.layers[0] {*target=Some(mask);}
-        store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document,crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
-        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+        store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document,crate::snapshot::retire_raster_snapshot);
+        crate::snapshot::retire_raster_snapshot(document);
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
-    let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    let document = crate::testing::raster_image_test_snapshot();
+    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::snapshot::retire_raster_snapshot);
     let bytes = encode(&document);
     let decoded = decode(&bytes).expect("decode");
     assert_eq!(decoded, document);
     // 🧹️ Both documents own a populated asset pool, so they reach the artifact's retirement seam
     // rather than `RasterOwnedMap`'s fail-closed `Drop`.
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(decoded);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    crate::snapshot::retire_raster_snapshot(decoded);
+    crate::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,14 +97,14 @@ async fn pack_round_trips_representative_document() {
             RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::snapshot::retire_raster_snapshot);
     let spec = <RasterSnapshot as pack::snapshot::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
     let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
     let (before, after) = (image(&document), image(&decoded));
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(decoded);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    crate::snapshot::retire_raster_snapshot(decoded);
+    crate::snapshot::retire_raster_snapshot(document);
     assert!(before.is_some(), "the fixture asset carries its composed image");
     assert_eq!(after, before, "the pack carries the composed image content beside its handle");
 }
@@ -119,12 +119,12 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
-    let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document(), None);
-    let mut store = ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::io::text::snapshot::snapshot_wire_codec::empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {

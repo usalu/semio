@@ -1,8 +1,8 @@
 //! 🔺️ `retire-product` — sparse diff construction.
 
-use super::mutation::RetireProduct;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductsRows};
+use crate::retire_product::mutation::RetireProduct;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductsRows};
 
 //#region 🔖️Diff
 

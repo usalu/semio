@@ -1,8 +1,8 @@
 //! Diff for `introduce-product-class`.
 
-use super::mutation::IntroduceProductClass;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductClassesRows};
+use crate::introduce_product_class::mutation::IntroduceProductClass;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductClassesRows};
 
 pub fn diff(payload: &IntroduceProductClass, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     if base.catalogue.product_classes.iter().any(|item| item.id == payload.product_class.id) {

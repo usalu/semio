@@ -1,7 +1,9 @@
 //! 🏋️ Handwritten EN1991 site, load assumptions and nested accidental-case identities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1991Snapshot;
-use crate::{AccidentalCase, AccidentalExplosion, AccidentalImpact, FireMode, FloorArea, RoofArea, SelfWeightElement, StructureKind, WindFace, document::AnnexChoice, part_1_2::FireCurve};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_model::{AccidentalCase, AccidentalExplosion, AccidentalImpact, FireMode, FloorArea, RoofArea, SelfWeightElement, StructureKind, WindFace};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1991_model::part_1_2::FireCurve;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, validate_sqlite_database_schema, artifact::{Cell, FloatColumn, FloatRow, NativeEncodingBound, RowWriter, reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -152,8 +154,5 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1991Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec() }
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

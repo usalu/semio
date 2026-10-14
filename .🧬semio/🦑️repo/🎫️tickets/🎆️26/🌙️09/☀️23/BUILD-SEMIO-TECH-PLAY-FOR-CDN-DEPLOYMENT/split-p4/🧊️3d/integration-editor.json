@@ -1,0 +1,26 @@
+{
+ "lib": "semio_s_artifact_puzzle_3d_editor",
+ "lib_root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "parent_module": "",
+ "rewrites": [["use super::unit_tests::context::*;", "use crate::context::*;"], ["with_puzzle3d_app_for(", "with_puzzle3d_session_for("]],
+ "targets": [
+  {"name": "editor-surface", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs", "doc": "",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs", "module": "unit_tests"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs", "module": "context", "pub": true, "new": true},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🤖️agent-lane/🦀️.rs", "module": "agent_lane_tests"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧵️retained-wiring/🦀️.rs", "module": "retained_wiring_tests"}]},
+  {"name": "editor-panels", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs", "doc": "",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs", "module": "context", "pub": true, "new": true}]},
+  {"name": "editor-budgets", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️budgets/🦀️.rs", "doc": "",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs", "module": "context", "pub": true, "new": true}]},
+  {"name": "editor-gestures", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gestures/🦀️.rs", "doc": "🖐️ Puzzle3d editor gesture laws — example switching, mutation latency, gesture kinds, selection scale, the transform tool machine and the demo session asset.",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs", "module": "context", "pub": true, "new": true},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs", "module": "example_switch"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mutation-latency/🦀️.rs", "module": "mutation_latency"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gesture-kinds/🦀️.rs", "module": "gesture_kinds"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️selection-scale/🦀️.rs", "module": "selection_scale"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool/🦀️.rs", "module": "transform_tool"},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs", "module": "demo_session_example"}]}
+ ]
+}

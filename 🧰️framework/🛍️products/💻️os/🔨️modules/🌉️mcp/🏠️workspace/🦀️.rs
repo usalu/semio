@@ -4565,7 +4565,7 @@ impl HeadlessWorkspace {
         let mut probe_store = match existing {
             Some(probe_store) => probe_store,
             None => {
-                let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
+                let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
                 let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
                 probe_store.install_document_store_owners_exact(probe_store_owners());
                 let document_key = self.origin.artifact_document_key(artifact_id);

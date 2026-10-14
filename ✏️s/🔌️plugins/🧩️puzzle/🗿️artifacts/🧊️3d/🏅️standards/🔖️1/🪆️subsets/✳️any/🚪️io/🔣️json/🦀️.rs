@@ -113,7 +113,7 @@ fn catalog(v: &mut DslValue, d: bool) -> Result<(), String> {
 fn meta(v: &mut DslValue, d: bool) -> Result<(), String> {
     field(v, "kindCatalogs", catalog, d)
 }
-pub(crate) fn convert(mut v: DslValue, decode: bool) -> Result<DslValue, String> {
+pub fn convert(mut v: DslValue, decode: bool) -> Result<DslValue, String> {
     field(&mut v, "meta", meta, decode)?;
     field(&mut v, "objects", objects, decode)?;
     field(&mut v, "attractions", attractions, decode)?;

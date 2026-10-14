@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "kind": "read-only-source-observation-not-authority",
+  "previousRoster": "product-actor-integration-source-inputs1.json",
+  "phaseBudgetsMilliseconds": [30000, 30000],
+  "paths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🏃️dispatch/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🧬️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts"
+  ]
+}

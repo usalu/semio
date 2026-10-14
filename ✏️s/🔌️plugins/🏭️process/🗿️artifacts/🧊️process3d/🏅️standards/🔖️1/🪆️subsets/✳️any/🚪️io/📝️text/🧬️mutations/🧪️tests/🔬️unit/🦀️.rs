@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::mutations::*;
-use crate::schema::mutations::*;
-use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, WorkingSolid};
+use crate::standards::v1::subsets::any::io::component::text::mutations::*;
+use crate::*;
+use semio_s_artifact_process_process3d_model::{snapshot::brep_child_handle, snapshot::brep_snapshot_for_working_solid, snapshot::empty_process3d_snapshot, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::WorkingSolid};
 use protocol::Mutation;
 
 fn cut_step(id: &str) -> ProcessStep {
@@ -8,7 +8,7 @@ fn cut_step(id: &str) -> ProcessStep {
 }
 
 fn circular_saw_machine() -> WorkshopMachine {
-    use crate::{CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
+    use semio_s_artifact_process_process3d_model::{snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::StockQuantity};
     WorkshopMachine {
         id: "circularSaw".into(),
         label: "Circular Saw".into(),

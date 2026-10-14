@@ -14,14 +14,17 @@
     },
     "scope": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[^/\\\\:*?\\u0000][^\\\\:*?\\u0000]*$"
     },
     "members": {
       "type": "array",
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "pattern": "^[^/\\\\:*?\\u0000][^\\\\:*?\\u0000]*$",
+        "not": {"const":"."}
       }
     },
     "generation": {

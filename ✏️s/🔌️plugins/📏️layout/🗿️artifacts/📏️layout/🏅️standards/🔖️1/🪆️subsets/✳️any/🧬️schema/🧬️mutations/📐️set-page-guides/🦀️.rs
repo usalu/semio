@@ -1,8 +1,11 @@
 //! 📐 `set-page-guides` — replaces the guides on one page.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageGuideRow, PageGuidesDelta, PagePatch};
-use crate::{LayoutDiff, LayoutRect, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageGuideRow, PageGuidesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::LayoutRect;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,10 +20,10 @@ pub struct SetPageGuides {
     pub guides: Vec<LayoutRect>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageGuides {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageGuides where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_guides::SetPageGuides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-guides", kind: "set-page-guides", record: "SetPageGuides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_guides(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_page_guides(self, base)? 
     })
 }
@@ -47,10 +50,10 @@ pub fn diff_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> p
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { guides: Some(PageGuidesDelta { len, rows }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_page_guides<Op: From<crate::set_page_guides::SetPageGuides>>(payload: &SetPageGuides, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::SetPageGuides(SetPageGuides { id: page.id.clone(), guides: page.guides.clone() })]
+    vec![Op::from(SetPageGuides { id: page.id.clone(), guides: page.guides.clone() })]
 
     })())
 }

@@ -1,0 +1,122 @@
+{
+  "request": {
+    "version": 1,
+    "manifest": "fixture/Cargo.toml",
+    "package": "fixture",
+    "test": "selected",
+    "arguments": [
+      "--test-threads=1"
+    ]
+  },
+  "cases": [
+    {
+      "name": "exact test executable",
+      "records": [
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/selected"
+        }
+      ],
+      "expected": "$ROOT/selected"
+    },
+    {
+      "name": "unrelated compiler output",
+      "records": [
+        {
+          "reason": "build-finished",
+          "success": true
+        },
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "different",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/other"
+        },
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/selected"
+        }
+      ],
+      "expected": "$ROOT/selected"
+    },
+    {
+      "name": "absent executable",
+      "records": [],
+      "refused": true
+    },
+    {
+      "name": "wrong target kind",
+      "records": [
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "bin"
+            ]
+          },
+          "executable": "$ROOT/selected"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "name": "multiple executables",
+      "records": [
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/selected"
+        },
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/other"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "name": "escaped executable",
+      "records": [
+        {
+          "reason": "compiler-artifact",
+          "target": {
+            "name": "selected",
+            "kind": [
+              "test"
+            ]
+          },
+          "executable": "$ROOT/../outside"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

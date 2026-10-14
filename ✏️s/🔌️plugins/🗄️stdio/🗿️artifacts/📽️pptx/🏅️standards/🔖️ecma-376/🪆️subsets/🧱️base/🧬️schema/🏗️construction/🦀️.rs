@@ -1,9 +1,21 @@
 //! 🏗️ Canonical PresentationML construction over retained OPC/XML authority.
 
-use crate::schema::mutations::xml_address;
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxSlide, PptxXmlPart};
-use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{attr,attribute_value,element_matches,expanded_element_name,namespace_scope,resolve_office_document_relationship,DRAWINGML_NAMESPACES,OFFICE_RELATIONSHIP_NAMESPACES,PRESENTATIONML_NAMESPACES,SLIDE_CONTENT_TYPE}}};
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::attr;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::attribute_value;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::element_matches;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::expanded_element_name;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::namespace_scope;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::DRAWINGML_NAMESPACES;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::OFFICE_RELATIONSHIP_NAMESPACES;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::PRESENTATIONML_NAMESPACES;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SLIDE_CONTENT_TYPE;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, OpcRelationship, OpcTargetMode};
 use std::collections::HashSet;
@@ -133,7 +145,7 @@ fn plain_text_box(node: &XmlNode, scope: &[(String, String)]) -> Result<Option<(
     Ok(Some((text_body_index, namespace_scope(&node_scope, text_body))))
 }
 
-fn run_node(run: &crate::schema::snapshot::PptxRun, drawing_prefix: &str) -> Result<XmlNode, String> {
+fn run_node(run: &semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun, drawing_prefix: &str) -> Result<XmlNode, String> {
     let mut children = Vec::new();
     if run.bold || run.italic || run.font_size.is_some() {
         let mut attrs = Vec::new();
@@ -384,5 +396,3 @@ pub(crate) fn append_slide(snapshot: &mut PptxSnapshot) -> Result<(), String> {
     Ok(())
 }
 
-#[path="🌱️minimal/🦀️.rs"]
-pub mod minimal;

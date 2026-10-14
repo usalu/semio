@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "owner": "semio-framework-io-codec",
+  "definitions": [
+    "SourceSpan",
+    "SourceSpanError",
+    "AnchoredSyntax",
+    "OpaqueExtension",
+    "ArtifactCodecResult",
+    "CodecSeverity",
+    "CodecDiagnostic",
+    "CodecFailure",
+    "CodecOutput",
+    "CodecResult",
+    "CodecRepresentation",
+    "CancellationToken",
+    "CodecLimits",
+    "DecodePolicy",
+    "EncodePolicy",
+    "CodecConsumption",
+    "CodecBudget",
+    "DecodeContext",
+    "EncodeContext",
+    "PayloadSniff",
+    "RandomAccessPayload",
+    "PayloadSource",
+    "PayloadSink",
+    "ResourceRequest",
+    "ResourceResolver",
+    "BoundedRandomAccessPayload",
+    "BoundedPayloadSource",
+    "ResolvedPayloadSource",
+    "BoundedPayloadSink",
+    "ResolvedPayloadSink",
+    "PayloadCodec",
+    "ArtifactCodec"
+  ],
+  "productionDependencies": [
+    "semio-framework-artifact-reference",
+    "semio-framework-io-schema"
+  ],
+  "originalNativeLaws": [
+    "codec_budget_enforces_limits_and_shared_cancellation",
+    "codec_context_bounds_streaming_random_access_recursion_and_resolved_resources",
+    "resolved_resources_cannot_outlive_their_cancellation_budget",
+    "codec_result_requires_valid_owned_spans_and_deterministic_opaque_order"
+  ],
+  "sourceBoundary": {
+    "maxSourceBytes": 262144,
+    "maxSourceFiles": 32,
+    "maxActiveLines": 4000
+  },
+  "budgets": [
+    {
+      "limit": 4,
+      "used": 0,
+      "increment": 4,
+      "admitted": true,
+      "result": 4
+    },
+    {
+      "limit": 4,
+      "used": 4,
+      "increment": 1,
+      "admitted": false,
+      "result": 4
+    },
+    {
+      "limit": 4,
+      "used": 0,
+      "increment": 5,
+      "admitted": false,
+      "result": 0
+    },
+    {
+      "limit": 0,
+      "used": 0,
+      "increment": 0,
+      "admitted": true,
+      "result": 0
+    }
+  ]
+}

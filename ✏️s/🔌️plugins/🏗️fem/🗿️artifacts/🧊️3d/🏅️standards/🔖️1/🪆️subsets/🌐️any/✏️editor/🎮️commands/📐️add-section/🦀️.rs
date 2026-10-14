@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-section`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,8 +18,8 @@ pub struct AddSection {
 
 pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
-        section: crate::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j }, index: None,
+    let id = semio_s_fem_app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
+        section: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j }, index: None,
     })]))
 }

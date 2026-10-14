@@ -1,7 +1,7 @@
 //! 🫧️ Ephemeral Layout interaction state bound to one exact Blueprint or Preview window.
 
 use super::transform::LayoutTransformToolState;
-use crate::LayoutDropPreviewState;
+use semio_s_artifact_layout_layout_model::LayoutDropPreviewState;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
@@ -36,6 +36,6 @@ semio_framework_plugin::window_transient_owners! {
     mutation: LayoutWindowTransientMutation,
     windows: {
         LayoutBlueprintWindowTransientOwner => super::LAYOUT_PLAY_WINDOW_BLUEPRINT,
-        LayoutPreviewWindowTransientOwner => crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW,
+        LayoutPreviewWindowTransientOwner => crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW,
     },
 }

@@ -54,7 +54,7 @@ use mesh_io::{export_solid_glb, export_solid_mesh, export_solid_obj, export_soli
 
 /// 🧭️ Geometry entity kind carried by a handle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum GeometryKind {
     Vertex,
@@ -70,7 +70,7 @@ pub enum GeometryKind {
 
 /// 🧭️ Opaque kind-and-label geometry identity within the owning kernel.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(transparent)]
 pub struct GeometryHandle(pub String);
 
@@ -98,7 +98,7 @@ pub struct BrepTopology {
 
 /// 📏️ Closest-point / distance query result.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ClosestPoint {
     pub distance: f64,
     pub point: Vec3,

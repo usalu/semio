@@ -1,7 +1,7 @@
 //! 🔧️ `change-script-limits` — atomically updates the part-number script execution limits facet
 //! (`max_steps`/`max_recursion`/`timeout_ms` are validated together, never one-field-at-a-time).
 
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -16,15 +16,15 @@ pub struct ChangeScriptLimits {
     pub new_timeout_ms: u64,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeScriptLimits {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeScriptLimits where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_script_limits::mutation::ChangeScriptLimits> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "script-limits", kind: "change-script-limits", record: "ChangedScriptLimits" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::change_script_limits::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_script_limits::inverse::inverse(self, base)?
     
     })
 }

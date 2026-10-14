@@ -1,7 +1,7 @@
 //! 🧩️ Complete Puzzle3d inline catalogs and literal relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot;
-use crate::standards::v1::subsets::any::schema::*;
+use crate::snapshot::Puzzle3dSnapshot;
+use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
 use store::{
     sqlite_snapshot::{
@@ -66,18 +66,18 @@ struct Cells<'a> {
     len: usize,
 }
 impl<'a> Cells<'a> {
-    fn new(values: &[Cell<'a>]) -> Self {
+    pub fn new(values: &[Cell<'a>]) -> Self {
         let mut row = Self { values: [Cell::Null; 40], len: 0 };
         for value in values {
             row.push(*value);
         }
         row
     }
-    fn push(&mut self, value: Cell<'a>) {
+    pub fn push(&mut self, value: Cell<'a>) {
         self.values[self.len] = value;
         self.len += 1;
     }
-    fn f64(&mut self, value: f64) {
+    pub fn f64(&mut self, value: f64) {
         self.push(if value.is_nan() { Cell::Null } else { Cell::Real(value) });
         self.push(Cell::Integer(value.to_bits() as i64));
         self.push(Cell::Text(class(value)));
@@ -96,17 +96,17 @@ impl<'a> Cells<'a> {
             self.f64(value);
         }
     }
-    fn direction(&mut self, value: Option<[f64; 3]>) {
+    pub fn direction(&mut self, value: Option<[f64; 3]>) {
         for i in 0..3 {
             self.optional(value.map(|v| v[i]));
         }
     }
-    fn orientation(&mut self, value: Option<[f64; 4]>) {
+    pub fn orientation(&mut self, value: Option<[f64; 4]>) {
         for i in 0..4 {
             self.optional(value.map(|v| v[i]));
         }
     }
-    fn scale(&mut self, value: Puzzle3dScale) {
+    pub fn scale(&mut self, value: Puzzle3dScale) {
         match value {
             Puzzle3dScale::Uniform(v) => {
                 self.push(Cell::Text("uniform"));
@@ -277,7 +277,7 @@ struct Cursor<'a, 'c, 'p> {
     control: &'c mut SqliteSnapshotControl<'p>,
 }
 impl<'a, 'c, 'p> Cursor<'a, 'c, 'p> {
-    fn new(row: &'a SqliteRow, index: usize, control: &'c mut SqliteSnapshotControl<'p>) -> Self {
+    pub fn new(row: &'a SqliteRow, index: usize, control: &'c mut SqliteSnapshotControl<'p>) -> Self {
         Self { row, index, control }
     }
     fn next(&mut self) -> Result<&'a SqliteValue, ValueError> {
@@ -291,7 +291,7 @@ impl<'a, 'c, 'p> Cursor<'a, 'c, 'p> {
             _ => Err(invalid("Puzzle3d TEXT required")),
         }
     }
-    fn text(&mut self) -> Result<String, ValueError> {
+    pub fn text(&mut self) -> Result<String, ValueError> {
         let value = self.borrowed()?;
         Reconstruction::new(self.control)?.text(value)
     }
@@ -342,7 +342,7 @@ impl<'a, 'c, 'p> Cursor<'a, 'c, 'p> {
         }
         Ok(())
     }
-    fn f64(&mut self) -> Result<f64, ValueError> {
+    pub fn f64(&mut self) -> Result<f64, ValueError> {
         let query = self.next()?;
         let value = f64::from_bits(self.integer()? as u64);
         if self.borrowed()? != class(value) {
@@ -376,21 +376,21 @@ impl<'a, 'c, 'p> Cursor<'a, 'c, 'p> {
     fn xyz(&mut self) -> Result<[f64; 3], ValueError> {
         Ok([self.f64()?, self.f64()?, self.f64()?])
     }
-    fn direction(&mut self) -> Result<Option<[f64; 3]>, ValueError> {
+    pub fn direction(&mut self) -> Result<Option<[f64; 3]>, ValueError> {
         match (self.optional_float()?, self.optional_float()?, self.optional_float()?) {
             (None, None, None) => Ok(None),
             (Some(x), Some(y), Some(z)) => Ok(Some([x, y, z])),
             _ => Err(invalid("Puzzle3d partial vector presence")),
         }
     }
-    fn orientation(&mut self) -> Result<Option<[f64; 4]>, ValueError> {
+    pub fn orientation(&mut self) -> Result<Option<[f64; 4]>, ValueError> {
         match (self.optional_float()?, self.optional_float()?, self.optional_float()?, self.optional_float()?) {
             (None, None, None, None) => Ok(None),
             (Some(w), Some(x), Some(y), Some(z)) => Ok(Some([w, x, y, z])),
             _ => Err(invalid("Puzzle3d partial quaternion presence")),
         }
     }
-    fn scale(&mut self) -> Result<Puzzle3dScale, ValueError> {
+    pub fn scale(&mut self) -> Result<Puzzle3dScale, ValueError> {
         let kind = self.borrowed()?;
         let uniform = self.optional_float()?;
         let axes = self.direction()?;
@@ -602,7 +602,7 @@ struct Rows<'a> {
     groups: [BTreeMap<i64, BTreeMap<i64, &'a SqliteRow>>; 23],
 }
 impl<'a> Rows<'a> {
-    fn new(d: &'a SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    pub fn new(d: &'a SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         store::sqlite_snapshot::validate_sqlite_database_schema(d, Puzzle3dSnapshot::SQLITE_SCHEMA, c.limits())?;
         c.check_database(d, SqliteSnapshotPhase::ReconstructSnapshot)?;
         let mut ids: [BTreeSet<i64>; 23] = std::array::from_fn(|_| BTreeSet::new());
@@ -645,7 +645,7 @@ impl<'a> Rows<'a> {
         }
         Ok(Self { groups })
     }
-    fn take(&mut self, table: usize, parent: i64, c: &mut SqliteSnapshotControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
+    pub fn take(&mut self, table: usize, parent: i64, c: &mut SqliteSnapshotControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
         let rows = self.groups[table].remove(&parent).unwrap_or_default();
         let total = rows.len();
         c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, total)?;
@@ -679,7 +679,7 @@ impl<'a> Rows<'a> {
         }
         Ok(result)
     }
-    fn scale(&mut self, table: usize, parent: i64, c: &mut SqliteSnapshotControl<'_>) -> Result<Option<Puzzle3dScale>, ValueError> {
+    pub fn scale(&mut self, table: usize, parent: i64, c: &mut SqliteSnapshotControl<'_>) -> Result<Option<Puzzle3dScale>, ValueError> {
         if let Some(row) = self.one(table, parent, false)? {
             let mut value = Cursor::new(row, 2, c);
             let scale = value.scale()?;
@@ -887,6 +887,3 @@ fn reconstruct(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<
     Ok(Puzzle3dSnapshot { schema, domain, meta: Puzzle3dMeta { kind_catalogs, kind_compatibility }, objects, attractions, target_volumes, references })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

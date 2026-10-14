@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/store/member-open/snapshot-decoder/schema.json",
+  "title": "Selected Member Snapshot Decoder",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "output",
+    "authority",
+    "allocation",
+    "refusal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": "original-request-owned-pack-borrow"
+    },
+    "output": {
+      "const": "producer-selected-typed-snapshot"
+    },
+    "authority": {
+      "const": "original-member-request-and-step-context"
+    },
+    "allocation": {
+      "const": "original-concrete-open-body-and-input-receipts"
+    },
+    "refusal": {
+      "const": "original-request-input-and-snapshot-paid-close"
+    }
+  }
+}

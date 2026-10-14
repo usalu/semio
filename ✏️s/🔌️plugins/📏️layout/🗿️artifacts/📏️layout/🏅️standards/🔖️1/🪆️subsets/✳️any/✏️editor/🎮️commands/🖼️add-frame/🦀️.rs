@@ -1,10 +1,11 @@
 //! ✏️ ✏️ Layout play app commands command — `add-frame`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::layout::modes::edit::windows::blueprint::config::current;
-use crate::mutations::create_frame::CreateFrame;
-use crate::mutations::LayoutMutation;
-use crate::{Frame, LayoutSnapshot};
+use crate::modes::edit::windows::blueprint::config::current;
+use semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -29,19 +30,19 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         "text" => Frame::Text {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
+            bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
             locked: None,
             visible: None,
             story_id: document.stories.first().map_or_else(|| "story-1".into(), |story| story.id.clone()),
             thread_next: None,
             columns: 1,
-            inset: crate::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
+            inset: semio_s_artifact_layout_layout_model::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
             wrap_mode: "box".into(),
         },
         "image" => Frame::Image {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
+            bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
             locked: None,
             visible: None,
             link_id: document.links.first().map_or_else(|| "link-missing".into(), |link| link.id.clone()),
@@ -49,7 +50,7 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         _ => Frame::Rect {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
+            bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
             locked: None,
             visible: None,
             fill: Some([0.2, 0.24, 0.3, 1.0]),
@@ -61,7 +62,7 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     Ok(Emit {
         artifact_mutations: vec![LayoutMutation::CreateFrame(CreateFrame { page_id, frame, index: Some(index), layer_id: Some(layer_id) })],
-        effects: vec![crate::editor::layout::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
+        effects: vec![crate::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
         ..Default::default()
     })
 }

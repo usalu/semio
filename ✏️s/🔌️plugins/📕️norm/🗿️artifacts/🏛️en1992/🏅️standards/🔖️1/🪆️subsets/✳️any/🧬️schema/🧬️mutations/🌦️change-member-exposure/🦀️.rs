@@ -1,8 +1,8 @@
 //! 🌦 `change-member-exposure`.
 
-use crate::diff::En1992Diff;
-use crate::mutations::En1992Mutation;
-use crate::{En1992Snapshot, ExposureClass};
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+
+use semio_s_artifact_norm_en1992_model::{En1992Snapshot, ExposureClass};
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,11 +15,11 @@ pub struct ChangeMemberExposure {
     pub new_exposure: ExposureClass,
 }
 
-impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberExposure {
+impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberExposure where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_exposure::ChangeMemberExposure> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-exposure", kind: "change-member-exposure", record: "ChangedMemberExposure" };
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_member_exposure::diff::diff(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_member_exposure::inverse::inverse(self, base)? 
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -27,3 +27,10 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberExpo
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

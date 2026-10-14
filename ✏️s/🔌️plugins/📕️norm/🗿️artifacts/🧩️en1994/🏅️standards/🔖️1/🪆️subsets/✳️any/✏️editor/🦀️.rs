@@ -6,13 +6,21 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::document::NormHost;
-use crate::editor::en1994::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
-use crate::editor::en1994::modes::edit as edit_mode;
-use crate::editor::en1994::modes::edit::windows::{inputs, results};
-use crate::editor::en1994::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::standards::v1::subsets::any::schema::mutations::En1994Mutation;
-use crate::En1994Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::NormHost;
+use crate::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
+use crate::modes::edit as edit_mode;
+use crate::modes::edit::windows::{inputs, results};
+use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_plugin::AppIo;
@@ -72,7 +80,7 @@ pub struct En1994PlayApp;
 impl ArtifactEditor for En1994PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::composite_floor_beam::source(), crate::composite_floor_beam_failing::source(), crate::composite_bridge_girder::source()]
+        vec![semio_s_artifact_norm_en1994_examples::composite_floor_beam::source(), semio_s_artifact_norm_en1994_examples::composite_floor_beam_failing::source(), semio_s_artifact_norm_en1994_examples::composite_bridge_girder::source()]
     }
     type Snapshot = En1994Snapshot;
     type Mutation = En1994Mutation;
@@ -87,11 +95,11 @@ impl ArtifactEditor for En1994PlayApp {
 
     type Command = En1994Command;
 
-    const DIALECT: Dialect = crate::EN1994_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_norm_en1994_model::EN1994_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.en1994/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        crate::app_surface::norm_artifact_store_preparation::<Self>()
+        semio_s_plugin_norm_app_surface::norm_artifact_store_preparation::<Self>()
     }
 
     semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
@@ -101,7 +109,7 @@ impl ArtifactEditor for En1994PlayApp {
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        crate::app_surface::build_norm_tool_job::<Self>(request)
+        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -111,13 +119,13 @@ impl ArtifactEditor for En1994PlayApp {
         artifact_schema: "semio.norm.en1994/v1",
         factory: "En1994BoundedCommandJobFactory",
         factory_type: En1994BoundedCommandJobFactory,
-        contract: crate::app_surface::norm_bounded_contract(),
+        contract: semio_s_plugin_norm_app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::app_surface::app_schema_descriptor())
+        Some(semio_s_plugin_norm_app_surface::app_schema_descriptor())
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -129,14 +137,14 @@ impl ArtifactEditor for En1994PlayApp {
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+        Some(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
     fn command_id(command: &En1994Command) -> &'static str {
         command.command_id()
     }
 
-    semio_s_plugin_norm_app_surface::norm_command_from_action!(En1994Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(En1994Command, semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_snapshot_json);
 
     fn handle(
         command: &En1994Command,
@@ -147,7 +155,7 @@ impl ArtifactEditor for En1994PlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<En1994Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        crate::app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
+        semio_s_plugin_norm_app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, En1994Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -157,8 +165,8 @@ impl ArtifactEditor for En1994PlayApp {
             results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
             document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
-            _ => crate::app_surface::render_unknown_body(body_key, view_state.locale),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, semio_s_plugin_norm_results_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
+            _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
@@ -168,27 +176,27 @@ impl ArtifactEditor for En1994PlayApp {
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, En1994Snapshot>) -> Result<Media, MediaError> {
-        crate::app_surface::export_media::<En1994Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
+        semio_s_plugin_norm_app_surface::export_media::<En1994Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, En1994Snapshot>) -> Result<Emit<En1994Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let _base = doc.snapshot.clone();
-        crate::app_surface::import_media(port, media)
+        semio_s_plugin_norm_app_surface::import_media(port, media)
     }
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸En1994PlayApp
 
 //#region 🧵️RetainedCommands
-crate::norm_owned_tool_job_factory!(En1994BoundedCommandJobFactory, En1994PlayApp);
+semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(En1994BoundedCommandJobFactory, En1994PlayApp);
 
-impl crate::app_surface::NormRetainedEditor for En1994PlayApp {
+impl semio_s_plugin_norm_app_surface::NormRetainedEditor for En1994PlayApp {
     type Family = En1994Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
 
-    fn selected_check_window_mutation(command: &En1994Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
+    fn selected_check_window_mutation(command: &En1994Command) -> Option<semio_s_plugin_norm_results_config::NormResultsWindowConfigMutation> {
         match command {
             En1994Command::SetSelectedCheckIndex(payload) => Some(selected_check::window_mutation(payload)),
             _ => None,
@@ -207,16 +215,16 @@ impl crate::app_surface::NormRetainedEditor for En1994PlayApp {
 /// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
 pub struct En1994Family;
 
-impl crate::document::NormFamily for En1994Family {
+impl semio_s_plugin_norm_compliance::NormFamily for En1994Family {
     type Document = En1994Snapshot;
     type Mutation = En1994Mutation;
 
-    fn family_id() -> crate::document::NormFamilyId {
-        crate::document::NormFamilyId::En1994
+    fn family_id() -> semio_s_plugin_norm_compliance::NormFamilyId {
+        semio_s_plugin_norm_compliance::NormFamilyId::En1994
     }
 
-    fn evaluate(document: &En1994Snapshot) -> crate::document::CheckReport {
-        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    fn evaluate(document: &En1994Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+        semio_s_artifact_norm_en1994_inferences::evaluate(document)
     }
 }
 
@@ -225,12 +233,12 @@ pub type Host = NormHost<En1994Family>;
 
 //#region ðï¸Manifest
 pub fn create_en1994_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::EN1994_DIALECT)
+    Editor::builder(semio_s_artifact_norm_en1994_model::EN1994_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifact_kind())
-            .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+            .artifact_kind(semio_s_artifact_norm_en1994_model::artifact_kind())
+            .io(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
-            .default_mode_id(crate::app_surface::MODE_EDIT)
+            .default_mode_id(semio_s_plugin_norm_app_surface::MODE_EDIT)
             .window_kind_def(inputs::definition())
             .window_kind_def(results::definition())
             .default_layout(edit_mode::layout())
@@ -301,3 +309,47 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🪢️Mounts
+#[path = "🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]
+    pub mod apply_remedy;
+    #[path = "🎮️commands/🧮️evaluate/🦀️.rs"]
+    pub mod evaluate;
+    #[path = "🎮️commands/➕insert-item/🦀️.rs"]
+    pub mod insert_item;
+    #[path = "🎮️commands/➖remove-item/🦀️.rs"]
+    pub mod remove_item;
+    #[path = "🎮️commands/☑️selected-check/🦀️.rs"]
+    pub mod selected_check;
+    #[path = "🎮️commands/✏️set-field/🦀️.rs"]
+    pub mod set_field;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/📚️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

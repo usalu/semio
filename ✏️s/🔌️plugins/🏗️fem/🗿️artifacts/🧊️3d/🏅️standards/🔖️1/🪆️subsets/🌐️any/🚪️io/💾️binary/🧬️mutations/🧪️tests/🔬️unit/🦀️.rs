@@ -1,11 +1,18 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::standards::v1::subsets::any::schema;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
-use crate::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema;
+use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
-fn cantilever_fixture() -> crate::Fem3dSnapshot {
-    crate::Fem3dSnapshot {
+fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
         nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
         elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
         materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
@@ -33,8 +40,8 @@ fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn fem3d_document_text_round_trips_through_the_store() {
     let fixture = cantilever_fixture();
-    let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
-    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+    let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
         Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone(), index: None }),
         Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone(), index: None }),

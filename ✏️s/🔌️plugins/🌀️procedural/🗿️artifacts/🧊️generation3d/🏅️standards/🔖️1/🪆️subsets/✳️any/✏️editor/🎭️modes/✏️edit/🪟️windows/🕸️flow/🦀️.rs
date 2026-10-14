@@ -1,12 +1,12 @@
 //! 🕸️ Generation3d play app — the main flow-graph window (edit mode).
 
-use crate::editor::generation3d::config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use crate::editor::generation3d::PreviewInteractionMarks;
-use crate::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
-use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
-use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
-use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use crate::windows::preview::PreviewInteractionMarks;
+use crate::windows::preview::GENERATION_3D_INTERACTION_CHANNEL;
+use crate::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
+use crate::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -74,7 +74,7 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
         value: current.into(),
         // 🎚️ Rows come from the ONE ladder `cycleLodMode` walks, so the keyboard cycle and the
         // picker can never disagree (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        items: crate::editor::generation3d::config::GENERATION_3D_LOD_MODES
+        items: semio_s_artifact_procedural_3d_editor_config::GENERATION_3D_LOD_MODES
             .iter()
             .map(|mode| {
                 let label = match (*mode, is_de) {
@@ -351,6 +351,3 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
 //#endregion 🔖️Render
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

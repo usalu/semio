@@ -1,9 +1,13 @@
 //! 🔺️ Sparse diff builder for `ReplaceSolid`.
 use super::ReplaceSolid;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, Fem3dSolidsModification};
-use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,solid_breach};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_breach;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

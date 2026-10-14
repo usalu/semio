@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::iso16757::unit_tests::context;
+use crate::panels::catalogue::*;
+use crate::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
@@ -47,9 +47,9 @@ fn reference_tables_are_populated_from_evaluate_constants() {
         .expect("installation clearance table");
     let cell = clearance.rows[0].cells.get(1).expect("clearance value cell");
     match cell {
-        crate::app_surface::CatalogueCell::Number { value, .. } => {
+        semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => {
             assert!(
-                (*value - crate::artifact_schema::part_2::INSTALL_CLEARANCE_M).abs() < 1e-12,
+                (*value - semio_s_artifact_norm_iso16757_checks_common::helpers::part_2::INSTALL_CLEARANCE_M).abs() < 1e-12,
                 "clearance cell must equal evaluate() INSTALL_CLEARANCE_M limit"
             );
         }

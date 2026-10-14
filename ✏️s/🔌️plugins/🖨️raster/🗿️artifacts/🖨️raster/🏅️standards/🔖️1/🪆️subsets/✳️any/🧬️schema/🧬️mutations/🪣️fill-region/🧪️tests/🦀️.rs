@@ -3,11 +3,12 @@
 //! a fill edited in history re-derives its pixels — and its downstream — from its base; the store folds it like the leaf.
 
 use super::*;
-use crate::mutations::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
-use crate::mutations::{inverse_raster_mutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterLayerNode, SemioImageSnapshot, RASTER_DOCUMENT_SCHEMA};
+use crate::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
+use semio_s_artifact_raster_raster_mutations::inverse_raster_mutation;
+use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
 //#region 🧫️Cases
@@ -35,7 +36,7 @@ fn clipped(fill: RasterMutation, spans: &[(u32, u32, u32)]) -> RasterMutation {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 /// 🧱️ The blank base with the wall painted.
@@ -230,8 +231,8 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 #[semio_framework_async_macros::async_test]
 async fn the_store_folds_a_fill_like_the_leaf() {
     let fill = fill_region("paint", "pixels", seed(2, 2), 16, [0.1, 0.9, 0.3, 1.0]);
-    let mut store = crate::mutations::RasterStore::new(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "fill-region", base(false), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    let mut store = semio_s_artifact_raster_raster_mutations::RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "fill-region", base(false), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![fill.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the fill applies");
     let before = base(false);
     let expected = apply_raster_mutation(&before, &fill).expect("the leaf applies");

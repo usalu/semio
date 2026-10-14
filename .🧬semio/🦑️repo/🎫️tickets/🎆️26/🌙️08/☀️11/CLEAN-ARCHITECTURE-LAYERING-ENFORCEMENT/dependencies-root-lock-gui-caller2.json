@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "row": {
+    "name": "📥️deps javascript lock root",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo dependencies lock --scope .",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "3_dev",
+      "order": -43.85
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock:root\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "fcffb6961ea38a85514515681ee5dc12fc8ecdad44d41e9efcce110e83cbf603",
+  "reason": "OwnershipGUI2 observed fresh frozen lock drift after concurrent Source changes; actual operation uses current selected Source publisher",
+  "initialAuthorityInputs": {
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock:root\",\"maximumElapsedMilliseconds\":600000}",
+    "SEMIO_SCRIPT_CAPABILITIES": null,
+    "SEMIO_BUILD_MODE": null,
+    "CARGO_NET_OFFLINE": null
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

@@ -23,6 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, *[".."] * 8))
 IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
 SEP = r"\s*::\s*"
+EXTERNAL = "\0external"
 
 
 def strip(src):
@@ -300,6 +301,7 @@ class Cut:
                     if self.crate_of[file] == name and rule.search(self.rel(file)):
                         self.remap[tuple(mod.path)] = (name, (mod.name,))
         self.aliases = self.derive_aliases()
+        self.ext_uses = self.derive_external_uses()
         base = os.path.dirname(os.path.abspath(config_path))
         moves = list(self.config.get("moves", []))
         for name in self.config.get("moves_files", []):
@@ -408,6 +410,23 @@ class Cut:
         aliases.sort(key=lambda a: -len(a[0]))
         return aliases
 
+    def derive_external_uses(self):
+        """🔗️ Names a module binds with a private `use` of an external crate path, so `crate::<module>::Name` resolves there."""
+        out = {}
+        local = set(self.tree.root.children) | {"crate", "super", "self", "component"}
+        for file, mod in self.tree.files.items():
+            text = self.tree.text[file]
+            for m in re.finditer(r"(?m)^(?P<indent>[ \t]*)use\s+(?P<body>[^;]*);", text):
+                head = re.match(IDENT, m.group("body").strip())
+                if not head or head.group(0) in local:
+                    continue
+                public = tuple(self.public(self.module_at(file, m.start())))
+                for segs, alias in leaves([], m.group("body")):
+                    if segs[-1] in ("*", "self"):
+                        continue
+                    out[(public, alias or segs[-1])] = tuple(segs)
+        return out
+
     def public(self, segs):
         """🌐️ An absolute module path without the private `component` segments its parents glob re-export."""
         out, node = [], self.tree.root
@@ -496,6 +515,10 @@ class Cut:
             absolute = segs
         absolute = self.unalias(absolute)
         node, rest = self.tree.resolve(absolute)
+        if rest:
+            external = self.ext_uses.get((tuple(self.public(list(node.path))), rest[0]))
+            if external:
+                return EXTERNAL, list(external) + rest[1:], absolute
         crate = self.home(node, rest)
         if crate is None:
             return None
@@ -517,6 +540,8 @@ class Cut:
         return b + segs[k:] == list(new)
 
     def spell(self, own, crate, new, test_root=False):
+        if crate == EXTERNAL:
+            return new[0], list(new[1:])
         head = "crate" if crate == own and not test_root else self.idents[crate]
         segs = [s for s in new if s != "component"] if head != "crate" else list(new)
         return head, segs
@@ -550,7 +575,7 @@ class Cut:
                     changed = True
                 else:
                     rows.append((None, path, alias, glob, segs))
-                if crate != own and self.crates[crate].get("aggregator") and not test_root:
+                if crate != own and crate in self.crates and self.crates[crate].get("aggregator") and not test_root:
                     self.problems.append(f"UPWARD {self.rel(file)} -> aggregator via {'::'.join(absolute)}")
             if not changed:
                 covered.append((m.start(), m.end()))
@@ -596,7 +621,7 @@ class Cut:
             keep = crate == own and not test_root and ((segs[0] == "crate" and new == segs[1:]) or (segs[0] in ("super", "self") and self.relative_ok(file, m.start(), segs, crate, new)) or (is_root and segs[0] not in ("crate", "super", "self") and new == segs))
             if keep:
                 continue
-            if crate != own and self.crates[crate].get("aggregator") and not test_root:
+            if crate != own and crate in self.crates and self.crates[crate].get("aggregator") and not test_root:
                 self.problems.append(f"UPWARD {self.rel(file)}:{raw.count(chr(10), 0, m.start()) + 1} -> aggregator via {'::'.join(absolute)}")
             head_name, shown = self.spell(own, crate, new, test_root)
             edits.append((m.start(), m.end(), "::".join([head_name] + shown)))
@@ -642,6 +667,8 @@ class Cut:
                 lines.append(f"{pad}{(vis + ' ') if vis else ''}mod {name} {{")
                 lines += render(child, prefix + [name], depth + 1)
                 lines.append(f"{pad}}}")
+                if name == "component":
+                    lines.append(f"{pad}pub use component::*;")
             return lines
 
         return render(nodes, [], indent)
@@ -687,7 +714,13 @@ class Cut:
                 raw = self.tree.raw[file]
                 end = rend + (1 if raw[rend:rend + 1] == "\n" else 0)
                 rendered = "".join(f"{indent}pub use {'::'.join(segs)}{' as ' + alias if alias else ''};\n" for segs, alias in kept)
-                edits = [e for e in edits if not (rstart <= e[0] < end)] + [(rstart, end, rendered)]
+                start = rstart
+                while not kept:
+                    prev = raw.rfind("\n", 0, start - 1) + 1
+                    if start == 0 or not re.match(r"[ \t]*#\[[^\n]*\]\n$", raw[prev:start]):
+                        break
+                    start = prev
+                edits = [e for e in edits if not (e[0] < end and e[1] > start)] + [(start, end, rendered)]
                 self.dropped_reexports.append((self.rel(file), [("::".join(segs), alias) for segs, alias, _ in rows if (segs, alias) not in kept]))
             for m in re.finditer(r"(?m)^[ \t]*//#region 🚚️Moved\n(?:.*\n)*?[ \t]*//#endregion 🚚️Moved[ \t]*\n", self.tree.raw[file]):
                 edits = [e for e in edits if not (m.start() <= e[0] < m.end())] + [(m.start(), m.end(), "")]

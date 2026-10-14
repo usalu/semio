@@ -69,7 +69,7 @@ fn csv_native_payload(snapshot:&CsvSnapshot,encoding:store::sqlite_snapshot::Sna
 async fn sqlite_snapshot_csv_actual_factory_canonical_external_carrier(){
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Csv full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::STDIO_CSV_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<CsvSnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.csv".into(),standard:"rfc4180".into(),subset:"*".into()};let snapshot=csv_canonical_carrier_snapshot();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=csv_native_payload(&snapshot,encoding);let database=with_original_decode(&native_caller_policy(),Default::default(),&mut |_|true,&mut |_|true,|_|{},|sql,native|(provider.export)(&codec.schema,&dialect,&payload,sql,native)).unwrap().value;assert_eq!(database,expected);let payload={let original_database=database;let pointer=original_database.tables.as_ptr();let mut original_input=Some(original_database);let result=with_original_encode(&native_caller_policy(),Default::default(),&mut |_|true,&mut |_|true,|_|{},|sql,native|(provider.import)(&codec.schema,&dialect,&mut original_input,encoding,sql,native));if result.is_ok(){assert!(original_input.is_none());}else if let Some(retained)=&original_input{assert_eq!(retained.tables.as_ptr(),pointer);}result}.unwrap().value;let restored=with_original_decode(&native_caller_policy(),Default::default(),&mut |_|true,&mut |_|true,|_|{},|sql,native|<CsvSnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload,sql,native)).unwrap();assert_eq!(restored,snapshot);retire_original_output(restored,&native_caller_policy());retire_original_output(payload,&native_caller_policy());}
@@ -106,7 +106,7 @@ fn csv_canonical_carrier_snapshot()->CsvSnapshot{let count=usize::try_from(csv_n
 async fn sqlite_snapshot_csv_actual_typed_file_preserves_complete_literal_owned_fields(){
  use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Csv typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.csv".into(),standard:"rfc4180".into(),subset:"*".into()};
  let snapshot=csv_native_control_snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  assert_eq!(database.tables.iter().map(|table|table.rows.len()).sum::<usize>(),usize::try_from(csv_native_control_fixture()["expectedRows"].as_u64().unwrap()).unwrap());
@@ -151,7 +151,7 @@ async fn sqlite_snapshot_csv_complete_logical_owner_erased_factory_preserves_eve
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Csv complete logical owner").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Csv complete logical owner").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::STDIO_CSV_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().unwrap();assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<CsvSnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.csv".into(),standard:"rfc4180".into(),subset:"*".into()};
  for input in fixture["snapshots"].as_array().unwrap(){

@@ -2,8 +2,8 @@
 //! cylinders, cones, spheres and tori (and NURBS via [`semio_framework_3d_brep_intersect`]'s marching SSI): face-pair
 //! candidates via AABB overlap → [`intersect_surface_surface`] (W2-A) → the SSI curve's domain
 //! clipped to both faces' trims → an imprint edge shared by both operands (so stitching needs no
-//! fuzzy vertex welding, only shared-edge adjacency) → [`crate::euler::split_face_by_chain`]/
-//! [`crate::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
+//! fuzzy vertex welding, only shared-edge adjacency) → [`semio_framework_3d_brep_construction::euler::split_face_by_chain`]/
+//! [`semio_framework_3d_brep_construction::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
 //! against the OTHER solid via [`semio_framework_3d_brep_queries::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
 //! shell(s)/solid(s) → [`semio_framework_3d_brep_validation::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
 //! old mesh pipeline survives only as the explicit opt-in [`boolean_solid_mesh_preview`]. A
@@ -42,11 +42,11 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex};
+use semio_framework_3d_brep_construction::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex};
 use semio_framework_3d_brep_intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
-use crate::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
-use crate::staged::{drive, drive_solid, StageOutput};
-use crate::transform::{copy_solid, transform_solid};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use semio_framework_3d_brep_construction::staged::{drive, drive_solid, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::transform::{copy_solid, transform_solid};
 use semio_framework_3d_brep_vector::matrix::Affine3;
 use semio_framework_3d_brep_representation::contract::{MeshTransfer, PointClassification};
 use semio_framework_3d_brep_queries::bounding_volume::face_aabb;
@@ -2383,6 +2383,56 @@ fn aabb_overlap(a: &semio_framework_3d_brep_representation::contract::Aabb, b: &
 
 // #endregion 🔖️AabbMath
 
+// #region 🔖️Stage
+
+/// 🔀 A boolean as a staged operation. The fast paths answer in one unit; the general engine runs
+/// one [`BooleanJob`] unit per advance plus one finishing unit for its terminal transition.
+pub struct BooleanStage {
+    job: Option<BooleanJob>,
+    answered: Option<SolidId>,
+    finished: bool,
+}
+
+impl BooleanStage {
+    /// 🔀 Admits `a op b` against `body` (the fast paths run here).
+    pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
+        Ok(match boolean_job(body, a, b, op, tol, rec)? {
+            BooleanAdmission::Answered(solid) => Self { job: None, answered: Some(solid), finished: false },
+            BooleanAdmission::Job(job) => Self { job: Some(job), answered: None, finished: false },
+        })
+    }
+}
+
+impl StagedOperation for BooleanStage {
+    fn progress(&self) -> StageProgress {
+        match &self.job {
+            None => StageProgress { done: usize::from(self.finished), total: 1, phase: "boolean" },
+            Some(job) => {
+                let progress = job.progress();
+                StageProgress { done: progress.units_done + usize::from(self.finished), total: progress.units_total.max(progress.units_done) + 1, phase: progress.phase.tag() }
+            }
+        }
+    }
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        if let Some(solid) = self.answered {
+            self.finished = true;
+            return Ok(StageStep::Done(StageOutput::Solid(solid)));
+        }
+        let job = self.job.as_mut().ok_or_else(|| KernelError::Operation("boolean stage already finished".into()))?;
+        match job.step_unbudgeted(body, rec, 1)? {
+            BooleanStep::Working(_) => Ok(StageStep::Working),
+            BooleanStep::Done(solid) => {
+                self.finished = true;
+                Ok(StageStep::Done(StageOutput::Solid(solid)))
+            }
+            BooleanStep::Cancelled(_) => Err(KernelError::Operation("boolean stage was cancelled".into())),
+        }
+    }
+}
+
+// #endregion 🔖️Stage
+
 // #region 🔖️Jobs
 
 #[path = "⏱️jobs/🦀️.rs"]
@@ -2419,6 +2469,10 @@ fn plane_normal(normal: Vec3) -> Result<Vec3, KernelError> {
 }
 
 // #endregion 🔖️Validate
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

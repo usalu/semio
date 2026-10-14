@@ -1,8 +1,7 @@
 //! 💬️ Block2d mutation — `ChangeMetaDescription`: the editing-session `meta.description`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 💬️ `change-meta-description` payload.
@@ -18,19 +17,19 @@ pub struct ChangeMetaDescription {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_meta_description(new_description: String) -> Block2dMutation {
-    Block2dMutation::ChangeMetaDescription(ChangeMetaDescription { new_description })
+pub fn change_meta_description<Op: From<crate::change_meta_description::ChangeMetaDescription>>(new_description: String) -> Op {
+    Op::from(ChangeMetaDescription { new_description })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeMetaDescription {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeMetaDescription where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_meta_description::ChangeMetaDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "meta", kind: "change-meta-description", record: "ChangedMetaDescription" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_meta_description::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_meta_description::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeMetaDesc
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

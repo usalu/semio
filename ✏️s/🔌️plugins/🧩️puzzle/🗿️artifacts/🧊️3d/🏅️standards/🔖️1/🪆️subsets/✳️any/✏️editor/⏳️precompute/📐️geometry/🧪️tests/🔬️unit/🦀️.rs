@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
+use semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::*;
 
 /// 🧮️ Primitive work one penetration probe step may cost ([`precompute_work_done`]): a vertex or inset probe is two
 /// queries; a face probe clips every near face and probes the clipped polygon's edges and centroid. The measured maximum
@@ -518,8 +518,8 @@ fn document_scale_capacities_are_derived_from_the_flagship_fixture_not_the_bookk
     assert_eq!((DOCUMENT_VORTEX_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CELL_SLOTS), (2 * DOCUMENT_OBJECT_SLOTS, DOCUMENT_OBJECT_SLOTS, 4 * DOCUMENT_OBJECT_SLOTS));
     assert_eq!((DOCUMENT_VOLUME_SLOTS, DOCUMENT_CANDIDATE_SLOTS), (DOCUMENT_KIND_SLOTS, 4 * DOCUMENT_KIND_SLOTS));
     for (slots, page) in [
-        (DOCUMENT_OBJECT_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
-        (DOCUMENT_ATTRACTION_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::page_bytes()),
+        (DOCUMENT_OBJECT_SLOTS, FixedOwnerVec::<semio_s_artifact_puzzle_3d_model::EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
+        (DOCUMENT_ATTRACTION_SLOTS, FixedOwnerVec::<semio_s_artifact_puzzle_3d_model::AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::page_bytes()),
         (DOCUMENT_VOLUME_SLOTS, FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::page_bytes()),
         (DOCUMENT_OBJECT_SLOTS, FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
         (DOCUMENT_CELL_SLOTS, FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::page_bytes()),
@@ -575,7 +575,6 @@ fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
     assert_eq!(FixedOwnerSet::<String, 8>::new().capacity(), 8);
 }
 
-
 /// ⚖️ LAW: every sub-page a fixed owner asks the guest for stays at or under
 /// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` — the owners never ask for a block a fragmented guest
 /// refuses first.
@@ -589,7 +588,7 @@ fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
 /// keeps a later widening from re-crossing the ceiling.
 #[test]
 fn every_fixed_owner_sub_page_request_stays_under_the_guest_contiguous_ceiling() {
-    use crate::standards::v1::subsets::any::schema::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
+    use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
     for (owner, bytes) in [
         ("scene_snapshot objects", FixedOwnerVec::<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
         ("scene_snapshot attractions", FixedOwnerVec::<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::sub_page_bytes()),

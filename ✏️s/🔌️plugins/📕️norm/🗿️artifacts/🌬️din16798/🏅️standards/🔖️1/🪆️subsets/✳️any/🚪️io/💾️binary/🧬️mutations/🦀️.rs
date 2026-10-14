@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Din16798Mutation;
+use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,51 +26,49 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use super::*;
-use crate::artifact_schema::mutations::Din16798Mutation;
-use crate::artifact_schema::mutations::{
-    change_annex::ChangeAnnex,
-    change_theta_rm::ChangeThetaRm,
-    change_outdoor_co2::ChangeOutdoorCo2,
-    change_envelope_n50::ChangeEnvelopeN50,
-    change_envelope_volume::ChangeEnvelopeVolume,
-    change_cellar_area::ChangeCellarArea,
-    change_cellar_ventilation::ChangeCellarVentilation,
-    change_night_setback::ChangeNightSetback,
-    insert_zone::InsertZone,
-    remove_zone::RemoveZone,
-    change_zone_usage_type::ChangeZoneUsageType,
-    change_zone_floor_area::ChangeZoneFloorArea,
-    change_zone_occupants::ChangeZoneOccupants,
-    change_zone_comfort_category::ChangeZoneComfortCategory,
-    change_zone_pollution_class::ChangeZonePollutionClass,
-    change_zone_comfort_model::ChangeZoneComfortModel,
-    change_zone_t_op_winter::ChangeZoneTOpWinter,
-    change_zone_t_op_summer::ChangeZoneTOpSummer,
-    change_zone_air_speed::ChangeZoneAirSpeed,
-    change_zone_clothing::ChangeZoneClothing,
-    change_zone_metabolic_rate::ChangeZoneMetabolicRate,
-    change_zone_rh::ChangeZoneRh,
-    change_zone_outdoor_air::ChangeZoneOutdoorAir,
-    change_zone_co2::ChangeZoneCo2,
-    change_zone_illuminance::ChangeZoneIlluminance,
-    change_zone_noise::ChangeZoneNoise,
-    change_zone_vent_system_id::ChangeZoneVentSystemId,
-    change_zone_turbulence::ChangeZoneTurbulence,
-    change_zone_vent_method::ChangeZoneVentMethod,
-    insert_vent_system::InsertVentSystem,
-    remove_vent_system::RemoveVentSystem,
-    change_vent_system_type::ChangeVentSystemType,
-    change_vent_sfp::ChangeVentSfp,
-    change_vent_sfp_class::ChangeVentSfpClass,
-    change_vent_heat_recovery::ChangeVentHeatRecovery,
-    change_vent_oda_class::ChangeVentOdaClass,
-    change_vent_filter_sup::ChangeVentFilterSup,
-    change_vent_inspection::ChangeVentInspection,
-    change_vent_duct_class::ChangeVentDuctClass,
-    change_vent_duct_leakage::ChangeVentDuctLeakage,
-    change_vent_design_airflow::ChangeVentDesignAirflow,
-};
+#[cfg(test)] use crate::binary::mutations::*;
+use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
+use semio_s_artifact_norm_din16798_mut_building::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_din16798_mut_building::change_theta_rm::ChangeThetaRm;
+use semio_s_artifact_norm_din16798_mut_building::change_outdoor_co2::ChangeOutdoorCo2;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_n50::ChangeEnvelopeN50;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_volume::ChangeEnvelopeVolume;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_area::ChangeCellarArea;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_ventilation::ChangeCellarVentilation;
+use semio_s_artifact_norm_din16798_mut_building::change_night_setback::ChangeNightSetback;
+use semio_s_artifact_norm_din16798_mut_zones::insert_zone::InsertZone;
+use semio_s_artifact_norm_din16798_mut_zones::remove_zone::RemoveZone;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_usage_type::ChangeZoneUsageType;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_floor_area::ChangeZoneFloorArea;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_occupants::ChangeZoneOccupants;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_comfort_category::ChangeZoneComfortCategory;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_pollution_class::ChangeZonePollutionClass;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_comfort_model::ChangeZoneComfortModel;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_winter::ChangeZoneTOpWinter;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_summer::ChangeZoneTOpSummer;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_air_speed::ChangeZoneAirSpeed;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_clothing::ChangeZoneClothing;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_metabolic_rate::ChangeZoneMetabolicRate;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_rh::ChangeZoneRh;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_outdoor_air::ChangeZoneOutdoorAir;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_co2::ChangeZoneCo2;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_illuminance::ChangeZoneIlluminance;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_noise::ChangeZoneNoise;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_system_id::ChangeZoneVentSystemId;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_turbulence::ChangeZoneTurbulence;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_method::ChangeZoneVentMethod;
+use semio_s_artifact_norm_din16798_mut_ventilation::insert_vent_system::InsertVentSystem;
+use semio_s_artifact_norm_din16798_mut_ventilation::remove_vent_system::RemoveVentSystem;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_system_type::ChangeVentSystemType;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp::ChangeVentSfp;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp_class::ChangeVentSfpClass;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_heat_recovery::ChangeVentHeatRecovery;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_oda_class::ChangeVentOdaClass;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_filter_sup::ChangeVentFilterSup;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection::ChangeVentInspection;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class::ChangeVentDuctClass;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage::ChangeVentDuctLeakage;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow::ChangeVentDesignAirflow;
 fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
     let bytes = semio_framework_pack_json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);

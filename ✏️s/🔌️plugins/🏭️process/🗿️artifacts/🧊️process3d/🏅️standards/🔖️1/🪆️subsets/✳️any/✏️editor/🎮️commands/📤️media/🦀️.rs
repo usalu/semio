@@ -1,9 +1,9 @@
 //! 📤️ Process 3d play app commands — shell effects: model export/import round-trips through the host.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::standards::v1::subsets::any::io::{export_process3d_model, import_process3d_model};
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Process3dSnapshot};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_io::{export_process3d_model, import_process3d_model};
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
@@ -23,12 +23,12 @@ pub mod export_model {
         payload: &ExportModel,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: no `LinkResolver` — see
         // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
         // children's content, so export degrades honestly to the empty working scene.
-        let scene = crate::process_working_scene_from_snapshot(doc.snapshot);
+        let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(doc.snapshot);
         match export_process3d_model(&scene, cfg.snapshot.resolved_up_to, &payload.format).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("process3d.media.export"), error))? {
             Some(export) => Ok(Emit::effect(Effect::DownloadMediaExport {
                 filename: export.filename,
@@ -57,7 +57,7 @@ pub mod load_model_request {
         _payload: &LoadModelRequest,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::effect(Effect::RequestFileOpen { req: semio_framework_plugin::RequestId(111), accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false, args: None }))
     }
@@ -82,10 +82,10 @@ pub mod import_model_file {
         payload: &ImportModelFile,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         match import_process3d_model(&payload.name.to_ascii_lowercase(), &payload.payload) {
-            Some(snapshot) => Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
+            Some(snapshot) => Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() }),
             None => Ok(Emit::default()),
         }
     }

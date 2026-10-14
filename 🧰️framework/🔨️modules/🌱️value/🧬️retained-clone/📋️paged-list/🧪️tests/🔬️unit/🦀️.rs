@@ -1,3 +1,4 @@
+use crate::retained_clone::FixtureSourceBirth;
 use super::*;
 use serde::Deserialize;
 use std::{
@@ -239,6 +240,7 @@ impl RetainedClone for NonconformingRetirementChild {
 }
 
 #[derive(Debug, PartialEq, crate::RetainedClone, crate::RetireOwned)]
+#[value(crate="crate")]
 struct OversizedOwner {
     first: String,
     second: String,
@@ -246,6 +248,7 @@ struct OversizedOwner {
 }
 
 #[derive(crate::RetireOwned)]
+#[value(crate="crate")]
 struct ReleaseProbe(u8);
 
 struct ReleaseProbeCursor([u8; 128]);
@@ -284,7 +287,7 @@ impl RetainedCloneCursor<ReleaseProbe> for ReleaseProbeCursor {
 
 #[test]
 fn paged_native_typed_field_close_exposes_exact_scaffold_demand() {
-    use crate::value::observe_retirement_allocations;
+    use crate::observe_retirement_allocations;
     let _guard=RELEASE_PROBE_LOCK.lock().unwrap();
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📏️release-authority/🔣️.json")).unwrap();
     let source=super::super::RetainedCloneSource::from_owner(ReleaseProbe(fixture["inputByte"].as_u64().unwrap() as u8));
@@ -411,6 +414,7 @@ impl RetainedClone for InsufficientScaffoldChild {
 }
 
 #[derive(crate::RetainedClone, crate::RetireOwned)]
+#[value(crate="crate")]
 struct DerivedScaffoldOwner {
     child: InsufficientScaffoldChild,
 }

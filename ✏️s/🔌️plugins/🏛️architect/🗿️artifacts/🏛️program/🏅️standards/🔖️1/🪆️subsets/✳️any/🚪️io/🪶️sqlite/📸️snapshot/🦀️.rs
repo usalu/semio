@@ -254,7 +254,7 @@ mod tests{
  use std::io::Write;
  #[test]
  fn sqlite_snapshot_architect_core_and_first_registers_match_independent_sqlite(){
-  let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/👥️stakeholder/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json")).unwrap();
+  let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/👥️stakeholder-creates-a/📸️snapshot/➡️after/🔣️.json")).unwrap();
   let mut snapshot:crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot=semio_framework_pack_json::from_json_str(&original.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();snapshot.stakeholders[0].header.name="世界\0__proto__".into();snapshot.stakeholders.push(snapshot.stakeholders[0].clone());
   let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits::default());let mut p=RowWriter::new(SCHEMA,&mut control).unwrap();project_core(&snapshot,&mut p).unwrap();register_project(&mut p,&snapshot.stakeholders).unwrap();register_project(&mut p,&snapshot.users).unwrap();register_project(&mut p,&snapshot.activities).unwrap();register_project(&mut p,&snapshot.functions).unwrap();register_project(&mut p,&snapshot.elements).unwrap();let database=p.finish().unwrap();
   let bytes=store::sqlite_snapshot::export_sqlite_database(&database,store::sqlite_snapshot::SqliteDatabaseLimits::default(),&mut |_|true).unwrap();

@@ -3,8 +3,8 @@
 //! (table cells may themselves hold nested paragraphs/tables — both count is recursive);
 //! `wordCount` is a whitespace-split word count over every run's `text`, anywhere in the tree.
 
-use crate::schema::snapshot::DocxBlock;
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Docx` document outline.
@@ -53,8 +53,5 @@ impl DocxOutline {
 }
 //#endregion 🔖️Outline
 
-#[cfg(test)]
 //#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

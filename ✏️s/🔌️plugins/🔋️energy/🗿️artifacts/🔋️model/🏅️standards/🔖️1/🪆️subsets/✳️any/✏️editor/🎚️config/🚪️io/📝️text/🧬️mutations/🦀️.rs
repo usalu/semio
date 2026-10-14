@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::model::config::mutations::*;
-use crate::editor::model::config::EnergyModelConfig;
+use crate::mutations::*;
+use crate::EnergyModelConfig;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 impl protocol::OpText for EnergyModelConfigMutation {
@@ -20,8 +20,8 @@ impl protocol::OpText for EnergyModelConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::model::config::mutations::*;
-use crate::editor::model::config::EnergyModelConfig;
+use crate::mutations::*;
+use crate::EnergyModelConfig;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this

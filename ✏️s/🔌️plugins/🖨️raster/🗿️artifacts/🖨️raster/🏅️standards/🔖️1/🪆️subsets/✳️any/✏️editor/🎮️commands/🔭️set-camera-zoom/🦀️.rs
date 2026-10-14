@@ -1,8 +1,9 @@
 //! 🎥️ 🎥️ Raster play app commands command — `set-camera-zoom`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, SetCameraEdit};
-use crate::op::RasterMutation;
-use crate::{RasterCamera, RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation, SetCameraEdit};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::RasterCamera;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

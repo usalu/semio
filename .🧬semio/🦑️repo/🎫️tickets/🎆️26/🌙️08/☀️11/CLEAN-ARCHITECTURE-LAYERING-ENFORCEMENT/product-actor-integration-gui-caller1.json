@@ -1,0 +1,19 @@
+{
+  "row": {
+    "name": "🌉️Plugin Host · General Actor Integration Source",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-plugin-host:test-original-actor-boundary-source",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"plugin-host:original-actor-boundary:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/plugin-host-actor-boundary"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.8277
+    }
+  },
+  "launchSha256": "17de071d82b91af7eab09bc469431db540bbab32723b66a106840dc8557affcb",
+  "outputRedirectOnly": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/product-actor-integration-current"
+}

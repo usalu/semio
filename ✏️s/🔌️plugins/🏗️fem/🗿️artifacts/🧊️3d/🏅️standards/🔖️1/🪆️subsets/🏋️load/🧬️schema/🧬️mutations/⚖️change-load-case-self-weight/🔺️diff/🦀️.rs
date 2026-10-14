@@ -1,7 +1,10 @@
 //! 🔺️ Sparse diff builder for `ChangeLoadCaseSelfWeight`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesModification};
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasePatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

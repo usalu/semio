@@ -1,8 +1,12 @@
-use super::*;
-use crate::editor::fem3d::modes::edit::windows::results;
-use crate::editor::fem3d::unit_tests::context::{close, dispatch, fem3d_app, Fem3dApp};
-use crate::app_surface::{FemLoopMode, FemWaveform};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::*;
+use semio_s_fem_app_surface::FemResultsAnimation;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation};
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use crate::context::{close, dispatch, fem3d_app, Fem3dApp};
+use semio_s_fem_app_surface::{FemLoopMode, FemWaveform};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{Effect, InvocationResult, ViewModel, ViewWindowInstance};
 
 fn animation(command: SetResultAnimation) -> Fem3dCommand {
@@ -115,7 +119,7 @@ async fn set_result_animation_applies_one_named_field() {
 /// disagrees with the configuration actually captured, is refused by name.
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
+    let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -125,7 +129,7 @@ async fn set_result_animation_honours_the_window_a_control_tagged() {
         window_instances: vec![
             ViewWindowInstance { id: "results-left".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
             ViewWindowInstance { id: "results-right".into(), window_kind_id: results::FEM3D_WINDOW_RESULTS.into() },
-            ViewWindowInstance { id: "model-left".into(), window_kind_id: crate::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL.into() },
+            ViewWindowInstance { id: "model-left".into(), window_kind_id: semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL.into() },
         ],
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };

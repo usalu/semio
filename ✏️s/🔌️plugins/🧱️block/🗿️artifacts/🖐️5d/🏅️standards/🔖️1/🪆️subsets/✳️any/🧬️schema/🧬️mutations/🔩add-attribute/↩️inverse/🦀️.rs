@@ -1,15 +1,14 @@
 //! ↩️ Inverse for `AddAttribute`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AddAttribute, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::add_attribute::AddAttribute, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_attribute::RemoveAttribute> {
     Ok((|| {
     if base.attributes.iter().any(|item| item.key == payload.attribute.key) {
         return Vec::new();
     }
-    vec![super::super::remove_attribute::remove_attribute(payload.attribute.key.clone())]
+    vec![crate::remove_attribute::remove_attribute(payload.attribute.key.clone())]
 
     })())
 }

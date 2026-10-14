@@ -12,7 +12,7 @@ use semio_framework_3d_brep_vector::Vec3;
 
 /// 🌀 Local shape of a surface at one parameter pair.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct SurfaceDifferential {
     pub u: f64,
     pub v: f64,

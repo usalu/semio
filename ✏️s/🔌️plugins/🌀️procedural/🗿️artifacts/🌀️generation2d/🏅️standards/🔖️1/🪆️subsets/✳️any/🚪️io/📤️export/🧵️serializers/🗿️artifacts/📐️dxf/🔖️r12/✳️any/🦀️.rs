@@ -2,8 +2,8 @@
 //! export leaf, the one dxf writer every owner shares.
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no dxf import.
-use crate::standards::v1::subsets::any::io::generation2d_drawing;
-use crate::Generation2dSnapshot;
+use crate::generation2d_drawing;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}

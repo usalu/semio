@@ -1811,156 +1811,17 @@ fn flow_vcs_host_snapshot_scalar_digest(host_snapshot: &FlowHostSnapshot) -> u64
 // #region 🔖️FormsBridge
 pub mod forms_bridge {
     use super::{FlowHostSnapshot, Widget};
-    use crate::playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
-    fn humanize_widget_label(id: &str) -> String {
-        let mut words = Vec::new();
-        let mut current = String::new();
-        for ch in id.chars() {
-            if ch == '_' || ch == '-' || ch == ' ' {
-                if !current.is_empty() {
-                    words.push(current.clone());
-                    current.clear();
-                }
-                continue;
-            }
-            if ch.is_uppercase() && !current.is_empty() {
-                words.push(current.clone());
-                current.clear();
-            }
-            current.push(if ch.is_uppercase() { ch } else { ch.to_ascii_uppercase() });
-        }
-        if !current.is_empty() {
-            words.push(current);
-        }
-        if words.is_empty() {
-            return id.to_string();
-        }
-        words.join(" ")
-    }
-
-    /// 🔀️ Schema aliases treated as a single-choice question when generating a playbook block (anything else is free text).
-    enum SchemaQuestionFamily {
-        Choice,
-    }
-
-    impl SchemaQuestionFamily {
-        fn parse(schema: &str) -> Option<Self> {
-            match schema.trim().to_ascii_lowercase().as_str() {
-                "enum" | "single" | "select" | "choice" => Some(Self::Choice),
-                _ => None,
-            }
-        }
-    }
-
-    fn variable_question_kind(schema: &str) -> &'static str {
-        match SchemaQuestionFamily::parse(schema) {
-            Some(SchemaQuestionFamily::Choice) => "single",
-            None => "text",
-        }
-    }
-
-    fn widget_to_playbook_block(widget: &Widget) -> Option<PlaybookBlock> {
-        match widget {
-            Widget::InputSlider { id, label, value, min, max, step } => Some(PlaybookBlock {
-                id: id.clone(),
-                label: label.clone(),
-                kind: "slider".into(),
-                description: None,
-                required: None,
-                placeholder: None,
-                default: Some(semio_framework_value::DslValue::float(*value)),
-                min: Some(*min),
-                max: Some(*max),
-                step: Some(*step),
-                unit: None,
-                text: None,
-                options: None,
-                fields: None,
-                schema: None,
-                src: None,
-                accept: None,
-                example_id: None,
-                params: None,
-                condition: None,
-            }),
-            Widget::InputNote { id, text, .. } => Some(PlaybookBlock {
-                id: id.clone(),
-                label: humanize_widget_label(id),
-                kind: "note".into(),
-                description: None,
-                required: None,
-                placeholder: None,
-                default: None,
-                min: None,
-                max: None,
-                step: None,
-                unit: None,
-                text: Some(text.clone()),
-                options: None,
-                fields: None,
-                schema: None,
-                src: None,
-                accept: None,
-                example_id: None,
-                params: None,
-                condition: None,
-            }),
-            Widget::InputImage { id, src, .. } => Some(PlaybookBlock {
-                id: id.clone(),
-                label: humanize_widget_label(id),
-                kind: "image".into(),
-                description: None,
-                required: None,
-                placeholder: None,
-                default: None,
-                min: None,
-                max: None,
-                step: None,
-                unit: None,
-                text: None,
-                options: None,
-                fields: None,
-                schema: None,
-                src: Some(src.clone()),
-                accept: None,
-                example_id: None,
-                params: None,
-                condition: None,
-            }),
-            Widget::Variable { id, name, schema, .. } => {
-                let kind = variable_question_kind(schema);
-                let options = if kind == "single" { Some(vec![PlaybookBlockOption { value: schema.clone(), label: humanize_widget_label(schema) }]) } else { None };
-                Some(PlaybookBlock {
-                    id: id.clone(),
-                    label: humanize_widget_label(name),
-                    kind: kind.into(),
-                    description: None,
-                    required: None,
-                    placeholder: None,
-                    default: Some(semio_framework_value::DslValue::String(name.clone())),
-                    min: None,
-                    max: None,
-                    step: None,
-                    unit: None,
-                    text: None,
-                    options,
-                    fields: None,
-                    schema: Some(schema.clone()),
-                    src: None,
-                    accept: None,
-                    example_id: None,
-                    params: None,
-                    condition: None,
-                })
-            }
-            _ => None,
-        }
-    }
-
-    pub fn flow_host_snapshot_to_form_spec(host_snapshot: &FlowHostSnapshot) -> PlaybookSpec {
-        let blocks: Vec<PlaybookBlock> = host_snapshot.widgets.iter().filter_map(widget_to_playbook_block).collect();
-        PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![PlaybookStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
+    /// 🫴️ Hands each original widget's fields directly to the selected actual producer.
+    pub fn flow_host_snapshot_to_form_spec<P:crate::forms::FlowFormProducer>(host_snapshot:&FlowHostSnapshot,producer:&P)->P::Form {
+     let fields=host_snapshot.widgets.iter().filter_map(|widget|match widget {
+      Widget::InputSlider {id,label,value,min,max,step}=>Some(producer.slider(id,label,*value,*min,*max,*step)),
+      Widget::InputNote {id,text}=>Some(producer.note(id,text)),
+      Widget::InputImage {id,src}=>Some(producer.image(id,src)),
+      Widget::Variable {id,name,schema}=>Some(producer.variable(id,name,schema)),
+      _=>None,
+     }).collect();
+     producer.finish(fields)
     }
 
     /// 🏷️ Widget "kind" tags recognized when patching a single generation value into a raw fixture-JSON widget.

@@ -1,5 +1,6 @@
 //! 🧊️ Inserts an exact owned topology sibling at its declared document position.
-use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, diff::CadDiff, diff::CadBrepsDelta};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadBrepsDelta};
 use protocol::MutationKind;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -15,7 +16,7 @@ pub struct CreateBrep {
 
 impl<Op> MutationKind<CadSnapshot, Op> for CreateBrep
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::delete_brep::DeleteBrep>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::delete_brep::DeleteBrep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

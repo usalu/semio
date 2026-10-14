@@ -374,11 +374,7 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
         Ok(Self { control, bytes: 0, units: 0 })
     }
     fn reserve(&mut self, count: usize) -> Result<(), ValueError> {
-        let bytes = self.control.ledger.reconstruction_bytes.checked_add(count).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction value byte count overflow"))?;
-        self.control.check_value_bytes(bytes.checked_add(self.control.ledger.reconstruction_scalar_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native reconstruction aggregate byte count overflow"))?)?;
-        let units = self.control.ledger.reconstruction_units.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "native reconstruction unit count overflow"))?;
-        if units % 256 == 0 || count > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, units, 0)?; }
-        self.control.ledger.reconstruction_bytes = bytes; self.control.ledger.reconstruction_units = units; self.bytes = bytes; self.units = units; Ok(())
+        let(bytes,units)=self.control.reserve_reconstruction(count)?;self.bytes=bytes;self.units=units;Ok(())
     }
     /// 🔤️ Checks the aggregate native byte bound before copying one borrowed text field.
     pub fn text(&mut self, text: &str) -> Result<String, ValueError> { self.reserve(text.len())?; copy_text(text, self.control, SqliteSnapshotPhase::ReconstructSnapshot) }

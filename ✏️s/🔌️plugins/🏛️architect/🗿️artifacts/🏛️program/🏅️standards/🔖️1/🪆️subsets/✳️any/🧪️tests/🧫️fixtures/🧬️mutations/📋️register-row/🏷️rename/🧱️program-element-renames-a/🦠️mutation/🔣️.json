@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "programElement",
+  "id": "program-element-a",
+  "newName": "Renamed Program Element A"
+}

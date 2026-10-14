@@ -1,8 +1,9 @@
 //! 📝️ Generation2d play app — the generation input-form window (generate mode).
 
-use crate::editor::generation2d::terminology::Generation2dLabels;
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::Generation2dSnapshot;
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
+use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
 use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;
 use semio_framework_plugin::built_text_node;
@@ -41,7 +42,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &Generation2dSnapshot, generation: &GenerationPlayState, labels: &Generation2dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let spec = flow_host_snapshot_to_form_spec(&document.host_snapshot);
+    let spec = flow_host_snapshot_to_form_spec(&document.host_snapshot, &PlaybookFlowFormProducer);
     let Some(current) = selected_generation(generation) else {
         return built_text_node(semio_framework_ui_locale::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
@@ -50,7 +51,4 @@ pub fn render(document: &Generation2dSnapshot, generation: &GenerationPlayState,
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

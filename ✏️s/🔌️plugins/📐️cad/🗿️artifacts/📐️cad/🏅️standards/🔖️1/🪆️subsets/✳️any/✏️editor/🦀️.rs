@@ -982,7 +982,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     }
 
     fn operation_wire_source<'a>(&self, operation: &'a CadMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
-        semio_s_artifact_cad_cad_io::binary::mutations::prepared_operation_wire_source(operation)
+        semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
     }
 
     fn operation_schema_parts<'a>(&'a self, operation: &'a CadMutation) -> Option<(&'a str, &'a str)> {

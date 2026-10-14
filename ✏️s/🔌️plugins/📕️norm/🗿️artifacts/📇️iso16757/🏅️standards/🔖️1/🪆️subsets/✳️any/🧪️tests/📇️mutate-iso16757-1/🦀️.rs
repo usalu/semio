@@ -295,17 +295,17 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::schema::mutations::{Iso16757Mutation};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::{apply_iso16757_mutation,inverse_iso16757_mutation};
+    use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
+    use semio_s_artifact_norm_iso16757_mutations::mutation_bridge::{apply_iso16757_mutation, inverse_iso16757_mutation};
 
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::text::mutations::{decode_iso16757_mutation_json};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::schema::snapshot::{Iso16757Snapshot};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::binary::snapshot::{encode_iso16757_pack};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::binary::snapshot::{decode_iso16757_pack};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::text::snapshot::{encode_iso16757_dsl};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::text::snapshot::{decode_iso16757_dsl};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::text::snapshot::{decode_iso16757_snapshot_json};
-    use semio_s_artifact_norm_iso16757::standards::v1::subsets::any::io::text::snapshot::{encode_iso16757_snapshot_json};
+    use semio_s_artifact_norm_iso16757_io::text::mutations::decode_iso16757_mutation_json;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+    use semio_s_artifact_norm_iso16757_io::binary::snapshot::encode_iso16757_pack;
+    use semio_s_artifact_norm_iso16757_io::binary::snapshot::decode_iso16757_pack;
+    use semio_s_artifact_norm_iso16757_io::text::snapshot::encode_iso16757_dsl;
+    use semio_s_artifact_norm_iso16757_io::text::snapshot::decode_iso16757_dsl;
+    use semio_s_artifact_norm_iso16757_io::text::snapshot::decode_iso16757_snapshot_json;
+    use semio_s_artifact_norm_iso16757_io::text::snapshot::encode_iso16757_snapshot_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode

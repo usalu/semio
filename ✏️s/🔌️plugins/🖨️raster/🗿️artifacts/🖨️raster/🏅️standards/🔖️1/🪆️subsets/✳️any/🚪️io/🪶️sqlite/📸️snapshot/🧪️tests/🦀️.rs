@@ -3,11 +3,11 @@
 mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
+use crate::snapshot::retire_raster_snapshot;
+use crate::io::sqlite::snapshot::*;
 fn provider()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<RasterSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Raster must declare its complete owned semantic SQLite capability")}
 #[semio_framework_async_macros::async_test]
-async fn sqlite_snapshot_raster_actual_declaration_capability(){semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("raster").label("Raster owned SQLite").version("0.0.1").package_id("semio:raster").artifact(crate::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(RASTER_DOCUMENT_SCHEMA).await.unwrap().unwrap();let p=codec.snapshot_sqlite.expect("actual Raster declaration must publish semantic SQLite");assert_eq!(p.snapshot_type,Some(std::any::TypeId::of::<RasterSnapshot>()));
+async fn sqlite_snapshot_raster_actual_declaration_capability(){semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("raster").label("Raster owned SQLite").version("0.0.1").package_id("semio:raster").artifact(semio_s_artifact_raster_raster::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(RASTER_DOCUMENT_SCHEMA).await.unwrap().unwrap();let p=codec.snapshot_sqlite.expect("actual Raster declaration must publish semantic SQLite");assert_eq!(p.snapshot_type,Some(std::any::TypeId::of::<RasterSnapshot>()));
  use store::io::io_mechanism::{io_route,io_run};
  let dialect=dialect();let sqlite=semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
  let into=io_route(&dialect,&sqlite,1).await.unwrap().value;let from=io_route(&sqlite,&dialect,1).await.unwrap().value;
@@ -112,7 +112,7 @@ async fn sqlite_snapshot_raster_independent_all_domains_and_leaf_edits(){
  let edited_file=raster_independent_sqlite_oracle(&file,"edit","none");let edited_database=import_sqlite_database(&edited_file,Default::default(),&mut |_|true).unwrap();
  let restored=Owner(Some(original_owners::with_sqlite_recipient(Default::default(),&mut |_|true,|sqlite_control|RasterSnapshot::from_sqlite_database(&edited_database, sqlite_control)).unwrap()));assert_eq!(restored.0.as_ref().unwrap(),expected_snapshot);
  let reprojection=original_owners::with_sqlite_recipient(Default::default(),&mut |_|true,|sqlite_control|expected_snapshot.to_sqlite_database(sqlite_control)).unwrap();raster_independent_sqlite_oracle(&export_sqlite_database(&reprojection,Default::default(),&mut |_|true).unwrap(),"edited","none");
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("raster").label("Raster independent semantic SQLite").version("0.0.1").package_id("semio:raster").artifact(crate::declaration().unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("raster").label("Raster independent semantic SQLite").version("0.0.1").package_id("semio:raster").artifact(semio_s_artifact_raster_raster::declaration().unwrap()).try_build().unwrap();
  let dialect=dialect();let sqlite=semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
  let into=io_route(&dialect,&sqlite,1).await.unwrap().value;let from=io_route(&sqlite,&dialect,1).await.unwrap().value;
  for route in [&into,&from]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,store::io_schema::IoFidelity::Exact);}

@@ -1,9 +1,10 @@
 //! 🔍️ Localized selection properties and foreground controls through semantic commands.
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::{raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text};
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
-use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
+use crate::config::RasterConfig;
+use crate::terminology::RasterPlayLabels;
+use crate::{raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_raster_raster_model::{find_layer, layer_name, layer_node_id, layer_opacity, layer_blend_mode, layer_transform, layer_visible, layer_locked, layer_protection};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::activation_target;
 use semio_framework_plugin::BuiltNode;
@@ -55,7 +56,7 @@ fn value(layer: &RasterLayerNode, field: &str, document: &RasterDocument) -> Str
         }
         "maskX" | "maskY" | "maskScaleX" | "maskScaleY" | "maskRotation" | "maskShearX" | "maskWidth" | "maskHeight" => {
             let (RasterLayerNode::Pixel { mask: Some(mask), .. } | RasterLayerNode::Group { mask: Some(mask), .. }) = layer else { return String::new(); };
-            let image = mask.image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<crate::SemioImageSnapshot>());
+            let image = mask.image_key.as_ref().and_then(|key| document.assets.get(key)).and_then(|asset| asset.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>());
             match field {
                 "maskX" => mask.transform.x.to_string(),
                 "maskY" => mask.transform.y.to_string(),
@@ -141,7 +142,7 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
     }
     if selected.len()==1 {
         let id=layer_node_id(selected[0]);
-        let duplicate=crate::editor::raster::commands::duplicate_layer::plan(document,id).is_ok();
+        let duplicate=crate::commands::duplicate_layer::plan(document,id).is_ok();
         let delete=layer_protection(&document.layers,id).is_some_and(|policy|policy.structural);
         for (key,command,label,enabled) in [("duplicate","duplicateLayer",labels.duplicate_layer,duplicate),("delete","deleteLayer",labels.delete_layer,delete)] {
             let (action,args)=raster_action(command,Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
@@ -149,7 +150,7 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
             if !enabled {row=row.description(text(labels.locked_hint.as_str())?);}
             rows.push(row.target(activation_target((action,args))?).try_build().map_err(|_|capacity())?);
         }
-        let supported=crate::editor::raster::commands::merge_down::plan(document,id).is_ok();
+        let supported=crate::commands::merge_down::plan(document,id).is_ok();
         let (action,args)=raster_action("mergeDown",Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
         rows.push(ui::tree_item(ui_label(labels.merge_down.as_str())?).try_id(format!("{ROOT}.merge-down")).map_err(|_|capacity())?.description(text(labels.merge_down_hint.as_str())?).disabled(!supported)
             .target(activation_target((action,args))?).try_build().map_err(|_|capacity())?);

@@ -1,6 +1,6 @@
 
     use super::*;
-    use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_SELECTED};
+    use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_SELECTED};
 
     fn forest_table_object() -> Puzzle3dObject {
         let positions = [
@@ -80,9 +80,9 @@
     /// popup's vortex, in candidate order, and reads pending only while that search has found nothing yet.
     #[test]
     fn the_suggestion_popup_lists_the_free_candidates_the_brush_run_published_for_its_vortex() {
-        use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
-        use crate::editor::puzzle3d::precompute::brush::{BrushSuggestionVerdict, BrushSuggestionsFound};
-        use crate::standards::v1::subsets::any::schema::BrushPreviewState;
+        use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu;
+        use semio_s_artifact_puzzle_3d_precompute_brush::{BrushSuggestionVerdict, BrushSuggestionsFound};
+        use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
         let session = Puzzle3dPrecomputeSession::new();
         let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into(), submenu: false }), ..Puzzle3dRuntime::default() };
         let envelope = Puzzle3dScene { scene_snapshot: forest_store(), runtime, active_utility: "select".into() };
@@ -116,7 +116,7 @@
 
     #[test]
     fn world_references_json_carries_infinite_asset_urls_the_dev_server_can_serve() {
-        use crate::editor::puzzle3d::snapshot::default_scene_snapshot;
+        use semio_s_artifact_puzzle_3d_editor_snapshot::default_scene_snapshot;
         let json = world_references_json(&default_scene_snapshot());
         let records: Vec<Value> = serde_json::from_str(&json).expect("referencesJson");
         let masterarbeit = records.iter().find(|row| row["id"] == "ref-masterarbeit").expect("ref-masterarbeit");
@@ -130,8 +130,8 @@
 
     #[test]
     fn meshes_json_is_published_in_exactly_the_mesh_lane_order_trace_subjects_index() {
-        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
-        let scene_snapshot = crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document(&snapshot);
+        let snapshot = semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")).expect("example parses");
+        let scene_snapshot = semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document(&snapshot);
         let lane = mesh_lane(&scene_snapshot);
         assert_eq!(&lane[..2], [PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_MESH_KIND]);
         assert!(lane[2..].windows(2).all(|pair| pair[0] < pair[1]), "mesh urls follow in one stable sorted order");

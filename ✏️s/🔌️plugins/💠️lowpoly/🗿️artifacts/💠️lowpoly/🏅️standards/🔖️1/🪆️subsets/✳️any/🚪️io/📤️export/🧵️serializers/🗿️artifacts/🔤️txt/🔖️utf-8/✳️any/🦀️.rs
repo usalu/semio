@@ -5,8 +5,8 @@
 //! honest lowpoly.txt representation is therefore lowpoly's OWN canonical `.lowpoly` DSL text
 //! (`pack::snapshot::ArtifactDsl for LowpolySnapshot`, `../../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs`)
 //! carried verbatim as the txt body -- never a second bespoke grammar.
-use crate::standards::v1::subsets::any::io::text::snapshot::print_dsl;
-use crate::schema::snapshot::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::print_dsl;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}

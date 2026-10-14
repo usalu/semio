@@ -1,4 +1,4 @@
-use super::*;
+use crate::config::*;
 use protocol::DiffAlgebra;
 
 #[test]

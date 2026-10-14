@@ -554,6 +554,13 @@ version = "0.1.0"
 [[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry-primitives",
+]
+
+[[package]]
+name = "semio-framework-geometry-primitives"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-hash"

@@ -1,7 +1,7 @@
 //! 🧺️ Funds the original retained modeling source projection before any original backing or scalar output changes.
 
 use super::*;
-use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 
 fn refusal(kind:ValueRefusalKind,reason:&'static str)->ValueError {ValueError::literal(kind,reason)}
 fn extent<T>(count:usize)->Result<usize,ValueError> {count.checked_mul(size_of::<T>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"original snapshot buffer extent overflow"))}

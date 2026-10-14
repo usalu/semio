@@ -1,7 +1,19 @@
 //! 🧬️ Layout diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
-use crate::{CharacterStyle, Frame, FramePatch, GridSettings, ImageLink, ImageLinkPatch, Layer, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch, TextStyleRun};
-use crate::LayoutSnapshot;
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use protocol::{Identified, Patchable};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_layout_layout_model::set_frame_layer;
+use semio_s_artifact_layout_layout_model::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::list_delta::RowPatch;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 use schema::ArtifactSchema;
@@ -237,7 +249,7 @@ protocol::plain_list_delta! {
 
 /// 🧾️ One dictionary row keyed by its question; the forms crate owns the entry type, so the delta keys it through this wrapper.
 #[derive(Clone, Debug, PartialEq)]
-struct LayoutDataEntryRow(crate::FormDictionaryEntry);
+struct LayoutDataEntryRow(semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry);
 
 impl protocol::list_delta::Keyed for LayoutDataEntryRow {
     type Key = String;
@@ -259,7 +271,7 @@ pub struct LayoutDataEntryRemoval {
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryInsertion {
     pub index: usize,
-    pub row: crate::FormDictionaryEntry,
+    pub row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry,
 }
 
 /// ↕️ One `entries` row moved from its base index to its index in the resulting list.
@@ -301,7 +313,7 @@ impl LayoutDataEntriesDelta {
     }
 
     /// ➕️ The delta that inserts `row` at `index` of the after list.
-    pub fn insertion(index: usize, row: crate::FormDictionaryEntry) -> Self {
+    pub fn insertion(index: usize, row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry) -> Self {
         Self::from_parts(protocol::list_delta::Parts::insertion(index, LayoutDataEntryRow(row)))
     }
 
@@ -316,13 +328,13 @@ impl LayoutDataEntriesDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &[crate::FormDictionaryEntry], capability: ApplyCapability) -> Result<Vec<crate::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry], capability: ApplyCapability) -> Result<Vec<semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
         let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
         Ok(self.clone().into_parts().commit_onto(&rows, capability)?.into_iter().map(|row| row.0).collect())
     }
 
     /// 🔁️ The negative delta over `base`, read row by row.
-    pub fn inverse(&self, base: &[crate::FormDictionaryEntry]) -> Self {
+    pub fn inverse(&self, base: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]) -> Self {
         let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
         Self::from_parts(self.clone().into_parts().inverse(&rows))
     }
@@ -355,13 +367,6 @@ protocol::list_delta! {
         row: Layer,
         patch: LayerPatch,
         key: id
-    }
-}
-
-impl protocol::list_delta::Keyed for Frame {
-    type Key = String;
-    fn key(&self) -> String {
-        self.id().to_string()
     }
 }
 
@@ -783,7 +788,7 @@ impl RowPatch<Page> for PagePatch {
         row.overrides = self.overrides.commit_onto(&row.overrides, capability).map_err(|error| error.under(["overrides"]))?;
         row.frames = self.frames.commit_onto(&row.frames, capability).map_err(|error| error.under(["frames"]))?;
         row.layers = self.layers.commit_onto(&row.layers, capability).map_err(|error| error.under(["layers"]))?;
-        crate::derive_page_layers(row);
+        semio_s_artifact_layout_layout_model::derive_page_layers(row);
         Ok(())
     }
     fn absorb(&mut self, later: Self) {
@@ -863,7 +868,7 @@ impl GridPatch {
 
 //#region 🔖️PositionalAlgebra
 /// 📍️ The shared shape of every positional list delta: the final length when it changes plus the rows whose value differs from the base.
-pub(crate) trait Positional: Default + Clone {
+pub trait Positional: Default + Clone {
     type Item: Clone + PartialEq;
     fn len(&self) -> Option<usize>;
     fn rows(&self) -> Vec<(usize, &Self::Item)>;
@@ -890,7 +895,7 @@ macro_rules! impl_positional {
 impl_positional!(TextStyleRunsDelta, TextStyleRun, TextStyleRunRow, run);
 impl_positional!(PageGuidesDelta, LayoutRect, PageGuideRow, guide);
 
-pub(crate) fn apply_positional<D: Positional>(items: &[D::Item], delta: &D) -> MutationApplyResult<Vec<D::Item>> {
+pub fn apply_positional<D: Positional>(items: &[D::Item], delta: &D) -> MutationApplyResult<Vec<D::Item>> {
     let target = delta.len().unwrap_or(items.len());
     let rows = delta.rows();
     if let Some((index, _)) = rows.iter().find(|(index, _)| *index >= target) {
@@ -906,14 +911,14 @@ pub(crate) fn apply_positional<D: Positional>(items: &[D::Item], delta: &D) -> M
     Ok(next)
 }
 
-pub(crate) fn absorb_positional<D: Positional>(first: D, second: D) -> D {
+pub fn absorb_positional<D: Positional>(first: D, second: D) -> D {
     let len = second.len().or(first.len());
     let mut rows: std::collections::BTreeMap<usize, D::Item> = first.rows().into_iter().map(|(index, value)| (index, value.clone())).collect();
     rows.extend(second.rows().into_iter().map(|(index, value)| (index, value.clone())));
     D::from_parts(len, rows.into_iter().filter(|(index, _)| len.is_none_or(|len| *index < len)).collect())
 }
 
-pub(crate) fn inverse_positional<D: Positional>(delta: &D, base: &[D::Item]) -> D {
+pub fn inverse_positional<D: Positional>(delta: &D, base: &[D::Item]) -> D {
     let target = delta.len().unwrap_or(base.len());
     let mut indices: std::collections::BTreeSet<usize> = delta.rows().into_iter().map(|(index, _)| index).filter(|index| *index < base.len()).collect();
     indices.extend(target..base.len());
@@ -966,8 +971,8 @@ pub fn page_override_rows(held: &[PageOverride], payload: &[PageOverride]) -> Pa
 }
 
 /// 🎯️ The dictionary rows that turn the held entries into the payload entries.
-pub fn data_entry_rows(held: &[crate::FormDictionaryEntry], payload: &[crate::FormDictionaryEntry]) -> LayoutDataEntriesDelta {
-    let wrap = |rows: &[crate::FormDictionaryEntry]| rows.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<_>>();
+pub fn data_entry_rows(held: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry], payload: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]) -> LayoutDataEntriesDelta {
+    let wrap = |rows: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]| rows.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<_>>();
     LayoutDataEntriesDelta::from_parts(payload_parts(&wrap(held), &wrap(payload)))
 }
 //#endregion 🔖️PayloadRows
@@ -984,14 +989,14 @@ macro_rules! absorb_lists {
 }
 
 impl LayoutDiff {
-    fn apply_data_fields(&self, base: &Option<crate::FormDictionary>, capability: ApplyCapability) -> MutationApplyResult<Option<crate::FormDictionary>> {
+    fn apply_data_fields(&self, base: &Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>, capability: ApplyCapability) -> MutationApplyResult<Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>> {
         let Some(delta) = &self.data_fields else { return Ok(base.clone()) };
         let entries = delta.entries.clone().unwrap_or_default();
-        let commit = |held: &[crate::FormDictionaryEntry]| entries.commit_onto(held, capability).map_err(|error| error.under(["dataFields", "entries"]));
+        let commit = |held: &[semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry]| entries.commit_onto(held, capability).map_err(|error| error.under(["dataFields", "entries"]));
         Ok(match (base, delta.presence) {
             (_, Some(DataFieldsPresence::Deleted)) => None,
-            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(crate::FormDictionary { entries: commit(&[])? }),
-            (Some(dictionary), _) => Some(crate::FormDictionary { entries: commit(&dictionary.entries)? }),
+            (None, Some(DataFieldsPresence::Created)) | (Some(_), Some(DataFieldsPresence::Replaced)) | (None, Some(DataFieldsPresence::Replaced)) => Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary { entries: commit(&[])? }),
+            (Some(dictionary), _) => Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary { entries: commit(&dictionary.entries)? }),
             (None, None) => {
                 if entries.is_empty() {
                     None
@@ -1047,11 +1052,11 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
             let child = next.background_drawing.take().ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "the document has no imported plan").at(["drawingTexts"]))?;
             let mut content = child.content.clone();
             for row in &self.drawing_texts {
-                if !crate::set_drawing_text(&mut content, row.index, &row.text) {
+                if !semio_s_artifact_layout_layout_model::set_drawing_text(&mut content, row.index, &row.text) {
                     return Err(MutationApplyError::new("mutation.apply.missing-target", "the imported plan has no text at that index").at(["drawingTexts".to_string(), row.index.to_string()]));
                 }
             }
-            next.background_drawing = Some(crate::background_drawing_child_handle("edit", &content));
+            next.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("edit", &content));
         }
         if let Some(value) = &self.referenced_model {
             next.referenced_model = value.clone();
@@ -1093,7 +1098,7 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
 }
 
 fn absorb_data_fields(first: Option<LayoutDataFieldsDelta>, second: LayoutDataFieldsDelta) -> Option<LayoutDataFieldsDelta> {
-    use DataFieldsPresence::{Created, Deleted, Replaced};
+    use crate::DataFieldsPresence::{Created, Deleted, Replaced};
     let first = first.unwrap_or_default();
     let entries = |first: Option<LayoutDataEntriesDelta>, second: Option<LayoutDataEntriesDelta>| match (first, second) {
         (Some(mut first), Some(second)) => {
@@ -1126,7 +1131,7 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
                 None => LayoutDataFieldsDelta { presence: None, entries: delta.entries.as_ref().map(|entries| entries.inverse(base_entries)) },
             }
         });
-        let labels = crate::mutations::set_drawing_text::drawing_labels(base);
+        let labels = semio_s_artifact_layout_layout_model::drawing_labels(base);
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
@@ -1168,3 +1173,325 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl Patchable<crate::ParagraphStylePatch> for ParagraphStyle {
+    fn apply_patch(&mut self, patch: &crate::ParagraphStylePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(font_family) = &patch.font_family {
+            self.font_family = font_family.clone();
+        }
+        if let Some(font_size) = patch.font_size {
+            self.font_size = font_size;
+        }
+        if let Some(font_weight) = patch.font_weight {
+            self.font_weight = font_weight;
+        }
+        if let Some(leading) = patch.leading {
+            self.leading = leading;
+        }
+        if let Some(tracking) = patch.tracking {
+            self.tracking = tracking;
+        }
+        if let Some(alignment) = &patch.alignment {
+            self.alignment = alignment.clone();
+        }
+    }
+}
+
+impl Patchable<crate::CharacterStylePatch> for CharacterStyle {
+    fn apply_patch(&mut self, patch: &crate::CharacterStylePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(font_family) = &patch.font_family {
+            self.font_family = font_family.clone();
+        }
+        if let Some(font_size) = &patch.font_size {
+            self.font_size = *font_size;
+        }
+        if let Some(font_weight) = &patch.font_weight {
+            self.font_weight = *font_weight;
+        }
+        if let Some(italic) = &patch.italic {
+            self.italic = *italic;
+        }
+        if let Some(color) = &patch.color {
+            self.color = *color;
+        }
+        if let Some(tracking) = &patch.tracking {
+            self.tracking = *tracking;
+        }
+    }
+}
+
+impl Patchable<crate::ParentPagePatch> for ParentPage {
+    fn apply_patch(&mut self, patch: &crate::ParentPagePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(width) = patch.width {
+            self.width = width;
+        }
+        if let Some(height) = patch.height {
+            self.height = height;
+        }
+    }
+}
+
+impl Patchable<crate::SpreadPatch> for Spread {
+    fn apply_patch(&mut self, patch: &crate::SpreadPatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+    }
+}
+
+/// 🩹️ Pure field-apply for a {@link FramePatch} onto a {@link Frame} — no inverse capture (every
+/// semantic mutation computes its own inverse from `base` directly; see `↩️inverse` triad leaves).
+pub fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
+    if let Some(layer_id) = &patch.layer_id {
+        set_frame_layer(frame, layer_id);
+    }
+    {
+        let bounds = match frame {
+            Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
+        };
+        if let Some(value) = patch.x {
+            bounds.x = value;
+        }
+        if let Some(value) = patch.y {
+            bounds.y = value;
+        }
+        if let Some(value) = patch.width {
+            bounds.width = value;
+        }
+        if let Some(value) = patch.height {
+            bounds.height = value;
+        }
+        if let Some(value) = patch.rotation {
+            bounds.rotation = value;
+        }
+    }
+    {
+        let (locked, visible) = match frame {
+            Frame::Rect { locked, visible, .. } | Frame::Text { locked, visible, .. } | Frame::Image { locked, visible, .. } => (locked, visible),
+        };
+        if let Some(value) = patch.locked {
+            *locked = value.then_some(true);
+        }
+        if let Some(value) = patch.visible {
+            *visible = (!value).then_some(false);
+        }
+    }
+    match frame {
+        Frame::Rect { fill, stroke, .. } => {
+            if let Some(new) = patch.fill {
+                *fill = new;
+            }
+            if let Some(new) = patch.stroke {
+                *stroke = new;
+            }
+        }
+        Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => {
+            if let Some(new) = &patch.wrap_mode {
+                *wrap_mode = new.clone();
+            }
+            if let Some(new) = patch.columns {
+                *columns = new;
+            }
+            if let Some(new) = &patch.story_id {
+                *story_id = new.clone();
+            }
+            if let Some(new) = &patch.thread_next {
+                *thread_next = new.clone();
+            }
+            if let Some(new) = patch.inset_x {
+                inset.x = new;
+            }
+            if let Some(new) = patch.inset_y {
+                inset.y = new;
+            }
+            if let Some(new) = patch.inset_width {
+                inset.width = new;
+            }
+            if let Some(new) = patch.inset_height {
+                inset.height = new;
+            }
+        }
+        Frame::Image { .. } => {}
+    }
+}
+
+/// 📝️ Sparse patch for a {@link TextStory}'s body content.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct TextStoryPatch {
+    pub content: Option<String>,
+    #[value(default)]
+    pub style_runs: Option<crate::TextStyleRunsDelta>,
+}
+
+impl Patchable<TextStoryPatch> for TextStory {
+    fn apply_patch(&mut self, patch: &TextStoryPatch) {
+        if let Some(content) = &patch.content {
+            self.content = content.clone();
+        }
+        if let Some(style_runs) = patch.style_runs.as_ref().and_then(|delta| crate::apply_story_runs(&self.style_runs, delta).ok()) {
+            self.style_runs = style_runs;
+        }
+    }
+}
+
+/// 🔗️ Sparse patch for an {@link ImageLink}'s file path.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct ImageLinkPatch {
+    pub path: Option<String>,
+    #[value(default)]
+    pub width: Option<u32>,
+    #[value(default)]
+    pub height: Option<u32>,
+    #[value(default)]
+    pub dpi: Option<u32>,
+    #[value(default)]
+    pub color_profile: Option<String>,
+}
+
+impl Patchable<ImageLinkPatch> for ImageLink {
+    fn apply_patch(&mut self, patch: &ImageLinkPatch) {
+        if let Some(path) = &patch.path {
+            self.path = path.clone();
+        }
+        if let Some(width) = patch.width {
+            self.width = width;
+        }
+        if let Some(height) = patch.height {
+            self.height = height;
+        }
+        if let Some(dpi) = patch.dpi {
+            self.dpi = dpi;
+        }
+        if let Some(color_profile) = &patch.color_profile {
+            self.color_profile = (!color_profile.is_empty()).then(|| color_profile.clone());
+        }
+    }
+}
+
+/// 🖼️ Sparse patch for a {@link Frame}: bounds for any kind, fill/stroke for rects, wrap-mode/columns
+/// for text. The doubly-optional `fill`/`stroke` distinguishes "unchanged" (outer `None`) from
+/// "cleared" (inner `None`). Needed both by `op`'s `PatchFrame` operation and by the DSL/spr mirror in
+/// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
+/// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
+/// patches above it has no `Patchable` impl.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct FramePatch {
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    #[value(default)]
+    pub rotation: Option<f64>,
+    pub fill: Option<Option<[f32; 4]>>,
+    pub stroke: Option<Option<[f32; 4]>>,
+    pub wrap_mode: Option<String>,
+    pub columns: Option<u32>,
+    #[value(default)]
+    pub locked: Option<bool>,
+    #[value(default)]
+    pub visible: Option<bool>,
+    #[value(default)]
+    pub story_id: Option<String>,
+    #[value(default)]
+    pub thread_next: Option<Option<String>>,
+    #[value(default)]
+    pub inset_x: Option<f64>,
+    #[value(default)]
+    pub inset_y: Option<f64>,
+    #[value(default)]
+    pub inset_width: Option<f64>,
+    #[value(default)]
+    pub inset_height: Option<f64>,
+    #[value(default)]
+    pub layer_id: Option<String>,
+}
+
+/// 🖼️ The sparse diff of a frame-selection transform (`drag-frames`/`rotate-frames`/`scale-frames`): every unlocked
+/// target frame of `page_id` gets `transform` applied to its BASE bounds — so the leaf replays on any base — and is
+/// patched in page order with the fields `fields` keeps. A repeated or empty target set is the Fatal `mutation.invariant`;
+/// a missing page, or no target that is an unlocked frame of it, is the Error `mutation.target-missing`; missing and
+/// locked targets are skipped with one Warning `mutation.partial` per reason; a transform that moves nothing is the
+/// Warning `mutation.no-op`.
+pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets: &[String], transform: impl Fn(&semio_s_artifact_layout_layout_model::LayoutBounds) -> semio_s_artifact_layout_layout_model::LayoutBounds, fields: impl Fn(&semio_s_artifact_layout_layout_model::LayoutBounds) -> crate::FramePatch) -> protocol::MutationOutcome<LayoutDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+    if let Err(reason) = layout_frame_targets_invariant(targets) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+    }
+    let Some(page) = base.pages.iter().find(|page| page.id == page_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{page_id}\" does not exist."), [page_id.to_string()]);
+    };
+    let missing: Vec<String> = targets.iter().filter(|id| !page.frames.iter().any(|frame| frame.id() == id.as_str())).cloned().collect();
+    let locked: Vec<String> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && semio_s_artifact_layout_layout_model::frame_edits_blocked(base, page, frame)).map(|frame| frame.id().to_string()).collect();
+    let movable = layout_frame_selection_targets(base, page_id, targets);
+    if movable.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} target(s) is an unlocked frame of page \"{page_id}\".", targets.len()), targets.to_vec());
+    }
+    let partial: Vec<protocol::MutationMessage> = [(missing, "not on this page"), (locked, "locked")]
+        .into_iter()
+        .filter(|(ids, _)| !ids.is_empty())
+        .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
+        .collect();
+    let patched: Vec<PageFramesModification> = movable.iter().filter_map(|frame| Some(transform(frame.bounds())).filter(|next| next != frame.bounds()).map(|next| PageFramesModification { id: frame.id().to_string(), patch: fields(&next) })).collect();
+    if patched.is_empty() {
+        return protocol::MutationOutcome::new(LayoutDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "The transform moves no frame.").at(targets.to_vec())]));
+    }
+    protocol::MutationOutcome::new(LayoutDiff {
+        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: page_id.to_string(), patch: PagePatch { frames: PageFramesDelta { modified: patched, ..Default::default() }, ..Default::default() } }], ..Default::default() }),
+        ..Default::default()
+    })
+    .absorb_messages(partial)
+}
+
+/// 🎯️ The frames a frame-selection transform moves: the unlocked frames of `page_id` named by `targets`, in page order.
+pub fn layout_frame_selection_targets<'a>(base: &'a LayoutSnapshot, page_id: &str, targets: &[String]) -> Vec<&'a semio_s_artifact_layout_layout_model::Frame> {
+    let Some(page) = base.pages.iter().find(|page| page.id == page_id) else { return Vec::new() };
+    page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && !semio_s_artifact_layout_layout_model::frame_edits_blocked(base, page, frame)).collect()
+}
+
+/// 🚨️ A frame-selection target set names at least one frame and no frame twice — the schema's `minItems`/`uniqueItems`.
+pub fn layout_frame_targets_invariant(targets: &[String]) -> Result<(), String> {
+    if targets.is_empty() {
+        return Err("targets must name at least one frame".to_string());
+    }
+    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
+        Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
+        None => Ok(()),
+    }
+}
+
+/// 📍️ The pivot a frame-selection rotate or scale records for `targets` on `page`: the centroid of their frame centres —
+/// one recorded point, so the leaf replays on any base. `None` when no target is a frame of the page.
+pub fn layout_frame_selection_pivot(page: &semio_s_artifact_layout_layout_model::Page, targets: &[String]) -> Option<(f64, f64)> {
+    let centres: Vec<(f64, f64)> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id())).map(|frame| layout_frame_centre(frame.bounds())).collect();
+    (!centres.is_empty()).then(|| (centres.iter().map(|centre| centre.0).sum::<f64>() / centres.len() as f64, centres.iter().map(|centre| centre.1).sum::<f64>() / centres.len() as f64))
+}
+
+/// 🎯️ A frame's centre: the point its rotation turns about.
+pub fn layout_frame_centre(bounds: &semio_s_artifact_layout_layout_model::LayoutBounds) -> (f64, f64) {
+    (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5)
+}
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod io {
+    #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+    pub mod binary;
+    #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+    pub mod text;
+}
+//#endregion 🪢️TaxonomyMounts

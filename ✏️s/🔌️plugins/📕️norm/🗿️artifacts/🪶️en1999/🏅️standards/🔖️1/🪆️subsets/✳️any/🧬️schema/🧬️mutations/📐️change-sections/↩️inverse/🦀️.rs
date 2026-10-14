@@ -1,12 +1,12 @@
 //! ↩️ `change-sections` inverse.
 
-use crate::mutations::change_sections::ChangeSections;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_sections::ChangeSections;
 
-pub fn inverse(_payload: &ChangeSections, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeSections, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_sections::ChangeSections> {
     Ok((|| {
-    vec![En1999Mutation::ChangeSections(ChangeSections { sections: base.sections.clone() })]
+    vec![Op::from(ChangeSections { sections: base.sections.clone() })]
 
     })())
 }

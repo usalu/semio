@@ -1,8 +1,8 @@
 //! 📚️ EN 1997 play app panel — examples plus DIN 1054 / EN 1997-1 reference tables.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::artifact_schema::{part_1, resolve_params, resolve_upl_params, DesignApproach};
-use crate::document::{AnnexChoice, ClauseId};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1997_checks::{part_1, resolve_params, resolve_upl_params, DesignApproach};
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -16,7 +16,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1997.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -140,7 +140,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `CreateSolid`.
 use super::CreateSolid;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidInsertion, Fem3dSolidsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::{invariant,solid_breach};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_breach;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

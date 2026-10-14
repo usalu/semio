@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/store/native-publication-producer/schema.json",
+  "title": "Selected Native Store Publication Producer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "selection",
+    "ordering",
+    "identity",
+    "registry",
+    "source"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "selection": {
+      "const": "explicit-original-native-factory-type"
+    },
+    "ordering": {
+      "const": "validated-history-before-publication-before-candidate-handoff"
+    },
+    "identity": {
+      "const": "actual-typed-snapshot-and-child-declared-codec"
+    },
+    "registry": {
+      "const": "original-atomic-native-assembly"
+    },
+    "source": {
+      "const": "original-envelope-actor-and-concrete-constructor"
+    }
+  }
+}

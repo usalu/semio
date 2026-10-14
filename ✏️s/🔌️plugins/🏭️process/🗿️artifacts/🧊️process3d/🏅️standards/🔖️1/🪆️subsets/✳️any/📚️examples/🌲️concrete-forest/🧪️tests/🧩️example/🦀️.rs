@@ -1,18 +1,18 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🌲️concrete-forest/🗣️.dsl.semio");
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🖼️assets/🌲️concrete-forest/🗣️.dsl.semio")).expect("../../../../🖼️assets/🌲️concrete-forest/🗣️.dsl.semio").leak();
     assert!(text.len() > 8);
 }
 
 //#region 🧪️ExampleLaws
-use crate::standards::v1::subsets::any::schema::inferences::Process3dInference;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_inferences::Process3dInference;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
 async fn example_parses_to_the_reference_stock() {
     let snapshot = <Process3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
-    assert_eq!(snapshot.stock_payload.solid, crate::WorkingSolid::Reference { reference_id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() });
+    assert_eq!(snapshot.stock_payload.solid, semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Reference { reference_id: semio_s_artifact_process_process3d_model::snapshot::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() });
     assert_eq!(snapshot.step_payloads.len(), 7);
     assert_eq!(Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
@@ -28,17 +28,17 @@ async fn every_composed_child_of_the_example_has_a_genesis_pack() {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use pack::snapshot::ArtifactPack;
     let snapshot = <Process3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
-    let stock = crate::genesis_process3d_child_pack(&snapshot, "stockSolid", &snapshot.stock_solid.child_id).expect("stock child pack");
+    let stock = semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(&snapshot, "stockSolid", &snapshot.stock_solid.child_id).expect("stock child pack");
     let brep = <SemioBrepSnapshot as ArtifactPack>::decode_pack(&stock).expect("stock brep decodes");
     assert_eq!((brep.faces.len(), brep.edges.len(), brep.vertices.len()), (57, 126, 71));
-    let steps = crate::genesis_process3d_child_pack(&snapshot, "steps", &snapshot.steps.child_id).expect("steps child pack");
+    let steps = semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(&snapshot, "steps", &snapshot.steps.child_id).expect("steps child pack");
     let flow = <SemioFlowSnapshot as ArtifactPack>::decode_pack(&steps).expect("steps flow decodes");
     assert_eq!(flow.nodes.len(), 7);
     assert_eq!(snapshot.tool_solids.len(), 5, "five cut/attach steps mint a tool solid; the two drills mint none");
     for tool in &snapshot.tool_solids {
-        let pack = crate::genesis_process3d_child_pack(&snapshot, "toolSolids", &tool.child_id).unwrap_or_else(|| panic!("tool child pack {}", tool.child_id));
+        let pack = semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(&snapshot, "toolSolids", &tool.child_id).unwrap_or_else(|| panic!("tool child pack {}", tool.child_id));
         assert!(<SemioBrepSnapshot as ArtifactPack>::decode_pack(&pack).is_ok_and(|brep| !brep.faces.is_empty()));
     }
-    assert!(crate::genesis_process3d_child_pack(&snapshot, "stockSolid", "not-a-child").is_none());
+    assert!(semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(&snapshot, "stockSolid", "not-a-child").is_none());
 }
 //#endregion 🧪️GenesisChildren

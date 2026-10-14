@@ -1,7 +1,7 @@
 //! Norm command — `insert-item`.
 
-use crate::standards::v1::subsets::any::schema::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,6 +17,6 @@ pub struct InsertItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &InsertItem, doc: &ArtifactView<'_, En1999Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1999Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_insert_item(doc.snapshot, &payload.path, payload.index as usize, payload.value_json.as_deref(), |document, edit| crate::mutations::resolve_edit(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_insert_item(doc.snapshot, &payload.path, payload.index as usize, payload.value_json.as_deref(), |document, edit| semio_s_artifact_norm_en1999_mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

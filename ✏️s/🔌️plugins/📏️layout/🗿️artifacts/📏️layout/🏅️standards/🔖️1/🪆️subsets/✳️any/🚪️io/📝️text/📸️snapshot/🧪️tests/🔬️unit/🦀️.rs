@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::io::text::snapshot::*;
 use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
 fn minimal_document_with_character_style() -> LayoutSnapshot {
@@ -70,7 +70,7 @@ async fn sample_fixture_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn demo_dsl_snapshot() {
-    let text = print_dsl(&crate::standards::v1::subsets::any::io::text::snapshot::default_document());
+    let text = print_dsl(&crate::io::text::snapshot::snapshot_wire_codec::default_document());
     assert!(parse_dsl(&text).is_ok());
     if std::env::var("LAYOUT_EMIT_DEMO_DSL").is_ok() {
         eprintln!("{text}");
@@ -79,7 +79,7 @@ async fn demo_dsl_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn example_fixture_matches_engine_demo() {
-    let demo = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let demo = crate::io::text::snapshot::snapshot_wire_codec::default_document();
     let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
     assert_eq!(from_example.pages.len(), demo.pages.len());
     assert_eq!(from_example.pages[0].frames.len(), demo.pages[0].frames.len());
@@ -101,7 +101,7 @@ async fn parse_dsl_reports_derived_grammar_errors() {
     assert!(parse_dsl("").is_err(), "empty text must fail: no schema field at all");
     assert!(parse_dsl("not a document at all").is_err(), "a token with no recognized key must fail");
     assert!(parse_dsl("name=Demo").is_err(), "a document missing its required schema field must fail");
-    let printed = print_dsl(&crate::standards::v1::subsets::any::schema::snapshot::empty_layout_snapshot());
+    let printed = print_dsl(&crate::snapshot::empty_layout_snapshot());
     assert!(parse_dsl(&printed.replacen("baseline-grid=", "baseline-grid=notanumber ", 1)).is_err(), "a malformed nested grid value must fail");
     assert!(parse_dsl(&printed.replacen("name=", "unknown-field=1 name=", 1)).is_err(), "an unknown field must fail");
 }

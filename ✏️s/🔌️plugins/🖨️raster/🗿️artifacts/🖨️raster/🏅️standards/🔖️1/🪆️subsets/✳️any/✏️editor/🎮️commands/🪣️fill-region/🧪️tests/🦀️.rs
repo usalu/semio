@@ -2,8 +2,8 @@
 //! colour, target, mask value and selection, its seed the clicked pixel; a click the layer cannot take leaves zero trace.
 
 use super::*;
-use crate::editor::raster::config::RasterPixelSelection;
-use crate::mutations::paint_stroke::RasterSelectionSpan;
+use crate::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_framework_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {
@@ -28,7 +28,7 @@ fn leaf(mutation: RasterMutation) -> FillRegionLeaf {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 //#region 🪣️Leaf
@@ -56,7 +56,7 @@ fn a_mask_fill_fills_the_session_mask_value_as_its_grey_level() {
 #[test]
 fn the_session_selection_clips_only_fills_on_its_own_layer_and_target() {
     let document = document(false, true);
-    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, crate::mutations::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
+    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
     let built = leaf(fill_region_leaf(&click("ink", 1.0, 0.0), &document, &selected).expect("the clipped fill fills"));
     assert_eq!(built.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
     retire(document);

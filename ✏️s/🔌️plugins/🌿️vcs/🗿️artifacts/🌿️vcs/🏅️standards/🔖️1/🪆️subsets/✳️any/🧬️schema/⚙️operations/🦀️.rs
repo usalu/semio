@@ -18,7 +18,7 @@ pub type VcsStore = store::ArtifactStore<VcsSnapshot, VcsDemoMutation>;
 /// but never mutated, undone or closed. `VcsPlayApp::build_document_store_owners` installs the SAME
 /// catalog for the app-hosted store; every standalone store goes through here instead.
 pub async fn new_vcs_store(envelope: VcsEnvelope, actor: protocol::ActorId) -> Result<OwnedVcsStore, store::VcsError> {
-    let mut store = VcsStore::new(envelope, actor).await?;
+    let mut store = VcsStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<VcsSnapshot, VcsDemoMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedVcsStore(store))
 }

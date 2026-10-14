@@ -1,8 +1,8 @@
 //! 🔺️ `change-members` diff.
 
-use crate::mutations::change_members::ChangeMembers;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999MembersRows};
+use crate::change_members::ChangeMembers;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999MembersRows};
 
 pub fn diff(payload: &ChangeMembers, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.members == &payload.members {

@@ -11,7 +11,7 @@ async fn definition_declares_the_paint2d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn window_measures_surface_brush_eraser_and_bucket_groups() {
     let config = RasterConfig::default();
-    let measures = window_measures(&config, &crate::editor::raster::terminology::RasterPlayLabels::NATIVE_EN);
+    let measures = window_measures(&config, &crate::terminology::RasterPlayLabels::NATIVE_EN);
     assert_eq!(measures.len(), 3);
     assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintBrush")));
     assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Group { id, .. } if id == "raster-utility-options-paintEraser")));
@@ -24,7 +24,7 @@ async fn window_measures_surface_brush_eraser_and_bucket_groups() {
 #[semio_framework_async_macros::async_test]
 async fn brush_controls_share_color_hardness_and_resolved_german_labels() {
     let config = RasterConfig { brush_color: "#123456".into(), brush_hardness: 0.25, ..RasterConfig::default() };
-    let measures = window_measures(&config, &crate::editor::raster::terminology::RasterPlayLabels::NATIVE_DE);
+    let measures = window_measures(&config, &crate::terminology::RasterPlayLabels::NATIVE_DE);
     let WindowMeasure::Group { label, children, .. } = &measures[0] else { panic!("brush group") };
     assert_eq!(label, "Pinsel");
     assert!(children.iter().any(|m| matches!(m, WindowMeasure::Slider { label, value, .. } if label.as_deref() == Some("Härte") && *value == 0.25)));
@@ -34,7 +34,7 @@ async fn brush_controls_share_color_hardness_and_resolved_german_labels() {
 #[semio_framework_async_macros::async_test]
 async fn brush_and_eraser_share_localized_mask_target_controls(){
     let config=RasterConfig{paint_target:"mask".into(),mask_value:96,..Default::default()};
-    for (labels,target,value) in [(&crate::editor::raster::terminology::RasterPlayLabels::NATIVE_EN,"Edit target","Mask value"),(&crate::editor::raster::terminology::RasterPlayLabels::NATIVE_DE,"Bearbeitungsziel","Maskenwert")]{
+    for (labels,target,value) in [(&crate::terminology::RasterPlayLabels::NATIVE_EN,"Edit target","Mask value"),(&crate::terminology::RasterPlayLabels::NATIVE_DE,"Bearbeitungsziel","Maskenwert")]{
         for measure in window_measures(&config,labels){let WindowMeasure::Group{children,..}=measure else{panic!("tool group")};assert!(children.iter().any(|control|matches!(control,WindowMeasure::Select{label,value,..} if label.as_deref()==Some(target)&&value=="mask")));assert!(children.iter().any(|control|matches!(control,WindowMeasure::Slider{label,value:coverage,disabled,..} if label.as_deref()==Some(value)&&*coverage==96.0&&*disabled==Some(false))));}
     }
 }

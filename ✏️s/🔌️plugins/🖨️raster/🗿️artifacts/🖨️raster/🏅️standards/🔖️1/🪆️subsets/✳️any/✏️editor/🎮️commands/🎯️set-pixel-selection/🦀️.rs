@@ -1,6 +1,8 @@
 //! 🎯️ Publish completed intrinsic selection coverage into session configuration.
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterPixelSelection, SetPixelSelectionEdit};
-use crate::{RasterMutation,RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation, SetPixelSelectionEdit};
+use crate::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]

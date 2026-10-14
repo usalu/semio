@@ -1,7 +1,8 @@
 //! 🔐️ Original borrowed authority and projected clone bindings obey exact physical custody.
-use crate::{retained_clone::{RetainedCloneSource,RetainedCloneBinding,RetainedCloneGrant},value::observe_retirement_allocations};
+use crate::{RetainedCloneSource,RetainedCloneBinding,RetainedCloneGrant,observe_retirement_allocations};
 
-#[derive(crate::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 struct Captured{owner:String,metadata:String}
 
 #[test]
@@ -18,8 +19,8 @@ fn sealed_clone_source_original_projected_authority_survives_every_alias_until_f
   }
   let(result,heap)=observe_retirement_allocations(||RetainedCloneSource::admit_borrowed(original,|owner:&Captured|&owner.owner,birth));
   let(mut source,receipt)=result.unwrap_or_else(|_|panic!("actual original issuer admission"));assert_eq!(heap,(receipt.retained_capacity_bytes,0));assert_eq!(source.borrow().get().as_ptr(),owner_pointer);
-  let mut born=heap.0;let mut released=0;let mut binding=None;let copy=source.borrow().binding_copy_bytes();
-  for denied in [RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy-1,maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,..Default::default()}]{
+  let mut born=heap.0;let mut released=0;let mut binding=None;let copy=source.borrow().binding_copy_bytes();assert_eq!(copy,law["currency"]["metadataCopyBytes"].as_u64().unwrap()as usize);
+  for denied in [RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,..Default::default()}]{
    let(result,heap)=observe_retirement_allocations(||source.borrow().bind(&mut binding,denied));assert_eq!(heap,(0,0));assert_eq!(result.unwrap().unwrap(),Default::default());assert!(binding.is_none());
   }
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_depth:1,..Default::default()};
@@ -45,7 +46,7 @@ fn sealed_clone_source_original_projected_authority_survives_every_alias_until_f
    
 #[test]
 fn sealed_clone_source_returns_same_original_workspace_after_all_projection_aliases_return(){
- use crate::retained_clone::RetainedCloneSourceTake;
+ use crate::RetainedCloneSourceTake;
  use crate::retirement::controlled::ControlledRetirement;
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔐️custody.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
@@ -56,10 +57,15 @@ fn sealed_clone_source_returns_same_original_workspace_after_all_projection_alia
   loop{let copy=source.next_take_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_take_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_take_release_byte_demand().unwrap(),maximum_depth:source.next_take_depth_demand().unwrap()};let(result,heap)=observe_retirement_allocations(||source.take_authority(grant));match result{Ok(RetainedCloneSourceTake::Pending(p))=>{assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;freed+=heap.1;},Err(error)=>{assert_eq!(heap,(0,0));assert_eq!(error.kind,crate::ValueRefusalKind::WorkLimit);break;},Ok(RetainedCloneSourceTake::Ready(_, _))=>panic!("live genuine projection must retain original workspace")}}
   assert_eq!(child.borrow().unwrap().get().as_ptr(),pointer);
   for _ in 0..10000{if child.terminal_is_empty(){break;}let copy=child.next_close_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:child.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:child.next_close_release_byte_demand().unwrap(),maximum_depth:child.next_close_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||child.close_step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
-  assert!(child.terminal_is_empty());let copy=source.next_take_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_take_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_take_release_byte_demand().unwrap(),maximum_depth:source.next_take_depth_demand().unwrap()};
-  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:copy-1,..grant},RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe_retirement_allocations(||source.take_authority(denied));assert!(result.is_err());assert_eq!(heap,(0,0));assert!(!source.terminal_is_empty());}
+  assert!(child.terminal_is_empty());let copy=source.next_take_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_take_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_take_release_byte_demand().unwrap(),maximum_depth:source.next_take_depth_demand().unwrap()};assert_eq!(copy,law["currency"]["metadataCopyBytes"].as_u64().unwrap()as usize);assert!(grant.maximum_release_bytes>0);
+  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe_retirement_allocations(||source.take_authority(denied));assert!(result.is_err());assert_eq!(heap,(0,0));assert!(!source.terminal_is_empty());}
   let(result,heap)=observe_retirement_allocations(||source.take_authority(grant).unwrap());let RetainedCloneSourceTake::Ready(original,p)=result else{panic!("all genuine aliases returned")};assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;freed+=heap.1;assert_eq!(original.owner.as_ptr(),pointer);assert_eq!(original.metadata.as_ptr(),metadata);
   let mut close=ControlledRetirement::new(original).unwrap_or_else(|_|panic!("typed original workspace close"));for _ in 0..10000{if close.terminal_is_empty(){break;}let copy=close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};let(step,heap)=observe_retirement_allocations(||close.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
   assert!(close.terminal_is_empty());assert_eq!(bytes+born,freed);assert_eq!(observe_retirement_allocations(||{drop(source);drop(child);drop(close);}).1,(0,0));println!("[DEBUG] same original workspace alias denial and recovery original={bytes} born={born} release={freed}");
  }
 }     
+#[test]
+fn immutable_binding_query_matches_exact_original_lease_and_projected_path(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔐️custody.json")).unwrap();let law=&fixture["bindingIdentity"];let demand=RetainedCloneSource::<u64>::owned_constructor_demand::<()>();let birth=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};let(mut first,_)=RetainedCloneSource::admit_owned(1u64,(),birth).unwrap_or_else(|_|panic!("original first admission"));let(mut second,_)=RetainedCloneSource::admit_owned(1u64,(),birth).unwrap_or_else(|_|panic!("original second admission"));let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};let mut binding=None;first.borrow().bind(&mut binding,grant).unwrap();let bound=binding.as_ref().unwrap();let query=first.borrow();assert!(std::ptr::eq(query.get(),first.borrow().get()));assert!(!std::ptr::eq(query.get(),second.borrow().get()));assert_eq!(query.matches_binding(bound),law["sameOrigin"].as_bool().unwrap());assert_eq!(query.project(1,|value|value).matches_binding(bound),law["differentProjection"].as_bool().unwrap());assert_eq!(second.borrow().matches_binding(bound),law["differentOrigin"].as_bool().unwrap());
+ while binding.is_some(){let copy=RetainedCloneBinding::copy_demand(&binding).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:RetainedCloneBinding::capacity_demand(&binding,copy).unwrap(),maximum_release_bytes:RetainedCloneBinding::release_demand(&binding).unwrap(),maximum_depth:RetainedCloneBinding::depth_demand(&binding).unwrap()};RetainedCloneBinding::close_one(&mut binding,grant).unwrap();}for owner in [&mut first,&mut second]{while !owner.terminal_is_empty(){let copy=owner.next_close_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};owner.close_step(grant).unwrap();}}eprintln!("[DEBUG] Original binding query preserves private leases and agrees with independent pointer identity");
+}

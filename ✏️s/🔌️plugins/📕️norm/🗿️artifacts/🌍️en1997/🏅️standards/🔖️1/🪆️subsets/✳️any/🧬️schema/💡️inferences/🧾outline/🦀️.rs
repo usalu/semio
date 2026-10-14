@@ -1,7 +1,7 @@
 //! 🧾 `outline` — geotechnical project field structure plus governing-situation summary.
 
-use crate::document::CheckStatus;
-use crate::En1997Snapshot;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "structure_id",
@@ -47,7 +47,7 @@ impl En1997Outline {
             + snapshot.retaining_walls.len()
             + snapshot.slopes.len()
             + snapshot.uplift_cases.len()) as u32;
-        let report = crate::standards::v1::subsets::any::schema::check_project(snapshot);
+        let report = semio_s_artifact_norm_en1997_checks::check_project(snapshot);
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|c| c.status == CheckStatus::Pass).count() as u32;
         let all_pass = report.complies();

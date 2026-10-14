@@ -17,7 +17,7 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 /// 🌱️ The author of `edits` and a replica holding its whole log.
@@ -31,7 +31,7 @@ async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>, _iden
 }
 
 async fn replica(id: &str, n: Option<i32>, log: &[crate::os_spr::MutationEnvelope], budget: Option<usize>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut store = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", id, DemoSnapshot { n }, None), ActorId("deferred".into())).await;
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("deferred".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     for event in log {
         store.ingest_remote(event.clone()).await.expect("the replica takes the log");
     }
@@ -220,7 +220,7 @@ async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..100).map(|_| vec![add(1)])).collect();
     let (author, log) = authored("deferred-ring", Some(0), edits, &mut identity).await;
     let first = author.mutation_ops().expect("operations")[0].mutation_id.clone();
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "deferred-ring", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "deferred-ring", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store.closes_on_drop();
     for event in &log {
@@ -327,14 +327,14 @@ impl Mutation<DemoSnapshot> for CountedOp {
     }
 }
 
-impl MemberStoreOwner<CountedOp> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,CountedOp> for crate::os_store::tests::DemoMemberStoreProducer<CountedOp> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<CountedOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, CountedOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, CountedOp>> {
         super::fixture_authoring_member_owners::<CountedOp>(grant)
     }
 }
@@ -371,7 +371,7 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
 /// then `add(1)` × 239 authored by `later`, so `early`'s undo is an interior revert at position 0 that replays every later
 /// edit. The store authors as `early` afterwards and defers local replays by `budget`.
 async fn long_history(id: &str, budget: Option<ReplayTurnBudget>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ArtifactStore<DemoSnapshot, CountedOp> {
-    let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None), ActorId("early".into())).await;
+    let mut store = ArtifactStore::new_with_actor(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("early".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.enable_convergence_early_exit();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {

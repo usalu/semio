@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "nested-and-global",
+      "roots": {
+        "base": "base",
+        "base/nested": "nested"
+      },
+      "files": {
+        "base/lib.rs": "pub const N:u32=1;",
+        "base/nested/lib.rs": "pub const M:u32=2;",
+        "shared/compiler.json": "{}"
+      },
+      "owners": {
+        "base/lib.rs": "base",
+        "base/nested/lib.rs": "nested",
+        "shared/compiler.json": null
+      },
+      "unrelated": {
+        "unselected.rs": "pub const UNSELECTED:u8=0;"
+      }
+    },
+    {
+      "id": "global-only",
+      "roots": {},
+      "files": {
+        "main.rs": "fn main(){}"
+      },
+      "owners": {
+        "main.rs": null
+      }
+    }
+  ],
+  "seed": ".semio-native-index"
+}

@@ -1,8 +1,7 @@
 //! 🚫 Block5d mutation — `RemoveRepresentationTag`: a member of a representation's `tags` set.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🚫 `remove-representation-tag` payload.
@@ -19,19 +18,19 @@ pub struct RemoveRepresentationTag {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_representation_tag(id: String, tag: String) -> Block5dMutation {
-    Block5dMutation::RemoveRepresentationTag(RemoveRepresentationTag { id, tag })
+pub fn remove_representation_tag<Op: From<crate::remove_representation_tag::RemoveRepresentationTag>>(id: String, tag: String) -> Op {
+    Op::from(RemoveRepresentationTag { id, tag })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RemoveRepresentationTag {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for RemoveRepresentationTag where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::add_representation_tag::AddRepresentationTag> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "representation-tag", kind: "remove-representation-tag", record: "RemovedRepresentationTag" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::remove_representation_tag::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_representation_tag::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RemoveRepresen
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

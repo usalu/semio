@@ -3,7 +3,7 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-impl semio_framework_os_kernel::DiffText for crate::standards::v1::subsets::any::schema::diff::Din4108Diff {
+impl semio_framework_os_kernel::DiffText for semio_s_artifact_norm_din4108_diff::Din4108Diff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }

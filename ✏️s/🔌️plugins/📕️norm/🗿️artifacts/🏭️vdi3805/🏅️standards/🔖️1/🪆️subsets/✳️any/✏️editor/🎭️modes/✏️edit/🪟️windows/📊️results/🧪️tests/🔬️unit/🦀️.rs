@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::vdi3805::unit_tests::context;
+use crate::modes::edit::windows::results::*;
+use crate::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {
@@ -10,7 +10,7 @@ async fn definition_declares_this_windows_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_computed_checks() {
     let mut app = context::app_with_registry().await;
-    let mut host = crate::document::NormHost::<crate::editor::vdi3805::Vdi3805Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = semio_s_plugin_norm_compliance::NormHost::<crate::Vdi3805Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
     let rendered = context::render(&mut app, BODY_RESULTS).await;
     assert!(!rendered.contains("No checks computed."), "the default document must compute at least one check: {rendered}");

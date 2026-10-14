@@ -365,8 +365,7 @@ export class NxScript extends Script {
     return owned.sort((a, b) => a - b);
   }
   async run(segments: string[]): Promise<void> {
-    const graphConsumer=!segments.some(argument=>["--version","-v","--help","-h"].includes(argument))&&!["reset","daemon"].includes(segments[0]??"");
-    if(!graphConsumer)return this.runInStorage(segments);
+    if(segments.length===1&&segments[0]==="--version")return this.runInStorage(segments);
     return withRepositoryNxStorageV1(this.root,this.invocation,bind=>this.runInStorage(segments,bind));
   }
   private async runInStorage(segments: string[],bind?:(toolingIdentity:string)=>Promise<BoundedNxNamespaceV1>): Promise<void> {return withRepositoryToolingStoreV1(this.root,this.invocation,store=>this.runWithToolingStore(segments,store,bind));}
@@ -374,8 +373,11 @@ export class NxScript extends Script {
     const graphConsumer=!segments.some(argument=>["--version","-v","--help","-h"].includes(argument))&&!["reset","daemon"].includes(segments[0]??"");
     if (graphConsumer&&!process.env.SEMIO_BUILD_GRAPH_PATH) {
       const {loadBuildGraphV1}=await import("../../🏗️build/🕸️graph/🟦️.ts"),{withRepositoryBuildGraphArtifactV1}=await import("../💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
-      const baseline = await loadBuildGraphV1(this.root, this.invocation),{prepareSelectedRustBuildGraphV1}=await import("../../🏗️build/🕸️graph/🦀️rust/🟦️.ts"),prepared=await prepareSelectedRustBuildGraphV1(this.root,baseline,segments,this.invocation),graph=prepared.graph;
-      return withRepositoryBuildGraphArtifactV1(this.root,graph,this.invocation,async pinned=>{const patch={...prepared.environment,SEMIO_BUILD_GRAPH_PATH:pinned.path,SEMIO_BUILD_GRAPH_DIGEST:pinned.digest,SEMIO_BUILD_REUSE_GRAPH:"true"},previous=Object.fromEntries(Object.keys(patch).map(key=>[key,process.env[key]]));Object.assign(process.env,patch);try{await this.runWithToolingStore(segments,store,bind);}finally{for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}});
+      const {buildInvocationGraphSelectionV1}=await import("../../🏗️build/🕸️graph/🚪️admission/🟦️.ts"),baseline = await loadBuildGraphV1(this.root, this.invocation,{selection:buildInvocationGraphSelectionV1(segments)}),{withSelectedRustBuildGraphV1}=await import("../../🏗️build/🕸️graph/🦀️rust/🟦️.ts");return withSelectedRustBuildGraphV1(this.root,baseline,segments,this.invocation,async prepared=>{const graph=prepared.graph;
+      const {withSelectedNextBuildGraphV1,nextCacheEnabledV1}=await import("../../../🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts");
+      const useNext=nextCacheEnabledV1()?withSelectedNextBuildGraphV1:async<T>(_workspace:string,value:typeof graph,_args:readonly string[],_invocation:ScriptInvocation,body:(value:typeof graph)=>Promise<T>)=>body(value);
+      return useNext(this.root,graph,segments,this.invocation,nextGraph=>withRepositoryBuildGraphArtifactV1(this.root,nextGraph,this.invocation,async pinned=>{const patch={...prepared.environment,SEMIO_BUILD_GRAPH_PATH:pinned.path,SEMIO_BUILD_GRAPH_DIGEST:pinned.digest,SEMIO_BUILD_REUSE_GRAPH:"true"},previous=Object.fromEntries(Object.keys(patch).map(key=>[key,process.env[key]]));Object.assign(process.env,patch);try{await this.runWithToolingStore(segments,store,bind);}finally{for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}}));
+      });
     }
     const outputLog = process.env[NX_OUTPUT_LOG_ENV];
     delete process.env[NX_OUTPUT_LOG_ENV];
@@ -476,18 +478,19 @@ export class NxScript extends Script {
     const budget = scriptInvocationBudget(this.invocation, requestedBudget ?? 0);
     const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
     try {
-      if (!existsSync(join(this.root, "node_modules/nx/package.json")) && !invocation.args.includes(NxScript.javascriptEnvironment)) {
+      if (graphConsumer&&!existsSync(join(this.root, "node_modules/nx/package.json")) && !invocation.args.includes(NxScript.javascriptEnvironment)) {
         const install = launch(["run", NxScript.javascriptEnvironment, "--output-style=stream"]);
         const installed = await new Promise<number>((accept, reject) => { install.once("error", reject); install.once("close", (code) => accept(code ?? 1)); });
         if (installed !== 0 || cancelled) { process.exitCode = cancelled ? cancelled === "SIGINT" ? 130 : 143 : installed; return; }
       }
       if (!cancelled) {
+        if(graphConsumer){
         const graphSeal = await import("../🕸️graph/🔏️seal/🟦️.ts"), workspaceData = env.NX_WORKSPACE_DATA_DIRECTORY!, inheritedReuse = env.NX_FORCE_REUSE_CACHED_GRAPH === "true" && env.SEMIO_NX_GRAPH_SEAL_REUSE === undefined;
         const sealStarted=performance.now();
         delete env.SEMIO_NX_SELECTED_GRAPH_RECEIPT;
         let selected=false;
         if(!inheritedReuse&&!invocation.watch&&nxChildEnvironment(env,invocation.args,false).NX_DAEMON!=="false"){
-          for(const key of ["NX_WORKSPACE_DATA_DIRECTORY","NX_SOCKET_DIR","NX_DAEMON_SOCKET_DIR","NX_DAEMON"]){const value=key==="NX_DAEMON"?nxChildEnvironment(env,invocation.args,false).NX_DAEMON:env[key];if(value===undefined)delete process.env[key];else process.env[key]=value;}
+          for(const key of ["NX_WORKSPACE_DATA_DIRECTORY","NX_PROJECT_GRAPH_CACHE_DIRECTORY","NX_CACHE_DIRECTORY","NX_NATIVE_FILE_CACHE_DIRECTORY","SEMIO_NX_FIXED_STORAGE","TMPDIR","TMP","TEMP","NX_SOCKET_DIR","NX_DAEMON_SOCKET_DIR","NX_DAEMON"]){const value=key==="NX_DAEMON"?nxChildEnvironment(env,invocation.args,false).NX_DAEMON:env[key];if(value===undefined)delete process.env[key];else process.env[key]=value;}
           const frozen=await createRequire(nxCli)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
           if(!frozen||frozen.toolingIdentity!==toolingIdentity)throw Error("Original immutable graph authorizers required");
           if(frozen.authorizers.selectedTaskSelectionV1(invocation.args,readBuildMode(env.SEMIO_BUILD_MODE??"prototype"))){
@@ -501,6 +504,7 @@ export class NxScript extends Script {
         if(!inheritedReuse){env.NX_FORCE_REUSE_CACHED_GRAPH=sealed?"true":"false";env.SEMIO_NX_GRAPH_SEAL_REUSE=sealed?"true":"false";}
         this.invocation.control.signal.throwIfAborted();
         env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP=sourceMembership?.digest;
+        }
         const launchedAt = Date.now();
         const child=launch(invocation.args,Boolean(invocation.watch));
         const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",code=>accept(code??1)); });void status.catch(()=>{});
@@ -610,7 +614,7 @@ if (import.meta.main) {
   const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((envelope.capabilities as {buildMode?:unknown}).buildMode??selectedMode??"prototype");
   if(selectedMode!==undefined&&mode!==selectedMode)throw Error("Original dashboard build mode changed across handoff");
   const invocation=args[0]==="nx"&&native.dashboardInstalled(WORKSPACE_ROOT,mode)?native.dashboardInvocation(args.slice(1)):undefined;
-  if(invocation){try{await withScriptProcessEnvelope(envelope,async original=>{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=1;}}
+  if(invocation){try{await withScriptProcessEnvelope(envelope,async original=>{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{invocation:original,workspace:WORKSPACE_ROOT,mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=1;}}
   else{
     try { await withScriptProcessEnvelope(envelope, async original => {
       publishBootstrapSources(WORKSPACE_ROOT);

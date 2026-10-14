@@ -1,32 +1,39 @@
 //! 🧬️ Closed raster mutation vocabulary: layer structure, properties, assets, pixels and masks.
 
-use crate::diff::RasterDiff;
-use crate::RasterSnapshot;
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Leaves
-use super::add_layer_asset;
-use super::change_layer_adjustment_kind;
-use super::change_layer_blend_mode;
-use super::change_layer_opacity;
-use super::change_layer_visible;
-use super::change_layer_locked;
-use super::create_layer;
-use super::delete_layer;
-use super::move_layer;
-use super::remove_layer_asset;
-use super::rename_layer;
-use super::reorder_layers;
-use super::resize_layer;
-use super::change_layer_pixels;
-use super::change_layer_mask;
-use super::change_layer_transform;
-use super::change_layer_adjustment_parameter;
-use super::paint_stroke;
-use super::fill_region;
-use super::apply_filter;
-use super::transform_image;
-use super::fill_selection;
-use super::write_pixel_region;
+use semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_visible;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_locked;
+use semio_s_artifact_raster_raster_mutations_layers::create_layer;
+use semio_s_artifact_raster_raster_mutations_layers::delete_layer;
+use semio_s_artifact_raster_raster_mutations_layers::move_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
+use semio_s_artifact_raster_raster_mutations_layers::reorder_layers;
+use semio_s_artifact_raster_raster_mutations_layers::resize_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_transform;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_region;
+use semio_s_artifact_raster_raster_mutations_pixels::apply_filter;
+use semio_s_artifact_raster_raster_mutations_pixels::transform_image;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_selection;
+use semio_s_artifact_raster_raster_mutations_pixels::write_pixel_region;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -69,7 +76,7 @@ pub enum RasterMutation {
 /// `RasterOwnedMap`). Every other leaf carries plain scalars and needs nothing.
 pub fn retire_raster_mutation(mutation: RasterMutation) {
     if let RasterMutation::CreateLayer(value) = mutation {
-        crate::retire_raster_layer(*value.layer);
+        semio_s_artifact_raster_raster_model::retire_raster_layer(*value.layer);
     }
 }
 
@@ -98,17 +105,13 @@ mod mask_tests;
 //#region 🌉️ExternalCodecBridge
 
 
-
-
 /// 🧹️ Cold-retires a batch of operations nobody will apply — a `create-layer` inverse can carry a
 /// whole subtree whose adjustment layers own populated `params` maps.
-pub(crate) fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
+pub fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
     for mutation in mutations {
         protocol::Mutation::retire_cold(mutation);
     }
 }
-
-
 
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
@@ -128,7 +131,6 @@ pub(crate) fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 
 
-
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Kinds
@@ -146,3 +148,10 @@ pub const KINDS: &[&str] =
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
+
+//#region 🪢️TaxonomyMounts
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+//#endregion 🪢️TaxonomyMounts

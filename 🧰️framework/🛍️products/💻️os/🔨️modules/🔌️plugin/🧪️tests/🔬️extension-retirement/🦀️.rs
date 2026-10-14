@@ -2,7 +2,7 @@ mod extension_retirement_tests {
     use super::*;
     use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
     use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-    use crate::bounded_ownership::PluginLifecycleStep;
+    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 
     fn echo_step(bytes: Vec<u8>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: bytes.capacity(), ..Default::default() };
@@ -46,7 +46,7 @@ mod extension_retirement_tests {
     }
 
     fn quoted_grant(demand: RetirementDemand) -> RetainedCloneGrant {
-        crate::bounded_ownership::plugin_demand_grant(demand)
+        semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(demand)
     }
 
     fn yielded(step: PluginLifecycleStep) -> bool {

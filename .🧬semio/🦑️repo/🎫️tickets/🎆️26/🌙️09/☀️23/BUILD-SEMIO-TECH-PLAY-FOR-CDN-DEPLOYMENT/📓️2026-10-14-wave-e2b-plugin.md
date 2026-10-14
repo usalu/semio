@@ -7,7 +7,14 @@ Rules kept: no git-modifying command, no worktree, no sub-agent, no ticket opera
 
 ## 1. Outcome
 
-PLACEHOLDER-OUTCOME
+| Item | Result |
+|---|---|
+| C1–C3: the 155 back-edge names (R1–R6) | **Done.** `🧭️facet-imports.py` prints **0 edges against the order** and no facet cycle (§3), re-checked on 2026-10-14 after fixing the three edges peers added overnight. |
+| Impl placement for a cut | Clean except `Plugin::builder` (public, 160 consumer files; §2.3). |
+| C4: `pub(crate)` shrink | **No mechanical shrink is possible.** The strip/re-widen loop reached ~2,860 of 3,062 before the restart killed it; the remainder was restored without a compiler. Now 3,100 (peer additions). The exposure is structural (§4). |
+| Cut plan to 4,000 lines / 262,144 bytes / 32 files | **Planned (§5).** 12 owner crates fit today (≈ 22.5 k lines); 5 components (≈ 45.6 k lines) need decomposition first, each with a concrete design. |
+| Crate extraction | **Not started.** The plugin closure has not built upstream since the restart (§6), so no extraction can be proven compile-clean. |
+| Last compile-clean state | 2026-10-13: native lib, `--profile test`, `wasm32-wasip2`, `wasm32-wasip2 --features component-guest` (feature since deleted by L1), `--features artifact-app-testing`: all 0 errors, native warnings 119 (126 before). Everything after that (C4 restore, the 2026-10-14 drift fixes) is checked only by the facet/impl tools and the TypeScript oracles. |
 
 ## 2. How the order was reached (C1–C3)
 
@@ -130,7 +137,19 @@ The in-crate preparation is complete and needs nothing from WS1: zero edges agai
 
 ## 6. Verification
 
-PLACEHOLDER-VERIFY
+| Check | Result |
+|---|---|
+| `cargo check -p semio-framework-plugin --lib` (native), 2026-10-13 before C4 | 0 errors, 119 warnings (baseline 126) |
+| same: `--profile test`, `--target wasm32-wasip2`, `wasm32-wasip2 --features component-guest`, `--features artifact-app-testing` (2026-10-13) | 0 errors each |
+| `--features component-guest-async` | fails in `🌐host/🦀️.rs` (lines 128, 402, 810: `resolve_ready` on a `Vec<u8>`, `document_write`/`DocumentWriteParams` and `document_json` absent from the WIT). This gated path was not touched beyond the request-registry import and is stale against the WIT; it is not from this wave. |
+| Any plugin check on 2026-10-14 | **Blocked upstream.** Successively red: `ui-theme`, `ui-layout`, `os-store-message-ledger`, `job`, `os-pack`, `os-command`, `os-channel`, `ui-draw-contract`, `ui-runtime`, `os-store-one-item`, `os-store-envelope`, `dsl-record`, `value`, plus manifest errors ("member of the wrong workspace", a missing `📡️spr/🎮️command` manifest). U1 owns them; not patched here. A private source snapshot with local fixes was tried and abandoned (each fix exposed the next red crate); it is deleted. |
+| Plugin lib, one process per test | Baseline only: 2026-10-13 binary before any edit, 5 in parallel, 180 s alarm: **1,048 ok / 175 FAILED / 7 TIMEOUT** of 1,231 (1,230 recorded). The after-run needs a building tree. |
+| `test-retained-raw-source` | The nx target now refuses ("Original immutable build graph path and digest required") and `📜️script.ts` requires a parent invocation envelope, so its five Bun files ran directly: **18 pass / 5 fail**. 1 failure was this wave's (the lease oracle still read the moved `MountedTypedCommandFullOperation` impl from the lease file) and is fixed (lease suite 4/4). The other 4 read peer-changed sources: `self.close_ladder_step(grant)` (now takes `cx`), `🏪️store/🦀️.rs` `TransientStore::begin_close_retirement`, `🏪️store/🔗️read` `try_return_original_snapshot_read`, and `store::MemberOpenOperation::close_step(open,same)` (now with a parent). |
+| Other Bun oracles reading moved code (17 files) | Mine: none failing. Failures read pre-E2 root locations (`ChildEmissionPreviewJob`, `gesture: GestureCapture<…>` in the root), peer-changed sources (`pending_job_outcome`, job payload fixture) or a missing `web-tree-sitter` package. |
+| K0 launcher, 2026-10-15: `bun repo cargo --store=shared --configuration=prototype -- check -p semio-framework-plugin --lib` | **Refused before rustc** by `admitCargoSourceBoundariesV1`: `Rust crate Source refused before compiler: semio-framework-2d (Rust crate Source boundary exceeded before compiler byte allocation)`. The admission runs over every workspace unit of the graph and only tightens the global 4,000 / 262,144 / 32 policy, so the plugin closure cannot compile until both the upstream `semio-framework-2d` (owned by E4/the split lanes) and the plugin crate itself (≈ 68 k lines) are cut. Native lib, test profile, wasm32-wasip2 and `artifact-app-testing` are therefore unverifiable on the current tree, and so is the per-test sweep. No error from the C1–C3 moves could be observed or fixed. |
+| Hub wasm workspace check, `🔎️manifest-sweep.sh` | Not run: the closure does not resolve. |
+
+Private dirs: `⚡️cache/e2b/target`, `snap`, `snapbuild` and the baseline binary are deleted; `⚡️cache/e2b/base/results.tsv` and the logs stay for the after-run comparison.
 
 ## 7. Inputs (kept in `e2b-plugin/`)
 

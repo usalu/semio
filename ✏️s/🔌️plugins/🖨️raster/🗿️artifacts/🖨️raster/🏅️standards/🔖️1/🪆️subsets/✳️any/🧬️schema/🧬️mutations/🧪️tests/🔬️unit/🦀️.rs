@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::mutations::{apply_raster_mutation_json,undo_raster_mutation_json};
+use crate::text::{apply_raster_mutation_json, undo_raster_mutation_json};
 use super::*;
-use crate::standards::v1::subsets::any::schema::{layer_name, layer_visible};
-use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
-use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::{layer_name, layer_visible};
+use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
+use semio_s_artifact_raster_raster_model::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use protocol::Mutation;
 
 use semio_framework_os_kernel as vcs;
@@ -32,11 +32,11 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
         // 🧹️ Every displaced projection owns the document's `assets` pool and every adjustment's
         // `params` map, so it retires instead of reaching `RasterOwnedMap`'s fail-closed `Drop`.
-        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(std::mem::replace(&mut restored, next));
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(std::mem::replace(&mut restored, next));
         protocol::Mutation::retire_cold(back);
     }
     assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot for {mutation:?}");
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(restored);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);
     forward
 }
 
@@ -44,28 +44,28 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
 /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
 fn every_mutation() -> Vec<RasterMutation> {
     vec![
-        RasterMutation::ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"adjust-1".into(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.25))}),
-        RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
-        RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() }),
-        RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),
-        RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }),
-        RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:"l1".into(),expected:false,locked:true}),
-        RasterMutation::ChangeLayerVisible(change_layer_visible::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
-        RasterMutation::ChangeLayerOpacity(change_layer_opacity::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
-        RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
-        RasterMutation::MoveLayer(move_layer::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
-        RasterMutation::ResizeLayer(resize_layer::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
-        RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
-        RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(ABC_ASSET_PNG).expect("fixture image decodes") }),
-        RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: "asset-1".into() }),
-        RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
-        RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
-        RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
-        crate::mutations::paint_stroke::paint_stroke("l1", "pixels", "brush", crate::mutations::paint_stroke::RasterBrush { size: 4.0, hardness: 0.5, opacity: 1.0, color: vec![1.0, 0.0, 0.0, 1.0] }, vec![crate::mutations::paint_stroke::RasterStrokePoint { x: 2.0, y: 2.0 }, crate::mutations::paint_stroke::RasterStrokePoint { x: 9.5, y: 6.0 }]),
-        crate::mutations::fill_region::fill_region("l1", "pixels", crate::mutations::fill_region::RasterSeed { x: 3, y: 2 }, 24, [0.0, 0.5, 1.0, 1.0]),
-        crate::mutations::apply_filter::apply_filter("l1", "blur", 2.0),
-        crate::mutations::transform_image::rotate_image("l1", true),
-        crate::mutations::fill_selection::fill_selection("l1", "pixels", [0.0, 0.5, 1.0, 1.0]),
+        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"adjust-1".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
+        RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
+        RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }),
+        RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),
+        RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }),
+        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::ChangeLayerLocked {layer_id:"l1".into(),expected:false,locked:true}),
+        RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }),
+        RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 }),
+        RasterMutation::ChangeLayerBlendMode(semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "l1".into(), new_blend_mode: "multiply".into() }),
+        RasterMutation::MoveLayer(semio_s_artifact_raster_raster_mutations_layers::move_layer::mutation::MoveLayer { layer_id: "l1".into(), new_x: 10.0, new_y: 20.0 }),
+        RasterMutation::ResizeLayer(semio_s_artifact_raster_raster_mutations_layers::resize_layer::mutation::ResizeLayer { layer_id: "l1".into(), new_width: 256, new_height: 256 }),
+        RasterMutation::ChangeLayerAdjustmentKind(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
+        RasterMutation::AddLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset::mutation::AddLayerAsset { asset_id: "asset-1".into(), asset: semio_s_artifact_raster_raster_io::semio_image_from_png_bytes(ABC_ASSET_PNG).expect("fixture image decodes") }),
+        RasterMutation::RemoveLayerAsset(semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset-1".into() }),
+        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::ChangeLayerTransform {layer_id:"l1".into(),expected:RasterTransform::default(),transform:RasterTransform {x:3.0,y:-2.0,a:2.0,b:1.0,c:-2.0,d:1.0}}),
+        RasterMutation::ChangeLayerMask(semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::ChangeLayerMask { layer_id: "l1".into(), expected: None, mask: Some(RasterLayerMask { enabled: true, linked: false, invert: true, width: None, height: None, image_key: None, transform: RasterTransform::default() }) }),
+        RasterMutation::ChangeLayerPixels(semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: semio_s_artifact_raster_raster_model::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
+        semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::paint_stroke("l1", "pixels", "brush", semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterBrush { size: 4.0, hardness: 0.5, opacity: 1.0, color: vec![1.0, 0.0, 0.0, 1.0] }, vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterStrokePoint { x: 2.0, y: 2.0 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterStrokePoint { x: 9.5, y: 6.0 }]),
+        semio_s_artifact_raster_raster_mutations_pixels::fill_region::fill_region("l1", "pixels", semio_s_artifact_raster_raster_mutations_pixels::fill_region::RasterSeed { x: 3, y: 2 }, 24, [0.0, 0.5, 1.0, 1.0]),
+        semio_s_artifact_raster_raster_mutations_pixels::apply_filter::apply_filter("l1", "blur", 2.0),
+        semio_s_artifact_raster_raster_mutations_pixels::transform_image::rotate_image("l1", true),
+        semio_s_artifact_raster_raster_mutations_pixels::fill_selection::fill_selection("l1", "pixels", [0.0, 0.5, 1.0, 1.0]),
     ]
 }
 
@@ -92,7 +92,7 @@ fn populated_base() -> RasterSnapshot {
         params: RasterOwnedMap::new(),
     });
     let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
-    base.assets.insert("asset-1".into(), crate::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
+    base.assets.insert("asset-1".into(), semio_s_artifact_raster_raster_io::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
     base
 }
 
@@ -100,10 +100,10 @@ fn populated_base() -> RasterSnapshot {
 async fn every_variant_round_trips_via_inverse() {
     let base = populated_base();
     for mutation in every_mutation() {
-        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(round_trip(&base, &mutation));
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(round_trip(&base, &mutation));
         protocol::Mutation::retire_cold(mutation);
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }
 
 /// ⚖️ Every applied variant's concrete inverse sums to exactly the negative of its forward diff on the populated document.
@@ -114,29 +114,29 @@ async fn every_applied_variant_inverse_sums_to_the_negative_diff() {
         let (diff, messages) = mutation.diff(&base).into_parts();
         protocol::MutationDiff::retire_cold(diff);
         if !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&mutation, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
         }
         protocol::Mutation::retire_cold(mutation);
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_remove_layer_round_trip() {
     let snapshot = empty_raster_snapshot();
-    let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
+    let added = round_trip(&snapshot, &RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
     assert_eq!(added.layers.len(), 1);
-    let removed = round_trip(&added, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() }));
+    let removed = round_trip(&added, &RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "l1".into() }));
     assert!(removed.layers.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_and_change_layer_visible_round_trip() {
     let snapshot = empty_raster_snapshot();
-    let added = round_trip(&snapshot, &RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
-    let renamed = round_trip(&added, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }));
+    let added = round_trip(&snapshot, &RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }));
+    let renamed = round_trip(&added, &RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "Renamed".into() }));
     assert_eq!(layer_name(&renamed.layers[0]), "Renamed");
-    let hidden = round_trip(&renamed, &RasterMutation::ChangeLayerVisible(change_layer_visible::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }));
+    let hidden = round_trip(&renamed, &RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }));
     assert!(!layer_visible(&hidden.layers[0]));
 }
 
@@ -145,17 +145,17 @@ async fn reorder_layer_into_group_round_trip() {
     let mut snapshot = empty_raster_snapshot();
     snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
     snapshot.layers.push(pixel_layer("l1", "Base"));
-    let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
+    let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
     let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
     assert_eq!(children.len(), 1);
-    assert_eq!(crate::standards::v1::subsets::any::schema::layer_node_id(&children[0]), "l1");
+    assert_eq!(semio_s_artifact_raster_raster_model::layer_node_id(&children[0]), "l1");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resize_layer_is_a_graceful_no_op_on_a_group() {
     let mut snapshot = empty_raster_snapshot();
     snapshot.layers.push(RasterLayerNode::Group { id: "g1".into(), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() });
-    let mutation = RasterMutation::ResizeLayer(resize_layer::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
+    let mutation = RasterMutation::ResizeLayer(semio_s_artifact_raster_raster_mutations_layers::resize_layer::mutation::ResizeLayer { layer_id: "g1".into(), new_width: 10, new_height: 10 });
     let outcome = mutation.diff(&snapshot);
     assert_eq!(outcome.diff(), &RasterDiff::default());
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Error));
@@ -164,12 +164,12 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
-    let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);
 }
@@ -177,7 +177,7 @@ async fn store_applies_layer_create() {
 //#region 🔖️OpText
 fn representative_raster_document() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
-    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+    assets.insert("asset-1".into(), semio_s_artifact_raster_raster_model::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
     params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -247,7 +247,7 @@ async fn raster_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&mutation);
         protocol::Mutation::retire_cold(mutation);
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(representative_raster_document());
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(representative_raster_document());
 }
 //#endregion 🔖️OpText
 
@@ -259,10 +259,10 @@ async fn raster_op_text_round_trips_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_raster_snapshot();
-    let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+    let mutation = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
-    let d2 = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base).diff().clone();
+    let d2 = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("l2", "Second")) }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
@@ -270,10 +270,10 @@ async fn create_layer_satisfies_the_inverse_and_absorb_laws() {
 async fn change_layer_opacity_satisfies_the_inverse_and_absorb_laws() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    let mutation = RasterMutation::ChangeLayerOpacity(change_layer_opacity::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
+    let mutation = RasterMutation::ChangeLayerOpacity(semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "l1".into(), new_opacity: 0.4 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
-    let d2 = RasterMutation::ChangeLayerVisible(change_layer_visible::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
+    let d2 = RasterMutation::ChangeLayerVisible(semio_s_artifact_raster_raster_mutations_layers::change_layer_visible::mutation::ChangeLayerVisible { layer_id: "l1".into(), new_visible: false }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
@@ -282,10 +282,10 @@ async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
     base.layers.push(pixel_layer("l2", "Second"));
-    let mutation = RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 1 });
+    let mutation = RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 1 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
-    let d2 = RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l2".into() }).diff(&base).diff().clone();
+    let d2 = RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "l2".into() }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 //#endregion 🧪️MutationLaws
@@ -297,20 +297,20 @@ async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn delete_missing_layer_is_a_target_missing_error() {
     let base = empty_raster_snapshot();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "does-not-exist".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "does-not-exist".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_missing_layer_is_a_target_missing_error() {
     let base = empty_raster_snapshot();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "does-not-exist".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_duplicate_id_never_applies() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    let duplicate = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+    let duplicate = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -318,20 +318,20 @@ async fn create_layer_duplicate_id_never_applies() {
 async fn delete_layer_outcome_obeys_the_policy_matrix() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "l1".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_layer_outcome_obeys_the_policy_matrix() {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
-    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::RenameLayer(rename_layer::RenameLayer { layer_id: "l1".into(), new_name: "New".into() })).await;
+    protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &RasterMutation::RenameLayer(semio_s_artifact_raster_raster_mutations_layers::rename_layer::mutation::RenameLayer { layer_id: "l1".into(), new_name: "New".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_layer_outcome_obeys_the_policy_matrix() {
     let base = empty_raster_snapshot();
-    let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
+    let mutation = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🧪️OutcomeLaws
@@ -367,23 +367,23 @@ fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
         mask: None,
         children: vec![adjustment_layer_with_params("nested-brighten")],
     });
-    projection.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("law asset fits the owned map");
-    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection(projection);
+    projection.assets.insert("seed".into(), semio_s_artifact_raster_raster_io::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("law asset fits the owned map");
+    <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection(projection);
 }
 
 /// 🧊️ The same law one level up: a cold diff nobody will apply again owns the layers its `added` insertions carry,
 /// each of which can hide a populated map.
 #[test]
 fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
-    let sparse = crate::standards::v1::subsets::any::schema::diff::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
-    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
+    let sparse = semio_s_artifact_raster_raster_diff::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
+    <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
 }
 
 /// 🧊️ And one level below: the store cold-retires decoded arrivals, replay clones and rebased
 /// inverses through `Mutation::retire_cold`, and `create-layer` is the one leaf carrying a subtree.
 #[test]
 fn retire_cold_closes_the_layer_a_create_layer_operation_owns() {
-    let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(adjustment_layer_with_params("created-brighten")) });
+    let mutation = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(adjustment_layer_with_params("created-brighten")) });
     protocol::Mutation::retire_cold(mutation);
 }
 //#endregion 🧪️ColdRetirementLaws
@@ -401,9 +401,9 @@ fn mutation_json_bridge_applies_and_inverts_a_populated_before_document() {
     before.id = "bridge-populated".into();
     before.layers.push(pixel_layer("sketch", "Sketch"));
     before.layers.push(adjustment_layer_with_params("brighten"));
-    before.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one bridge asset fits the owned map");
+    before.assets.insert("seed".into(), semio_s_artifact_raster_raster_io::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one bridge asset fits the owned map");
     let before_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&before)));
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(before);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(before);
     assert!(before_json.contains("\"brightness\""), "the whole-document projection carries the adjustment params: {before_json}");
     assert!(before_json.contains("\"seed\""), "the whole-document projection carries the asset pool: {before_json}");
 
@@ -423,9 +423,9 @@ fn json_export_serializes_a_populated_document() {
     let mut document = empty_raster_snapshot();
     document.id = "json-export-populated".into();
     document.layers.push(adjustment_layer_with_params("brighten"));
-    document.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one export asset fits the owned map");
-    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("a populated raster document exports as json");
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    document.assets.insert("seed".into(), semio_s_artifact_raster_raster_io::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one export asset fits the owned map");
+    let bytes = semio_s_artifact_raster_raster_io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("a populated raster document exports as json");
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
     let text = String::from_utf8(bytes).expect("json export is utf-8");
     assert!(text.contains("\"brightness\""), "the export carries the adjustment params: {text}");
     assert!(text.contains("\"seed\""), "the export carries the asset pool: {text}");
@@ -440,11 +440,11 @@ async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
     for (id, name) in [("a", "A"), ("b", "B"), ("c", "C")] {
         base.layers.push(pixel_layer(id, name));
     }
-    let delete = RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "b".into() });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&delete, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
-    let reorder = RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "b".into(), parent_id: None, index: 0 });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&reorder, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
-    let insert = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("n", "N")) });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&insert, &base, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold).await;
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+    let delete = RasterMutation::DeleteLayer(semio_s_artifact_raster_raster_mutations_layers::delete_layer::mutation::DeleteLayer { layer_id: "b".into() });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&delete, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    let reorder = RasterMutation::ReorderLayers(semio_s_artifact_raster_raster_mutations_layers::reorder_layers::mutation::ReorderLayers { layer_id: "b".into(), parent_id: None, index: 0 });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&reorder, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    let insert = RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("n", "N")) });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&insert, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>::retire_cold).await;
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }

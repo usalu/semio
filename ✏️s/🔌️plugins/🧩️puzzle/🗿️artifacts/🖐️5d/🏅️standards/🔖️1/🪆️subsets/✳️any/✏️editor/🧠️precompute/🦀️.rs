@@ -19,13 +19,13 @@ use crate::puzzle_job::JobTurn;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, RetainedJobPayload, StepBudget, StepContext, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_plugin::{Fault, ToolRunJob};
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_OPS_MAX};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main as world3d;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::puzzle3d_scene_snapshot_from_document;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{ConnectVortices,Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main as world3d;
+use semio_s_artifact_puzzle_3d_editor::puzzle3d_scene_snapshot_from_document;
+use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::BrushPreviewState;
-use semio_s_artifact_puzzle_3d::{Puzzle3dAttraction, Puzzle3dCatalogObjectKind, Puzzle3dCatalogVortexKind, Puzzle3dCatalogVortexTemplate, Puzzle3dKindCatalogs, Puzzle3dMeta, Puzzle3dObject, Puzzle3dPlaySnapshot, Puzzle3dRepresentation, Puzzle3dScale, Puzzle3dSnapshot, Puzzle3dVortex, PUZZLE_3D_SCHEMA};
+use semio_s_artifact_puzzle_3d_model::BrushPreviewState;
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogObjectKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexKind, semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexTemplate, semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs, semio_s_artifact_puzzle_3d_model::Puzzle3dMeta, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dRepresentation, semio_s_artifact_puzzle_3d_model::Puzzle3dScale, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
 use std::collections::{HashMap, VecDeque};
 
 //#region 🔖️Constants
@@ -189,8 +189,8 @@ fn puzzle3d_scale(scale: &semio_framework_pack_json::Value) -> Option<Puzzle3dSc
 /// 🧊️ One 5d target volume as the planner's own: the box is already stated in the 3d pose space both
 /// artifacts share, so the bridge renames the type and nothing else. A HIDDEN volume still constrains
 /// — `hidden` is a paint flag, and dropping it here would silently widen the fill region.
-pub(crate) fn puzzle3d_target_volume(volume: &crate::editor::puzzle5d::Puzzle5dTargetVolume) -> semio_s_artifact_puzzle_3d::Puzzle3dTargetVolume {
-    semio_s_artifact_puzzle_3d::Puzzle3dTargetVolume {
+pub(crate) fn puzzle3d_target_volume(volume: &crate::editor::puzzle5d::Puzzle5dTargetVolume) -> semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume {
+    semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume {
         id: volume.id.clone(),
         origin: volume.origin,
         orientation: volume.orientation,

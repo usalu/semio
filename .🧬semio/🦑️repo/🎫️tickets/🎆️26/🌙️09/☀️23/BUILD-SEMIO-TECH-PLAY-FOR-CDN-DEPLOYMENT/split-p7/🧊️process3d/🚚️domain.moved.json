@@ -51,7 +51,8 @@
    "reference_solid",
    "step_tool_solids",
    "working_solid_child_handle",
-   "working_solid_from_brep_snapshot"
+   "working_solid_from_brep_snapshot",
+   "MachineCatalogs"
   ]
  }
 ]

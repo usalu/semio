@@ -101,7 +101,7 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         if !semio_framework_job::worker_job_retirements_are_parked() {
             break;
         }
-        let demand=PluginApp::maintenance_retirement_demands(&app,TYPED_OPERATION_RESULT_PAGE_BYTES).expect("original maintenance quote");let grant=crate::bounded_ownership::plugin_demand_grant(demand);let step=PluginApp::maintenance_step(&mut app,grant).expect("bounded maintenance");if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=step{assert!(progress.fits(grant));}
+        let demand=PluginApp::maintenance_retirement_demands(&app,TYPED_OPERATION_RESULT_PAGE_BYTES).expect("original maintenance quote");let grant=semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(demand);let step=PluginApp::maintenance_step(&mut app,grant).expect("bounded maintenance");if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=step{assert!(progress.fits(grant));}
         crate::reserved_jobs::plugin_job_yield_once().await;
     }
 

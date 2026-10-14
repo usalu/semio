@@ -2,7 +2,7 @@
 //! (`max_file_bytes`/`max_records`/`max_field_length`/`max_nesting_depth` are one security policy,
 //! never set one-field-at-a-time).
 
-use crate::{SecurityLimits, Vdi3805Mutation, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_model::{SecurityLimits, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -15,15 +15,15 @@ pub struct ChangeLimits {
     pub new_limits: SecurityLimits,
 }
 
-impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeLimits {
+impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeLimits where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_limits::ChangeLimits> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "limits", kind: "change-limits", record: "ChangedLimits" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+        crate::change_limits::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_limits::inverse::inverse(self, base)?
     
     })
 }
@@ -32,3 +32,10 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeLimits {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

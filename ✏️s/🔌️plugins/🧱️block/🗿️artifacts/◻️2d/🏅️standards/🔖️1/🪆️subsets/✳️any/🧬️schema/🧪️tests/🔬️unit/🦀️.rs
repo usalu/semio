@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_block2d_snapshot;
+use semio_s_artifact_block_2d_io::text::snapshot::empty_block2d_snapshot;
 
-use super::*;
+use semio_s_artifact_block_2d_schema::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_definition_matches_default() {

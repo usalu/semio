@@ -55,7 +55,6 @@ const KINDS: &[&str] = &[
     "change-meta-description",
 ];
 
-
 /// 🧫️ The real derived node kind: the committed *Hexagonal Cut Concrete Forest Left* example, with
 /// the members its carrier does not hold taken from committed specification vectors. Derived once,
 /// provenance recorded in the feature description.
@@ -71,7 +70,7 @@ const MEMBERS: &[&str] = &["schema", "nodeKind", "presentation", "handleKinds", 
 mod subject {
     use super::{DERIVED_ASSET, MEMBERS};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_block_2d::standards::v1::subsets::any::io::text::mutations::block2d_mutation_report_json;
+    use semio_s_artifact_block_2d_io::text::mutations::block2d_mutation_report_json;
 
     //#region 🔖️Plan
     /// 📋️ One member of the bridge's report, named in the error when it is absent — never defaulted.

@@ -1,7 +1,7 @@
 //! Norm command — `remove-item`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
-use crate::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,6 +16,6 @@ pub struct RemoveItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &RemoveItem, doc: &ArtifactView<'_, Iso16757Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Iso16757Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| crate::mutations::resolve_edit(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| semio_s_artifact_norm_iso16757_mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

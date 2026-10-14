@@ -1,10 +1,11 @@
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 /** 📦️ Verifies portable browser distribution ownership and byte-preserving copies. */
-export async function testBrowserDistribution(workspace: string, outputDirectory: string): Promise<void> {
+export async function testBrowserDistribution(workspace: string, outputDirectory: string,invocation:ScriptInvocation): Promise<void> {
   const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution");
   const { copyBrowserArtifacts } = await import(join(moduleRoot, "🟦️.ts"));
   const fixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️cases.json"), "utf8"));
@@ -69,10 +70,10 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     for (const name of [...Object.keys(fixture.ambient), ".semio-artifact.json"]) assert.equal(existsSync(join(buildOutput, fixture.destination, name)), false);
     await assert.rejects(() => build({ root: app, configFile: false, publicDir: false, logLevel: "silent", plugins: [browserArtifactVitePlugin([{ ...sources[0], owner: "wrong" }])], build: { outDir: join(temporary, "bad-vite-output"), emptyOutDir: true } }), /owner/i);
     const { buildViteArtifact, serveVite } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts"));
-    const config = join(app, "⚙️vite.config.ts"), published = join(temporary, "published");
+    const config = join(app, "⚙️vite.config.ts");
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
-    await buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary });
-    assert.ok(existsSync(join(temporary, lifecycle.storage.config)), "Vite config compilation must stay inside the private fixture");
+    const published = await buildViteArtifact({ invocation,root: app, workspace, config, owner: fixture.owner, mode: "release" });
+    assert.equal(existsSync(join(app,"node_modules/.vite-temp")),false,"Owned runner config emits no source-adjacent compilation cache");
     const resolvedConfig = await resolveConfig({ root: app, configFile: false }, "serve");
     assert.equal(resolvedConfig.cacheDir, join(temporary, lifecycle.storage.optimizer), "Vite dependency optimization must stay inside the private fixture");
     const publishedIndex = readFileSync(join(published, "index.html"), "utf8"), publishedMarker = JSON.parse(readFileSync(join(published, ".semio-artifact.json"), "utf8"));
@@ -80,15 +81,15 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.ok(publishedMarker.files.includes("index.html"));
     assert.deepEqual(publishedMarker.files, (await require("fast-glob")("**/*", { cwd: published, dot: true, onlyFiles: true })).filter((file: string) => file !== ".semio-artifact.json").sort());
     put(config, 'throw new Error("fixture build failure"); export default {};');
-    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary }), /Vite build failed/i);
+    await assert.rejects(() => buildViteArtifact({ invocation,root: app, workspace, config, owner: fixture.owner, mode: "release" }), /Vite build failed/i);
     assert.equal(readFileSync(join(published, "index.html"), "utf8"), publishedIndex);
-    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary, signal: abort.signal }), /abort/i);
+    await assert.rejects(() => buildViteArtifact({ invocation,root: app, workspace, config, owner: fixture.owner, mode: "release", signal: abort.signal }), /abort/i);
     assert.equal((await (await import("node:fs/promises")).readdir(temporary)).some(name => name.startsWith("vite-build-")), false);
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
     const serving = new AbortController();
     let ready!: (url: string) => void, failed!: (error: unknown) => void;
     const listening = new Promise<string>((resolve, reject) => { ready = resolve; failed = reject; });
-    const server = serveVite({ root: app, config, host: lifecycle.server.host, port: 0, signal: serving.signal, ready });
+    const server = serveVite({ invocation,root: app, config, host: lifecycle.server.host, port: 0, signal: serving.signal, ready });
     void server.catch(failed);
     let url: string, socket: WebSocket | undefined;
     try {
@@ -105,13 +106,13 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
       await until(() => messages.some(message => message.type === lifecycle.hmr.connected));
       put(join(app, lifecycle.hmr.changedFile), lifecycle.hmr.contents);
       await until(() => messages.some(message => message.type === lifecycle.hmr.update));
-      await assert.rejects(() => serveVite({ root: app, config, host: lifecycle.server.host, port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Occupied port was reused") }), /in use|EADDRINUSE/i);
+      await assert.rejects(() => serveVite({ invocation,root: app, config, host: lifecycle.server.host, port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Occupied port was reused") }), /in use|EADDRINUSE/i);
       serving.abort(); await server;
       await until(() => socket!.readyState === WebSocket.CLOSED);
     } finally { serving.abort(); await server; socket?.close(); }
     const net = await import("node:net"), rebound = net.createServer();
     await new Promise<void>((resolve, reject) => { rebound.once("error", reject); rebound.listen(Number(new URL(url!).port), lifecycle.server.host, resolve); });
     await new Promise<void>((resolve, reject) => rebound.close(error => error ? reject(error) : resolve()));
-    await assert.rejects(() => serveVite({ root: app, config, host: lifecycle.server.host, port: 0, signal: abort.signal, ready: () => assert.fail("Cancelled server became ready") }), /abort/i);
+    await assert.rejects(() => serveVite({ invocation,root: app, config, host: lifecycle.server.host, port: 0, signal: abort.signal, ready: () => assert.fail("Cancelled server became ready") }), /abort/i);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }

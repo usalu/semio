@@ -4,10 +4,18 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
-use crate::standards::v1::subsets::any::schema;
-use crate::viewer::block2d::modes::view;
-use crate::viewer::block2d::modes::view::windows::board;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_2d_model::{Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
+use semio_s_artifact_block_2d_schema as schema;
+use crate::modes::view;
+use crate::modes::view::windows::board;
 use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
 use semio_framework_2d::compute::EngineHandles;
 
@@ -88,7 +96,7 @@ impl ArtifactViewer for Block2dViewer {
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
     /// `crate::standards::v1::subsets::any::io::text::snapshot`).
     fn initial_snapshot() -> Block2dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_block2d_snapshot()
+        semio_s_artifact_block_2d_io::text::snapshot::default_block2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block2dViewCommand::Noop` variant never carries a config
@@ -134,3 +142,21 @@ pub fn create_block2d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

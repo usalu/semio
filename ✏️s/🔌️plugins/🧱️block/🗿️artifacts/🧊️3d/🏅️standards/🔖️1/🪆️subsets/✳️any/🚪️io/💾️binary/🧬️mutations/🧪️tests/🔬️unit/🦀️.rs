@@ -1,14 +1,13 @@
 
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::{BLOCK_3D_SCHEMA, Block3dSnapshot};
+use crate::binary::mutations::*;
+use semio_s_artifact_block_3d_model::{BLOCK_3D_SCHEMA, Block3dSnapshot};
 use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 
 #[semio_framework_async_macros::async_test]
 async fn block3d_document_vcs_replays_granular_operations() {
-    use crate::standards::v1::subsets::any::schema::mutations::{self as m,Block3dStore};
+    use semio_s_artifact_block_3d_mutations::{self as m,Block3dStore};
 
-
-    let mut store = Block3dStore::new(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid initial state");
+    let mut store = Block3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(BLOCK_3D_SCHEMA, "block3d", Block3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid initial state");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit
     // (`edit history insertion requires its exact mutation retirement factory`); install the
     // exact owners production installs through `Block3dPlayApp::build_document_store_owners`.
@@ -21,7 +20,7 @@ async fn block3d_document_vcs_replays_granular_operations() {
 
 #[semio_framework_async_macros::async_test]
 async fn block3d_operation_binary_round_trips() {
-    let operation = crate::standards::v1::subsets::any::schema::mutations::delete_vortex("v0".into());
+    let operation = semio_s_artifact_block_3d_mut_vortices::delete_vortex("v0".into());
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }

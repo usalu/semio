@@ -1,8 +1,7 @@
 //! 🌤️ Energy model mutation — `UnbindWeatherFile`: Detaches the `weather` link slot. Refused when nothing is bound, so an undo chain can never invent an unbind that had no partner.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -14,19 +13,22 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 #[dsl(keyword = "unbind-weather-file")]
 pub struct UnbindWeatherFile {}
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn unbind_weather_file() -> EnergyModelMutation {
-    EnergyModelMutation::UnbindWeatherFile(UnbindWeatherFile {})
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn unbind_weather_file<Op: From<UnbindWeatherFile>>() -> Op {
+    UnbindWeatherFile {}.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for UnbindWeatherFile {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for UnbindWeatherFile
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<UnbindWeatherFile> + From<crate::BindWeatherFile>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "weather-file", kind: "unbind-weather-file", record: "UnboundWeatherFile" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

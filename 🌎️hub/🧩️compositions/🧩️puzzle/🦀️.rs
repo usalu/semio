@@ -7,14 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
-
-//#region ✏️Editor
-/// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name `puzzle::editor::puzzle3d::…`
-/// exactly as they name `cad::editor::cad::…` — same shape as 📐️cad/🏭️process/🪵️sourcing.
-pub mod editor {
-    pub use semio_s_artifact_puzzle_3d::editor::*;
-}
-//#endregion ✏️Editor
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -22,8 +15,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum PuzzleApps: PluginApp {
         Puzzle2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp>>),
         Puzzle2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_2d::viewer::puzzle2d::Puzzle2dViewer>>),
-        Puzzle3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp>>),
-        Puzzle3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d::viewer::puzzle3d::Puzzle3dViewer>>),
+        Puzzle3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>>),
+        Puzzle3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>>),
         Puzzle5dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>>),
         Puzzle5dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>>),
     }
@@ -63,7 +56,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// was not traced this pass) — deleting on inference alone risks silently breaking real export/import
 /// UI functionality, which this ticket's "get everything working" rule forbids doing speculatively.
 pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
-    Plugin::<PuzzleApps>::builder("puzzle")
+    PluginBuilder::<_, PuzzleApps>::new("puzzle")
         .label("Puzzle")
         .version("0.1.0")
         .package_id("semio:puzzle")
@@ -72,16 +65,16 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
         .declare_artifact(semio_s_artifact_puzzle_5d::artifact::<PuzzleApps>())
         .editor_mutation_roster::<semio_s_artifact_puzzle_2d::editor::puzzle2d::Puzzle2dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_puzzle_2d::viewer::puzzle2d::Puzzle2dViewer>()
-        .editor_mutation_roster::<semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp>()
-        .viewer_mutation_roster::<semio_s_artifact_puzzle_3d::viewer::puzzle3d::Puzzle3dViewer>()
+        .editor_mutation_roster::<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>()
         .editor_mutation_roster::<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>()
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for
         // stdio/draw/forms/mathematical/layout/raster. One activation per owned artifact kind, read
         // live from each kind's own `artifact_kind().id` (never hardcoded).
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_2d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_2d::standards::v1::subsets::any::schema::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_3d_model::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_5d::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {

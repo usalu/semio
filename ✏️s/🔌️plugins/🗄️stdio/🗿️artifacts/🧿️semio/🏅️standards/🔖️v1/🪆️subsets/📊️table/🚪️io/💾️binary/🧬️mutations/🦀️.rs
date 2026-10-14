@@ -89,7 +89,4 @@ impl protocol::OpBinary for SemioTableMutation {
 //#endregion 🔖️OpBinary
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

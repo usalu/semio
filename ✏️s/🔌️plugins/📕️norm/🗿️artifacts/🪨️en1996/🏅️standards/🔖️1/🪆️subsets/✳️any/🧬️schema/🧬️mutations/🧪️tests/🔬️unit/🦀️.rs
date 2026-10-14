@@ -1,5 +1,5 @@
-use super::*;
-use crate::document::AnnexChoice;
+use crate::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use protocol::Mutation;
 
 #[test]

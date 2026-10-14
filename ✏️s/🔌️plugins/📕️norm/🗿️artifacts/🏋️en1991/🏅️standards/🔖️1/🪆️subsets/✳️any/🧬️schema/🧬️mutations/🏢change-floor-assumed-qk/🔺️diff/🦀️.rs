@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `change-floor-assumed-qk`.
-use super::ChangeFloorAssumedQk;
-use crate::{En1991Diff, En1991Snapshot};
-use crate::diff::{En1991FloorDelta, En1991FloorPatch};
+use crate::change_floor_assumed_qk::ChangeFloorAssumedQk;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_diff::{En1991FloorDelta, En1991FloorPatch};
 pub fn diff(payload: &ChangeFloorAssumedQk, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.floors.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);

@@ -10,6 +10,10 @@
 //! ephemeral `InteractionHoverState` and selection in the persisted `protocol::InteractionState`,
 //! both read through `InteractionView` in `render_with_request_context`. A surface that copied them
 //! into its own transient would own two sources of truth for one fact.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 

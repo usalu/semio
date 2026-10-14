@@ -1,8 +1,8 @@
 //! 🔺️ `change-member-my-ed` diff.
 
-use crate::mutations::change_member_m_y_ed::ChangeMemberMYEd;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999MembersRows, En1999MembersPatch, En1999MembersActionsRows, En1999MembersActionsPatch};
+use crate::change_member_m_y_ed::ChangeMemberMYEd;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999MembersRows, En1999MembersPatch, En1999MembersActionsRows, En1999MembersActionsPatch};
 
 pub fn diff(payload: &ChangeMemberMYEd, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_m_y_k.is_finite() {

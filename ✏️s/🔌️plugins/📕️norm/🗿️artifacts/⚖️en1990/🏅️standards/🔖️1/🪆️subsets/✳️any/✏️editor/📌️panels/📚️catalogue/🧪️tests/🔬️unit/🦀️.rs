@@ -1,8 +1,8 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::artifact_schema::{psi_for_category, NaEn};
-use crate::editor::en1990::unit_tests::context;
-use crate::ImportanceClass;
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use semio_s_artifact_norm_en1990_checks::{psi_for_category, NaEn};
+use crate::unit_tests::context;
+use semio_s_artifact_norm_en1990_model::ImportanceClass;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]

@@ -14,7 +14,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, store_schema::HistoryLane, document_store_owners::MemberStoreOwner, document_store_owners::DocumentStoreOwners, SnapshotRetirementFactory};
+use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, store_schema::HistoryLane, document_store_owners::MemberStoreProducer, document_store_owners::DocumentStoreOwners, SnapshotRetirementFactory};
 
 
 
@@ -178,20 +178,20 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
 #[path = "🧬️schema/🧹️retirement/🦀️.rs"]
 mod flow_mutation_retirement;
 
-impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
+impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::snapshot::FlowSnapshotPackProducer {
     /// 📦️ A flow document opens as an owned member through its OWN `ArtifactPack` codec (the
     /// hand-written twin above). It declared `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose
     /// `step` has exactly one answer — `Rejected(MemberOpenDiagnostic::Decode)` — so every composed
     /// replacement or document archive carrying a real flow member was refused at member-open step 0,
     /// always.
-    type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
+    type SnapshotOpen = crate::os_store::ProducedMemberSnapshotOpen<FlowHostSnapshot,crate::io::binary::snapshot::FlowSnapshotPackProducer>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FlowMutation>>()? + FlowAuthoringFactory::birth_demand().capacity_bytes, depth: 1 })
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<FlowHostSnapshot, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<FlowHostSnapshot, FlowMutation>>()? + FlowAuthoringFactory::birth_demand().capacity_bytes, depth: 1 })
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, FlowMutation>> {
-        DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<FlowHostSnapshot, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<FlowHostSnapshot, FlowMutation>> {
+        DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
     }
 }
 
@@ -261,3 +261,21 @@ pub fn retire_flow_store_cold(mut store: FlowStore) {
 
 #[path = "../🚪️io/🦀️.rs"]
 pub mod io;
+
+
+/// 🌱️ The actual child history producer retains its Store birth and reset envelope capabilities.
+pub const FLOW_HISTORY_STORE_FACTORY:crate::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>=crate::os_store::OriginalStoreGenesisFactory{construct:original_flow_history_store,envelope:original_flow_history_envelope};
+
+/// 🧾️ The selected child codec admits the exact original baseline into its reset envelope.
+pub fn original_flow_history_envelope(baseline:FlowHostSnapshot)->Result<FlowEnvelope,::semio_framework_os_kernel::os_vcs::VcsError>{
+ let producer=crate::io::binary::snapshot::FlowSnapshotPackProducer;
+ let genesis=::semio_framework_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis::born(baseline,&producer).map_err(|error|::semio_framework_os_kernel::os_vcs::VcsError::ValidationFailed(error.to_string()))?;
+ Ok(crate::os_store::document_materialize::create_document_envelope_from_genesis(FLOW_DOCUMENT_SCHEMA,"flow-host",genesis,None))
+}
+
+/// 🏪️ The actual child constructor publishes its native codec and installs its original Store catalog.
+pub fn original_flow_history_store(baseline:FlowHostSnapshot)->Result<FlowStore,::semio_framework_os_kernel::os_vcs::VcsError>{
+ let envelope=original_flow_history_envelope(baseline)?;
+ let mut store=::semio_framework_async::poll::resolve_ready(FlowStore::new::<crate::io::binary::snapshot::FlowSnapshotPackProducer>(envelope,crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())))?;
+ crate::os_store::install_funded_member_store_owners(&mut store,&crate::io::binary::snapshot::FlowSnapshotPackProducer)?;Ok(store)
+}

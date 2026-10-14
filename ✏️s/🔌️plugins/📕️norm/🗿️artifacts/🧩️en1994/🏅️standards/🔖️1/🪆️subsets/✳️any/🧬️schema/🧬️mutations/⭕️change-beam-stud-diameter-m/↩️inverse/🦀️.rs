@@ -1,10 +1,10 @@
 //! Inverse for `change-beam-stud-diameter-m`.
-use super::ChangeBeamStudDiameterM;
-use crate::{En1994Mutation, En1994Snapshot};
-pub fn inverse(payload: &ChangeBeamStudDiameterM, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+use crate::change_beam_stud_diameter_m::ChangeBeamStudDiameterM;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+pub fn inverse<Op>(payload: &ChangeBeamStudDiameterM, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_beam_stud_diameter_m::ChangeBeamStudDiameterM> {
     Ok((|| {
     let Some(beam) = base.beams.get(payload.index) else { return Vec::new(); };
-    vec![En1994Mutation::ChangeBeamStudDiameterM(ChangeBeamStudDiameterM { index: payload.index, new_diameter_m: beam.studs.diameter_m })]
+    vec![Op::from(ChangeBeamStudDiameterM { index: payload.index, new_diameter_m: beam.studs.diameter_m })]
 
     })())
 }

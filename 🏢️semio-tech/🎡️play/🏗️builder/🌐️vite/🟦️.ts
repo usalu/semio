@@ -13,7 +13,6 @@ import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../🧰️framework/🛍
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
-import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
@@ -39,7 +38,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     root: playDir,
     base: ".",
-    cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "semio-tech-play"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
+    cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
     publicDir: path.join(playDir, "public"),
     assetsInclude: ["**/*.wasm"],
     worker: { format: "es" },

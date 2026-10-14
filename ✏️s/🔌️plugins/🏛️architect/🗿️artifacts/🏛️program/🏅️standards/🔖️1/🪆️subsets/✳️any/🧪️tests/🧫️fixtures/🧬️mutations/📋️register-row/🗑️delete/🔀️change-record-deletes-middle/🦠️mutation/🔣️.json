@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "changeRecord",
+  "id": "change-record-a"
+}

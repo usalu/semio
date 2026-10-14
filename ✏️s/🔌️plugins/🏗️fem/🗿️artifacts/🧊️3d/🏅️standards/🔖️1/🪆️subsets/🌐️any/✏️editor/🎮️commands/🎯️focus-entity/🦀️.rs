@@ -1,14 +1,15 @@
 //! 🎯️ Fem3d play app command — `focus-entity`: aims the addressed window's orbit at one entity.
 
 use crate::editor::fem3d::commands::set_camera::{self, SetCamera};
-use crate::editor::fem3d::interaction::fem3d_entity_point;
-use crate::editor::fem3d::modes::edit::windows::{model, results};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Viewport3dOrbit;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_point;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_os_kernel::Viewport3dOrbit;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️FocusEntity
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -52,7 +53,4 @@ pub fn focused_orbit(camera: &Viewport3dOrbit, target: [f64; 3]) -> Viewport3dOr
 //#endregion 🔖️FocusEntity
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

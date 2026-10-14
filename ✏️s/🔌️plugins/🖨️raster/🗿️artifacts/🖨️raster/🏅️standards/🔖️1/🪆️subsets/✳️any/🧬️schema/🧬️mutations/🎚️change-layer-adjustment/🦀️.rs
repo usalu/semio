@@ -3,9 +3,9 @@
 //! `Pixel`/`Group` layer is a graceful no-op.
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️ChangeLayerAdjustmentKind
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -17,15 +17,15 @@ pub mod mutation {
         pub new_adjustment_kind: String,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerAdjustmentKind {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerAdjustmentKind where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer", kind: "change-layer-adjustment-kind", record: "ChangedLayerAdjustmentKind" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::change_layer_adjustment_kind::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::change_layer_adjustment_kind::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -40,3 +40,13 @@ pub mod mutation {
 }
 
 pub use mutation::ChangeLayerAdjustmentKind;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/📈️switches/🦀️.rs"]
+mod tests_switches_the_tone_layer_from_levels_to_curves;
+//#endregion 🪢️TaxonomyMounts

@@ -14,8 +14,10 @@
 //! args), whose ticks stay provisional until the release publishes ONE edit and whose cancel leaves none.
 
 use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
-use crate::editor::fem2d::modes::edit::windows::results;
-use crate::editor::fem2d::modes::edit::windows::results::transient::{addressed_to, FemPlaybackClock, FemResultsWindowTransientOwner};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientOwner;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation, WindowTransientMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -220,7 +222,7 @@ impl FemPlaybackTransport for Fem2dResultsPlayback {
 
     /// 🧹️ The results body and the panel that reads its transport.
     fn dirty_scope() -> semio_framework::kernel::UiDirtyScope {
-        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
+        semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }
     }
 }
 
@@ -235,7 +237,4 @@ pub fn handle_window(payload: &SetResultAnimation, _doc: &ArtifactView<'_, Fem2d
 //#endregion 🔖️Fem2d
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

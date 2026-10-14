@@ -1,11 +1,11 @@
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::model as model_window;
-use crate::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 fn addressed(kind: &str) -> ViewModel {

@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -18,7 +19,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🔌️ Builds the BIM plugin surface for host registration: one declared artifact tree (schema, io with the IFC, glTF and SVG hops, editor, viewer, examples), activated whenever an
 /// `s.bim.model` document opens, isolated execution, and document write access to persist edits.
 pub fn plugin() -> Result<Plugin<BimApps>, PluginAssemblyError> {
-    Plugin::<BimApps>::builder("bim")
+    PluginBuilder::<_, BimApps>::new("bim")
         .label("BIM")
         .version("0.1.0")
         .package_id("semio:bim")

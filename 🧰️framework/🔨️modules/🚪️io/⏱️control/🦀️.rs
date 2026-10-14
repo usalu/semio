@@ -2,37 +2,8 @@
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,retained_clone::RetainedCloneProgress,ValueError,ValueRefusalKind};
 #[path="🛫️snapshot/🦀️.rs"]mod snapshot;
 pub use snapshot::NativeSnapshotEncodeOwner;
-/// 🫴️ A domain frame keeps its complete fallible status in original receiving custody.
-pub trait NativeSqliteReceivingFrame:semio_framework_value::retirement::RetireOwned{
- fn receiving_status(&mut self)->&mut Option<Result<(),ValueError>>;
-}
-macro_rules! original_sqlite_receiving{
- ($owner:ident,$direction:ident,$progress:path,$phase:ident)=>{
- impl<'owner,'control> $owner<'owner,'control>{
-  /// 🪶️ Adopts one complete domain frame through the original SQL and native receiving boundaries.
-  pub fn receive_sqlite_snapshot<F:NativeSqliteReceivingFrame,O:semio_framework_value::retirement::RetireOwned>(&mut self,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,construct:impl FnOnce()->F,operation:impl FnOnce(&mut F,&mut crate::sqlite_snapshot::artifact::receiving::Port<'_,'_,'_,NativeSnapshotBodyWallet>)->Result<(),ValueError>,publish:impl FnOnce(&mut F)->Result<O,ValueError>)->Result<O,ValueError>{
-   let result=(||{self.native().checkpoint()?;let before=self.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;let settlement=crate::sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,crate::sqlite_snapshot::SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
-    let result=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O>(|slot,native,body|{
-     let owned=settlement.with_control(|control|{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::$direction(native),body};port.work(1,std::mem::size_of::<F>())?;*slot=Some(construct());let frame=slot.as_mut().unwrap();port.work(1,std::mem::size_of::<O>())?;let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);Ok::<_,ValueError>(port.owned())})?;
-     settlement.finish_body(owned)?;let frame=slot.as_mut().unwrap();if frame.receiving_status().as_ref().is_some_and(Result::is_ok){native.checkpoint()?;}frame.receiving_status().take().unwrap()?;publish(frame)
-    }));match result{Ok(output)=>Ok(output),Err(error)=>Err(settlement.refused(self.native().owned_bytes(),error))}
-   })();result.map_err(|error|error.with_retained_progress(self.progress()))
-  }
- }
- };
-}
-original_sqlite_receiving!(NativeSnapshotDecodeOwner,Decode,semio_framework_value::native_decoding::NativeDecodeProgress,ProjectSnapshot);
-original_sqlite_receiving!(NativeSnapshotEncodeOwner,Encode,semio_framework_value::native_encoding::NativeEncodeProgress,ReconstructSnapshot);
 /// 🧾️ Debits actual producer spans from one admitted receiving frame's original authority.
 pub struct NativeSnapshotBodyWallet{grant:RetainedCloneGrant,progress:RetainedCloneProgress}
-impl crate::sqlite_snapshot::artifact::receiving::ReceivingWallet for NativeSnapshotBodyWallet{
- fn admit_frontier(&self,demand:RetainedCloneGrant)->Result<(),ValueError>{NativeSnapshotBodyWallet::admit_frontier(self,demand)}
- fn record_progress(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{NativeSnapshotBodyWallet::record_progress(self,progress)}
- fn allocate_vec_into<T>(&mut self,native:&mut NativeDecodeControl<'_>,count:usize,output:&mut Vec<T>,depth:usize)->Result<(),ValueError>{NativeSnapshotBodyWallet::allocate_vec_into(self,native,count,output,depth)}
- fn allocate_encode_vec_into<T>(&mut self,native:&mut NativeEncodeControl<'_>,count:usize,output:&mut Vec<T>,depth:usize)->Result<(),ValueError>{NativeSnapshotBodyWallet::allocate_encode_vec_into(self,native,count,output,depth)}
- fn copy_text_into(&mut self,native:&mut NativeDecodeControl<'_>,text:&str,output:&mut String,depth:usize)->Result<(),ValueError>{NativeSnapshotBodyWallet::copy_text_into(self,native,text,output,depth)}
- fn copy_encode_text_into(&mut self,native:&mut NativeEncodeControl<'_>,text:&str,output:&mut String,depth:usize)->Result<(),ValueError>{NativeSnapshotBodyWallet::copy_encode_text_into(self,native,text,output,depth)}
-}
 impl NativeSnapshotBodyWallet{
  /// 🎟️ Binds explicitly supplied original producer authority without deriving it from storage demands.
  pub fn new(grant:RetainedCloneGrant)->Self{Self{grant,progress:Default::default()}}

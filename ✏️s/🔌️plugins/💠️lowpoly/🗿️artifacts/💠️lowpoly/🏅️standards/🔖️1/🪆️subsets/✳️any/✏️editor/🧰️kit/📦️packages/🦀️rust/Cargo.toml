@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-kit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly editor kit"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-config = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-view = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -1,8 +1,7 @@
 //! 🏷️ Energy model mutation — `RenameModel`: Sets the model's identity field.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct RenameModel {
     pub new_name: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_model(new_name: String) -> EnergyModelMutation {
-    EnergyModelMutation::RenameModel(RenameModel { new_name })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn rename_model<Op: From<RenameModel>>(new_name: String) -> Op {
+    RenameModel { new_name }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RenameModel {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RenameModel
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RenameModel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "model", kind: "rename-model", record: "RenamedModel" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

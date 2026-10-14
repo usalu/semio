@@ -4,8 +4,10 @@
 //! open transaction (previewed by that window, never history), and a cancelled gesture leaves zero trace. Time travel edits
 //! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
-use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app_with_registry, scene, window_meta, LayoutApp, INSTANCE, WINDOW};
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
+use crate::{LayoutCommand, LayoutPlayApp, layout_entity_label};
+use semio_s_artifact_layout_layout_editor_commands::layout_select_action_args;
+use crate::unit_tests::context::{layout_app_with_registry, scene, window_meta, LayoutApp, INSTANCE, WINDOW};
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{artifact_app_laws, InvocationResult, PluginApp};
 
@@ -103,11 +105,11 @@ async fn painted(app: &mut LayoutApp, id: &str) -> (f64, f64) {
 }
 
 fn stream(dx: f64, dy: f64) -> LayoutCommand {
-    LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx, dy, phase: Some("stream".into()), reason: None })
+    LayoutCommand::TranslateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::TranslateSelection { ids: vec!["frame-1".into()], dx, dy, phase: Some("stream".into()), reason: None })
 }
 
 fn phase(phase: &str, reason: Option<&str>) -> LayoutCommand {
-    LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 0.0, dy: 0.0, phase: Some(phase.into()), reason: reason.map(str::to_string) })
+    LayoutCommand::TranslateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 0.0, dy: 0.0, phase: Some(phase.into()), reason: reason.map(str::to_string) })
 }
 
 fn label(entry: &HistoryEntry, locale: semio_framework_ui_locale::Locale) -> String {
@@ -199,20 +201,20 @@ async fn two_gestures_are_two_transactions() {
 #[semio_framework_async_macros::async_test]
 async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     let mut app = layout_app_with_registry().await;
-    let turned = run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
+    let turned = run(&mut app, LayoutCommand::RotateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::RotateSelection { ids: vec!["frame-1".into()], angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
     let rows = edit_rows(&turned);
     assert_eq!(rows.len(), 1);
     assert!(rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#rotateSelection")));
     assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::En), "Rotate 1 frame by 90°");
-    let scaled = run(&mut app, LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 2.0, sy: 2.0, phase: None, reason: None })).await;
+    let scaled = run(&mut app, LayoutCommand::ScaleSelection(semio_s_artifact_layout_layout_editor_commands::gumball::ScaleSelection { ids: vec!["frame-1".into()], sx: 2.0, sy: 2.0, phase: None, reason: None })).await;
     let rows = edit_rows(&scaled);
     assert_eq!(rows.len(), 1);
     assert_eq!(label(&rows[0], semio_framework_ui_locale::Locale::De), "1 Rahmen um (2; 2) skalieren");
     let before = app.0.snapshot().expect("the head before the multi-frame transforms");
     let pair = vec!["frame-1".to_string(), "frame-text-1".to_string()];
-    let turned = run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: pair.clone(), angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
+    let turned = run(&mut app, LayoutCommand::RotateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::RotateSelection { ids: pair.clone(), angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
     assert_eq!(edit_rows(&turned).iter().map(|row| label(row, semio_framework_ui_locale::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
-    let scaled = run(&mut app, LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: pair, sx: 0.5, sy: 3.0, phase: None, reason: None })).await;
+    let scaled = run(&mut app, LayoutCommand::ScaleSelection(semio_s_artifact_layout_layout_editor_commands::gumball::ScaleSelection { ids: pair, sx: 0.5, sy: 3.0, phase: None, reason: None })).await;
     assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, semio_framework_ui_locale::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
     assert_ne!(app.0.snapshot().expect("the transformed head"), before);
     reserved(&mut app, "undo", None).await;
@@ -227,7 +229,7 @@ async fn one_shot_turns_and_scalings_are_one_transaction_each() {
 async fn a_streamed_drag_of_two_frames_is_one_transaction() {
     let mut app = layout_app_with_registry().await;
     let before = (origin(&app, "frame-1"), origin(&app, "frame-text-1"));
-    let tick = |dx: f64, phase: &str| LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into(), "frame-text-1".into()], dx, dy: 1.0, phase: Some(phase.into()), reason: None });
+    let tick = |dx: f64, phase: &str| LayoutCommand::TranslateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::TranslateSelection { ids: vec!["frame-1".into(), "frame-text-1".into()], dx, dy: 1.0, phase: Some(phase.into()), reason: None });
     run(&mut app, tick(4.0, "stream")).await;
     run(&mut app, tick(4.0, "stream")).await;
     let rows = edit_rows(&run(&mut app, tick(2.0, "commit")).await);
@@ -246,7 +248,7 @@ async fn a_document_moved_under_an_open_gesture_aborts_it() {
     let mut app = layout_app_with_registry().await;
     let before = origin(&app, "frame-1");
     run(&mut app, stream(20.0, 0.0)).await;
-    let other = run(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "y".into(), value: "77".into() })).await;
+    let other = run(&mut app, LayoutCommand::PatchFrame(semio_s_artifact_layout_layout_editor_commands::patch_frame::PatchFrame { frame_id: "frame-text-1".into(), page_id: Some("page-1".into()), field: "y".into(), value: "77".into() })).await;
     assert_eq!(edit_rows(&other).len(), 1, "the other edit lands");
     let late = run(&mut app, phase("commit", None)).await;
     assert!(edit_rows(&late).is_empty(), "the gesture opened on the old base publishes nothing");
@@ -296,15 +298,15 @@ async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
 /// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
 fn folded(log: &[LayoutMutation]) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
-    log.iter().fold(crate::standards::v1::subsets::any::io::text::snapshot::default_document(), |document, mutation| protocol::apply_diff(mutation.diff(&document).diff(), &document).expect("the leaf applies"))
+    log.iter().fold(semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document(), |document, mutation| protocol::apply_diff(mutation.diff(&document).diff(), &document).expect("the leaf applies"))
 }
 
 fn drag_leaf(dx: f64) -> LayoutMutation {
-    LayoutMutation::DragFrames(crate::mutations::drag_frames::DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx, dy: 0.0 })
+    LayoutMutation::DragFrames(semio_s_artifact_layout_layout_mutations_frames::drag_frames::DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx, dy: 0.0 })
 }
 
 fn turn_leaf(pivot_x: f64, pivot_y: f64) -> LayoutMutation {
-    LayoutMutation::RotateFrames(crate::mutations::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
+    LayoutMutation::RotateFrames(semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
 }
 
 /// ⏪️ Time travel edits the gesture's yielded leaf, never the gesture: the gumball drag's offset and then the downstream
@@ -316,7 +318,7 @@ async fn a_gumball_drag_and_its_downstream_turn_edited_in_time_travel_replay_exa
     let mut app = layout_app_with_registry().await;
     let rows_before = document_rows(&mut app).await.len();
     gumball_drag(&mut app, 10.0).await;
-    run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
+    run(&mut app, LayoutCommand::RotateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::RotateSelection { ids: vec!["frame-1".into()], angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
     let rows = document_rows(&mut app).await;
     assert_eq!(rows.len(), rows_before + 2, "two gestures, two rows");
     assert!(rows[rows_before..].iter().all(|row| row.transaction.is_some() && row.mutations.iter().all(|mutation| mutation.editable)), "both rows are tool transactions of editable leaves");
@@ -399,7 +401,7 @@ async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_ar
 fn reference_chips_name_frames_by_kind_content_and_page() {
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::Terminology;
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let frame = ["frame".to_string()];
     let chip = |kinds: &[String], id: &str, locale| <LayoutPlayApp as ArtifactEditor>::entity_label(&document, kinds, id).map(|label| label.resolve(Terminology::Native, locale).to_string());
     assert_eq!(chip(&frame, "frame-text-1", Locale::En).as_deref(), Some("Text Frame \u{201c}Hello layout\u{201d} \u{b7} Page 1"));

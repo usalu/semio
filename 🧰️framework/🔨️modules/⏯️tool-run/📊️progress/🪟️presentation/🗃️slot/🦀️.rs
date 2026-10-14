@@ -1,6 +1,7 @@
 //! 🗃️ Retains the published presentation while its original seed, tick and retired children advance privately.
 use super::{ToolRunPresentation,ToolRunPresentationBody,seed::ToolRunPresentationSeed,update::ToolRunPresentationUpdate};
-use super::super::{ToolRunIdentity,ToolRunState,ToolRunTick,entities::{ToolRunEntityEditGrant,ToolRunEntityEditProgress}};
+use semio_framework_tool_run::{ToolRunIdentity,ToolRunState,ToolRunTick};
+use semio_framework_tool_run_entities::{ToolRunEntityEditGrant,ToolRunEntityEditProgress};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
 use std::mem::{ManuallyDrop,size_of};
 

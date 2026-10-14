@@ -1,8 +1,10 @@
 //! 🗑️ `delete-story` — removes a {@link TextStory} by id; inverse recreates it via `create-story`.
 
-use crate::mutations::{create_story, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryRemoval};
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::create_story;
+use semio_s_artifact_layout_layout_diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutStoryRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,12 +19,12 @@ pub struct DeleteStory {
     pub id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
+impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_story::CreateStory> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "story", kind: "delete-story", record: "DeletedStory" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_delete_story(self, base)?
     
@@ -47,13 +49,22 @@ pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protoc
 //#endregion 🗑️DeleteStory
 
 //#region 🗑️DeleteStory
-pub fn inverse_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_delete_story<Op: From<crate::create_story::CreateStory>>(payload: &DeleteStory, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.stories.iter().position(|story| story.id == payload.id) {
-        Some(index) => vec![LayoutMutation::CreateStory(create_story::CreateStory { story: base.stories[index].clone(), index: Some(index) })],
+        Some(index) => vec![Op::from(create_story::CreateStory { story: base.stories[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🗑️DeleteStory
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+mod tests_removes_a_middle_row;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️removes-story-2/🦀️.rs"]
+mod tests_removes_story_2;
+//#endregion 🪢️TaxonomyMounts

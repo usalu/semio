@@ -1,5 +1,24 @@
-use super::*;
-use crate::editor::fem2d::unit_tests::context::{fem2d_app, render as render_body};
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::*;
+use semio_s_fem_model::Dof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_os_kernel::Viewport2d;
+use semio_framework_plugin::{BuiltNode, Canvas2dScene};
+use semio_framework_ui_scene::canvas2d_snapshot_with_page;
+use semio_framework_ui_scene::{
+    canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
+    canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
+};
+use std::collections::HashMap;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::SCALE_2D;
+use std::fmt::Write;
+use crate::context::{fem2d_app, render as render_body};
 
 fn visual_freshness(generation: u64) -> Fem2dVisualFreshness {
     Fem2dVisualFreshness { app_instance_id: 7, model_revision: 11, document_generation: generation, operation: 13, numerical_preview_sequence: 17, surface_generation: generation, renderer_scene_generation: generation }
@@ -36,7 +55,7 @@ async fn renders_fem2d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_preview_renders_region_edges() {
     let mut app = fem2d_app();
-    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
+    crate::context::dispatch(&mut app, semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand::SetActiveExample(semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = render(&snapshot, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
@@ -46,13 +65,13 @@ async fn mesh_preview_renders_region_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_model_extent_degenerate_model_returns_one() {
-    assert_eq!(fem2d_model_extent(&semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()), 1.0);
+    assert_eq!(fem2d_model_extent(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()), 1.0);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn live_visual_language_distinguishes_every_progress_state() {
     use pack::snapshot::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let region_id = doc.regions.first().expect("example region").id.clone();
     let element_id = element_id(doc.elements.first().expect("example element")).to_string();
     let node_id = doc.nodes.first().expect("example node").id.clone();
@@ -81,7 +100,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
 #[semio_framework_async_macros::async_test]
 async fn model_visual_language_includes_load_and_support_glyphs() {
     use pack::snapshot::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
     assert!(encoded.contains("support-"));
     assert!(encoded.contains("load-"));
@@ -92,7 +111,7 @@ async fn live_visual_replay_is_deterministic_and_bounded() {
     use std::time::Instant;
     use pack::snapshot::ArtifactDsl;
 
-    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let node_id = doc.nodes.first().expect("example node").id.clone();
     let visual = Fem2dLiveVisual {
         region_quality: doc.regions.iter().rev().enumerate().map(|(index, region)| (region.id.clone(), if index % 2 == 0 { RegionVisualQuality::Coarse } else { RegionVisualQuality::Refined })).collect(),

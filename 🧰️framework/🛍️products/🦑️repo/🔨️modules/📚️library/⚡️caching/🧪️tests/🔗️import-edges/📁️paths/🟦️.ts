@@ -1,3 +1,4 @@
+import "../../../../🏗️build/📤️arguments/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";

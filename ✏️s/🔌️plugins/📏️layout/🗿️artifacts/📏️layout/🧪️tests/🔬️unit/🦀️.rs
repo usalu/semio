@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA, LayoutBounds, LayoutRect, artifact_kind, background_drawing_child_handle};
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 
 fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
     Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
@@ -59,7 +61,7 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
     assert_eq!(child.handle.target.dialect.subset, "drawing");
     assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Layout child projection").len(), 1);
 
-    let artifact = crate::standards::v1::subsets::any::schema::LayoutArtifact::from_snapshot(snapshot.clone());
+    let artifact = semio_s_artifact_layout_layout_model::LayoutArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every Layout document field");
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
     semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);

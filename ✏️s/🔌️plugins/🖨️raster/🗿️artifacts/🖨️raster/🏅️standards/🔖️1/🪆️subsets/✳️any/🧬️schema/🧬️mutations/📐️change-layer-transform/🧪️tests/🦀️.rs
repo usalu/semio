@@ -3,8 +3,9 @@ use super::*;
 use protocol::Mutation;
 #[semio_framework_async_macros::async_test]
 async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
-    use crate::standards::v1::subsets::any::schema::{create_layer_of_kind, layer_node_id, snapshot::retire_raster_snapshot};
-    use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
+    use semio_s_artifact_raster_raster_model::{create_layer_of_kind, layer_node_id};
+    use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
+    use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     for kind in ["pixel","group"] {for row in fixture["cases"].as_array().unwrap(){
         let mut base=empty_raster_snapshot();base.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&base.layers[0]).to_owned();
@@ -19,7 +20,7 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
         }
         assert_eq!(validate(&payload,&after),Err(protocol::OutcomeCode::TargetMismatch));
         let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=protocol::apply_diff(&undo, &after).unwrap();assert_eq!(restored,base);
-        let movement=RasterMutation::MoveLayer(crate::mutations::move_layer::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
+        let movement=RasterMutation::MoveLayer(crate::move_layer::mutation::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
         for full_first in [false,true] {
             let full=mutation.diff(&base).diff().clone();let partial=movement.diff(&base).diff().clone();
             let (first,second)=if full_first {(full,partial)}else{(partial,full)};

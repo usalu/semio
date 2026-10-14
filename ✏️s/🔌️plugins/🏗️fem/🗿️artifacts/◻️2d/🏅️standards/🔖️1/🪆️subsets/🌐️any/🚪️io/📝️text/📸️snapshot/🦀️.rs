@@ -1,6 +1,6 @@
 //! 📜️ FEM 2D artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -41,19 +41,19 @@ pub type Fem2dSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
+use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
@@ -81,19 +81,19 @@ impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
+use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
 /// language-neutral test adapter. Same reachability wall as `fem2d_mutation_report_json`:
@@ -128,31 +128,31 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::*;
+use crate::standards::v1::subsets::any::schema::*;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
+use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 
 /// 🌱️ An empty `Fem2dSnapshot` — every test fixture's blank baseline and the fallback boot document.
-pub fn empty_fem2d_snapshot() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
-    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::default()
+pub fn empty_fem2d_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
+    crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::default()
 }
 
 /// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL, so the
 /// editor and the viewer both paint a real structure at first frame instead of an empty canvas. A
 /// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
 /// and says so on the console.
-pub fn default_fem2d_snapshot() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
-    match <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT) {
+pub fn default_fem2d_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
+    match <crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT) {
         Ok(snapshot) => {
             eprintln!(
                 "[TRACE] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",

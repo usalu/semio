@@ -8,9 +8,16 @@
 //! The committed before/after snapshots are never hand edited: `committed_snapshots_are_the_declared_workbooks` holds them to
 //! `build_minimal_xlsx` of the two declared workbooks.
 
-use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_cell::SetCell, XlsxMutation};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_cell::SetCell;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✍️set-cell/🧮️widens/📸️snapshot/➡️after/🔣️.json");

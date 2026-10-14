@@ -292,3 +292,26 @@ fn flow_selected_copy_normal_frames_and_cancel_match_physical_receipts(){
         eprintln!("[DEBUG] Original selected normal copy body{body}: exact source and initiating context, denied currencies/under-atomic bodies System0, all task/buffer/result releases matched, full cancel and terminal Drop0");
     }
 }
+
+#[test]
+fn flow_original_snapshot_intake_contract_keeps_actual_source_through_close(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📥️intake.json")).unwrap();
+ for case in corpus["cases"].as_array().unwrap(){
+  let(root,drops)=source();let source_address=Arc::as_ptr(&root);
+  let mut cursor=FlowHostSnapshotCopy::new(root,0,|root,_|root.host_snapshot.as_ref(),Arc::new(RootFactory),[1;32]);
+  for _ in 0..case["cancelAfter"].as_u64().unwrap(){normal(&mut cursor.cursor,1,64).unwrap();}
+  let same_source=Arc::as_ptr(cursor.cursor.owned.source.as_ref().unwrap())==source_address;
+  let intake:&mut dyn semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot>=&mut cursor;
+  intake.begin_close();let denied_take=intake.take().is_some();
+  let body=case["copyBytes"].as_u64().unwrap()as usize;
+  for _ in 0..200_000{
+   if intake.terminal_is_empty(){break;}
+   let demand=intake.next_close_demands(body).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+   let step=intake.close_step(grant).unwrap();assert!(step.progress().fits(grant));assert_ne!(step.progress().copied_items,0);
+  }
+  let terminal=intake.terminal_is_empty();let demand=intake.next_close_demands(body).unwrap();
+  let concrete_body=demand.release_bytes==size_of::<FlowHostSnapshotCopy<Root>>()&&demand.depth==1;
+  let actual=serde_json::json!({"sameSourceAllocation":same_source,"takeAfterClose":denied_take,"finalRootDrops":drops.load(Ordering::SeqCst),"terminalEmpty":terminal,"terminalReleaseIsConcreteBody":concrete_body});
+  assert_eq!(actual,case["expected"]);
+ }
+}

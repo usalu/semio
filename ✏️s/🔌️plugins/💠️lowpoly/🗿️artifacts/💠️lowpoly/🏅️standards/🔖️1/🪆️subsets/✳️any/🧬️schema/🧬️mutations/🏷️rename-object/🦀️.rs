@@ -1,6 +1,6 @@
 //! 🏷️ `rename-object` — changes an object's identity/display name.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -16,13 +16,16 @@ pub struct RenameObject {
     pub new_name: String,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RenameObject {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for RenameObject
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::rename_object::RenameObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "object", kind: "rename-object", record: "RenamedObject" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,7 @@
 //! 📏️ Literal Layout entity projection and borrowed inline Drawing relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
-use crate::standards::v1::subsets::any::schema::snapshot::LayoutSnapshot;
+use crate::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutBounds, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
+use crate::snapshot::LayoutSnapshot;
 #[path="🧾️dictionary/🦀️.rs"]mod dictionary;
 #[path="🔍️rows/🦀️.rs"]mod indexed;
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -10,7 +10,7 @@ fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidVa
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,RowWriter,FloatColumn}};
 const SCHEMA:&str=concat!(include_str!("🗄️.sql"),"\n",include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"));
 fn ordinal(n:usize)->Result<i64,ValueError>{i64::try_from(n).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Layout ordinal exceeds INTEGER width"))}
-fn text(value:Option<&str>)->Cell<'_>{value.map(Cell::Text).unwrap_or(Cell::Null)}
+pub fn text(value:Option<&str>)->Cell<'_>{value.map(Cell::Text).unwrap_or(Cell::Null)}
 fn boolean(value:Option<bool>)->Cell<'static>{value.map(|v|Cell::Integer(i64::from(v))).unwrap_or(Cell::Null)}
 fn unsigned(value:Option<u32>)->Cell<'static>{value.map(|v|Cell::Integer(i64::from(v))).unwrap_or(Cell::Null)}
 fn words(value:u64)->[Cell<'static>;2]{[Cell::Integer((value>>32) as i64),Cell::Integer((value&0xffffffff) as i64)]}
@@ -71,7 +71,7 @@ struct Owned(Option<LayoutSnapshot>);
 impl Owned{fn new(value:LayoutSnapshot)->Self{Self(Some(value))}fn value(&mut self)->&mut LayoutSnapshot{self.0.as_mut().unwrap()}fn take(mut self)->LayoutSnapshot{self.0.take().unwrap()}}
 impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){retire(value);}}}
 fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<LayoutSnapshot,ValueError>{
- let mut r=Reader::new(database,control)?;let doc=r.take("layout_document",1)?;let grid=r.take("layout_grid",1)?;let mut owner=Owned::new(standards::v1::subsets::any::schema::snapshot::empty_layout_snapshot());let s=owner.value();s.schema=r.text(doc,1)?;s.name=r.text(doc,2)?;s.print_target=r.optional_text(doc,3)?;if r.rows.contains("layout_form_dictionary",1)?{s.data_fields=Some(dictionary::reconstruct(&mut r)?);}s.grid=GridSettings{baseline_grid:r.real(grid,1)?,baseline_offset:r.real(grid,2)?,snap_to_baseline:Reader::boolean(grid,3)?};
+ let mut r=Reader::new(database,control)?;let doc=r.take("layout_document",1)?;let grid=r.take("layout_grid",1)?;let mut owner=Owned::new(crate::snapshot::empty_layout_snapshot());let s=owner.value();s.schema=r.text(doc,1)?;s.name=r.text(doc,2)?;s.print_target=r.optional_text(doc,3)?;if r.rows.contains("layout_form_dictionary",1)?{s.data_fields=Some(dictionary::reconstruct(&mut r)?);}s.grid=GridSettings{baseline_grid:r.real(grid,1)?,baseline_offset:r.real(grid,2)?,snap_to_baseline:Reader::boolean(grid,3)?};
  let source=r.list("layout_paragraph_style",1,1,2)?;s.paragraph_styles=transfer::reserve(source.len(),r.control)?;for row in source{s.paragraph_styles.push(ParagraphStyle{id:r.text(row,3)?,name:r.text(row,4)?,font_family:r.text(row,5)?,font_size:r.real(row,6)?,font_weight:Reader::unsigned(row,7)?,leading:r.real(row,8)?,tracking:r.real(row,9)?,alignment:r.text(row,10)?});}
  let source=r.list("layout_character_style",1,1,2)?;s.character_styles=transfer::reserve(source.len(),r.control)?;for row in source{s.character_styles.push(CharacterStyle{id:r.text(row,3)?,name:r.optional_text(row,4)?,font_family:r.optional_text(row,5)?,font_size:r.optional_real(row,6)?,font_weight:Reader::optional_unsigned(row,7)?,italic:Reader::optional_boolean(row,8)?,color:r.optional_color(row,9)?,tracking:r.optional_real(row,10)?});}
  let source=r.list("layout_story",1,1,2)?;s.stories=transfer::reserve(source.len(),r.control)?;for row in source{let source=r.list("layout_style_run",row.rowid,1,2)?;let mut runs=transfer::reserve(source.len(),r.control)?;for v in source{runs.push(TextStyleRun{start:Reader::wide(v,3)?,end:Reader::wide(v,5)?,paragraph_style_id:r.optional_text(v,7)?,character_style_id:r.optional_text(v,8)?});}s.stories.push(TextStory{id:r.text(row,3)?,content:r.text(row,4)?,style_runs:runs});}
@@ -110,7 +110,7 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
 }
 
-use crate::standards::v1::subsets::any::schema::snapshot::retire;
+use crate::snapshot::retire;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

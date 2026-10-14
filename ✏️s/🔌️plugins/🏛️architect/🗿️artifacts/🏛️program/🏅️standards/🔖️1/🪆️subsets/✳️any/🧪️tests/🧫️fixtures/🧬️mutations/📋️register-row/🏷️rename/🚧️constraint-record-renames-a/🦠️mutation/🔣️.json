@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "constraintRecord",
+  "id": "constraint-record-a",
+  "newName": "Renamed Constraint Record A"
+}

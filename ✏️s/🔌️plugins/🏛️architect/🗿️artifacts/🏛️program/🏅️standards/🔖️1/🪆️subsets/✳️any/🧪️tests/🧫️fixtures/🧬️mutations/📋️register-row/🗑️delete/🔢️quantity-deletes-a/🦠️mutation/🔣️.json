@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "quantityRequirement",
+  "id": "quantity-requirement-a"
+}

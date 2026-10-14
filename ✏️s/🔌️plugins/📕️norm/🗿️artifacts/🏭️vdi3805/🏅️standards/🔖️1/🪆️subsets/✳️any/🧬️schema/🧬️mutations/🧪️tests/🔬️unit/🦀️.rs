@@ -1,5 +1,5 @@
-use crate::GenericAttributes;
-use super::*;
+use semio_s_artifact_norm_vdi3805_model::GenericAttributes;
+use crate::*;
 use protocol::{Mutation, SemanticMutation};
 use std::collections::BTreeMap;
 
@@ -31,22 +31,21 @@ async fn change_manufacturer_file_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn change_correction_as_of_and_strict_mode_round_trip() {
     let base = Vdi3805Snapshot::default();
-    let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: crate::EditionId::new(2025, 3) });
+    let correction = Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: semio_s_artifact_norm_vdi3805_model::EditionId::new(2025, 3) });
     let after = round_trip(&base, &correction);
-    assert_eq!(after.correction_as_of, crate::EditionId::new(2025, 3));
+    assert_eq!(after.correction_as_of, semio_s_artifact_norm_vdi3805_model::EditionId::new(2025, 3));
 
     let strict = Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: true });
     let after = round_trip(&base, &strict);
     assert!(after.strict_mode);
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn change_and_remove_edition_profile_round_trip() {
     let base = Vdi3805Snapshot::default();
-    let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "8".into(), new_choice: crate::EditionProfileChoice::Legacy });
+    let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "8".into(), new_choice: semio_s_artifact_norm_vdi3805_model::EditionProfileChoice::Legacy });
     let after_change = round_trip(&base, &change);
-    assert_eq!(after_change.edition_profile.get("8"), Some(&crate::EditionProfileChoice::Legacy));
+    assert_eq!(after_change.edition_profile.get("8"), Some(&semio_s_artifact_norm_vdi3805_model::EditionProfileChoice::Legacy));
 
     let remove = Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: "8".into() });
     let after_remove = round_trip(&after_change, &remove);
@@ -56,7 +55,7 @@ async fn change_and_remove_edition_profile_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn change_edition_profile_undo_of_a_fresh_sheet_is_remove() {
     let base = Vdi3805Snapshot::default();
-    let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "fresh".into(), new_choice: crate::EditionProfileChoice::Current });
+    let change = Vdi3805Mutation::ChangeEditionProfile(change_edition_profile::ChangeEditionProfile { sheet: "fresh".into(), new_choice: semio_s_artifact_norm_vdi3805_model::EditionProfileChoice::Current });
     let undo = change.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Vdi3805Mutation::RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile { sheet: "fresh".into() })]);
 }
@@ -66,14 +65,14 @@ async fn create_rename_replace_configuration_remove_product_round_trip() {
     let base = Vdi3805Snapshot::default();
     let product = CatalogueProduct {
         id: "VLV-NEW".into(),
-        identity: crate::ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
-        title: crate::bilingual("Neu", "New"),
-        sheet: crate::SheetId(3),
+        identity: semio_s_artifact_norm_vdi3805_model::ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
+        title: semio_s_artifact_norm_vdi3805_model::bilingual("Neu", "New"),
+        sheet: semio_s_artifact_norm_vdi3805_model::SheetId(3),
         records: Vec::new(),
-        configuration: crate::Configuration { id: "cfg.new".into(), attributes: crate::SheetAttributes::Generic(GenericAttributes::default()), geometry_ref: None, function_refs: Vec::new() },
+        configuration: semio_s_artifact_norm_vdi3805_model::Configuration { id: "cfg.new".into(), attributes: semio_s_artifact_norm_vdi3805_model::SheetAttributes::Generic(GenericAttributes::default()), geometry_ref: None, function_refs: Vec::new() },
         accessories: Vec::new(),
         components: Vec::new(),
-        extensions: crate::ExtensionBag::default(),
+        extensions: semio_s_artifact_norm_vdi3805_model::ExtensionBag::default(),
     };
     let create = Vdi3805Mutation::AddProduct(add_product::AddProduct { product: product.clone(), index: None });
     let after_create = round_trip(&base, &create);
@@ -83,16 +82,16 @@ async fn create_rename_replace_configuration_remove_product_round_trip() {
     let undo = create.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Vdi3805Mutation::RemoveProduct(remove_product::RemoveProduct { id: "VLV-NEW".into() })]);
 
-    let rename = Vdi3805Mutation::RenameProduct(rename_product::RenameProduct { id: "VLV-NEW".into(), new_title: crate::bilingual("Umbenannt", "Renamed") });
+    let rename = Vdi3805Mutation::RenameProduct(rename_product::RenameProduct { id: "VLV-NEW".into(), new_title: semio_s_artifact_norm_vdi3805_model::bilingual("Umbenannt", "Renamed") });
     let after_rename = round_trip(&after_create, &rename);
-    assert_eq!(crate::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"), "Renamed");
+    assert_eq!(semio_s_artifact_norm_vdi3805_model::text_in(&after_rename.catalog.products.iter().find(|p| p.identity.article_number == "VLV-NEW").unwrap().title, "en"), "Renamed");
     assert_eq!(after_rename.index.entries.iter().find(|e| e.product_id == "VLV-NEW").unwrap().tags, vec!["Umbenannt".to_string(), "Renamed".to_string()]);
 
     let replace = Vdi3805Mutation::ChangeProductConfiguration(change_product_configuration::ChangeProductConfiguration {
         id: "VLV-NEW".into(),
-        new_configuration: crate::Configuration {
+        new_configuration: semio_s_artifact_norm_vdi3805_model::Configuration {
             id: "cfg.new".into(),
-            attributes: crate::SheetAttributes::ValveHeating(crate::ValveHeatingAttributes::from_kvs_m3_h(80, 8.0, "PN16", "flange", 0.3, 0.7)),
+            attributes: semio_s_artifact_norm_vdi3805_model::SheetAttributes::ValveHeating(semio_s_artifact_norm_vdi3805_model::ValveHeatingAttributes::from_kvs_m3_h(80, 8.0, "PN16", "flange", 0.3, 0.7)),
             geometry_ref: None,
             function_refs: Vec::new(),
         },
@@ -116,16 +115,16 @@ async fn remove_product_of_a_missing_id_has_an_empty_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn geometry_lifecycle_round_trips() {
     let base = Vdi3805Snapshot::default();
-    let geometry = crate::ParametricGeometry { id: "geom.new".into(), bbox: crate::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
+    let geometry = semio_s_artifact_norm_vdi3805_model::ParametricGeometry { id: "geom.new".into(), bbox: semio_s_artifact_norm_vdi3805_model::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
     let create = Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() });
     let after_create = round_trip(&base, &create);
     assert!(after_create.geometry.contains_key("geom.new"));
 
-    let resize = Vdi3805Mutation::ResizeGeometry(resize_geometry::ResizeGeometry { id: "geom.new".into(), new_bbox: crate::BoundingBox::from_size(2.0, 2.0, 2.0) });
+    let resize = Vdi3805Mutation::ResizeGeometry(resize_geometry::ResizeGeometry { id: "geom.new".into(), new_bbox: semio_s_artifact_norm_vdi3805_model::BoundingBox::from_size(2.0, 2.0, 2.0) });
     let after_resize = round_trip(&after_create, &resize);
     assert_eq!(after_resize.geometry.get("geom.new").unwrap().bbox.max_x, 2.0);
 
-    let connection = crate::ConnectionPoint { id: "c1".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [1.0, 0.0, 0.0], diameter_mm: None };
+    let connection = semio_s_artifact_norm_vdi3805_model::ConnectionPoint { id: "c1".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [1.0, 0.0, 0.0], diameter_mm: None };
     let add_conn = Vdi3805Mutation::AddGeometryConnection(add_geometry_connection::AddGeometryConnection { id: "geom.new".into(), connection: connection.clone(), index: None });
     let after_add = round_trip(&after_create, &add_conn);
     assert_eq!(after_add.geometry.get("geom.new").unwrap().connections.len(), 1);
@@ -150,17 +149,17 @@ async fn geometry_lifecycle_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn curve_lifecycle_round_trips() {
     let base = Vdi3805Snapshot::default();
-    let curve = crate::CharacteristicCurve {
+    let curve = semio_s_artifact_norm_vdi3805_model::CharacteristicCurve {
         id: "curve.new".into(),
-        x_unit: crate::VdiUnit::delta("%", crate::VdiQuantityKind::Dimensionless, 0.01),
-        y_unit: crate::VdiUnit::absolute("m3/h", crate::VdiQuantityKind::Volume, 1.0),
-        points: vec![crate::CurvePoint { x: 0.0, y: 0.0 }],
+        x_unit: semio_s_artifact_norm_vdi3805_model::VdiUnit::delta("%", semio_s_artifact_norm_vdi3805_model::VdiQuantityKind::Dimensionless, 0.01),
+        y_unit: semio_s_artifact_norm_vdi3805_model::VdiUnit::absolute("m3/h", semio_s_artifact_norm_vdi3805_model::VdiQuantityKind::Volume, 1.0),
+        points: vec![semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 0.0, y: 0.0 }],
     };
     let create = Vdi3805Mutation::AddCurve(add_curve::AddCurve { curve: curve.clone() });
     let after_create = round_trip(&base, &create);
     assert!(after_create.curves.contains_key("curve.new"));
 
-    let new_points = vec![crate::CurvePoint { x: 0.0, y: 0.0 }, crate::CurvePoint { x: 100.0, y: 9.0 }];
+    let new_points = vec![semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 0.0, y: 0.0 }, semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 100.0, y: 9.0 }];
     let replace = Vdi3805Mutation::ChangeCurvePoints(change_curve_points::ChangeCurvePoints { id: "curve.new".into(), new_points: new_points.clone() });
     let after_replace = round_trip(&after_create, &replace);
     assert_eq!(after_replace.curves.get("curve.new").unwrap().points, new_points);

@@ -1,9 +1,9 @@
-use super::ChangeWallThickness;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-pub fn inverse(payload: &ChangeWallThickness, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::change_wall_thickness::ChangeWallThickness;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+pub fn inverse<Op>(payload: &ChangeWallThickness, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_wall_thickness::ChangeWallThickness> {
     Ok((|| {
-    if payload.index >= base.walls.len() { Vec::new() } else { vec![En1996Mutation::ChangeWallThickness(ChangeWallThickness { index: payload.index, new_thickness_m: base.walls[payload.index].thickness_m })] }
+    if payload.index >= base.walls.len() { Vec::new() } else { vec![Op::from(ChangeWallThickness { index: payload.index, new_thickness_m: base.walls[payload.index].thickness_m })] }
 
     })())
 }

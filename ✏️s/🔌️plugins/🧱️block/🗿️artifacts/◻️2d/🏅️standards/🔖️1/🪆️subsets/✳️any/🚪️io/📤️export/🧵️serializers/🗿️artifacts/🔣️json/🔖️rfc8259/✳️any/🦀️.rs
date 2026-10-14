@@ -1,7 +1,7 @@
 //! 🚪️ block2d → json — foreign `Serializer<Block2dSnapshot>` on the framework's `io_mechanism`
 //! channel. Named binary64 fields use closed word objects and retain every IEEE state.
 
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -12,7 +12,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 🔣️ This subset's snapshot as compact rfc8259 text — also the body the `🎒️zip` container leaf
 /// embeds, and the exact bytes the TypeScript mirror's parity test compares against.
 pub fn json_text(from: &Block2dSnapshot) -> String {
-    crate::standards::v1::subsets::any::io::json::to_json_text(from)
+    crate::json_native::to_json_text(from)
 }
 
 /// 🧵️ `s.block.block2d@1/*` → `s.stdio.json@rfc8259/*`.

@@ -1,6 +1,22 @@
 //! 🧬️ Raster diff schema — sparse field delta over the artifact.
 
-use crate::{SemioImageSnapshot, RasterLayerNode, RasterLayerPatch};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use semio_framework_pixels::editing::{paint_stroke_in_place, validate_extent, PixelAlphaBrush, PixelBrush, PixelOperation};
+use semio_framework_pixels::RasterImage;
+use semio_s_artifact_raster_raster_model::RasterLayerMask;
+use semio_s_artifact_raster_raster_model::RasterTransform;
+use semio_s_artifact_raster_raster_model::semio_image_from_rgba8;
+use semio_s_artifact_raster_raster_model::layer_protection;
+use semio_s_artifact_raster_raster_model::RasterMaskContent;
+use semio_s_artifact_raster_raster_model::RasterPixelContent;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -109,10 +125,10 @@ pub struct RasterLayerModification {
 }
 //#endregion 🔖️DeltaHelpers
 
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::standards::v1::subsets::any::schema::flatten_raster_layers;
-use crate::standards::v1::subsets::any::schema::layer_node_id;
-use crate::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::flatten_raster_layers;
+use semio_s_artifact_raster_raster_model::layer_node_id;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use protocol::MutationDiff;
 
 pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str) -> Option<RasterLayerNode> {
@@ -149,7 +165,7 @@ fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> pro
             if parameters.iter().any(|row| params.get(&row.parameter).is_some_and(|v|v.as_f64().is_none())) {return Err(protocol::MutationApplyError::new("mutation.apply.parameter-type","existing adjustment parameter must be numeric"));}
             let added=parameters.iter().filter(|row| row.value.is_some()&&!params.contains_key(&row.parameter)).count();
             let removed=parameters.iter().filter(|row|row.value.is_none()&&params.contains_key(&row.parameter)).count();
-            if params.len()+added-removed>crate::RASTER_OWNED_MAP_CAPACITY {return Err(protocol::MutationApplyError::new("mutation.apply.parameter-capacity","adjustment parameter capacity exceeded"));}
+            if params.len()+added-removed>semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {return Err(protocol::MutationApplyError::new("mutation.apply.parameter-capacity","adjustment parameter capacity exceeded"));}
         }
     }
     if invalid {
@@ -161,12 +177,12 @@ fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> pro
 fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
     let mut inverse = RasterLayerPatch::default();
     if let (Some(content), RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = (&patch.mask_content, &mut *node) {
-        inverse.mask_content = Some(crate::RasterMaskContent { mask: std::mem::replace(mask, content.mask.clone()) });
+        inverse.mask_content = Some(semio_s_artifact_raster_raster_model::RasterMaskContent { mask: std::mem::replace(mask, content.mask.clone()) });
     }
     match node {
         RasterLayerNode::Pixel { name, visible, locked, opacity, blend_mode, transform, width, height, image_key, .. } => {
             if let Some(content) = &patch.pixel_content {
-                inverse.pixel_content = Some(crate::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
+                inverse.pixel_content = Some(semio_s_artifact_raster_raster_model::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
                 *image_key = content.image_key.clone();
                 *width = content.width;
                 *height = content.height;
@@ -241,8 +257,8 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
             if let Some(parameters)=&patch.adjustment_parameters {
                 inverse.adjustment_parameters=Some(parameters.iter().map(|row| {
                     let previous=params.remove_entry(&row.parameter).map(|mut entry| entry.take().1);
-                    let value=previous.as_ref().and_then(crate::RasterAdjustmentNumber::from_parameter);
-                    crate::RasterAdjustmentParameter {parameter:row.parameter.clone(),value}
+                    let value=previous.as_ref().and_then(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::from_parameter);
+                    semio_s_artifact_raster_raster_model::RasterAdjustmentParameter {parameter:row.parameter.clone(),value}
                 }).collect());
                 for row in parameters {if let Some(next)=row.value {params.insert(row.parameter.clone(),next.literal()).expect("validated parameter fits owned map");}}
             }
@@ -394,7 +410,7 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
     let mut next = layers.to_vec();
     for row in &delta.removed {
         if let Some(removed) = remove_layer_from_tree(&mut next, &row.id) {
-            crate::retire_raster_layer(removed);
+            semio_s_artifact_raster_raster_model::retire_raster_layer(removed);
         }
     }
     let mut pending: Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)> = Vec::new();
@@ -417,7 +433,7 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
                 Some(children) => match check_slots(children.len(), &rows) {
                     Ok(()) => place_entering(children, rows),
                     Err(error) => {
-                        crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
+                        semio_s_artifact_raster_raster_model::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
                         retire_pending(batch.collect(), Vec::new());
                         retire_pending(waiting, next);
                         return Err(error);
@@ -434,14 +450,14 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
     }
     for (index, entry) in delta.modified.iter().enumerate() {
         if let Err(error) = apply_layer_patch_entry(&mut next, entry) {
-            crate::retire_raster_layers(next);
+            semio_s_artifact_raster_raster_model::retire_raster_layers(next);
             return Err(error.under(["modified".to_string(), index.to_string()]));
         }
     }
     let next_ids: Vec<_> = flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
     if next_ids.iter().enumerate().any(|(index, id)| next_ids[..index].contains(id)) {
         drop(next_ids);
-        crate::retire_raster_layers(next);
+        semio_s_artifact_raster_raster_model::retire_raster_layers(next);
         return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
     Ok(next)
@@ -458,16 +474,16 @@ fn enter(pending: &mut Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)>, par
 /// 🫧 Closes the owners a refused apply still holds.
 fn retire_pending(pending: Vec<(Option<String>, Vec<(usize, RasterLayerNode)>)>, tree: Vec<RasterLayerNode>) {
     for (_, rows) in pending {
-        crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
+        semio_s_artifact_raster_raster_model::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect());
     }
-    crate::retire_raster_layers(tree);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(tree);
 }
 
 fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerModification) -> protocol::MutationApplyResult<()> {
     patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "modified layer does not exist"))
 }
 
-fn validate_assets_delta<T>(assets: &crate::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
+fn validate_assets_delta<T>(assets: &semio_s_artifact_raster_raster_model::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
     let additional = delta.entries.iter().filter(|(key, value)| value.is_some() && !assets.contains_key(key)).count();
     assets.validate_additional_unique_entries(additional).map_err(|reason| protocol::MutationApplyError::new("mutation.apply.capacity", reason))?;
     for (key, value) in &delta.entries {
@@ -506,11 +522,11 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             if let Some(delta) = &self.layers {
                 let displaced = std::mem::take(&mut next.layers);
                 let applied = apply_layers_delta(&displaced, delta);
-                crate::retire_raster_layers(displaced);
+                semio_s_artifact_raster_raster_model::retire_raster_layers(displaced);
                 match applied {
                     Ok(layers) => next.layers = layers,
                     Err(error) => {
-                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(next);
+                        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(next);
                         return Err(error.under(["layers"]));
                     }
                 }
@@ -519,7 +535,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
+                            next.assets.insert(key.clone(), semio_s_artifact_raster_raster_model::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
                         // 🗑️ A removal used to be refused outright ("asset removal requires the retained
                         // Raster initialization authority"), which made `remove-layer-asset` unusable on
@@ -544,11 +560,11 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 let displaced = next;
                 match apply_pixel_region(&displaced, region, capability) {
                     Ok(applied) => {
-                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(displaced);
+                        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(displaced);
                         next = applied;
                     }
                     Err(error) => {
-                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(displaced);
+                        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(displaced);
                         return Err(error.under(["pixels"]));
                     }
                 }
@@ -586,13 +602,13 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         let RasterDiff { schema: _, id: _, title: _, layers, assets: _, pixels: _ } = self;
         if let Some(layers) = layers {
             for insertion in layers.inserted {
-                crate::retire_raster_layer(insertion.layer);
+                semio_s_artifact_raster_raster_model::retire_raster_layer(insertion.layer);
             }
         }
     }
 
     fn retire_projection(projection: RasterSnapshot) {
-        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(projection);
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(projection);
     }
 }
 
@@ -600,7 +616,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
 /// 🖌️ Applies one pixel region: the target image is rewritten in that rectangle, filed as a new content-addressed asset and
 /// the layer (or its mask) repointed — the derived handle is minted here, from the applied pixels.
 fn apply_pixel_region(snapshot: &RasterSnapshot, region: &RasterPixelRegion, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterSnapshot> {
-    use crate::mutations::paint_stroke::{canvas, painted, painted_diff, Refusal};
+
     let refuse = |refusal: Refusal| match refusal {
         Refusal::Error(code, message) | Refusal::Fatal(code, message) => protocol::MutationApplyError::new(code, message),
     };
@@ -658,7 +674,6 @@ fn id_address(forest: &[IdNode], target: &str, parent: Option<&str>) -> Option<(
 }
 
 
-
 fn id_ancestors(forest: &[IdNode], target: &str) -> Vec<String> {
     let mut chain = Vec::new();
     let mut cursor = target.to_string();
@@ -676,10 +691,10 @@ fn inverse_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> Rast
     match node {
         RasterLayerNode::Pixel { name, visible, locked, opacity, blend_mode, transform, mask, width, height, image_key, .. } => {
             if patch.mask_content.is_some() {
-                inverse.mask_content = Some(crate::RasterMaskContent { mask: mask.clone() });
+                inverse.mask_content = Some(semio_s_artifact_raster_raster_model::RasterMaskContent { mask: mask.clone() });
             }
             if patch.pixel_content.is_some() {
-                inverse.pixel_content = Some(crate::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
+                inverse.pixel_content = Some(semio_s_artifact_raster_raster_model::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
             }
             if patch.transform.is_some() {
                 inverse.transform = Some(transform.clone());
@@ -696,7 +711,7 @@ fn inverse_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> Rast
         }
         RasterLayerNode::Group { name, visible, locked, opacity, blend_mode, transform, mask, .. } => {
             if patch.mask_content.is_some() {
-                inverse.mask_content = Some(crate::RasterMaskContent { mask: mask.clone() });
+                inverse.mask_content = Some(semio_s_artifact_raster_raster_model::RasterMaskContent { mask: mask.clone() });
             }
             if patch.transform.is_some() {
                 inverse.transform = Some(transform.clone());
@@ -711,7 +726,7 @@ fn inverse_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> Rast
         }
         RasterLayerNode::Adjustment { name, visible, locked, opacity, blend_mode, adjustment_kind, params, .. } => {
             if let Some(parameters) = &patch.adjustment_parameters {
-                inverse.adjustment_parameters = Some(parameters.iter().map(|row| crate::RasterAdjustmentParameter { parameter: row.parameter.clone(), value: params.get(&row.parameter).and_then(crate::RasterAdjustmentNumber::from_parameter) }).collect());
+                inverse.adjustment_parameters = Some(parameters.iter().map(|row| semio_s_artifact_raster_raster_model::RasterAdjustmentParameter { parameter: row.parameter.clone(), value: params.get(&row.parameter).and_then(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::from_parameter) }).collect());
             }
             inverse.name = patch.name.as_ref().map(|_| name.clone());
             inverse.visible = patch.visible.map(|_| *visible);
@@ -771,10 +786,10 @@ impl protocol::DiffAlgebra<RasterSnapshot> for RasterDiff {
             layers: self.layers.as_ref().map(|delta| inverse_layers(delta, &base.layers)),
             assets: self.assets.as_ref().map(|delta| RasterAssetsDelta { entries: delta.entries.iter().filter_map(|(key, value)| match (value, base.assets.contains_key(key)) {
                 (Some(_), false) => Some((key.clone(), None)),
-                (_, true) => crate::raster_image(&base.assets, key).map(|asset| (key.clone(), Some(asset))),
+                (_, true) => semio_s_artifact_raster_raster_model::raster_image(&base.assets, key).map(|asset| (key.clone(), Some(asset))),
                 (None, false) => None,
             }).collect() }),
-            pixels: self.pixels.iter().rev().filter_map(|region| crate::mutations::paint_stroke::inverse_pixel_region(region, base)).collect(),
+            pixels: self.pixels.iter().rev().filter_map(|region| crate::inverse_pixel_region(region, base)).collect(),
         }
     }
 
@@ -899,7 +914,7 @@ fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayers
             if children.get(index).is_some_and(|node| layer_node_id(node) == id) {
                 let node = children.remove(index);
                 if removed {
-                    crate::retire_raster_layer(node);
+                    semio_s_artifact_raster_raster_model::retire_raster_layer(node);
                 } else {
                     lifted.insert(id, node);
                 }
@@ -924,10 +939,10 @@ fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayers
     for (container, rows) in entering {
         match born_children_mut(born, &container) {
             Some(children) if check_slots(children.len(), &rows).is_ok() => place_entering(children, rows),
-            _ => crate::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect()),
+            _ => semio_s_artifact_raster_raster_model::retire_raster_layers(rows.into_iter().map(|(_, node)| node).collect()),
         }
     }
-    crate::retire_raster_layers(lifted.into_values().collect());
+    semio_s_artifact_raster_raster_model::retire_raster_layers(lifted.into_values().collect());
 }
 
 /// 🧹 Drops the move rows that leave their layer exactly where the surviving siblings already put it: a move inside one container
@@ -967,7 +982,7 @@ fn absorb_layers_delta(dst: &mut RasterLayersDelta, mut src: RasterLayersDelta) 
     let mut nodes: BTreeMap<String, RasterLayerNode> = BTreeMap::new();
     for row in born_rows.into_iter().chain(std::mem::take(&mut src.inserted)) {
         if let Some(displaced) = nodes.insert(layer_node_id(&row.layer).to_string(), row.layer) {
-            crate::retire_raster_layer(displaced);
+            semio_s_artifact_raster_raster_model::retire_raster_layer(displaced);
         }
     }
     let born: std::collections::BTreeSet<String> = nodes.values().flat_map(subtree_ids_of).collect();
@@ -994,7 +1009,7 @@ fn absorb_layers_delta(dst: &mut RasterLayersDelta, mut src: RasterLayersDelta) 
             inserted.push(RasterLayerInsertion { parent_id: container, index, layer });
         }
     }
-    crate::retire_raster_layers(nodes.into_values().collect());
+    semio_s_artifact_raster_raster_model::retire_raster_layers(nodes.into_values().collect());
     let removed: Vec<RasterLayerRemoval> = leaving.into_iter().map(|(parent_id, id, index)| RasterLayerRemoval { id, parent_id, index }).collect();
     let moved = without_identity_moves(moved, &removed, &inserted);
     let gone: std::collections::BTreeSet<&str> = removed.iter().map(|row| row.id.as_str()).filter(|id| !inserted.iter().any(|row| layer_node_id(&row.layer) == *id)).collect();
@@ -1025,7 +1040,7 @@ pub fn diff_add_layer(parent_id: Option<String>, index: usize, layer: RasterLaye
 
 /// ➖️ Sparse removal diff: one removal row at the layer's base address. Empty when the layer is not in `base`.
 pub fn diff_remove_layer(base: &[RasterLayerNode], layer_id: &str) -> RasterDiff {
-    let Some((parent_id, index)) = crate::standards::v1::subsets::any::schema::locate_layer(base, layer_id) else { return RasterDiff::default() };
+    let Some((parent_id, index)) = semio_s_artifact_raster_raster_model::locate_layer(base, layer_id) else { return RasterDiff::default() };
     RasterDiff { layers: Some(RasterLayersDelta { removed: vec![RasterLayerRemoval { id: layer_id.to_string(), parent_id, index }], ..Default::default() }), ..Default::default() }
 }
 
@@ -1037,7 +1052,7 @@ pub fn diff_patch_layer(layer_id: &str, patch: RasterLayerPatch) -> RasterDiff {
 /// `(parent_id, index)` — never the layer itself. The index saturates at the end of the destination list. Empty when the layer is
 /// not in `base`.
 pub fn diff_move_layer(base: &[RasterLayerNode], layer_id: &str, parent_id: Option<String>, index: usize) -> RasterDiff {
-    let Some((from_parent, from_index)) = crate::standards::v1::subsets::any::schema::locate_layer(base, layer_id) else { return RasterDiff::default() };
+    let Some((from_parent, from_index)) = semio_s_artifact_raster_raster_model::locate_layer(base, layer_id) else { return RasterDiff::default() };
     let length = container_of(base, parent_id.as_deref()).map_or(0, <[RasterLayerNode]>::len);
     let room = if parent_id == from_parent { length.saturating_sub(1) } else { length };
     RasterDiff {
@@ -1070,3 +1085,190 @@ mod asset_capacity_vectors;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️layer-tree-delta/🦀️.rs"]
 mod layer_tree_delta;
+
+/// 🖼️ The image a repaint (a stroke, a region fill) paints into and where it sits: the source image (decoded, so its
+/// profile and metadata ride along), its asset key, the key prefix of the image the repaint mints, and the layer's mask
+/// when the target is one.
+pub struct Canvas {
+    pub source: SemioImageSnapshot,
+    previous: Option<String>,
+    prefix: &'static str,
+    mask: Option<RasterLayerMask>,
+    pub extent: (Option<u32>, Option<u32>),
+    pub placement: RasterTransform,
+}
+
+/// 📐️ A repaint that also moves the layer's pixel grid (a rotation, a resize, a crop): the image's new display extent and
+/// the layer's new placement.
+pub struct Reshape {
+    pub width: u32,
+    pub height: u32,
+    pub transform: RasterTransform,
+}
+
+/// ⚠️ Why a repaint cannot land: a state-dependent Error (the layer or its image is not there, or does not take this
+/// repaint) or a Fatal application fault, with the target it names.
+pub enum Refusal {
+    Error(&'static str, String),
+    Fatal(&'static str, String),
+}
+
+/// 🧩️ The decoded image behind `key`, from the asset pool's own materialized child.
+fn asset_image(base: &RasterSnapshot, key: &str) -> Result<SemioImageSnapshot, Refusal> {
+    let child = base.assets.get(key).ok_or_else(|| Refusal::Error("mutation.target-missing", format!("Image asset \"{key}\" is not in the document.")))?;
+    let image = child.local_owner::<SemioImageSnapshot>().ok_or_else(|| Refusal::Fatal("mutation.apply.image-unmaterialized", format!("Image asset \"{key}\" has no materialized pixels.")))?;
+    let frame = image.frames.first().ok_or_else(|| Refusal::Fatal("mutation.apply.image-invalid", format!("Image asset \"{key}\" has no frame.")))?;
+    if validate_extent(image.width, image.height).ok().map(|count| count * 4) != Some(frame.rgba8.len()) {
+        return Err(Refusal::Fatal("mutation.apply.image-invalid", format!("Image asset \"{key}\" does not hold one RGBA8 pixel per pixel of its extent.")));
+    }
+    Ok(image.as_ref().clone())
+}
+
+/// 🫥️ A blank `width × height` image filled with `pixel`, refused when the extent is outside the pixel budget.
+fn blank(width: u32, height: u32, pixel: [u8; 4]) -> Result<SemioImageSnapshot, Refusal> {
+    let count = validate_extent(width, height).map_err(|_| Refusal::Fatal("mutation.apply.image-invalid", format!("A {width}×{height} image is outside the pixel budget.")))?;
+    Ok(semio_image_from_rgba8(width, height, pixel.repeat(count)))
+}
+
+/// 🖼️ Resolves the image a repaint of `layer_id`'s `target` (`pixels` or `mask`) paints into on `base`.
+pub fn canvas(layer_id: &str, target: &str, base: &RasterSnapshot) -> Result<Canvas, Refusal> {
+    let layer = find_layer(&base.layers, layer_id).ok_or_else(|| Refusal::Error("mutation.target-missing", format!("Layer \"{layer_id}\" is not in the document.")))?;
+    if !layer_protection(&base.layers, layer_id).is_some_and(|protection| protection.editable) {
+        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" is locked.")));
+    }
+    let layer_extent = match layer {
+        RasterLayerNode::Pixel { width, height, .. } => (width.unwrap_or(512), height.unwrap_or(512)),
+        _ => (512, 512),
+    };
+    let placement = match layer {
+        RasterLayerNode::Pixel { transform, .. } | RasterLayerNode::Group { transform, .. } | RasterLayerNode::Adjustment { transform, .. } => transform.clone(),
+    };
+    if target == "mask" {
+        let mask = match layer {
+            RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. } => mask.clone(),
+            RasterLayerNode::Adjustment { .. } => None,
+        }
+        .ok_or_else(|| Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" has no mask.")))?;
+        let source = match &mask.image_key {
+            Some(key) => {
+                let mut image = asset_image(base, key)?;
+                if let Some(frame) = image.frames.first_mut() {
+                    for pixel in frame.rgba8.chunks_exact_mut(4) {
+                        let coverage = semio_framework_pixels::compositing::layers::mask_coverage([pixel[0], pixel[1], pixel[2], pixel[3]]);
+                        pixel.copy_from_slice(&[255, 255, 255, coverage]);
+                    }
+                }
+                image
+            }
+            None => blank(mask.width.unwrap_or(layer_extent.0), mask.height.unwrap_or(layer_extent.1), [255; 4])?,
+        };
+        return Ok(Canvas { source, previous: mask.image_key.clone(), prefix: "mask", mask: Some(mask), extent: (None, None), placement });
+    }
+    let RasterLayerNode::Pixel { image_key, width, height, .. } = layer else {
+        return Err(Refusal::Error("mutation.target-mismatch", format!("Layer \"{layer_id}\" holds no pixels.")));
+    };
+    let source = match image_key {
+        Some(key) => asset_image(base, key)?,
+        None => blank(layer_extent.0, layer_extent.1, [0; 4])?,
+    };
+    Ok(Canvas { source, previous: image_key.clone(), prefix: "pixels", mask: None, extent: (*width, *height), placement })
+}
+
+/// 🎨️ What one repaint did: the canvas it painted, the painted image as an asset, and the key it is filed under.
+pub struct Painted {
+    canvas: Canvas,
+    asset: SemioImageSnapshot,
+    key: String,
+}
+
+/// 🗄️ Files `pixels` repainted on `canvas` as a new content-addressed asset of `layer_id` in the lossless carrier.
+pub fn painted(canvas: Canvas, pixels: Vec<u8>, layer_id: &str) -> Painted {
+    let mut image = canvas.source.clone();
+    image.frames[0].rgba8 = pixels;
+    filed(canvas, image, layer_id)
+}
+
+/// 🗄️ Files `image` — of any extent — computed from `canvas` as a new content-addressed asset of `layer_id`.
+pub fn reshaped(canvas: Canvas, image: RasterImage, layer_id: &str) -> Painted {
+    let image = semio_image_from_rgba8(image.width, image.height, image.pixels);
+    filed(canvas, image, layer_id)
+}
+
+fn filed(canvas: Canvas, image: SemioImageSnapshot, layer_id: &str) -> Painted {
+    let key = semio_s_artifact_raster_raster_model::raster_image_content_id(&format!("{}-{layer_id}", canvas.prefix), &image);
+    let asset = image;
+    Painted { canvas, asset, key }
+}
+
+/// 🗑️ Whether the image `key` that `layer_id`'s `target` stops showing is shown by nothing else and so leaves the pool.
+fn released(base: &RasterSnapshot, key: &str, layer_id: &str, target: &str) -> bool {
+    base.assets.contains_key(key)
+        && !flatten_raster_layers(&base.layers).iter().any(|layer| {
+            let own = layer_node_id(layer) == layer_id;
+            let pixels = matches!(layer, RasterLayerNode::Pixel { image_key: Some(shown), .. } if shown == key) && !(own && target == "pixels");
+            let mask = match layer {
+                RasterLayerNode::Pixel { mask: Some(mask), .. } | RasterLayerNode::Group { mask: Some(mask), .. } => mask.image_key.as_deref() == Some(key) && !(own && target == "mask"),
+                _ => false,
+            };
+            pixels || mask
+        })
+}
+
+/// 🧱️ `width × height` RGBA8 samples at `(x, y)` of a row-major `pixels` buffer `image_width` pixels wide; `None` when the
+/// rectangle leaves the buffer.
+pub fn rect_samples(pixels: &[u8], image_width: u32, x: u32, y: u32, width: u32, height: u32) -> Option<Vec<u8>> {
+    let row_bytes = (width as usize) * 4;
+    let mut samples = Vec::with_capacity(row_bytes * height as usize);
+    for row in 0..height as usize {
+        let at = ((y as usize + row) * image_width as usize + x as usize) * 4;
+        samples.extend_from_slice(pixels.get(at..at + row_bytes)?);
+    }
+    Some(samples)
+}
+
+/// ↩️ The region that restores the rectangle `region` writes, read from `base`'s own samples; `None` when `base` shows no
+/// image there (the layer's pointer and pool are then restored by the whole-image inverse).
+pub fn inverse_pixel_region(region: &RasterPixelRegion, base: &RasterSnapshot) -> Option<RasterPixelRegion> {
+    let target = canvas(&region.layer_id, &region.target, base).ok()?;
+    target.previous.as_ref()?;
+    let frame = target.source.frames.first()?;
+    Some(RasterPixelRegion { samples: rect_samples(&frame.rgba8, target.source.width, region.x, region.y, region.width, region.height)?, ..region.clone() })
+}
+
+/// 🔺️ The diff a repaint of `layer_id`'s `target` makes on `base`: the painted image filed under its content key, the
+/// layer (or its mask) pointed at it — at its `reshape`d extent and placement when the repaint moved the pixel grid — the
+/// replaced image released when nothing else shows it.
+pub fn painted_diff(painted: Painted, base: &RasterSnapshot, layer_id: &str, target: &str, reshape: Option<&Reshape>) -> protocol::MutationOutcome<RasterDiff> {
+    let release = painted.canvas.previous.as_deref().filter(|previous| *previous != painted.key && released(base, previous, layer_id, target)).map(str::to_string);
+    if !base.assets.contains_key(&painted.key) && base.assets.len() >= semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
+        return protocol::MutationOutcome::fatal("mutation.apply.capacity", format!("The asset pool already holds {} images.", base.assets.len()), [layer_id.to_string()]);
+    }
+    let patch = match painted.canvas.mask {
+        Some(mask) => RasterLayerPatch { mask_content: Some(RasterMaskContent { mask: Some(RasterLayerMask { image_key: Some(painted.key.clone()), ..mask }) }), ..Default::default() },
+        None => RasterLayerPatch {
+            pixel_content: Some(RasterPixelContent { image_key: Some(painted.key.clone()), width: reshape.map_or(painted.canvas.extent.0, |reshape| Some(reshape.width)), height: reshape.map_or(painted.canvas.extent.1, |reshape| Some(reshape.height)) }),
+            transform: reshape.map(|reshape| reshape.transform.clone()),
+            ..Default::default()
+        },
+    };
+    let mut entries = std::collections::BTreeMap::new();
+    entries.insert(painted.key, Some(painted.asset));
+    if let Some(release) = release {
+        entries.insert(release, None);
+    }
+    protocol::MutationOutcome::new(RasterDiff {
+        layers: Some(RasterLayersDelta { modified: vec![RasterLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }),
+        assets: Some(RasterAssetsDelta { entries }),
+        ..Default::default()
+    })
+}
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod io {
+    #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+    pub mod binary;
+    #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+    pub mod text;
+}
+//#endregion 🪢️TaxonomyMounts

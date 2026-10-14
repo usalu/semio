@@ -1,5 +1,5 @@
-use super::*;
-use crate::document::CheckStatus;
+use semio_s_artifact_norm_vdi3805_inferences::*;
+use semio_s_plugin_norm_compliance::CheckStatus;
 use std::collections::BTreeSet;
 
 #[semio_framework_async_macros::async_test]
@@ -33,7 +33,7 @@ async fn valve_min_kvs_worked_example_dn50() {
     if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
         a.kvs_m3_s = 0.5 / 3600.0;
     }
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
     let report = evaluate(&doc);
     let kvs = report.checks.iter().find(|c| c.id.contains("vdi3805.2.kvs")).expect("kvs check");
     assert_eq!(kvs.status, CheckStatus::Fail);
@@ -55,7 +55,7 @@ async fn remedy_law_applicable_writes_improve_or_pass() {
                 if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
                     a.kvs_m3_s = remedy.required.value;
                 }
-                crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+                semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
                 let next = evaluate(&doc);
                 let again = next.checks.iter().find(|c| c.id == fail.id);
                 assert!(again.is_none_or(|c| c.status == CheckStatus::Pass || c.utilization <= 1.0), "kvs remedy on {} did not fix", fail.id);
@@ -64,7 +64,7 @@ async fn remedy_law_applicable_writes_improve_or_pass() {
                 if let SheetAttributes::ValveHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
                     a.dn = remedy.required.value as u16;
                 }
-                crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+                semio_s_artifact_norm_vdi3805_checks::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
                 let next = evaluate(&doc);
                 let again = next.checks.iter().find(|c| c.id == fail.id);
                 assert!(again.is_none_or(|c| c.status == CheckStatus::Pass || c.utilization <= 1.0), "dn remedy on {} did not fix", fail.id);
@@ -131,7 +131,6 @@ async fn evaluate_reaches_claimed_product_sheets_when_present() {
     assert!(parts.iter().any(|p| p.contains("Blatt 2")));
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn edition_profile_legacy_missing_keys_fails() {
     let mut doc = conforming_valve_dataset();
@@ -149,7 +148,7 @@ async fn edition_profile_legacy_missing_keys_fails() {
 async fn curve_monotonicity_remedy_path_is_scalar_point_y() {
     let mut doc = conforming_valve_dataset();
     let curve = doc.curves.get_mut("curve-kvs").expect("curve");
-    curve.points = vec![crate::CurvePoint { x: 0.0, y: 1.0 }, crate::CurvePoint { x: 50.0, y: 0.5 }, crate::CurvePoint { x: 100.0, y: 4.5 }];
+    curve.points = vec![semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 0.0, y: 1.0 }, semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 50.0, y: 0.5 }, semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 100.0, y: 4.5 }];
     let report = evaluate(&doc);
     let fail = report.checks.iter().find(|c| c.id.contains("curve") && c.status == CheckStatus::Fail).expect("curve fail");
     let remedy = &fail.remedies[0];
@@ -159,13 +158,13 @@ async fn curve_monotonicity_remedy_path_is_scalar_point_y() {
 
 #[semio_framework_async_macros::async_test]
 async fn apply_remedy_flips_curve_monotonicity_fail_to_pass() {
-    use crate::app_surface::set_value_at_path;
+    use semio_s_plugin_norm_app_surface::set_value_at_path;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
     let mut doc = conforming_valve_dataset();
     let curve = doc.curves.get_mut("curve-kvs").expect("curve");
-    curve.points = vec![crate::CurvePoint { x: 0.0, y: 1.0 }, crate::CurvePoint { x: 50.0, y: 0.5 }, crate::CurvePoint { x: 100.0, y: 4.5 }];
+    curve.points = vec![semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 0.0, y: 1.0 }, semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 50.0, y: 0.5 }, semio_s_artifact_norm_vdi3805_model::CurvePoint { x: 100.0, y: 4.5 }];
     let before = evaluate(&doc);
     let fail = before.checks.iter().find(|c| c.id.contains("curve") && c.status == CheckStatus::Fail).expect("curve fail");
     let remedy = &fail.remedies[0];
@@ -193,10 +192,9 @@ async fn operative_sheets_without_product_are_not_applicable() {
     assert_eq!(part_17::check(&doc).status, CheckStatus::NotApplicable);
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn every_emitted_path_resolves() {
-    use crate::app_surface::{get_value_at_path, parse_path};
+    use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path};
     use semio_framework_value::ToValue;
 
     for doc in [conforming_valve_dataset(), nonconforming_valve_dataset()] {
@@ -218,8 +216,8 @@ async fn every_emitted_path_resolves() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_has_en_de_field_meta() {
-    use crate::app_surface::NormFieldMeta;
-    use crate::editor::field_meta::vdi3805_field_meta;
+    use semio_s_plugin_norm_app_surface::NormFieldMeta;
+    use semio_s_artifact_norm_vdi3805_editor::field_meta::vdi3805_field_meta;
     use semio_framework_value::DslValue;
 use semio_framework_value::ToValue;
 
@@ -265,7 +263,7 @@ use semio_framework_value::ToValue;
 
 #[semio_framework_async_macros::async_test]
 async fn sync_fail_remedy_targets_writable_attribute_leaf() {
-    use crate::app_surface::set_value_at_path;
+    use semio_s_plugin_norm_app_surface::set_value_at_path;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
@@ -309,7 +307,7 @@ async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
     // Native 210 implies pump fields so attributes_from_records yields PumpHeating.
     doc.catalog.products[0].records = vec![
-        crate::NativeRecord {
+        semio_s_artifact_norm_vdi3805_model::NativeRecord {
             family: RecordFamilyId(RecordFamilyId::R210.to_string()),
             fields: vec![
                 "210".into(),
@@ -333,7 +331,6 @@ async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
     assert!(report.checks.iter().any(|c| c.id.contains("vdi3805.5.") && (c.id.contains(".q.") || c.id.contains(".eta.") || c.id.contains(".sync."))));
     assert!(report.checks.iter().any(|c| c.id.contains(".sync.") && c.status == CheckStatus::Fail), "Generic config vs pump 210 must sync-fail");
 }
-
 
 fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit: &mut dyn FnMut(&str, &semio_framework_value::DslValue)) {
     match value {
@@ -394,7 +391,7 @@ fn is_reference_or_entity_id_leaf(path: &str) -> bool {
         || leaf.ends_with("Ref")
 }
 
-fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
+fn report_signature(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
     report
         .checks
         .iter()
@@ -428,7 +425,7 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
         }
         semio_framework_value::DslValue::Bool(b) => Some(semio_framework_value::DslValue::Bool(!*b)),
         semio_framework_value::DslValue::String(s) => {
-            use crate::editor::field_meta::vdi3805_field_meta;
+            use semio_s_artifact_norm_vdi3805_editor::field_meta::vdi3805_field_meta;
             if is_reference_or_entity_id_leaf(path) {
                 return Some(semio_framework_value::DslValue::String("__dangling__".into()));
             }
@@ -467,7 +464,7 @@ use semio_framework_value::ToValue;
         for (path, leaf) in leaves {
             let Some(next) = perturb_dsl_leaf(&path, &leaf) else { continue };
             let mut tree = semio_framework_value::ToValue::to_value(&base);
-            if crate::app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
+            if semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
                 inert.push(format!("{label}:{path} (set failed)"));
                 continue;
             }
@@ -505,11 +502,11 @@ async fn assessed_blatt_examples_decode_and_evaluate() {
 
 #[semio_framework_async_macros::async_test]
 async fn facet_parity_accessories_components_generic_product_id() {
-    let snapshot_graphql = include_str!("../../../📸️snapshot/🔗️.graphql");
-    let root_graphql = include_str!("../../../🔗️.graphql");
-    let diff_graphql = include_str!("../../../🔺️diff/🔗️.graphql");
-    let snapshot_json = include_str!("../../../📸️snapshot/🔣️.json");
-    let root_json = include_str!("../../../🔣️.json");
+    let snapshot_graphql = semio_s_artifact_norm_vdi3805_model::SNAPSHOT_LEAVES.graphql;
+    let root_graphql = semio_s_artifact_norm_vdi3805_schema::vdi3805_artifact_schema_descriptor().artifact.graphql;
+    let diff_graphql = semio_s_artifact_norm_vdi3805_diff::DIFF_LEAVES.graphql;
+    let snapshot_json = semio_s_artifact_norm_vdi3805_model::SNAPSHOT_LEAVES.json_schema;
+    let root_json = semio_s_artifact_norm_vdi3805_schema::vdi3805_artifact_schema_descriptor().artifact.json_schema;
     for (label, text) in [
         ("snapshot.graphql", snapshot_graphql),
         ("root.graphql", root_graphql),
@@ -582,7 +579,7 @@ async fn dangling_accessory_and_component_ids_fail_with_one_of_existing_product_
 
 #[test]
 fn check_sources_contain_no_fingerprint_gaming_patterns() {
-    let inf = include_str!("../../🦀️.rs");
+    let inf = semio_s_artifact_norm_vdi3805_inferences::vdi3805_artifact_inference_descriptor().inference.rust;
     let hits: Vec<_> = ["param_metric", "pos_metric", "point_metric + unit_metric", "field_fingerprint", "(k.len() as f64) * 1e-", "let _ = actual_records", "let _ = curve_id", "let _ = document"]
         .into_iter()
         .filter(|p| inf.contains(p))

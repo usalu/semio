@@ -1,5 +1,5 @@
 //! 🗑️ Original typed Store effects prepare their custody before the Session publishes Discard.
-use crate::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 use super::*;
 use std::mem::{ManuallyDrop,size_of_val};
 use semio_framework_value::{ErasedSnapshotRetirement,FactoryAuthority,ArtifactOwnedValueRetirementFactory,retirement::{RetireOwned,controlled::ControlledRetirement}};

@@ -83,7 +83,7 @@ async fn every_example_switch_publishes_its_own_graph_without_leaking_the_previo
 /// (`📓️runtime-verification-2026-09-09.md` boot #11).
 #[semio_framework_async_macros::async_test]
 async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_the_eval_chain() {
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
@@ -199,7 +199,7 @@ fn run_windows(run: &context::PreviewRunReceipt) -> Vec<String> {
 }
 
 fn preview_eval_text(app: &mut crate::editor_domain::editor_laws::context::Generation3dApp, preview_view: &semio_framework_plugin::ViewModel) -> Option<String> {
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
     app.window_transient_snapshot(preview_view).ok().flatten().and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().and_then(|state| state.preview_eval_text.clone()))
 }
 

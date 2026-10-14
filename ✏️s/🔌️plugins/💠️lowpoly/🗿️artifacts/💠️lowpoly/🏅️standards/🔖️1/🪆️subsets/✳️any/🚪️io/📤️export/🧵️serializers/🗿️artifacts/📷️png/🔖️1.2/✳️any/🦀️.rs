@@ -3,8 +3,8 @@
 //! view leaf. Lowpoly is y-up and the view is z-up, so `(x, y, z)` is drawn as `(x, -z, y)`.
 //!
 //! 🔖 `IoFidelity::Lossy`: a picture, not the model — there is no png import.
-use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::mesh_geometry::world_parts;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use {semio_s_artifact_stdio_semio_mesh_export::encode_mesh, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};

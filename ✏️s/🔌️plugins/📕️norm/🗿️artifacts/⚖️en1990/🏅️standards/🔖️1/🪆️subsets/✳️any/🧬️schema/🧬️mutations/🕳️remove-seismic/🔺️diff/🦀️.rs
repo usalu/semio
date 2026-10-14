@@ -1,8 +1,8 @@
 //! 🕳️ `remove-seismic` diff — removes the row at the index; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemoveSeismic;
-use crate::diff::{En1990Diff, En1990SeismicDelta};
-use crate::En1990Snapshot;
+use crate::remove_seismic::RemoveSeismic;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990SeismicDelta};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &RemoveSeismic, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

@@ -1,8 +1,8 @@
 //! 📚️ EN 1991 play app panel — examples plus Table 6.1 / snow-zone / wind q_p reference tables.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::document::{AnnexChoice, ClauseId};
-use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_3, part_1_4};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
+use semio_s_artifact_norm_en1991_checks::{part_1_1, part_1_3, part_1_4};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -15,7 +15,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1991.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -121,7 +121,7 @@ fn wind_qp_na_b3() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

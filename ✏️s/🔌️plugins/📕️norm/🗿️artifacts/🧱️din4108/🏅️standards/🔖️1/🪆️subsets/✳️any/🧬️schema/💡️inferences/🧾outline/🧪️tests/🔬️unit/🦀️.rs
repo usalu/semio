@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::schema::inferences::outline::Din4108Outline;
-use crate::Din4108Snapshot;
+use crate::outline::Din4108Outline;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn outline_counts_envelope_entities() {

@@ -1,9 +1,9 @@
 //! Inverse for `change-fire-duration`.
-use super::ChangeFireDuration;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeFireDuration, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_fire_duration::ChangeFireDuration;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeFireDuration, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_fire_duration::ChangeFireDuration> {
     Ok((|| {
-    vec![En1991Mutation::ChangeFireDuration(ChangeFireDuration { new_fire_duration: base.fire_duration })]
+    vec![Op::from(ChangeFireDuration { new_fire_duration: base.fire_duration })]
 
     })())
 }

@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-mutations-vortex"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle3d vortex mutations"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d-diff = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[features]
+testing = ["dep:serde", "semio-s-artifact-puzzle-3d-model/testing"]
+
+[dev-dependencies]
+serde = { workspace = true }

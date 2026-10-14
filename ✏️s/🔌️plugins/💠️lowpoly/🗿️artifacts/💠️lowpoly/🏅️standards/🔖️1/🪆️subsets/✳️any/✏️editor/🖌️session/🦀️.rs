@@ -9,12 +9,12 @@
 //! documented deviation).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::view::try_build_doc;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::schema::composite_layer_pixels;
-use crate::{LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
+use crate::try_build_doc;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::composite_layer_pixels;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyObjectPatch, snapshot::LowpolySelection, snapshot::LowpolySnapshot, snapshot::LOWPOLY_PAINT_TEXTURE_SIZE};
 use machine::Command;
 use protocol::Mutation;
 use semio_framework_plugin::Emit;
@@ -65,9 +65,9 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
 /// 📍️ The absolute positions of the vertices a kernel edit moved and the absolute content of the Normal attribute channels it
 /// rewrote, when `after` is `before` with only vertex positions, Normal channels (and the normals the central applier recomputes)
 /// changed — the topology, every other attribute, the materials and the textures all equal; `None` otherwise.
-fn repositioned_vertices(before: &crate::LowpolyMeshState, after: &crate::LowpolyMeshState) -> Option<(Vec<crate::diff::LowpolyVertexPosition>, Vec<crate::LowpolyMeshAttribute>)> {
+fn repositioned_vertices(before: &semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState, after: &semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState) -> Option<(Vec<semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyVertexPosition>, Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute>)> {
     let same_channels = before.attributes.len() == after.attributes.len()
-        && before.attributes.iter().zip(&after.attributes).all(|(held, moved)| held == moved || (held.name == moved.name && held.domain == moved.domain && held.semantic == moved.semantic && held.interpolation == moved.interpolation && held.semantic == crate::LowpolyMeshAttributeSemantic::Normal));
+        && before.attributes.iter().zip(&after.attributes).all(|(held, moved)| held == moved || (held.name == moved.name && held.domain == moved.domain && held.semantic == moved.semantic && held.interpolation == moved.interpolation && held.semantic == semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeSemantic::Normal));
     let same_topology = before.vertices.len() == after.vertices.len()
         && before.vertices.iter().zip(&after.vertices).all(|(held, moved)| held.halfedge == moved.halfedge)
         && before.halfedges == after.halfedges
@@ -76,47 +76,47 @@ fn repositioned_vertices(before: &crate::LowpolyMeshState, after: &crate::Lowpol
         && same_channels
         && before.materials == after.materials
         && before.textures == after.textures;
-    let rows: Vec<crate::diff::LowpolyVertexPosition> = before
+    let rows: Vec<semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyVertexPosition> = before
         .vertices
         .iter()
         .zip(&after.vertices)
         .enumerate()
         .filter(|(_, (held, moved))| held.position.map(f32::to_bits) != moved.position.map(f32::to_bits))
-        .map(|(vertex, (_, moved))| crate::diff::LowpolyVertexPosition { vertex: vertex as u32, position: moved.position })
+        .map(|(vertex, (_, moved))| semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyVertexPosition { vertex: vertex as u32, position: moved.position })
         .collect();
-    let channels: Vec<crate::LowpolyMeshAttribute> = before.attributes.iter().zip(&after.attributes).filter(|(held, moved)| held != moved).map(|(_, moved)| moved.clone()).collect();
+    let channels: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute> = before.attributes.iter().zip(&after.attributes).filter(|(held, moved)| held != moved).map(|(_, moved)| moved.clone()).collect();
     (same_topology && !(rows.is_empty() && channels.is_empty())).then_some((rows, channels))
 }
 
 /// 🎯️ Maps an `object_patch_diff` result (plus the edit's before/after `mesh_workspace` content) to the one semantic
 /// `LowpolyMutation` it represents — a kernel mesh edit changes exactly one facet per commit (name XOR smooth-shading
 /// XOR one transform axis XOR mesh), so the first populated field wins.
-pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: Option<&crate::LowpolyMeshState>, after_mesh_workspace: Option<&crate::LowpolyMeshState>) -> Option<LowpolyMutation> {
+pub fn semantic_mutation_for_patch(id: String, before_transform: &semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: Option<&semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>, after_mesh_workspace: Option<&semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
-        return Some(LowpolyMutation::RenameObject(crate::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
+        return Some(LowpolyMutation::RenameObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject { id, new_name: new_name.clone() }));
     }
     if let Some(new_smooth_shading) = patch.smooth_shading {
-        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
+        return Some(LowpolyMutation::ChangeObjectSmoothShading(semio_s_artifact_lowpoly_lowpoly_mut_objects::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
     }
     if let Some(position) = patch.position.filter(|position| *position != before_transform.position) {
-        return Some(LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id, new_position: position }));
+        return Some(LowpolyMutation::MoveObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::move_object::MoveObject { id, new_position: position }));
     }
     if let Some(rotation) = patch.rotation.filter(|rotation| *rotation != before_transform.rotation) {
-        return Some(LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id, new_rotation: rotation }));
+        return Some(LowpolyMutation::RotateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rotate_object::RotateObject { id, new_rotation: rotation }));
     }
     if let Some(scale) = patch.scale.filter(|scale| *scale != before_transform.scale) {
-        return Some(LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id, new_scale: scale }));
+        return Some(LowpolyMutation::ScaleObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::scale_object::ScaleObject { id, new_scale: scale }));
     }
     if before_mesh_workspace != after_mesh_workspace {
         if after_mesh_workspace.is_none() {
-            return Some(LowpolyMutation::DeleteMesh(crate::mutations::delete_mesh::DeleteMesh { id }));
+            return Some(LowpolyMutation::DeleteMesh(semio_s_artifact_lowpoly_lowpoly_mut_geometry::delete_mesh::DeleteMesh { id }));
         }
         let state=after_mesh_workspace.expect("populated typed mesh state");
         if let Some((positions, channels)) = before_mesh_workspace.and_then(|before| repositioned_vertices(before, state)) {
-            return Some(LowpolyMutation::SetVertexPositions(crate::mutations::set_vertex_positions::SetVertexPositions { object_id: id, positions, channels }));
+            return Some(LowpolyMutation::SetVertexPositions(semio_s_artifact_lowpoly_lowpoly_mut_geometry::set_vertex_positions::SetVertexPositions { object_id: id, positions, channels }));
         }
-        let handle = crate::managed_mesh_child_handle(&id, state);
-        return Some(LowpolyMutation::CreateMesh(crate::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: String::new(), mesh_state:Some(state.clone()) }));
+        let handle = semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle(&id, state);
+        return Some(LowpolyMutation::CreateMesh(semio_s_artifact_lowpoly_lowpoly_mut_geometry::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: String::new(), mesh_state:Some(state.clone()) }));
     }
     None
 }
@@ -147,7 +147,7 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
 /// 🔊️ Every refusal is an `Err` naming its cause — a session that cannot be built, an edit the kernel rejects, an
 /// active object the projection does not carry — so a command that does nothing says why. An edit that changes
 /// nothing is still `Ok(Emit::default())`.
-pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Result<Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation>, String> {
+pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Result<Emit<LowpolyMutation, semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfigMutation>, String> {
     let mut doc = try_build_doc(projection, config, ctx).map_err(|error| format!("lowpoly mesh edit: compute session refused: {error}"))?;
     let object_id = doc.active_object_id().to_string();
     let before = projection.objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} is not in the document"))?;
@@ -182,7 +182,7 @@ pub struct PaintTextureLut {
 /// transient carries, passed through untouched so a republished cache never drops an open stroke.
 pub struct LowpolyScratch {
     texture_cache: PaintTextureLut,
-    mesh_workspace: HashMap<String, crate::LowpolyMeshState>,
+    mesh_workspace: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
     current_selection: LowpolySelection,
     selection_object_id: Option<String>,
     selected_object_ids: Vec<String>,
@@ -191,7 +191,7 @@ pub struct LowpolyScratch {
 
 impl Default for LowpolyScratch {
     fn default() -> Self {
-        Self { texture_cache: PaintTextureLut::default(), mesh_workspace: crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace(), current_selection: LowpolySelection::default(), selection_object_id: None, selected_object_ids: Vec::new(), paint: BTreeMap::new() }
+        Self { texture_cache: PaintTextureLut::default(), mesh_workspace: semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace(), current_selection: LowpolySelection::default(), selection_object_id: None, selected_object_ids: Vec::new(), paint: BTreeMap::new() }
     }
 }
 
@@ -222,17 +222,17 @@ impl LowpolyScratch {
     pub fn selection_object_id(&self) -> Option<&str> {
         self.selection_object_id.as_deref()
     }
-    pub fn mesh_workspace(&self, object_id: &str) -> Option<&crate::LowpolyMeshState> {
+    pub fn mesh_workspace(&self, object_id: &str) -> Option<&semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState> {
         self.mesh_workspace.get(object_id)
     }
 
     /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s input.
-    pub fn mesh_workspace_map(&self) -> HashMap<String, crate::LowpolyMeshState> {
+    pub fn mesh_workspace_map(&self) -> HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState> {
         self.mesh_workspace.clone()
     }
 
     /// 🕸️ Replaces the whole session-local mesh-workspace cache after a successful edit.
-    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, crate::LowpolyMeshState>) {
+    pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>) {
         self.mesh_workspace = map;
     }
 
@@ -290,18 +290,18 @@ pub struct LowpolyPaintGesture {
 //#region 🔖️Transient
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub(crate) struct LowpolyTransientState {
-    mesh_workspace: Arc<BTreeMap<String, crate::LowpolyMeshState>>,
+    mesh_workspace: Arc<BTreeMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>>,
     paint: BTreeMap<String, LowpolyPaintGesture>,
 }
 
 impl Default for LowpolyTransientState {
     fn default() -> Self {
-        Self { mesh_workspace: Arc::new(crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace().into_iter().collect()), paint: BTreeMap::new() }
+        Self { mesh_workspace: Arc::new(semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace().into_iter().collect()), paint: BTreeMap::new() }
     }
 }
 
 struct LowpolyTransientStateRef<'a> {
-    mesh_workspace: &'a BTreeMap<String, crate::LowpolyMeshState>,
+    mesh_workspace: &'a BTreeMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
     paint: &'a BTreeMap<String, LowpolyPaintGesture>,
 }
 
@@ -316,7 +316,7 @@ impl<'a> semio_framework_value::ToValue for LowpolyTransientStateRef<'a> {
 #[derive(value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct LowpolyTransientStateWire {
-    mesh_workspace: BTreeMap<String, crate::LowpolyMeshState>,
+    mesh_workspace: BTreeMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
     #[value(default)]
     paint: BTreeMap<String, LowpolyPaintGesture>,
 }
@@ -338,8 +338,8 @@ impl LowpolyTransient {
     #[cfg(test)]
     pub(crate) fn with_test_workspace_bytes(bytes: usize) -> Self {
         let mut state = LowpolyTransientState::default();
-        let mut padding=crate::LowpolyMeshState::empty();
-        padding.materials.push(crate::LowpolyMeshMaterial{name:"padding".into(),value:semio_framework_value::DslValue::String("x".repeat(bytes))});
+        let mut padding=semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState::empty();
+        padding.materials.push(semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshMaterial{name:"padding".into(),value:semio_framework_value::DslValue::String("x".repeat(bytes))});
         Arc::make_mut(&mut state.mesh_workspace).insert("test-padding".into(),padding);
         Self { state: Arc::new(state) }
     }
@@ -542,7 +542,7 @@ pub fn lowpoly_tool_once(verb: &str, authoring_seed: &str, leaves: Vec<LowpolyMu
 
 /// 📤️ The emission of one one-shot gesture: its committed transaction as ONE edit stamped with the ref — plain when the
 /// view carries no admission (a render or test view without command authority) — or nothing.
-pub fn lowpoly_tool_emit(verb: &str, doc: &semio_framework_plugin::ArtifactView<'_, LowpolySnapshot>, leaves: Vec<LowpolyMutation>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+pub fn lowpoly_tool_emit(verb: &str, doc: &semio_framework_plugin::ArtifactView<'_, LowpolySnapshot>, leaves: Vec<LowpolyMutation>) -> Emit<LowpolyMutation, semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfigMutation> {
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
     match lowpoly_tool_once(verb, seed, leaves) {
         Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),

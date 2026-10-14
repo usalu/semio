@@ -1,7 +1,9 @@
-use super::*;
-use crate::editor::generation2d::commands::add_generation;
-use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, render as render_body, render_with_view, snapshot_read, Generation2dApp};
-use crate::editor::generation2d::Generation2dCommand;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+use semio_s_artifact_procedural_2d_mode_generate::windows::generations::*;
+use semio_s_artifact_procedural_2d_editor_commands::add_generation;
+use crate::app_fixture::{app, close, dispatch, render as render_body, render_with_view, snapshot_read, Generation2dApp};
+use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 /// 🗂️ The generate-mode window renders BOTH of its sections against an untouched document: the

@@ -1,12 +1,12 @@
 //! ↩️ `change-heated-volume-m3` inverse.
 
-use crate::mutations::change_heated_volume_m3::ChangeHeatedVolumeM3;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_heated_volume_m3::ChangeHeatedVolumeM3;
 
-pub fn inverse(_payload: &ChangeHeatedVolumeM3, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeHeatedVolumeM3, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_heated_volume_m3::ChangeHeatedVolumeM3> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeHeatedVolumeM3(ChangeHeatedVolumeM3 { new_heated_volume_m3: base.heated_volume_m3 })]
+    vec![Op::from(ChangeHeatedVolumeM3 { new_heated_volume_m3: base.heated_volume_m3 })]
 
     })())
 }

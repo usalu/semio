@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-editor",
+ "description": "Procedural generation3d editor: the play app, its artifact editor implementation, the retained command, flow-eval, document-io, contributions and store-preparation routes",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+ "moves": [
+  {
+   "from": "editor::generation3d",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith"
+}

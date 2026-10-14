@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::text::mutations::*;
-use crate::standards::v1::subsets::any::schema::snapshot::compliant_demo;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1997_model::compliant_demo;
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_annex() {

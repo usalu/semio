@@ -1,6 +1,6 @@
 //! Serialize stdio.xlsx to stdio.binary (encode ZIP bytes).
 
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
 //#region Codec

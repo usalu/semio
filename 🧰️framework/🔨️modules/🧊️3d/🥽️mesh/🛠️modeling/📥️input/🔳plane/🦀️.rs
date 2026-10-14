@@ -1,9 +1,9 @@
 //! 🔳️ Constructs the actual plane topology with independently admitted original backing and entity writes.
 use super::super::*;
-use protocol::value::{ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 /// 🧵️ Retains every original plane vertex, halfedge and face through refusal or cancellation.
-#[derive(protocol::value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct MeshPlaneProduction{width:f32,depth:f32,vertices:Vec<MeshVertex>,halfedges:Vec<HalfEdge>,faces:Vec<MeshFace>,phase:u8,ordinal:usize}
 impl MeshPlaneProduction{
     /// 🌱️ Admits dimensions inline before retaining any geometry backing.
@@ -12,7 +12,7 @@ impl MeshPlaneProduction{
     pub fn progress(&self)->f32{(self.phase as f32+self.ordinal as f32/4.0)/7.0}
     pub fn terminal_is_empty(&self)->bool{self.phase==7&&self.vertices.capacity()==0&&self.halfedges.capacity()==0&&self.faces.capacity()==0}
     /// 🎟️ Quotes the selected original backing, entity or whole mesh donation.
-    pub fn demand(&self)->protocol::value::RetirementDemand{let(copy,capacity)=match self.phase{0=>(0,4*size_of::<MeshVertex>()),1=>(0,4*size_of::<HalfEdge>()),2=>(0,size_of::<MeshFace>()),3=>(size_of::<MeshVertex>(),0),4=>(size_of::<HalfEdge>(),0),5=>(size_of::<MeshFace>(),0),_=>(0,0)};protocol::value::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()}}
+    pub fn demand(&self)->semio_framework_value::RetirementDemand{let(copy,capacity)=match self.phase{0=>(0,4*size_of::<MeshVertex>()),1=>(0,4*size_of::<HalfEdge>()),2=>(0,size_of::<MeshFace>()),3=>(size_of::<MeshVertex>(),0),4=>(size_of::<HalfEdge>(),0),5=>(size_of::<MeshFace>(),0),_=>(0,0)};semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()}}
     /// 🪜️ Advances one backing reserve, one actual entity, or one mesh header donation.
     pub fn step(&mut self,grant:RetainedCloneGrant)->Result<(Option<HalfedgeMesh>,RetainedCloneProgress),ValueError>{
         if self.phase==7||grant.maximum_items==0{return Ok((None,Default::default()))}let demand=self.demand();if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Ok((None,Default::default()))}

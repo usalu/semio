@@ -2,7 +2,7 @@
 
 use semio_framework_diagnostic::Diagnostic;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::{FromValue as _,ToValue as _,ValueError,ValueRefusalKind};
 
 
 use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};

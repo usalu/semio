@@ -6,7 +6,7 @@ use crate::plugin_app::PluginApp;
 use crate::artifact_registration::ArtifactContribution;
 use crate::artifact_declaration::{ArtifactDeclaration, FlowExtensionDeclaration, HostMediaHandlerDeclaration};
 use crate::artifact_identity::ArtifactDefinitionRegistry;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::artifact_inference::ArtifactInferenceServiceMetadata;
 use crate::plugin_program::{Plugin, PluginCommandHandler};
 use semio_framework::{
@@ -92,7 +92,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::plugin_app::NoPluginApp> 
     /// 📖️ One non-capturing `(artifact_schema, kinds)` provider per `.document_app_mutation_roster::
     /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
     /// the process-wide owner mutation roster by `try_build`.
-    owner_mutation_rosters: Vec<crate::store_lifecycle::OwnerMutationRoster>,
+    owner_mutation_rosters: Vec<semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster>,
     app_defs: Vec<(App, crate::plugin_program::AppFactory<PA>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>>,
     document_app_ids: Vec<String>,

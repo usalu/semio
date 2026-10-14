@@ -2,10 +2,10 @@
 //! value every host's bucket click reads (`🎮️commands/🪣️fill-region`); the command handler lives in
 //! `🎮️commands/🌊️set-fill-tolerance`.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::modes::edit::windows::composite::options::brush::foreground_measure;
-use crate::editor::raster::raster_measure_action;
-use crate::editor::raster::terminology::RasterPlayLabels;
+use crate::config::RasterConfig;
+use crate::modes::edit::windows::composite::options::brush::foreground_measure;
+use crate::raster_measure_action;
+use crate::terminology::RasterPlayLabels;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

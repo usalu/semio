@@ -1,10 +1,10 @@
 //! ↩️ `restore-entities` -- writes entities to exact absolute values (or removes them) at exact positions in one atomic step -- the undo verb of every conformance repair, which a class cannot express through its own filtered verbs.
 
-use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
-use crate::standards::v_ap214::subsets::base::io::ladder;
-use crate::standards::v_ap214::subsets::base::io::ladder::EntityRestore;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::EntityRestore;
 use crate::standards::v_ap214::subsets::cc3::schema::mutations::{rejected, restored, StepCc3Mutation};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 //#region 🔖️Payload
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]

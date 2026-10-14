@@ -5,10 +5,12 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{edit_rules};
-#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell};
-#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
-use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell};
+#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
@@ -128,12 +130,12 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(snapshot)
+        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(snapshot)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(bytes)
+        semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx(bytes)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
@@ -150,7 +152,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     }
 
     fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
-        crate::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_agent_target_revision(doc.snapshot, args)
+        semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_agent_target_revision(doc.snapshot, args)
     }
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
@@ -206,7 +208,7 @@ impl ArtifactEditor for XlsxTransitionalEditor {
 
 fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxTransitionalEditorCommand) -> Result<Emit<XlsxMutation>, Fault> {
     let XlsxTransitionalEditorCommand::SetCell { sheet_name, row, column, revision, value } = command;
-    crate::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx.transitional")
+    semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx.transitional")
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxTransitionalEditor {

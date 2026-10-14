@@ -1,9 +1,18 @@
-use super::*;
-use crate::editor::fem2d::commands::{add_area_load, add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, fem2d_empty_app};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_nodal_load::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::{add_area_load, add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
+use crate::context::{dispatch, fem2d_app, fem2d_empty_app};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 
-async fn with_dead_case(app: &mut crate::editor::fem2d::unit_tests::context::Fem2dApp) {
+async fn with_dead_case(app: &mut crate::context::Fem2dApp) {
     dispatch(app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Dead".into(), self_weight: false })).await;
 }
 

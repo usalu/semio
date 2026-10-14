@@ -1,4 +1,5 @@
 use super::*;
+use ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer as _;
 use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::retained_clone::RetainedCloneStep;
@@ -145,10 +146,10 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
     let seed = SemioValueSnapshot::default();
-    let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed, None);
+    let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(subset_dialect("value"));
     let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::os_store::document_store_owners::MemberStoreOwner<SemioValueMutation>>::member_store_owners(semio_s_artifact_stdio_contract::testing::unbounded_grant()).map(|(owners, _)| owners).unwrap_or_else(|_| panic!("value store owners admit")));
+    let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, ::semio_s_artifact_stdio_contract::SemioMemberStoreProducer::<SemioValueSnapshot,SemioValueMutation>::new().member_store_owners(semio_s_artifact_stdio_contract::testing::unbounded_grant()).map(|(owners, _)| owners).unwrap_or_else(|_| panic!("value store owners admit")));
 
     let first = store.snapshot_read().expect("first snapshot read lease");
     let second = store.snapshot_read().expect("second snapshot read lease");
@@ -214,10 +215,10 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
     let document = case["document"].as_str().unwrap();
     let seed = SemioValueSnapshot::default();
-    let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed, None);
+    let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, document, seed, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(subset_dialect("value"));
     let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.facts().share_snapshot(), envelope.vcs.genesis.facts().digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::os_store::document_store_owners::MemberStoreOwner<SemioValueMutation>>::member_store_owners(semio_s_artifact_stdio_contract::testing::unbounded_grant()).map(|(owners, _)| owners).unwrap_or_else(|_| panic!("value store owners admit")));
+    let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, ::semio_s_artifact_stdio_contract::SemioMemberStoreProducer::<SemioValueSnapshot,SemioValueMutation>::new().member_store_owners(semio_s_artifact_stdio_contract::testing::unbounded_grant()).map(|(owners, _)| owners).unwrap_or_else(|_| panic!("value store owners admit")));
     for value in case["values"].as_array().unwrap() {
         semio_framework_plugin::with_authoring_identity!(|identity| store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: value.as_str().unwrap().into() } }), dsl::os_store::store_schema::HistoryLane::Document, &mut identity).await).expect("real registered value operation");
     }

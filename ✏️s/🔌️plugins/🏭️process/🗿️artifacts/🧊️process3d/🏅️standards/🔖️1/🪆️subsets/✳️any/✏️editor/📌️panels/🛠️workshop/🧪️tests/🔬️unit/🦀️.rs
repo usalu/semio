@@ -1,8 +1,27 @@
-use super::*;
-use crate::editor::process3d::commands::workshop::{add_workshop_machine, remove_workshop_machine};
-use crate::editor::process3d::panels::catalogue;
-use crate::editor::process3d::unit_tests::context;
-use crate::editor::process3d::Process3dCommand;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_process_process3d_panels::workshop::*;
+use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
+use semio_s_artifact_process_process3d_kit::installed_catalogs;
+use semio_s_artifact_process_process3d_kit::process3d_action;
+use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
+use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
+use semio_framework_plugin::row_action;
+use semio_framework_plugin::row_target;
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::RowActionPlacement;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_s_artifact_process_process3d_commands::{workshop::add_workshop_machine, workshop::remove_workshop_machine};
+use semio_s_artifact_process_process3d_panels::catalogue;
+use semio_s_artifact_process_process3d_editor::Process3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_a_workshop_panel_tab_to_this_body_key() {
@@ -62,10 +81,10 @@ async fn catalogue_reflects_workshop_after_machine_removal() {
 /// `installed_catalogs` deduped them the Werkstatt showed nine sections instead of five.
 #[semio_framework_async_macros::async_test]
 async fn the_real_extension_pack_renders_each_catalog_section_once() {
-    use crate::editor::process3d::commands::contribution::set_contributions;
+    use semio_s_artifact_process_process3d_commands::contribution::set_contributions;
     let mut app = context::app();
-    let pack = crate::editor::process3d::unit_tests::demonstrator_contributions_pack();
-    let distilled = crate::editor::process3d::installable_contributions(&pack, crate::editor::process3d::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    let pack = crate::context::demonstrator_contributions_pack();
+    let distilled = semio_s_artifact_process_process3d_kit::installable_contributions(&pack, semio_s_artifact_process_process3d_kit::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
     context::dispatch(&mut app, Process3dCommand::SetContributions(set_contributions::SetContributions { json: distilled }));
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
     let marker = "\"key\":\"process3d-play-workshop.catalog.";
@@ -88,14 +107,14 @@ async fn the_real_extension_pack_renders_each_catalog_section_once() {
 /// tool back off the document" path is covered end to end by the `🎮️commands/🪜️step` tests).
 #[semio_framework_async_macros::async_test]
 async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
-    use crate::schema::inferences::measure_for_capability;
-    use crate::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};
+    use semio_s_artifact_process_process3d_inferences::measure_for_capability;
+    use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MeasureRecipe, snapshot::ProcessMeasure, snapshot::WorkingSolid};
     let capability = Capability {
         id: "crosscut".into(),
         label: "Crosscut".into(),
         icon_id: "scissors".into(),
         recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-        parameters: vec![crate::CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 }, crate::CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
+        parameters: vec![semio_s_artifact_process_process3d_model::snapshot::CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 }, semio_s_artifact_process_process3d_model::snapshot::CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 }],
         rules: Vec::new(),
     };
     let measure = measure_for_capability(&capability, None);
@@ -127,9 +146,9 @@ fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
 }
 
 /// 🌾️ A workshop an order of magnitude past any viewport: 60 installed machines.
-fn oversized_workshop() -> crate::Process3dSnapshot {
-    use crate::{Workshop, WorkshopMachine};
-    let mut fixture = crate::empty_process3d_snapshot();
+fn oversized_workshop() -> semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot {
+    use semio_s_artifact_process_process3d_model::{snapshot::Workshop, snapshot::WorkshopMachine};
+    let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     fixture.workshop = Workshop {
         machines: (0..60)
             .map(|index| WorkshopMachine { id: format!("machine-{index:03}"), label: format!("Machine {index}"), icon_id: "scissors".into(), catalog_id: None, capabilities: Vec::new() })
@@ -139,8 +158,8 @@ fn oversized_workshop() -> crate::Process3dSnapshot {
 }
 
 /// 🚚️ Reads through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`.
-fn project(fixture: &crate::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+fn project(fixture: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(fixture, "[]", labels, windows).expect("workshop renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("workshop projection")
 }

@@ -3,7 +3,7 @@
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisCodec};
+use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use crate::os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
@@ -1004,13 +1004,13 @@ where
 /// their persisted `inverse`/`mutation_meta`) and `transitions` — from a decoded `HistoryLog`, then
 /// folds it into every derived position and fact ([`project_envelope_history`]). The initial
 /// snapshot comes from `pack` via `ArtifactPack::decode_pack`, matching `parse_document_pack`'s contract.
-pub async fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_document_spr<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack + 'static,
+    P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
-    parse_decoded_document_spr(pack, log).await
+    parse_decoded_document_spr(pack, log, producer).await
 }
 
 /// 🧊️ The validation replay's final projection is a SCRATCH value nothing below reads — the
@@ -1020,12 +1020,12 @@ where
 /// with a layout entry died in `OrderedMap<WidgetLayout>::drop`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
 /// `?` above as well, which the explicit call below never covered.
-pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack + 'static,
+    P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
-    let initial_snapshot = P::decode_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+    let initial_snapshot = producer.decode_genesis_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
     async fn decode_op<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payload: &crate::os_spr::OpPayload) -> Result<Mutation, TextError> {
         match (&payload.binary, &payload.text) {
@@ -1138,7 +1138,6 @@ where
 /// binary op log (`print_document_spr`), which carries real inverse/binary payloads/cursor.
 pub async fn print_document_pack<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: ArtifactPack,
     Mutation: OpText + OpBinary,
 {
     let pack = envelope.vcs.genesis.pack().to_vec();
@@ -1150,9 +1149,9 @@ where
 /// 📥️ Parses the explicit `.ops` records against an already-obtained initial snapshot.
 /// Text persistence is intentionally strict: it requires inverse operations, one authoritative
 /// metadata record per forward operation, durable messages/conflicts, and exactly one cursor.
-pub(crate) async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub(crate) async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactGenesisCodec + 'static,
+    P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let mut schema = String::new();
@@ -1352,7 +1351,7 @@ where
     let envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema,
         id,
-        vcs: ArtifactVcs { genesis: AdmittedArtifactGenesis::born(initial_snapshot).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))?, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
+        vcs: ArtifactVcs { genesis: AdmittedArtifactGenesis::born(initial_snapshot,producer).map_err(|error| TextError::new(error.kind, error.message, TextSpan::at(1, 1)))?, edits, changes: ArtifactHistoryLedger::new(), checkpoints: ArtifactHistoryLedger::new(), alternatives: ArtifactHistoryLedger::new() },
         backbone: None,
         active_alternative_id: None,
         cursor: None,
@@ -1417,22 +1416,22 @@ where
 
 /// 📥️ Parses the textual VCS document back into an envelope plus its live (fully-replayed)
 /// snapshot — obtains the initial snapshot via `P::parse_dsl` then shares `replay_ops`.
-pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_document_text<P, Mutation>(dsl: &str, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactDsl + ArtifactGenesisCodec + 'static,
+    P: Clone + ArtifactDsl + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let initial_snapshot = P::parse_dsl(dsl)?;
-    replay_ops(initial_snapshot, ops).await
+    replay_ops(initial_snapshot, ops, producer).await
 }
 
 /// 📥️ spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
 /// pair (see `ArtifactPackFiles`'s doc) — this is a thin forward onto `parse_document_spr`, which
 /// recovers real `inverse`/`mutation_meta`/`cursor` instead of recomputing them via replay.
-pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_document_pack<P, Mutation>(pack: &[u8], spr: &[u8], producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
-    P: Clone + ArtifactPack + 'static,
+    P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
-    parse_document_spr(pack, spr).await
+    parse_document_spr(pack, spr, producer).await
 }

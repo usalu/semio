@@ -1,9 +1,8 @@
 //! 🏷️ Generation2d mutation — `ChangeSchema`: sets the fixture's document-level schema field to a
 //! new value.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ChangeSchema
@@ -17,19 +16,22 @@ pub struct ChangeSchema {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_schema(schema: String) -> Generation2dMutation {
-    Generation2dMutation::ChangeSchema(ChangeSchema { schema })
+pub fn change_schema<Op: From<ChangeSchema>>(schema: String) -> Op {
+    Op::from(ChangeSchema { schema })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeSchema {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ChangeSchema
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<ChangeSchema>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "hostSnapshot", kind: "change-schema", record: "ChangedSchema" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_schema::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_schema::inverse::inverse(self, base)?
     
     })
 }

@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// 🧮️ Entity counts of a shape. `edges` counts every edge; `degenerate_edges` of them collapse to a point
 /// (a sphere's poles) and carry no length, so the Euler characteristic ignores them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct TopologyCounts {
     pub solids: usize,
     pub shells: usize,
@@ -29,7 +29,7 @@ pub struct TopologyCounts {
 
 /// 💧 How watertight a shape is, worst problem first.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum Watertightness {
     NonManifold,
@@ -41,7 +41,7 @@ pub enum Watertightness {
 /// 🧷 Edge-use census of a shape's faces. Every non-degenerate edge of a watertight shape is used by exactly
 /// two coedges that run along it in opposite senses as seen from outside.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ManifoldReport {
     pub closed: bool,
     pub manifold: bool,

@@ -2,21 +2,28 @@
 //! [`crate::model::Model`] field for field with [`ModelPatch`]: every collection is keyed rows (removed, inserted,
 //! modified), every record a field patch. Only the central applier turns a diff into a snapshot.
 
-use crate::EnergyModelSnapshot;
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+
+use crate::diff_patch::Unchanged;
+use crate::snapshot::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 #[path = "🧱️entities/🦀️.rs"]
 pub mod entities;
-#[path = "🩹️patch/🦀️.rs"]
-pub mod patch;
-#[path = "✂️splice/🦀️.rs"]
-pub mod splice;
 
 pub use entities::*;
-pub use patch::{Field, FieldPatch, ListEdit, OptionChange, Row, RowPatch, Rows, Slot, Slots, Unchanged};
-pub use splice::Splice;
 
 //#region 🔖️LinkSlotDelta
 /// 🔗️ A link slot's delta. The field is `Option<EnergyLinkSlotDelta>`, and ABSENT means the slot did
@@ -121,3 +128,22 @@ impl DiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🧬️Facet
+/// 🧬️ The diff facet's five handcrafted language leaves, owned here beside the diff they describe; the artifact schema
+/// descriptor (`semio_s_artifact_energy_model_schema`) assembles them.
+pub const FACET: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves {
+    rust: include_str!("🦀️.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: include_str!("🔗️.graphql"),
+    json_schema: include_str!("🔣️.json"),
+    proto: include_str!("🛰️.proto"),
+};
+//#endregion 🧬️Facet
+
+//#region 🚪️Representations
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;
+//#endregion 🚪️Representations

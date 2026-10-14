@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,14 +26,14 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
-use crate::artifact_schema::mutations::Din18599Mutation;
-#[cfg(test)] use crate::artifact_schema::mutations::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_element_u, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class, replace_elements, replace_zones, update_climate, update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
-use crate::{
-    Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
-};
+use crate::binary::mutations::*;
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+#[cfg(test)] use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
+#[cfg(test)] use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, replace_elements, replace_zones, update_climate};
+#[cfg(test)] use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
+use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 #[cfg(test)] use protocol::OpText;
-use crate::standards::v1::subsets::any::io::text::mutations::{Din18599MutationDsl,din18599_mutation_to_dsl,din18599_mutation_from_dsl};
+use crate::text::mutations::{Din18599MutationDsl, din18599_mutation_to_dsl, din18599_mutation_from_dsl};
 
 impl OpBinary for Din18599MutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -5,8 +5,11 @@
 
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
-use crate::schema::mutations::{edit_rules, set_shape_text};
-use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_shape_text;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -49,7 +52,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(PptxStrictEdit
 
 //#region 🔖️Helpers
 fn build_set_page_mutation(snapshot: &PptxSnapshot, page: usize, item: usize, revision: &str, text: &str) -> Result<Option<PptxMutation>, Fault> {
-    let slides = crate::schema::mutations::xml_address::pptx_slides(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.projection"), error))?;
+    let slides = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.projection"), error))?;
     let slide = slides.get(page).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-slide"), format!("PPTX slide {page} no longer exists")))?;
     let shape = slide.shapes.get(item).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-shape"), format!("PPTX shape {page}/{item} no longer exists")))?;
     let current =
@@ -97,12 +100,12 @@ impl ArtifactEditor for PptxStrictEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(snapshot)
+        semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(snapshot)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes)
+        semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
@@ -131,7 +134,7 @@ impl ArtifactEditor for PptxStrictEditor {
     }
 
     fn initial_snapshot() -> PptxSnapshot {
-        crate::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
+        semio_s_artifact_stdio_pptx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
     }
 
     /// ✏️ Replaces the addressed text-bearing shape after its optimistic revision matches.

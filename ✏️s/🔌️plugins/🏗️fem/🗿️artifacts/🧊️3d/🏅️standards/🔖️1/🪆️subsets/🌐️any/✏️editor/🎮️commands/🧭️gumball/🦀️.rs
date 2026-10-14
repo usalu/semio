@@ -6,26 +6,29 @@
 //! leaf as one edit or `phase: "abort"` (with a `reason`) drops it with zero trace — plus the per-window handle flags
 //! the Transform utility's options rail toggles.
 
-use crate::editor::fem3d::interaction::gumball::{fem3d_gumball_tick, Fem3dGumballMotion, Fem3dGumballTool};
-use crate::editor::fem3d::modes::edit::windows::{model as model_window, results as results_window};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_gumball_tick;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballTool;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results as results_window;
 use crate::editor::fem3d::Fem3dPlayApp;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d::editor::fem2d::transient::fem_gumball_drive;
-use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransientMutation;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 /// 🪟️ The dirty scope every transform dispatch declares: both world bodies (the model shows the moved
 /// geometry, the results window re-solves it) and the panels that read the moved entity.
 pub fn fem3d_transform_dirty_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: vec![model_window::FEM3D_BODY_MODEL.into(), results_window::FEM3D_BODY_RESULTS.into()],
-        panel_bodies: vec![crate::editor::fem3d::panels::artifact::BODY_KEY.into(), crate::editor::fem3d::panels::inspection::BODY_KEY.into()],
+        panel_bodies: vec![semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact::BODY_KEY.into(), semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::inspection::BODY_KEY.into()],
         utilities: false,
         tools: false,
         engagements: false,
@@ -182,7 +185,4 @@ pub mod set_transform_gumball_flag {
 //#endregion 🔖️SetTransformGumballFlag
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

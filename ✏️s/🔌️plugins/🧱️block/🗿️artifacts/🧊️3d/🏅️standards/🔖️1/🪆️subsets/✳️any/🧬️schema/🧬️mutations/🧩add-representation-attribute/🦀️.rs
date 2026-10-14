@@ -1,9 +1,8 @@
 //! 🧩 Block3d mutation — `AddRepresentationAttribute`: a member of a representation's nested `attributes`.
 
-use crate::BlockAttribute;
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🧩 `add-representation-attribute` payload.
@@ -22,24 +21,24 @@ pub struct AddRepresentationAttribute {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_representation_attribute(id: String, attribute: BlockAttribute) -> Block3dMutation {
-    Block3dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: None })
+pub fn add_representation_attribute<Op: From<crate::add_representation_attribute::AddRepresentationAttribute>>(id: String, attribute: BlockAttribute) -> Op {
+    Op::from(AddRepresentationAttribute { id, attribute, index: None })
 }
 
 /// 📍️ Builder — like [`add_representation_attribute`] but inserts the row at `index`.
-pub fn add_representation_attribute_at(id: String, attribute: BlockAttribute, index: u32) -> Block3dMutation {
-    Block3dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: Some(index) })
+pub fn add_representation_attribute_at<Op: From<crate::add_representation_attribute::AddRepresentationAttribute>>(id: String, attribute: BlockAttribute, index: u32) -> Op {
+    Op::from(AddRepresentationAttribute { id, attribute, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddRepresentationAttribute {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for AddRepresentationAttribute where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::remove_representation_attribute::RemoveRepresentationAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-attribute", kind: "add-representation-attribute", record: "AddedRepresentationAttribute" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::add_representation_attribute::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_representation_attribute::inverse::inverse(self, base)?
     
     })
 }
@@ -51,3 +50,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddRepresentat
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

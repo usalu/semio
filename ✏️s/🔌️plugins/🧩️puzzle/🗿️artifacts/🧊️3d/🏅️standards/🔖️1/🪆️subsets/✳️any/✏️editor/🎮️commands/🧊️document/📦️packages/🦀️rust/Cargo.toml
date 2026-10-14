@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-commands-document"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle3d document commands"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-session = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-snapshot = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-transform = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-object = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-reference = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
+semio-s-plugin-puzzle-retained = { workspace = true }

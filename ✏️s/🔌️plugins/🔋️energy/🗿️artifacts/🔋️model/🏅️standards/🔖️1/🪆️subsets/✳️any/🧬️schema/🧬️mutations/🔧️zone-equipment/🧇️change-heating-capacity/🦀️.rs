@@ -1,8 +1,7 @@
 //! 🧇️ Energy model mutation — `ChangeZoneEquipmentHeatingCapacity`: Sets the heating output this equipment can deliver, in watts.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneEquipmentHeatingCapacity {
     pub new_heating_capacity_w: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_equipment_heating_capacity(id: crate::model::EntityId, new_heating_capacity_w: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneEquipmentHeatingCapacity(ChangeZoneEquipmentHeatingCapacity { id, new_heating_capacity_w })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_equipment_heating_capacity<Op: From<ChangeZoneEquipmentHeatingCapacity>>(id: crate::model::EntityId, new_heating_capacity_w: f64) -> Op {
+    ChangeZoneEquipmentHeatingCapacity { id, new_heating_capacity_w }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneEquipmentHeatingCapacity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneEquipmentHeatingCapacity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneEquipmentHeatingCapacity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-equipment", kind: "change-zone-equipment-heating-capacity", record: "ChangedZoneEquipmentHeatingCapacity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

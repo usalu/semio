@@ -1,55 +1,63 @@
 //! 🧬️ Din4108 mutations — envelope subject vocabulary.
 
-use crate::{Din4108Diff, Din4108Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
-pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din4108_mutation, inverse_din4108_mutation};
+pub use crate::edit_rules::EDIT_RULES;
 
-use super::change_climate_zone;
-use super::change_usage;
-use super::change_t_int_c;
-use super::change_rh_int;
-use super::change_airtightness_n50;
-use super::change_has_mechanical_ventilation;
-use super::change_bb2_details_conform;
-use super::insert_zone;
-use super::remove_zone;
-use super::change_zone_floor_area;
-use super::change_zone_heaviness;
-use super::change_zone_night_ventilation;
-use super::insert_zone_window;
-use super::remove_zone_window;
-use super::change_zone_window_area;
-use super::change_zone_window_g_value;
-use super::change_zone_window_shading_fc;
-use super::insert_element;
-use super::remove_element;
-use super::change_element_area;
-use super::change_element_adjacent;
-use super::change_element_kind;
-use super::insert_layer;
-use super::remove_layer;
-use super::reorder_layers;
-use super::change_layer_thickness;
-use super::change_layer_lambda;
-use super::change_layer_mu;
-use super::change_layer_material_id;
-use super::insert_thermal_bridge;
-use super::remove_thermal_bridge;
-use super::change_thermal_bridge_psi;
-use super::change_thermal_bridge_length;
-use super::change_element_orientation_deg;
-use super::change_element_inclination_deg;
-use super::change_element_delta_u_g;
-use super::change_element_delta_u_f;
-use super::change_element_delta_u_r;
-use super::change_thermal_bridge_bb2_type;
-use super::change_zone_window_orientation;
-use super::change_zone_window_inclination_deg;
-use super::change_layer_application_type;
-use super::change_layer_compressive_class;
+use semio_s_artifact_norm_din4108_mut_building::change_climate_zone;
+use semio_s_artifact_norm_din4108_mut_building::change_usage;
+use semio_s_artifact_norm_din4108_mut_building::change_t_int_c;
+use semio_s_artifact_norm_din4108_mut_building::change_rh_int;
+use semio_s_artifact_norm_din4108_mut_building::change_airtightness_n50;
+use semio_s_artifact_norm_din4108_mut_building::change_has_mechanical_ventilation;
+use semio_s_artifact_norm_din4108_mut_building::change_bb2_details_conform;
+use semio_s_artifact_norm_din4108_mut_zones::insert_zone;
+use semio_s_artifact_norm_din4108_mut_zones::remove_zone;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_floor_area;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_heaviness;
+use semio_s_artifact_norm_din4108_mut_zones::change_zone_night_ventilation;
+use semio_s_artifact_norm_din4108_mut_windows::insert_zone_window;
+use semio_s_artifact_norm_din4108_mut_windows::remove_zone_window;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_area;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_g_value;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_shading_fc;
+use semio_s_artifact_norm_din4108_mut_elements::insert_element;
+use semio_s_artifact_norm_din4108_mut_elements::remove_element;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_area;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_adjacent;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_kind;
+use semio_s_artifact_norm_din4108_mut_layers::insert_layer;
+use semio_s_artifact_norm_din4108_mut_layers::remove_layer;
+use semio_s_artifact_norm_din4108_mut_layers::reorder_layers;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_thickness;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_lambda;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_mu;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_material_id;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::insert_thermal_bridge;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::remove_thermal_bridge;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_psi;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_length;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_orientation_deg;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_inclination_deg;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_g;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_f;
+use semio_s_artifact_norm_din4108_mut_elements::change_element_delta_u_r;
+use semio_s_artifact_norm_din4108_mut_thermal_bridge::change_thermal_bridge_bb2_type;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_orientation;
+use semio_s_artifact_norm_din4108_mut_windows::change_zone_window_inclination_deg;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_application_type;
+use semio_s_artifact_norm_din4108_mut_layers::change_layer_compressive_class;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -151,16 +159,28 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_din4108_mutation(base: &semio_s_artifact_norm_din4108_model::Din4108Snapshot, mutation: &crate::Din4108Mutation) -> Result<(semio_s_artifact_norm_din4108_model::Din4108Snapshot, Vec<String>), String> {
+    let raised = <crate::Din4108Mutation as protocol::Mutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_din4108_mutation(mutation: &crate::Din4108Mutation, base: &semio_s_artifact_norm_din4108_model::Din4108Snapshot) -> Result<Vec<crate::Din4108Mutation>, semio_framework_value::ValueError> {
+    <crate::Din4108Mutation as protocol::Mutation<semio_s_artifact_norm_din4108_model::Din4108Snapshot>>::inverse(mutation, base)
+}
+}
+pub use crate::mutation_bridge::*;

@@ -1,8 +1,7 @@
 //! 🕶️ Energy model mutation — `ChangeDaylightZoneGlareLimit`: Sets the maximum discomfort glare index the control tolerates.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeDaylightZoneGlareLimit {
     pub new_glare_limit: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_daylight_zone_glare_limit(id: crate::model::EntityId, new_glare_limit: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeDaylightZoneGlareLimit(ChangeDaylightZoneGlareLimit { id, new_glare_limit })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_daylight_zone_glare_limit<Op: From<ChangeDaylightZoneGlareLimit>>(id: crate::model::EntityId, new_glare_limit: f64) -> Op {
+    ChangeDaylightZoneGlareLimit { id, new_glare_limit }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeDaylightZoneGlareLimit {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeDaylightZoneGlareLimit
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeDaylightZoneGlareLimit>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "daylight-zone", kind: "change-daylight-zone-glare-limit", record: "ChangedDaylightZoneGlareLimit" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

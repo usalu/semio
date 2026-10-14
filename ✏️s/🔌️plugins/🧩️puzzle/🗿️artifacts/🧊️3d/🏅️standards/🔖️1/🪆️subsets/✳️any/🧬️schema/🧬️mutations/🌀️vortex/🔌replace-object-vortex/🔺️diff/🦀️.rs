@@ -1,9 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceObjectVortex` — patches the presentation fields of one vortex inside
 //! the owner object. An absent object or an absent vortex is `mutation.target-missing`; a replacement that
 //! keeps every field is the `mutation.no-op` warning. A replacement keeps the addressed vortex's id.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVortexPatch, Puzzle3dVorticesDelta};
-use protocol::list_delta::RowPatch;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectsDelta, Puzzle3dVortexPatch, Puzzle3dVorticesDelta};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ReplaceObjectVortex, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

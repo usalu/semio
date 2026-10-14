@@ -1,9 +1,9 @@
 //! Inverse for `change-coast-or-island`.
-use super::ChangeCoastOrIsland;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeCoastOrIsland, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_coast_or_island::ChangeCoastOrIsland;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeCoastOrIsland, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_coast_or_island::ChangeCoastOrIsland> {
     Ok((|| {
-    vec![En1991Mutation::ChangeCoastOrIsland(ChangeCoastOrIsland { new_coast_or_island: base.coast_or_island })]
+    vec![Op::from(ChangeCoastOrIsland { new_coast_or_island: base.coast_or_island })]
 
     })())
 }

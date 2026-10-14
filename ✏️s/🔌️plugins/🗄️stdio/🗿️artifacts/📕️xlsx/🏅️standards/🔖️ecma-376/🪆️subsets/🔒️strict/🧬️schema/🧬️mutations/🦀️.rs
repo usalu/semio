@@ -21,9 +21,15 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{insert_xml_part_diff, remove_xml_part_diff, retarget_attribute_values_diff, retype_xml_part_diff, root_attribute_diff, root_edits_diff, xml_part_positions};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::insert_xml_part_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::remove_xml_part_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::retarget_attribute_values_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::retype_xml_part_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 #[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;

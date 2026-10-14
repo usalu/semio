@@ -292,7 +292,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                     continue;
                 }
                 if !forgiving {
-                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated block comment (no closing marker)", TextSpan::at(start_line, start_col)));
+                    return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated block comment (no closing marker)", TextSpan::at(start_line, start_col)));
                 }
                 // forgiving: fall through — the open marker's own chars lex as ordinary tokens.
             }
@@ -327,7 +327,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                             if forgiving {
                                 break;
                             }
-                            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                            return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
                         }
                         buf.push(cj);
                         byte_offset += cj.len_utf8() as u32;
@@ -349,7 +349,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                             if forgiving {
                                 break;
                             }
-                            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                            return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
                         }
                         if cj == '\\' {
                             match decode_backslash_unit(&chars, j) {
@@ -368,7 +368,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                                     j += 1;
                                 }
                                 None => {
-                                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown backslash escape in string literal", TextSpan::at(start_line, start_col)));
+                                    return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unknown backslash escape in string literal", TextSpan::at(start_line, start_col)));
                                 }
                             }
                             continue;
@@ -400,7 +400,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                             if forgiving {
                                 break;
                             }
-                            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
+                            return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated string literal (newline before closing quote)", TextSpan::at(start_line, start_col)));
                         }
                         buf.push(cj);
                         byte_offset += cj.len_utf8() as u32;
@@ -411,7 +411,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             }
             i = j;
             if !closed && !forgiving {
-                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated string literal", TextSpan::at(start_line, start_col)));
+                return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated string literal", TextSpan::at(start_line, start_col)));
             }
             push!(if closed { TokenKind::Text } else { TokenKind::Error }, start_line, start_col, start_byte, buf);
             continue;
@@ -469,7 +469,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                 continue;
             }
             if !forgiving {
-                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unterminated fenced block (no closing '```' line)", TextSpan::at(start_line, start_col)));
+                return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated fenced block (no closing '```' line)", TextSpan::at(start_line, start_col)));
             }
             // forgiving mode: fall through to "unknown character" for the opening backtick, then
             // the lexer naturally re-tries from the next character on its next loop iteration.
@@ -677,7 +677,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
         byte_offset += c.len_utf8() as u32;
         column += 1;
         if !forgiving {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unexpected character '{c}'"), TextSpan::at(start_line, start_col)));
+            return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, format!("unexpected character '{c}'"), TextSpan::at(start_line, start_col)));
         }
         push!(TokenKind::Error, start_line, start_col, start_byte, c.to_string());
     }

@@ -1,10 +1,13 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::standards::v1::subsets::any::io::binary::mutations::{process3d_protocol_error, PROCESS3D_MUTATION_BINARY_FORMAT};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::process3d_protocol_error, standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MUTATION_BINARY_FORMAT};
 use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
 use semio_framework_plugin::ArtifactOwnedDisposer as _;
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Process3dPublicationLease {
     operation: u64,
@@ -248,7 +251,7 @@ impl Process3dStoreInitializationAuthority {
                 return Process3dTurn::Yield;
             }
             Process3dStoreInitializationPhase::ValidateEnvelope => {
-                let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == crate::PROCESS_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= PROCESS3D_OWNER_BYTES);
+                let valid = self.envelope.as_ref().is_some_and(|envelope| envelope.schema == semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA && !envelope.id.is_empty() && envelope.id.len() <= PROCESS3D_OWNER_BYTES);
                 self.phase = if valid { Process3dStoreInitializationPhase::ValidateEdit { index: 0 } } else { Process3dStoreInitializationPhase::RetireFault };
                 if !valid {
                     self.fault = Some(process3d_fault_detail(b"process3d-store.initializer-envelope-invalid"));
@@ -662,11 +665,11 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
     }
 }
 
-pub(crate) const PROCESS3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+
 
 /// 🎟️ Funds one synchronous fixture turn from exactly the demand its own owner quoted.
 #[cfg(test)]
-pub(crate) fn process3d_demand_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+pub fn process3d_demand_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
@@ -676,7 +679,7 @@ enum Process3dReleased {
     String(String),
     Machine(WorkshopMachine),
     Capabilities(Vec<Capability>),
-    Child(store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>),
+    Child(store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>),
     Timeline(Process3dTimelineOwner),
     Snapshot(Process3dSnapshot),
     Json(semio_framework_pack_json::JsonWriteCursor<semio_framework_value::DslValue>),
@@ -709,7 +712,7 @@ pub(crate) fn process3d_mutation_value_factory() -> std::sync::Arc<dyn store::Ar
     std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Process3dMutation>::default())
 }
 
-pub(crate) const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
+
 
 const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
@@ -979,7 +982,7 @@ impl Process3dSnapshotCopyCursor {
                 }
                 machines.clear();
                 *self.candidate = Some(Process3dSnapshot {
-                    workshop: crate::Workshop { machines },
+                    workshop: semio_s_artifact_process_process3d_model::snapshot::Workshop { machines },
                     stock_id: process3d_copy_string(&source.stock_id)?,
                     stock_label: process3d_copy_string(&source.stock_label)?,
                     stock_pose: process3d_copy_pose(&source.stock_pose),
@@ -1083,8 +1086,8 @@ fn process3d_fault_detail(code: &[u8]) -> Vec<u8> {
 #[derive(semio_framework_value::RetireOwned)]
 struct Process3dTimelineOwner {
     steps: Vec<ProcessStep>,
-    tools: Vec<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>,
-    flow: Option<store::os_store::artifact_child::ArtifactChild<crate::SemioFlowSnapshot>>,
+    tools: Vec<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>,
+    flow: Option<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot>>,
     phase: u8,
 }
 
@@ -1206,11 +1209,11 @@ impl Process3dTimelineCursor {
                 }
             }
             Process3dTimelinePhase::Allocate => {
-                let extent = self.length.checked_mul(size_of::<ProcessStep>() + size_of::<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>()).ok_or("process3d-store.timeline-allocation-overflow")?;
+                let extent = self.length.checked_mul(size_of::<ProcessStep>() + size_of::<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>()).ok_or("process3d-store.timeline-allocation-overflow")?;
                 if extent > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
                 self.payload.steps = Vec::with_capacity(self.length);
                 self.payload.tools = Vec::with_capacity(self.length);
-                if self.payload.steps.capacity().saturating_mul(size_of::<ProcessStep>()) + self.payload.tools.capacity().saturating_mul(size_of::<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>()) > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
+                if self.payload.steps.capacity().saturating_mul(size_of::<ProcessStep>()) + self.payload.tools.capacity().saturating_mul(size_of::<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>()) > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
                 self.phase = Process3dTimelinePhase::Copy(0);
             }
             Process3dTimelinePhase::Copy(index) => {
@@ -1238,7 +1241,7 @@ impl Process3dTimelineCursor {
             Process3dTimelinePhase::Tools(index) => {
                 let Some(step) = self.payload.steps.get(index) else {
                     self.hash.update(b"{\"schema\":");
-                    self.hash.update(semio_framework_pack_json::to_json_string(&crate::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.to_string()).as_bytes());
+                    self.hash.update(semio_framework_pack_json::to_json_string(&semio_s_artifact_stdio_semio_flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.to_string()).as_bytes());
                     self.hash.update(b",\"nodes\":[");
                     self.phase = Process3dTimelinePhase::Nodes { index: 0, tool: 0 };
                     return Ok(false);
@@ -1250,7 +1253,7 @@ impl Process3dTimelineCursor {
                         self.phase = Process3dTimelinePhase::Reference { index, offset: 0 };
                     }
                     Some(solid) => {
-                        self.payload.tools.push(crate::working_solid_child_handle(&format!("tool-{}", step.id), solid));
+                        self.payload.tools.push(semio_s_artifact_process_process3d_model::snapshot::working_solid_child_handle(&format!("tool-{}", step.id), solid));
                         self.phase = Process3dTimelinePhase::Tools(index + 1);
                     }
                     None => self.phase = Process3dTimelinePhase::Tools(index + 1),
@@ -1259,7 +1262,7 @@ impl Process3dTimelineCursor {
             Process3dTimelinePhase::Reference { index, offset } => {
                 let step = &self.payload.steps[index];
                 let reference_id = match &step.measure { ProcessMeasure::Cut { tool: WorkingSolid::Reference { reference_id }, .. } | ProcessMeasure::Attach { component: WorkingSolid::Reference { reference_id }, .. } => reference_id, _ => return Err("process3d-store.reference-owner") };
-                let bytes = crate::reference_solid(reference_id).map_or(reference_id.as_bytes(), |reference| reference.step.as_bytes());
+                let bytes = semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id).map_or(reference_id.as_bytes(), |reference| reference.step.as_bytes());
                 let end = offset.saturating_add(4_096).min(bytes.len());
                 self.reference_hash.as_mut().expect("retained reference hash").update(&bytes[offset..end]);
                 if end == bytes.len() {
@@ -1276,7 +1279,7 @@ impl Process3dTimelineCursor {
                     if index > 0 { self.hash.update(b","); }
                     let left = &self.payload.steps[index];
                     let right = &self.payload.steps[index + 1];
-                    let edge = crate::FlowEdge { id: format!("e-{}-{}", left.id, right.id), from: crate::PortRef { node: process3d_copy_string(&left.id)?, port: "out".into() }, to: crate::PortRef { node: process3d_copy_string(&right.id)?, port: "in".into() }, kind: "sequence".into() };
+                    let edge = semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowEdge { id: format!("e-{}-{}", left.id, right.id), from: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: process3d_copy_string(&left.id)?, port: "out".into() }, to: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: process3d_copy_string(&right.id)?, port: "in".into() }, kind: "sequence".into() };
                     self.write_json(&edge, Process3dTimelinePhase::Edges(index + 1));
                 } else {
                     self.hash.update(b"]}");
@@ -1290,7 +1293,7 @@ impl Process3dTimelineCursor {
                     if index > 0 { self.hash.update(b","); }
                     let has_tool = !matches!(step.measure, ProcessMeasure::Drill { .. });
                     let child = if has_tool { Some(self.payload.tools[tool].child_id.as_str()) } else { None };
-                    let node = crate::flow_node_from_process_step(step, index, child);
+                    let node = semio_s_artifact_process_process3d_model::snapshot::flow_node_from_process_step(step, index, child);
                     self.write_json(&node, Process3dTimelinePhase::Nodes { index: index + 1, tool: tool + usize::from(has_tool) });
                 } else {
                     self.hash.update(b"],\"edges\":[");
@@ -1840,7 +1843,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             }
             let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
             let maximum_items = process3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("process3d-envelope.snapshot-item-authority", token.start))?;
-            *self.session = Some(crate::standards::v1::subsets::any::io::binary::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
+            *self.session = Some(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::binary::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
             self.token = Some(token);
             self.state = Process3dSnapshotDecodeState::Ingest;
         }
@@ -2306,10 +2309,9 @@ impl Process3dRetainedMutationReader {
     }
 
     fn structural_step(&mut self, bytes: &[u8]) -> Result<(), protocol::ProtocolError> {
-        use crate::standards::v1::subsets::any::schema::mutations::{
-            change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
-            replace_machine_capabilities, replace_step_measure, replace_stock_solid,
-        };
+        use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
+        use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
+        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
         match self.tag {
             0 => {
                 if self.field == 0 {
@@ -2524,10 +2526,9 @@ impl Process3dRetainedMutationReader {
     }
 
     fn take_partial(&mut self) -> Option<Process3dMutation> {
-        use crate::standards::v1::subsets::any::schema::mutations::{
-            change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps,
-            replace_machine_capabilities, replace_step_measure, replace_stock_solid,
-        };
+        use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
+        use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
+        use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
         if self.string.has_partial() {
             let partial = self.string.take_partial();
             match self.tag {
@@ -3016,7 +3017,7 @@ struct Process3dSnapshotDecodeAuthority {
     token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
-    session: std::mem::ManuallyDrop<Option<crate::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession>>,
+    session: std::mem::ManuallyDrop<Option<semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession>>,
     value: std::mem::ManuallyDrop<Option<Process3dSnapshot>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
@@ -3055,7 +3056,7 @@ impl Process3dSnapshotDecodeAuthority {
         Ok(Default::default())
     }
 
-    fn session(&mut self) -> &mut crate::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession {
+    fn session(&mut self) -> &mut semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession {
         self.session.as_mut().expect("Process3d mounted pack session retained")
     }
 
@@ -3593,6 +3594,3 @@ enum Process3dRetainedStepPhase {
     Measure,
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retained-laws/🦀️.rs"]
-mod retained_laws;

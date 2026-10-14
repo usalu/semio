@@ -1,11 +1,11 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-drop`.
 
-use crate::editor::layout::commands::{add_frame, add_page};
+use crate::{add_frame, add_page};
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::layout::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use crate::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -63,13 +63,13 @@ pub struct CanvasDrop {
 }
 
 fn native_artifact_kind(kind: &str) -> Option<&'static str> {
-    crate::editor::layout::panels::catalogue::native_artifact_kind(kind)
+    crate::native_artifact_kind(kind)
 }
 
 fn place_native(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, artifact_kind: &str, x: f64, y: f64) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
-    use crate::mutations::create_frame::CreateFrame;
-    use crate::mutations::create_link::CreateLink;
-    use crate::{Frame, ImageLink};
+    use semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame;
+    use semio_s_artifact_layout_layout_mutations_content::create_link::CreateLink;
+    use semio_s_artifact_layout_layout_model::{Frame, ImageLink};
     let config = current(cfg);
     let Some(page) = doc.snapshot.pages.iter().find(|page| page.id == config.active_page_id) else { return Ok(Emit::default()) };
     let link_id = format!("link-{}", doc.snapshot.links.len() + 1);
@@ -92,7 +92,7 @@ fn place_native(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cf
     let frame = Frame::Image {
         id: frame_id.clone(),
         layer_id: layer_id.clone(),
-        bounds: crate::LayoutBounds { x, y, width: 200.0, height: 120.0, rotation: 0.0 },
+        bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x, y, width: 200.0, height: 120.0, rotation: 0.0 },
         locked: None,
         visible: None,
         link_id,
@@ -102,7 +102,7 @@ fn place_native(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cf
             LayoutMutation::CreateLink(CreateLink { link, index: None }),
             LayoutMutation::CreateFrame(CreateFrame { page_id: page.id.clone(), frame, index: Some(page.frames.len()), layer_id: Some(layer_id) }),
         ],
-        effects: vec![crate::editor::layout::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
+        effects: vec![crate::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],
         ..Default::default()
     })
 }

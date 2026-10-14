@@ -1,8 +1,10 @@
 //! ↔️ `change-page-width` — sets a page's `width` scalar.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,12 +20,12 @@ pub struct ChangePageWidth {
     pub new_width: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageWidth {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePageWidth where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_page_width::ChangePageWidth> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "page-width", kind: "change-page-width", record: "ChangedPageWidth" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_page_width(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_page_width(self, base)?
     
@@ -54,13 +56,19 @@ pub fn diff_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) 
 //#endregion ↔️ChangePageWidth
 
 //#region ↔️ChangePageWidth
-pub fn inverse_change_page_width(payload: &ChangePageWidth, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_page_width<Op: From<crate::change_page_width::ChangePageWidth>>(payload: &ChangePageWidth, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
-        Some(page) => vec![LayoutMutation::ChangePageWidth(ChangePageWidth { id: payload.id.clone(), new_width: page.width })],
+        Some(page) => vec![Op::from(ChangePageWidth { id: payload.id.clone(), new_width: page.width })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion ↔️ChangePageWidth
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/↔️widens-page-1/🦀️.rs"]
+mod tests_widens_page_1;
+//#endregion 🪢️TaxonomyMounts

@@ -1,12 +1,25 @@
 //! 🏭️ Genuine Process3d parent capability and complete persisted-state baselines.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_os_kernel as store;
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
-use crate::*;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model::snapshot::*;
+use protocol::{Identified, Patchable};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_brep::{schema::snapshot::BrepCurve, schema::snapshot::BrepEdge, schema::snapshot::BrepFace, schema::snapshot::BrepLoop, schema::snapshot::BrepLoopEdge, schema::snapshot::BrepShell, schema::snapshot::BrepShellFace, schema::snapshot::BrepSolid, schema::snapshot::BrepSolidShell, schema::snapshot::BrepSurface, schema::snapshot::BrepVertex, schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowEdge, schema::snapshot::FlowNode, schema::snapshot::FlowParam, schema::snapshot::PortRef, schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap()
 }
 fn words() -> Vec<u64> {
     laws()["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
@@ -44,7 +57,7 @@ fn full(word: u64) -> Process3dSnapshot {
     }
     let capabilities = recipes
         .into_iter()
-        .map(|recipe| crate::Capability { id: String::new(), label: literal.into(), icon_id: String::new(), recipe, parameters: vec![CapabilityParameter { id: literal.into(), label: String::new(), value: f }], rules: rules.clone() })
+        .map(|recipe| semio_s_artifact_process_process3d_model::snapshot::Capability { id: String::new(), label: literal.into(), icon_id: String::new(), recipe, parameters: vec![CapabilityParameter { id: literal.into(), label: String::new(), value: f }], rules: rules.clone() })
         .collect();
     let solids = vec![
         WorkingSolid::Box { width: f, depth: f, height: f },
@@ -176,7 +189,7 @@ fn sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_
 #[test]
 fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields() {
     use store::sqlite_snapshot::*;
-    let codec = store::bare_artifact_codec::<Process3dSnapshot, crate::Process3dMutation>(crate::PROCESS_3D_SCHEMA);
+    let codec = store::bare_artifact_codec::<Process3dSnapshot, semio_s_artifact_process_process3d_mutations::Process3dMutation>(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA);
     let capability = codec.snapshot_sqlite.expect("Process3d parent owned relational capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.process.process3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
@@ -186,11 +199,11 @@ fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = original_owners::with_decoding(|native_owner|(capability.export)(crate::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let database = original_owners::with_decoding(|native_owner|(capability.export)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             assert_eq!(database.tables.len(), 32);
             assert_eq!(database.table("process3_document").unwrap().single_row().unwrap().text(1).unwrap(), expected.stock_id);
             assert_eq!(database.table("process3_stock_payload").unwrap().single_row().unwrap().text(2).unwrap(), expected.stock_payload.id);
-            let output = original_owners::with_encoding(|native_owner|(capability.import)(crate::PROCESS_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let output = original_owners::with_encoding(|native_owner|(capability.import)(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             let actual = match output {
                 store::io_schema::IoPayload::Text(v) => Process3dSnapshot::parse_dsl(&v).unwrap(),
                 store::io_schema::IoPayload::Binary(v) => Process3dSnapshot::decode_pack(&v).unwrap(),
@@ -202,19 +215,19 @@ fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_
 #[test]
 fn sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_and_scalar_width() {
     let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const tables=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(tables.length!==Object.keys(l.tableWidths).length)throw Error('count');for(const{name}of tables)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO process3_document VALUES(1,'root','root');INSERT INTO process3_stock_payload VALUES(1,1,'payload','payload')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),bits=BigInt.asIntN(64,word),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const v=data.getFloat64(0),kind=Number.isNaN(v)?'nan':v===Infinity?'positiveInfinity':v===-Infinity?'negativeInfinity':'finite';const cells=[1n,1n,...Array(7).fill(Number.isNaN(v)?null:v),...Array.from({length:7},()=>[bits,kind]).flat()];d.query('INSERT OR REPLACE INTO process3_stock_pose VALUES('+Array(23).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT position_x_ieee754_bits,position_x_numeric_class FROM process3_stock_pose').get();if(BigInt.asUintN(64,row.position_x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.position_x_numeric_class!==kind)throw Error('word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('fk');d.close();"#;
-    let output = std::process::Command::new("bun").args(["-e", script, include_str!("../🗄️.sql"), &laws().to_string()]).output().unwrap();
+    let output = std::process::Command::new("bun").args(["-e", script, std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql").leak(), &laws().to_string()]).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
 
 use semio_framework_plugin::{__semio_dispatch_PluginApp, plugin_app_close_prelude::*, EditorApp, PluginApp, VcsArtifactApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
  /// 🏭️ The actual Process3d declared editor app.
- enum SqliteProcessApps:PluginApp{Editor(VcsArtifactApp<EditorApp<crate::editor::process3d::Process3dPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>)}
+ enum SqliteProcessApps:PluginApp{Editor(VcsArtifactApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>)}
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability() {
-    semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(crate::declaration().unwrap()).try_build().unwrap();
-    let codec = store::os_store::codec_registry::document_codec(crate::PROCESS_3D_SCHEMA).await.unwrap().unwrap();
+    semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
+    let codec = store::os_store::codec_registry::document_codec(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA).await.unwrap().unwrap();
     assert!(codec.snapshot_sqlite.is_some(), "Actual Process3d declared document has no parent SQLite capability");
 }
 #[test]
@@ -258,7 +271,7 @@ mod native_semantic_census;
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_owner() {
-    semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(crate::declaration().unwrap()).try_build().unwrap();
+    semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(semio_s_artifact_process_process3d::declaration().unwrap()).try_build().unwrap();
     let corpus = laws();
     let declared = &corpus["dialect"];
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: declared["artifactKind"].as_str().unwrap().into(), standard: declared["standard"].as_str().unwrap().into(), subset: declared["subset"].as_str().unwrap().into() };
@@ -276,7 +289,7 @@ async fn sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_
             let edited = public_cohort::edit(&file);
             let actual = public_cohort::Owned::new(async{let original_file_dialect=&dialect;let original_file_input=&edited;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<Process3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);
             let mut literal = public_cohort::Owned::new(full(word));
-            let public: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚦️public/🔣️.json")).unwrap();
+            let public: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️public/🔣️.json").leak()).unwrap();
             assert_eq!(public["retirement"], "explicit");
             literal.stock_payload.label = public["independentEdit"]["value"].as_str().unwrap().into();
             assert_full(&actual, &literal, word);

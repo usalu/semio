@@ -402,7 +402,7 @@ fn the_viewer_preview_window_offers_the_cancel_verb_the_fixture_names() {
     let window_kind_id = row["windowKindId"].as_str().expect("window kind id");
     let verb = row["cancelAction"].as_str().expect("cancel action");
     assert_eq!(row["offersCancelOnWindow"].as_bool(), Some(true), "the fixture must claim the viewer window offers it");
-    let definition = semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer();
+    let definition = semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer();
     let window = definition.window_kinds.iter().find(|window| window.id == window_kind_id).unwrap_or_else(|| panic!("{window_kind_id} is a declared window kind"));
     assert!(window.actions.iter().any(|action| action.id == verb), "{window_kind_id} must offer {verb}: {:?}", window.actions.iter().map(|action| action.id.as_str()).collect::<Vec<_>>());
 }

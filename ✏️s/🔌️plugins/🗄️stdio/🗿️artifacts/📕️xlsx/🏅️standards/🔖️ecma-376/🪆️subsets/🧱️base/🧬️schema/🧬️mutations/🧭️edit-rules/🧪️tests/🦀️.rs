@@ -1,8 +1,8 @@
 //! 🧪️ Every details-pane pointer of the XLSX editor resolves to the concrete kinds of its gesture, and replaying them reaches the edited workbook.
 
-use super::*;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules::*;
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
-use crate::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
 fn part_row(snapshot: &XlsxSnapshot, wanted: impl Fn(&PartRole) -> bool) -> usize {

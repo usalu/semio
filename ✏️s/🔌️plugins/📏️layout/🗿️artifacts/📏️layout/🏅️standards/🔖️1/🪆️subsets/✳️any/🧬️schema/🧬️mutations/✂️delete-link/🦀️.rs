@@ -1,8 +1,10 @@
 //! 🗑️ `delete-link` — removes an {@link ImageLink} by id; inverse recreates it via `create-link`.
 
-use crate::mutations::{create_link, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutLinksDelta, LayoutLinkRemoval};
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::create_link;
+use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutLinkRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,12 +19,12 @@ pub struct DeleteLink {
     pub id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
+impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteLink where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_link::CreateLink> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "link", kind: "delete-link", record: "DeletedLink" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_link(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_delete_link(self, base)?
     
@@ -47,13 +49,22 @@ pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol
 //#endregion 🗑️DeleteLink
 
 //#region 🗑️DeleteLink
-pub fn inverse_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_delete_link<Op: From<crate::create_link::CreateLink>>(payload: &DeleteLink, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.links.iter().position(|link| link.id == payload.id) {
-        Some(index) => vec![LayoutMutation::CreateLink(create_link::CreateLink { link: base.links[index].clone(), index: Some(index) })],
+        Some(index) => vec![Op::from(create_link::CreateLink { link: base.links[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🗑️DeleteLink
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+mod tests_removes_a_middle_row;
+#[cfg(test)]
+#[path = "🧪️tests/🔗️removes-link-2/🦀️.rs"]
+mod tests_removes_link_2;
+//#endregion 🪢️TaxonomyMounts

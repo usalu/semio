@@ -13,7 +13,7 @@ pub struct PathHitCursor {
     winding:i64,boundary:bool,stroke:bool,work:Vec<Piece>,
     pub maximum_depth:usize,
 }
-fn distance(point:Point,a:Point,b:Point)->f64 {
+pub fn distance(point:Point,a:Point,b:Point)->f64 {
     let (dx,dy)=(b[0]-a[0],b[1]-a[1]);
     let length=dx.hypot(dy);
     if length==0.0{return (point[0]-a[0]).hypot(point[1]-a[1]);}

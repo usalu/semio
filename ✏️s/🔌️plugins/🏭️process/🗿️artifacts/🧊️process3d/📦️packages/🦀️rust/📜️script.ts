@@ -4,8 +4,8 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runCmd, runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 /** 🛂️ Check the actual persisted Source model and its owning consumers. */
 class SourceCheckScript extends BundleScript {
   run(): void {
@@ -28,4 +28,6 @@ class ReplaySourceScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { commands: { "check-snapshot-sqlite-source": SourceCheckScript, "test-replay-source": ReplaySourceScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+const familyRoot = resolve(import.meta.dir, "../..");
+const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { packages: familyPackages, commands: { "check-snapshot-sqlite-source": SourceCheckScript, "test-replay-source": ReplaySourceScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

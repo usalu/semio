@@ -1,7 +1,7 @@
 import { selectCases } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { runPhases } from "../../⚖️parity/📋️orchestration/🟦️.ts";
-import { discoverTestCases, testLayoutBreaches, validateAllContracts } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { type BreachRecord, formatBreachReport, getRepoMetaDir } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverTestCases, testLayoutBreaches, validateAllContracts,testCacheDir } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord, formatBreachReport } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -24,11 +24,11 @@ export class ContractScript extends Script {
   async run(segments: string[]): Promise<void> {
     const cases = selectCases(this.repoRoot, segments);
     const breaches: BreachRecord[] = [...validateAllContracts(this.repoRoot, cases), ...(await testLayoutBreaches(this.repoRoot))];
-    const cachePath = join(getRepoMetaDir(this.repoRoot), "⚡️cache", "breaches", "testing.json");
-    mkdirSync(join(getRepoMetaDir(this.repoRoot), "⚡️cache", "breaches"), { recursive: true });
+    const directory=testCacheDir(this.repoRoot,"reports"),cachePath=join(directory,"testing.json");
+    mkdirSync(directory, { recursive: true });
     writeFileSync(cachePath, `${JSON.stringify(breaches, null, 2)}\n`);
     console.log(formatBreachReport(breaches, cachePath));
-    if (breaches.length > 0) process.exit(1);
+    if (breaches.length > 0) process.exitCode=1;
   }
 }
 
@@ -39,8 +39,8 @@ export class RunScript extends Script {
     const breaches = [...validateAllContracts(this.repoRoot, cases), ...(await testLayoutBreaches(this.repoRoot))];
     if (breaches.length > 0) {
       console.error(formatBreachReport(breaches, "(not cached — contract phase failed inside run)"));
-      process.exit(1);
+      process.exitCode=1;return;
     }
-    process.exit(runPhases(this.repoRoot, segments, ["oracle", "subject"]));
+    process.exitCode=runPhases(this.repoRoot, segments, ["oracle", "subject"]);
   }
 }

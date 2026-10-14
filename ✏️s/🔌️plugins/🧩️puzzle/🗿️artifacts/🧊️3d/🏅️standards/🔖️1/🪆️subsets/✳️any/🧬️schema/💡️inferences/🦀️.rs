@@ -4,8 +4,16 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📍️flat-position/`).
 
-use crate::standards::v1::subsets::any::schema::inferences::flatten::flatten_snapshot;
-use crate::Puzzle3dSnapshot;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::flatten::flatten_snapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -70,5 +78,33 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::standards::v1::subsets::any::schema::inferences::flatten::FlattenPose;
+pub use crate::flatten::FlattenPose;
 //#endregion 🔁️Re-exports
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod flat_position {
+    #[path = "📍️flat-position/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod flatten {
+    #[path = "🗜️flatten/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
+        pub mod inferences;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
+        pub mod inferences;
+    }
+}
+//#endregion 🌳️Modules

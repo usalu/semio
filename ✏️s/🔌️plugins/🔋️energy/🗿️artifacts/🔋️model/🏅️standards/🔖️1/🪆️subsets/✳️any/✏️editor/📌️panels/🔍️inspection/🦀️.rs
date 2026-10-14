@@ -17,20 +17,20 @@
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): a press previews its value and commits ONE transaction of the absolute
 //! `change-*` leaf on release. Name fields bind `Trigger::Commit` with the blur policy: one edit per rename.
 
-use crate::editor::model::interaction::{
+use crate::editor_interaction::{
     energy_entity_kind, energy_target_id, EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_CONSTRUCTION, ENERGY_GRANULARITY_FENESTRATION, ENERGY_GRANULARITY_GAS_MATERIAL, ENERGY_GRANULARITY_GLAZING_MATERIAL, ENERGY_GRANULARITY_MATERIAL,
     ENERGY_GRANULARITY_SHADING, ENERGY_GRANULARITY_SURFACE, ENERGY_GRANULARITY_THERMOSTAT, ENERGY_GRANULARITY_ZONE,
 };
-use crate::editor::model::config::EnergyModelConfig;
-use crate::editor::model::results::{result_field, ResultField};
-use crate::editor::model::{
+use crate::editor_config::EnergyModelConfig;
+use crate::editor_config::{result_field, ResultField};
+use crate::editor_commands::{
     energy_model_action, gas_kind_id, outside_boundary_kind_id, surface_class_id, surface_roughness_id, ui_label, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, GAS_KIND_IDS, OUTSIDE_BOUNDARY_KIND_IDS,
     SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_SITE_ACTION_ID,
     SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, SURFACE_CLASS_IDS, SURFACE_ROUGHNESS_IDS,
 };
-use crate::editor::model::modes::edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
+use crate::editor_edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
 use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Surface, Thermostat, Zone};
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
@@ -606,7 +606,7 @@ fn shading_rows(shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<Ui
 /// host-merged `value`, so authoring `{field: <current>}` would pin the select to the value it already
 /// has and every pick would be a no-op; an empty descriptor lets the host's `{value}` merge be the
 /// only source. The verb is declared APP-level
-/// (`crate::editor::model::window_shared_action_definitions`), so this control dispatches whichever
+/// (`semio_s_artifact_energy_model_editor_edit::window_shared_action_definitions`), so this control dispatches whichever
 /// window is active — the panel is docked beside all four.
 fn results_rows(config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let current = result_field(config);

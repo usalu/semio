@@ -14,10 +14,13 @@
 //!
 //! 🪆️ Mounted at the subset level beside `✏️editor`, exactly where generation3d mounts its twin, so the
 //! two artifacts' run modules stay one diff apart.
+#![allow(clippy::result_large_err)]
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
-use crate::standards::v1::subsets::any::schema::host_with_session;
+use semio_s_artifact_procedural_2d_model::host_with_session;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
+use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::ExtensionInvocation;
@@ -233,7 +236,36 @@ pub use tool_run::*;
 //#endregion ⏯️Run
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
+
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+}
+
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+    let nodes: Vec<NodeGraphNodeRecord> = host_snapshot
+        .nodes
+        .iter()
+        .map(|node| NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: port.id.clone(), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: port.id.clone(), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            ..Default::default()
+        })
+        .collect();
+    let edges: Vec<NodeGraphEdgeRecord> = host_snapshot
+        .edges
+        .iter()
+        .map(|edge| {
+            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
+            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
+            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+        })
+        .collect();
+    (nodes, edges)
+}

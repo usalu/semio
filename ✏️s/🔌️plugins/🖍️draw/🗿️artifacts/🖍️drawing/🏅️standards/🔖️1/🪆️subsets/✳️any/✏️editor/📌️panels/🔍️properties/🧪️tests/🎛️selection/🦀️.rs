@@ -463,7 +463,7 @@ fn inspector_actions_respect_selection_eligibility() {
         if !structure.is_empty() {
             for operation in ["alignLeft","distributeHorizontal","ungroup"] {
                 let expected=eligibility.allows(operation);
-                let actual=crate::commands::edit_selection::plan(&document,&ids,operation).is_ok();
+                let actual=semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(&document,&ids,operation).is_ok();
                 assert_eq!(actual,expected,"{}: actual planner {operation}",row["name"]);
             }
         }

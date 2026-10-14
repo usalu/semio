@@ -1,7 +1,8 @@
 //! 🔺️ `change-has-mechanical-ventilation` diff.
 
-use super::ChangeHasMechanicalVentilation;
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::change_has_mechanical_ventilation::ChangeHasMechanicalVentilation;
+use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeHasMechanicalVentilation, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.has_mechanical_ventilation == payload.new_has_mechanical_ventilation {

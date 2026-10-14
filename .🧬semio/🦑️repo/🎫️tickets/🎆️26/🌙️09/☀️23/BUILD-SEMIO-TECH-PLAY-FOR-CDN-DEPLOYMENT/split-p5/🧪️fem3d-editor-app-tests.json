@@ -1,0 +1,177 @@
+[
+ {
+  "test": "🎭️modes/✏️edit/🪟️windows/📊️results/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::modes::edit::windows::results",
+  "crate": "semio_s_artifact_fem_3d_editor_results_window"
+ },
+ {
+  "test": "🎭️modes/✏️edit/🪟️windows/🧱️model/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::modes::edit::windows::model",
+  "crate": "semio_s_artifact_fem_3d_editor_model_window"
+ },
+ {
+  "test": "🎮️commands/⏯️set-result-animation/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/⏯️set-result-animation/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::set_result_animation",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/⏱️result-animation-tick/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/⏱️result-animation-tick/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::result_animation_tick",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/⚪️add-node/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/⚪️add-node/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::add_node",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🎥️set-camera/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🎥️set-camera/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::set_camera",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/🎯️focus-entity/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🎯️focus-entity/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::focus_entity",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/👁️set-result-display/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/👁️set-result-display/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::set_result_display",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/📍️add-nodal-load/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/📍️add-nodal-load/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::add_nodal_load",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/📚️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/📚️set-active-example/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::set_active_example",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🗂️remove-selection/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🗂️remove-selection/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::remove_selection",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🧭️gumball/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::gumball",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ },
+ {
+  "test": "🎮️commands/🧮️set-analysis-settings/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🧮️set-analysis-settings/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::set_analysis_settings",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-combination/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-combination/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_combination",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-element/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-element/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_element",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-load-case/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-load-case/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_load_case",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-load/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-load/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_load",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-material/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-material/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_material",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-node/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-node/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_node",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-section/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-section/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_section",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-solid/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-solid/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_solid",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "🎮️commands/🩹️patch-support/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🎮️commands/🩹️patch-support/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::commands::patch_support",
+  "crate": "semio_s_artifact_fem_3d_editor_commands"
+ },
+ {
+  "test": "📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "📌️panels/🔍️inspection/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::panels::inspection",
+  "crate": "semio_s_artifact_fem_3d_editor_panels"
+ },
+ {
+  "test": "📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "📌️panels/🗿️artifact/🦀️.rs",
+  "module": "tests",
+  "modpath": "editor::fem3d::panels::artifact",
+  "crate": "semio_s_artifact_fem_3d_editor_panels"
+ },
+ {
+  "test": "🧪️tests/🔬️unit/🦀️.rs",
+  "owner": "🦀️.rs",
+  "module": "unit_tests",
+  "modpath": "editor::fem3d",
+  "crate": "semio_s_artifact_fem_3d_editor"
+ }
+]

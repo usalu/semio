@@ -6,9 +6,9 @@
 //! longer exist — that vocabulary is banned outright, not preserved — so the document-mutation
 //! half now asserts the NEW operations' `OpText`/`OpBinary` round-trip instead of pinning byte
 //! literals for a wire shape this ticket deliberately changed.
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
+use crate::io::binary::mutations::*;
 use crate as puzzle_3d;
-use crate::standards::v1::subsets::any::schema::mutations::{change_object_anchor,connect_vortices,create_object,delete_object};
+use {semio_s_artifact_puzzle_3d_mutations_object::change_object_anchor::mutation::change_object_anchor, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::delete_object};
 
 use protocol::OpText;
 

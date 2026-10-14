@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_pack_json::Value;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewCamera;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
 fn default_document() -> Generation3dSnapshot {
     semio_s_artifact_procedural_3d_model::default_snapshot()
@@ -16,7 +16,7 @@ fn evaluated_preview_fixture(graph: &FlowHostSnapshot) -> (String, FlowEvalSessi
 
 #[test]
 fn definition_declares_a_world3d_surface_so_picking_can_resolve() {
-    let def = semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::definition();
+    let def = semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::definition();
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
     assert_eq!(def.surface_kind, SurfaceKind::World3d);
@@ -128,7 +128,7 @@ fn render_uses_the_configured_preview_camera() {
 #[test]
 fn the_window_chrome_binds_show_mode_lod_and_sun_to_viewer_actions() {
     let config = Generation3dViewConfig::default();
-    let measures = preview_window_measures(&config, false, semio_s_artifact_procedural_generation3d::viewer::generation3d::generation3d_view_action);
+    let measures = preview_window_measures(&config, false, semio_s_artifact_procedural_3d_viewer::generation3d_view_action);
     assert_eq!(measures.len(), 3, "show mode, LOD and the sun group");
     let rendered = format!("{measures:?}");
     for action in ["setShowMode", "setLodMode", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"] {

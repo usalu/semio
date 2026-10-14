@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "performanceCriterion",
+  "id": "performance-criterion-a",
+  "newName": "Renamed Performance Criterion A"
+}

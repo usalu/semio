@@ -171,7 +171,7 @@ fn a_cancelled_job_retires_and_a_finished_job_cannot_run_again() {
 #[test]
 fn unwrapping_refuses_an_authored_uv_channel_and_an_empty_mesh() {
     let mut mesh = HalfedgeMesh::plane_prim(1.0, 1.0).unwrap();
-    use protocol::value::DslValue;
+    use semio_framework_value::DslValue;
     let values = vec![DslValue::Array(vec![DslValue::float(0.0), DslValue::float(0.0)]); 4];
     mesh.set_attribute("uv".into(), MeshAttribute { domain: MeshAttributeDomain::Vertex, semantic: MeshAttributeSemantic::Uv, interpolation: MeshAttributeInterpolation::Linear, values, indices: None }).unwrap();
     assert!(matches!(mesh.unwrap_uv_job(), Err(MeshKernelError::InvalidInput(_))));

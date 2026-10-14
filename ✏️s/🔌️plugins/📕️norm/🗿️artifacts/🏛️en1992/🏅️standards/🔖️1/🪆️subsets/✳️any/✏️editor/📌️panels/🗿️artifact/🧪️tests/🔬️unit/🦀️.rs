@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::en1992::unit_tests::context;
+use crate::panels::document::*;
+use crate::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {

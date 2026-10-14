@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/wfc-bitmap:build",
-    "check": "bun repo run @semio-tech/wfc-bitmap:check",
-    "test": "bun repo run @semio-tech/wfc-bitmap:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/wfc-bitmap:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/wfc-bitmap:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/wfc-bitmap:test"
   },
   "exports": {
     ".": {

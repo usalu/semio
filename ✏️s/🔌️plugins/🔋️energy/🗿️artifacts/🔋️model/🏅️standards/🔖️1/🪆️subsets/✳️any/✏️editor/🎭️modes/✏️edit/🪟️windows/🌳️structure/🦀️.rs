@@ -4,7 +4,7 @@
 //! below them are a real read overview, not yet individually addressable (see the surface root's
 //! `EnergyModelEditorCommand::SetStructureField` doc comment for the honest scope note).
 
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionDefinition;
@@ -35,7 +35,7 @@ fn action(id: &str, en: &str, de: &str, args: Vec<ActionArgDef>) -> ActionDefini
 /// arguments are meaningless outside this window's own tree stay.
 /// 🆕️ `create-surface` — declared here but exported for the APP-level roster, because the
 /// `mod+shift+s` keybinding that reaches it must fire while ANY window is active. Listing it in
-/// [`actions`] would make it this window's alone; `crate::editor::model::window_shared_action_definitions`
+/// [`actions`] would make it this window's alone; `semio_s_artifact_energy_model_editor_edit::window_shared_action_definitions`
 /// is its real home.
 pub fn create_surface_action() -> ActionDefinition {
     action(
@@ -80,7 +80,7 @@ pub fn definition() -> WindowKindDefinition {
 /// derives for both surfaces, grouped so no node exceeds the kit's 32-sibling ceiling (the 33rd
 /// sibling faults `tree-window.siblings` and the window would render empty).
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::energy_structure_tree(&crate::energy_model(document)))
+    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&crate::snapshot::energy_model(document)))
 }
 //#endregion 🔖️Render
 

@@ -9,7 +9,7 @@
 //! walks two programs on one folder through an open history edit.
 //! A child of the history-edit session laws: it drives their toy app and their verbs. The folder actor itself (admission,
 //! own-write echo, read-back) is the store layer's law (`🏪️store/🔄️sync`, `💻️os/🧪️tests/🧪️folder-archive-restore`).
-#[cfg(test)] use crate::bounded_ownership::plugin_demand_grant;
+#[cfg(test)] use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 
 use super::*;
 

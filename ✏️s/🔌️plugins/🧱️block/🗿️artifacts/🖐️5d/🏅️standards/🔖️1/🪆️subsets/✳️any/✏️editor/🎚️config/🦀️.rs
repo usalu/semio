@@ -4,7 +4,6 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! part kind's identity/presentations/grips live in `crate`.
 
-
 //#region 🔖️Config
 /// 🧮️ `Block5dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
@@ -135,3 +134,8 @@ impl protocol::OpBinary for Block5dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️Mounts

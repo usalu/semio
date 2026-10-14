@@ -1,5 +1,5 @@
 import {repositoryCargoPreparationStorageV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import {cargoPreparationRuntimeV1,observedCargoPreparationV1} from "../🧰️runtime/🟦️.ts";
+import {cargoPreparationRuntimeV1,observedCargoPreparationV1,cargoPreparationFixtureEnvironmentV1} from "../🧰️runtime/🟦️.ts";
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -17,7 +17,7 @@ test("queued native preparation survives waiting beyond one active recipe budget
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for queued native proofs");
   mkdirSync(artifactRoot, { recursive: true });
-  const storage={version:1 as const,directory:artifactRoot,program:repositoryCargoPreparationStorageV1(process.cwd()).program};
+  const storage={version:1 as const,directory:artifactRoot,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program};
   const root = mkdtempSync(join(artifactRoot, "cargo-queued-preparation-"));
   const put = (path: string, source: string): void => {
     mkdirSync(join(root, path, ".."), { recursive: true });
@@ -28,9 +28,9 @@ test("queued native preparation survives waiting beyond one active recipe budget
   put("kernel/🦀️.rs", "pub fn kernel() {}\n");
   put("📜️script.ts", observedCargoPreparationV1(root,`import {writeFileSync} from "node:fs";import {join} from "node:path";writeFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"published.txt"),${JSON.stringify(fixture.expectedPublication)});\n`));
   const library = cargoPreparationRuntimeV1(root);
-  put("proof/📜️script.ts", `import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(library)};prepareCargoWorkspaceInvocation(${JSON.stringify(storage)},process.env.SEMIO_WORKSPACE_ROOT!,["test","--manifest-path","kernel/Cargo.toml"],process.env.SEMIO_WORKSPACE_ROOT!,process.env);console.log(JSON.stringify({prepared:true}));\n`);
-  const holder = await acquireQueuedResourceLease({ directory: storage.directory, resource: `cargo-preparation:${root}`, mode: "exclusive", owner: "independent-owner", signal: new AbortController().signal });
-  const child = Bun.spawn([process.execPath, join(root, "proof/📜️script.ts")], { cwd: root, env: { ...process.env, SEMIO_WORKSPACE_ROOT: root }, stdout: "pipe", stderr: "pipe" });
+  put("proof/📜️script.ts", `import {prepareCargoFixtureV1} from ${JSON.stringify(fileURLToPath(new URL("../🧰️runtime/🟦️.ts",import.meta.url)))};await prepareCargoFixtureV1(${JSON.stringify(storage)},process.env.SEMIO_WORKSPACE_ROOT!,["test","--manifest-path","kernel/Cargo.toml"],process.env.SEMIO_WORKSPACE_ROOT!,process.env);console.log(JSON.stringify({prepared:true}));\n`);
+  const holder = await acquireQueuedResourceLease({ directory: storage.leaseDirectory, resource: `cargo-preparation:${root}`, mode: "exclusive", owner: "independent-owner", signal: new AbortController().signal });
+  const child = Bun.spawn([process.execPath, join(root, "proof/📜️script.ts")], { cwd: root, env: cargoPreparationFixtureEnvironmentV1(root), stdout: "pipe", stderr: "pipe" });
   const output = new Response(child.stdout).text(), diagnostic = new Response(child.stderr).text();
   try {
     await delay(fixture.waitMillis);

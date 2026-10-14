@@ -1,9 +1,14 @@
 //! 🧬️ EN 1998 artifact schema — mirrors the snapshot subject.
 
-use crate::{
-    En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo,
-    En1998Tank, En1998Tower,
-};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1998_model::{En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Tank, En1998Tower};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -37,8 +42,8 @@ pub struct En1998Artifact {
 //#endregion 🔖️Artifact
 
 impl En1998Artifact {
-    pub fn to_snapshot(&self) -> crate::En1998Snapshot {
-        crate::En1998Snapshot {
+    pub fn to_snapshot(&self) -> semio_s_artifact_norm_en1998_model::En1998Snapshot {
+        semio_s_artifact_norm_en1998_model::En1998Snapshot {
             annex: self.annex.clone(),
             site: self.site.clone(),
             buildings: self.buildings.clone(),
@@ -52,7 +57,7 @@ impl En1998Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::En1998Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: semio_s_artifact_norm_en1998_model::En1998Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             site: snapshot.site,
@@ -71,13 +76,13 @@ impl En1998Artifact {
 
 impl Default for En1998Artifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::En1998Snapshot::default())
+        Self::from_snapshot(semio_s_artifact_norm_en1998_model::En1998Snapshot::default())
     }
 }
 
 // Re-export formula modules (kept below for evaluate).
 
-use crate::document::AnnexChoice;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 
 pub mod na_de {
     /// 🌋️ German seismic zone per DIN EN 1998-1/NA (classic zones 0–3).
@@ -105,13 +110,13 @@ pub mod na_de {
         }
     }
 
-    impl From<crate::DeSeismicZone> for SeismicZone {
-        fn from(value: crate::DeSeismicZone) -> Self {
+    impl From<semio_s_artifact_norm_en1998_model::DeSeismicZone> for SeismicZone {
+        fn from(value: semio_s_artifact_norm_en1998_model::DeSeismicZone) -> Self {
             match value {
-                crate::DeSeismicZone::Zone0 => Self::Zone0,
-                crate::DeSeismicZone::Zone1 => Self::Zone1,
-                crate::DeSeismicZone::Zone2 => Self::Zone2,
-                crate::DeSeismicZone::Zone3 => Self::Zone3,
+                semio_s_artifact_norm_en1998_model::DeSeismicZone::Zone0 => Self::Zone0,
+                semio_s_artifact_norm_en1998_model::DeSeismicZone::Zone1 => Self::Zone1,
+                semio_s_artifact_norm_en1998_model::DeSeismicZone::Zone2 => Self::Zone2,
+                semio_s_artifact_norm_en1998_model::DeSeismicZone::Zone3 => Self::Zone3,
             }
         }
     }
@@ -120,15 +125,15 @@ pub mod na_de {
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum GroundCombo { AR, BR, CR, BT, CT, CS }
 
-    impl From<crate::DeGroundCombo> for GroundCombo {
-        fn from(value: crate::DeGroundCombo) -> Self {
+    impl From<semio_s_artifact_norm_en1998_model::DeGroundCombo> for GroundCombo {
+        fn from(value: semio_s_artifact_norm_en1998_model::DeGroundCombo) -> Self {
             match value {
-                crate::DeGroundCombo::AR => Self::AR,
-                crate::DeGroundCombo::BR => Self::BR,
-                crate::DeGroundCombo::CR => Self::CR,
-                crate::DeGroundCombo::BT => Self::BT,
-                crate::DeGroundCombo::CT => Self::CT,
-                crate::DeGroundCombo::CS => Self::CS,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::AR => Self::AR,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::BR => Self::BR,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::CR => Self::CR,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::BT => Self::BT,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::CT => Self::CT,
+                semio_s_artifact_norm_en1998_model::DeGroundCombo::CS => Self::CS,
             }
         }
     }
@@ -196,7 +201,7 @@ pub mod part_1 {
     }
 
     /// 🏋️ Seismic combination gravity action on a storey [N] — ΣG_k + Σψ_E,i·Q_k,i (6.12b gravity part).
-    pub fn storey_seismic_action_n(storey: &crate::En1998Storey, is_roof: bool) -> f64 {
+    pub fn storey_seismic_action_n(storey: &semio_s_artifact_norm_en1998_model::En1998Storey, is_roof: bool) -> f64 {
         let mut sum = storey.permanent_gk_n;
         for v in &storey.variables {
             sum += psi_e(&v.category, is_roof, storey.correlated_occupancy) * v.qk_n;
@@ -205,12 +210,12 @@ pub mod part_1 {
     }
 
     /// ⚖️ Seismic mass m = (ΣG_k + Σψ_E·Q_k)/g [kg] (EN 1998-1 §3.2.4).
-    pub fn storey_seismic_mass_kg(storey: &crate::En1998Storey, is_roof: bool) -> f64 {
+    pub fn storey_seismic_mass_kg(storey: &semio_s_artifact_norm_en1998_model::En1998Storey, is_roof: bool) -> f64 {
         storey_seismic_action_n(storey, is_roof) / 9.81
     }
 
     /// ⚖️ Seismic mass from ΣG_k + Σψ_E·Q_k for ancillary entities (bridges/towers).
-    pub fn entity_seismic_mass_kg(permanent_gk_n: f64, variables: &[crate::En1998VariableAction], is_roof: bool, correlated: bool) -> f64 {
+    pub fn entity_seismic_mass_kg(permanent_gk_n: f64, variables: &[semio_s_artifact_norm_en1998_model::En1998VariableAction], is_roof: bool, correlated: bool) -> f64 {
         let mut sum = permanent_gk_n;
         for v in variables {
             sum += psi_e(&v.category, is_roof, correlated) * v.qk_n;
@@ -223,7 +228,6 @@ pub mod part_1 {
         let psi = psi_e(content_category, true, true);
         (permanent_gk_n + filling_ratio.clamp(0.0, 1.0) * psi * content_qk_n) / 9.81
     }
-
 
     /// 📐 Plan regularity metrics EN 1998-1 §4.2.3.2 — (e0x, e0y, rx, ry, ℓₛ).
     pub fn plan_regularity_metrics(
@@ -247,8 +251,7 @@ pub mod part_1 {
         (e0x, e0y, rx, ry, ls)
     }
 
-
-    #[cfg(test)] use super::*;
+    #[cfg(test)] use crate::*;
 
     pub fn gamma_i(importance: &str) -> f64 {
         match importance.trim().to_ascii_uppercase().as_str() {
@@ -446,7 +449,7 @@ pub mod part_1 {
 }
 
 pub mod part_2 {
-    #[cfg(test)] use super::*;
+    #[cfg(test)] use crate::*;
     pub fn isolation_reduction_factor(period_ratio: f64) -> f64 {
         let r = period_ratio.max(1.0);
         (r * r).max(1.0)
@@ -591,51 +594,16 @@ fn en_ground_params(ground: char, type1: bool) -> (f64, f64, f64, f64) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
-mod compliance_tests;
-
-
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1998` — handcrafted schema facet leaves.
 pub fn en1998_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.norm.en1998",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
+        snapshot: semio_s_artifact_norm_en1998_model::SNAPSHOT_LEAVES,
+        diff: semio_s_artifact_norm_en1998_diff::DIFF_LEAVES,
+        mutations: semio_s_artifact_norm_en1998_mutations::MUTATION_LEAVES,
     }
 }
 //#endregion 🔖️Descriptor
 
-
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets

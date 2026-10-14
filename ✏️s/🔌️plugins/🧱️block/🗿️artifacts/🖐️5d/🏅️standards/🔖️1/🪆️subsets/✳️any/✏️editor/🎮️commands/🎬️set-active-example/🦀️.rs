@@ -10,14 +10,14 @@ pub const BLOCK5D_EXAMPLE_CAPSULE: &str = "nakagin-capsule";
 /// it carries no mutation rows, no diff and no history row, so re-selecting the open example leaves `canUndo` false.
 pub fn load_document_effect(document: &Block5dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Block5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block5d", crate::BLOCK_5D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block5d", semio_s_artifact_block_5d_model::BLOCK_5D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️LoadDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
-use crate::Block5dSnapshot;
-use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
+use semio_s_artifact_block_5d_mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use crate::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -29,8 +29,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK5D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-        BLOCK5D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
+        BLOCK5D_EXAMPLE_FOREST_LEFT => semio_s_artifact_block_5d_io::text::snapshot::parse_dsl(semio_s_artifact_block_5d_io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK5D_EXAMPLE_CAPSULE => semio_s_artifact_block_5d_io::text::snapshot::parse_dsl(semio_s_artifact_block_5d_io::text::snapshot::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

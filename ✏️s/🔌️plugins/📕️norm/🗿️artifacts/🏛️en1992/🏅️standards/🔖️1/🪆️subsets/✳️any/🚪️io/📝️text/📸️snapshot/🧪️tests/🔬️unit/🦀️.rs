@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
@@ -16,7 +16,7 @@ async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
 async fn compliant_office_frame_round_trips() {
     let document = En1992Snapshot::compliant_office_frame();
     assert!(!document.members.is_empty());
-    assert_eq!(document.annex, crate::document::AnnexChoice::De);
+    assert_eq!(document.annex, semio_s_plugin_norm_compliance::AnnexChoice::De);
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 

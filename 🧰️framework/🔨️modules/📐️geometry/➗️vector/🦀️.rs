@@ -1,6 +1,6 @@
 //! ➗️ Tiny f64 vector helpers shared by the planar curve, loop, triangulation, solid and section domains.
 
-use crate::{Point, Vec2};
+use semio_framework_geometry_primitives::{Point, Vec2};
 
 /// 📏️ Coincidence tolerance for lengths and distances, in the caller's unit (metres for the BIM domain): one nanometre.
 pub const LENGTH_EPS: f64 = 1e-9;

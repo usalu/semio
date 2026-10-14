@@ -1,6 +1,6 @@
 
-use super::*;
-use crate::Block3dVortexTemplate;
+use crate::bounds::*;
+use semio_s_artifact_block_3d_model::Block3dVortexTemplate;
 
 fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
     Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }

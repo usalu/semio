@@ -1,6 +1,6 @@
 //! 📐️ `scale-object` — sets an object's absolute scale.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -16,13 +16,16 @@ pub struct ScaleObject {
     pub new_scale: [f32; 3],
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ScaleObject {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for ScaleObject
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::scale_object::ScaleObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

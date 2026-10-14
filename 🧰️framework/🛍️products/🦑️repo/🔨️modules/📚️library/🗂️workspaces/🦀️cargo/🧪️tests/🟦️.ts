@@ -1,6 +1,6 @@
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {stripVTControlCharacters} from "node:util";
-import {cargoPreparationRuntimeV1,observedCargoPreparationV1,cargoPreparationFixtureEnvironmentV1} from "./🧰️runtime/🟦️.ts";
+import {cargoPreparationRuntimeV1,observedCargoPreparationV1,cargoPreparationFixtureEnvironmentV1,prepareCargoFixtureV1,captureCargoFixtureV1} from "./🧰️runtime/🟦️.ts";
 import {pathToFileURL} from "node:url";
 import { fileURLToPath } from "node:url";
 import { test, expect, spyOn } from "bun:test";
@@ -40,7 +40,7 @@ test("present owner scopes isolate selected native metadata without concealing b
   expect(cargoWorkspaceForManifest(root,"framework/kernel/Cargo.toml").directory).toBe(".");
  }
 });
-test("Cargo-native unmatched members refuse while unused inherited path declarations are inert",()=>{
+test("Cargo-native unmatched members refuse while unused inherited path declarations are inert",async()=>{
  for(const row of fixture.nativeSemantics) { const root=mkdtempSync(join(artifactRoot!,"workspace-native-"));put(root,"Cargo.toml",workspace(row.members,row.unusedPath?'[workspace.dependencies]\nunused={path="'+row.unusedPath+'"}\n':''));put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"framework/kernel/🦀️.rs","pub fn kernel() {}\n"); expect(cargo(root,"Cargo.toml").status===0).toBe(row.valid); }
 });
 
@@ -54,7 +54,7 @@ test("inherited path consumers are physically bound to their independently autho
   expect(cargo(root,"product/Cargo.toml").status===0,row.id).toBe(row.valid);
  }
 });
-test("package command selection binds one current owner and refuses cross-scope or removed selectors",()=>{
+test("package command selection binds one current owner and refuses cross-scope or removed selectors",async()=>{
  const root=mkdtempSync(join(artifactRoot!,"workspace-selection-"));put(root,"Cargo.toml",workspace(["framework/*"]));put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel"));put(root,"specific/Cargo.toml",workspace(["*"]));put(root,"specific/model/Cargo.toml",pkg("specific-model"));
  for(const row of fixture.commandSelection) { if(row.error) expect(()=>selectedCargoArguments(root,row.args)).toThrow();else expect(selectedCargoArguments(root,row.args)).toEqual([row.args[0],"--manifest-path",join(root,row.manifest),...row.args.slice(1)]); }
 });
@@ -77,19 +77,19 @@ test("selected Cargo refresh removes deleted artifact and plugin manifests while
   unlinkSync(join(root,"specific",deleted,"Cargo.toml"));put(root,"specific/"+deleted+"/target/retained","source absence is explicit");
   expect(cargo(root,"Cargo.toml").status).not.toBe(0);
   expect(()=>publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toThrow();
-  const owned=await import(pathToFileURL(cargoPreparationRuntimeV1(root)).href);owned.prepareCargoWorkspaceInvocation(storage,root,["metadata","--manifest-path","Cargo.toml"],root,cargoPreparationFixtureEnvironmentV1(root));
+  await prepareCargoFixtureV1(storage,root,["metadata","--manifest-path","Cargo.toml"],root,cargoPreparationFixtureEnvironmentV1(root));
   const native=cargo(root,"Cargo.toml");expect(native.status).toBe(0);expect(JSON.parse(native.text).workspace_members.length).toBe(2);
   expect(Bun.TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,"Cargo.toml"),"utf8")));
   expect(publishCargoWorkspaceMembership(root,discoverCargoWorkspaces(root)[0]!,"check")).toBe(false);
  }
 });
 
-test("portable preparation recipes match the independent closed schema",()=>{
+test("portable preparation recipes match the independent closed schema",async()=>{
  const validator=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/🔣️.json",import.meta.url),"utf8")));
  for(const row of fixture.preparation.accepted){expect(validator(row)).toBe(true);expect(parseCargoPreparation(row)).toEqual(row);}
  for(const row of fixture.preparation.rejected){expect(validator(row)).toBe(false);expect(()=>parseCargoPreparation(row)).toThrow();}
 });
-test("preparation follows actual selected dependency scopes and deduplicates shared owner argv",()=>{
+test("preparation follows actual selected dependency scopes and deduplicates shared owner argv",async()=>{
  const root=mkdtempSync(join(artifactRoot!,"workspace-preparation-"));
  put(root,"Cargo.toml",workspace(["framework/*"]));put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["general"]\n'));
  put(root,"specific/Cargo.toml",workspace(["models/*"]));
@@ -112,7 +112,7 @@ test("every compiling native command prepares owners and keeps diagnostics off m
  put(root,"framework/kernel/🦀️.rs","");
  put(root,"📜️script.ts",observedCargoPreparationV1(root,'console.log("[preparation] owned input refreshed");'));
  const api=cargoPreparationRuntimeV1(root);
- put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(storage)},${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)},process.env);console.log(JSON.stringify({machine:"retained"}));`);
+ put(root,"proof/📜️script.ts",`import {prepareCargoFixtureV1,captureCargoFixtureV1} from ${JSON.stringify(fileURLToPath(new URL("./🧰️runtime/🟦️.ts",import.meta.url)))};await prepareCargoFixtureV1(${JSON.stringify(storage)},${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)},process.env);console.log(JSON.stringify({machine:"retained"}));`);
  const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
  if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
  expect(child.exitCode).toBe(0);expect(Buffer.from(child.stdout).toString()).toBe('{"machine":"retained"}\n');expect(Buffer.from(child.stderr).toString()).toContain("owned input refreshed");
@@ -201,7 +201,7 @@ test("batch owner publication discovers one fresh repository inventory", () => {
 });
 
 
-test("selected preparation development closure matches Cargo tree root ownership",()=>{
+test("selected preparation development closure matches Cargo tree root ownership",async()=>{
  const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure;
  for(const row of law.cases){
   const root=mkdtempSync(join(artifactRoot!,"cargo-development-closure-")),names=new Set<string>(law.packages.map((value:any)=>value.name));
@@ -212,9 +212,8 @@ test("selected preparation development closure matches Cargo tree root ownership
    put(root,path,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
   }
   expect(glob.sync("packages/*/Cargo.toml",{cwd:root,onlyFiles:true}).length).toBe(names.size);
-  const tree=Bun.spawnSync(["cargo","tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...(row.roots.length?row.roots.flatMap((name:string)=>["-p",name]):["--workspace"])],{cwd:root,stdout:"pipe",stderr:"pipe",timeout:10_000});
-  expect(tree.exitCode,tree.stderr.toString()).toBe(0);
-  const reached=[...new Set(tree.stdout.toString().split("\n").map(line=>line.split(" ")[0]!).filter(name=>names.has(name)))].sort();expect(reached).toEqual(row.expected);
+  const tree=await captureCargoFixtureV1(root,["tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...(row.roots.length?row.roots.flatMap((name:string)=>["-p",name]):["--workspace"])]);
+  const reached=[...new Set(tree.split("\n").map(line=>line.split(" ")[0]!).filter(name=>names.has(name)))].sort();expect(reached).toEqual(row.expected);
   put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");');
   prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"),row.roots);
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(reached);
@@ -222,7 +221,7 @@ test("selected preparation development closure matches Cargo tree root ownership
  }
 });
 
-test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
+test("Cargo preparation diagnostics observe only opted-in exact phases",async()=>{
  const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🛠️preparation-diagnostics/🔣️.json",import.meta.url),"utf8")),packages=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8")).developmentClosure.packages;
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8"))),root=mkdtempSync(join(artifactRoot!,"cargo-preparation-diagnostics-"));
  put(root,"Cargo.toml",workspace(["packages/*"]));
@@ -231,10 +230,9 @@ test("Cargo preparation diagnostics observe only opted-in exact phases",()=>{
   const source=pkg(value.name,'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["'+value.name+'"]\n'+edges);
   put(root,`packages/${value.name}/Cargo.toml`,source);put(root,`packages/${value.name}/🦀️.rs`,"pub fn law() {}\n");expect(Bun.TOML.parse(source)).toEqual(TOML.parse(source));
  }
- const tree=Bun.spawnSync(["cargo","tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...law.roots.flatMap((name:string)=>["-p",name])],{cwd:root,stdout:"pipe",stderr:"pipe"});
- expect(tree.exitCode,tree.stderr.toString()).toBe(0);
- const reached=[...new Set(tree.stdout.toString().trim().split("\n").map(line=>line.split(" ")[0]))].sort();expect(reached).toEqual(law.expected);
- put(root,"📜️script.ts",'import {appendFileSync} from "node:fs";appendFileSync(process.env.SEMIO_WORKSPACE_ROOT+"/events.jsonl",process.argv[2]+"\\n");');
+ const tree=await captureCargoFixtureV1(root,["tree","--offline","--prefix","none","--no-dedupe","--format","{p}","--edges","normal,build,dev","--manifest-path",join(root,"Cargo.toml"),...law.roots.flatMap((name:string)=>["-p",name])]);
+ const reached=[...new Set(tree.trim().split("\n").map(line=>line.split(" ")[0]))].sort();expect(reached).toEqual(law.expected);
+ put(root,"📜️script.ts",observedCargoPreparationV1(root,'import {appendFileSync} from "node:fs";appendFileSync(process.env.SEMIO_WORKSPACE_ROOT+"/events.jsonl",process.argv[2]+"\\n");'));
  const old=process.env.SEMIO_CARGO_PREPARATION_TIMING,output:string[]=[];
  expect(law.stream).toBe("stderr");
  const logger=spyOn(console,"error").mockImplementation((line:unknown)=>{output.push(String(line));});
@@ -264,7 +262,7 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
  put(root,"Cargo.toml",workspace(["packages/*"]));put(root,"packages/a/Cargo.toml",pkg("a"));put(root,"packages/a/🦀️.rs","pub fn law() {}\n");
  const validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🛠️preparation/📊️diagnostic/🔣️.json",import.meta.url),"utf8")));
  expect(validate({phase:law.waiting.phase,owner:law.waiting.owner,elapsedMs:0,items:law.waiting.items})).toBe(true);
- const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:storage.directory,resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
+ const lease=await acquireQueuedResourceLease({owner:"independent-diagnostic-owner",directory:storage.leaseDirectory,resource:`cargo-preparation:${root}`,mode:"exclusive",signal:new AbortController().signal});
  const script=fileURLToPath(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",import.meta.url));
  const child=Bun.spawn([process.execPath,script,"prepare","--manifest",law.waiting.owner],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(storage),SEMIO_CARGO_PREPARATION_TIMING:law.enabled},stdout:"pipe",stderr:"pipe"});
  const reader=child.stderr.getReader();let timeout:ReturnType<typeof setTimeout>|undefined;
@@ -277,7 +275,7 @@ test("queued Cargo preparation exposes opted-in waiting before the protected ope
  }finally{if(timeout)clearTimeout(timeout);child.kill("SIGTERM");await child.exited;reader.releaseLock();lease.release();}
 },10000);
 
-test("selected package preparation follows the Cargo resolved local closure without preparing siblings",()=>{
+test("selected package preparation follows the Cargo resolved local closure without preparing siblings",async()=>{
  const law=JSON.parse(readFileSync(new URL("./🧫️fixtures/🎯️selected-preparation/🔣️.json",import.meta.url),"utf8"));
  for(const row of law.cases){
   const root=mkdtempSync(join(artifactRoot!,"cargo-selected-preparation-"));
@@ -291,15 +289,14 @@ test("selected package preparation follows the Cargo resolved local closure with
   for(const path of ["framework/kernel","framework/bridge","specific/models/a","specific/models/b"])put(root,path+"/🦀️.rs","pub fn law() {}\n");
   const source='import {appendFileSync} from "node:fs";import {join} from "node:path";appendFileSync(join(process.env.SEMIO_WORKSPACE_ROOT!,"events.jsonl"),process.argv[2]+"\\n");';
   put(root,"📜️script.ts",observedCargoPreparationV1(root,source));put(root,"specific/📜️script.ts",observedCargoPreparationV1(root,source));
-  const metadata=Bun.spawnSync(["cargo","metadata","--offline","--format-version","1","--manifest-path",join(root,row.manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});
-  expect(metadata.exitCode,metadata.stderr.toString()).toBe(0);
-  const oracle=JSON.parse(metadata.stdout.toString()),packages=new Map(oracle.packages.map((value:any)=>[value.id,value])),nodes=new Map(oracle.resolve.nodes.map((value:any)=>[value.id,value]));
+  const metadata=await captureCargoFixtureV1(root,["metadata","--offline","--format-version","1","--manifest-path",join(root,row.manifest)]);
+  const oracle=JSON.parse(metadata),packages=new Map(oracle.packages.map((value:any)=>[value.id,value])),nodes=new Map(oracle.resolve.nodes.map((value:any)=>[value.id,value]));
   const seeds=row.packages.length?oracle.packages.filter((value:any)=>row.packages.includes(value.name)).map((value:any)=>value.id):row.manifest.endsWith("models/a/Cargo.toml")?[oracle.resolve.root]:oracle.workspace_members;
   const reached=new Set<string>(seeds);for(const id of reached)for(const dependency of (nodes.get(id) as any).dependencies)reached.add(dependency);
   expect([...reached].map(id=>(packages.get(id) as any).name).sort()).toEqual(row.expected);
   const api=cargoPreparationRuntimeV1(root);
   const args=["test","--manifest-path",row.manifest,...row.packages.flatMap((name:string)=>["-p",name])];
-  put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(storage)},${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)},process.env);`);
+  put(root,"proof/📜️script.ts",`import {prepareCargoFixtureV1,captureCargoFixtureV1} from ${JSON.stringify(fileURLToPath(new URL("./🧰️runtime/🟦️.ts",import.meta.url)))};await prepareCargoFixtureV1(${JSON.stringify(storage)},${JSON.stringify(root)},${JSON.stringify(args)},${JSON.stringify(root)},process.env);`);
   const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...cargoPreparationFixtureEnvironmentV1(root),SEMIO_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
   expect(child.exitCode,child.stderr.toString()).toBe(0);
   expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(row.expected);
@@ -328,7 +325,7 @@ test("membership discovery compiles bounded matchers independent of unrelated le
 });
 
 
-test("explicit root-owned packages remain discoverable beneath a different native workspace",()=>{
+test("explicit root-owned packages remain discoverable beneath a different native workspace",async()=>{
  const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-overlap-"));put(root,"Cargo.toml",workspace(row.rootMembers).replace('member-manifests='+JSON.stringify(row.rootMembers.map((member:string)=>member+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('members='+JSON.stringify(row.rootMembers),'members='+JSON.stringify(row.rootMembers)+'\nexclude=["framework"]'));put(root,"framework/Cargo.toml",workspace(row.frameworkMembers).replace('members='+JSON.stringify(row.frameworkMembers),'members='+JSON.stringify(row.frameworkMembers)+'\nexclude=["product"]'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage).replace('[package]\n','[package]\nworkspace='+JSON.stringify(row.rootPackageWorkspace)+'\n'));put(root,"framework/product/🦀️.rs","pub fn product(){}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general(){}\n");
  const scopes=discoverCargoWorkspaces(root),packages=scopes.flatMap(scope=>cargoWorkspaceMembers(root,scope));expect(packages.map(row=>[row.name,row.workspace]).sort()).toEqual([[row.frameworkPackage,"framework"],[row.rootPackage,"."]].sort());for(const scope of scopes){const native=cargo(root,scope.manifest);expect(native.status,native.text).toBe(0);const metadata=JSON.parse(native.text);expect(metadata.workspace_members).toHaveLength(1);}
  expect(selectedCargoArguments(root,["check","-p",row.rootPackage])).toEqual(["check","--manifest-path",join(root,"framework/product/Cargo.toml"),"-p",row.rootPackage]);expect(selectedCargoArguments(root,["check","-p",row.frameworkPackage])).toEqual(["check","--manifest-path",join(root,"framework/general/Cargo.toml"),"-p",row.frameworkPackage]);
@@ -345,19 +342,19 @@ test("current physical workspace admissions and selected nextest profiles match 
 },30000);
 
 
-test("all-root dependency preparation honors explicit package workspaces beneath native child owners",()=>{
+test("all-root dependency preparation honors explicit package workspaces beneath native child owners",async()=>{
  const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-prepare-nested-"));
  put(root,"Cargo.toml",workspace(row.rootMembers,'[workspace.dependencies]\ngeneral={package="'+row.frameworkPackage+'",path="framework/general"}\n').replace('member-manifests='+JSON.stringify(row.rootMembers.map((m:string)=>m+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('[workspace]\n','[workspace]\nexclude=["framework"]\n'));
  put(root,"framework/Cargo.toml",workspace(row.frameworkMembers).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");
- const native=cargo(root,"Cargo.toml");expect(native.status,native.text).toBe(0);expect(JSON.parse(native.text).workspace_members).toHaveLength(1);const tree=Bun.spawnSync(["cargo","tree","--offline","--manifest-path",join(root,"Cargo.toml"),"-p",row.frameworkPackage],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(tree.exitCode,tree.stderr.toString()).toBe(0);expect(tree.stdout.toString()).toContain(row.frameworkPackage);
+ const native=cargo(root,"Cargo.toml");expect(native.status,native.text).toBe(0);expect(JSON.parse(native.text).workspace_members).toHaveLength(1);const tree=await captureCargoFixtureV1(root,["tree","--offline","--manifest-path",join(root,"Cargo.toml"),"-p",row.frameworkPackage]);expect(tree).toContain(row.frameworkPackage);
  expect(()=>prepareCargoOwners(root,discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!)).not.toThrow();
 });
 
 
-test("named dependency preparation agrees with actual Cargo root graph reachability",()=>{
+test("named dependency preparation agrees with actual Cargo root graph reachability",async()=>{
  const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-prepare-reachable-"));
  put(root,"Cargo.toml",workspace(row.rootMembers,'[workspace.dependencies]\ngeneral={package="'+row.frameworkPackage+'",path="framework/general"}\n').replace('member-manifests='+JSON.stringify(row.rootMembers.map((m:string)=>m+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('[workspace]\n','[workspace]\nexclude=["framework"]\n'));
  put(root,"framework/Cargo.toml",workspace([...row.frameworkMembers,"orphan"]).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");put(root,"framework/orphan/Cargo.toml",pkg("unreachable-module"));put(root,"framework/orphan/🦀️.rs","pub fn orphan() {}\n");
  const selected=discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!;
- for(const selection of fixture.reachablePreparation){const tree=Bun.spawnSync(["cargo","tree","--offline","--manifest-path",join(root,"Cargo.toml"),...selection.names.flatMap((name:string)=>["-p",name])],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(tree.exitCode===0,tree.stderr.toString()).toBe(selection.valid);if(selection.valid)expect(()=>prepareCargoOwners(root,selected,selection.names)).not.toThrow();else expect(()=>prepareCargoOwners(root,selected,selection.names)).toThrow();}
+ for(const selection of fixture.reachablePreparation){let valid=false,diagnostic="";try{await captureCargoFixtureV1(root,["tree","--offline","--manifest-path",join(root,"Cargo.toml"),...selection.names.flatMap((name:string)=>["-p",name])]);valid=true;}catch(error){diagnostic=String(error);if(!/exited with status/u.test(diagnostic))throw error;}expect(valid,diagnostic).toBe(selection.valid);if(selection.valid)expect(()=>prepareCargoOwners(root,selected,selection.names)).not.toThrow();else expect(()=>prepareCargoOwners(root,selected,selection.names)).toThrow();}
 });

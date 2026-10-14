@@ -1,6 +1,6 @@
 //! 📜️ Lowpoly artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::LowpolySnapshot;
+use crate::snapshot::LowpolySnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -37,8 +37,8 @@ pub type LowpolySnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::snapshot::*;
+use crate::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 /// ✉️ Handcrafted `ArtifactDsl`; `ArtifactPack` over the derived record spec.
@@ -64,8 +64,8 @@ impl pack::snapshot::ArtifactDsl for LowpolySnapshot {
 }
 #[cfg(test)] pub use snapshot_codec::*;
 
-use crate::{LowpolyObject,LowpolyPaintLayer,LowpolyTransform,LOWPOLY_DOCUMENT_SCHEMA};
-use crate::schema::LOWPOLY_DEFAULT_EXAMPLE_LABEL;
+use crate::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
+use crate::LOWPOLY_DEFAULT_EXAMPLE_LABEL;
 use semio_framework_3d::mesh::HalfedgeMesh;
 
 /// 🏗️ Builds an object with its authored mesh source and content-addressed child handle.
@@ -77,7 +77,7 @@ pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &s
             name: object_name.into(),
             transform: LowpolyTransform::default(),
             smooth_shading: false,
-            mesh: Some(crate::mesh_child_handle(object_id, mesh_json)),
+            mesh: Some(crate::snapshot::mesh_child_handle(object_id, mesh_json)),
             paint_layers: vec![LowpolyPaintLayer::new("Base")],
             mesh_content: mesh_json.into(),
         }],
@@ -90,15 +90,15 @@ const CONCRETE_FOREST_LEFT_MESH_JSON: &str = include_str!("../../../📚️examp
 /// `ArtifactChild` handle while the app session owns its matching mesh payload.
 pub struct LowpolyOwnedDefaultDocument {
     pub snapshot: LowpolySnapshot,
-    pub mesh_workspace: std::collections::HashMap<String, crate::LowpolyMeshState>,
+    pub mesh_workspace: std::collections::HashMap<String, crate::managed_mesh::LowpolyMeshState>,
 }
 
 /// 🌲️ Hexagonal Cut Concrete Forest Left — the same CAD-derived mesh fixture puzzle 3d and cad shape use.
 pub fn concrete_forest_left_owned_document() -> LowpolyOwnedDefaultDocument {
     let mesh=HalfedgeMesh::from_json(CONCRETE_FOREST_LEFT_MESH_JSON).expect("authored default mesh source is valid");
-    let state=crate::LowpolyMeshState::from_mesh(mesh);
+    let state=crate::managed_mesh::LowpolyMeshState::from_mesh(mesh);
     let mut snapshot=snapshot_from_mesh_json(CONCRETE_FOREST_LEFT_MESH_JSON,"obj-1",LOWPOLY_DEFAULT_EXAMPLE_LABEL);
-    snapshot.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-1",&state));
+    snapshot.objects[0].mesh=Some(crate::snapshot::managed_mesh_child_handle("obj-1",&state));
     snapshot.objects[0].mesh_state=Some(state.clone());
     let mesh_workspace=std::collections::HashMap::from([("obj-1".to_string(),state)]);
     LowpolyOwnedDefaultDocument { snapshot, mesh_workspace }
@@ -116,7 +116,7 @@ pub fn default_snapshot() -> LowpolySnapshot {
 }
 
 /// 🕸️ Fresh app-owned companion payload for `default_snapshot()`'s exact child handle.
-pub fn default_mesh_workspace() -> std::collections::HashMap<String, crate::LowpolyMeshState> {
+pub fn default_mesh_workspace() -> std::collections::HashMap<String, crate::managed_mesh::LowpolyMeshState> {
     default_owned_document().mesh_workspace
 }
 

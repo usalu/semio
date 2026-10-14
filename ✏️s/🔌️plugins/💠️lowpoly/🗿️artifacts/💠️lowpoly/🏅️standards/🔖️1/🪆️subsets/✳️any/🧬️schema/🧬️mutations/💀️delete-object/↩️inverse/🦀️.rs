@@ -2,16 +2,16 @@
 //! missing id ⇒ `Vec::new()`.
 
 use super::DeleteObject;
-use crate::mutations::create_object;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use crate::create_object;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteObject, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::create_object::CreateObject>>(payload: &DeleteObject, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(index) = base.objects.iter().position(|object| object.id == payload.id) else {
         return Vec::new();
     };
-    vec![LowpolyMutation::CreateObject(create_object::CreateObject { index, object: base.objects[index].clone() })]
+    vec![Op::from(create_object::CreateObject { index, object: base.objects[index].clone() })]
 
     })())
 }

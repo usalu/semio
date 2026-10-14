@@ -18,5 +18,8 @@ semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️module
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-fem-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
-semio-s-artifact-fem-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-editor-results-window = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-model = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-mutations = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d-model = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-fem-3d-mutations = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

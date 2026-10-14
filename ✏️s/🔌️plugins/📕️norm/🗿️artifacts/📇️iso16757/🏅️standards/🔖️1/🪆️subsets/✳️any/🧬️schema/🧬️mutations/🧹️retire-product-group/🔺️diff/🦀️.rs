@@ -1,8 +1,8 @@
 //! 🔺️ `retire-product-group` — sparse diff construction.
 
-use super::mutation::RetireProductGroup;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductGroupsRows};
+use crate::retire_product_group::mutation::RetireProductGroup;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductGroupsRows};
 
 //#region 🔖️Diff
 

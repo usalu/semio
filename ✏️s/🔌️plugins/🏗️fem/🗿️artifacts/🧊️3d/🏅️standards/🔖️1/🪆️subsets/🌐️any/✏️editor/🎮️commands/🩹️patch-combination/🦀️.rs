@@ -1,12 +1,12 @@
 //! 🩹️ Fem3d play app command — `patch-combination`: one-field edit of a combination (`name`, a
 //! `term:<caseId>` factor, `addTerm` with the case id as value, `removeTerm`) → `ReplaceCombination`.
 
-use crate::standards::v1::subsets::any::schema::mutations::replace_combination;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 /// ⚖️ The field prefix a term factor row binds: `term:<caseId>`.
 pub const TERM_FIELD_PREFIX: &str = "term:";
@@ -56,7 +56,4 @@ pub fn handle(payload: &PatchCombination, doc: &ArtifactView<'_, Fem3dSnapshot>,
 //#endregion 🔖️PatchCombination
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

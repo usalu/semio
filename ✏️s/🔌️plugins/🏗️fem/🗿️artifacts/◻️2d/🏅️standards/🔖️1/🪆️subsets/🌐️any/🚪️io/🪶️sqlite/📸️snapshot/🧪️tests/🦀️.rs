@@ -7,7 +7,7 @@ fn sqlite_snapshot_fem2d_declared_capability_is_owned() {
 }
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::sqlite::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
@@ -52,13 +52,13 @@ fn every_word(s:&mut Fem2dSnapshot,word:u64){let v=f64::from_bits(word);s.analys
 #[test]fn sqlite_snapshot_fem2d_native_decode_actual_interior_owned_work(){let mut s=state();s.nodes=(0..2048).map(|n|FemNode{id:n.to_string(),x:0.,y:0.}).collect();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&s))};let mut interior=false;let mut cb=|p:SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::DecodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}};assert!(original_owners::with_decoding(|native_owner|Fem2dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut cb,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior);assert!(original_owners::with_decoding(|native_owner|Fem2dSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1024,..SqliteDatabaseLimits::default()}), native_owner)).is_err());}}
 
 mod public_populated_owner {
-    use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
     use semio_framework_plugin::__semio_dispatch_PluginApp;
     use semio_framework_plugin::plugin_app_close_prelude::*;
     semio_framework_dispatch_macros::dyn_enum_close! {
         /// 🏗️ Actual two FEM2d editor and viewer wrappers close this owning declaration.
         pub(crate) enum FemArtifactApps: PluginApp {
-            FemEditor(VcsArtifactApp<EditorApp<crate::editor::fem2d::Fem2dPlayApp>>),
+            FemEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp>>),
             FemViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>>),
         }
     }
@@ -75,7 +75,7 @@ mod public_populated_owner {
         }}
         same(&a.to_value(),&b.to_value());
     }
-    fn register(){let _plugin=semio_framework_plugin::Plugin::<FemArtifactApps>::builder("fem").label("FEM2d SQLite owner").version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
+    fn register(){let _plugin=semio_framework_plugin::PluginBuilder::<_, FemArtifactApps>::new("fem").label("FEM2d SQLite owner").version("0.1.0").package_id("semio:fem").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_fem2d_populated_actual_app_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};

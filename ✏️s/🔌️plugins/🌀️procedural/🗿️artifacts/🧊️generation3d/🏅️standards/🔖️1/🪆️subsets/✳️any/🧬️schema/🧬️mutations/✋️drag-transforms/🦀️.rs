@@ -3,9 +3,8 @@
 //! absolute rows; this leaf carries what the user did, so editing it in history re-derives the operator on any base.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::generation3d_label_items;
-use crate::generation3d_label_number;
-use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_items;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_number;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -21,18 +20,21 @@ pub struct DragTransforms {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_transforms(targets: Vec<String>, offset: [f64; 3]) -> Generation3dMutation {
-    Generation3dMutation::DragTransforms(DragTransforms { targets, dx: offset[0], dy: offset[1], dz: offset[2] })
+pub fn drag_transforms<Op: From<DragTransforms>>(targets: Vec<String>, offset: [f64; 3]) -> Op {
+    Op::from(DragTransforms { targets, dx: offset[0], dy: offset[1], dz: offset[2] })
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for DragTransforms {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for DragTransforms
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "drag", entity: "transforms", kind: "drag-transforms", record: "DraggedTransforms" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::drag_transforms::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::drag_transforms::inverse::inverse(self, base)?
     

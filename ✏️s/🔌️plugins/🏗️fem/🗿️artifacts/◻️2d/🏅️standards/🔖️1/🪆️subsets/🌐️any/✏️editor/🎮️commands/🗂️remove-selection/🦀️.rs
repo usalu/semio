@@ -81,6 +81,3 @@ pub fn resolve_selection_ids(doc: &Fem2dSnapshot, ids: &[String]) -> Vec<String>
         .collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

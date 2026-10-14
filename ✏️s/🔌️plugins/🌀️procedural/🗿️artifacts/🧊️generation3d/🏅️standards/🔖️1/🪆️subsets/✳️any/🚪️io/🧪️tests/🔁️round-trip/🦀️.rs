@@ -136,7 +136,7 @@ pub fn retire_document(document: semio_s_artifact_procedural_generation3d::Gener
 
 /// 🧊️ Checks the editable polygon payload planted by a surface import against the independent cube oracle.
 pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
-    use semio_s_artifact_procedural_3d_mesh_bridge;
+    use semio_s_artifact_procedural_3d_mesh_bridge as mesh_bridge;
     let (kind, payload) = mesh_bridge::imported_source(&document).expect("import plants a source and constructor");
     let kind = kind.to_owned();
     let payload = payload.to_owned();

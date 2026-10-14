@@ -1,6 +1,6 @@
 //! 🌫️ `change-paint-layer-opacity` — sets a paint layer's compositing opacity.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -17,13 +17,16 @@ pub struct ChangePaintLayerOpacity {
     pub new_opacity: f32,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLayerOpacity {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for ChangePaintLayerOpacity
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::change_paint_layer_opacity::ChangePaintLayerOpacity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-opacity", record: "ChangedPaintLayerOpacity" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

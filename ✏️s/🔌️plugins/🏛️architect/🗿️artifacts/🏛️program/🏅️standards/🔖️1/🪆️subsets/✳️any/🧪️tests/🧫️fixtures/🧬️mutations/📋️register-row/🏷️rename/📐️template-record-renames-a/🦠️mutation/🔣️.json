@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "templateRecord",
+  "id": "template-record-a",
+  "newName": "Renamed Template Record A"
+}

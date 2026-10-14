@@ -1,9 +1,9 @@
 //! Inverse for `change-mixed-terrain-upwind`.
-use super::ChangeMixedTerrainUpwind;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeMixedTerrainUpwind, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_mixed_terrain_upwind::ChangeMixedTerrainUpwind;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeMixedTerrainUpwind, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_mixed_terrain_upwind::ChangeMixedTerrainUpwind> {
     Ok((|| {
-    vec![En1991Mutation::ChangeMixedTerrainUpwind(ChangeMixedTerrainUpwind { new_mixed_terrain_upwind: base.mixed_terrain_upwind })]
+    vec![Op::from(ChangeMixedTerrainUpwind { new_mixed_terrain_upwind: base.mixed_terrain_upwind })]
 
     })())
 }

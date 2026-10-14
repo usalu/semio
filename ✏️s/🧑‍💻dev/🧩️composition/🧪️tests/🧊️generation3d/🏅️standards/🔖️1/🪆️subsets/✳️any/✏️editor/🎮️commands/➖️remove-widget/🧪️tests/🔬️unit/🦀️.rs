@@ -1,7 +1,8 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{add_widget, patch_flow_widgets};
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_artifact_flow_flow::Widget;
 use crate::editor_domain::editor_laws::context;
 
@@ -39,7 +40,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     let before_eval = before_session.eval_json().to_string();
     let config = Generation3dConfig::default();
     crate::flow_operators::resolve_preview_geometry(&before_eval, &before_fixture, &config.lod_mode, &mut before_session);
-    let before_meshes = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&before_eval, &before_fixture, &config, Some(&before_session), &Default::default()).meshes_json;
+    let before_meshes = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&before_eval, &before_fixture, &config, Some(&before_session), &Default::default()).meshes_json;
 
     dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
     let after_fixture = context::snapshot(&app).host_snapshot.clone();
@@ -50,7 +51,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
     after_host.retire_cold();
     let after_eval = after_session.eval_json().to_string();
     crate::flow_operators::resolve_preview_geometry(&after_eval, &after_fixture, &config.lod_mode, &mut after_session);
-    let after_meshes = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&after_eval, &after_fixture, &config, Some(&after_session), &Default::default()).meshes_json;
+    let after_meshes = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&after_eval, &after_fixture, &config, Some(&after_session), &Default::default()).meshes_json;
 
     assert_ne!(before_eval, after_eval, "slider mutation must invalidate the evaluated flow");
     assert_ne!(before_meshes, after_meshes, "slider mutation must change the tessellated preview mesh");

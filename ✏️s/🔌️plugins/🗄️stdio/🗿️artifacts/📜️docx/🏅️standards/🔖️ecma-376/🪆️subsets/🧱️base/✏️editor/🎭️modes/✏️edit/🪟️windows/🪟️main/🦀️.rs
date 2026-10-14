@@ -1,7 +1,12 @@
 //! 📄️ Canonical DOCX text drafts with revision-bound run-formatting controls.
 
-use crate::schema::mutations::{docx_run_formatting, docx_top_level_block_count, docx_top_level_text_targets, DocxRunFormatting, DocxTextTargetKind, DocxXmlAddress};
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_block_count;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxXmlAddress;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};

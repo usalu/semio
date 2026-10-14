@@ -1,133 +1,74 @@
-import {phaseCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import installationSchema from "../../📦️installation/🧬️schema/🔣️.json";
-const installation=()=>({mode:"prototype" as const,control:phaseCompilerAdmissionControlV1(new AbortController().signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done)))});
-import { expect, test } from "bun:test";
-import { chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import {createRequire} from "node:module";
+import {createHash} from "node:crypto";
+import {chmodSync,copyFileSync,constants,existsSync,mkdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {basename,dirname,join,relative} from "node:path";
+import {receiveScriptProcessInvocation,createScriptProcessEnvelope,withScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {stageArtifacts} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import {publishedCargoArtifactDirectoryV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryToolingStoreV1} from "../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {withRepositoryNxStorageV1} from "../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
-import { captureDashboardSources, digestDashboardSources, installDashboard, dashboardInvocation, mayRunStale, staleDashboard } from "../../📦️installation/🟦️.ts";
-import { dashboardExecutable } from "../../📦️packages/🦀️rust/📜️script.ts";
+import {captureDashboardSources,digestDashboardSources,installDashboard,dashboardInvocation,launchDashboard,mayRunStale,staleDashboard,type DashboardExecutionOptions} from "../../📦️installation/🟦️.ts";
+import {dashboardExecutable} from "../../📦️packages/🦀️rust/📜️script.ts";
+import installationSchema from "../../📦️installation/🧬️schema/🔣️.json";
+import fixture from "../🧫️fixtures/🧊️execution/🔣️.json" with {type:"json"};
 
-test("native launch arguments match shared vectors while Nx keeps build and installation scheduling", async () => {
-  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️execution/🔣️.json",import.meta.url),"utf8"));
-  for(const vector of fixture.cases)expect(dashboardInvocation(vector.args)??null).toEqual(vector.expected);
-  for(const vector of fixture.mayRunStale)expect(mayRunStale(vector.args),vector.args.join(" ")).toBe(vector.expected);
-  const {createTaskGraph}=await import("nx/src/tasks-runner/create-task-graph.js");
-  const project=JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8"));
-  const graph={nodes:{[project.name]:{name:project.name,type:"lib",data:{root:"dashboard",targets:project.targets}}},dependencies:{[project.name]:[]}};
-  expect(Object.keys(createTaskGraph(graph,{},[project.name],["run"],undefined,{}).tasks)).toEqual([`${project.name}:run`]);
-  expect(Object.keys(createTaskGraph(graph,{},[project.name],["install"],undefined,{}).tasks).sort()).toEqual([`${project.name}:build`,`${project.name}:install`]);
-});
-
-test("dashboard execution preserves old bytes across artifact publication and reuses identical builds", async () => {
-  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
-  const root = mkdtempSync(join(output, "de-")), packageRoot = join(root, "package"), name = process.platform === "win32" ? "semio.exe" : "semio";
-  mkdirSync(packageRoot,{recursive:true});writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="dashboard-fixture"\nversion="0.0.0"\n');
-  mkdirSync(join(packageRoot, "dist/build/prototype"), { recursive: true });
-  const source = join(packageRoot, "dist/build/prototype", name), first = Buffer.from("first executable"), second = Buffer.from("second executable");
-  writeFileSync(source, first);
-  const a = await installDashboard(packageRoot, root, installation());
-  expect(basename(dirname(a))).toBe(new Bun.CryptoHasher("sha256").update(first).digest("hex"));
-  expect(await dashboardExecutable(packageRoot, root, installation())).toBe(a);
-  writeFileSync(source, second);
-  expect(await dashboardExecutable(packageRoot, root, installation())).toBe(a);
-  const b = await installDashboard(packageRoot, root, installation());
-  expect(b).not.toBe(a);
-  expect(readFileSync(a)).toEqual(first);
-  expect(readFileSync(b)).toEqual(second);
-});
-
-function stalenessTree(output: string) {
-  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️execution/🔣️.json", import.meta.url), "utf8")).staleness;
-  const root = mkdtempSync(join(output, "ds-"));
-  for (const [path, content] of Object.entries<string>(fixture.files)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
-  return { fixture, root, packageRoot: join(root, fixture.package) };
+const artifactRoot=()=>{const root=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!root)throw Error("Original dashboard test artifact root required");return root;};
+let fixtureSequence=0;
+function fixtureRoot():string{for(let attempt=0;attempt<36;attempt++){const root=join(artifactRoot(),"d"+(fixtureSequence++).toString(36));if(existsSync(root))continue;mkdirSync(root);return root;}throw Error("Bounded dashboard fixture namespace exhausted");}
+async function cleanupFixtureRoot(root:string):Promise<void>{
+ await receiveScriptProcessInvocation(process.env,async original=>{const control=scriptCompilerAdmissionControlV1(original,"dashboard:fixture-cleanup",120000);if(process.platform==="darwin")for(const partition of["r","t","l"]){const mounted=join(root,".cache/b",partition,"m");if(existsSync(mounted)&&statSync(mounted).dev!==statSync(dirname(mounted)).dev)await captureOwnedCommandV1("hdiutil",["detach",mounted],process.cwd(),{control,env:process.env});}rmSync(root,{recursive:true,force:true});});
+}
+const name=process.platform==="win32"?"semio.exe":"semio";
+const mode=()=>{const value=process.env.SEMIO_BUILD_MODE;if(value!=="prototype"&&value!=="release")throw Error("Original dashboard fixture mode required");return value;};
+function stalenessTree(){const root=fixtureRoot();for(const[path,content]of Object.entries(fixture.staleness.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);}return{root,packageRoot:join(root,fixture.staleness.package)};}
+async function withPublishedFixture<T>(root:string,packageRoot:string,original:ScriptInvocation,body:(publish:(bytes:string|Buffer)=>Promise<void>,options:DashboardExecutionOptions)=>Promise<T>):Promise<T>{
+ const selected=mode(),control=scriptCompilerAdmissionControlV1(original,"dashboard:fixture",120000),manifest=join(packageRoot,"Cargo.toml"),options:DashboardExecutionOptions={workspace:process.cwd(),mode:selected,network:{offline:true},control,invocation:original};
+ return withRepositoryCompilerStoreV1(process.cwd(),selected,control,process.env,async store=>{const source=join(store.captureDirectory,"dashboard-fixture-"+basename(root)),published=publishedCargoArtifactDirectoryV1(store.root,manifest,selected),publish=async(bytes:string|Buffer)=>{writeFileSync(source,bytes);chmodSync(source,0o755);await stageArtifacts(published,relative(process.cwd(),manifest).replaceAll("\\","/"),new Map([[name,source]]),{control,leaseDirectory:join(process.cwd(),".cache/b/l/m/data")});};try{return await withRepositoryToolingStoreV1(process.cwd(),original,()=>body(publish,options));}finally{rmSync(source,{force:true});rmSync(published,{recursive:true,force:true});}});
 }
 
-test("source digest names the crate closure and changes exactly when a compiled source changes", async () => {
-  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
-  const { fixture } = stalenessTree(output);
-  for (const mutation of fixture.mutations) {
-    const { root, packageRoot } = stalenessTree(output);
-    const before = await captureDashboardSources(packageRoot, root);
-    expect([...before.roots], mutation.name).toEqual(fixture.roots);
-    for (const [path, content] of Object.entries<string>(mutation.write ?? {})) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
-    for (const [path, seconds] of Object.entries<number>(mutation.touch ?? {})) { const time = statSync(join(root, path)).mtimeMs / 1000 + seconds; utimesSync(join(root, path), time, time); }
-    expect(await digestDashboardSources(root, before.roots) !== before.digest, mutation.name).toBe(mutation.stale);
-  }
+test("native launch arguments match shared vectors while Nx keeps compile and installation scheduling",async()=>receiveScriptProcessInvocation(process.env,async original=>{
+ for(const row of fixture.cases)expect(dashboardInvocation(row.args)??null).toEqual(row.expected);for(const row of fixture.mayRunStale)expect(mayRunStale(row.args),row.args.join(" ")).toBe(row.expected);
+ await withRepositoryNxStorageV1(process.cwd(),original,async bind=>{const identity=process.env.SEMIO_NX_TOOLING_IDENTITY,sdk=process.env.SEMIO_NX_TOOLING_ROOT;if(!identity||!sdk)throw Error("Original actual Nx SDK required");const namespace=await bind(identity),prior=Object.fromEntries(Object.keys(namespace.environment).map(key=>[key,process.env[key]]));Object.assign(process.env,namespace.environment);try{const{createTaskGraph}=createRequire(join(sdk,"package.json"))("nx/src/tasks-runner/create-task-graph"),project=JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8")),graph={nodes:{[project.name]:{name:project.name,type:"lib",data:{root:"dashboard",targets:project.targets}}},dependencies:{[project.name]:[]}};expect(Object.keys(createTaskGraph(graph,{},[project.name],["run"],undefined,{}).tasks)).toEqual([project.name+":run"]);expect(Object.keys(createTaskGraph(graph,{},[project.name],["install"],undefined,{}).tasks).sort()).toEqual([project.name+":build",project.name+":install"]);}finally{for(const[key,value]of Object.entries(prior))if(value===undefined)delete process.env[key];else process.env[key]=value;}});
+ const project=JSON.parse(readFileSync(new URL("../../📦️packages/🦀️rust/📋️project.json",import.meta.url),"utf8"));expect(project.targets.compile.metadata.semio.rustBuildIntent.binary).toBe("semio");const script=readFileSync(new URL("../../📦️packages/🦀️rust/📜️script.ts",import.meta.url),"utf8");expect(script.indexOf("const sources = await captureDashboardSources")).toBeLessThan(script.indexOf("await runDeclaredRustBuildV1(workspace"));expect(script.indexOf("await runDeclaredRustBuildV1(workspace")).toBeLessThan(script.indexOf("return await installDashboard(packageRoot"));console.log("[DEBUG] Actual Nx keeps public build before installation; its uncached Source capture precedes canonical binary compile and native run remains independent");
+}));
+
+test("dashboard immutable installation preserves old bytes and reuses identical published executable",async()=>{
+ const root=fixtureRoot(),packageRoot=join(root,"p");mkdirSync(packageRoot);writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="dashboard-fixture"\nversion="0.0.0"\n');try{await receiveScriptProcessInvocation(process.env,original=>withPublishedFixture(root,packageRoot,original,async(publish,options)=>{const first=Buffer.from("first executable"),second=Buffer.from("second executable");await publish(first);const a=await installDashboard(packageRoot,root,options);expect(basename(dirname(a))).toBe(createHash("sha256").update(first).digest("hex"));expect(await dashboardExecutable(packageRoot,root,options)).toBe(a);await publish(second);expect(await dashboardExecutable(packageRoot,root,options)).toBe(a);const b=await installDashboard(packageRoot,root,options);expect(b).not.toBe(a);expect(readFileSync(a)).toEqual(first);expect(readFileSync(b)).toEqual(second);console.log("[DEBUG] Actual fixed Rust publication becomes an immutable finite tools installation; older bytes remain intact");}));}finally{await cleanupFixtureRoot(root);}
+},120000);
+
+test("source digest names the crate closure and changes only for compiled Source vectors",async()=>{
+ for(const mutation of fixture.staleness.mutations){const{root,packageRoot}=stalenessTree();try{const before=await captureDashboardSources(packageRoot,root);expect([...before.roots],mutation.name).toEqual(fixture.staleness.roots);for(const[path,content]of Object.entries(mutation.write??{})){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);}for(const[path,seconds]of Object.entries(mutation.touch??{})){const time=statSync(join(root,path)).mtimeMs/1000+seconds;utimesSync(join(root,path),time,time);}expect(await digestDashboardSources(root,before.roots)!==before.digest,mutation.name).toBe(mutation.stale);}finally{await cleanupFixtureRoot(root);}}
 });
 
-test("a recorded installation is stale after a source edit, not after a build output edit, and reports why", async () => {
-  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
-  const { root, packageRoot } = stalenessTree(output), name = process.platform === "win32" ? "semio.exe" : "semio";
-  expect(await staleDashboard(root,"prototype")).toBe("it is not installed");
-  mkdirSync(join(packageRoot, "dist/build/prototype"), { recursive: true });
-  writeFileSync(join(packageRoot, "dist/build/prototype", name), "first executable");
-  await installDashboard(packageRoot, root, installation());
-  expect(await staleDashboard(root,"prototype")).toBeUndefined();
-  writeFileSync(join(packageRoot, "dist/build/prototype", name), "second executable");
-  expect(await staleDashboard(root,"prototype")).toBeUndefined();
-  writeFileSync(join(root, "mod/🎮️registry/🦀️.rs"), "pub fn registry() { 2; }\n");
-  expect(await staleDashboard(root,"prototype")).toMatch(/^its sources changed since installation \(\d+ files\)$/);
-  await installDashboard(packageRoot, root, installation());
-  expect(await staleDashboard(root,"prototype")).toBeUndefined();
-  writeFileSync(join(root, "mod/🎮️registry/🆕️.rs"), "pub fn added() {}\n");
-  expect(await staleDashboard(root,"prototype")).toMatch(/\d+ -> \d+ files/);
-});
+test("installation Source staleness excludes publication bytes and records genuine Source changes",async()=>{
+ const{root,packageRoot}=stalenessTree();try{await receiveScriptProcessInvocation(process.env,original=>withPublishedFixture(root,packageRoot,original,async(publish,options)=>{expect(await staleDashboard(root,options.mode)).toBe("it is not installed");await publish("first executable");await installDashboard(packageRoot,root,options);expect(await staleDashboard(root,options.mode)).toBeUndefined();await publish("second executable");expect(await staleDashboard(root,options.mode)).toBeUndefined();writeFileSync(join(root,"mod/🎮️registry/🦀️.rs"),"pub fn registry(){2;}\n");expect(await staleDashboard(root,options.mode)).toMatch(/^its sources changed since installation \(\d+ files\)$/);await installDashboard(packageRoot,root,options);expect(await staleDashboard(root,options.mode)).toBeUndefined();writeFileSync(join(root,"mod/🎮️registry/🆕️.rs"),"pub fn added(){}\n");expect(await staleDashboard(root,options.mode)).toMatch(/\d+ -> \d+ files/);}));}finally{await cleanupFixtureRoot(root);}
+},120000);
 
-test("dashboard installation records and binaries coexist for both selected modes",async()=>{
- const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️execution/🔣️.json",import.meta.url),"utf8")),root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"dm-")),packageRoot=join(root,"p"),name=process.platform==="win32"?"semio.exe":"semio",oracle=new Ajv({strict:true}).compile(installationSchema),paths=[] as string[];
- mkdirSync(packageRoot,{recursive:true});writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="dashboard-fixture"\nversion="0.0.0"\n');
- for(const mode of fixture.installationModes){mkdirSync(join(packageRoot,"dist/build",mode),{recursive:true});writeFileSync(join(packageRoot,"dist/build",mode,name),mode);const options={...installation(),mode};paths.push(await installDashboard(packageRoot,root,options));const record=JSON.parse(readFileSync(join(root,".🧬semio/🦑️repo/⚡️cache/🎛️dashboard",mode,"installed.json"),"utf8"));expect(oracle(record)).toBe(true);expect(record.mode).toBe(mode);expect(record.path).toContain(`/dashboard-cli/${mode}/`);}
- expect(paths[0]).not.toBe(paths[1]);for(const [index,mode] of fixture.installationModes.entries())expect(await dashboardExecutable(packageRoot,root,{...installation(),mode})).toBe(paths[index]);
-});
+test("installation receipt schema binds selected mode to exact finite tools bytes and permissions",async()=>{
+ const root=fixtureRoot(),packageRoot=join(root,"p"),oracle=new Ajv({strict:true}).compile(installationSchema);mkdirSync(packageRoot);writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="dashboard-fixture"\nversion="0.0.0"\n');try{await receiveScriptProcessInvocation(process.env,original=>withPublishedFixture(root,packageRoot,original,async(publish,options)=>{await publish(options.mode);const path=await installDashboard(packageRoot,root,options),record=JSON.parse(readFileSync(join(root,".🧬semio/🦑️repo/⚡️cache/🎛️dashboard",options.mode,"installed.json"),"utf8"));expect(oracle(record)).toBe(true);expect(record.mode).toBe(options.mode);expect(record.path).toContain(`.cache/b/t/m/dashboard-cli/${options.mode}/`);expect(record.bytes).toBe(Buffer.byteLength(options.mode));expect(record.permissions).toBe(0o755);expect(await dashboardExecutable(packageRoot,root,options)).toBe(path);console.log("[DEBUG] Dashboard finite installation receipt matches independent Ajv oracle in "+options.mode);}));}finally{await cleanupFixtureRoot(root);}
+},120000);
 
-/** 🛫️ An installed dashboard receives the neutral runner's original backend and process handoff. */
-test("the neutral build runner launches an installed dashboard before discovering backend graphs",async()=>{
-  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
-  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️execution/🔣️.json",import.meta.url),"utf8")).installedRunner;
-  const root=join(output,"d"),previousMode=process.env.SEMIO_BUILD_MODE,relative=`.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/${fixture.mode}/${"a".repeat(64)}/${process.platform==="win32"?"semio.exe":"semio"}`;
-  expect(join(root,relative).length).toBeLessThanOrEqual(256);mkdirSync(root);
+/** 🛫️ The finite installed dashboard receives the unchanged original process handoff. */
+test("installed finite dashboard retains authored capabilities and original deadline through its child lifetime",async()=>{
+ const root=fixtureRoot(),workspace=process.cwd(),selected=mode(),authored=fixture.installedRunner.authoring;
+ try{await receiveScriptProcessInvocation(process.env,original=>withRepositoryToolingStoreV1(workspace,original,async tools=>{
+  const control=scriptCompilerAdmissionControlV1(original,"dashboard:bridge-fixture",120000),source=join(tools.root,"bridge-"+basename(root)),bytes=readFileSync(process.execPath),digest=createHash("sha256").update(bytes).digest("hex"),executable=join(tools.root,"dashboard-cli",selected,digest,name),directory=dirname(executable),existing=existsSync(directory);
+  copyFileSync(process.execPath,source,constants.COPYFILE_FICLONE);chmodSync(source,0o755);
   try{
-    process.env.SEMIO_BUILD_MODE=fixture.mode;
-    const executable=join(root,relative);mkdirSync(dirname(executable),{recursive:true});copyFileSync(process.execPath,executable,constants.COPYFILE_FICLONE);chmodSync(executable,0o755);
-    writeFileSync(join(root,"daemon"),`import {writeFileSync} from "node:fs";writeFileSync("observed.json",JSON.stringify({arguments:process.argv.slice(2),tool:process.env.SEMIO_BUILD_TOOL,mode:process.env.SEMIO_BUILD_MODE}));console.log("[DEBUG] installed dashboard bridge tool="+process.env.SEMIO_BUILD_TOOL+" args="+process.argv.slice(2).join(","));`);
-    const record={version:2,platform:process.platform,mode:fixture.mode,path:relative,sources:{roots:["fixture"],digest:`0:${"a".repeat(40)}`}};
-    expect(new Ajv({strict:false}).compile(installationSchema)(record)).toBe(true);
-    const path=join(root,`.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/${fixture.mode}/installed.json`);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,JSON.stringify(record));
-    const {createScriptProcessEnvelope,withScriptProcessEnvelope}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
-    const {runOwnedBuildInvocationV1}=await import("../../../📚️library/🏗️build/📜️script.ts");
-    await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"dashboard:bridge-test",maximumElapsedMilliseconds:30000},{},Date.now()),invocation=>runOwnedBuildInvocationV1(root,fixture.arguments,invocation));
-    expect(JSON.parse(readFileSync(join(root,"observed.json"),"utf8"))).toEqual(fixture.expected);
-    const authored=fixture.authoring,capabilities={workspaceRoot:root,arguments:authored.arguments,selection:authored.arguments,launches:[authored.arguments],buildMode:fixture.mode,native:{...authored.native,artifactDirectory:join(root,authored.native.artifactDirectory)}};
-    const authoringSchema=JSON.parse(readFileSync(new URL("../../../📚️library/🏗️build/🧬️schema/📥️authoring.json",import.meta.url),"utf8"));
-    expect(new Ajv({strict:false}).compile(authoringSchema)(capabilities)).toBe(true);
-    const receiver=new URL("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href;
-    writeFileSync(join(root,"daemon"),`import {writeFileSync} from "node:fs";import {receiveScriptProcessInvocation} from ${JSON.stringify(receiver)};await receiveScriptProcessInvocation(process.env,async invocation=>{const remainingBefore=invocation.control.remainingMilliseconds();await Bun.sleep(${authored.receivingDelayMilliseconds});const remainingAfter=invocation.control.remainingMilliseconds(),receivedAt=Date.now(),envelope=JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION);writeFileSync("observed-authored.json",JSON.stringify({arguments:process.argv.slice(2),tool:process.env.SEMIO_BUILD_TOOL,mode:process.env.SEMIO_BUILD_MODE,envelope,remainingBefore,remainingAfter,receivedAt}));console.log("[DEBUG] authored installed dashboard owner="+invocation.policy.owner+" remaining="+remainingAfter);});`);
-    const cli=new URL("../../../📚️library/🏗️build/📜️script.ts",import.meta.url).href;
-    const program=`import {writeFileSync} from "node:fs";import {runBuildCliV1} from ${JSON.stringify(cli)};const startedAt=Date.now();await runBuildCliV1(${JSON.stringify(root)},${JSON.stringify(["repo",...fixture.arguments])},process.env);writeFileSync("cli-clock.json",JSON.stringify({startedAt,completedAt:Date.now()}));`;
-    const environment:NodeJS.ProcessEnv={...process.env,SEMIO_SCRIPT_POLICY:JSON.stringify(authored.policy),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(capabilities),CARGO_NET_OFFLINE:"false"};
-    delete environment.SEMIO_SCRIPT_PROCESS_INVOCATION;
-    const child=Bun.spawn([process.execPath,"--eval",program],{cwd:root,env:environment,stdout:"pipe",stderr:"pipe"});
-    const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
-    expect(status,stderr).toBe(0);
-    const observed=JSON.parse(readFileSync(join(root,"observed-authored.json"),"utf8")),clock=JSON.parse(readFileSync(join(root,"cli-clock.json"),"utf8"));
-    expect({arguments:observed.arguments,tool:observed.tool,mode:observed.mode}).toEqual(fixture.expected);
-    expect(observed.envelope.policy).toEqual(authored.policy);
-    expect(observed.envelope.capabilities).toEqual({...capabilities,tool:"bazel"});
-    expect(observed.envelope.deadlineEpochMilliseconds-authored.policy.maximumElapsedMilliseconds).toBeGreaterThanOrEqual(clock.startedAt-2);
-    expect(observed.envelope.deadlineEpochMilliseconds-authored.policy.maximumElapsedMilliseconds).toBeLessThanOrEqual(clock.completedAt);
-    expect(observed.remainingBefore).toBeLessThan(authored.policy.maximumElapsedMilliseconds);
-    expect(observed.remainingAfter).toBeGreaterThan(0);
-    expect(observed.remainingAfter).toBeLessThanOrEqual(observed.remainingBefore-authored.receivingDelayMilliseconds+2);
-    expect(Math.abs(observed.envelope.deadlineEpochMilliseconds-observed.receivedAt-observed.remainingAfter)).toBeLessThanOrEqual(2);
-    expect(stdout).toContain("[DEBUG] authored installed dashboard owner="+authored.policy.owner);
-    expect(()=>statSync(buildGraphPathV1(root))).toThrow();
-    console.log(stdout.split("\n").find(line=>line.startsWith("[DEBUG] authored installed dashboard")));
-  }finally{if(previousMode===undefined)delete process.env.SEMIO_BUILD_MODE;else process.env.SEMIO_BUILD_MODE=previousMode;rmSync(root,{recursive:true,force:true});}
-});
+   await stageArtifacts(directory,"dashboard-installation:"+selected,new Map([[name,source]]),{control,leaseDirectory:join(workspace,".cache/b/l/m/data")});
+   writeFileSync(join(root,"daemon"),'import {writeFileSync} from "node:fs";writeFileSync("observed.json",JSON.stringify({arguments:process.argv.slice(2),mode:process.env.SEMIO_BUILD_MODE,envelope:JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION)}));console.log("[DEBUG] finite installed dashboard original handoff");');
+   const record={version:3,platform:process.platform,mode:selected,path:relative(workspace,executable).replaceAll("\\","/"),sources:{roots:["fixture"],digest:`0:${"a".repeat(40)}`},digest,bytes:bytes.length,permissions:0o755};expect(new Ajv({strict:true}).compile(installationSchema)(record)).toBe(true);
+   const file=join(root,".🧬semio/🦑️repo/⚡️cache/🎛️dashboard",selected,"installed.json");mkdirSync(dirname(file),{recursive:true});writeFileSync(file,JSON.stringify(record));
+   const capabilities={tool:"bazel",arguments:authored.arguments,native:authored.native},envelope=createScriptProcessEnvelope(authored.policy,capabilities,Date.now());
+   await new Promise<void>(done=>setTimeout(done,authored.receivingDelayMilliseconds));
+   await withScriptProcessEnvelope(envelope,async invocation=>{const launchControl=scriptCompilerAdmissionControlV1(invocation,"dashboard:bridge-launch",30000);expect(await launchDashboard(root,["daemon","status"],{workspace,mode:selected,network:{offline:true},control:launchControl,invocation})).toBe(0);});
+   const observed=JSON.parse(readFileSync(join(root,"observed.json"),"utf8"));expect(observed.arguments).toEqual(["status"]);expect(observed.mode).toBe(selected);expect(observed.envelope.policy).toEqual(authored.policy);expect(observed.envelope.capabilities).toEqual(capabilities);expect(observed.envelope.deadlineEpochMilliseconds).toBeLessThanOrEqual(envelope.deadlineEpochMilliseconds!);expect(observed.envelope.deadlineEpochMilliseconds).toBeGreaterThan(envelope.deadlineEpochMilliseconds!-100);expect(()=>statSync(buildGraphPathV1(root))).toThrow();
+  }finally{rmSync(source,{force:true});if(!existing)rmSync(directory,{recursive:true,force:true});}
+ }));}finally{await cleanupFixtureRoot(root);}
+},120000);

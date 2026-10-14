@@ -1,0 +1,10 @@
+import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+import {repositoryCompilerLaunchEnvironmentV1} from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import policy from "../🔣️policy.json" with {type:"json"};
+import fixture from "./🔣️.json" with {type:"json"};
+import {readFileSync} from "node:fs";
+test("compiler ingress requires issued storage and keeps its closed default protocol",async()=>{expect(new Ajv({strict:true}).compile(schema)(policy)).toBe(true);await expect(repositoryCompilerLaunchEnvironmentV1({} as never,{} as never,{})).rejects.toThrow();const oracle=new Database(":memory:");try{expect((oracle.query("SELECT json_extract(?, '$.compiler') AS compiler").get(JSON.stringify(policy)) as {compiler:string}).compiler).toBe(fixture.defaultCompiler);expect(policy.wrapper).toBe("bun");console.log("[DEBUG] Closed compiler ingress schema and SQLite agree; invented reservation refuses before environment projection");}finally{oracle.close();}});
+test("default Cargo ingress selects the closed Source guard",()=>{const config=Bun.TOML.parse(readFileSync(".cargo/config.toml","utf8")) as {build:{rustc?:string;"rustc-wrapper"?:string}};expect(config.build.rustc).toBe(policy.program);expect(config.build["rustc-wrapper"]).toBe(policy.wrapper);});

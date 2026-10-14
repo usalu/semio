@@ -6,7 +6,7 @@ mod tests {
         let document = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(std::str::from_utf8(&bytes).unwrap()).unwrap();
         snapshot.opc.content_types.set_override(path, content_type);
         if let Some(part) = snapshot.xml_parts.iter_mut().find(|part| part.path == path) { part.document = document; part.content_type = content_type.into(); }
-        else { snapshot.xml_parts.push(crate::schema::snapshot::PptxXmlPart { path: path.into(), content_type: content_type.into(), document }); }
+        else { snapshot.xml_parts.push(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart { path: path.into(), content_type: content_type.into(), document }); }
     }
 
     const TRANSITIONAL_PRESENTATION_XML: &str = concat!(

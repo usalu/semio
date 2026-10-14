@@ -563,5 +563,19 @@
         }
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-process-process3d-model",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "📸️ The subject half reports snapshot identities through the text codec the model crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-process-process3d-mutations",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The subject half reports mutations through the text codec the mutations crate owns."
+    }
   ]
 }

@@ -1,10 +1,10 @@
-pub(crate) mod context {
+pub mod context {
     
     use super::super::*;
     
-    pub(crate) const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
+    pub const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
     
-    pub(crate) fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+    pub fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
         (
             vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
             vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
@@ -16,14 +16,14 @@ pub(crate) mod context {
     /// B22 — a second id whose DIGEST is already resident adopts the resident page — so a law asserting
     /// "this process holds nothing for that geometry" must not reuse the shared cube, or it passes or fails
     /// by test order.
-    pub(crate) fn seeded_cube_mesh_buffers(seed: f32) -> (Vec<f32>, Vec<u32>) {
+    pub fn seeded_cube_mesh_buffers(seed: f32) -> (Vec<f32>, Vec<u32>) {
         let (positions, indices) = unit_cube_mesh_buffers();
         (positions.iter().map(|value| value + seed).collect(), indices)
     }
     
     /// 🧊️ Same box as `unit_cube_mesh_buffers` but with outward-facing (CCW-from-outside) winding, needed
     /// for tests that rely on `CollisionShape::contains_point` actually reporting interior points as inside.
-    pub(crate) fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+    pub fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
         (
             vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
             vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 5, 4, 0, 1, 5, 2, 7, 6, 2, 3, 7, 0, 7, 3, 0, 4, 7, 1, 6, 5, 1, 2, 6],
@@ -32,7 +32,7 @@ pub(crate) mod context {
     
     /// 🏗️ One `Host` object with a single free `port-a` vortex — the smallest scene that still schedules
     /// both precompute lanes.
-    pub(crate) fn single_object_scene_json() -> String {
+    pub fn single_object_scene_json() -> String {
         let scene = SceneConfig {
             scene_snapshot: EngineSceneSnapshot {
                 attractions: vec![],
@@ -71,31 +71,10 @@ pub(crate) mod context {
 
 use super::*;
 
-/// 🔗️ Keeps the example scene_snapshot's scene-authored kind catalog in sync with the compile-time
-/// `puzzle3d-default` manifest.
-#[test]
-fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-    let scene_snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
-    let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&scene_snapshot.meta.kind_catalogs).unwrap()).unwrap();
-    let manifest = crate::graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
-    let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
-    let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
-    for vortex in &catalogs.vortices {
-        if let Some(default_cable_kind) = &vortex.default_cable_kind {
-            assert!(wire_kind_ids.contains(default_cable_kind.as_str()), "vortex kind {:?} references unknown wire kind {default_cable_kind:?}", vortex.id);
-        }
-    }
-    for cable in &catalogs.cables {
-        if let Some(default_attraction_kind) = &cable.default_attraction_kind {
-            assert!(edge_kind_ids.contains(default_attraction_kind.as_str()), "cable kind {:?} references unknown edge kind {default_attraction_kind:?}", cable.id);
-        }
-    }
-}
-
 /// 🪪️ A vortex id that already carries its owner's prefix is passed through untouched.
 #[test]
 fn vortex_full_id_prefixes_only_bare_ids() {
-    use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
+    use crate::puzzle3d_vortex_full_id;
     assert_eq!(puzzle3d_vortex_full_id("host", "v0"), "host:v0");
     assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
 }

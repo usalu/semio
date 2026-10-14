@@ -1,8 +1,8 @@
 //! 🧬️ `replace-zones` mutation leaf.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -11,10 +11,10 @@ use crate::Din18599Snapshot;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ReplaceZones {
-    pub new_zones: Vec<crate::ThermalZone>,
+    pub new_zones: Vec<semio_s_artifact_norm_din18599_model::ThermalZone>,
 }
 
-impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ReplaceZones {
+impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for ReplaceZones where Op: protocol::Mutation<Din18599Snapshot, Diff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::replace_zones::ReplaceZones> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "replace",
         entity: "zones",
@@ -23,12 +23,12 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ReplaceZones
     };
 
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
-        super::diff::diff(self, base)
+        crate::replace_zones::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::replace_zones::inverse::inverse(self, base)?
     
     })
 }
@@ -37,3 +37,10 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ReplaceZones
         semio_framework_ui_locale::LocalizedLabel::native("Replace zones", "Zonen ersetzen")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

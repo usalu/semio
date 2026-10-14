@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "complianceRecord",
+  "id": "compliance-record-a"
+}

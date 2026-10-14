@@ -17,8 +17,8 @@
 //! pieces of the horizon, so a face of an edge is the exact region swept by it. Related:
 //! <https://en.wikipedia.org/wiki/Straight_skeleton>, Aichholzer et al., "A novel type of skeleton for polygons" (1995).
 
-use crate::vector::{perp, unit, LENGTH_EPS};
-use crate::{Point, Vec2};
+use semio_framework_geometry_vector::{perp, unit, LENGTH_EPS};
+use semio_framework_geometry_primitives::{Point, Vec2};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
 

@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-unicode-properties"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🏷️ Pinned Unicode shaping record head and property ranges asset."
+
+[package.metadata.semio]
+role = "framework"
+id = "unicode-properties"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_unicode_properties"
+path = "../../🦀️.rs"

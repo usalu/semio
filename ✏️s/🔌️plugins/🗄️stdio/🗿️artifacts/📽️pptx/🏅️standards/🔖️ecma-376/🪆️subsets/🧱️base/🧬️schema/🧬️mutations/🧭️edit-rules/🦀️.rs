@@ -75,7 +75,7 @@ fn node_edit(event: &SnapshotEditEvent, pointer: &str, snapshot: &PptxSnapshot, 
     if *node == replacement {
         return Ok(Some(Vec::new()));
     }
-    let address = xml_address::pptx_xml_address(snapshot, &part.path, path).map_err(|message| refusal(pointer, message))?;
+    let address = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_xml_address(snapshot, &part.path, path).map_err(|message| refusal(pointer, message))?;
     Ok(Some(vec![PptxMutation::ReplaceXmlNode(replace_xml_node::ReplaceXmlNode { address, node: replacement })]))
 }
 
@@ -182,7 +182,3 @@ pub fn special(event: &SnapshotEditEvent, snapshot: &PptxSnapshot) -> Result<Opt
         _ => Ok(None),
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

@@ -1,8 +1,7 @@
 //! ⏳️ Energy model mutation — `ChangeInfiltrationSchedule`: Re-points one infiltration's schedule reference; a schedule the document does not define is refused.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeInfiltrationSchedule {
     pub new_schedule_id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_infiltration_schedule(id: crate::model::EntityId, new_schedule_id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeInfiltrationSchedule(ChangeInfiltrationSchedule { id, new_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_infiltration_schedule<Op: From<ChangeInfiltrationSchedule>>(id: crate::model::EntityId, new_schedule_id: crate::schedule::ScheduleId) -> Op {
+    ChangeInfiltrationSchedule { id, new_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeInfiltrationSchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeInfiltrationSchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeInfiltrationSchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration", kind: "change-infiltration-schedule", record: "ChangedInfiltrationSchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

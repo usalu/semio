@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-2d-text-font-shape"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧵️ OpenType lookup selection, substitution, ligatures, marks, contexts and cluster face mapping."
+
+[package.metadata.semio]
+role = "framework"
+id = "2d-text-font-shape"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_2d_text_font_shape"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-2d-text-font = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-2d-text-font-shape-unicode = { path = "../../🌐️unicode/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+ttf-parser = "0.25.1"
+rustybuzz = "0.20.1"
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-testing = { path = "../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-catalog = { path = "../../../📇️catalog/📦️packages/🦀️rust" }

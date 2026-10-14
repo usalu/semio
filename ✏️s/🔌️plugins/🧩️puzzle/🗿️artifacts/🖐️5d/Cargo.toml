@@ -45,9 +45,6 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-framework-async-macros]
     path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-graph]
-    path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
-
     [workspace.dependencies.semio-framework-hash]
     path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
 
@@ -115,6 +112,51 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.serde_json]
     version = "1.0.149"
     features = [ "raw_value" ]
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-editor]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-editor-config]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-editor-modes]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-editor-snapshot]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-editor-transform]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🔄️transform/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-inferences]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-model]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-mutations]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-mutations-object]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-mutations-selection]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-mutations-volume]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-mutations-vortex]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-precompute]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-precompute-brush]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-plugin-puzzle-jobs]
+    path = "../../🎮️commands/📤️jobs/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

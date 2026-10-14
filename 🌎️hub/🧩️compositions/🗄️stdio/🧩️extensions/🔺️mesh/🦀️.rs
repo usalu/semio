@@ -7,6 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::PluginBuilder;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
@@ -26,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioMeshApps>::builder("stdio-mesh").label("Stdio Mesh").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-mesh").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = PluginBuilder::<_, StdioMeshApps>::new("stdio-mesh").label("Stdio Mesh").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-mesh").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_gltf::declaration(semio_s_artifact_stdio_gltf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_obj::declaration(semio_s_artifact_stdio_obj::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_stl::declaration(semio_s_artifact_stdio_stl::definition()?).map_err(PluginAssemblyError::definition)?);

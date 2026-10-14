@@ -1,5 +1,5 @@
-use super::*;
-use crate::schema::snapshot::PptxXmlPart;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
 use protocol::{command::DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
 use quick_xml::{events::Event, reader::Reader};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
@@ -56,7 +56,7 @@ fn snapshot(case: &semio_framework_pack_json::Value) -> PptxSnapshot {
 }
 
 fn text_at(snapshot: &PptxSnapshot, slide_path: &str, shape_id: &str) -> String {
-    xml_address::pptx_slides(snapshot)
+    crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot)
         .expect("canonical slides")
         .into_iter()
         .find(|slide| slide.address.slide_part_path == slide_path)
@@ -83,7 +83,7 @@ fn assert_quick_xml(text: &str) {
 fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
     for case in fixture_cases() {
         let base = snapshot(&case);
-        let slides = xml_address::pptx_slides(&base).expect("namespace-independent canonical projection");
+        let slides = crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&base).expect("namespace-independent canonical projection");
         let expected = case["slides"].as_array().expect("fixture slides");
         assert_eq!(slides.len(), expected.len());
         for (slide, expected) in slides.iter().zip(expected) {
@@ -119,7 +119,7 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
         let position = PptxTransform { x: parse("x"), y: parse("y"), cx: parse("cx"), cy: parse("cy") };
         let mut positioned = base.clone();
         apply_pptx_mutation(&mut positioned, &PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address: position_address, position }));
-        let shape = xml_address::pptx_slides(&positioned).expect("positioned slides").into_iter().flat_map(|slide| slide.shapes).find(|shape| shape.address.shape_id == shape_id).expect("positioned shape");
+        let shape = crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&positioned).expect("positioned slides").into_iter().flat_map(|slide| slide.shapes).find(|shape| shape.address.shape_id == shape_id).expect("positioned shape");
         assert_eq!(shape.position, Some(position));
         let serialized = positioned.part_text(slide_path).expect("positioned XML");
         for token in position_edit["preserve"].as_array().expect("preserved position tokens") {
@@ -130,7 +130,7 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
         let moved_address = slides.iter().find(|slide| slide.address.relationship_id == move_edit["relationshipId"].as_str().expect("move relationship")).expect("addressed moved slide").address.clone();
         let mut moved = base.clone();
         apply_pptx_mutation(&mut moved, &PptxMutation::MoveSlide(move_slide::MoveSlide { address: moved_address, destination_index: move_edit["destinationIndex"].as_u64().expect("move index") as usize }));
-        assert_eq!(xml_address::pptx_slides(&moved).expect("moved slides")[0].address.relationship_id, move_edit["relationshipId"].as_str().expect("move relationship"));
+        assert_eq!(crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&moved).expect("moved slides")[0].address.relationship_id, move_edit["relationshipId"].as_str().expect("move relationship"));
     }
 }
 
@@ -138,12 +138,12 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
 fn canonical_save_reopens_with_quick_xml_and_own_decoder() {
     for case in fixture_cases() {
         let base = snapshot(&case);
-        let slides = xml_address::pptx_slides(&base).expect("slides");
+        let slides = crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&base).expect("slides");
         let edit = &case["edits"]["text"];
         let address = slides.iter().flat_map(|slide| &slide.shapes).find(|shape| shape.address.shape_id == edit["shapeId"].as_str().expect("shape id")).expect("shape").address.clone();
         let mut edited = base.clone();
         apply_pptx_mutation(&mut edited, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { address, text: edit["to"].as_str().expect("target text").into() }));
-        let bytes = crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&edited).expect("canonical save");
+        let bytes = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx(&edited).expect("canonical save");
         let mut archive = zip::ZipArchive::new(Cursor::new(&bytes)).expect("independent ZIP reopen");
         for part in &edited.xml_parts {
             let mut member = archive.by_name(&part.path).expect("saved XML member");
@@ -152,7 +152,7 @@ fn canonical_save_reopens_with_quick_xml_and_own_decoder() {
             assert_quick_xml(&text);
         }
         drop(archive);
-        let reopened = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("own canonical reopen");
+        let reopened = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("own canonical reopen");
         assert_eq!(text_at(&reopened, edit["slidePath"].as_str().expect("slide path"), edit["shapeId"].as_str().expect("shape id")), edit["to"].as_str().expect("target text"));
         assert_eq!(reopened.opc.parts, edited.opc.parts);
         assert_eq!(reopened.opc.relationships, edited.opc.relationships);
@@ -180,14 +180,14 @@ async fn every_demo_kind_satisfies_the_inverse_sum_law() {
 #[semio_framework_async_macros::async_test]
 async fn removing_a_middle_slide_or_shape_is_restored_at_its_original_index() {
     let text_box = |text: &str| PptxShape::TextBox { text_frame: vec![PptxParagraph::text(text)], position: PptxTransform::default() };
-    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
+    let base = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![text_box("a0"), text_box("a1"), text_box("a2")] },
             PptxSlide { shapes: vec![text_box("b0")] },
             PptxSlide { shapes: vec![text_box("c0")] },
         ],
     });
-    let slides = xml_address::pptx_slides(&base).expect("canonical slides");
+    let slides = crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&base).expect("canonical slides");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::RemoveSlide(remove_slide::RemoveSlide { address: slides[1].address.clone() }), &base).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::RemoveShape(remove_shape::RemoveShape { address: slides[0].shapes[1].address.clone() }), &base).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::MoveSlide(move_slide::MoveSlide { address: slides[1].address.clone(), destination_index: 2 }), &base).await;

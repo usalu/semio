@@ -1,0 +1,35 @@
+{
+ "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+ "crate": "semio_s_artifact_draw_drawing_editor_commands",
+ "aggregator": "commands",
+ "workspace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+ "aggregatorRole": "library",
+ "consumers": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+  "🌎️hub/🧩️compositions/🖍️draw"
+ ],
+ "crates": {
+  "commands": {
+   "ident": "semio_s_artifact_draw_drawing_editor_commands",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "doc": ""
+  },
+  "interaction": {
+   "ident": "semio_s_artifact_draw_drawing_editor_interaction",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+   "doc": ""
+  }
+ },
+ "rules": [
+  [
+   "",
+   "commands",
+   ""
+  ],
+  [
+   "clipboard",
+   "interaction",
+   "clipboard"
+  ]
+ ]
+}

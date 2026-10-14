@@ -5,12 +5,13 @@
 //! asked for (`TreeWindows::for_body`, threaded in from the editor's `render`). There is no `+N` row
 //! and no truncation — a closed group costs one stamped `total` and nothing else.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::{layer_row_id, raster_action, ui_label, ui_value_map, ui_value_text, RASTER_INTERACTION_DOMAIN, RASTER_INTERACTION_GRANULARITY, RASTER_PLAY_CONTROLLER_ID, RASTER_TREE_PREFIX};
-use crate::standards::v1::subsets::any::schema::layer_name;
-use crate::standards::v1::subsets::any::schema::{layer_visible,layer_protection,layer_node_id};
-use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
+use crate::config::RasterConfig;
+use crate::terminology::RasterPlayLabels;
+use crate::{layer_row_id, raster_action, ui_label, ui_value_map, ui_value_text, RASTER_INTERACTION_DOMAIN, RASTER_INTERACTION_GRANULARITY, RASTER_PLAY_CONTROLLER_ID, RASTER_TREE_PREFIX};
+use semio_s_artifact_raster_raster_model::layer_name;
+use semio_s_artifact_raster_raster_model::{layer_visible, layer_protection, layer_node_id};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_window_item;

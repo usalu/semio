@@ -128,17 +128,17 @@ where
     C: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: Clone + OpBinary + Mutation<C> + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
-    std::sync::Arc::new(BoundedConfigPreparationFactory::<C, M> { prefix, maximum_bytes, marker: std::marker::PhantomData, snapshot_factory: std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<C>::default()), mutation_factory: std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<M>::default()) })
+    std::sync::Arc::new(BoundedConfigPreparationFactory::<C, M> { prefix, maximum_bytes, marker: std::marker::PhantomData, snapshot_factory: std::sync::Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<C>::default()), mutation_factory: std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<M>::default()) })
 }
 
 /// 🌱️ Quotes the original preparation source Arc and both original issuer Arcs while their retirement tickets remain pending.
 pub fn bounded_config_store_one_item_preparation_factory_source_birth_demand<C: 'static, M: 'static>() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand {
-    semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<BoundedConfigPreparationFactory<C, M>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::retirement::OwnedValueRetirementFactory<M>>(), depth: 1 }
+    semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<BoundedConfigPreparationFactory<C, M>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<M>>(), depth: 1 }
 }
 
 /// 🌱️ Prices the exact bounded preparation factory Arc, its two original issuer Arcs and every original retirement ticket.
 pub fn bounded_config_store_one_item_preparation_factory_birth_bytes<C: 'static, M: 'static>() -> usize {
-    semio_framework_value::factory_constructor_birth_bytes::<BoundedConfigPreparationFactory<C, M>>(semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::retirement::OwnedValueRetirementFactory<M>>())
+    semio_framework_value::factory_constructor_birth_bytes::<BoundedConfigPreparationFactory<C, M>>(semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<M>>())
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -162,7 +162,7 @@ struct BoundedConfigPreparation<C: 'static, M: 'static> {
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    pub(crate) closing: bool,
+    pub closing: bool,
     snapshot_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<C>>>,
     mutation_factory: Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>>,
     active_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
@@ -423,7 +423,7 @@ where
         Ok(Default::default())
     }
 
-    pub(crate) fn cancel_signal(&self) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
+    pub fn cancel_signal(&self) -> std::sync::Arc<std::sync::atomic::AtomicBool> {
         assert!(self.cancel_arc_live,"initializer cancellation source is terminal");
         std::sync::Arc::clone(&self.cancel_requested)
     }
@@ -432,18 +432,18 @@ where
         if self.cancel_arc_live { self.cancel_requested.store(true, std::sync::atomic::Ordering::Release); }
     }
 
-    pub(crate) fn take_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
+    pub fn take_candidate(&mut self) -> Option<Box<ArtifactStore<P, Mutation>>> {
         let candidate = self.authority.as_mut()?.take_boxed_candidate()?;
         self.terminal_handoff = true;
         Some(candidate)
     }
 
     /// 📈️ The initializer's `(operations folded, operations to fold)` while its authority is retained.
-    pub(crate) fn progress(&self) -> (u64, u64) {
+    pub fn progress(&self) -> (u64, u64) {
         self.authority.as_ref().map_or((0, 0), |authority| authority.progress())
     }
 
-    pub(crate) fn accept_terminal_failure(&mut self) -> bool {
+    pub fn accept_terminal_failure(&mut self) -> bool {
         if !self.authority.as_ref().is_some_and(|authority| authority.terminal_is_empty()) {
             return false;
         }
@@ -451,7 +451,7 @@ where
         true
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.authority.is_none() && !self.cancel_arc_live && self.terminal_handoff
     }
 }
@@ -522,4 +522,4 @@ where
 #[path="../🎞️media/📥️snapshot/🦀️.rs"]
 mod snapshot_source;
 pub use snapshot_source::ArtifactSnapshotCloseLease;
-pub(crate) use snapshot_source::{ArtifactMediaSnapshotSource,ArtifactSnapshotCloseRetention};
+pub use snapshot_source::{ArtifactMediaSnapshotSource,ArtifactSnapshotCloseRetention};

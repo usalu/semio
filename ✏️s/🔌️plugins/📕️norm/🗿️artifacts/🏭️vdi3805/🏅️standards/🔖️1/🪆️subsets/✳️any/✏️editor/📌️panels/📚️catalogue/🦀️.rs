@@ -7,14 +7,14 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::document::ClauseId;
-use crate::{CONNECTION_TYPE_ROWS, FILTER_CLASS_ROWS, PRESSURE_CLASS_ROWS, SHEET_NUMERIC_BOUNDS_19_AIRFLOW, SHEET_NUMERIC_BOUNDS_53_COP, SHEET_NUMERIC_BOUNDS_DN, SHEET_NUMERIC_BOUNDS_VOLUME_M3, SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_artifact_norm_vdi3805_model::{CONNECTION_TYPE_ROWS, FILTER_CLASS_ROWS, PRESSURE_CLASS_ROWS, SHEET_NUMERIC_BOUNDS_19_AIRFLOW, SHEET_NUMERIC_BOUNDS_53_COP, SHEET_NUMERIC_BOUNDS_DN, SHEET_NUMERIC_BOUNDS_VOLUME_M3, SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA};
 
 pub const BODY_CATALOGUE: &str = "norm.vdi3805.play.catalogue";
 
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 
 /// 📋 Blatt-sourced connection types (VDI 3805-1 §6.2 / product-sheet Anschlussart code lists).
@@ -101,7 +101,6 @@ fn heat_pump_cop_table() -> CatalogueTable {
     }
 }
 
-
 /// 📋 Airflow domain (VDI 3805-16/19) — same numbers evaluate() reads.
 fn airflow_domain_table() -> CatalogueTable {
     let (min_v, max_v) = SHEET_NUMERIC_BOUNDS_19_AIRFLOW;
@@ -165,7 +164,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 
 #[cfg(test)]

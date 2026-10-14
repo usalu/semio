@@ -1,6 +1,6 @@
 //! 🔗️ Immutable clone sources capture actual original authority and expose sealed projection leases.
 use super::{RetainedCloneBinding,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneProjection,RetainedCloneRef,RetainedCloneStep,RetainedOwnedProjection,RETAINED_CLONE_SOURCE_IDS};
-use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},shared_issuance::{SealedShared,SharedIssuer}};
 use std::{mem::ManuallyDrop,ptr::NonNull,sync::atomic::Ordering};
 
 pub(super) struct RetainedCloneLeaseOwner{pub(super) id:u64,payload:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
@@ -142,13 +142,3 @@ impl<A:RetireOwned+Sync> RetainedCloneSource<A,A>{
  pub fn admit_owned<B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)>{Self::admit_with(owner,authority,identity,true,grant)}
 }
 
-#[cfg(test)]
-pub(crate) struct FixtureSource<T:RetireOwned+Sync>(RetainedCloneSource<T>);
-#[cfg(test)]
-impl<T:RetireOwned+Sync> std::ops::Deref for FixtureSource<T>{type Target=RetainedCloneSource<T>;fn deref(&self)->&Self::Target{&self.0}}
-#[cfg(test)]
-impl<T:RetireOwned+Sync> FixtureSource<T>{fn drain(&mut self){for _ in 0..100000{if self.0.terminal_is_empty(){return;}let copy=self.0.next_close_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.0.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:self.0.next_close_release_byte_demand().unwrap(),maximum_depth:self.0.next_close_depth_demand().unwrap()};let(step,heap)=crate::value::observe_retirement_allocations(||self.0.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}panic!("original source fixture did not physically close");}}
-#[cfg(test)]
-impl<T:RetireOwned+Sync> Drop for FixtureSource<T>{fn drop(&mut self){if !std::thread::panicking(){self.drain();}}}
-#[cfg(test)]
-impl<T:RetireOwned+Sync> RetainedCloneSource<T>{pub(crate) fn from_owner(owner:T)->FixtureSource<T>{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:Self::constructor_copy_bytes(),maximum_capacity_bytes:Self::owned_constructor_capacity_bytes::<()>(),maximum_depth:1,..Default::default()};FixtureSource(Self::admit_owned(owner,(),grant).unwrap_or_else(|_|panic!("original fixture source admission")).0)}}

@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeDailyScheduleLimits` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, OptionChange, Rows, ScheduleSetPatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, ScheduleSetPatch};
+use crate::diff_patch::{OptionChange, Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeDailyScheduleLimits, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

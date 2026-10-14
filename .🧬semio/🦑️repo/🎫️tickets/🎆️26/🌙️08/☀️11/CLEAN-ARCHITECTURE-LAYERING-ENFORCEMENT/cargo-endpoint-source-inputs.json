@@ -1,0 +1,29 @@
+{
+  "kind": "owned-source-freeze-observations-not-admission-receipt",
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83c\udfc3\ufe0fexecution/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "6ee2ef94ea9d531c4fed170d2a8dfaa02d0d5b9f3f6c815f305f52c84b7ea9fb",
+      "bytes": 14295,
+      "absolutePathCharacters": 113
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83c\udfc3\ufe0fexecution/\ud83d\udcdc\ufe0fscript.ts",
+      "sha256": "ec4d91529e26a00791e41947437648b51cadcc393607d9dad9d45ca9e1d7f50f",
+      "bytes": 958,
+      "absolutePathCharacters": 119
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83c\udfc3\ufe0fexecution/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "05b8c0c72657bdffd6e857a41a61184ad9cae480885158c2296f956a6a440627",
+      "bytes": 16445,
+      "absolutePathCharacters": 121
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83e\udd80\ufe0fcargo/\ud83c\udfc3\ufe0fexecution/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "bc485800c81fa766d1d1ab8308c493606fbbacb04dcbe4c78390d8dc63249613",
+      "bytes": 6781,
+      "absolutePathCharacters": 134
+    }
+  ]
+}

@@ -16,7 +16,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-default = []
 testing = []
 
 [dependencies]

@@ -1,9 +1,11 @@
 //! ➖️ `delete-frame` — removes a {@link Frame} from a page by id (and every layer's `object_ids`
 //! referencing it); inverse recreates it via `create-frame`.
 
-use crate::mutations::{create_frame, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::create_frame;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +21,12 @@ pub struct DeleteFrame {
     pub frame_id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_frame::CreateFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "frame", kind: "delete-frame", record: "DeletedFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_delete_frame(self, base)?
     
@@ -55,7 +57,7 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
 //#endregion ➖️DeleteFrame
 
 //#region ➖️DeleteFrame
-pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_delete_frame<Op: From<crate::create_frame::CreateFrame>>(payload: &DeleteFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -65,8 +67,17 @@ pub fn inverse_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> Res
     };
     let frame = page.frames[index].clone();
     let layer_id = page.layers.iter().find(|layer| layer.object_ids.iter().any(|id| id == &payload.frame_id)).map(|layer| layer.id.clone());
-    vec![LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: payload.page_id.clone(), frame, index: Some(index), layer_id })]
+    vec![Op::from(create_frame::CreateFrame { page_id: payload.page_id.clone(), frame, index: Some(index), layer_id })]
 
     })())
 }
 //#endregion ➖️DeleteFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+mod tests_removes_a_middle_row;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️removes/🦀️.rs"]
+mod tests_removes_the_text_frame_and_its_layer_membership;
+//#endregion 🪢️TaxonomyMounts

@@ -1,8 +1,10 @@
 //! 🗑️ `delete-page` — removes a {@link Page} by id; inverse recreates it via `create-page`.
 
-use crate::mutations::{create_page, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPageRemoval};
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::create_page;
+use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutPageRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,12 +19,12 @@ pub struct DeletePage {
     pub id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
+impl<Op> MutationKind<LayoutSnapshot, Op> for DeletePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_page::CreatePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "page", kind: "delete-page", record: "DeletedPage" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_delete_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_delete_page(self, base)?
     
@@ -47,13 +49,22 @@ pub fn diff_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> protocol
 //#endregion 🗑️DeletePage
 
 //#region 🗑️DeletePage
-pub fn inverse_delete_page(payload: &DeletePage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_delete_page<Op: From<crate::create_page::CreatePage>>(payload: &DeletePage, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().position(|page| page.id == payload.id) {
-        Some(index) => vec![LayoutMutation::CreatePage(create_page::CreatePage { page: base.pages[index].clone(), index: Some(index) })],
+        Some(index) => vec![Op::from(create_page::CreatePage { page: base.pages[index].clone(), index: Some(index) })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🗑️DeletePage
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+mod tests_removes_a_middle_row;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️removes-page-2/🦀️.rs"]
+mod tests_removes_page_2;
+//#endregion 🪢️TaxonomyMounts

@@ -3,7 +3,7 @@
 //! leaves zero trace, an identity motion commits nothing; the motion algebra composes offsets, rotations and factors.
 
 use super::*;
-use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
 
 fn clock(ms: u64) -> protocol::HybridLogicalTimestamp {
     protocol::HybridLogicalTimestamp { actor: 0, physical_ms: ms, logical: 0 }
@@ -122,17 +122,17 @@ fn the_gumball_rides_the_shared_gesture_runner() {
 #[test]
 fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
     use semio_framework_plugin::ArtifactEditor;
-    type Editor = crate::editor::generation3d::Generation3dPlayApp;
+    type Editor = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
     for (verb, motion) in [("translateSelection", GumballMotion::Translate([1.0, 0.0, 0.0])), ("rotateSelection", GumballMotion::Rotate(AxisAngle { axis: [0.0, 0.0, 1.0], angle: 0.5 })), ("scaleSelection", GumballMotion::Scale([2.0, 1.0, 1.0]))] {
-        let tool = format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID);
+        let tool = format!("{}#{verb}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID);
         let leaf = motion.leaf(vec!["t".into()]);
         let kind = <Generation3dMutation as protocol::SemanticMutation<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot>>::semantics(&leaf).kind;
         assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&tool), &[kind], "{tool}");
     }
     for verb in ["editMeshSelection", "knifeMeshSelection", "deleteSelection"] {
-        assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID)), &["create-widget"], "a mesh edit's row reads the operator it inserts: {verb}");
+        assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#{verb}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID)), &["create-widget"], "a mesh edit's row reads the operator it inserts: {verb}");
     }
-    assert!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID)).is_empty());
+    assert!(<Editor as ArtifactEditor>::tool_intent_kinds(&format!("{}#nodeGraphEdit", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID)).is_empty());
 }
 
 /// ⚖️ LAW (audit S4): every gumball refusal is its own NAMED fault code under `generation3d.gumball.` — the code a shell
@@ -173,7 +173,7 @@ fn every_gumball_refusal_is_a_named_fault_code() {
 fn every_gumball_refusal_code_has_a_localized_notice() {
     use semio_framework_plugin::ArtifactEditor;
     use semio_framework_ui_locale::{Locale, Terminology};
-    type Editor = crate::editor::generation3d::Generation3dPlayApp;
+    type Editor = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
     let notices = semio_framework::fault_notice_definitions(<Editor as ArtifactEditor>::fault_notices());
     assert_eq!(semio_framework::validate_fault_notices(&notices), Vec::new(), "the gumball notice table is a valid table");
     let refusals = [

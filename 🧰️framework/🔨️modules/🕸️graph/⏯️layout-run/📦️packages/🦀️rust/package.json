@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun repo run @semio-tech/framework-graph-layout-run-rs:test",
-    "check": "bun repo run @semio-tech/framework-graph-layout-run-rs:check"
+    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-graph-layout-run-rs:test",
+    "check": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-graph-layout-run-rs:check"
   },
   "bundleKind": "library",
   "devDependencies": {

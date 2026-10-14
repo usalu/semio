@@ -1,3 +1,4 @@
+use crate::builder::PluginBuilder;
 mod plugin_builder_contract_tests {
     //! 🧪️ The plugin contract's own unit test: a `TestApp` implementing the pure `ArtifactApp`
     //! surface (B1), wrapped in `VcsArtifactApp`, exercising typed operations with true inverses, config
@@ -80,22 +81,22 @@ mod plugin_builder_contract_tests {
     }
 
     /// 🎟️ Spends exactly the quoted close turn of a hosted app.
-    fn app_close_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::PluginLifecycleFailure> {
+    fn app_close_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
         let grant = crate::app_testing::artifact_app_laws::fixture_mounted_policy().close;
         assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"app demand exceeds its original fixture close policy");
-        let step = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty())))?;
+        let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty())))?;
         let _ = app.take_constructor_receipt();
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "close receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
     }
 
     /// 🎟️ Spends exactly the quoted maintenance turn of a hosted app.
-    fn app_maintenance_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<crate::bounded_ownership::PluginLifecycleStep, crate::PluginLifecycleFailure> {
+    fn app_maintenance_turn<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
         let grant = crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance;
         assert!(grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"app demand exceeds its original fixture maintenance policy");
-        let step = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))?;
+        let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((app.maintenance_step(same,grant)?,app.maintenance_terminal_is_empty())))?;
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "maintenance receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
     }
@@ -975,7 +976,7 @@ mod plugin_builder_contract_tests {
         }
 
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(crate::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default())))
+            Some(semio_framework_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
         async fn initial_snapshot() -> TestSnapshot {
@@ -1240,18 +1241,18 @@ mod plugin_builder_contract_tests {
             Ok(if self.moved { Default::default() } else { semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<TestCommand>(), depth: 1, ..Default::default() } })
         }
 
-        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
             use semio_framework_value::retained_clone::RetainedCloneProgress;
-            if grant.maximum_items == 0 { return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
-            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(crate::bounded_ownership::plugin_retirement_fault)?;
-            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
+            if grant.maximum_items == 0 { return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
+            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
             if !self.moved {
                 self.pending = Some(std::mem::replace(command, TestCommand::NoopMutation));
                 self.moved = true;
-                return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
+                return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
             }
-            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(crate::bounded_ownership::plugin_retirement_fault)?;
-            Ok(crate::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
+            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+            Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
         }
 
         fn terminal_is_empty(&self, command: &TestCommand) -> bool { self.moved && self.pending.is_none() && self.active.is_none() && matches!(command, TestCommand::NoopMutation) }
@@ -1533,7 +1534,7 @@ mod plugin_builder_contract_tests {
 
     #[test]
     fn keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners() {
-        use crate::bounded_ownership::PluginLifecycleStep;
+        use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
         let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
         fn close_root<T: Send + Sync + 'static>(factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<T>>, root: T) {
@@ -2317,7 +2318,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..MAINTENANCE_STAGES {
             app.maintenance_stage = stage;
             match app_maintenance_turn(app,cx) {
-                Ok(crate::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
+                Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
                 Ok(_) => {}
                 Err(fault) => panic!("{what}: bounded maintenance faulted: {fault:?}"),
             }
@@ -2334,7 +2335,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
-                crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
+                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }
         artifact_app_laws::close_registered_fixture_app(app,mounted_policy,cx).expect("original fixture terminal close");
@@ -2346,7 +2347,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             for _ in 0..MAINTENANCE_STAGES {
                 let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes).expect("original fixture maintenance quote");
-                crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
+                semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(app,same,grant)?,app.maintenance_terminal_is_empty()))).expect("original fixture maintenance turn");
             }
         }
         artifact_app_laws::close_registered_fixture_app(app,mounted_policy,cx).expect("original fixture terminal close");
@@ -3157,7 +3158,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
         assert_eq!(chunks.push(vec![2; 17]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
-        let output = ArtifactDownloadOutput::test_from_media_export(handle.clone(), "audio/mpeg", chunks.clone()).expect("exact media output");
+        let mut donated_handle=Some(handle.clone());let mut source=Some(ArtifactMediaExportPoll::Complete(ArtifactMediaExportResult::structured(MediaType{class:MediaClass::Presentation,form:MediaForm::Sequence},"fixture.schema","audio/mpeg",chunks.clone()).expect("exact fixture media")));let mut received=None;
+        assert!(ArtifactDownloadOutput::receive_media_export_original(&mut donated_handle,&mut source,&mut received,cx).expect("exact original media output"));let output=received.take().expect("funded download receiving");
         app.segmented_downloads.insert_admitted(operation_id.0, output);
 
         app.cancel_media_export(&handle).await.expect("completed output cancellation");
@@ -3167,13 +3169,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 17);
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 0);
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
@@ -3416,8 +3418,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             let demand = app.close_retirement_demands(ARTIFACT_OUTPUT_CHUNK_BYTES).expect("quoted pre-segment close demand");
             let sub_chunk = store::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes.min(ARTIFACT_OUTPUT_CHUNK_BYTES - 1), ..fixture_close_grant(demand) };
-            match { let step = crate::bounded_ownership::original_lifecycle_step(cx,sub_chunk,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original bounded pre-segment close slice"); let _ = app.take_constructor_receipt(); step } {
-                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => {
+            match { let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,sub_chunk,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original bounded pre-segment close slice"); let _ = app.take_constructor_receipt(); step } {
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => {
                     assert_eq!(demand.release_bytes, ARTIFACT_OUTPUT_CHUNK_BYTES, "the ladder parked before its segmented-download rung");
                     parked = true;
                     break;
@@ -3427,11 +3429,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(parked, "the close ladder never reached its segmented-download stage");
         assert_eq!(chunks.chunks_remaining(), 2, "walking the ladder to the segment stage released no chunk");
-        assert_eq!(app_close_turn(&mut *app,cx).expect("first close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app,cx).expect("first close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.chunks_remaining(), 1);
-        assert_eq!(app_close_turn(&mut *app,cx).expect("second close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app,cx).expect("second close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.chunks_remaining(), 0);
-        assert_eq!(app_close_turn(&mut *app,cx).expect("terminal close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app,cx).expect("terminal close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.segmented_downloads.contains(37));
     
         
@@ -4321,7 +4323,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAssemblyError> {
-        Plugin::<TestRuntimeApps>::builder("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
+        PluginBuilder::<_, TestRuntimeApps>::new("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4773,8 +4775,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
             app.maintenance_stage = 6;
             match app_maintenance_turn(&mut app,cx).expect("bounded app-typed peer retirement progresses") {
-                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
-                crate::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
                 _ => {}
             }
         }
@@ -4837,8 +4839,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let quote = cancelled.maintenance_retirement_demands(16).expect("quoted cancelled roster demand");
         let exact = fixture_close_grant(quote);
         let short = store::RetainedCloneGrant { maximum_copy_bytes: quote.copy_bytes.saturating_sub(1), maximum_capacity_bytes: quote.capacity_bytes.saturating_sub(1), maximum_release_bytes: quote.release_bytes.saturating_sub(1), ..exact };
-        let interrupted = crate::bounded_ownership::original_lifecycle_step(cx,short,quote,|same,grant|Ok((cancelled.maintenance_step(same,grant)?,cancelled.maintenance_terminal_is_empty()))).expect("original sub-page close grant");
-        assert!(matches!(interrupted, crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
+        let interrupted = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,short,quote,|same,grant|Ok((cancelled.maintenance_step(same,grant)?,cancelled.maintenance_terminal_is_empty()))).expect("original sub-page close grant");
+        assert!(matches!(interrupted, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
         assert!(cancelled.peer_roster_publications.get(generation).is_some(), "cancelled publication stays mounted until its retained page closes");
         for _ in 0..64 {
             cancelled.maintenance_stage = 7;
@@ -4911,10 +4913,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     //#region 🔖️CompositionTests
     store::space_members! {
+    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
         history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum TestMembers, TestMembersOpen {
-            Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation),
+            Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, crate::test_app_mutation_fixture::TestMemberStoreProducer, crate::test_app_mutation_fixture::TestMemberStoreProducer),
         }
     }
 
@@ -4945,8 +4948,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
         let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        let mut child = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
-        store::install_funded_member_store_owners(&mut child)?;
+        let mut child = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
+        store::install_funded_member_store_owners(&mut child,&crate::test_app_mutation_fixture::TestMemberStoreProducer)?;
         Ok(TestMembers::Child(Box::new(child)))
     }
 
@@ -4957,7 +4960,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
         let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
+        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
     }
 
     struct TestSnapshotRetirement {
@@ -5014,30 +5017,30 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
     }
 
-    impl store::os_store::document_store_owners::MemberStoreOwner<TestMutation> for TestSnapshot {
+    impl store::os_store::document_store_owners::MemberStoreProducer<TestSnapshot,TestMutation> for crate::test_app_mutation_fixture::TestMemberStoreProducer {
         /// 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
         /// `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
         /// candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
         /// (`UnsupportedMemberSnapshotOpen::step` has no other answer), so the three
         /// `retained_composed_replacement_*` laws could never reach `ValidatingClosure` or
-        /// `CandidateReady`. `PackMemberSnapshotOpen` is the framework's own pack decoder and
+        /// `CandidateReady`. `ProducedMemberSnapshotOpen` is the framework's own pack decoder and
         /// `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
-        type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
+        type SnapshotOpen = store::ProducedMemberSnapshotOpen<TestSnapshot,store::ArtifactPackSnapshotDecoder<TestSnapshot>>;
 
-        fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-            let base = store::os_store::document_store_owners::DocumentStoreOwners::<Self, TestMutation>::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<Self, TestMutation>>()?;
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 })?;
+        fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+            let base = store::os_store::document_store_owners::DocumentStoreOwners::<TestSnapshot, TestMutation>::source_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>()?;
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<TestSnapshot, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<TestSnapshot, TestMutation, store::MutationApplyEdit<TestSnapshot, TestMutation>>(), depth: 1 })?;
             let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
             Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
         }
 
-        fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, TestMutation>> {
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 }).map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+        fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<TestSnapshot, TestMutation>> {
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<TestSnapshot, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<TestSnapshot, TestMutation, store::MutationApplyEdit<TestSnapshot, TestMutation>>(), depth: 1 }).map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
             store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
-                semio_framework_value::retirement::SharedValueRetirementFactory::<TestSnapshot>::default(),
-                semio_framework_value::retirement::OwnedValueRetirementFactory::<Self>::default(),
-                semio_framework_value::retirement::OwnedValueRetirementFactory::<TestMutation>::default(),
-                store::ArtifactStoreCursorDisposer::<Self, TestMutation>::new(),
+                semio_framework_value::factory::SharedValueRetirementFactory::<TestSnapshot>::default(),
+                semio_framework_value::factory::OwnedValueRetirementFactory::<TestSnapshot>::default(),
+                semio_framework_value::factory::OwnedValueRetirementFactory::<TestMutation>::default(),
+                store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
                 test_document_preparation_factory(),
             ))
         }
@@ -5048,7 +5051,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// then has to close the app it registered that member into.
     fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
-        store::install_funded_member_store_owners(child).expect("actual funded member catalog");
+        store::install_funded_member_store_owners(child,&crate::test_app_mutation_fixture::TestMemberStoreProducer).expect("actual funded member catalog");
     }
 
     /// 🎭️ Installs the member owner catalog whose OWNED-VALUE factory carries the lie —
@@ -5060,11 +5063,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
         type Catalog = store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>;
-        let capacity = Catalog::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<TestSnapshot>, TestLyingOwnedValueRetirementFactory, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>().expect("exact catalog source birth");
+        let capacity = Catalog::source_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<TestSnapshot>, TestLyingOwnedValueRetirementFactory, semio_framework_value::factory::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>().expect("exact catalog source birth");
         let admitted = Catalog::admit_source_constructor(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }, || (
-            semio_framework_value::retirement::SharedValueRetirementFactory::<TestSnapshot>::default(),
+            semio_framework_value::factory::SharedValueRetirementFactory::<TestSnapshot>::default(),
             TestLyingOwnedValueRetirementFactory { lie_about_terminal: std::sync::atomic::AtomicBool::new(lie_about_terminal) },
-            semio_framework_value::retirement::OwnedValueRetirementFactory::<TestMutation>::default(),
+            semio_framework_value::factory::OwnedValueRetirementFactory::<TestMutation>::default(),
             store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
         ));
         store::install_unscheduled_catalog(child, store::os_store::document_store_owners::complete_unscheduled_catalog(admitted)).expect("exact original lying-witness catalog");
@@ -5130,9 +5133,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..65_536 {
             app.maintenance_stage = 20;
             match app_maintenance_turn(&mut app,cx).expect("live failed-member cleanup") {
-                crate::bounded_ownership::PluginLifecycleStep::Progress(_) | crate::bounded_ownership::PluginLifecycleStep::Complete(_) => {}
-                crate::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
-                crate::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(_) | semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_) => {}
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
             }
             if app.test_child_admission_state(1).abort_empty {
                 break;
@@ -5140,7 +5143,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(app.test_child_admission_state(1).abort_empty);
         app.maintenance_stage = 20;
-        assert!(matches!(app_maintenance_turn(&mut app,cx).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
+        assert!(matches!(app_maintenance_turn(&mut app,cx).unwrap(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
         close_member_admission_app(&mut app,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -5858,7 +5861,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         app.maintenance_stage = 4;
-        assert!(matches!(app_maintenance_turn(&mut app,cx).expect("transfer retirement authority"), crate::bounded_ownership::PluginLifecycleStep::Progress(_)));
+        assert!(matches!(app_maintenance_turn(&mut app,cx).expect("transfer retirement authority"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(_)));
         let mut faulted = None;
         for turn in 0..64 * usize::from(MAINTENANCE_STAGES) {
             app.maintenance_stage = 4;
@@ -8625,7 +8628,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity,cx).await.expect_err("a View command emitting operations must be rejected");
-        assert!(matches!(&error.primary,crate::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
+        assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -8705,7 +8708,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             seq: 2,
         };
         let error = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect_err("a View-kind intent emitting operations must be rejected");
-        assert!(matches!(&error.primary,crate::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
+        assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");

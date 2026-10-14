@@ -32,7 +32,7 @@ use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, Geometr
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadGeometry {
+pub struct CadGeometry {
     #[value(skip)]
     pub owned_meshes: HashMap<String, std::sync::Arc<MeshData>>,
     #[value(skip)]
@@ -54,7 +54,7 @@ pub(crate) struct CadGeometry {
 }
 
 /// 🧊️ Projects a current owned topology snapshot into triangles without retaining importer handles.
-pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {
+pub fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {
     let body = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;
     let mut result = MeshData::default();
     for face in body.faces.ids() {
@@ -184,7 +184,7 @@ pub(crate) struct CadSolid {
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadPrimitiveSlot {
+pub struct CadPrimitiveSlot {
     pub slot: String,
     pub primitive_id: String,
     pub kind: String,
@@ -196,7 +196,7 @@ pub(crate) struct CadPrimitiveSlot {
 /// `solid_handle`) through the composition mechanism — never back onto `CadSnapshot` directly.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub(crate) struct CadObject {
+pub struct CadObject {
     pub id: String,
     pub label: String,
     pub typology: String,
@@ -226,7 +226,7 @@ fn default_true() -> bool {
 //#endregion 🔖️EphemeralImportTypes
 
 //#region 🔖️Parse
-pub(crate) fn parse_geometry(value: Option<&DslValue>) -> CadGeometry {
+pub fn parse_geometry(value: Option<&DslValue>) -> CadGeometry {
     value.and_then(|entry| <CadGeometry as semio_framework_value::FromValue>::from_value(entry.clone()).ok()).unwrap_or_default()
 }
 
@@ -593,7 +593,7 @@ pub fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub(crate) fn objects_from_host_snapshot_model(kernel: &mut Brep, objects_value: &[DslValue], geometry: &CadGeometry) -> Vec<CadObject> {
+pub fn objects_from_host_snapshot_model(kernel: &mut Brep, objects_value: &[DslValue], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()
@@ -654,7 +654,7 @@ pub(crate) const CAD_PRIMITIVE_PSET: &str = "cad.primitive";
 /// 🌉️ WRITE direction: one `CadObject` → one `SemioModelElement`, exactly invertible by
 /// [`cad_object_from_model_element`]. `typology` rides `ElementClass::Other{name}`, `origin`/`orientation`/`scale` the
 /// placement, `solid_handle` `GeometryRef::Brep`, and every authoring field the [`CAD_OBJECT_PSET`] property set.
-pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
+pub fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
     use semio_s_artifact_stdio_semio_model::schema::snapshot::{Property, PropertySet, PsetValue};
     let [ox, oy, oz] = object.origin;
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
@@ -683,7 +683,7 @@ pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelEle
 
 /// 🌉️ WRITE direction: a pane's full object list → a `SemioModelSnapshot` ready to become a
 /// composed child's content (see `store::os_store::artifact_child::ArtifactChild`/`crate::cad_model_child_handle`).
-pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
+pub fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
     SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
 }
 
@@ -750,7 +750,7 @@ pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadO
 
 /// 🌉️ READ direction: every element in a resolved `SemioModelSnapshot` child → this pane's
 /// `CadObject` list — what `crate::CadComposedPanes::compose` calls per pane.
-pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
+pub fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
     model.elements.iter().map(cad_object_from_model_element).collect()
 }
 //#endregion 🔖️ModelBridge
@@ -762,4 +762,4 @@ pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<Cad
 
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;

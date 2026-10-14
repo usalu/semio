@@ -1,7 +1,12 @@
 //! 📋️ Admitted typed frames retain their actual owners until every payload and backing allocation closes.
 
-use super::{RetireOwned,RetirementCursor,RetirementStep,admit_owned_retirement,owned_retirement_birth_bytes};
-use crate::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,list::PagedList,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
+use semio_framework_value_retirement::{RetireOwned,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value_retirement::retirement::{RetirementCursor,RetirementStep};
+use semio_framework_value_paged_list::PagedList;
+pub use semio_framework_value_control_contract::*;
+pub use semio_framework_value_control_contract as retained_clone;
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,retirement};
+pub use semio_framework_value_paged_list::list;
 use std::mem::ManuallyDrop;
 
 #[must_use="retirement queue payloads and backing must reach terminal-empty"]
@@ -12,7 +17,7 @@ impl RetirementQueue {
     pub fn has_reserved_slot(&self)->bool {self.frames.has_reserved_slot()}
     pub fn terminal_is_empty(&self)->bool {self.frames.terminal_is_empty()}
     pub const fn frame_birth_bytes<T:RetireOwned>()->usize {owned_retirement_birth_bytes::<T>()}
-    pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {Ok(self.frames.next_capacity_allocation_bytes(self.frames.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"retirement queue length overflow"))?).map_err(ValueError::from)?.unwrap_or(0))}
+    pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.frames.next_allocation_bytes().map_err(ValueError::from)}
     pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
         self.step_progress=empty_progress();let result=self.reserve_original(grant);match result{Ok(progress)=>{self.step_progress=progress;Ok(progress)},Err(error)=>{self.step_progress=error.retained_progress();Err(error)}}
     }
@@ -121,3 +126,12 @@ impl RetirementCursor for RetirementQueue {
 }
 fn empty_progress()->RetainedCloneProgress {RetainedCloneProgress {copied_items:0,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0}}
 fn refusal(kind:ValueRefusalKind,message:&'static str)->ValueError {ValueError::literal(kind,message)}
+
+#[cfg(test)]
+#[path="🧪️tests/🎮️ownership/🦀️.rs"]
+mod original_ownership_tests;
+#[cfg(test)]
+#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
+mod allocation_testing;
+#[cfg(test)]
+pub(crate) use allocation_testing::observe_retirement_allocations;

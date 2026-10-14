@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeRefrigerationSystemDefrostSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, RefrigerationConfigPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, RefrigerationConfigPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRefrigerationSystemDefrostSchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

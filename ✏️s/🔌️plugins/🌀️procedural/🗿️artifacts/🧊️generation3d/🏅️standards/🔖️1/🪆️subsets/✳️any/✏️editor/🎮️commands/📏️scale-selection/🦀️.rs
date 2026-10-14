@@ -1,9 +1,12 @@
 //! 📏️ Generation3d command — `scale-selection`: one gumball scale gesture tick (design §13, `World3dHost` live protocol).
 //! The gumball tool (`🧭️transforms`) yields the relative `scale-transforms` leaf of the per-axis factors; the phases are
 //! those of `translate-selection`.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::editor::generation3d::transform_commands::{gumball_once, GumballMotion};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_transforms::gumball_once;
+use semio_s_artifact_procedural_3d_transforms::GumballMotion;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

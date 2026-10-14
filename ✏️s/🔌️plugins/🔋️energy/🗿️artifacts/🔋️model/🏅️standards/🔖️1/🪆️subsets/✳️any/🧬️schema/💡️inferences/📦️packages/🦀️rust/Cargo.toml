@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-energy-model-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model inferences: the inference schema, entries and their codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-energy-engine-model = { workspace = true }

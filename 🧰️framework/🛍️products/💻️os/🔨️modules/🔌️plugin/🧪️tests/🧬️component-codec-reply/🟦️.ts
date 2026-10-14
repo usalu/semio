@@ -9,11 +9,12 @@ type TestSource = { readonly directory: string; readonly url: string };
  * @see 🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs (the native twin) */
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
-  const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json");
+  const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json");
   const { actorCodecAnswer } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts");
   const { OriginalOperationSource } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts");
   const { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts");
   const { default: stockFixture } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json");
+  type CodecRequest = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecRequest;
   type CodecExports = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecExports;
   type Case = (typeof fixture.cases)[number];
   type Pair = { readonly packHex: string; readonly sprHex: string };
@@ -86,8 +87,9 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
             throw failure;
           } finally {
             if (api) {
-              api.originalSource.close();
-              expect(() => api.originalSource.issue()).toThrow("original-turn.closed");
+              const closing=api;
+              closing.originalSource.close();
+              expect(() => closing.originalSource.issue()).toThrow("original-turn.closed");
               stock.returnClosed(original, true);
             }
           }
@@ -116,7 +118,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         setInterval: () => null,
         clearInterval: () => {},
         self: { postMessage: (message: Record<string, unknown>) => posted.push(message), addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } },
-        api: { originalSource, codec: (codecRequest: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ShardCodecRequest) => actorCodecAnswer(codecFor(row), codecRequest) },
+        api: { originalSource, codec: (codecRequest: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecRequest) => actorCodecAnswer(codecFor(row), codecRequest) },
       });
       new vm.Script(shardWorkerSource()).runInContext(context);
       new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(context);
@@ -132,6 +134,15 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         expect(worker, `${current.id} (generated worker)`).toEqual(current.expected);
         if (result?.ok) expect(typeof result.beat?.turnSeq, "a codec call is a guest step and proves liveness like a job step").toBe("number");
       }
+      let refusedGuestCalls=0;
+      context.api.codec=(codecRequest:CodecRequest)=>actorCodecAnswer({packSchemaHash:async()=>{refusedGuestCalls++;return new Uint8Array([1]);},genesis:async()=>{refusedGuestCalls++;return{pack:new Uint8Array([1]),spr:new Uint8Array([2])};},printMirror:async()=>{refusedGuestCalls++;return["one","two"];}},codecRequest);
+      for(const [index,current]of fixture.requestCases.entries())if(!current.accepted){
+        const value:unknown=current.request,projected=value!==null&&typeof value==="object"&&!Array.isArray(value)?Object.fromEntries(Object.entries(value).map(([name,item])=>[name,name==="pair"&&item!==null&&typeof item==="object"&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).map(([key,value])=>[key==="packHex"?"pack":key==="sprHex"?"spr":key,(key==="packHex"||key==="sprHex")&&typeof value==="string"?bytes(value):value])):item])):value;
+        await send({data:{kind:"codec",requestId:"request-refusal-"+index,actorId:"a",activationGeneration:1n,request:projected}});
+        const result=answered("request-refusal-"+index);expect(result?.ok).toBe(false);expect(result?.error?.replace(/^Error: /,"")).toBe(current.refusal);
+      }
+      expect(refusedGuestCalls).toBe(0);
+      context.api.codec=(codecRequest:CodecRequest)=>actorCodecAnswer(codecFor(row),codecRequest);
       row = fixture.cases[0]!;
       new vm.Script('inFlightTurnActors.add("a");').runInContext(context);
       await send({ data: { kind: "codec", requestId: "overlap", actorId: "a", activationGeneration: 1n, request: request(row) } });

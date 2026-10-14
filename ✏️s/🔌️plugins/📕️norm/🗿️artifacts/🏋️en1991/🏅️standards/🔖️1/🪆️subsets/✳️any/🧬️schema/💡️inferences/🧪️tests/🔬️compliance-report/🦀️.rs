@@ -1,7 +1,7 @@
-use crate::document::{AnnexChoice, CheckStatus};
-use crate::En1991Snapshot;
-use crate::artifact_schema::inferences::{evaluate, check_full_actions};
-use crate::example_subjects::{de_office_compliant, multi_fail_noncompliant};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_inferences::{evaluate, check_full_actions};
+use semio_s_artifact_norm_en1991_examples::example_subjects::{de_office_compliant, multi_fail_noncompliant};
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
@@ -111,10 +111,9 @@ fn path_resolves(doc: &En1991Snapshot, path: &str) -> bool {
     !path.contains('[')
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn snow_zone2_150m_roof_mu08() {
-    let sk = crate::standards::v1::subsets::any::schema::part_1_3::ground_snow_pa("2", 150.0);
+    let sk = semio_s_artifact_norm_en1991_checks::part_1_3::ground_snow_pa("2", 150.0);
     assert!((sk - 850.0).abs() < 1e-6);
     let s = sk * 0.8;
     assert!((s - 680.0).abs() < 1e-6);
@@ -122,14 +121,14 @@ async fn snow_zone2_150m_roof_mu08() {
 
 #[semio_framework_async_macros::async_test]
 async fn imposed_category_b1_de() {
-    let q = crate::standards::v1::subsets::any::schema::part_1_1::imposed_qk_pa("B1", AnnexChoice::De);
+    let q = semio_s_artifact_norm_en1991_checks::part_1_1::imposed_qk_pa("B1", AnnexChoice::De);
     assert!((q - 2000.0).abs() < 1e-6);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bridge_crane_silo_claim_gates() {
     let mut doc = En1991Snapshot::default();
-    doc.structure_kind = crate::StructureKind::Building;
+    doc.structure_kind = semio_s_artifact_norm_en1991_model::StructureKind::Building;
     doc.crane_claimed = false;
     doc.silo_claimed = false;
     let report = evaluate(&doc);
@@ -238,7 +237,7 @@ fn apply_si_path(doc: &mut En1991Snapshot, path: &str, value: f64) {
 #[semio_framework_async_macros::async_test]
 async fn structure_kind_runs_lm1_udl_lm2_footway() {
     let mut doc = En1991Snapshot::default();
-    doc.structure_kind = crate::StructureKind::Bridge;
+    doc.structure_kind = semio_s_artifact_norm_en1991_model::StructureKind::Bridge;
     doc.assumed_bridge_udl = 3600.0;
     doc.assumed_bridge_tandem = 270_000.0;
     doc.assumed_bridge_lm2 = 360_000.0;
@@ -267,9 +266,9 @@ async fn crane_and_silo_applicability_gating() {
 
 #[semio_framework_async_macros::async_test]
 async fn regenerate_example_assets_once() {
-    use crate::example_subjects::{de_office_compliant, multi_fail_noncompliant};
-    use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_en1991_pack};
-    use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_dsl};
+    use semio_s_artifact_norm_en1991_examples::example_subjects::{de_office_compliant, multi_fail_noncompliant};
+    use semio_s_artifact_norm_en1991_io::binary::snapshot::{encode_en1991_pack};
+    use semio_s_artifact_norm_en1991_io::text::snapshot::{encode_en1991_dsl};
     use std::fs;
     use std::path::PathBuf;
     if std::env::var("EN1991_REGEN_ASSETS").ok().as_deref() != Some("1") { return; }
@@ -288,7 +287,7 @@ async fn regenerate_example_assets_once() {
 
 #[semio_framework_async_macros::async_test]
 async fn python_oracle_within_half_percent() {
-    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_snapshot_json;
     use std::process::Command;
     let doc = En1991Snapshot::default();
     let report = evaluate(&doc);
@@ -317,7 +316,7 @@ async fn python_oracle_within_half_percent() {
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_json_validates_against_schema() {
-    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_snapshot_json;
     use std::process::Command;
     let doc = En1991Snapshot::default();
     let json = encode_en1991_snapshot_json(&doc);
@@ -332,15 +331,14 @@ async fn snapshot_json_validates_against_schema() {
     assert!(!String::from_utf8_lossy(&out.stdout).contains("skip"), "jsonschema must not skip");
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn field_meta_coverage_all_committed_examples() {
-    use crate::field_meta::en1991_field_meta;
-    use crate::example_subjects::{
+    use semio_s_artifact_norm_en1991_editor::field_meta::en1991_field_meta;
+    use semio_s_artifact_norm_en1991_examples::example_subjects::{
         de_accidental_variants, de_bridge_compliant, de_bridge_noncompliant, de_fire_parametric_compliant,
         de_fire_parametric_noncompliant, de_office_compliant, multi_fail_noncompliant,
     };
-    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
+    use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_snapshot_json;
     for doc in [
         de_office_compliant(),
         multi_fail_noncompliant(),
@@ -404,7 +402,7 @@ async fn field_meta_coverage_all_committed_examples() {
 
 #[semio_framework_async_macros::async_test]
 async fn scope_aware_perturbation_of_editable_leaves() {
-    use crate::example_subjects::{
+    use semio_s_artifact_norm_en1991_examples::example_subjects::{
         de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant,
     };
     use crate::{FireMode, StructureKind};
@@ -661,7 +659,7 @@ async fn duplicate_roof_id_fails_integrity() {
 
 #[semio_framework_async_macros::async_test]
 async fn duplicate_accidental_id_fails_integrity() {
-    use crate::example_subjects::de_accidental_variants;
+    use semio_s_artifact_norm_en1991_examples::example_subjects::de_accidental_variants;
     let mut doc = de_accidental_variants();
     assert!(!doc.accidental_cases.is_empty());
     let twin = doc.accidental_cases[0].clone();
@@ -673,7 +671,7 @@ async fn duplicate_accidental_id_fails_integrity() {
 
 #[semio_framework_async_macros::async_test]
 async fn oracle_manifest_kind_count_matches_mutation_enum() {
-    use crate::standards::v1::subsets::any::schema::mutations::KINDS;
+    use semio_s_artifact_norm_en1991_mutations::KINDS;
     let any = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
         .join("🏅️standards").read_dir().unwrap().next().unwrap().unwrap().path()
         .read_dir().unwrap().map(|e| e.unwrap().path()).find(|p| p.is_dir()).unwrap()

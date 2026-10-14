@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "before": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "f70d8b06f7950d93d4ac0890c580fe63cb8a0375367150c1bf10c353d13fa6ec"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "254aca4b5bcbbad60d3faf2384456536bbaf0c0355aa9ed4b1cfbdc74cf9ceba"
+    }
+  ],
+  "after": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "205eea74231c753c34019c1a687940f64039d8a1aec07e9bc6a85c779460b81b"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "3de7b7cb11580878b51486699e109e0d6ecb891df1fb6865f32668d334f8561a"
+    }
+  ],
+  "product": "existing600000 parent; absent authored capabilities uses configuredcompletefactory",
+  "process": "initial300000 callerpolicy from actual TEST_LEVEL_BUDGET_MS.quick phase; no authority freshening"
+}

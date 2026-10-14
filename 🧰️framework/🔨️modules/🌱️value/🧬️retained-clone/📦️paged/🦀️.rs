@@ -147,7 +147,7 @@ impl<const N: usize> RetireOwned for PagedBytes<N> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         self.into_retained_bytes().retirement()
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<super::paged_list::PagedListRetirement<u8, N>>()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<u8, N>>()) }
     fn controlled_retirement_supported() -> bool { true }
 }
 
@@ -274,7 +274,7 @@ impl<const N: usize> RetireOwned for PagedUtf8<N> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         self.into_retained_chunks().retirement()
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<super::paged_list::PagedListRetirement<String, N>>()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<String, N>>()) }
     fn controlled_retirement_supported() -> bool { true }
 }
 
@@ -487,7 +487,7 @@ impl<V: RetireOwned + Send + Sync + 'static, const N: usize> RetireOwned for Pag
     fn retirement(self) -> Box<dyn RetirementCursor> {
         self.into_retained_entries().retirement()
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<super::paged_list::PagedListRetirement<(PagedUtf8<{usize::MAX}>, V), N>>()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<crate::retirement::PagedListRetirement<(PagedUtf8<{usize::MAX}>, V), N>>()) }
     fn controlled_retirement_supported() -> bool { V::controlled_retirement_supported() }
 }
 

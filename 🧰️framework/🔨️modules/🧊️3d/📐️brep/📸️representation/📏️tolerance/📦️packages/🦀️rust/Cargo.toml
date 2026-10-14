@@ -16,7 +16,6 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-replication.workspace = true
 semio-framework-value.workspace = true
 semio-framework-value-derive.workspace = true
 

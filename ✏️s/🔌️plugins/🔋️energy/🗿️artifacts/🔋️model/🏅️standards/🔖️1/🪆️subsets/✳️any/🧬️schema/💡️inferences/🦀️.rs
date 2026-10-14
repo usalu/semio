@@ -11,13 +11,24 @@
 //! first-party `pack::json` serialization (`Model` derives `ToValue`) — always a full JSON object,
 //! never a possibly-malformed opaque body.
 
-use crate::EnergyModelSnapshot;
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_model as model;
+
+use crate::snapshot::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 
 
-pub use super::entries::EnergyModelEntries;
+#[path = "🗃️entries/🦀️.rs"]
+pub mod entries;
+
+pub use entries::EnergyModelEntries;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an energy-model snapshot. One field per named inference under
@@ -63,3 +74,10 @@ pub fn energy_model_artifact_inference_descriptor() -> semio_framework_schema_re
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚪️Representations
+#[path = "../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
+pub mod text;
+#[path = "../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
+pub mod binary;
+//#endregion 🚪️Representations

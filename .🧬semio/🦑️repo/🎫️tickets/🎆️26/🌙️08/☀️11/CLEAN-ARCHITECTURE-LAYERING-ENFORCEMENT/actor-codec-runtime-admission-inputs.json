@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
+      "bytes": 6877,
+      "sha256": "d3a68481787a07b54a32ce0b4ad4db4053c8ad7fa3058ade44abf6fdf7f6c0e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json",
+      "bytes": 7940,
+      "sha256": "734fb502d8856fbee70210ea33a7fbbfbb13620f3a2c7918e476dcf8dc466be5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🟦️.ts",
+      "bytes": 15105,
+      "sha256": "c52b6c04b971b17568fb920bc6a5b34134c7421ce2616731e5010b8b29eb5815"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 7360,
+      "sha256": "1657d07371477a3af3b03be90773d0c541d8f5b71e1943c7361cbb74c3913ead"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "bytes": 9678,
+      "sha256": "cd3be1ea83e56861b346aa01d12d146752ebf3a34d681bbc21950f6741ced01b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "bytes": 566,
+      "sha256": "ad9889f6bbe776d2e4d1dc979c6700b63be5ab55d3f8a1fb0268f50899fd057c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "bytes": 4473,
+      "sha256": "068933093f617caca17e786eb2e72e0f6082c750c2b12cf3d1529731ed7b377f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "bytes": 5639,
+      "sha256": "adaf1f4830c76efc9ec66284e59a19c713cbd4201e075ff1f82c703e0cc8aa8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "bytes": 191665,
+      "sha256": "738d3d8fe7b7a1aaaeccb48110027f8148700fd385c921a20ceca1153d02b852"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "bytes": 102904,
+      "sha256": "92a352e30e9d0e36c6722fa0ccbad337026b22ea6854eec876cd2d84a055ca6c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts",
+      "bytes": 11151,
+      "sha256": "ebfa8f1479da9dafcc7334a7ae2a490c6db3c6052d7328c9f300f7d6bb905121"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "bytes": 134296,
+      "sha256": "35bfe3634b9bb7d31be67755c1010b2f15eec49fd7eb48119b0475db4da3d309"
+    }
+  ],
+  "newPublicRuntimeExports": [
+    "admitActorCodecAnswerV1",
+    "actorCodecRuntimeSourceV1"
+  ],
+  "existingDefaultAnswerTypeConserved": true,
+  "portableCases": 23,
+  "registeredTestsCollected": 0,
+  "rootActor9DoesNotQualifyTheseEdits": true,
+  "generatedFactoryScalarCharacters": 3409,
+  "generatedRuntimeScalarCharacters": 3075,
+  "probe": "🗑️generated/actor-codec-current/probes.json"
+}

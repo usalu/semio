@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::en1995::unit_tests::context;
+use crate::modes::edit::windows::results::*;
+use crate::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {

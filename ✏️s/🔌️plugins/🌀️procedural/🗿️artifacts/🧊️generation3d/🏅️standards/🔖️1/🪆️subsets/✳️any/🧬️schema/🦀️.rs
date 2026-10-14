@@ -12,6 +12,7 @@ use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use ::semio_framework_schema::ArtifactSchema;
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
+use semio_framework_plugin::ActionDescriptor;
 
 //#region 🔖️Generation3dArtifact
 /// 🧬️ Generation3dArtifact facet type.
@@ -239,7 +240,7 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
 
 /// 🏠️ A host that shares `session`'s neural cache and converged evaluation baseline, installed under `grant`.
 pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
-    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
+    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, grant) {
         Ok((host, _)) => Ok(host),
         Err((error, host)) => {
             host.retire_cold();
@@ -356,6 +357,17 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
+pub const GENERATION_3D_PLAY_APP_ID: &str = "procedural3d-play";
+
+/// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
+pub const GENERATION3D_EDITOR_APP_ID: &str = "s.procedural.generation3d@1/*#editor";
+
+/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
+/// (`🍱️panes/*`, `☑️options/*`) builds its `on_change`/item actions with.
+pub fn generation3d_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GENERATION_3D_PLAY_APP_ID.into(), action: action.into(), args }
+}
+
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use semio_framework_artifact_flow_flow::CameraJson;
@@ -382,3 +394,15 @@ pub mod diff {
     mod component;
     pub use component::*;
 }
+
+//#region 🔖️AddressHelpers
+/// 🔎️ BASE-state widget index lookup by id — shared by every widget triad leaf's inverse.
+pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
+    host_snapshot.widgets.iter().position(|widget| widget_id(widget) == id)
+}
+
+/// 🔎️ BASE-state synapse index lookup by id — shared by every synapse triad leaf's inverse.
+pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
+    host_snapshot.synapses.iter().position(|synapse| synapse.id == id)
+}
+//#endregion 🔖️AddressHelpers

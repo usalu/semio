@@ -5,11 +5,11 @@
 //! carries the part's content type and its document diff — never a whole `order` key list.
 
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{DocxBlock, DocxXmlPart, DocxXmlParts, DOCX_MAX_XML_PARTS};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxXmlPart, DocxXmlParts, DOCX_MAX_XML_PARTS};
 #[cfg(test)]
-use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -252,7 +252,6 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DocxDiff` (real compile errors captured above
 /// on `DocxDiff`'s own doc comment) — same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs
@@ -263,48 +262,13 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 /// artifacts hand-roll, not worth adding here for one more). 
 //#region 🔖️Primitives
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️Primitives
 
 //#region 🔖️XmlValueCodecs
 
-
-
-
 //#endregion 🔖️XmlValueCodecs
 
 //#region 🔖️ValueCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //#endregion 🔖️ValueCodecs
 
@@ -321,40 +285,13 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 /// file's own `HandcraftedDiffCodec` doc comment).
 //#region 🔖️BinaryPrimitives
 
-
-
-
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️XmlValueBinaryCodecs
 
-
-
-
-
-
 //#endregion 🔖️XmlValueBinaryCodecs
 
 //#region 🔖️ValueBinaryCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //#endregion 🔖️ValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
@@ -476,12 +413,5 @@ pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️result-apply/🦀️.rs"]
-mod result_apply_tests;

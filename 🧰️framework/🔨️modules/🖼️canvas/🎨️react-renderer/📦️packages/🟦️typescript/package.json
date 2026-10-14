@@ -9,7 +9,7 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/canvas-react-renderer:test"
+    "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/canvas-react-renderer:test"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

@@ -1,7 +1,12 @@
-use super::*;
-use crate::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_empty_app};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_node::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
+use crate::context::{dispatch, fem2d_empty_app};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 

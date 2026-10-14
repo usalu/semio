@@ -17,7 +17,7 @@ fn change(operation: &str, x: u32, y: u32, width: u32, height: u32, bilinear: bo
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 #[test]

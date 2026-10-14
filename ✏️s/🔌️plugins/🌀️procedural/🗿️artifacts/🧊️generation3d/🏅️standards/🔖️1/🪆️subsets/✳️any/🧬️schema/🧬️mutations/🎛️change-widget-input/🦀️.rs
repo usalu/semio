@@ -4,7 +4,6 @@
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_number;
-use crate::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
@@ -192,8 +191,8 @@ pub struct ChangeWidgetInput {
 
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_widget_input(id: impl Into<String>, channel: impl Into<String>, input: WidgetInputValue) -> Generation3dMutation {
-    Generation3dMutation::ChangeWidgetInput(ChangeWidgetInput { id: id.into(), channel: channel.into(), input })
+pub fn change_widget_input<Op: From<ChangeWidgetInput>>(id: impl Into<String>, channel: impl Into<String>, input: WidgetInputValue) -> Op {
+    Op::from(ChangeWidgetInput { id: id.into(), channel: channel.into(), input })
 }
 
 /// 🚧️ Why an input cannot land on its widget: an input the record does not hold is `mutation.target-missing`, every other
@@ -274,14 +273,17 @@ impl ChangeWidgetInput {
     }
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeWidgetInput {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ChangeWidgetInput
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::update_widget::UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "widget-input", kind: "change-widget-input", record: "ChangedWidgetInput" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_widget_input::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_widget_input::inverse::inverse(self, base)?
     

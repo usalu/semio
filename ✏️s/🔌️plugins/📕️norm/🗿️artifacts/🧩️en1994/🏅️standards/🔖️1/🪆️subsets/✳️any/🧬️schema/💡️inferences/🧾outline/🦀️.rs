@@ -1,6 +1,6 @@
 //! 🧾 `outline` — composite structure subject field outline.
 
-use crate::En1994Snapshot;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[

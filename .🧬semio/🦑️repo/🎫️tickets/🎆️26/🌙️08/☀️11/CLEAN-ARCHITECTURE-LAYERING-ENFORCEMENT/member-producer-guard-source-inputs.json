@@ -1,0 +1,129 @@
+{
+  "kind": "read-only-bytes-not-admission-authority",
+  "sources": [
+    {
+      "role": "producer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+      "sha256": "46922b4ec47260939b73ed02c0ee7154067830d825a6242d3557df7e00fb86b3",
+      "bytes": 984,
+      "symbols": [
+        "MemberStoreProducer"
+      ]
+    },
+    {
+      "role": "catalog",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "sha256": "96a5755854ee1d041505401d22b1426aac9ec472d03eccee4f00224ed100a6c8",
+      "bytes": 50738,
+      "symbols": [
+        "DocumentStoreOwners",
+        "funded_member_store_owners",
+        "complete_unscheduled_catalog",
+        "bounded_artifact_store_owners"
+      ]
+    },
+    {
+      "role": "opening",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "341faf811bc518f31056b69b47250af077fd3dc86e7a9ba2bd68e00e382be6be",
+      "bytes": 72996,
+      "symbols": [
+        "InitialMemberStoreOpen",
+        "MemberSnapshotOpenOperation"
+      ]
+    },
+    {
+      "role": "store",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "8d875a428ebaca6702d7bcc03b80e4907b43bd29ee4d511216ec9f38ad794c60",
+      "bytes": 801089,
+      "symbols": [
+        "ArtifactStore",
+        "ArtifactStoreOwnedDisposer",
+        "ArtifactStoreCursorDisposer",
+        "create_member_store",
+        "open_member_store"
+      ]
+    },
+    {
+      "role": "valueFactory",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "sha256": "d498de9d5deb2894d7714c86ca6864128a4913cede616b2dc7e6968de1882d4a",
+      "bytes": 20467,
+      "symbols": [
+        "ArtifactOwnedValueRetirementFactory"
+      ]
+    },
+    {
+      "role": "readRetirement",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "sha256": "348a08ab3d52128dec75730c8674cb24ed4aaa9fff40e35ef6ce75cabb8958f2",
+      "bytes": 104112,
+      "symbols": [
+        "ArtifactStoreVcsRetirement",
+        "ArtifactStoreEnvelopeRetirement"
+      ]
+    },
+    {
+      "role": "editRetirement",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+      "sha256": "920fb4e24ed3ed30bfe19f72feedbd7c9c6e25f76977c278eafdec334595a5db",
+      "bytes": 21819,
+      "symbols": [
+        "ArtifactStoreOperationRowsRetirement",
+        "ArtifactStoreDecodedEditRetirement"
+      ]
+    },
+    {
+      "role": "messageLedger",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "sha256": "61209bd6b5ed077015573e4f5fd7f1a3e955ce0b28a98cd047e422d30cbf1d36",
+      "bytes": 30909,
+      "symbols": [
+        "ArtifactEditMessageLedger",
+        "ArtifactEditMessageLedgerRetirement"
+      ]
+    },
+    {
+      "role": "storeLaws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e183381255014f3c1d170614da2dda253103d65fb1fdd32242b603efa6e532f0",
+      "bytes": 1030125,
+      "symbols": [
+        "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
+        "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
+        "typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child"
+      ]
+    },
+    {
+      "role": "catalogLaws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+      "sha256": "4184649ef890bde98dbe8517b402908205af5dda0f7e35d4f09ebeaf3d9905c5",
+      "bytes": 8055,
+      "symbols": [
+        "member_catalog_constructor_birth_and_retirement_match_original_system_allocations",
+        "member_catalog_initial_open_cancellation_pays_original_catalog_and_page_before_drop"
+      ]
+    },
+    {
+      "role": "extension.producer",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+      "sha256": "51999a3bd2ff3ed1d474e27351eebe2a915bf48eb296e007b6be3db1e55ddee1",
+      "bytes": 7544,
+      "symbols": [
+        "SemioMemberStoreProducer",
+        "semio_member_owner"
+      ]
+    },
+    {
+      "role": "extension.members",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "sha256": "eca0baf3410b8b81fd66856f87ec8dba2d85cbd726a83c5d8d207540aa387b84",
+      "bytes": 35239,
+      "symbols": [
+        "SemioMembers",
+        "SemioMembersOpen"
+      ]
+    }
+  ]
+}

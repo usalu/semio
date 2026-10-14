@@ -9,6 +9,7 @@ description = "Pooled actor/plugin runtime kernel: PackageId/ActorId/Lane/Budget
 [package.metadata.semio]
 role = "framework"
 id = "actor"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

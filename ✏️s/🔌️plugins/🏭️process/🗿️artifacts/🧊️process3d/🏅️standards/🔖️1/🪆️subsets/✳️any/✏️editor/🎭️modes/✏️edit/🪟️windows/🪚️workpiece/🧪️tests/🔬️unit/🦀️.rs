@@ -1,5 +1,33 @@
-use super::*;
-use crate::editor::process3d::unit_tests::context;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_process_process3d_modes::windows::workpiece::*;
+use semio_s_artifact_process_process3d_modes::windows::workpiece;
+use semio_framework::kernel::Effect;
+use semio_s_artifact_process_process3d_config::Process3dConfig;
+use semio_s_artifact_process_process3d_modes::windows::workpiece::options;
+use semio_s_artifact_process_process3d_inferences::processed_mesh;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene};
+use semio_framework_pack_json as json;
+use semio_framework_plugin::app::WindowKit;
+use semio_framework_plugin::mesh_from_kind;
+use semio_framework_plugin::world3d_camera_json;
+use semio_framework_plugin::world3d_selection_json;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MeshView;
+use semio_framework_plugin::MeshWindowKit;
+use semio_framework_plugin::SurfaceKind;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementControl;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowKindDefinition;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_plugin::WindowOptions;
+use semio_framework_plugin::WorldSunConfig;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_world3d_surface_and_body_key() {
@@ -12,7 +40,7 @@ async fn definition_declares_the_world3d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_exposes_no_utility_switch_options() {
     let doc = Process3dSnapshot::default();
-    let engagement = engagement(&doc, &Process3dConfig::default(), crate::editor::process3d::config::PROCESS3D_DEFAULT_UTILITY, &crate::editor::process3d::terminology::Process3dLabels::NATIVE_EN);
+    let engagement = engagement(&doc, &Process3dConfig::default(), semio_s_artifact_process_process3d_config::PROCESS3D_DEFAULT_UTILITY, &semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels::NATIVE_EN);
     assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options");
 }
 
@@ -28,9 +56,9 @@ async fn render_world_scene_contains_processed_mesh() {
 /// document that carries no stock at all, so a unit-box extent here means the replay silently failed.
 #[semio_framework_async_macros::async_test]
 async fn render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let scene = crate::process_working_scene_from_snapshot(&snapshot);
-    assert!(matches!(scene.stock.solid, crate::WorkingSolid::Box { width, .. } if (width - 3.0).abs() < 1e-9), "timber fixture stock: {:?}", scene.stock.solid);
+    let snapshot = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&snapshot);
+    assert!(matches!(scene.stock.solid, semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Box { width, .. } if (width - 3.0).abs() < 1e-9), "timber fixture stock: {:?}", scene.stock.solid);
     let mesh = processed_mesh(&scene, None).expect("timber replay tessellates");
     let extent = |axis: usize| {
         let values = mesh.positions.iter().skip(axis).step_by(3).map(|value| f64::from(*value));

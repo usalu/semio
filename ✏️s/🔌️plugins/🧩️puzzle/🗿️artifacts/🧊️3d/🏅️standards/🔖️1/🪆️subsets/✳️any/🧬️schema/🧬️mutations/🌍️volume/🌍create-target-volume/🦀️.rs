@@ -1,17 +1,17 @@
 //! Puzzle3d mutation — `CreateTargetVolume`: brings a new id-keyed target volume into existence.
-use crate::standards::v1::subsets::any::schema::mutations::DeleteTargetVolume;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use {crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume};
+use crate::delete_target_volume::mutation::DeleteTargetVolume;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume};
 
 //#region 🔖️Mutation
 /// `create-target-volume` payload — full initial payload at an optional FINAL-state `index` (`None` appends). A
 /// duplicate `target_volume.id` is a no-op.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "create-target-volume")]
 pub struct CreateTargetVolume {
     #[dsl(block)]

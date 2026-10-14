@@ -9,8 +9,8 @@
 //! replacement is `replace-step-measure`: a large structured sub-payload (`ProcessMeasure`, the
 //! tool/pose geometry a step performs) swapped wholesale on one addressed step.
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, ProcessMeasure};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessMeasure};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceStepMeasure
@@ -27,7 +27,7 @@ pub struct ReplaceStepMeasure {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ReplaceStepMeasure
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_step_measure::ReplaceStepMeasure>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::replace_step_measure::ReplaceStepMeasure>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "step", kind: "replace-step-measure", record: "ReplacedStepMeasure" };
 

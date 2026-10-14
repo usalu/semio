@@ -19,7 +19,7 @@ fn sqlite_snapshot_owns_precise_samples_and_semantic_metadata() {
 async fn sqlite_snapshot_png_public_file_round_trip_preserves_owned_sample_metadata() {
     use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use store::sqlite_snapshot::SnapshotEncoding;
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
         .label("PNG canonical SQLite").version("0.0.1").package_id("semio:stdio")
         .artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.stdio.png".into(), standard: "1.2".into(), subset: "*".into() };

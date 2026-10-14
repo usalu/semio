@@ -1,5 +1,5 @@
 //! ⚖️ Borrowed design actions and genuine nullable owner references before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -18,7 +18,7 @@ fn write<'a>(root:&'a R,out:&mut RowWriter<'_,'_>,mut actions:Vec<(&'a str,i64)>
  for(index,e)in n::list(n::field(root,19)?)?.iter().enumerate(){let e=n::record(e)?;let member_text=n::text(n::field(e,0)?)?;let action_text=n::text(n::field(e,1)?)?;let member=resolve_index(&members,member_text,out)?;let action=resolve_index(&actions,action_text,out)?;out.insert_float("en1990_effect",&[Cell::Integer(1),n::ordinal(index)?,Cell::Text(member_text),Cell::Text(action_text),member,action,Cell::Real(n::real(n::field(e,2)?)?)],EFFECT_FLOATS)?;}Ok(())
 }
 /// 🛂️ Nine SQL tables, exact nullable references and live cumulative paid frontiers.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{
  n::check_schema(En1990Snapshot::SQLITE_SCHEMA,9,36,limits)?;let rows=count(root)?;if rows>limits.max_rows{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"norm semantic rows exceed caller limit"))}
  let actions=native.allocate_vec::<(&str,i64)>(actions_count(root)?)?;let members=native.allocate_vec::<(&str,i64)>(n::list(n::field(root,17)?)?.len())?;
  n::admit(root,native,limits,En1990Snapshot::SQLITE_SCHEMA,9,36,rows,|root,out|write(root,out,actions,members))

@@ -2,11 +2,11 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::editor::lowpoly::view::{build_doc, primitive_kind};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_view::{build_doc, primitive_kind};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -31,14 +31,14 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     let Some(mut new_object) = build.snapshot().objects.iter().find(|object| object.id == new_id).cloned() else {
         return Ok(Emit::default());
     };
-    new_object.paint_layers = new_object.paint_layers.into_iter().map(crate::LowpolyPaintLayer::compacted).collect();
+    new_object.paint_layers = new_object.paint_layers.into_iter().map(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::compacted).collect();
     let index = projection.objects.len();
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added object used to also
     // reset the mesh domain's selection/targets to whole-object/empty here — that state is
     // framework-owned `InteractionState` now, only ever mutated by the framework's own injected
     // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
-        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::mutations::create_object::CreateObject { index, object: new_object })],
+        artifact_mutations: vec![LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index, object: new_object })],
         config_mutations: vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: new_id })],
         ..Default::default()
     })
@@ -46,7 +46,4 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
 //#endregion 🔖️AddPrimitive
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

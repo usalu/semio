@@ -1,7 +1,7 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::artifact_schema::{evaluate_document, geg_anlage2_ht_prime_limits};
-use crate::editor::din18599::unit_tests::context;
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use semio_s_artifact_norm_din18599_checks::{evaluate_document, geg_anlage2_ht_prime_limits};
+use crate::unit_tests::context;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -43,7 +43,7 @@ fn reference_tables_cells_match_evaluate_sources() {
     };
     assert_eq!(*cell_limit, geg_anlage2_ht_prime_limits::DETACHED_AN_LE_350);
 
-    let doc = crate::subjects::compliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let report = evaluate_document(&doc);
     let check = report.checks.iter().find(|c| c.id == "din18599.geg.ht-prime").expect("ht-prime check");
     assert_eq!(check.limit.value, *cell_limit);

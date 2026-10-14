@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifact_schema::mutations::En1998Mutation;
+use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,20 +26,37 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use super::*;
-use crate::artifact_schema::mutations::En1998Mutation;
-use crate::artifact_schema::mutations::{
-    change_annex::ChangeAnnex, update_site::UpdateSite, insert_building::InsertBuilding, remove_building::RemoveBuilding,
-    change_system_v_rd_n::ChangeSystemVRdN, change_storey_permanent_gk_n::ChangeStoreyPermanentGkN,
-    change_storey_stiffness_x::ChangeStoreyStiffnessX, change_storey_drift_xm::ChangeStoreyDriftXM,
-    change_building_plan_regular::ChangeBuildingPlanRegular, change_elevation_regular::ChangeElevationRegular,
-    change_member_detailing::ChangeMemberDetailing,
-    change_masonry_wall_ratio::ChangeMasonryWallRatio, insert_bridge::InsertBridge,
-    change_bridge_v_rd_n::ChangeBridgeVRdN, insert_assessment::InsertAssessment, change_assessment_rkn::ChangeAssessmentRKN,
-    insert_silo::InsertSilo, insert_tank::InsertTank, insert_foundation::InsertFoundation,
-    insert_retaining_wall::InsertRetainingWall, insert_tower::InsertTower, change_tower_m_rd_nm::ChangeTowerMRdNm,
-    remove_bridge::RemoveBridge, remove_assessment::RemoveAssessment, remove_silo::RemoveSilo, remove_tank::RemoveTank, remove_foundation::RemoveFoundation, remove_retaining_wall::RemoveRetainingWall, remove_tower::RemoveTower,
-};
+#[cfg(test)] use crate::binary::mutations::*;
+use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
+use semio_s_artifact_norm_en1998_mut_buildings::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_en1998_mut_buildings::update_site::UpdateSite;
+use semio_s_artifact_norm_en1998_mut_buildings::insert_building::InsertBuilding;
+use semio_s_artifact_norm_en1998_mut_buildings::remove_building::RemoveBuilding;
+use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n::ChangeSystemVRdN;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n::ChangeStoreyPermanentGkN;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x::ChangeStoreyStiffnessX;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm::ChangeStoreyDriftXM;
+use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular::ChangeBuildingPlanRegular;
+use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular::ChangeElevationRegular;
+use semio_s_artifact_norm_en1998_mut_members::change_member_detailing::ChangeMemberDetailing;
+use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio::ChangeMasonryWallRatio;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge::InsertBridge;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n::ChangeBridgeVRdN;
+use semio_s_artifact_norm_en1998_mut_members::insert_assessment::InsertAssessment;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn::ChangeAssessmentRKN;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo::InsertSilo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank::InsertTank;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation::InsertFoundation;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall::InsertRetainingWall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower::InsertTower;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm::ChangeTowerMRdNm;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge::RemoveBridge;
+use semio_s_artifact_norm_en1998_mut_members::remove_assessment::RemoveAssessment;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo::RemoveSilo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank::RemoveTank;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation::RemoveFoundation;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall::RemoveRetainingWall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower::RemoveTower;
 fn write_json_bin<T: semio_framework_value::ToValue>(out: &mut Vec<u8>, value: &T) {
     let bytes = semio_framework_pack_json::to_json_string(value);
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);

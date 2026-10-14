@@ -13,7 +13,7 @@
 //! keyed by its raw entity id, so a pick costs nothing of the argument arena.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, snapshot_target_regions, puzzle2d_node_display_label, ui_label, Puzzle2dScene, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_TARGET_REGION, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle2d_node_display_label, crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -147,7 +147,7 @@ fn pick_row(id: &str, label: String, description: Option<&str>, granularity: &st
 
 fn node_row(node: &Value, snapshot: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
-    let (hidden, locked) = (crate::editor::puzzle2d::puzzle2d_entity_hidden(node), flag(node, "locked"));
+    let (hidden, locked) = (crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node), flag(node, "locked"));
     let item = pick_item(id, node_label(node, snapshot), node.get("nodeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_NODE)?.dimmed(hidden);
     with_hide_lock_actions(item, node_flag_target(id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"])).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
 }

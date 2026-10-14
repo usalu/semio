@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-2d-booleans"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🔀️ Planar polygon and path booleans under bounded work grants."
+
+[package.metadata.semio]
+role = "framework"
+id = "2d-booleans"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_2d_booleans"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-2d-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-2d-retire = { path = "../../../🧹️retire/📦️packages/🦀️rust" }
+semio-framework-2d-path-flatten = { path = "../../../🛤️path/📏️flatten/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

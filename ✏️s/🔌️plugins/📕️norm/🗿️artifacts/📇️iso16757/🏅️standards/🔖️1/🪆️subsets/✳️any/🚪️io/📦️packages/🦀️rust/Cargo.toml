@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-iso16757-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "ISO 16757 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-iso16757-diff = { workspace = true }
+semio-s-artifact-norm-iso16757-model = { workspace = true }
+semio-s-artifact-norm-iso16757-mut-catalogue = { workspace = true }
+semio-s-artifact-norm-iso16757-mut-definitions = { workspace = true }
+semio-s-artifact-norm-iso16757-mut-products = { workspace = true }
+semio-s-artifact-norm-iso16757-mut-selection = { workspace = true }
+semio-s-artifact-norm-iso16757-mutations = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

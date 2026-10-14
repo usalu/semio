@@ -1,8 +1,7 @@
 //! 📐 Block5d mutation — `ChangePartKindUnit`: the part kind's optional `unit`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 📐 `change-part-kind-unit` payload.
@@ -18,19 +17,19 @@ pub struct ChangePartKindUnit {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_part_kind_unit(new_unit: Option<String>) -> Block5dMutation {
-    Block5dMutation::ChangePartKindUnit(ChangePartKindUnit { new_unit })
+pub fn change_part_kind_unit<Op: From<crate::change_part_kind_unit::ChangePartKindUnit>>(new_unit: Option<String>) -> Op {
+    Op::from(ChangePartKindUnit { new_unit })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangePartKindUnit {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangePartKindUnit where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_part_kind_unit::ChangePartKindUnit> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part-kind", kind: "change-part-kind-unit", record: "ChangedPartKindUnit" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::change_part_kind_unit::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_part_kind_unit::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangePartKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,0 +1,341 @@
+{
+  "status": "prepared-only-production-held",
+  "descriptor": {
+    "version": 1,
+    "owner": "os/store/member-producer",
+    "roles": {
+      "producer": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+        "symbols": [
+          "MemberStoreProducer"
+        ]
+      },
+      "catalog": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+        "symbols": [
+          "DocumentStoreOwners",
+          "funded_member_store_owners",
+          "complete_unscheduled_catalog",
+          "bounded_artifact_store_owners"
+        ]
+      },
+      "opening": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+        "symbols": [
+          "InitialMemberStoreOpen",
+          "MemberSnapshotOpenOperation"
+        ]
+      },
+      "store": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+        "symbols": [
+          "ArtifactStore",
+          "ArtifactStoreOwnedDisposer",
+          "ArtifactStoreCursorDisposer",
+          "create_member_store",
+          "open_member_store"
+        ]
+      },
+      "valueFactory": {
+        "language": "rust",
+        "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+        "symbols": [
+          "ArtifactOwnedValueRetirementFactory"
+        ]
+      },
+      "readRetirement": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+        "symbols": [
+          "ArtifactStoreVcsRetirement",
+          "ArtifactStoreEnvelopeRetirement"
+        ]
+      },
+      "editRetirement": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+        "symbols": [
+          "ArtifactStoreOperationRowsRetirement",
+          "ArtifactStoreDecodedEditRetirement"
+        ]
+      },
+      "messageLedger": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+        "symbols": [
+          "ArtifactEditMessageLedger",
+          "ArtifactEditMessageLedgerRetirement"
+        ]
+      },
+      "storeLaws": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+        "symbols": [
+          "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
+          "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
+          "typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child"
+        ]
+      },
+      "catalogLaws": {
+        "language": "rust",
+        "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+        "symbols": [
+          "member_catalog_constructor_birth_and_retirement_match_original_system_allocations",
+          "member_catalog_initial_open_cancellation_pays_original_catalog_and_page_before_drop"
+        ]
+      }
+    },
+    "extension": {
+      "owner": "s/stdio/semio/v1",
+      "roles": {
+        "producer": {
+          "language": "rust",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+          "symbols": [
+            "SemioMemberStoreProducer",
+            "semio_member_owner"
+          ]
+        },
+        "members": {
+          "language": "rust",
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+          "symbols": [
+            "SemioMembers",
+            "SemioMembersOpen"
+          ]
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "exact-current-owned-declarations",
+      "change": null,
+      "accepted": true
+    },
+    {
+      "id": "missing-producer",
+      "change": {
+        "removeRole": "producer"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalog",
+      "change": {
+        "removeRole": "catalog"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-opening",
+      "change": {
+        "removeRole": "opening"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-store",
+      "change": {
+        "removeRole": "store"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-valueFactory",
+      "change": {
+        "removeRole": "valueFactory"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-readRetirement",
+      "change": {
+        "removeRole": "readRetirement"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-editRetirement",
+      "change": {
+        "removeRole": "editRetirement"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-messageLedger",
+      "change": {
+        "removeRole": "messageLedger"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-storeLaws",
+      "change": {
+        "removeRole": "storeLaws"
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-catalogLaws",
+      "change": {
+        "removeRole": "catalogLaws"
+      },
+      "accepted": false
+    },
+    {
+      "id": "producer-default-body",
+      "change": {
+        "role": "producer",
+        "from": "fn member_store_owners_birth_demand(&self)->Result<RetainedCloneBirthDemand,ValueError>;",
+        "to": "fn member_store_owners_birth_demand(&self)->Result<RetainedCloneBirthDemand,ValueError>{todo!()}"
+      },
+      "accepted": false
+    },
+    {
+      "id": "producer-open-owner",
+      "change": {
+        "role": "producer",
+        "from": "type SnapshotOpen:MemberSnapshotOpenOperation<Snapshot=P>;",
+        "to": "type SnapshotOpen;"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-catalog-source-price",
+      "change": {
+        "role": "opening",
+        "from": "bytes.checked_add(source.capacity_bytes)",
+        "to": "bytes.checked_add(0)"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-progress-extent",
+      "change": {
+        "role": "opening",
+        "from": "progress.retained_capacity_bytes == source_capacity",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "open-progress-grant",
+      "change": {
+        "role": "opening",
+        "from": "progress.fits(source_grant)",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-ticket-admission",
+      "change": {
+        "role": "store",
+        "from": "if !owners.constructor_is_complete()",
+        "to": "if false"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-original-tickets",
+      "change": {
+        "role": "store",
+        "from": "owners.take_factory_retirement_tickets()",
+        "to": "Default::default()"
+      },
+      "accepted": false
+    },
+    {
+      "id": "install-original-disposer",
+      "change": {
+        "role": "store",
+        "from": "owners.store_disposer.take()",
+        "to": "None"
+      },
+      "accepted": false
+    },
+    {
+      "id": "funded-producer-selection",
+      "change": {
+        "role": "catalog",
+        "from": "producer.member_store_owners_birth_demand()?",
+        "to": "Default::default()"
+      },
+      "accepted": false
+    },
+    {
+      "id": "cursor-terminal-witness",
+      "change": {
+        "role": "store",
+        "from": "self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()",
+        "to": "true"
+      },
+      "accepted": false
+    },
+    {
+      "id": "fixed-message-ledger",
+      "change": {
+        "role": "messageLedger",
+        "from": "pub const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192;",
+        "to": "pub const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = usize::MAX;"
+      },
+      "accepted": false
+    }
+  ],
+  "descriptorCases": [
+    {
+      "id": "wrong-role-module-owner",
+      "path": [
+        "roles",
+        "producer",
+        "path"
+      ],
+      "value": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "accepted": false
+    },
+    {
+      "id": "wrong-role-symbol-binding",
+      "path": [
+        "roles",
+        "producer",
+        "symbols"
+      ],
+      "value": [
+        "ArtifactStore"
+      ],
+      "accepted": false
+    },
+    {
+      "id": "undeclared-language-owner",
+      "path": [
+        "roles",
+        "producer",
+        "language"
+      ],
+      "value": "typescript",
+      "accepted": false
+    },
+    {
+      "id": "missing-explicit-extension-owner",
+      "path": [
+        "extension",
+        "owner"
+      ],
+      "remove": true,
+      "accepted": false
+    },
+    {
+      "id": "descriptor-extra-authority",
+      "path": [
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    }
+  ]
+}

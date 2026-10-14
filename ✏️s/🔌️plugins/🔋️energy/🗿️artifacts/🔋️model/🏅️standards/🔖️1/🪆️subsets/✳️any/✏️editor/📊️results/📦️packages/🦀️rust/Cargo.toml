@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-energy-model-editor-results"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model editor results: the run's per-surface payload decoded into a colour map and legend"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-energy-model-editor-config = { workspace = true }
+semio-s-artifact-energy-model-session = { workspace = true }
+
+[dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-tool-run = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }

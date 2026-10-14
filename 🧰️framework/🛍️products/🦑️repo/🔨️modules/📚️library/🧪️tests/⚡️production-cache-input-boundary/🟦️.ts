@@ -33,12 +33,12 @@ function oracle(path: string, patterns: readonly string[], projectRoot = vector.
   return (positives.length === 0 || positives.some((pattern) => minimatch(path, pattern))) && negatives.every((pattern) => !minimatch(path, pattern));
 }
 
-test("production cache inputs exclude fixtures while test inputs retain them", () => {
+test("production cache inputs exclude fixtures while test inputs retain them", async() => {
   
   expect(vector["version"]).toEqual(1);
   expect(vector.samples.every((sample) => existsSync(join(root, sample.path)))).toBe(true);
   const projectJson = JSON.parse(readFileSync(join(root, vector.projectRoot, "📋️project.json"), "utf8"));
-  const namedInputs = cacheInternals.projectInputs(projectJson, vector.projectRoot, root, new Map());
+  const namedInputs = await cacheInternals.projectInputs(projectJson, vector.projectRoot, root, new Map());
   const project = {
     name: vector.projectName,
     type: "lib" as const,
@@ -69,7 +69,7 @@ test("production cache inputs exclude fixtures while test inputs retain them", (
   expect(namedInputs.production).toContain("!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*");
   expect(nxJson.namedInputs.production).toContain("!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*");
   const nativeJson = JSON.parse(readFileSync(join(root, vector.nativeProject.root, "📋️project.json"), "utf8"));
-  const nativeNamedInputs = cacheInternals.projectInputs(nativeJson, vector.nativeProject.root, root, new Map());
+  const nativeNamedInputs = await cacheInternals.projectInputs(nativeJson, vector.nativeProject.root, root, new Map());
   const nativeProject = {
     name: vector.nativeProject.name,
     type: "lib" as const,
@@ -110,9 +110,9 @@ test("native input vocabulary is total while owner overrides and unknown refusal
 
 
 /** 🧫️ Original Nx hashing and independent minimatch agree on collection ancestry. */
-test("exact example collection boundary preserves domain module names", () => {
+test("exact example collection boundary preserves domain module names", async() => {
   const json = JSON.parse(readFileSync(join(root, vector.projectRoot, "📋️project.json"), "utf8"));
-  const namedInputs = cacheInternals.projectInputs(json, vector.projectRoot, root, new Map());
+  const namedInputs = await cacheInternals.projectInputs(json, vector.projectRoot, root, new Map());
   const project = { name: vector.projectName, type: "lib" as const, data: { root: vector.projectRoot, namedInputs, targets: { production: { inputs: ["production"] }, test: { inputs: ["default"] } } } };
   const files = vector.collectionBoundaries.map((row) => ({ file: `${vector.projectRoot}/${row.path}`, hash: row.path }));
   for (const target of ["production", "test"] as const) {

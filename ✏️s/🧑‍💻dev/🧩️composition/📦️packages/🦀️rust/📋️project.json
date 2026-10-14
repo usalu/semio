@@ -94,7 +94,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts test quick --test semio_s_artifact_procedural_generation3d",
+        "command": "bun ./📜️script.ts test quick --test retained-artifact-units",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },

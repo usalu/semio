@@ -1,4 +1,4 @@
-use super::*;
+use crate::panels::inspection::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
@@ -9,7 +9,7 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
-    let mut host = NormHost::<En1998Family>::from_artifact(crate::En1998Snapshot::default());
+    let mut host = NormHost::<En1998Family>::from_artifact(semio_s_artifact_norm_en1998_model::En1998Snapshot::default());
     host.evaluate();
     let first = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render(&host, None, Default::default(), None).expect("node assembly")))
     .expect("json");

@@ -8,18 +8,18 @@ pub use original_fixture_caller::OriginalFixtureCaller;
 #[cfg(test)] use crate::window_kits::node_graph_delete_selection_spec;
 #[cfg(test)] use crate::window_kits::delete_selection;
 #[cfg(test)] use crate::history_view::MutationView;
-#[cfg(test)] use crate::store_lifecycle::bounded_config_store_one_item_preparation_factory;
+#[cfg(test)] use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
 #[cfg(test)] use crate::tool_jobs::SupersedeLedger;
 #[cfg(test)] use crate::tool_jobs::SupersedeRecord;
 #[cfg(test)] use crate::tool_jobs::SupersedeRole;
-#[cfg(test)] use crate::store_lifecycle::bounded_document_store_initialization_job;
+#[cfg(test)] use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 #[cfg(test)] use crate::tool_jobs::TimeTravelPanel;
 #[cfg(test)] use crate::tool_jobs::TimeTravelEditorPanel;
 #[cfg(test)] use crate::tool_jobs::TIME_TRAVEL_TURN_WALL_US;
 #[cfg(test)] use crate::tool_jobs::HISTORY_ROW_MUTATION_ROWS;
 #[cfg(test)] use crate::command_history::HISTORY_ROWS_BUILT;
-#[cfg(test)] use crate::store_lifecycle::bounded_config_store_owners;
-#[cfg(test)] use crate::store_lifecycle::bounded_document_store_owners;
+#[cfg(test)] use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_owners;
+#[cfg(test)] use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
 use super::window_config::{WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry};
 use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry};
 use semio_framework_value::DslValue;
@@ -77,7 +77,7 @@ use crate::command_history::history_alternative_views;
 #[cfg(test)]
 use crate::command_history::AlternativeFact;
 #[cfg(test)]
-use crate::store_lifecycle::ArtifactStoreInitializationJob;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
 #[cfg(test)]
 use crate::command_history::history_panel_mutation_row;
 #[cfg(test)]
@@ -95,7 +95,7 @@ use crate::app_emission::TransactionPhase;
 use crate::command_history::CATALOGUE_EXAMPLE_ACTION_ID;
 use crate::tool_jobs::time_travel;
 #[cfg(test)]
-use crate::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use crate::window_surface::built_text_to_component_tree;
 #[cfg(test)]
@@ -155,7 +155,7 @@ use crate::artifact_instance::settle_framework_reserved_admission;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::artifact_registration::surface_dependency_breaches;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::child_view::ChildContentView;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -169,13 +169,13 @@ use crate::plugin_program::Plugin;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::reserved_jobs::register_framework_reserved_factories;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::store_lifecycle::ArtifactDisposal;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::store_lifecycle::bounded_config_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::surface_contract::ArtifactEditor;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -465,7 +465,7 @@ pub mod artifact_app_laws {
         S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Mutation: store::OpText + store::OpBinary + store::Mutation<S> + 'static,
     {
-        let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<S, Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
         let envelope = parsed.into_envelope();
         let pack = store::os_store::text_format::print_document_pack(&envelope).await;
         envelope.retire_unadopted();
@@ -501,7 +501,7 @@ pub mod artifact_app_laws {
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_text(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
         let envelope = parsed.into_envelope();
         let pack = store::os_store::text_format::print_document_pack(&envelope).await;
         envelope.retire_unadopted();
@@ -583,8 +583,8 @@ pub mod artifact_app_laws {
             let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("quoted maintenance demand"));
             if cx.should_yield(){return}
             let demand=PluginApp::maintenance_retirement_demands(app,grant.maximum_copy_bytes).expect("original maintenance quote");
-            match crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
-                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != super::RetainedCloneProgress::default() => idle_stages = 0,
+            match semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != super::RetainedCloneProgress::default() => idle_stages = 0,
                 _ => idle_stages += 1,
             }
             assert!(idle_stages <= usize::from(super::MAINTENANCE_STAGES), "a pressured displaced-owner queue made no maintenance progress over a whole stage rotation");
@@ -1009,7 +1009,7 @@ pub mod artifact_app_laws {
             if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
             let grant = mounted_policy.maintenance;
             let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
-            let maintenance = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+            let maintenance = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
                 let step = app.maintenance_step(same,grant)?;
                 Ok((step, app.maintenance_terminal_is_empty()))
             })?;
@@ -1174,7 +1174,7 @@ pub mod artifact_app_laws {
             let grant = fixture_close_grant(mounted_policy);
             let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
             last_quote = Some((demand, grant));
-            let step = crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+            let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
                 Ok((app.close_step(same,grant)?, app.close_terminal_is_empty()))
             })?;
             retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;

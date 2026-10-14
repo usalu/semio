@@ -1,0 +1,408 @@
+{
+  "request": {
+    "version": 1,
+    "channel": "nightly-2026-07-20",
+    "profile": "minimal",
+    "components": [
+      "rust-src",
+      "llvm-tools-preview"
+    ],
+    "targets": [
+      "wasm32-unknown-unknown",
+      "wasm32-wasip2"
+    ],
+    "bootstrapVersion": "1.29.0",
+    "store": "tools",
+    "selfUpdate": false,
+    "automaticInstall": false
+  },
+  "cases": [
+    {
+      "name": "valid-held-generation",
+      "receipt": "valid",
+      "offline": true,
+      "canceled": false,
+      "expected": "reuse"
+    },
+    {
+      "name": "online-first-generation",
+      "receipt": "absent",
+      "offline": false,
+      "canceled": false,
+      "expected": "provision"
+    },
+    {
+      "name": "offline-missing-generation",
+      "receipt": "absent",
+      "offline": true,
+      "canceled": false,
+      "expected": "refuse"
+    },
+    {
+      "name": "foreign-generation",
+      "receipt": "foreign",
+      "offline": false,
+      "canceled": false,
+      "expected": "refuse"
+    },
+    {
+      "name": "canceled-held-generation",
+      "receipt": "valid",
+      "offline": false,
+      "canceled": true,
+      "expected": "refuse"
+    },
+    {
+      "name": "known-original-interruption",
+      "receipt": "interrupted-original",
+      "offline": false,
+      "canceled": false,
+      "expected": "recover"
+    }
+  ],
+  "sealCases": [
+    {
+      "name": "original",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        }
+      ],
+      "expected": "27974b55d956aa63bc61c2ec43b1ff34f75e0f551d155d01a86d5f2d7e1d4bef"
+    },
+    {
+      "name": "driver-change",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 14,
+          "digest": "c9fb2389ebe87436f99d2eb920a66b8a40507ced96a306d5d44082ab77efacb3"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        }
+      ],
+      "expected": "fbea4e2bbe416019e0ac48d7dc93cd9bc5f86b9599382e9ad45b7b3c9a9186e3"
+    },
+    {
+      "name": "stdlib-change",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 11,
+          "digest": "1938c47696a623246aaf7e7e4eb386d6dc93596a07bef0a9d2a6c4cfb0091eeb"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        }
+      ],
+      "expected": "d05529efd99957af252891f09b32397c8bf8cbc77d9047e09206144fb0d0b889"
+    },
+    {
+      "name": "source-change",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "4d796a5bd359f509a91c9f03a14cec9e1e953b5e17cad3250269705c774bea09"
+        }
+      ],
+      "expected": "454725bc9ce576ea2ec595621f8351c8f500e1c8e90ae64ce9caf6622798e650"
+    },
+    {
+      "name": "empty-directory",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/empty",
+          "kind": "directory"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        }
+      ],
+      "expected": "b0007cc07ccbc20b4ce570ba393faa7e9e481bc38866a5dcfc2ef2ad2a44dd2d"
+    },
+    {
+      "name": "owned-library-link",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/driver-link",
+          "kind": "symlink",
+          "target": "librustc_driver.dylib"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        }
+      ],
+      "expected": "4341e005d7d3107b4b7003a2af473f94a56bfbe7e417c9c755504e823f8f5957"
+    },
+    {
+      "name": "portable-unicode-order",
+      "files": [
+        {
+          "path": "bin/rustc",
+          "kind": "file",
+          "bytes": 8,
+          "digest": "ec9a6e9fe278eb1a471fbab6f40367d8548078b651d9c71581c57c2a6ca379e0"
+        },
+        {
+          "path": "lib/librustc_driver.dylib",
+          "kind": "file",
+          "bytes": 15,
+          "digest": "0cfe486832622df300ea5aa61584d75d097191345039b479ff48d03b64188ebe"
+        },
+        {
+          "path": "lib/rustlib/host/lib/libstd.rlib",
+          "kind": "file",
+          "bytes": 12,
+          "digest": "e7e37bfbb3b389dd751ddaa44d5d3906e71b7f889efc366ff29b03d436746029"
+        },
+        {
+          "path": "lib/rustlib/src/rust/library/core/src/lib.rs",
+          "kind": "file",
+          "bytes": 13,
+          "digest": "5065059ef0321a079dc0da8ab9de6dcad48c335d9759f9c49caae440f865a2d1"
+        },
+        {
+          "path": "lib/.rlib",
+          "kind": "file",
+          "bytes": 1,
+          "digest": "a25513c7e0f6eaa80a3337ee18081b9e2ed09e00af8531c8f7bb2542764027e7"
+        },
+        {
+          "path": "lib/😀.rlib",
+          "kind": "file",
+          "bytes": 1,
+          "digest": "a25513c7e0f6eaa80a3337ee18081b9e2ed09e00af8531c8f7bb2542764027e7"
+        }
+      ],
+      "expected": "58cc062f311d7bfd89a55c252872d0e04a66f345b114e8f7152a4d99a8f53b26"
+    }
+  ],
+  "capture": {
+    "driverBytes": 131072,
+    "launcher": "neutral-launcher",
+    "entries": [
+      "bin",
+      "bin/rustc",
+      "lib",
+      "lib/empty",
+      "lib/librustc_driver.dylib"
+    ]
+  },
+  "resourceCases": [
+    {
+      "directory": "/tools/r/toolchains/nightly-aarch64",
+      "expected": "rustup:generation-shard:52"
+    },
+    {
+      "directory": "/tools/r/toolchains/nightly-x64",
+      "expected": "rustup:generation-shard:11"
+    },
+    {
+      "directory": "/tools/r/toolchains/neutral",
+      "expected": "rustup:generation-shard:40"
+    }
+  ],
+  "hosts": [
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "libc": "gnu",
+      "triple": "aarch64-apple-darwin"
+    },
+    {
+      "platform": "darwin",
+      "architecture": "x64",
+      "libc": "gnu",
+      "triple": "x86_64-apple-darwin"
+    },
+    {
+      "platform": "win32",
+      "architecture": "arm64",
+      "libc": "gnu",
+      "triple": "aarch64-pc-windows-msvc"
+    },
+    {
+      "platform": "win32",
+      "architecture": "x64",
+      "libc": "gnu",
+      "triple": "x86_64-pc-windows-msvc"
+    },
+    {
+      "platform": "linux",
+      "architecture": "arm64",
+      "libc": "gnu",
+      "triple": "aarch64-unknown-linux-gnu"
+    },
+    {
+      "platform": "linux",
+      "architecture": "x64",
+      "libc": "gnu",
+      "triple": "x86_64-unknown-linux-gnu"
+    },
+    {
+      "platform": "linux",
+      "architecture": "arm64",
+      "libc": "musl",
+      "triple": "aarch64-unknown-linux-musl"
+    },
+    {
+      "platform": "linux",
+      "architecture": "x64",
+      "libc": "musl",
+      "triple": "x86_64-unknown-linux-musl"
+    }
+  ],
+  "archivePaths": [
+    {
+      "home": "/owned/r",
+      "path": "rust-src-nightly/rust-src/lib/rustlib/src/rust/library/core/src/lib.rs",
+      "accepted": true
+    },
+    {
+      "home": "/owned/r",
+      "path": "../foreign",
+      "accepted": false
+    },
+    {
+      "home": "/owned/r",
+      "path": "/absolute",
+      "accepted": false
+    },
+    {
+      "home": "/owned/r",
+      "path": "archive/a/../../foreign",
+      "accepted": false
+    },
+    {
+      "home": "/owned/r",
+      "path": "archive/a\\b",
+      "accepted": false
+    },
+    {
+      "home": "/owned/r",
+      "path": "archive/a:b",
+      "accepted": false
+    },
+    {
+      "home": "/owned/r",
+      "path": "archive/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": false
+    }
+  ]
+}

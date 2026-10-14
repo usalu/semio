@@ -14,10 +14,18 @@
 //! 🖥️app-surface/🦀️.rs`), COPIED rather than imported: fem and energy have no cross-plugin
 //! dependency and the framework exposes no Rust colour helper to a wasm plugin.
 
-use crate::editor::model::config::EnergyModelConfig;
-use crate::editor::model::modes::edit::tools;
-use crate::energy_simulation_session::{ENERGY_SURFACE_PAYLOAD_HEADER_BYTES, ENERGY_SURFACE_PAYLOAD_MAGIC, ENERGY_SURFACE_PAYLOAD_ROW_BYTES};
-use semio_framework_plugin::ToolRunView;
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_s_artifact_energy_model_editor_config as editor_config;
+extern crate semio_s_artifact_energy_model_session as session;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_model as model;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_results as results;
+
+use crate::editor_config::ResultField;
+use crate::session::{ENERGY_SURFACE_PAYLOAD_HEADER_BYTES, ENERGY_SURFACE_PAYLOAD_MAGIC, ENERGY_SURFACE_PAYLOAD_ROW_BYTES};
 use std::collections::HashMap;
 
 //#region 🎨️Ramp
@@ -90,53 +98,6 @@ impl SurfaceEnergyMap {
 }
 //#endregion 📊️Map
 
-//#region 🔖️Field
-/// 🔖️ Which published quantity the 3d model window colours by. The wire ids are the values the
-/// `set-result-field` action carries and the `resultField` config string stores.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum ResultField {
-    #[default]
-    ConductionLoss,
-    ConductionGain,
-    SolarTransmitted,
-    SolarAbsorbed,
-}
-
-impl ResultField {
-    pub const ALL: [Self; 4] = [Self::ConductionLoss, Self::ConductionGain, Self::SolarTransmitted, Self::SolarAbsorbed];
-
-    pub fn id(self) -> &'static str {
-        match self {
-            Self::ConductionLoss => "conductionLoss",
-            Self::ConductionGain => "conductionGain",
-            Self::SolarTransmitted => "solarTransmitted",
-            Self::SolarAbsorbed => "solarAbsorbed",
-        }
-    }
-
-    /// 🔖️ The field a wire id names; unknown ids fall back to the default rather than refusing.
-    pub fn from_id(id: &str) -> Option<Self> {
-        Self::ALL.into_iter().find(|field| field.id() == id)
-    }
-
-    /// 🏷️ English caption stem, used by [`legend_caption`].
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::ConductionLoss => "Conduction loss",
-            Self::ConductionGain => "Conduction gain",
-            Self::SolarTransmitted => "Solar transmitted",
-            Self::SolarAbsorbed => "Solar absorbed",
-        }
-    }
-}
-
-/// 🎚️ The field the editor config currently selects. An unrecognized stored string (an older
-/// document, a hand-edited config) reads as the default rather than blanking the window.
-pub fn result_field(cfg: &EnergyModelConfig) -> ResultField {
-    ResultField::from_id(&cfg.result_field).unwrap_or_default()
-}
-//#endregion 🔖️Field
-
 //#region 🔓️Decode
 /// 🔓️ Decodes the run's tick payload. `None` for anything that is not a well-formed `ESF1` blob:
 /// wrong magic, a header that does not fit, or a body whose length does not match its row count.
@@ -160,12 +121,6 @@ pub fn decode_run_payload(payload: &[u8]) -> Option<SurfaceEnergyMap> {
     Some(SurfaceEnergyMap(rows))
 }
 
-/// 🔓️ The live energy simulation run's per-surface map, if there is one. Filters on
-/// `tool_id == energySimulation` so another plugin's run in the same document never colours this one.
-pub fn surface_energy_from_run(run: Option<&ToolRunView>) -> Option<SurfaceEnergyMap> {
-    let run = run.filter(|run| run.tool_id == tools::simulation::TOOL_ID)?;
-    decode_run_payload(run.payload.as_deref()?)
-}
 //#endregion 🔓️Decode
 
 //#region 🎨️Colors

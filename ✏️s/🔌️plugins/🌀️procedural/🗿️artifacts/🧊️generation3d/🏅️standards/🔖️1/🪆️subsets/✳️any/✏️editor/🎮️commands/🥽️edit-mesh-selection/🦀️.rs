@@ -2,9 +2,13 @@
 //! operator in with its DEFAULT params and then sets every input the user chose as an absolute `change-widget-input` leaf
 //! (design §19), so a history edit changes "extrude distance = 0.1", never a whole operator record.
 
-use crate::editor::generation3d::{config::{Generation3dConfig, Generation3dConfigMutation}, selection::{component_group, selected_analytic_labels, DOMAIN}};
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_editor_selection::component_group;
+use semio_s_artifact_procedural_3d_editor_selection::selected_analytic_labels;
+use semio_s_artifact_procedural_3d_editor_selection::DOMAIN;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
@@ -110,7 +114,7 @@ pub(crate) fn mesh_operation_rows(host_snapshot: &FlowHostSnapshot, operation: &
 }
 
 /// 🧩️ Inserts a source-scoped topology selector and feature through the recorder's declared graph edits.
-fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, target: &crate::editor::generation3d::selection::ComponentTarget<'_>) -> Result<(String, String), String> {
+fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, target: &semio_s_artifact_procedural_3d_editor_selection::ComponentTarget<'_>) -> Result<(String, String), String> {
     if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected geometry no longer exists")?;
@@ -183,7 +187,7 @@ pub fn edit_rows(payload: &EditMeshSelection, host_snapshot: &FlowHostSnapshot, 
 /// ref minted from the admission's authoring seed; a view without command authority publishes them plainly.
 pub(crate) fn mesh_edit_emit(verb: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, rows: Vec<Generation3dMutation>) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
-    let tool = format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID);
+    let tool = format!("{}#{verb}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID);
     match Scrub::start(tool, protocol::ActorId(seed.as_str().into()), "").send(ScrubInput::Commit { gesture: verb.to_string(), leaves: rows }, authoring_clock(0)) {
         Ok(ToolStep::Committed(transaction, rows)) if !seed.is_empty() => Emit::commit_transaction(transaction, rows),
         Ok(ToolStep::Committed(_, rows)) => Emit::mutations(rows),

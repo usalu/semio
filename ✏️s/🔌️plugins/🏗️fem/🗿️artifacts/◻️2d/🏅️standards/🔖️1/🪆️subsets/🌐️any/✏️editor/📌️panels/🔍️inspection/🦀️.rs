@@ -20,13 +20,24 @@
 //! slice it is looking at and the section stamps the full extent beside it, so neither listing needs
 //! a row cap nor a `+N` row standing in for the rest.
 
-use crate::editor::fem2d::commands::patch_combination::{ADD_TERM_FIELD, TERM_FIELD_PREFIX};
-use crate::editor::fem2d::interaction::{
-    fem2d_entity_kind, fem2d_load_owner, Fem2dInteractionSnapshot, FEM2D_GRANULARITY_COMBINATION, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_LOAD_CASE, FEM2D_GRANULARITY_MATERIAL, FEM2D_GRANULARITY_NODE,
-    FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SECTION, FEM2D_GRANULARITY_SUPPORT, FEM2D_INTERACTION_DOMAIN,
-};
-use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{fem2d_action, ui_label};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination::ADD_TERM_FIELD;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination::TERM_FIELD_PREFIX;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_kind;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_NODE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_REGION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_action;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
@@ -479,7 +490,4 @@ pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, label
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

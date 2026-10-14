@@ -2,7 +2,7 @@
   "name": "semio-framework-canvas",
   "private": true,
   "scripts": {
-    "test": "bun repo run semio-framework-canvas:test"
+    "test": "bun --cwd \"../../../../..\" repo run semio-framework-canvas:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

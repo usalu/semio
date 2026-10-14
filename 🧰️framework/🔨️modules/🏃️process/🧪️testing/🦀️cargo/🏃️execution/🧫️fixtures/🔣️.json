@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "request": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": ["kernel"], "arguments": ["long", "--lib", "original_"] },
+  "declaration": { "version": 1, "operations": [{ "command": { "program": "runtime", "cwd": "kernel", "arguments": ["script", "test"], "tail": "test-arguments" }, "continuation": null, "request": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": ["kernel"], "arguments": [] } }] },
+  "configuration": { "version": 1, "workspace": ".", "workspaceManifest": "Cargo.toml", "store": "configured-store", "vitest": "vitest.mjs", "runtime": "node", "coverageRuntime": "node", "python": "python", "nextest": false, "nextestConfig": "nextest.toml", "buildBudgetMs": 0, "commandBudgetMs": 1000, "maximumOutputBytes": 65536, "assertionBudgets": { "fundamental": 15000, "quick": 300000, "long": 900000, "exhaustive": 1800000 }, "assertionThreads": 1, "rustMinStack": "134217728" },
+  "commandCases": [
+    { "id": "original", "accepted": true },
+    { "id": "foreign-manifest", "accepted": false },
+    { "id": "foreign-cwd", "accepted": false },
+    { "id": "foreign-arguments", "accepted": false },
+    { "id": "foreign-program", "accepted": false },
+    { "id": "foreign-prefix", "accepted": false },
+    { "id": "empty-tail-foreign-program", "accepted": false },
+    { "id": "foreign-policy-target", "accepted": false },
+    { "id": "foreign-policy-mode", "accepted": false },
+    { "id": "missing-policy", "accepted": false }
+  ],
+  "captureMutations": ["control", "arguments", "budget", "output", "environment"],
+  "cases": [
+    { "id": "tests", "definition": "request", "value": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": ["kernel"], "arguments": [] }, "accepted": true },
+    { "id": "exact", "definition": "request", "value": { "version": 1, "kind": "exact-laws", "manifest": "kernel/Cargo.toml", "cwd": ".", "groups": [{ "package": "kernel", "target": { "kind": "lib" }, "laws": ["original_law"] }] }, "accepted": true },
+    { "id": "policy-refused", "definition": "request", "value": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": ["kernel"], "arguments": [], "policy": {} }, "accepted": false },
+    { "id": "storage-refused", "definition": "request", "value": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": ["kernel"], "arguments": [], "targetDirectory": "foreign" }, "accepted": false },
+    { "id": "empty-selection", "definition": "request", "value": { "version": 1, "kind": "tests", "manifest": "kernel/Cargo.toml", "cwd": "kernel", "packages": [], "arguments": [] }, "accepted": false },
+    { "id": "wrong-arm", "definition": "request", "value": { "version": 1, "kind": "exact-laws", "manifest": "kernel/Cargo.toml", "cwd": ".", "packages": ["kernel"], "arguments": [] }, "accepted": false },
+    { "id": "target-extra-field", "definition": "request", "value": { "version": 1, "kind": "exact-laws", "manifest": "kernel/Cargo.toml", "cwd": ".", "groups": [{ "package": "kernel", "target": { "kind": "lib", "name": "foreign" }, "laws": ["original_law"] }] }, "accepted": false },
+    { "id": "duplicate-laws", "definition": "request", "value": { "version": 1, "kind": "exact-laws", "manifest": "kernel/Cargo.toml", "cwd": ".", "groups": [{ "package": "kernel", "target": { "kind": "lib" }, "laws": ["original_law", "original_law"] }] }, "accepted": false }
+  ],
+  "controlCases": [
+    { "id": "original", "refused": false, "commands": 1 },
+    { "id": "foreign-manifest", "refused": true, "commands": 0 },
+    { "id": "foreign-action", "refused": true, "commands": 0 },
+    { "id": "foreign-package", "refused": true, "commands": 0 },
+    { "id": "missing-port", "refused": true, "commands": 0 },
+    { "id": "cancel-before", "refused": true, "commands": 0 },
+    { "id": "deadline-after-publication", "refused": true, "commands": 0 },
+    { "id": "descriptor-after-publication", "refused": true, "commands": 0 },
+    { "id": "policy-after-publication", "refused": true, "commands": 0 },
+    { "id": "control-after-publication", "refused": true, "commands": 0 },
+    { "id": "signal-after-publication", "refused": true, "commands": 0 },
+    { "id": "clock-after-publication", "refused": true, "commands": 0 },
+    { "id": "cancel-during-execution", "refused": true, "commands": 1 }
+  ]
+}

@@ -6,11 +6,15 @@
 //! synthesized once (fixed minimal-but-schema-shaped constants) when building a package from
 //! scratch, while decoded packages preserve their logical XML documents.
 
-use crate::standards::v_ecma_376::subsets::base::schema::refusal::{PptxError};
-use crate::{
-    schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
-    PptxSnapshot,
-};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 
 pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
     let mut opc = snap.opc.clone();

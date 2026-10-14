@@ -1,6 +1,6 @@
 
-use super::*;
-use crate::Block2dHandleTemplate;
+use crate::bounds::*;
+use semio_s_artifact_block_2d_model::Block2dHandleTemplate;
 use std::f64::consts::PI;
 
 fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {

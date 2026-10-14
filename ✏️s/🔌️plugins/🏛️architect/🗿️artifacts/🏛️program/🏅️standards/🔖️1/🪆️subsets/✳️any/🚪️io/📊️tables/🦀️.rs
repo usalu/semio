@@ -1,6 +1,7 @@
 //! 📊️ Register table projection shared by native exchange codecs.
 use crate::standards::v1::subsets::any::schema::{snapshot::ProgramSnapshot, kernel::{EntityHeader, EntityId, PluginError}};
 use crate::standards::v1::subsets::any::schema::mutations::{self as leaves, ProgramMutation};
+use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::schema::registers::*;
 use crate::standards::v1::subsets::any::schema::kernel::*;
 use semio_s_artifact_stdio_csv as stdio_csv;
@@ -262,10 +263,10 @@ fn remove_register_item(run: &mut ImportRun, register: &str, id: &EntityId) {
     }
     let id = id.clone();
     match register {
-        "elements" => run.emit(ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id })),
-        "stakeholders" => run.emit(ProgramMutation::DeleteStakeholder(leaves::delete_stakeholder::DeleteStakeholder { id })),
-        "requirements" => run.emit(ProgramMutation::DeleteRequirement(leaves::delete_requirement::DeleteRequirement { id })),
-        "relationships" => run.emit(ProgramMutation::DeleteRelationship(leaves::delete_relationship::DeleteRelationship { id })),
+        "elements" => run.emit(ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::ProgramElement, id })),
+        "stakeholders" => run.emit(ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id })),
+        "requirements" => run.emit(ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::Requirement, id })),
+        "relationships" => run.emit(ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::Relationship, id })),
         "adjacencies" => run.emit(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id })),
         _ => {}
     }
@@ -290,7 +291,7 @@ fn upsert_register_row(run: &mut ImportRun, row: RegisterCsvRow) -> Result<(), P
 fn upsert_element(run: &mut ImportRun, row: RegisterCsvRow) {
     if let Some(element) = run.work.elements.iter().find(|e| e.header.id == row.id) {
         if element.header.name != row.name {
-            run.emit(ProgramMutation::RenameProgramElement(leaves::rename_program_element::RenameProgramElement { id: row.id, new_name: row.name }));
+            run.emit(ProgramMutation::RenameRegisterRow(leaves::rename_register_row::RenameRegisterRow { register: RegisterKey::ProgramElement, id: row.id, new_name: row.name }));
         }
         return;
     }
@@ -322,13 +323,13 @@ fn upsert_element(run: &mut ImportRun, row: RegisterCsvRow) {
         adjacency_preferences: Vec::new(),
         environmental_zone: None,
     };
-    run.emit(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::ProgramElement(program_element), index: None }));
 }
 
 fn upsert_stakeholder(run: &mut ImportRun, row: RegisterCsvRow) {
     if let Some(stakeholder) = run.work.stakeholders.iter().find(|s| s.header.id == row.id) {
         if stakeholder.header.name != row.name {
-            run.emit(ProgramMutation::RenameStakeholder(leaves::rename_stakeholder::RenameStakeholder { id: row.id, new_name: row.name }));
+            run.emit(ProgramMutation::RenameRegisterRow(leaves::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: row.id, new_name: row.name }));
         }
         return;
     }
@@ -359,7 +360,7 @@ fn upsert_stakeholder(run: &mut ImportRun, row: RegisterCsvRow) {
         communication_channels: Vec::new(),
         success_metrics: Vec::new(),
     };
-    run.emit(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(stakeholder), index: None }));
 }
 
 fn upsert_requirement(run: &mut ImportRun, row: RegisterCsvRow) {
@@ -371,7 +372,7 @@ fn upsert_requirement(run: &mut ImportRun, row: RegisterCsvRow) {
             if source.is_some() {
                 requirement.source = source;
             }
-            run.emit(ProgramMutation::ReplaceRequirement(leaves::replace_requirement::ReplaceRequirement { requirement }));
+            run.emit(ProgramMutation::ReplaceRegisterRow(leaves::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Requirement(requirement) }));
         }
         return;
     }
@@ -398,7 +399,7 @@ fn upsert_requirement(run: &mut ImportRun, row: RegisterCsvRow) {
         trace_links: Vec::new(),
         superseded_by: None,
     };
-    run.emit(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Requirement(requirement), index: None }));
 }
 
 /// 🔗 Parses `source_id>target_id` from the CSV `source` column (export fidelity encoding).
@@ -417,7 +418,7 @@ fn parse_endpoint_pair(encoded: &str, program: &ProgramSnapshot) -> (EntityId, E
 fn upsert_relationship(run: &mut ImportRun, row: RegisterCsvRow) {
     if let Some(existing) = run.work.relationships.iter().find(|r| r.header.id == row.id) {
         if existing.header.name != row.name {
-            run.emit(ProgramMutation::RenameRelationship(leaves::rename_relationship::RenameRelationship { id: row.id, new_name: row.name }));
+            run.emit(ProgramMutation::RenameRegisterRow(leaves::rename_register_row::RenameRegisterRow { register: RegisterKey::Relationship, id: row.id, new_name: row.name }));
         }
         return;
     }
@@ -449,7 +450,7 @@ fn upsert_relationship(run: &mut ImportRun, row: RegisterCsvRow) {
         incompatibility_requirement: None,
         separation_requirements: Vec::new(),
     };
-    run.emit(ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::Relationship(relationship), index: None }));
 }
 
 fn upsert_adjacency(run: &mut ImportRun, row: RegisterCsvRow) {
@@ -493,7 +494,7 @@ fn upsert_adjacency(run: &mut ImportRun, row: RegisterCsvRow) {
 fn upsert_knowledge(run: &mut ImportRun, row: RegisterCsvRow) {
     if let Some(existing) = run.work.knowledge_payload.iter().find(|record| record.header.id == row.id) {
         if existing.header.name != row.name {
-            run.emit(ProgramMutation::RenameKnowledgeRecord(leaves::rename_knowledge_record::RenameKnowledgeRecord { id: row.id, new_name: row.name }));
+            run.emit(ProgramMutation::RenameRegisterRow(leaves::rename_register_row::RenameRegisterRow { register: RegisterKey::KnowledgeRecord, id: row.id, new_name: row.name }));
         }
         return;
     }
@@ -518,14 +519,14 @@ fn upsert_knowledge(run: &mut ImportRun, row: RegisterCsvRow) {
         citations: Vec::new(),
         usage_count: 0,
     };
-    run.emit(ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::KnowledgeRecord(knowledge_record), index: None }));
 }
 
 /// 🏁️ Upserts a COMPOSED `benchmarks` register row through create/rename mutations.
 fn upsert_benchmark(run: &mut ImportRun, row: RegisterCsvRow) {
     if let Some(existing) = run.work.benchmarks_payload.iter().find(|record| record.header.id == row.id) {
         if existing.header.name != row.name {
-            run.emit(ProgramMutation::RenameBenchmarkRecord(leaves::rename_benchmark_record::RenameBenchmarkRecord { id: row.id, new_name: row.name }));
+            run.emit(ProgramMutation::RenameRegisterRow(leaves::rename_register_row::RenameRegisterRow { register: RegisterKey::BenchmarkRecord, id: row.id, new_name: row.name }));
         }
         return;
     }
@@ -551,6 +552,6 @@ fn upsert_benchmark(run: &mut ImportRun, row: RegisterCsvRow) {
         knowledge_id: None,
         last_verified: None,
     };
-    run.emit(ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record, index: None }));
+    run.emit(ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::BenchmarkRecord(benchmark_record), index: None }));
 }
 //#endregion 📤️ExchangeImport

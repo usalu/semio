@@ -13,6 +13,3 @@ pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🎩️example/🦀️.rs"]
-mod example;

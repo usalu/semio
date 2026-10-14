@@ -1,5 +1,5 @@
 //! 🪵️ Complete timber members, actions and connections borrowed before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -13,4 +13,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,a)in n::list(n::field(c,18)?)?.iter().enumerate(){n::entity(out,"en1995_connection_action",parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Text(2),Real(3)])?,CONNECTION_ACTION_FLOATS)?;}}Ok(())
 }
 /// 🛂️ Exact five-table physical rows and IEEE cell words under copied caller controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1995Snapshot::SQLITE_SCHEMA,5,73,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1995Snapshot::SQLITE_SCHEMA,5,73,count(root)?,write)}

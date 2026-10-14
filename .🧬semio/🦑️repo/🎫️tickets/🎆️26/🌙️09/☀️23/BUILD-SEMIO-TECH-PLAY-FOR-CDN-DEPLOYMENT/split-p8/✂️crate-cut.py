@@ -235,7 +235,7 @@ def file_rewrites(crate, layer, idents, file, aggregator_root):
         edits.append((m.start(), m.end(), "\n".join(lines)))
         covered.append((m.start(), m.end()))
     for m in PATH.finditer(text):
-        if any(a <= m.start() < b for a, b in covered):
+        if any(a <= m.start() < b for a, b in covered) or re.search(r"pub\s*\(\s*in\s+$", text[max(0, m.start() - 12):m.start()]):
             continue
         segs = [x for x in re.split(SEP, m.group("path")) if x]
         abs_segs, dest = target(segs, m.start())
@@ -254,6 +254,7 @@ def file_rewrites(crate, layer, idents, file, aggregator_root):
             segs = [x for x in re.split(SEP, m.group("path")) if x]
             dest = layer(module_of(crate, segs))
             if dest != own:
+                references.append((file, raw.count("\n", 0, m.start()) + 1, own, dest, "::".join(segs)))
                 edits.append((m.start(), m.end(), f"{idents[dest]}::{'::'.join(segs)}"))
     return raw, sorted(edits)
 

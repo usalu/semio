@@ -1,0 +1,67 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-energy-model-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model editor: EnergyModelEditor, its reduce seam, retained commands, examples and manifest"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "authoring_law"
+path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-energy-model-editor-commands = { workspace = true }
+semio-s-artifact-energy-model-editor-config = { workspace = true }
+semio-s-artifact-energy-model-editor-edit = { workspace = true }
+semio-s-artifact-energy-model-editor-interaction = { workspace = true }
+semio-s-artifact-energy-model-editor-panels = { workspace = true }
+semio-s-artifact-energy-model-editor-results = { workspace = true }
+semio-s-artifact-energy-model-examples = { workspace = true }
+semio-s-artifact-energy-model-mut-boundary = { workspace = true }
+semio-s-artifact-energy-model-mut-construction = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration = { workspace = true }
+semio-s-artifact-energy-model-mut-finish = { workspace = true }
+semio-s-artifact-energy-model-mut-glazing = { workspace = true }
+semio-s-artifact-energy-model-mut-material = { workspace = true }
+semio-s-artifact-energy-model-mut-model = { workspace = true }
+semio-s-artifact-energy-model-mut-run = { workspace = true }
+semio-s-artifact-energy-model-mut-shading-device = { workspace = true }
+semio-s-artifact-energy-model-mut-site = { workspace = true }
+semio-s-artifact-energy-model-mut-surface = { workspace = true }
+semio-s-artifact-energy-model-mut-thermostat = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
+semio-s-artifact-energy-model-mut-zone = { workspace = true }
+semio-s-artifact-energy-model-mutations = { workspace = true }
+semio-s-artifact-energy-model-session = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

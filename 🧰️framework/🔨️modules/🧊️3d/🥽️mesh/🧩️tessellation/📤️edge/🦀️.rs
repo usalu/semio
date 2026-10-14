@@ -1,9 +1,9 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshEdgeReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(MeshEdgeReceipt);
+semio_framework_value::artifact_retire_leaf!(MeshEdgeReceipt);
 
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
 fn room<T>(buffer:&Vec<T>,count:usize)->bool{buffer.capacity().saturating_sub(buffer.len())>=count}

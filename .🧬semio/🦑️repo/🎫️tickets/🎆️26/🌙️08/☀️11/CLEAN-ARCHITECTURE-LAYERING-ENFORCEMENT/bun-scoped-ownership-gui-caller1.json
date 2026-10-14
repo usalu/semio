@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🦑️repo 🗂️Bun workspace ownership",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run repo:test-workspace-ownership",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "🧹clean🛡️gates",
+      "order": 900.057071
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:workspace-ownership:caller\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "bbdeef306d42dd312e0f8a2e7e7e1482774e89901ed2b915de13e8a3ea1481f0",
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bso-gui1"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

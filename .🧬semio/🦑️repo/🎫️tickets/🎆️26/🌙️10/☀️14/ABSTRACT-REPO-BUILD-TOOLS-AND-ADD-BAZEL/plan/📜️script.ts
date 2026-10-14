@@ -14,7 +14,7 @@ const {readBuildGraphV1}=await import(join(library,"🏗️build/🕸️graph/�
 const Ajv=createRequire(join(root,".nx/installation/package.json"))("ajv");
 const schema=JSON.parse(await readFile(join(library,"🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json"),"utf8")),validate=new Ajv({strict:true}).compile(schema);
 let source=await readFile(path,"utf8");const digest=createHash("sha256").update(source).digest("hex");assert.equal(digest,expectedDigest);
-const graph=readBuildGraphV1(JSON.parse(source));source="";Bun.gc(true);const began=performance.now(),unique=new Set<string>(),failures:{task:string;message:string}[]=[];
+const graph=readBuildGraphV1(JSON.parse(source));assert.equal(graph.admission?.selection.kind,"all","Exhaustive planning requires whole-workspace admission");source="";Bun.gc(true);const began=performance.now(),unique=new Set<string>(),failures:{task:string;message:string}[]=[];
 let planned=0,baseTasks=0,configuredTasks=0,expandedEntries=0,maximumClosure=0,cancelled=false;
 const cancel=()=>{cancelled=true;};process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
 try{

@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
@@ -381,8 +381,8 @@ pub(crate) use controlled::{decode as decode_sqlite_native,encode as encode_sqli
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::*;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
@@ -483,7 +483,7 @@ pub fn generation_preview_host(host_snapshot: &FlowHostSnapshot, values: &semio_
     let object: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
     let patched = apply_generation_values_to_host_snapshot(&snapshot_json, &object);
     let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
-    FlowHost::from_host_snapshot(patched_fixture)
+    FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY)
 }
 
 /// 📤️ The drawings a program OUTPUTS: every drawing a synapse delivers into an output widget
@@ -534,8 +534,8 @@ pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use crate::standards::v1::subsets::any::schema::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::*;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
@@ -552,7 +552,7 @@ use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.generation2d` example
 /// host_snapshot, falling back to the empty document if the fixture ever fails to parse.
 pub fn default_snapshot() -> Generation2dSnapshot {
-    Generation2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
+    Generation2dSnapshot::parse_dsl(crate::snapshot::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
 }
 }
 pub use snapshot_wire_codec::*;

@@ -1,6 +1,6 @@
 //! process3d ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 pub fn register() {}
 

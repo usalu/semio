@@ -56,6 +56,6 @@ export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Re
 /** 🦀️ Prepares selected sources and retains the original browser compiler control. */
 export async function buildRepositoryWasmWebV1(options: WasmPackWebBuildOptions): Promise<void> {
   const policy = repositoryWasmBuildPolicyV1(options.rsDir), control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs);
-  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()), getWorkspaceRoot(), ["build", "--manifest-path", join(options.componentDir, "Cargo.toml")], options.componentDir, process.env);
+  await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()), getWorkspaceRoot(), ["build", "--manifest-path", join(options.componentDir, "Cargo.toml")], options.componentDir, process.env,control);
   await buildWasmWebV1({ ...options, control }, policy);
 }

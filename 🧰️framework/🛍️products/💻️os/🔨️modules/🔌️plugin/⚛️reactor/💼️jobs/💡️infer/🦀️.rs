@@ -201,7 +201,7 @@ fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
 //#endregion 🌉️Channels
 
 type InferenceSession = semio_framework_job::MountedWorkerJobSession<semio_framework::action_bus::ErasedToolJob>;
-type InferenceRejected = crate::reserved_job_session::RefusedWorkerSource<semio_framework::action_bus::ErasedToolJob>;
+type InferenceRejected = semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::action_bus::ErasedToolJob>;
 
 // 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
 // `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body routes and constructs only.

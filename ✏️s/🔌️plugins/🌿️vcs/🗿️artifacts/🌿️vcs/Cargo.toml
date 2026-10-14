@@ -42,6 +42,12 @@ path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀�
 [workspace.dependencies.semio-s-artifact-stdio-xlsx]
 path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-xlsx-base-model]
+path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-xlsx-base]
+path = "../../../🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-zip]
 path = "../../../🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust"
 

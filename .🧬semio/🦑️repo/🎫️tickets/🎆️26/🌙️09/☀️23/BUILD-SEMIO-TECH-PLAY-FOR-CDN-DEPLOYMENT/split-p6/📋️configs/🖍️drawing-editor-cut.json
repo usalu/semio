@@ -1,0 +1,235 @@
+{
+ "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "crate": "semio_s_artifact_draw_drawing_editor",
+ "aggregator": "editor",
+ "workspace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+ "aggregatorRole": "library",
+ "monolithManifest": ".🧬semio/🦑️repo/⚡️cache/p6/orig/editor-Cargo.toml",
+ "consumers": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+  "🌎️hub/🧩️compositions/🖍️draw",
+  "🌎️hub/🧩️compositions/🪐️space"
+ ],
+ "crates": {
+  "editor": {
+   "ident": "semio_s_artifact_draw_drawing_editor",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "tool": {
+   "ident": "semio_s_artifact_draw_drawing_editor_tool",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+   "doc": "//! 🖱️ Drawing editor canvas tool: the pointer statechart, its session and gesture previews, the canvas pointer commands and the edit mode's canvas window.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "commands": {
+   "ident": "semio_s_artifact_draw_drawing_editor_commands",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "doc": "//! 🎮️ Drawing editor commands: the layer, selection, camera, document and engagement commands and the clipboard model.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "interaction": {
+   "ident": "semio_s_artifact_draw_drawing_editor_interaction",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  }
+ },
+ "rules": [
+  [
+   "",
+   "editor",
+   ""
+  ],
+  [
+   "commands",
+   "commands",
+   ""
+  ],
+  [
+   "commands::canvas_pointer_down",
+   "tool",
+   ""
+  ],
+  [
+   "modes",
+   "tool",
+   "modes"
+  ],
+  [
+   "clipboard",
+   "commands",
+   "clipboard"
+  ],
+  [
+   "clipboard::job",
+   "editor",
+   "clipboard_job"
+  ],
+  [
+   "interaction",
+   "interaction",
+   ""
+  ],
+  [
+   "commands::canvas_pointer_move",
+   "tool",
+   "canvas_pointer_move"
+  ],
+  [
+   "commands::canvas_pointer_up",
+   "tool",
+   "canvas_pointer_up"
+  ],
+  [
+   "commands::canvas_commit_draft",
+   "tool",
+   "canvas_commit_draft"
+  ],
+  [
+   "commands::canvas_double_click",
+   "tool",
+   "canvas_double_click"
+  ],
+  [
+   "commands::canvas_escape",
+   "tool",
+   "canvas_escape"
+  ],
+  [
+   "geometry_session",
+   "interaction",
+   "geometry_session"
+  ],
+  [
+   "terminology",
+   "interaction",
+   "terminology"
+  ],
+  [
+   "presence",
+   "interaction",
+   "presence"
+  ],
+  [
+   "config",
+   "interaction",
+   "config"
+  ],
+  [
+   "status",
+   "interaction",
+   "status"
+  ],
+  [
+   "panels",
+   "interaction",
+   "panels"
+  ],
+  [
+   "demo_session",
+   "interaction",
+   "demo_session"
+  ],
+  [
+   "example",
+   "interaction",
+   "example"
+  ],
+  [
+   "export_job",
+   "editor",
+   "export_job"
+  ],
+  [
+   "image_job",
+   "editor",
+   "image_job"
+  ],
+  [
+   "path_job",
+   "editor",
+   "path_job"
+  ]
+ ],
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs",
+   "items": [
+    "DRAWING_PLAY_CONTROLLER_ID",
+    "DRAWING_DEFAULT_UTILITY",
+    "DRAWING_INTERACTION_DOMAIN",
+    "DRAWING_INTERACTION_GRANULARITY",
+    "DRAWING_POINT_DOMAIN",
+    "DRAWING_POINT_GRANULARITY",
+    "drawing_play_action",
+    "drawing_manifest_action",
+    "ui_value_text",
+    "ui_value_number",
+    "ui_value_list",
+    "ui_value_map",
+    "drawing_document_revision",
+    "drawing_reset_document_effect"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-layer/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+   "items": [
+    "initialize_appearance",
+    "prepare_identity"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+   "items": [
+    "DrawingSelectionTargets",
+    "drawing_selection_targets",
+    "drawing_point_targets"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs",
+   "items": [
+    "visit",
+    "layer_ids"
+   ]
+  }
+ ]
+}

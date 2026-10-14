@@ -60,6 +60,6 @@ export class MatrixScript extends Script {
     const unregistered = measurements.find((measurement) => measurement.dimension === "runtimeMutationCoverage")?.missing.length ?? 0;
     const failures = enforceReleaseGates(measurements, { deferredMutations: deferred, skipped: 0, wildcardOwners, unregisteredRuntimeMutations: unregistered });
     for (const failure of failures) console.error(`[matrix] ${failure}`);
-    if (failures.length > 0) process.exit(1);
+    if (failures.length > 0) {process.exitCode=1;return;}
   }
 }

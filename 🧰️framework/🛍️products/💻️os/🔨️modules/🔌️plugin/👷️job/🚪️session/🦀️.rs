@@ -4,12 +4,12 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 use std::mem::{ManuallyDrop,size_of};
 
 /// 🧾️ Keeps every original refused input until its actual supplied context funds physical retirement.
-pub(crate) struct RefusedWorkerSource<J:InteractiveJob>{job:ManuallyDrop<Option<J>>,params:ManuallyDrop<Option<BatchJobParams>>,error:ManuallyDrop<Option<OriginalTurnFailure>>,cancel:Option<semio_framework_async::CancelTokenRetirement>,error_retirement:Option<ControlledRetirement<OriginalTurnFailure>>,closing:bool,pending:bool,original:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>}
+pub struct RefusedWorkerSource<J:InteractiveJob>{job:ManuallyDrop<Option<J>>,params:ManuallyDrop<Option<BatchJobParams>>,error:ManuallyDrop<Option<OriginalTurnFailure>>,cancel:Option<semio_framework_async::CancelTokenRetirement>,error_retirement:Option<ControlledRetirement<OriginalTurnFailure>>,closing:bool,pending:bool,original:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>}
 impl<J:InteractiveJob> RefusedWorkerSource<J>{
  /// 🎒️ Retains the exact dispatched producer before the initiating turn admits its worker storage.
- pub(crate) fn pending(job:J,operation:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
- pub(crate) fn admission_pending(&self)->bool{self.pending&&!self.closing}
- pub(crate) fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{if self.params.is_none(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_framework_job::WorkerJobSession::<J>::owned_admission_demand()}}
+ pub fn pending(job:J,operation:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
+ pub fn admission_pending(&self)->bool{self.pending&&!self.closing}
+ pub fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{if self.params.is_none(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_framework_job::WorkerJobSession::<J>::owned_admission_demand()}}
  /// 🚪️ Admits the original parameter alias and session on distinct funded caller events.
   fn prepare_pending_params(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.admission_pending(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker source is already closing or admitted").into())}
@@ -18,18 +18,18 @@ impl<J:InteractiveJob> RefusedWorkerSource<J>{
    if self.params.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(false)};*self.params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,config,now_us:cx.clock_source()});return Ok(false)}
    Ok(true)
   }
-  pub(crate) fn admit_pending(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<MountedWorkerJobSession<J>>,OriginalTurnFailure> where J:'static{
+  pub fn admit_pending(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<MountedWorkerJobSession<J>>,OriginalTurnFailure> where J:'static{
    if !self.prepare_pending_params(config,cx)?{return Ok(None)}
   let admitted=MountedWorkerJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)?;if let Some((session,_posted))=admitted{self.pending=false;return Ok(Some(session))}Ok(None)
  }
-  pub(crate) fn admit_pending_batch(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<BatchJobSession<J>>,OriginalTurnFailure> where J:'static{
+  pub fn admit_pending_batch(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<BatchJobSession<J>>,OriginalTurnFailure> where J:'static{
    if !self.prepare_pending_params(config,cx)?{return Ok(None)}
    let admitted=BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)?;if let Some((session,_posted))=admitted{self.pending=false;return Ok(Some(session))}Ok(None)
   }
- pub(crate) fn error(&self)->Option<&OriginalTurnFailure>{self.error.as_ref()}
+ pub fn error(&self)->Option<&OriginalTurnFailure>{self.error.as_ref()}
  fn job(&self)->Option<&J>{self.job.as_ref()}
- pub(crate) fn terminal_is_empty(&self)->bool{self.job.is_none()&&self.params.is_none()&&self.cancel.is_none()&&self.error.is_none()&&self.error_retirement.is_none()}
- pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn terminal_is_empty(&self)->bool{self.job.is_none()&&self.params.is_none()&&self.cancel.is_none()&&self.error.is_none()&&self.error_retirement.is_none()}
+ pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(job)=self.job.as_ref(){if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}if job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<J>>(),depth:1,..Default::default()})}return Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original refused job parent depth overflow"))?})}
   if self.params.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<BatchJobParams>>(),depth:1,..Default::default()})}
   if let Some(cancel)=self.cancel.as_ref(){return if cancel.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_async::CancelTokenRetirement>>(),depth:1,..Default::default()})}else{let mut demand=cancel.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original refused cancellation parent depth overflow"))?;Ok(demand)}}
@@ -38,7 +38,7 @@ impl<J:InteractiveJob> RefusedWorkerSource<J>{
  }
  fn posted(step:InteractiveJobCloseStep,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{let progress=step.progress();cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress).map_err(|error|OriginalTurnFailure::from(error.with_retained_progress(progress)))?;Ok(step)}
  fn metadata(&self,bytes:usize,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{Self::posted(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}}else{InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}},cx)}
- pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   let idle=||InteractiveJobCloseStep::Pending{progress:Default::default()};if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0{return Ok(idle())}
   let mut demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(OriginalTurnFailure::from)?;let alias=self.cancel.as_ref().is_some_and(|cancel|cancel.is_original_alias_witness(cx.original_cancel_token()));if alias{demand=RetirementDemand{depth:2,..Default::default()}}
   if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original refused worker close exceeds caller depth").into())}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(idle())}
@@ -65,12 +65,12 @@ macro_rules! admit_session {
 }
 
 /// 🚪️ Admits one mounted session under the caller's own preparation grant.
-pub(crate) fn admit_mounted<J: InteractiveJob + 'static>(job: J, params: BatchJobParams, cx: &mut StepContext<'_>) -> Result<MountedWorkerJobSession<J>, RefusedWorkerSource<J>> {
+pub fn admit_mounted<J: InteractiveJob + 'static>(job: J, params: BatchJobParams, cx: &mut StepContext<'_>) -> Result<MountedWorkerJobSession<J>, RefusedWorkerSource<J>> {
     admit_session!(MountedWorkerJobSession, job, params, cx)
 }
 
 /// 🚪️ Admits one caller-driven batch session under the caller's own preparation grant.
-pub(crate) fn admit_batch<J: InteractiveJob + 'static>(job: J, params: BatchJobParams, cx: &mut StepContext<'_>) -> Result<BatchJobSession<J>, RefusedWorkerSource<J>> {
+pub fn admit_batch<J: InteractiveJob + 'static>(job: J, params: BatchJobParams, cx: &mut StepContext<'_>) -> Result<BatchJobSession<J>, RefusedWorkerSource<J>> {
     admit_session!(BatchJobSession, job, params, cx)
 }
 

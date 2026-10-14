@@ -1,0 +1,72 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-3d-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d editor: the play app, its artifact editor implementation, the retained command, flow-eval, document-io, contributions and store-preparation routes"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-add-widget = { workspace = true }
+semio-s-artifact-procedural-3d-delete-selection = { workspace = true }
+semio-s-artifact-procedural-3d-editor-commands = { workspace = true }
+semio-s-artifact-procedural-3d-editor-config = { workspace = true }
+semio-s-artifact-procedural-3d-editor-panels = { workspace = true }
+semio-s-artifact-procedural-3d-editor-presence = { workspace = true }
+semio-s-artifact-procedural-3d-editor-selection = { workspace = true }
+semio-s-artifact-procedural-3d-editor-transient = { workspace = true }
+semio-s-artifact-procedural-3d-envelope = { workspace = true }
+semio-s-artifact-procedural-3d-examples = { workspace = true }
+semio-s-artifact-procedural-3d-export-document = { workspace = true }
+semio-s-artifact-procedural-3d-flow-eval-tick = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-service = { workspace = true }
+semio-s-artifact-procedural-3d-host = { workspace = true }
+semio-s-artifact-procedural-3d-import-document = { workspace = true }
+semio-s-artifact-procedural-3d-initialization = { workspace = true }
+semio-s-artifact-procedural-3d-io = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
+semio-s-artifact-procedural-3d-mode-edit = { workspace = true }
+semio-s-artifact-procedural-3d-mode-generate = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+semio-s-artifact-procedural-3d-navigate-graph = { workspace = true }
+semio-s-artifact-procedural-3d-node-graph-edit = { workspace = true }
+semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
+semio-s-artifact-procedural-3d-rotate-selection = { workspace = true }
+semio-s-artifact-procedural-3d-scale-selection = { workspace = true }
+semio-s-artifact-procedural-3d-set-contributions = { workspace = true }
+semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
+semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-s-artifact-procedural-3d-transforms = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-procedural-3d-testkit = { workspace = true }
+

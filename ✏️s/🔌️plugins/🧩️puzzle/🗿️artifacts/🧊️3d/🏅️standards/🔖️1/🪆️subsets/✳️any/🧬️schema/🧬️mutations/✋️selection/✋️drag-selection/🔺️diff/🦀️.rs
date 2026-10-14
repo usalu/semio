@@ -1,10 +1,9 @@
 //! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed object and target volume moves
 //! by the payload offset, read off the BASE origin, so the leaf replays on any base. The attraction graph is
 //! re-solved: attracted objects are re-placed from their moved parents, other touched attractions re-derive.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
-use protocol::list_delta::RowPatch;
-use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_follow, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_outcome, crate::standards::v1::subsets::any::schema::Puzzle3dPose, crate::standards::v1::subsets::any::schema::mutations::selection::Puzzle3dSelectionFollow};
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
+use {crate::puzzle3d_selection, crate::puzzle3d_selection_follow, crate::puzzle3d_selection_outcome, semio_s_artifact_puzzle_3d_model::Puzzle3dPose, crate::Puzzle3dSelectionFollow};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DragSelection, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

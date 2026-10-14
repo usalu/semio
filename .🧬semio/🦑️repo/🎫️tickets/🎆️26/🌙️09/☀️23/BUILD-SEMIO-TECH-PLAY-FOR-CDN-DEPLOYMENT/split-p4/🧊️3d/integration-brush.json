@@ -1,0 +1,11 @@
+{
+ "lib": "semio_s_artifact_puzzle_3d_precompute_brush",
+ "lib_root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🦀️.rs",
+ "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🦀️.rs",
+ "parent_module": "",
+ "rewrites": [],
+ "targets": [
+  {"name": "precompute-brush", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🧪️tests/🔬️unit/🦀️.rs", "doc": "",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🧪️tests/🔬️unit/🦀️.rs", "module": "tests"}]}
+ ]
+}

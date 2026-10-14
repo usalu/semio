@@ -1,8 +1,7 @@
 //! ⛱️ Energy model mutation — `ChangeShadingSurfaceTransmittanceSchedule`: Points the shading surface at one of the model's own schedules for its time-varying solar transmittance, or at none for a fully opaque obstruction.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeShadingSurfaceTransmittanceSchedule {
     pub new_transmittance_schedule_id: Option<crate::schedule::ScheduleId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_shading_surface_transmittance_schedule(id: crate::model::EntityId, new_transmittance_schedule_id: Option<crate::schedule::ScheduleId>) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeShadingSurfaceTransmittanceSchedule(ChangeShadingSurfaceTransmittanceSchedule { id, new_transmittance_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_shading_surface_transmittance_schedule<Op: From<ChangeShadingSurfaceTransmittanceSchedule>>(id: crate::model::EntityId, new_transmittance_schedule_id: Option<crate::schedule::ScheduleId>) -> Op {
+    ChangeShadingSurfaceTransmittanceSchedule { id, new_transmittance_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeShadingSurfaceTransmittanceSchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeShadingSurfaceTransmittanceSchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeShadingSurfaceTransmittanceSchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shading-surface", kind: "change-shading-surface-transmittance-schedule", record: "ChangedShadingSurfaceTransmittanceSchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

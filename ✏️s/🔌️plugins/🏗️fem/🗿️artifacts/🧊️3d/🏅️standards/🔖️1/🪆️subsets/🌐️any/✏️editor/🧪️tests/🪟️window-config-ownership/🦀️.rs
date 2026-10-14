@@ -10,7 +10,7 @@ fn renderer_camera_command() -> set_camera::SetCamera {
 #[test]
 fn fem3d_window_config_camera_uses_the_shared_renderer_pose_contract() {
     let command = renderer_camera_command();
-    assert_eq!(command.camera, crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None });
+    assert_eq!(command.camera, semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None });
     for invalid in [
         serde_json::json!({ "position": [8, -3, 5], "target": [0, 0, 0], "zoom": 1.25 }),
         serde_json::json!({ "camera": { "json": "{}" } }),
@@ -27,14 +27,14 @@ fn fem3d_window_config_document_admission_rejects_window_and_os_fields() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "3d").expect("dimension");
     let base = row["document"].to_string();
-    let _ = semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");
+    let _ = semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::Fem3dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");
     let _ = semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM snapshot admission");
     for field in row["foreignFields"].as_array().expect("foreign fields") {
         let key = field["key"].as_str().expect("field key");
         let mut candidate = row["document"].clone();
         candidate[key] = field["value"].clone();
         let text = candidate.to_string();
-        assert!(semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem3dArtifact>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "artifact admitted {key}");
+        assert!(semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::Fem3dArtifact>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "artifact admitted {key}");
         assert!(semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "snapshot admitted {key}");
     }
 }
@@ -57,8 +57,10 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
         .stack_size(128 * 1024 * 1024)
         .spawn(|| {
             block_on_fem_window_ownership(Box::pin(async {
-                use crate::editor::fem3d::commands::{set_active_example, set_result_display};
-                use crate::editor::fem3d::modes::edit::windows::{model, results};
+                use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
+                use crate::editor::fem3d::commands::set_result_display;
+                use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+                use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
                 fn manifest() -> App {
@@ -110,20 +112,20 @@ fn fem3d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         return Err("FEM window state crossed into a same-kind sibling".into());
                     }
                     let model_state = artifact_app_laws::capture_fixture_window_config::<model::config::Fem3dModelWindowConfigOwner, _, _>(&mut *app, &model_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM model state".to_string())?;
-                    if model_state.camera != (crate::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None }) {
+                    if model_state.camera != (semio_framework_os_kernel::Viewport3dOrbit { position: [8.0, -3.0, 5.0], target: [0.0; 3], zoom: 1.25, up: None }) {
                         return Err("FEM model camera did not persist on its exact owner".into());
                     }
                     let rendered = app.render(model::FEM3D_BODY_MODEL, None, &model_left).await.map_err(|error| format!("{error:?}"))?;
                     let rendered = artifact_app_laws::project_and_retire_fixture_tree(rendered).map_err(|error| format!("{error:?}"))?;
                     let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::World3dScene>(&rendered).map_err(|error| format!("{error:?}"))?;
-                    let echoed = semio_framework_pack_json::from_json_str::<crate::Viewport3dOrbit>(&scene.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
+                    let echoed = semio_framework_pack_json::from_json_str::<semio_framework_os_kernel::Viewport3dOrbit>(&scene.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
                     if echoed != model_state.camera { return Err("FEM renderer echo lost the exact window pose".into()); }
                     let result_state = artifact_app_laws::capture_fixture_window_config::<results::config::Fem3dResultsWindowConfigOwner, _, _>(&mut *app, &results_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM results state".to_string())?;
-                    if result_state.result_source_id.as_deref() != Some("dead") || result_state.result_mode != crate::app_surface::ResultMode::Modal || result_state.result_mode_index != 2 {
+                    if result_state.result_source_id.as_deref() != Some("dead") || result_state.result_mode != semio_s_fem_app_surface::ResultMode::Modal || result_state.result_mode_index != 2 {
                         return Err("FEM result display did not persist on its exact owner".into());
                     }
                     let before_example: Vec<(String, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.files.pack.clone())).collect();
-                    let reset = dispatch(&mut app, &model_left, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }), 0).await?;
+                    let reset = dispatch(&mut app, &model_left, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() }), 0).await?;
                     let [semio_framework::kernel::Effect::LoadDocument { pack, spr }] = reset.effects.as_slice() else {
                         return Err("FEM example command did not emit one host-owned document load".into());
                     };

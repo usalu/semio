@@ -102,7 +102,7 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
     use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
     use semio_framework_os_flow::{FlowHost, FlowExtensionSpec};
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     fn install(registry: &mut semio_framework_os_flow::neural::Registry) {
         use semio_framework_os_flow::neural::{Cardinality, ChannelSpec, OperatorInfo};
         for kind in ["number", "text", "boolean", "point", "vector"] {
@@ -148,7 +148,7 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
 fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
     use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["facets"].as_array().unwrap() {
         let widget: Widget = semio_framework_pack_json::from_json_str(&entry["widget"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -184,7 +184,7 @@ fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
 #[test]
 fn widget_input_is_one_typed_leaf_and_rejects_connected_ports() {
     use semio_framework_os_flow::FlowHost;
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     input_metadata();
     let mut host = FlowHost::default().with_operator_registry(semio_framework_os_flow::flow_operator_registry());
     let source = host.add_widget(r#"{"kind":"inputSlider","id":"width","label":"Width"}"#, 0.0, 0.0).unwrap();

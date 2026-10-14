@@ -1,0 +1,14 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "title":"Published Cargo Executable Receipt",
+ "type":"object",
+ "additionalProperties":false,
+ "required":["version","name","digest","bytes","permissions"],
+ "properties":{
+  "version":{"const":1},
+  "name":{"type":"string","pattern":"^[A-Za-z0-9_-]+(?:\\.exe)?$"},
+  "digest":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+  "bytes":{"type":"integer","minimum":1},
+  "permissions":{"type":"integer","minimum":0,"maximum":511}
+ }
+}

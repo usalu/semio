@@ -1,4 +1,5 @@
 //! 🗂️ Original Collection receiving retains every partial entity and boxed native body.
+use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
 use super::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,store};
 use store::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::receiving::{Port,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -52,7 +53,7 @@ fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&CollectionSnaps
   }port.control.checkpoint(port.phase(),index+1,entries.len())?
  }Ok(())
 }
-impl store::io::control::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
+impl store::sqlite_snapshot::receiving::NativeSqliteReceivingFrame for Frame{fn receiving_status(&mut self)->&mut Option<Result<()>>{&mut self.status}}
 pub(super)fn project_receiving(source:&CollectionSnapshot,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|project(source,frame,port),|frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})))}
 pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<CollectionSnapshot>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,None,port),|frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
 pub(super)fn validate_decoding(source:&CollectionSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}

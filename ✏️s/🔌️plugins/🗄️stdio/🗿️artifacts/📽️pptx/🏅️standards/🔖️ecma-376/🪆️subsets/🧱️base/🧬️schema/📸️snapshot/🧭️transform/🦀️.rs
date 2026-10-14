@@ -1,7 +1,4 @@
 //! 📐️ Exact signed64 transform scalar boundary.
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 use semio_framework_value::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError};
 use semio_framework_value::ValueRefusalKind;
 fn parse(text: &str) -> Result<i64, String> {

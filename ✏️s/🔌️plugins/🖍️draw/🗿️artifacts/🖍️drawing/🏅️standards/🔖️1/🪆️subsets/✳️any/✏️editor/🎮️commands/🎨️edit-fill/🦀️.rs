@@ -1,5 +1,5 @@
 //! 🎨️ One semantic fill edit with the artifact's normal undo boundary.
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_s_artifact_draw_drawing_model::fill::{edit_fill, FillEdit};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;

@@ -1,13 +1,12 @@
 //! ↩️ Inverse for `UpdateAnalysisSettings` — recovers the pre-mutation settings from `base`.
 use super::UpdateAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<update_analysis_settings::UpdateAnalysisSettings>>(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let _ = payload;
-    vec![Fem3dMutation::UpdateAnalysisSettings(UpdateAnalysisSettings { settings: base.analysis.clone() })]
+    vec![Op::from(UpdateAnalysisSettings { settings: base.analysis.clone() })]
 
     })())
 }

@@ -6,7 +6,7 @@ use crate::schema;
 /// `edit history insertion requires its exact mutation retirement factory` — the fixture could be
 /// read but never mutated or undone (fleet-brief stale-test bucket 2).
 async fn seeded_store() -> crate::host::owned::OwnedWriterStore {
-    crate::host::owned::new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture")
+    crate::host::owned::new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture")
 }
 
 #[semio_framework_async_macros::async_test]

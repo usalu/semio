@@ -1,6 +1,9 @@
 //! 🎨️ 🎨️ Generation3d play app commands command — `set-active-example`.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation, SetCamera, SetSelectedGeneration};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_editor_config::SetCamera;
+use semio_s_artifact_procedural_3d_editor_config::SetSelectedGeneration;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
@@ -11,6 +14,8 @@ use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
+use semio_framework_plugin::Effect;
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded document — a bundled example
 /// here, an imported file in `📥️import-document` — keeping every other display option (preview
@@ -69,7 +74,7 @@ pub fn emit(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation3dSnap
     } else {
         return Ok(Emit::default());
     };
-    let effect = crate::editor::generation3d::reset_generation3d_document_effect(&target);
+    let effect = crate::set_active_example::reset_generation3d_document_effect(&target);
     let config_mutations = config_load_mutations(cfg.snapshot, &target.host_snapshot.camera, target.generation.selected_generation_id.clone());
     // 🧹️ The loaded example projection is dead once its camera and selection are read — close it
     // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
@@ -79,4 +84,13 @@ pub fn emit(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation3dSnap
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     emit(payload, doc, cfg)
+}
+
+/// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and
+/// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
+/// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
+pub fn reset_generation3d_document_effect(document: &Generation3dSnapshot) -> Effect {
+    let pack = <Generation3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("generation3d", GENERATION_3D_SCHEMA));
+    Effect::LoadDocument { pack, spr }
 }

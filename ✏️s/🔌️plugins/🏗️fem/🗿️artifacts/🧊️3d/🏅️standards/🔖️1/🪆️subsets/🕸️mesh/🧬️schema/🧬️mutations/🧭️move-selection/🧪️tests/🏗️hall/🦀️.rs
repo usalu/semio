@@ -5,40 +5,40 @@
 //!
 //! 🏗️ Stretching the portal hall's apron slab to twice its width about the right column line doubles its footprint in x; the gate node the hall never had is skipped with a partial warning.
 
-use super::laws;
+use crate::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🏗️hall/🎯️outcome/🔣️.json");
 
 /// ▶️ The leaf carries `before` to exactly the committed `after` and produces exactly the committed delta.
 #[test]
 fn applies_to_committed_after_with_the_committed_diff() {
-    laws::forward(BEFORE, MUTATION, AFTER, DIFF);
+    laws::forward(BEFORE.as_str(), MUTATION.as_str(), AFTER.as_str(), DIFF.as_str());
 }
 
 /// ↩️ The computed inverse — whole-record replacements of every moved node and solid — restores `before` exactly.
 #[test]
 fn inverse_restores_before() {
-    laws::inverse_restores(BEFORE, MUTATION);
+    laws::inverse_restores(BEFORE.as_str(), MUTATION.as_str());
 }
 
 /// 🎯️ The declared outcome — status and ordered diagnostics — is what the leaf emits.
 #[test]
 fn declared_outcome_holds() {
-    laws::declared_outcome(BEFORE, MUTATION, OUTCOME);
+    laws::declared_outcome(BEFORE.as_str(), MUTATION.as_str(), OUTCOME.as_str());
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    laws::canonical(BEFORE, AFTER, MUTATION, Some(DIFF));
+    laws::canonical(BEFORE.as_str(), AFTER.as_str(), MUTATION.as_str(), Some(DIFF.as_str()));
 }
 
 /// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&laws::decoded_mutation(MUTATION), &laws::decoded_snapshot(BEFORE)).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&laws::decoded_mutation(MUTATION.as_str()), &laws::decoded_snapshot(BEFORE.as_str())).await;
 }

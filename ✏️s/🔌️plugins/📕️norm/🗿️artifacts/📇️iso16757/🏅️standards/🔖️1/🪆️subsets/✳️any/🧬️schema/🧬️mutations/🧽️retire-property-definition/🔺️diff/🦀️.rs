@@ -1,8 +1,8 @@
 //! 🔺️ `retire-property-definition` — sparse diff construction.
 
-use super::mutation::RetirePropertyDefinition;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757PropertyDefinitionsRows};
+use crate::retire_property_definition::mutation::RetirePropertyDefinition;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757PropertyDefinitionsRows};
 
 //#region 🔖️Diff
 

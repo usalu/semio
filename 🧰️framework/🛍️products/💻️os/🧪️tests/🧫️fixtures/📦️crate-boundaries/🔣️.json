@@ -2,6 +2,210 @@
   "version": 1,
   "crates": [
     {
+      "package": "semio-framework-value-native-decoding",
+      "manifest": "../../🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-native-encoding",
+      "manifest": "../../🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-original-aliases",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/📦️aliases/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-retirement-queue",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-shared-issuance",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-factory",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-retirement",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-paged-list",
+      "manifest": "../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-allocation-return",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-control-contract",
+      "manifest": "../../🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🎟️control/🧬️contract/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-dsl-record-emission",
+      "manifest": "../../🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🗣️dsl/🧬️schema/🖨️printing/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-dsl-record"
+      ]
+    },
+    {
+      "package": "semio-framework-dsl-notation",
+      "manifest": "../../🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🗣️dsl/🧬️schema/🖋️notation/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-dsl-record"
+      ]
+    },
+    {
+      "package": "semio-framework-geometry-solids",
+      "manifest": "../../🔨️modules/📐️geometry/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/🕸️mesh/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-geometry"
+      ]
+    },
+    {
+      "package": "semio-framework-geometry-skeleton",
+      "manifest": "../../🔨️modules/📐️geometry/🦴️skeleton/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/🦴️skeleton/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-geometry"
+      ]
+    },
+    {
+      "package": "semio-framework-geometry-bulge",
+      "manifest": "../../🔨️modules/📐️geometry/🌙️bulge/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/🌙️bulge/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-geometry"
+      ]
+    },
+    {
+      "package": "semio-framework-geometry-vector",
+      "manifest": "../../🔨️modules/📐️geometry/➗️vector/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/➗️vector/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-geometry"
+      ]
+    },
+    {
+      "package": "semio-framework-geometry-primitives",
+      "manifest": "../../🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-geometry"
+      ]
+    },
+    {
       "package": "semio-framework-dsl-lexical",
       "manifest": "../../🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
       "entry": "../../🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/🦀️.rs",
@@ -326,6 +530,91 @@
         "semio-framework-os-kernel",
         "semio-framework-plugin",
         "semio-framework"
+      ]
+    },
+    {
+      "package": "semio-framework-value-paged-text",
+      "manifest": "../../🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-ordered",
+      "manifest": "../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-clone-source",
+      "manifest": "../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-intrinsic",
+      "manifest": "../../🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-retained-clone",
+      "manifest": "../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-value-retained-map",
+      "manifest": "../../🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-value"
+      ]
+    },
+    {
+      "package": "semio-framework-mutation-diff",
+      "manifest": "../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/🦀️.rs",
+      "maximumActiveLines": 4000,
+      "forbiddenDependencies": [
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "semio-framework",
+        "semio-framework-replication",
+        "semio-framework-value"
       ]
     }
   ]

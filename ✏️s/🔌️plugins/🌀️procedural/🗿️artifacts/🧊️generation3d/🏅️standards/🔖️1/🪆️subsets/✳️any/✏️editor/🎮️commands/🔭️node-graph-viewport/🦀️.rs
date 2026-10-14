@@ -1,6 +1,7 @@
 //! 🕸️ 🕸️ Generation3d play app commands command — `node-graph-viewport`.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
@@ -18,5 +19,5 @@ pub struct NodeGraphViewport {
 
 pub fn handle(payload: &NodeGraphViewport, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let viewport = payload.viewport;
-    Ok(Emit::config(vec![Generation3dConfigMutation::SetCamera(crate::editor::generation3d::config::SetCamera { camera: CameraJson { x: viewport.x, y: viewport.y, zoom: viewport.zoom } })]))
+    Ok(Emit::config(vec![Generation3dConfigMutation::SetCamera(semio_s_artifact_procedural_3d_editor_config::SetCamera { camera: CameraJson { x: viewport.x, y: viewport.y, zoom: viewport.zoom } })]))
 }

@@ -7,9 +7,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::host::owned::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_OWNER_BYTES};
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, StockQuantity, WorkingSolid, WorkshopMachine};
+use crate::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 
 pub(crate) const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
 
@@ -119,10 +118,9 @@ pub fn encode_op(operation: &Process3dMutation) -> Result<Vec<u8>, protocol::Pro
 
 /// 📖️ Decodes a `Process3dMutation` from its binary command form.
 pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::any::schema::mutations::{
-        change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
-        replace_step_measure, replace_stock_solid,
-    };
+    use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
+    use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
+    use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
     if bytes.len() > PROCESS3D_OWNER_BYTES {
         return Err(protocol::ProtocolError::LimitExceeded("process3d mutation exceeds fixed binary owner"));
     }
@@ -714,11 +712,9 @@ fn read_machine(reader: &mut store::ByteReader<'_>) -> Result<WorkshopMachine, S
 
 #[cfg(test)]
 pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::{
-        change_machine_icon::ChangeMachineIcon, change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, change_stock_label::ChangeStockLabel, create_machine::CreateMachine, create_step::CreateStep,
-        delete_machine::DeleteMachine, delete_step::DeleteStep, move_stock::MoveStock, rename_machine::RenameMachine, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_machine_capabilities::ReplaceMachineCapabilities,
-        replace_step_measure::ReplaceStepMeasure, replace_stock_solid::ReplaceStockSolid,
-    };
+    use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon::ChangeMachineIcon, create_machine::CreateMachine, delete_machine::DeleteMachine, rename_machine::RenameMachine, replace_machine_capabilities::ReplaceMachineCapabilities};
+    use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled::ChangeStepEnabled, change_step_origin::ChangeStepOrigin, create_step::CreateStep, delete_step::DeleteStep, rename_step::RenameStep, reorder_steps::ReorderSteps, replace_step_measure::ReplaceStepMeasure};
+    use semio_s_artifact_process_process3d_mut_stock::{change_stock_label::ChangeStockLabel, move_stock::MoveStock, replace_stock_solid::ReplaceStockSolid};
 
     let pose = Pose { position: [1.0, 2.0, 3.0], axis: [0.0, 1.0, 0.0], angle: 0.5 };
     let capability = Capability {
@@ -741,7 +737,7 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
         measure: ProcessMeasure::Cut { tool: WorkingSolid::ImportedMesh { mesh_url: "fixtures/deep-tool.glb".into() }, pose: pose.clone() },
     };
     let machine = WorkshopMachine { id: "transient-machine".into(), label: "Transient Machine".into(), icon_id: "saw".into(), catalog_id: Some("deep-catalog".into()), capabilities: vec![capability.clone()] };
-    let child = crate::empty_process3d_snapshot().stock_solid;
+    let child = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot().stock_solid;
     vec![
         Process3dMutation::CreateStep(CreateStep { index: 0, step }),
         Process3dMutation::DeleteStep(DeleteStep { id: "obsolete-step".into() }),
@@ -767,14 +763,13 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{
-    change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
-    replace_step_measure, replace_stock_solid,
-};
+use crate::Process3dMutation;
+use semio_s_artifact_process_process3d_mut_machines::{change_machine_icon, create_machine, delete_machine, rename_machine, replace_machine_capabilities};
+use semio_s_artifact_process_process3d_mut_steps::{change_step_enabled, change_step_origin, create_step, delete_step, rename_step, reorder_steps, replace_step_measure};
+use semio_s_artifact_process_process3d_mut_stock::{change_stock_label, move_stock, replace_stock_solid};
 #[cfg(test)] use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
 #[cfg(test)] use protocol::OpText;
-use crate::standards::v1::subsets::any::io::text::mutations::{Process3dMutationDsl};
+use crate::standards::v1::subsets::any::io::component::text::mutations::Process3dMutationDsl;
 
 impl protocol::OpBinary for Process3dMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -787,11 +782,14 @@ impl protocol::OpBinary for Process3dMutationDsl {
 
 impl protocol::OpBinary for Process3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        crate::standards::v1::subsets::any::io::binary::mutations::encode_op(self)
+        crate::standards::v1::subsets::any::io::component::binary::mutations::encode_op(self)
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        crate::standards::v1::subsets::any::io::binary::mutations::decode_op(bytes)
+        crate::standards::v1::subsets::any::io::component::binary::mutations::decode_op(bytes)
     }
 }
 }
+
+pub const PROCESS3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;

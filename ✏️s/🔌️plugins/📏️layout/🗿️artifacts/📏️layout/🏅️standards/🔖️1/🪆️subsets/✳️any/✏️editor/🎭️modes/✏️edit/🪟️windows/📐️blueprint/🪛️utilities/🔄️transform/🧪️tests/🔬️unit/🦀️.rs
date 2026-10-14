@@ -5,7 +5,7 @@
 use super::*;
 
 fn document() -> LayoutSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+    semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document()
 }
 
 fn drag(dx: f64, dy: f64) -> LayoutFrameRecord {
@@ -107,7 +107,7 @@ fn an_interruption_aborts_the_open_gesture() {
 #[test]
 fn a_fully_locked_request_raises_one_notice() {
     let mut base = document();
-    if let crate::Frame::Rect { locked, .. } = base.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("demo rect") {
+    if let semio_s_artifact_layout_layout_model::Frame::Rect { locked, .. } = base.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("demo rect") {
         *locked = Some(true);
     }
     let dispatch = layout_transform_dispatch("translateSelection", LayoutTransformPhase::Once, Some(drag(5.0, 0.0)), &base, None, "seed-1", "rev-1", Some("locked"));

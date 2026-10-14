@@ -4,7 +4,7 @@ use super::*;
 /// ⌨️ The emission of one right-nudge verb of `session`'s selection by `delta`.
 fn plan(document:&DrawingSnapshot,session:&DrawingSession,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
     let history=semio_framework_plugin::HistoryView::empty();
-    nudge(&ArtifactView::with_operation(document,&history,crate::identity_test::operation()),session,"nudgeSelectionRight",delta)
+    nudge(&ArtifactView::with_operation(document,&history,semio_s_artifact_draw_drawing_editor::identity_test::operation()),session,"nudgeSelectionRight",delta)
 }
 
 fn document()->DrawingSnapshot {
@@ -58,7 +58,7 @@ fn stale_point_reference_rejects_the_entire_selection() {
     let mut paths=Vec::new();
     for id in ["first","second"] {let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id,segments.clone().into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id=id.into();paths.push(path);}
     let source=DrawingSnapshot {layers:paths.into(),..Default::default()};let saved=source.clone();
-    let mut session=crate::identity_test::session("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
+    let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
     let geometry=points::geometry_id(&segments).unwrap();
     session.interaction.points=vec![points::point_id("first",&geometry,1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap(),points::point_id("second",&"0".repeat(64),1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()];
     assert!(plan(&source,&session,[1.0,0.0]).is_err());assert_eq!(source,saved);
@@ -67,7 +67,7 @@ fn stale_point_reference_rejects_the_entire_selection() {
 #[test]
 fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let source=document();
-    let mut session=crate::identity_test::session("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
+    let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
     let first=plan(&source,&session,[10.0,-5.0]).unwrap();
     assert_eq!(first.artifact_mutations,vec![drag_layers(vec!["parent".into()].into(),10.0,-5.0)],"the ancestor owns its descendant's movement");
     let transaction=first.transaction.clone().expect("a nudge commits as one tool transaction");
@@ -87,7 +87,7 @@ fn a_node_nudge_drags_the_selected_points_and_rebinds_them() {
     let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id="path".into();
     let source=DrawingSnapshot {layers:vec![path].into(),..Default::default()};
     let geometry=points::geometry_id(&segments).unwrap();
-    let mut session=crate::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
+    let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
     session.interaction.points=vec![points::point_id("path",&geometry,1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()];
     let emit=plan(&source,&session,[1.0,0.0]).unwrap();
     assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:crate::schema::geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);

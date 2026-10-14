@@ -1,285 +1,90 @@
-pub(crate) mod context {
-    use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
-    /// ✏️ `Process3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
-    /// `ArtifactApp` — `EditorApp<Process3dPlayApp>` (SDK adapter, contract §2.1) is the real
-    /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<Process3dPlayApp>` builds it.
-    pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
-    
-    /// 🧪️ A fixture app that retires its stores on the way out. A registry-backed `VcsArtifactApp`
-    /// asserts on `Drop` that its artifact store reached the terminal-empty shallow shell
-    /// (`🏪️store/🦀️.rs`'s witness), so a bare drop aborts the whole test binary. The framework's own
-    /// `context::close_registered_fixture_app` caps the drain at 64 turns of one item each
-    /// (`🔌️plugin/🦀️.rs:6699-6709`), which this app — 31 tool jobs plus five stores — outgrows, so the
-    /// pump runs here instead and is bounded only far enough to be a runaway guard.
-    /// `Deref`/`DerefMut` keep every call site writing `&mut app` exactly as before. The drain never
-    /// panics while the thread is ALREADY unwinding — a second panic in a destructor aborts the whole
-    /// binary and hides the assertion that actually failed.
-    pub struct Process3dApp(Process3dRawApp);
-    
-    impl std::ops::Deref for Process3dApp {
-        type Target = Process3dRawApp;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-    
-    impl std::ops::DerefMut for Process3dApp {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-    
-    impl Drop for Process3dApp {
-        fn drop(&mut self) {
-            for _ in 0..1_048_576 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                let demand = match PluginApp::close_retirement_demands(&self.0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                    Ok(demand) => demand,
-                    Err(error) => {
-                        assert!(std::thread::panicking(), "Process3d fixture close demand faulted: {error:?}");
-                        return;
-                    }
-                };
-                match PluginApp::close_step(&mut self.0, crate::host::owned::process3d_demand_grant(demand)) {
-                    Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_)) => return,
-                    Ok(_) => continue,
-                    Err(fault) => {
-                        assert!(std::thread::panicking(), "Process3d fixture close faulted: {fault:?}");
-                        return;
-                    }
-                }
-            }
-            assert!(std::thread::panicking(), "Process3d fixture never reached its terminal-empty witness");
-        }
-    }
-    
-    /// ✏️ Adapts `create_process3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
-    /// examples }` shape `artifact_app_laws::assert_declared_actions_bridge_to_commands`/`new_app_with_registry`
-    /// still expect — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
-    /// packet's lease).
-    pub fn process3d_app_manifest_for_tests() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_process3d_app(), examples: Vec::new() }
-    }
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+#[path = "../🧰️support/🦀️.rs"]
+mod context;
 
-    semio_framework_plugin::history_edit_acceptance_law!("process", Process3dPlayApp, process3d_app_manifest_for_tests, "../..");
-    
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    
-    /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
-    fn seed_domain_catalog_contributions(app: &mut Process3dRawApp) {
-        use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
-        use semio_framework::{ProgramContributionEntry, TopicContribution};
-        fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
-            CapabilityParameter { id: id.into(), label: label.into(), value }
-        }
-        let wood_machines = vec![
-            WorkshopMachine {
-                id: "circularSaw".into(),
-                label: "Circular Saw".into(),
-                icon_id: "scissors".into(),
-                catalog_id: None,
-                capabilities: vec![Capability {
-                    id: "crosscut".into(),
-                    label: "Crosscut".into(),
-                    icon_id: "scissors".into(),
-                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                    parameters: vec![param("bladeDiameter", "Blade Diameter", 0.184), param("kerf", "Kerf", 0.002), param("maxCutDepth", "Max Cut Depth", 0.065)],
-                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }],
-                }],
-            },
-            WorkshopMachine {
-                id: "tableSaw".into(),
-                label: "Table Saw".into(),
-                icon_id: "scissors".into(),
-                catalog_id: None,
-                capabilities: vec![Capability {
-                    id: "rip".into(),
-                    label: "Rip".into(),
-                    icon_id: "scissors".into(),
-                    recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                    parameters: vec![param("bladeDiameter", "Blade Diameter", 0.315), param("kerf", "Kerf", 0.0032), param("maxCutDepth", "Max Cut Depth", 0.102), param("fenceWidth", "Fence Width", 0.8)],
-                    rules: vec![CapabilityRule::Max { quantity: StockQuantity::Height, parameter: "maxCutDepth".into(), margin: 0.0 }, CapabilityRule::Max { quantity: StockQuantity::Width, parameter: "fenceWidth".into(), margin: 0.0 }],
-                }],
-            },
-        ];
-        let metal_machines = vec![WorkshopMachine {
-            id: "chopSaw".into(),
-            label: "Chop Saw".into(),
-            icon_id: "scissors".into(),
-            catalog_id: None,
-            capabilities: vec![Capability {
-                id: "crosscut".into(),
-                label: "Crosscut".into(),
-                icon_id: "scissors".into(),
-                recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
-                parameters: vec![param("bladeDiameter", "Blade Diameter", 0.35), param("kerf", "Kerf", 0.002), param("maxCutDepth", "Max Cut Depth", 0.12)],
-                rules: vec![],
-            }],
-        }];
-        let entries = vec![
-            ProgramContributionEntry {
-                plugin_id: "process-wood".into(),
-                topic_contribution: Some(TopicContribution::new(
-                    "process.machines",
-                    DslValue::object([
-                        ("appId".to_string(), DslValue::String("process3d-play".to_string())),
-                        ("moduleId".to_string(), DslValue::String("wood".to_string())),
-                        ("label".to_string(), DslValue::String("Wood".to_string())),
-                        ("iconId".to_string(), DslValue::String("beam".to_string())),
-                        ("machinesJson".to_string(), DslValue::String(semio_framework_pack_json::to_json_string(&wood_machines))),
-                    ]),
-                )),
-            },
-            ProgramContributionEntry {
-                plugin_id: "process-metal".into(),
-                topic_contribution: Some(TopicContribution::new(
-                    "process.machines",
-                    DslValue::object([
-                        ("appId".to_string(), DslValue::String("process3d-play".to_string())),
-                        ("moduleId".to_string(), DslValue::String("metal".to_string())),
-                        ("label".to_string(), DslValue::String("Metal".to_string())),
-                        ("iconId".to_string(), DslValue::String("wrench".to_string())),
-                        ("machinesJson".to_string(), DslValue::String(semio_framework_pack_json::to_json_string(&metal_machines))),
-                    ]),
-                )),
-            },
-        ];
-        let json = semio_framework_pack_json::to_json_string(&entries);
-        // 🧵️ B1: an app's own behaviour dispatches only through the typed command channel —
-        // `handle_action` serves the framework-reserved verbs and rejects app command ids.
-        dispatch(app, Process3dCommand::SetContributions(set_contributions::SetContributions { json }));
-    }
-    
-    /// 🧪️ Every test context app is wired to the real manifest registry. The registry-less `new_app` path
-    /// leaves `AppActionRegistry::{actions, app_commands, mode_commands}` empty, so
-    /// `migrated_tool_ids()` (`🔌️plugin/🦀️.rs:12058`) returns NOTHING and `tool_job_registration`
-    /// (`:19140`) rejects every one of this app's proof rows with `interactive-job.catalog-authority` —
-    /// an app that declares tool proofs at all cannot be constructed without its manifest.
-    pub fn app() -> Process3dApp {
-        app_with_registry()
-    }
-    
-    /// 🧪️ A registry-backed app with NOTHING dispatched into it — no seeded contribution catalogs, so
-    /// its artifact generation is still the genesis one. Publication-authority admission is keyed on
-    /// that generation, so a test that swaps a production envelope must start from here; seeding first
-    /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
-    pub fn unseeded_app_with_registry() -> Process3dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
-        ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
-        Process3dApp(app)
-    }
-    
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn app_with_registry() -> Process3dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
-        ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
-        seed_domain_catalog_contributions(&mut app);
-        Process3dApp(app)
-    }
-    
-    pub fn dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> InvocationResult {
-        dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
-    }
-    
-    pub fn dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> InvocationResult {
-        settled_dispatch_with_utility(app, command, active_utility_id).0
-    }
-    
-    /// 🏁️ The settling dispatch. This app is MOUNTED (`bind_instance_id`), so a migrated command is
-    /// answered BEFORE its retained operation publishes: without driving the publication home the
-    /// document never changes, `snapshot()` stays stale, and — because the store still owes a
-    /// publication — the app can never reach the terminal-empty shallow shell [`Process3dApp::drop`]
-    /// drains for. The settled receipt's effects are folded into the answer, since either surface may
-    /// be the one carrying a `LoadDocument`; its `lanes` are the observable proof that a command wrote
-    /// a store (`InvocationResult.mutations` is empty by construction on this path).
-    pub fn settled_dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        settled_dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
-    }
-    
-    pub fn settled_dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        view_state.active_utility_id = Some(active_utility_id.into());
-        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let mut result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("dispatch");
-        let receipt = settle(app);
-        result.requested_effects.extend(receipt.effects.iter().cloned());
-        (result, receipt)
-    }
-    
-    pub fn action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
-        settled_action(app, action, args).0
-    }
-    
-    /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
-    /// operation publishes after the call answers.
-    pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, args, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("action dispatch");
-        // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
-        // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
-        // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
-        // interaction store and every selection-addressed render still projects the empty state.
-        let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)).expect("settle the framework-reserved admission");
-        let receipt = settle(app);
-        result.requested_effects.extend(receipt.effects.iter().cloned());
-        (result, receipt)
-    }
-    
-    /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
-    /// plugin host's continuation does.
-    pub fn settle(app: &mut Process3dRawApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("settle the typed operation")
-    }
-    
-    /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
-    /// "this command wrote an in-history mutation".
-    pub fn published_a_document_mutation(receipt: &semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
-        receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact)
-    }
-    
-    /// 🧩️ A `BuiltNode` carries retained page children, so the rendered tree is projected through the
-    /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
-    /// now fails with `BuiltChildren requires retained page transport`.
-    pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
-    }
-
-    /// 🪟️ Renders one body against a host view state — the seam every tree-window law drives, since
-    /// `ViewModel.tree_windows` is the ONLY way a caller states which containers are open and which
-    /// rows the viewport holds.
-    pub fn render_with_view(app: &mut Process3dRawApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = ::semio_framework_async::poll::resolve_ready(app.render(body_key, None, view_state)).expect("render");
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
-    }
-    
-    /// 🪟️ The host's own view state for the single main window. `VcsArtifactApp::window_measures`
-    /// projects ONE entry per declared window INSTANCE (`ViewModel.window_instances`) and keys the
-    /// answer by that instance id — a default, instance-less view therefore answers an EMPTY map no
-    /// matter what `ArtifactEditor::window_measures` returns.
-    pub fn main_window_view() -> ViewModel {
-        ViewModel {
-            window_id: Some(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() }],
-            ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
-        }
-    }
-    
-    pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
-        ::semio_framework_async::poll::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
-    }
-}
-
-use super::*;
-use crate::editor::process3d::unit_tests::context::{action, app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, main_window_view, process3d_app_manifest_for_tests, published_a_document_mutation, render as render_body, settled_dispatch, settled_dispatch_with_utility};
+use semio_s_artifact_process_process3d_editor::*;
+use semio_s_artifact_process_process3d_kit::builtin_installed_catalogs;
+use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
+use semio_s_artifact_process_process3d_modes;
+use semio_s_artifact_process_process3d_modes::windows::workpiece;
+use semio_s_artifact_process_process3d_panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
+use semio_s_artifact_process_process3d_presence::{Process3dPresence, Process3dPresenceMutation};
+use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::MeasureRecipe, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};
+use semio_framework::kernel::Effect;
+use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppActionRegistry;
+use semio_framework_plugin::AppDefinition;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactKindSpec;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::CommandDefinition;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::ContextMenuItemSpec;
+use {semio_framework_artifact_reference::Dialect};
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::FaultCode;
+use semio_framework_plugin::FaultOrigin;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::Menu;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::OsMediaCapability;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowMeasure;
+use std::collections::HashMap;
+use pack::snapshot::ArtifactPack;
+use semio_framework_2d::compute::EngineHandles;
+use camera::set_camera;
+use contribution::set_contributions;
+use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};
+use document::{set_active_example, set_snapshot};
+use engagement::{engagement_abort, engagement_input, engagement_submit};
+use inspector::patch_inspector;
+use media::{export_model, import_model_file, load_model_request};
+use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
+use stock::set_stock;
+use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
+use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
+use world::{world_face_drag_end, world_pointer_down};
+use crate::{context::action, context::app, context::app_with_registry, context::dispatch, context::dispatch_with_utility, context::main_window_measures, context::main_window_view, context::process3d_app_manifest_for_tests, context::published_a_document_mutation, context::render as render_body, context::settled_dispatch, context::settled_dispatch_with_utility};
 use semio_framework_plugin::{artifact_app_laws, ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
 fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
-    let mut snapshot = crate::empty_process3d_snapshot();
+    let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
     snapshot.workshop.machines.push(WorkshopMachine { id: "machine".into(), label: "Original Machine".into(), icon_id: "original-tool".into(), catalog_id: Some("original-catalog".into()), capabilities: Vec::new() });
     snapshot
@@ -295,9 +100,9 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let snapshot = production_initial_snapshot(label);
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let mutations = crate::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
-    assert_eq!(mutations.len(), crate::standards::v1::subsets::any::schema::mutations::KINDS.len(), "production ingress carries every Process3d mutation variant");
-    let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
+    let mutations = semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
+    assert_eq!(mutations.len(), semio_s_artifact_process_process3d_mutations::KINDS.len(), "production ingress carries every Process3d mutation variant");
+    let mutation_hex: Vec<String> = mutations.iter().map(|mutation| semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
     // 🪪️ Every workshop mutation addresses a machine by ID, so the expectation must locate the same
     // machine the replay does. It used to edit `machines.first_mut()` — the initial workshop already
     // carries the three generic machines (saw, drill, attacher) BEFORE the one this law appends, so a
@@ -341,14 +146,14 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
         ProcessMeasure::Attach { component, .. } => component,
         _ => unreachable!("production timeline ends with the authored attach measure"),
     };
-    let tool = crate::working_solid_child_handle(&format!("tool-{}", step.id), solid);
+    let tool = semio_s_artifact_process_process3d_model::snapshot::working_solid_child_handle(&format!("tool-{}", step.id), solid);
     let tool_ids = std::collections::BTreeMap::from([(step.id.clone(), tool.child_id.clone())]);
-    expected.steps = crate::flow_child_handle(&crate::flow_snapshot_for_steps(std::slice::from_ref(&step), &tool_ids));
+    expected.steps = semio_s_artifact_process_process3d_model::snapshot::flow_child_handle(&semio_s_artifact_process_process3d_model::snapshot::flow_snapshot_for_steps(std::slice::from_ref(&step), &tool_ids));
     expected.step_payloads = vec![step];
     expected.tool_solids = vec![tool];
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
-        "schema": crate::PROCESS_3D_SCHEMA,
+        "schema": semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA,
         "id": "process3d-production-mounted-law",
         "vcs": {
             "initialPack": snapshot_hex,
@@ -369,13 +174,13 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
         "conflicts": []
     }))
     .expect("schema-first Process3d production fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
-    let funded = crate::host::owned::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
+    let funded = semio_s_artifact_process_process3d_host::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
     for _ in 0..100_000 {
         let demand = retirement.next_demand(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
-        let step = retirement.close_step(crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture envelope retirement");
+        let step = retirement.close_step(semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).expect("Process3d fixture envelope retirement");
         if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() {
             drop(retirement);
             return (wire, expected, expected_digest);
@@ -384,16 +189,16 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     panic!("Process3d fixture envelope retirement did not reach terminal")
 }
 
-fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_production_envelope(app: &mut crate::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
-    crate::host::owned::process3d_admit_publication_authority(
+    semio_s_artifact_process_process3d_host::process3d_admit_publication_authority(
         handle.operation,
         handle.generation,
         handle.generation.0,
         handle.generation.0,
         handle.generation.0,
-        crate::host::owned::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::host::owned::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::owned::PROCESS3D_MOUNTED_CONTROL_CREDITS },
+        semio_s_artifact_process_process3d_host::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_process_process3d_host::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_process_process3d_host::PROCESS3D_MOUNTED_CONTROL_CREDITS },
     )
     .expect("Process3d production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -406,9 +211,9 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
     handle
 }
 
-fn drive_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut crate::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
-        crate::host::owned::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
+        semio_s_artifact_process_process3d_host::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -426,9 +231,9 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     // 🛣️ The publication lease table is a process-global four-slot DIRECT-MAPPED registry shared by the
     // whole test binary; two laws admitting concurrently collide on a slot and report
     // `process3d-publication.saturated`, which is scheduling, never the property under test.
-    let _lane = crate::host::owned::process3d_publication_authority_lane();
+    let _lane = semio_s_artifact_process_process3d_host::process3d_publication_authority_lane();
     let accepted_label = "accepted-production-swap";
-    let mut accepted = crate::editor::process3d::unit_tests::context::unseeded_app_with_registry();
+    let mut accepted = crate::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
     let (accepted_wire, expected_snapshot, expected_digest) = production_envelope_wire(accepted_label);
     let accepted_handle = admit_production_envelope(&mut accepted, &accepted_wire);
@@ -441,7 +246,7 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     // workshop declares three generic machines (saw, drill, attacher) BEFORE the one this law renames,
     // so `machines.first()` reads `saw` — a machine the replay never touches — and the literal
     // `("machine", "Renamed Machine", "drill")` was a positional accident, not the published state.
-    let fixtures = crate::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
+    let fixtures = semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
     let (renamed_id, renamed_label) = match &fixtures[9] {
         Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),
         _ => unreachable!("fixed all-variant fixture order"),
@@ -456,9 +261,9 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
-    assert!(crate::host::owned::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
+    assert!(semio_s_artifact_process_process3d_host::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
 
-    use crate::host::owned::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use semio_s_artifact_process_process3d_host::{Process3dPublicationHostile::Missing, Process3dPublicationHostile::WrongBase, Process3dPublicationHostile::WrongGeneration, Process3dPublicationHostile::WrongOperation, Process3dPublicationHostile::WrongParent};
     for (hostile, expected_code) in [
         (Missing, "process3d-publication.authority-missing"),
         (WrongOperation, "process3d-publication.wrong-operation"),
@@ -466,28 +271,28 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
         (WrongBase, "process3d-publication.wrong-base"),
         (WrongParent, "process3d-publication.wrong-parent"),
     ] {
-        let mut app = crate::editor::process3d::unit_tests::context::unseeded_app_with_registry();
+        let mut app = crate::context::unseeded_app_with_registry();
         let last_valid = app.snapshot().expect("last-valid Process3d snapshot");
         let last_valid_digest = production_semantic_digest(&last_valid);
         let base_generation = app.artifact_generation_now();
         let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
         assert_eq!(production_semantic_digest(&hostile_snapshot), hostile_digest);
         let handle = admit_production_envelope(&mut app, &hostile_wire);
-        crate::host::owned::process3d_arm_publication_hostile(handle.operation, hostile);
+        semio_s_artifact_process_process3d_host::process3d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::host::owned::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
+        assert_eq!(semio_s_artifact_process_process3d_host::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
         assert_eq!(retained, last_valid);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
-        assert!(crate::host::owned::process3d_release_publication_authority(handle.operation, handle.generation));
+        assert!(semio_s_artifact_process_process3d_host::process3d_release_publication_authority(handle.operation, handle.generation));
     }
 }
 
 //#region 🔖️CommandSurface
 fn retained_snapshot(machine_count: usize) -> Process3dSnapshot {
-    let mut snapshot = crate::empty_process3d_snapshot();
+    let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.workshop.machines.clear();
     snapshot.step_payloads.clear();
     snapshot.tool_solids.clear();
@@ -585,13 +390,13 @@ async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
 /// outcome instead of publishing its forced-empty diff as a no-op edit.
 #[test]
 fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_grant() {
-    use crate::mutations::create_step::CreateStep;
-    use crate::mutations::delete_step::DeleteStep;
+    use semio_s_artifact_process_process3d_mut_steps::create_step::CreateStep;
+    use semio_s_artifact_process_process3d_mut_steps::delete_step::DeleteStep;
 
     assert_eq!(PROCESS3D_DOCUMENT_GRANT_BYTES, 4_096);
     assert!(PROCESS3D_DOCUMENT_MAXIMUM_BYTES > PROCESS3D_DOCUMENT_GRANT_BYTES, "the document maximum is a validation, never the per-turn grant");
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let step = ProcessStep { id: "step-retained".into(), label: "Retained Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() } };
+    let base = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let step = ProcessStep { id: "step-retained".into(), label: "Retained Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: semio_s_artifact_process_process3d_model::snapshot::Pose::default() } };
     let forward = Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() });
     let (post, inverse) = prepare_process3d_document(&base, &forward).expect("create step prepares");
     assert!(matches!(forward, Process3dMutation::CreateStep(_)));
@@ -789,7 +594,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<Process3dCommand> {
     vec![
-        Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_pack_json::to_json_string(&crate::empty_process3d_snapshot()) }),
+        Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_pack_json::to_json_string(&semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot()) }),
         Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
         Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
         Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -806,7 +611,7 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
                 label: "Cut".into(),
                 enabled: true,
                 origin: None,
-                measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() },
+                measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: semio_s_artifact_process_process3d_model::snapshot::Pose::default() },
             }),
         }),
         Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: "cut-1".into(), enabled: false }),
@@ -894,7 +699,7 @@ async fn registry_backed_example_action_emits_the_requested_document() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode example document");
-    assert_eq!(loaded, crate::standards::v1::subsets::any::io::text::snapshot::plate_document());
+    assert_eq!(loaded, semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::plate_document());
 }
 
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick` (a pure selection-setting
@@ -972,7 +777,7 @@ async fn utility_registry_declares_four_flat_utilities_scoped_to_workpiece_windo
 #[semio_framework_async_macros::async_test]
 async fn process3d_io_mirrors_the_declared_artifact_kind() {
     let io = process3d_io();
-    assert_eq!(io.artifact_schema, crate::PROCESS_3D_SCHEMA);
+    assert_eq!(io.artifact_schema, semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA);
     assert_eq!(io.artifact.id, "3d.process");
     assert!(io.export_formats.is_empty());
     assert!(io.import_formats.is_empty());
@@ -1051,9 +856,9 @@ async fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         panic!("expected a LoadDocument effect");
     };
     let document = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    let expected_solid = crate::brep_child_handle("stock", &crate::brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
+    let expected_solid = semio_s_artifact_process_process3d_model::snapshot::brep_child_handle("stock", &semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
     assert_eq!(document.stock_solid, expected_solid, "setStock kind=cylinder must swap the stock solid to the real cylinder-content handle");
-    let cleared_steps = crate::flow_child_handle(&crate::flow_snapshot_for_steps(&[], &Default::default()));
+    let cleared_steps = semio_s_artifact_process_process3d_model::snapshot::flow_child_handle(&semio_s_artifact_process_process3d_model::snapshot::flow_snapshot_for_steps(&[], &Default::default()));
     assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
 }
 
@@ -1209,7 +1014,7 @@ async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
 #[semio_framework_async_macros::async_test]
 async fn export_brep_out_returns_step_text_structured_payload() {
     semio_framework_os_kernel::io::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
@@ -1226,7 +1031,7 @@ async fn export_brep_out_returns_step_text_structured_payload() {
 
 #[semio_framework_async_macros::async_test]
 async fn export_unknown_port_is_not_implemented() {
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
@@ -1234,7 +1039,7 @@ async fn export_unknown_port_is_not_implemented() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_geometry_in_rejects_unrecognized_schema() {
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };
@@ -1302,46 +1107,6 @@ async fn process_contribution_envelope_accepts_exact_limits_and_rejects_plus_one
 //#endregion 🔖️BehaviorTests
 
 //#region 🧩️RealContributionsPackAdmission
-/// 🧩️ The four shipped `process-extension-*` packs, exactly as those crates emit them
-/// (`✏️s/🔌️plugins/🏭️process/🧩️extensions/*/🦀️.rs` builds this payload from the same `MachineCatalog`
-/// this crate compiles in), plus the foreign `cad.computer` / `sourcing.module` entries the
-/// DEMONSTRATOR's `consumes` row puts in the same pack. This is the real host closure, not a toy.
-pub(crate) fn demonstrator_contributions_pack() -> String {
-    let mut entries: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
-    for catalog in builtin_installed_catalogs().into_iter().filter(|catalog| catalog.catalog_id() != "geometry") {
-        entries.push(semio_framework::ProgramContributionEntry {
-            plugin_id: format!("process-extension-{}", catalog.catalog_id()),
-            topic_contribution: Some(semio_framework::TopicContribution::new(
-                "process.machines",
-                semio_framework::DslValue::object([
-                    ("appId".to_string(), semio_framework::DslValue::String(PROCESS_3D_PLAY_APP_ID.to_string())),
-                    ("moduleId".to_string(), semio_framework::DslValue::String(catalog.catalog_id().to_string())),
-                    ("label".to_string(), semio_framework::DslValue::String(catalog.label().to_string())),
-                    ("iconId".to_string(), semio_framework::DslValue::String(catalog.icon_id().to_string())),
-                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&catalog.machines()))),
-                ]),
-            )),
-        });
-    }
-    for (plugin, topic, app) in [
-        ("cad-extension-aec-building", "cad.computer", "s.cad.cad@1/*#editor"),
-        ("cad-extension-spatial-shape", "cad.computer", "s.cad.cad@1/*#editor"),
-        ("sourcing-module-beams", "sourcing.module", "sourcing-curation"),
-    ] {
-        entries.push(semio_framework::ProgramContributionEntry {
-            plugin_id: plugin.to_string(),
-            topic_contribution: Some(semio_framework::TopicContribution::new(
-                topic,
-                semio_framework::DslValue::object([
-                    ("appId".to_string(), semio_framework::DslValue::String(app.to_string())),
-                    ("moduleId".to_string(), semio_framework::DslValue::String(plugin.to_string())),
-                ]),
-            )),
-        });
-    }
-    semio_framework_pack_json::to_json_string(&entries)
-}
-
 /// ⚖️ The REAL demonstrator pack crosses this app's registered `setContributions` admission, distils
 /// to the four `process.machines` entries addressed to this app, and is retained inside the
 /// contributions lane — every hop the live push actually takes.
@@ -1352,7 +1117,7 @@ pub(crate) fn demonstrator_contributions_pack() -> String {
 /// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS).
 #[test]
 fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
-    let pack = demonstrator_contributions_pack();
+    let pack = context::demonstrator_contributions_pack();
     let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
     println!("[STATS] process3d demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
@@ -1379,7 +1144,7 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
 /// catalogs untouched — the Werkstatt panel renders five sections, not nine.
 #[test]
 fn a_pack_repeating_the_builtin_ids_installs_exactly_the_builtin_catalogs() {
-    let pack = demonstrator_contributions_pack();
+    let pack = context::demonstrator_contributions_pack();
     let before: Vec<(String, String)> = builtin_installed_catalogs().iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
     let after: Vec<(String, String)> = installed_catalogs(&pack).iter().map(|catalog| (catalog.catalog_id().to_string(), catalog.label().to_string())).collect();
     assert_eq!(after, before, "a repeated catalog id must not open a second section");
@@ -1406,7 +1171,7 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
             ]),
         )),
     };
-    let mut entries = semio_framework::parse_contributions(&demonstrator_contributions_pack());
+    let mut entries = semio_framework::parse_contributions(&context::demonstrator_contributions_pack());
     entries.push(entry);
     let pack = semio_framework_pack_json::to_json_string(&entries);
     let catalogs = installed_catalogs(&pack);
@@ -1428,7 +1193,7 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
 #[test]
 fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     use protocol::OpBinary;
-    let pack = demonstrator_contributions_pack();
+    let pack = context::demonstrator_contributions_pack();
     let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
     let encoded = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: distilled.clone() }).encode_op().expect("encode real roster");
     println!("[STATS] process3d contributions roster={} encoded={} cap={PROCESS3D_RESUMABLE_OUTPUT_BYTES}", distilled.len(), encoded.len());
@@ -1497,7 +1262,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
 /// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn every_example_loads_through_the_member_less_archive_door() {
-    let _lane = crate::host::owned::process3d_publication_authority_lane();
+    let _lane = semio_s_artifact_process_process3d_host::process3d_publication_authority_lane();
     for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
         let mut app = context::unseeded_app_with_registry();
         let (pack, spr) = published_example_load(&mut app, example);
@@ -1518,8 +1283,8 @@ fn every_example_loads_through_the_member_less_archive_door() {
 /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Regenerate with `print_dsl` of the remint.
 #[test]
 fn every_example_fixture_carries_its_canonical_child_handles() {
-    for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, crate::standards::v1::subsets::any::io::text::snapshot::default_document()), (PROCESS3D_EXAMPLE_PLATE, crate::standards::v1::subsets::any::io::text::snapshot::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, crate::standards::v1::subsets::any::io::text::snapshot::concrete_forest_document())] {
-        let reminted = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&document), document.workshop.clone());
+    for (example, document) in [(PROCESS3D_EXAMPLE_TIMBER, semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()), (PROCESS3D_EXAMPLE_PLATE, semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::plate_document()), (PROCESS3D_EXAMPLE_CONCRETE_FOREST, semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::concrete_forest_document())] {
+        let reminted = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&document), document.workshop.clone());
         assert_eq!(document.stock_solid, reminted.stock_solid, "{example}: stale stockSolid handle");
         assert_eq!(document.steps, reminted.steps, "{example}: stale steps handle");
         assert_eq!(document.tool_solids, reminted.tool_solids, "{example}: stale toolSolids handles");

@@ -1,11 +1,13 @@
 //! 🕸️ Generation2d play app — the main node-graph window: the editable flow canvas.
 
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::editor::generation2d::{
-    GENERATION2D_GRAPH_EDGE_TARGET_PREFIX, GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX, GENERATION2D_GRAPH_NODE_TARGET_PREFIX, GENERATION2D_INTERACTION_DOMAIN,
-};
-use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_EDGE_TARGET_PREFIX;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_NODE_TARGET_PREFIX;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_2d_preview_eval::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_2d_model::with_host;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::BuiltNode;
@@ -171,7 +173,4 @@ pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMain
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

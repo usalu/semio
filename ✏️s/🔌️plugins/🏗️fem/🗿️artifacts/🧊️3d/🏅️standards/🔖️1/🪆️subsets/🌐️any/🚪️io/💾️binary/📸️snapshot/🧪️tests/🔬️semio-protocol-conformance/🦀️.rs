@@ -9,7 +9,7 @@ fn component_protocol_semio_is_protocol_dialect() {
 }
 #[test]
 fn verify_protocol_bytes_against_encoded_pack() {
-    use crate::Fem3dSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     let document = Fem3dSnapshot::default();
     let bytes = encode(&document);
     let g = semio_framework_dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

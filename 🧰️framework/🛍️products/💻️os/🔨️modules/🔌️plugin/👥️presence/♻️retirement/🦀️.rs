@@ -1,7 +1,7 @@
 //! 👥️ Domain-authorized presence store closure preserves exact local and peer owner retirement.
 
 use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement};
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::{ArtifactOwnedDisposer, Fault};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;

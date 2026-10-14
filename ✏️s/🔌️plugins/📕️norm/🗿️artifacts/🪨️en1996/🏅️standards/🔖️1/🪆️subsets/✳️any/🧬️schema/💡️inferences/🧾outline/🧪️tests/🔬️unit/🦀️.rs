@@ -1,4 +1,4 @@
-use super::*;
+use crate::outline::*;
 
 #[test]
 fn outline_field_count_matches_section_outline_length() {

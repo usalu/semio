@@ -1,7 +1,7 @@
 //! 💠️ Full literal parent and managed mesh owners share one exact cell visitor and paid row index.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::LowpolySnapshot;
-use crate::{LowpolyObject,LowpolyTransform,LowpolyPaintLayer};
+use crate::snapshot::LowpolySnapshot;
+use crate::{snapshot::LowpolyObject, snapshot::LowpolyTransform, snapshot::LowpolyPaintLayer};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell,FloatColumn,FloatRow}}};
 use semio_framework_value::{DecodedValue,FromValue,NativeDecodeControl,ValueError,ValueRefusalKind};
 #[path="🕸️mesh/🛫️projection/🦀️.rs"]mod mesh_projection;
@@ -43,6 +43,3 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,Self::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|allowance,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(allowance,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())})?}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

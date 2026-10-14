@@ -1,12 +1,12 @@
 //! 🔬️ Compliance report shape for DIN V 18599 rebuild.
 
-use crate::document::CheckStatus;
-use crate::subjects;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_din18599_model::subjects;
+use crate::evaluate;
 
 #[test]
 fn evaluate_emits_grouped_geg_and_part_checks() {
-    let report = evaluate(&crate::subjects::compliant_detached_house());
+    let report = evaluate(&semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house());
     assert!(report.summary.total >= 8);
     assert!(report.complies());
     assert!(report.checks.iter().any(|c| c.part.contains("GEG")));
@@ -15,7 +15,7 @@ fn evaluate_emits_grouped_geg_and_part_checks() {
 
 #[test]
 fn noncompliant_report_has_localized_remedies() {
-    let report = evaluate(&crate::subjects::noncompliant_detached_house());
+    let report = evaluate(&semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house());
     assert!(!report.complies());
     let fail = report.failing().next().unwrap();
     assert!(!fail.remedies.is_empty());

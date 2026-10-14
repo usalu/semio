@@ -1,8 +1,7 @@
 //! 🕝️ Energy model mutation — `ChangeConstantScheduleValue`: Sets the one value a constant schedule returns at every timestep.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeConstantScheduleValue {
     pub new_value: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_constant_schedule_value(id: crate::schedule::ScheduleId, new_value: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeConstantScheduleValue(ChangeConstantScheduleValue { id, new_value })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_constant_schedule_value<Op: From<ChangeConstantScheduleValue>>(id: crate::schedule::ScheduleId, new_value: f64) -> Op {
+    ChangeConstantScheduleValue { id, new_value }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeConstantScheduleValue {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeConstantScheduleValue
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeConstantScheduleValue>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "constant-schedule", kind: "change-constant-schedule-value", record: "ChangedConstantScheduleValue" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

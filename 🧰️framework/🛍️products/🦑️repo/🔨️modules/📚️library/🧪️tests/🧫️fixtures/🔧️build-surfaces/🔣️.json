@@ -1,5 +1,13 @@
 {
   "version": 1,
+  "packageRouting": {
+    "cases": [
+      {"platform":"posix","root":"/workspace/repo","package":"packages/space owner","command":"bun --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"","arguments":["--tool=bazel","run","fixture:test","--","two words",""]},
+      {"platform":"win32","root":"C:\\workspace\\repo","package":"packages/space owner","command":"bun --cwd \"../..\" repo run fixture:test -- \"literal$()\"","arguments":["run","fixture:test","--","literal$()"]},
+      {"platform":"posix","root":"/workspace/🧪 repo","package":"a/b/c","command":"bun --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache","arguments":["--tool=nx","run","fixture:test","--skip-cache"]}
+    ],
+    "sourceCaller":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+  },
   "scripts": {
     "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
     "setup": "bun repo run workspace:setup",
@@ -201,6 +209,10 @@
     "🌎️hub/🚀️local-bootstrap/👷️dev-owner/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+  ],
+  "editorAnswers": [
+    {"repoBuildTool":"nx","repoBuildTask":"@semio-tech/repo-lib:test-build-surfaces","repoBuildProject":"@semio-tech/repo-lib","repoBuildProjects":"@semio-tech/repo-*"},
+    {"repoBuildTool":"bazel","repoBuildTask":"@semio-tech/repo-lib:test-build-surfaces:release","repoBuildProject":"@semio-tech/repo-lib","repoBuildProjects":"@semio-tech/repo-lib,@semio-tech/os-*"}
   ],
   "editorInputs": [
     {

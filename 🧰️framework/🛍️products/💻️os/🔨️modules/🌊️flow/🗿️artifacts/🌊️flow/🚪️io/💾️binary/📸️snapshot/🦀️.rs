@@ -35,14 +35,8 @@ impl pack::snapshot::ArtifactPack for FlowHostSnapshot {
     /// 🌊️ Publishes the actual persisted Flow owner when its Store opens or hydrates.
     
     
-    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
-        <FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::encode_pack_with(&flow_host_snapshot_to_dsl(self), options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
-        let dsl_fixture = <FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::decode_pack_with(bytes, options)?;
-        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::serialization::text_error_to_pack_error(crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message, crate::os_store::TextSpan::at(1, 1))))
-    }
+    fn encode_pack_with(&self,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{FlowSnapshotPackProducer::encode_snapshot(self,options)}
+    fn decode_pack_with(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<Self,crate::os_store::PackError>{FlowSnapshotPackProducer::decode_snapshot(bytes,options)}
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         <FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::record_spec()
@@ -53,4 +47,30 @@ fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference:
         Some((semio_framework_artifact_reference::Dialect { artifact_kind: "flow.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::bare_artifact_codec::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA)))
     }
 fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
+}
+
+/// 🌊️ Child-owned persisted Flow record codec and original field construction.
+#[derive(Clone,Copy)]
+pub struct FlowSnapshotPackProducer;
+impl FlowSnapshotPackProducer {
+ fn encode_snapshot(snapshot:&FlowHostSnapshot,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{<FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::encode_pack_with(&flow_host_snapshot_to_dsl(snapshot),options)}
+ fn decode_snapshot(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<FlowHostSnapshot,crate::os_store::PackError>{
+  let dsl=<FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::decode_pack_with(bytes,options)?;
+  flow_host_snapshot_dsl_to_host_snapshot(dsl).map_err(|message|crate::os_store::serialization::text_error_to_pack_error(crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,crate::os_store::TextSpan::at(1,1))))
+ }
+}
+impl crate::os_store::MemberSnapshotDecoder<FlowHostSnapshot> for FlowSnapshotPackProducer {
+ fn decode_snapshot(bytes:&[u8])->Result<FlowHostSnapshot,crate::os_store::PackError>{Self::decode_snapshot(bytes,&crate::os_store::PackDecodeOptions::default())}
+}
+impl ::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactGenesisProducer<FlowHostSnapshot> for FlowSnapshotPackProducer {
+ fn encode_genesis_pack(&self,snapshot:&FlowHostSnapshot)->Result<Vec<u8>,semio_framework_value::ValueError>{Self::encode_snapshot(snapshot,&crate::os_store::PackEncodeOptions::default()).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
+ fn decode_genesis_pack(&self,bytes:&[u8])->Result<FlowHostSnapshot,semio_framework_value::ValueError>{Self::decode_snapshot(bytes,&crate::os_store::PackDecodeOptions::default()).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
+}
+
+impl crate::os_store::ArtifactStorePublication<FlowHostSnapshot> for FlowSnapshotPackProducer {
+ fn publish_native_snapshot()->Result<(),::semio_framework_os_kernel::io::ArtifactAssemblyRegistryError>{
+  let dialect=semio_framework_artifact_reference::Dialect{artifact_kind:"flow.host_snapshot",standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
+  let codec=crate::os_store::bare_artifact_codec::<FlowHostSnapshot,FlowMutation>(FLOW_DOCUMENT_SCHEMA);
+  ::semio_framework_os_kernel::io::register_native_snapshot_codec(dialect,codec)
+ }
 }

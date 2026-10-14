@@ -260,9 +260,7 @@ impl Default for ProgramSnapshot {
 
 //#region 🔖️Composition
 /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4 batch Db (`architect→C:table,graph
-/// R:model`): `program.benchmarks` (an id-keyed register that is NOT one of the 8 registers wired
-/// into `patch_register_item_operation`'s reflection dispatch, unlike e.g. `stakeholders`/
-/// `elements`) is the first — smallest, lowest-blast-radius — of this plugin's 68 register
+/// R:model`): `program.benchmarks` (an id-keyed register) is the first — smallest, lowest-blast-radius — of this plugin's 68 register
 /// collections to compose stdio's `table`
 /// subset, proving the pattern before a wider follow-up pass. Every `BenchmarkRecord` row nests a
 /// rich `EntityHeader` (id/name/status/priority/ownership/tags/notes/timestamps) that has no clean
@@ -270,9 +268,8 @@ impl Default for ProgramSnapshot {
 /// precedent: `id`/`name` are ALSO projected onto native columns for genuine table-tooling, but the
 /// full row (source of truth) round-trips as one JSON cell — nothing is silently dropped.
 ///
-/// Every one of the four existing `create`/`replace`/`delete`/`rename` mutation triads for
-/// `benchmarks` keeps its exact public payload/wire shape (`CreateBenchmarkRecord`,
-/// `ReplaceBenchmarkRecord`, …) — only the internal `🔺️diff`/`↩️inverse` bodies are rewired to read
+/// The four generic `📋️register-row` mutations address `benchmarks` through `RegisterKey::BenchmarkRecord`
+/// exactly as every other register; the register catalog reads and writes `benchmarks_payload` and re-mints
 /// the exact child owner below and re-mint a fresh content-addressed child handle for the identical per-entry
 /// mutation-rich shape (`📓️migration-recipe.md` §3/§4 — no `LinkResolver`/child-dispatch seam
 /// exists in `ArtifactApp::handle` yet, checked directly against `🔌️plugin/🦀️.rs`,
@@ -348,8 +345,7 @@ pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenc
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️Knowledge
-/// 🧩️ `program.knowledge` — second proof-of-pattern field (also outside
-/// `patch_register_item_operation`'s reflection dispatch), composed identically to `benchmarks`
+/// 🧩️ `program.knowledge` — second proof-of-pattern field, composed identically to `benchmarks`
 /// above. `KnowledgeRecord` also nests a rich `EntityHeader` with no clean native `table`-column
 /// mapping, so it follows the identical `id`/`name`-native-plus-full-`json` converter shape.
 //#region 🔖️ChildTypes

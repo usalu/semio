@@ -1,8 +1,7 @@
 //! 🐋️ Energy model mutation — `ChangeFenestrationFinOffset`: Sets how far beside the window jambs the two vertical projections stand, in metres.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationFinOffset {
     pub new_fin_offset_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_fin_offset(id: crate::model::EntityId, new_fin_offset_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationFinOffset(ChangeFenestrationFinOffset { id, new_fin_offset_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_fin_offset<Op: From<ChangeFenestrationFinOffset>>(id: crate::model::EntityId, new_fin_offset_m: f64) -> Op {
+    ChangeFenestrationFinOffset { id, new_fin_offset_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationFinOffset {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationFinOffset
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationFinOffset>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-fin-offset", record: "ChangedFenestrationFinOffset" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

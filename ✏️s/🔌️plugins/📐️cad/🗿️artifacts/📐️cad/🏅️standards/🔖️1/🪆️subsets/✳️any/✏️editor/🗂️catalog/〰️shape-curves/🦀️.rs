@@ -15,11 +15,11 @@ pub const ATTRIBUTE_DEFINITIONS: &[(&str, &str)] = &[
 
 /// 📚️ `interactions` assets of this catalog, embedded at build time.
 pub const INTERACTIONS: &[(&str, &str)] = &[
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌙️arc.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⭕️circle.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/〰️constructCurve.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎛️controlPointCurve.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌊️interpolateCurve.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🖊️line.json")),
-    ("spatial.shape", include_str!("../../../📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📈️polyline.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌙️arc.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⭕️circle.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/〰️constructCurve.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎛️controlPointCurve.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌊️interpolateCurve.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🖊️line.json")),
+    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📈️polyline.json")),
 ];

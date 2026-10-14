@@ -1,8 +1,11 @@
-use crate::standards::v1::subsets::any::io::text::mutations::*;
-use crate::document::AnnexChoice;
-use crate::MortarClass;
-use crate::mutations::{change_annex, change_mortar_class, change_support_sides, change_unit_fb, change_wall_height, change_wall_thickness, insert_wall, remove_wall};
-use crate::En1996Snapshot;
+use crate::text::mutations::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1996_model::MortarClass;
+use semio_s_artifact_norm_en1996_mut_project::change_annex;
+use semio_s_artifact_norm_en1996_mut_mortar::change_mortar_class;
+use semio_s_artifact_norm_en1996_mut_walls::{change_support_sides, change_wall_height, change_wall_thickness, insert_wall, remove_wall};
+use semio_s_artifact_norm_en1996_mut_units::change_unit_fb;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 fn every_mutation() -> Vec<En1996Mutation> {
     let wall = En1996Snapshot::compliant_clay_wall().walls[0].clone();

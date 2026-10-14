@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -34,7 +35,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (no publisher trust assumed beyond the sandbox default), and it asks the broker for document
 /// write access to persist edits.
 pub fn plugin() -> Result<Plugin<NoteApps>, PluginAssemblyError> {
-    Plugin::<NoteApps>::builder("note")
+    PluginBuilder::<_, NoteApps>::new("note")
         .label("Note")
         .version("0.1.0")
         .package_id("semio:note")

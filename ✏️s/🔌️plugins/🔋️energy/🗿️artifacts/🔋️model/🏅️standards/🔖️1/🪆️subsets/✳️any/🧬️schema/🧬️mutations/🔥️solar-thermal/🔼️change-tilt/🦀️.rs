@@ -1,8 +1,7 @@
 //! 🔼️ Energy model mutation — `ChangeSolarThermalSystemTilt`: Sets tilt on one solar thermal system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSolarThermalSystemTilt {
     pub new_tilt_deg: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_solar_thermal_system_tilt(id: crate::model::EntityId, new_tilt_deg: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSolarThermalSystemTilt(ChangeSolarThermalSystemTilt { id, new_tilt_deg })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_solar_thermal_system_tilt<Op: From<ChangeSolarThermalSystemTilt>>(id: crate::model::EntityId, new_tilt_deg: f64) -> Op {
+    ChangeSolarThermalSystemTilt { id, new_tilt_deg }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSolarThermalSystemTilt {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSolarThermalSystemTilt
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSolarThermalSystemTilt>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "solar-thermal-system", kind: "change-solar-thermal-system-tilt", record: "ChangedSolarThermalSystemTilt" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

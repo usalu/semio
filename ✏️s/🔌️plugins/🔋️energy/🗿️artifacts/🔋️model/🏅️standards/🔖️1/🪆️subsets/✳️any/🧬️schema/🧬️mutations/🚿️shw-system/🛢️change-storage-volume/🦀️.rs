@@ -1,8 +1,7 @@
 //! 🛢️ Energy model mutation — `ChangeShwSystemStorageVolume`: Sets storage volume (m³) on one service hot water system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeShwSystemStorageVolume {
     pub new_storage_volume_m3: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_shw_system_storage_volume(id: crate::model::EntityId, new_storage_volume_m3: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeShwSystemStorageVolume(ChangeShwSystemStorageVolume { id, new_storage_volume_m3 })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_shw_system_storage_volume<Op: From<ChangeShwSystemStorageVolume>>(id: crate::model::EntityId, new_storage_volume_m3: f64) -> Op {
+    ChangeShwSystemStorageVolume { id, new_storage_volume_m3 }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeShwSystemStorageVolume {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeShwSystemStorageVolume
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeShwSystemStorageVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "service-hot-water-system", kind: "change-shw-system-storage-volume", record: "ChangedShwSystemStorageVolume" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

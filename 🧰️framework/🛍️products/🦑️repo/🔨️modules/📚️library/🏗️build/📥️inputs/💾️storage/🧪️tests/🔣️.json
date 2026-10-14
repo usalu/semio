@@ -1,0 +1,1 @@
+{"version":1,"maximumMilliseconds":2000,"valid":[{"version":1,"wait":false},{"version":1,"wait":true}],"invalid":[{"version":2,"wait":false},{"version":1},{"version":1,"wait":0},{"version":1,"wait":false,"path":"foreign"}],"deferred":{"acquired":false},"complete":{"acquired":true},"graph":{"version":1,"projects":{},"dependencies":[]}}

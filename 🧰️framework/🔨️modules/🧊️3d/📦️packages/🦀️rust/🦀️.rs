@@ -13,14 +13,8 @@
 //! instead of reaching back across this crate for it — this crate had zero production consumers
 //! of those types left of its own (confirmed by repo-wide grep before the move).
 
-// 🧬️ `#[derive(ToValue, FromValue)]` aliases (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01), mirroring `🕸️graph`'s crate-root convention (`extern crate` names are visible
-// unqualified from every submodule, not just this file). `dsl_core` resolves to `protocol::value`
-// — this crate has no `semio-framework-os-kernel` dependency at all (the `brep`-feature-gated
-// `⚙️engine` mount that once needed it moved out entirely in ticket
-// 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME) — so every `#[value(...)]` container below names
-// `protocol` (`semio-framework-replication`) explicitly via `#[value(crate = "::protocol::value")]`.
-extern crate protocol as dsl_core;
+// 🧬️ `#[derive(ToValue, FromValue)]` alias. This crate has no `semio-framework-os-kernel` dependency, so every
+// `#[value(...)]` container names the value crate itself via `#[value(crate = "::semio_framework_value")]`.
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️Mesh

@@ -3,7 +3,7 @@ import { requestedCompilerAdmissionControlV1 } from "../../../../../../../🔨�
 import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -11,6 +11,8 @@ import { repoCacheDirectory } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🏷️ The one version every crate in this workspace carries (`[workspace.package] version`). */
 export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
@@ -32,7 +34,10 @@ export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWork
 /** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
 export async function buildRepositoryCargoArtifacts(manifest: string, args: string[], root: string, options: Omit<CargoArtifactBuildOptionsV1,"storage"|"sourceBoundary">&Readonly<{network:CargoDependencyNetworkV1}>): Promise<void> {
   const policy = repositoryCargoArtifactBuildPolicyV1(root, root, options.environment ?? process.env), control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs), path = resolve(root, manifest);
-  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root), root, [options.command ?? "build", "--manifest-path", path, ...args], root, options.environment ?? process.env);
   const environment = options.environment ?? process.env;
-  await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,store=>withRepositoryCargoInputsV1({workspace:root,manifest:path,args,network:options.network,control,storage:store.storage,environment:store.environment},environment=>buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,environment})));
+  await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,async store=>{
+    const storage={...repositoryCargoPreparationStorageV1(root),directory:requireNativeStoragePathV1(store.root,join(store.buildDirectory,"preparation"))},preparedEnvironment={...store.environment,CARGO_NET_OFFLINE:String(options.network.offline)},request=cargoWorkspacePreparationInvocationV1(storage,root,[options.command??"build","--manifest-path",path,...args],root,preparedEnvironment);
+    if(request){await store.storage.recheck();const output=await captureOwnedCommandV1(request.command,[...request.args],request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);await store.storage.recheck();}
+    return withRepositoryCargoInputsV1({workspace:root,manifest:path,args,network:options.network,control,storage:store.storage,environment:preparedEnvironment},environment=>buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,environment}));
+  });
 }

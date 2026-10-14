@@ -7,12 +7,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Puzzle3dSnapshot;
-
-/// 📄️ The `concrete-forest` example scene_snapshot, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio");
-/// 📄️ The `nakagin-capsule-tower` example scene_snapshot, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio");
+use crate::snapshot::Puzzle3dSnapshot;
 
 /// 📖️ Parses `.puzzle3d` DSL text into a `Puzzle3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle3dSnapshot, semio_framework_diagnostic::TextError> {
@@ -27,7 +22,7 @@ pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 
 //#endregion 🧪️Tests
 
@@ -39,8 +34,7 @@ pub type Puzzle3dSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
+use crate::snapshot::*;
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
@@ -49,7 +43,7 @@ impl pack::snapshot::ArtifactDsl for Puzzle3dSnapshot {
     fn envelope_id() -> &'static str {
         "puzzle.puzzle3d"
     }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+    pub fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -69,15 +63,8 @@ impl pack::snapshot::ArtifactDsl for Puzzle3dSnapshot {
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{Puzzle3dSnapshot};
-use ::semio_framework_schema::ArtifactSchema;
+use crate::*;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::Puzzle3dMeta;
-use crate::standards::v1::subsets::any::schema::Puzzle3dObject;
-use crate::standards::v1::subsets::any::schema::Puzzle3dAttraction;
-use crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume;
-use crate::standards::v1::subsets::any::schema::Puzzle3dReference;
 
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Puzzle3dEngineCommand {

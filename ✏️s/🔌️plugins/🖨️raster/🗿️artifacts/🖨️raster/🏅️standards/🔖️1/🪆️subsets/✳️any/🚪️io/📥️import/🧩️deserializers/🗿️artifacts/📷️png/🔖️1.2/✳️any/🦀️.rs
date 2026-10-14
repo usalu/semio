@@ -4,8 +4,8 @@
 //! are genuinely read — nothing is fabricated.
 //!
 //! 🧾️ `encode_png` always re-emits canonical RGBA8 (color type 6, bit depth 8), so this hop is lossless in both directions.
-use crate::standards::v1::subsets::any::io::{raster_document_from_semio_image, semio_image_from_format, PNG_DIALECT};
-use crate::RasterSnapshot;
+use crate::{raster_document_from_semio_image, semio_image_from_format, PNG_DIALECT};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let decoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(bytes)?;

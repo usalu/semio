@@ -1,8 +1,8 @@
 //! 🗼 `insert-tower` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertTower;
-use crate::diff::{En1998Diff, En1998TowerDelta};
-use crate::En1998Snapshot;
+use crate::insert_tower::InsertTower;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998TowerDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertTower, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.towers.iter().any(|existing| existing.id == payload.tower.id) {

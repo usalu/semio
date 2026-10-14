@@ -1,7 +1,9 @@
 //! 🔺️ Sparse diff builder for `CreateSupport`.
 use super::CreateSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportInsertion, Fem3dSupportsDelta};
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

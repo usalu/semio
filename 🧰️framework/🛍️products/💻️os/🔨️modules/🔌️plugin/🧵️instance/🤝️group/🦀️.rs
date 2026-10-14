@@ -67,7 +67,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
 
     fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
         if self.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        let step=crate::bounded_ownership::original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{let step=self.advance_private_child_group_granted(mounted,same,grant)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;
+        let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{let step=self.advance_private_child_group_granted(mounted,same,grant)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;
         let ready=self.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9);
         Ok(if ready{RetainedCloneStep::Complete(step.progress().unwrap_or_default())}else{RetainedCloneStep::Progress(step.progress().unwrap_or_default())})
     }
@@ -150,7 +150,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         let lease=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("mounted private publication requires its original cancellation lease"))?;
         let cancelled=lease.token.is_cancelled_now()||lease.publication_claim.is_cancelled()||lease.handle.publication_scope.is_cancelled()||lease.document_claim.as_ref().is_some_and(|claim|claim.is_cancelled());
         if cancelled||(owner.closing&&!mounted.owned_child_result_pending)||(mounted.owned_child_committed&&!mounted.owned_child_result_pending){
-            let grant=crate::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.close);
+            let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.close);
             let demand=self.private_child_group_operation_close_demands(operation,grant.maximum_copy_bytes)?;
             if demand.copy_bytes>grant.maximum_copy_bytes||demand.depth>grant.maximum_depth{return Err(plugin_sdk_fault("mounted retirement exceeds its original copy or depth admission").into());}
             self.close_private_child_group_operation_step(operation,cx,grant)?;
@@ -166,7 +166,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         if step.progress()!=Default::default(){mounted.publication_progress=mounted.publication_progress.saturating_add(1);}
         if !matches!(step,RetainedCloneStep::Complete(_)){return Ok(());}
         if cx.should_yield()||!self.typed_composed_outbox.can_push(){return Ok(());}
-        let grant=crate::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.maintenance);if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+        let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.maintenance);if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
         let generation=self.child_content_generation.checked_add(1).ok_or_else(||plugin_sdk_fault("private child frontier generation exhausted"))?;
         if !self.child_content_root.is_empty()&&!self.child_content_retirements.can_insert(generation){return Ok(());}
         let sequence=self.next_command_seq.checked_add(1).ok_or_else(||plugin_sdk_fault("private command history sequence exhausted"))?;
@@ -201,7 +201,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
     }
     pub(crate) fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}
     pub(crate) fn close_private_child_group_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
-        let grant=crate::bounded_ownership::original_lifecycle_grant(cx,grant);
+        let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,grant);
         let demand=self.private_child_group_close_demands(grant.maximum_copy_bytes)?;
         if self.private_child_groups_terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
         if !plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
@@ -217,7 +217,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
     }
     pub(crate) fn close_private_child_group_operation_step(&mut self,operation:u64,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
         let demand=self.private_child_group_operation_close_demands(operation,loan.maximum_copy_bytes)?;
-        let step=crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             let step=self.close_private_child_group_operation_granted(operation,same,grant)?;
             let terminal=self.private_child_groups.get(operation).is_none();
             Ok((match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>if terminal{PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)},semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"private group retains its original source"}},terminal))

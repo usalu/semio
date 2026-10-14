@@ -24,7 +24,7 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn attached_store(n: Option<i32>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, ChannelBackboneRemote) {
@@ -51,9 +51,9 @@ fn announced_operations(remote: &ChannelBackboneRemote) -> Vec<crate::os_spr::Mu
 /// 💾️ The value both persisted forms (pack + spr, dsl + ops) reload to — they must agree.
 async fn persisted_n(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> Option<i32> {
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let pack = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pack parses");
+    let pack = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses");
     let text_files = print_document_text(store.envelope()).await.expect("text prints");
-    let text = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &text_files.ops).await.expect("text parses");
+    let text = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &text_files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses");
     let (from_pack, from_text) = (pack.snapshot.n, text.snapshot.n);
     test_support::retire_parsed_document(pack);
     test_support::retire_parsed_document(text);
@@ -332,8 +332,8 @@ async fn an_open_transaction_refuses_every_other_command_and_retires_its_operati
 /// under it, onto one state and one applied order.
 #[semio_framework_async_macros::async_test]
 async fn a_committed_transaction_converges_with_the_replicas_that_edited_under_it() {
-    let mut author = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None), ActorId("author".into())).await;
-    let mut peer = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None), ActorId("peer".into())).await;
+    let mut author = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("author".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut peer = ArtifactStore::new_with_actor(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId("peer".into()), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut author, ArtifactCommand::Apply { mutations: vec![set(1)], transaction: None }).await.expect("a shared edit");
     for event in author.event_log().expect("log") {
         peer.ingest_remote(event).await.expect("the peer takes the shared edit");
@@ -373,7 +373,7 @@ async fn a_committed_transaction_converges_with_the_replicas_that_edited_under_i
 /// edit once with the ref; a batch-opened transaction aborts with zero trace.
 #[semio_framework_async_macros::async_test]
 async fn batched_gestures_stream_into_one_open_edit_and_a_closing_gesture_commits_it() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store.closes_on_drop();
     let (channel, remote) = ChannelBackbone::pair("batched-transaction").await;
@@ -420,7 +420,7 @@ async fn a_history_past_one_page_keeps_admitting_edits() {
 #[semio_framework_async_macros::async_test]
 async fn an_abort_restores_the_redo_stack_and_the_cursor_on_both_routes() {
     for batched in [false, true] {
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "redo", DemoSnapshot { n: Some(0) }, None)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "redo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners());
         store.closes_on_drop();
         for n in [1, 2] {

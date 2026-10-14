@@ -1,8 +1,8 @@
 //! 🏷️ `change-thermal-bridge-bb2-type` diff — patches the row's `bb2_type`; an id the document does not hold is a `mutation.invariant`.
 
-use super::ChangeThermalBridgeBb2Type;
-use crate::diff::{Din4108Diff, Din4108ThermalBridgeDelta, Din4108ThermalBridgePatch};
-use crate::Din4108Snapshot;
+use crate::change_thermal_bridge_bb2_type::ChangeThermalBridgeBb2Type;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ThermalBridgeDelta, Din4108ThermalBridgePatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeThermalBridgeBb2Type, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(row) = base.thermal_bridges.iter().find(|row| row.id == payload.bridge_id) else {

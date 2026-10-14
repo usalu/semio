@@ -1,9 +1,9 @@
 //! 🪆️ Subset root for `s.fem.fem2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`,
 //! `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
-//! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::fem2d`/
-//! `crate::viewer::fem2d` are mounted at the artifact crate's top-level `editor`/`viewer` modules.
-//! The artifact root also owns the `crate::examples::demo` source used here.
+//! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — the editor and viewer come from
+//! `semio-s-artifact-fem-2d-editor` and `semio-s-artifact-fem-2d-viewer`.
+//! The bundled examples come from `semio-s-artifact-fem-2d-io`.
 //!
 //! 🚪️ `io: io::io()` matches the `🗒️note`/`🧱️block` template exactly: the local
 //! `io_declaration()` this file used to carry (with `entries: &[]` and a DEVIATION note explaining
@@ -13,7 +13,7 @@
 //! the declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
 //! fidelity table.
 
-use crate::editor::fem2d as editor;
+use semio_s_artifact_fem_2d_editor::editor::fem2d as editor;
 use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema;
 use semio_s_artifact_fem_2d_viewer::viewer::fem2d as viewer;
@@ -29,17 +29,63 @@ fn examples() -> &'static [ExampleSource] {
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::fem2d_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![fem2d_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
 pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: FEM2D_DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::fem2d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        schema: SchemaDeclaration { descriptor: fem2d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::Fem2dViewer, PA>(viewer::create_fem2d_viewer()),
         editor: editor_surface::<editor::Fem2dPlayApp, PA>(editor::create_fem2d_app()),
         examples: examples(),
     }
 }
+
+//#region 🔖️Descriptor
+/// 🧬️ Descriptor for `s.fem.fem2d` — twenty handcrafted schema leaves.
+pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
+        id: "s.fem.fem2d",
+        artifact: ::semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️schema/🦀️.rs"), typescript: include_str!("🧬️schema/🟦️.ts"), graphql: include_str!("🧬️schema/🔗️.graphql"), json_schema: include_str!("🧬️schema/🔣️.json"), proto: include_str!("🧬️schema/🛰️.proto")
+        },
+        snapshot: ::semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️schema/📸️snapshot/🦀️.rs"),
+            typescript: include_str!("🧬️schema/📸️snapshot/🟦️.ts"),
+            graphql: include_str!("🧬️schema/📸️snapshot/🔗️.graphql"),
+            json_schema: include_str!("🧬️schema/📸️snapshot/🔣️.json"),
+            proto: include_str!("🧬️schema/📸️snapshot/🛰️.proto"),
+        },
+        diff: ::semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️schema/🔺️diff/🦀️.rs"),
+            typescript: include_str!("🧬️schema/🔺️diff/🟦️.ts"),
+            graphql: include_str!("🧬️schema/🔺️diff/🔗️.graphql"),
+            json_schema: include_str!("🧬️schema/🔺️diff/🔣️.json"),
+            proto: include_str!("🧬️schema/🔺️diff/🛰️.proto"),
+        },
+        mutations: ::semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️schema/🧬️mutations/🦀️.rs"),
+            typescript: include_str!("🧬️schema/🧬️mutations/🟦️.ts"),
+            graphql: include_str!("🧬️schema/🧬️mutations/🔗️.graphql"),
+            json_schema: include_str!("🧬️schema/🧬️mutations/🔣️.json"),
+            proto: include_str!("🧬️schema/🧬️mutations/🛰️.proto"),
+        },
+    }
+}
+//#endregion 🔖️Descriptor
+
+//#region 🔖️InferenceDescriptor
+/// 💡️ Registers `s.fem.fem2d.inference`'s facet leaves into the OS-wide inference catalog — call
+/// once at plugin init, alongside `fem2d_artifact_schema_descriptor`'s registration.
+pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
+        id: "s.fem.fem2d.inference",
+        inference: ::semio_framework_schema_registry::FacetLeaves {
+            rust: include_str!("🧬️schema/💡️inferences/🦀️.rs"), typescript: include_str!("🧬️schema/💡️inferences/🟦️.ts"), graphql: include_str!("🧬️schema/💡️inferences/🔗️.graphql"), json_schema: include_str!("🧬️schema/💡️inferences/🔣️.json"), proto: include_str!("🧬️schema/💡️inferences/🛰️.proto")
+        },
+    }
+}
+//#endregion 🔖️InferenceDescriptor

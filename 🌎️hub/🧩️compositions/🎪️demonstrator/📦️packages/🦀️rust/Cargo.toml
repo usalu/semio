@@ -32,6 +32,8 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-procedural-3d-editor = { workspace = true }
+semio-s-artifact-puzzle-3d-editor = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -56,13 +58,14 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 
 value_derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-sourcing-curation = { workspace = true }
-semio-s-artifact-process-process3d = { workspace = true }
 # 🎪️ Link only the artifact surfaces this bundle registers — not whole multi-artifact plugin crates
 # (puzzle 2d/5d, procedural 2d/assembly, gis terrain stay out of the demonstrator wasm link).
 semio-s-artifact-procedural-generation3d = { workspace = true }
 semio-s-artifact-puzzle-3d = { workspace = true }
 semio-s-artifact-gis-gismap = { workspace = true }
 semio-s-artifact-cad-cad-editor = { workspace = true }
+semio-s-artifact-process-process3d-editor = { workspace = true }
+semio-s-artifact-process-process3d-viewer = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

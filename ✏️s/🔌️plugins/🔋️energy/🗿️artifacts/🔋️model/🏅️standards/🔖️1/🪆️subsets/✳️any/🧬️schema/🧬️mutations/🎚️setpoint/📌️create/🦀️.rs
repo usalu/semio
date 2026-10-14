@@ -1,8 +1,7 @@
 //! 📌️ Energy model mutation — `CreateSetpointManager`: Creates one loop setpoint manager. `SetpointManagerKind` is a tagged union with no `dsl::DslField`, so the variant travels as its wire name beside the four outdoor-air-reset limits, and every other variant has to carry them as zero.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -25,8 +24,8 @@ pub struct CreateSetpointManager {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_setpoint_manager(
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_setpoint_manager<Op: From<CreateSetpointManager>>(
     id: crate::model::EntityId,
     name: String,
     kind: String,
@@ -37,18 +36,21 @@ pub fn create_setpoint_manager(
     schedule_present: bool,
     schedule_id: crate::schedule::ScheduleId,
     index: Option<u32>,
-) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSetpointManager(CreateSetpointManager { id, name, kind, low_outdoor_c, high_outdoor_c, low_setpoint_c, high_setpoint_c, schedule_present, schedule_id, index })
+) -> Op {
+    CreateSetpointManager { id, name, kind, low_outdoor_c, high_outdoor_c, low_setpoint_c, high_setpoint_c, schedule_present, schedule_id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSetpointManager {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSetpointManager
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSetpointManager> + From<crate::DeleteSetpointManager>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "setpoint-manager", kind: "create-setpoint-manager", record: "CreatedSetpointManager" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

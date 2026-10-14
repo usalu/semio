@@ -1,8 +1,7 @@
 //! 🏠️ Energy model mutation — `RenameZone`: Sets one zone's identity field. Zone names are the key every EnergyPlus-class report keys on, so a duplicate is refused.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RenameZone {
     pub new_name: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_zone(id: crate::model::EntityId, new_name: String) -> EnergyModelMutation {
-    EnergyModelMutation::RenameZone(RenameZone { id, new_name })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn rename_zone<Op: From<RenameZone>>(id: crate::model::EntityId, new_name: String) -> Op {
+    RenameZone { id, new_name }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RenameZone {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RenameZone
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RenameZone>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "zone", kind: "rename-zone", record: "RenamedZone" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

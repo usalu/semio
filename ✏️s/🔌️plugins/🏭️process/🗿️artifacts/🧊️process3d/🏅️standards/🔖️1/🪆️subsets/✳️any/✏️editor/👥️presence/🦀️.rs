@@ -1,5 +1,15 @@
 //! 👥️ Process 3d presence — shareable live ephemeral state + mutations.
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🧩️Modules
+
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactPack;

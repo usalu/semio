@@ -63,7 +63,7 @@
 use crate::air_exchange::InfiltrationMethod;
 use crate::model::{Construction, EntityId, Fenestration, GasKind, Material, Model, OutsideBoundary, Surface, SurfaceClass};
 use crate::schedule::ScheduleId;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_pack_json::{Object, Value};
 
 //#region 🔖️Constants

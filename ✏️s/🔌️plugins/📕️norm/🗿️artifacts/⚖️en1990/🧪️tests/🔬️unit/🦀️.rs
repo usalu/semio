@@ -2,7 +2,7 @@
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_hierarchical_subject() {
-    let snapshot = crate::En1990Snapshot::default();
+    let snapshot = semio_s_artifact_norm_en1990_model::En1990Snapshot::default();
     assert!(!snapshot.permanents.is_empty());
     assert!(!snapshot.variables.is_empty());
     assert!(!snapshot.members.is_empty());

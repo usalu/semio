@@ -1007,7 +1007,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   assert.equal(new Set(documents.map((row: any) => api.printDocumentOutputDirectory(row.id, root))).size, documents.length);
   assert.throws(() => api.printDocument("../report"), /Unknown/);
   const project = JSON.parse(readFileSync(join(root, product, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-  const targets = plugin.cacheInternals.printDocumentTargets(project, join(product, "📦️packages/🟦️typescript"), root);
+  const targets = await plugin.cacheInternals.printDocumentTargets(project, join(product, "📦️packages/🟦️typescript"), root);
   for (const document of documents) {
     const target = targets[`build-${document.id}`];
     assert.ok(target, document.id);

@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::generation2d::transient::component::mutations::*;
-use crate::editor::generation2d::transient::component::Generation2dTransient;
+use crate::mutations::*;
+use crate::Generation2dTransient;
 
 impl protocol::OpBinary for Generation2dTransientMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

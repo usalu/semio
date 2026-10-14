@@ -13,6 +13,7 @@ pub enum RetainedOrderedMapRemoveStep { Progress(RetainedOrderedMapRemoveProgres
 impl RetainedOrderedMapRemoveStep {pub fn progress(self)->RetainedOrderedMapRemoveProgress{match self{Self::Progress(p)|Self::Complete{progress:p,..}=>p}}}
 
 #[derive(crate::RetireOwned)]
+#[value(crate="crate")]
 struct RemoveWorkspace<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync>{map:RetainedOrderedMap<K,V>,key:K}
 struct State<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> {map:Option<RetainedOrderedMap<K,V>>,key:Option<K>,removed:Option<(K,V)>,page:Option<Vec<(K,V)>>,lookup:RetainedOrderedMapLookupCursor<K>,lease:super::super::RetainedCloneBorrowAuthority<RemoveWorkspace<K,V>>,target:Option<usize>,shift:usize,phase:u8,found:bool,closing:bool,spent:bool,close:RetainedCloneClose}
 /// ➖️ Retains the original map, search key and physical leaf owners through every refused turn.

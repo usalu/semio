@@ -79,7 +79,7 @@ def leaves(prefix, body):
 
 def inline_spans(text):
     spans = []
-    for m in re.finditer(r"(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+(" + IDENT + r")\s*\{", text):
+    for m in re.finditer(r"(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+(\$?" + IDENT + r")\s*\{", text):
         depth, j = 0, m.end() - 1
         while j < len(text):
             if text[j] == "{":
@@ -244,6 +244,9 @@ def rewrite_file(model, f, text, raw, own_new, report):
             return (model.new_ident, newp)
         if moved_file:
             in_test = f in model.crate.test_files or "🧪️tests" in os.path.relpath(f, model.artifact) or any(a <= offset < b for a, b in tspans)
+            if model.spec.get("monolith_dependency"):
+                report["mono_dep"].append((os.path.relpath(f, REPO), raw.count("\n", 0, offset) + 1, "::".join(target)))
+                return (model.ident, tuple(x for x in target if x != "component"))
             if in_test and model.spec.get("test_upward") == "monolith":
                 report["test_upward"].append((os.path.relpath(f, REPO), raw.count("\n", 0, offset) + 1, "::".join(target)))
                 return (model.ident, tuple(x for x in target if x != "component"))
@@ -277,6 +280,8 @@ def rewrite_file(model, f, text, raw, own_new, report):
             shown = (d[0] + "::" + "::".join(d[1])) if d is not None else "::".join(path)
             if d is not None and not d[1]:
                 shown = d[0]
+                if not alias and not glob and path:
+                    alias = path[-1]
             tail = "::*" if glob else (f" as {alias}" if alias else "")
             if selfleaf and not alias and d is None:
                 shown = "::".join(path)
@@ -388,7 +393,7 @@ def render(children, root_dir, indent, gate, keep=lambda c: True):
     lines, previous = [], None
     for child in children:
         if child[0] == "glob":
-            if previous is not None and previous[0] == "mount" and previous[1] == "component" and keep(previous):
+            if any(c[0] == "mount" and c[1] == "component" and keep(c) for c in children):
                 lines.append(f"{pad}pub use component::*;")
             continue
         if not keep(child):
@@ -493,7 +498,7 @@ def main():
         root_file = os.path.join(owner_dir, "🦀️.rs")
     if os.path.dirname(root_file) != os.path.normpath(owner_dir):
         raise SystemExit(f"owner dir {owner_dir} is not the root file's dir {root_file}")
-    report = {"upward": [], "facades": [], "test_upward": []}
+    report = {"upward": [], "facades": [], "test_upward": [], "mono_dep": []}
     writes = {}
     for f in sorted(crate.files):
         raw, text = model.raw[f], strip(model.raw[f])
@@ -758,7 +763,7 @@ def main():
     for name, row in extra.items():
         if not any(r.startswith(name + " =") for r in lib_rows):
             lib_rows.append(f"{name} = {row}")
-    ws_root = model.artifact
+    ws_root = os.path.join(REPO, spec["workspace"]) if spec.get("workspace") else model.artifact
     ws_manifest = os.path.join(ws_root, "Cargo.toml")
     rel_ws = os.path.relpath(ws_root, pkg_dir)
     manifest = [
@@ -770,6 +775,10 @@ def main():
         manifest += ["", "[dev-dependencies]"] + sorted(set(dev_rows))
     if tdev_rows:
         manifest += ["", "[target.'cfg(not(target_arch = \"wasm32\"))'.dev-dependencies]"] + sorted(set(tdev_rows))
+    if report["mono_dep"]:
+        mono_pkg = re.search(r'(?m)^name\s*=\s*"([^"]+)"', mono_text).group(1)
+        i = manifest.index("[dependencies]")
+        manifest.insert(i + 1, f"{mono_pkg} = {{ workspace = true }}")
     if report["test_upward"]:
         mono_pkg = re.search(r'(?m)^name\s*=\s*"([^"]+)"', mono_text).group(1)
         row = f'{mono_pkg} = {{ path = "{os.path.relpath(mono_dir, pkg_dir)}" }}'

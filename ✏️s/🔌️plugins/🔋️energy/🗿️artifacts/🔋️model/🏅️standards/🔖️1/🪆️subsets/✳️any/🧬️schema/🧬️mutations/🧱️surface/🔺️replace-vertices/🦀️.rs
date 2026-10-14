@@ -1,8 +1,7 @@
 //! 🔺️ Energy model mutation — `ReplaceSurfaceVertices`: Swaps the surface's whole polygon. Geometry is one value — moving a single corner would leave the other vertices describing a different plane — so the taxonomy's `replace` verb carries the full ring, minimum three vertices.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ReplaceSurfaceVertices {
     pub new_vertices_m: Vec<[f64; 3]>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_surface_vertices(id: crate::model::EntityId, new_vertices_m: Vec<[f64; 3]>) -> EnergyModelMutation {
-    EnergyModelMutation::ReplaceSurfaceVertices(ReplaceSurfaceVertices { id, new_vertices_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn replace_surface_vertices<Op: From<ReplaceSurfaceVertices>>(id: crate::model::EntityId, new_vertices_m: Vec<[f64; 3]>) -> Op {
+    ReplaceSurfaceVertices { id, new_vertices_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceSurfaceVertices {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceSurfaceVertices
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceSurfaceVertices>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "surface", kind: "replace-surface-vertices", record: "ReplacedSurfaceVertices" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

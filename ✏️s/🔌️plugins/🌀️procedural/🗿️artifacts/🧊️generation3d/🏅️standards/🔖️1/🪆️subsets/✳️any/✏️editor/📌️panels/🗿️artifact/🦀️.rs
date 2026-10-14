@@ -1,7 +1,7 @@
 //! 📄️ Generation3d play app panel — the document tree: nodes, ports and wires of the open graph.
 
-use crate::editor::generation3d::config::Generation3dConfig;
-use crate::editor::generation3d::modes::edit::windows::flow::graph_outline;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;

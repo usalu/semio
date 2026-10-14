@@ -19,11 +19,11 @@ pub struct CreateEnergyModel {
 
 impl<Op> MutationKind<CadSnapshot, Op> for CreateEnergyModel
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::create_energy_model::CreateEnergyModel> + From<crate::delete_energy_model::DeleteEnergyModel>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_energy_model::CreateEnergyModel> + From<crate::delete_energy_model::DeleteEnergyModel>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "energy-model", kind: "create-energy-model", record: "CreatedEnergyModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

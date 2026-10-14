@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "string",
+  "enum": [
+    "prototype",
+    "release"
+  ],
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "root": "next",
+        "owner": "repo-coordinator:next",
+        "maximumOutputBytes": 2147483648,
+        "maximumOutputFiles": 131072
+      }
+    }
+  }
+}

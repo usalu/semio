@@ -1,5 +1,6 @@
 //! 🧵️ Actual mapped glyph owners apply default GSUB with genuine GDEF eligibility and retained children.
-use super::{FontLookup,FontLookupPlanCursor,class::FontGlyphClassCursor,ligature::FontLigatureCursor,substitute::FontSubstitutionCursor,face::{FontClusterMapping,FontMappedScalar},super::{FontFace,FontOutlineLimits,FontProgress,reserve_slot}};
+use super::{FontLookup,FontLookupPlanCursor,class::FontGlyphClassCursor,ligature::FontLigatureCursor,substitute::FontSubstitutionCursor,face::{FontClusterMapping,FontMappedScalar}};
+use semio_framework_2d_text_font::{FontFace,FontOutlineLimits,FontProgress,reserve_slot};
 use super::context::apply::FontContextLayoutCursor;
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 #[derive(semio_framework_value::RetireOwned)]

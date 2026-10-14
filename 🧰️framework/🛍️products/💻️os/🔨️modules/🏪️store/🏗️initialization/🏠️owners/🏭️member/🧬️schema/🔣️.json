@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/store/member-producer/schema.json",
+  "title": "Original Member Store Producer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "selection",
+    "snapshot",
+    "catalog",
+    "custody",
+    "body",
+    "grant",
+    "close"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "selection": {
+      "const": "explicit-owned-child-producer"
+    },
+    "snapshot": {
+      "const": "producer-associated-original-open-operation"
+    },
+    "catalog": {
+      "const": "same-original-factories-and-source-birth-price"
+    },
+    "custody": {
+      "const": "original-request-step-context-and-source-loan"
+    },
+    "body": {
+      "const": "actual-initial-member-size-of-including-producer"
+    },
+    "grant": {
+      "const": "caller-callee-minimum-without-renewal"
+    },
+    "close": {
+      "const": "complete-original-paid-retirement-before-source-return"
+    }
+  }
+}

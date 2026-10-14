@@ -1,3 +1,7 @@
+import {nxToolingInstallIdentityV1} from "./📦️sdk/🪪️identity/🟦️.ts";
+export {nxToolingInstallIdentityV1} from "./📦️sdk/🪪️identity/🟦️.ts";
+import {withManagedToolingProvisionV1} from "./🧹️retention/📥️physical/🟦️.ts";
+import retentionSchema from "./🧹️retention/📥️physical/🧬️schema/🔣️.json";
 import {preflightNxAuthorizersV1} from "./🔏️authorizers/📥️loading/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type {RepositoryToolingStoreV1} from "../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
@@ -6,21 +10,28 @@ import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/�
 import { createHash, randomUUID } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import {toolPatchReceipt,assertToolingPatchV1} from "./🩹️patch/🟦️.ts";
-import {captureNxAuthorizerSourcesV1,nxAuthorizerSourcesHoldV1} from "./🔏️authorizers/🟦️.ts";
+import {captureNxAuthorizerSourcesV1} from "./🔏️authorizers/🟦️.ts";
+import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "./🔏️authorizers/📦️snapshot/🟦️.ts";
 import {nxAuthorizerReceiptHoldsV1} from "./🔏️authorizers/📤️receipt/🟦️.ts";
 import {cloneNxSdkSnapshotV1,nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1} from "./📦️sdk/📥️snapshot/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
-import {runTool} from "../📦️dependencies/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { prepareBun } from "./🟦️bun/📜️script.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 export type NxTooling = { readonly cli: string; readonly modulePath: string; readonly bun: string; readonly authorizer:string };
 const RECIPE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools";
 const STORE = ".cache/b/t/m/nx";
+
+/** 🕹️ Executes setup children with the original awaited progress, continuation, signal and remaining deadline. */
+export async function runNxSetupCommandV1(command:string,args:string[],cwd:string,label:string,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>):Promise<void>{
+ const started=performance.now(),advance=async()=>{checkResourceLeaseControl(control);await control.publish({resource:label,mode:"exclusive",elapsedMs:performance.now()-started});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);};
+ await advance();const remaining=checkResourceLeaseControl(control);if(remaining!==null&&Math.floor(remaining)<1)throw Error("Original compiler admission deadline exhausted");await runOwnedCommand(command,args,cwd,label,remaining===null?0:Math.floor(remaining),{signal:control.signal,env:environment,onProgress:advance});await advance();
+}
 
 /** 🛣️ Rejects substituted directories before creating a tooling installation. */
 function regularDirectory(path: string): void {
@@ -38,7 +49,7 @@ function existsOwnedDirectory(path:string):boolean{
 }
 
 /** 🔗️ Selects an immutable toolset through Nx's native installation directory. */
-export async function activateNxTools(workspace: string, tooling: NxTooling, store:RepositoryToolingStoreV1): Promise<void> {
+async function activateNxToolsOwnedV1(workspace: string, tooling: NxTooling, store:RepositoryToolingStoreV1): Promise<void> {
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=store.control.signal;signal.throwIfAborted();
   const root = realpathSync(workspace), nx = join(root, ".nx"), pointer = join(nx, "installation"), selected = realpathSync(dirname(tooling.modulePath));
   if (dirname(selected) !== join(root, STORE) || !/^[a-f0-9]{64}$/.test(basename(selected))) throw new Error("Nx tooling must be an owned immutable installation");
@@ -76,13 +87,6 @@ export function nxToolingInstallManifestV1(recipe:{name:string;private:boolean;p
   return {name:recipe.name,private:recipe.private,packageManager:recipe.packageManager,dependencies:recipe.dependencies,patchedDependencies:recipe.semio.toolPatches};
 }
 
-/** 🧮️ Keys installed dependency and patch bytes independently of installer implementation edits. */
-export function nxToolingInstallIdentityV1(environment: { platform: string; architecture: string; libc: string }, files: ReadonlyMap<string, Uint8Array>): string {
-  const hash = createHash("sha256").update(`nx-tooling-install-v3\0${environment.platform}\0${environment.architecture}\0${environment.libc}\0`);
-  for (const [name, bytes] of files) hash.update(name + "\0").update(bytes).update("\0");
-  return hash.digest("hex");
-}
-
 /** 🧩️ Gives Bun each patch's immutable content identity while sharing ordinary package downloads. */
 export function nxToolingInstallFilesV1(recipe: Parameters<typeof nxToolingInstallManifestV1>[0], lock: unknown, sources: ReadonlyMap<string,Uint8Array>): Map<string,Buffer> {
   if(!lock||typeof lock!=="object"||Array.isArray(lock))throw Error("Pinned tooling lock must be an object");
@@ -98,7 +102,7 @@ export function nxToolingInstallFilesV1(recipe: Parameters<typeof nxToolingInsta
 }
 
 /** 🛠️ Acquires the frozen Nx toolchain independently of application dependency synchronization. */
-export async function provisionNxTools(workspace: string, store:RepositoryToolingStoreV1): Promise<NxTooling> {
+async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolingStoreV1): Promise<NxTooling> {
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw Error("Original declared tooling partition required");const signal=store.control.signal;signal.throwIfAborted();
   const root = realpathSync(workspace), recipe = join(root, RECIPE), files = new Map<string, Buffer>();
   for (const name of ["package.json", "bun.lock"]) files.set(name, readFileSync(join(recipe, name)));
@@ -161,7 +165,7 @@ export async function provisionNxTools(workspace: string, store:RepositoryToolin
         for(const[path,bytes]of installFiles){mkdirSync(dirname(join(sdkStaging,path)),{recursive:true});writeFileSync(join(sdkStaging,path),bytes);}
         console.log(`Acquiring pinned Nx ${manifest.dependencies.nx} SDK snapshot…`);
         for(const entry of readdirSync(downloadCache))if(entry.includes("_patch_hash="))rmSync(join(downloadCache,entry),{recursive:true,force:true});
-        await runTool(bun,["install","--frozen-lockfile","--ignore-scripts","--cache-dir",downloadCache,"--backend","copyfile"],sdkStaging,signal,false,store.environment,repositoryCargoPreparationStorageV1(root));
+        await runNxSetupCommandV1(bun,["install","--frozen-lockfile","--ignore-scripts","--cache-dir",downloadCache,"--backend","copyfile"],sdkStaging,"nx:install",store.control,store.environment);
         signal.throwIfAborted();writeFileSync(join(sdkStaging,".semio-nx-sdk.json"),JSON.stringify({version:1,digest:sdkDigest,patches:sdkReceipt(sdkStaging)}));sdkInstalled(sdkStaging);renameSync(sdkStaging,sdkDirectory);
       }finally{rmSync(sdkStaging,{recursive:true,force:true});}
     });
@@ -170,8 +174,8 @@ export async function provisionNxTools(workspace: string, store:RepositoryToolin
       await withResourceLeases({directory:join(root,".cache/b/l/m/data"),signal:control.signal,control,resources:[{resource:"nx-sdk-snapshot:"+sdkDigest,mode:"shared"}]},async()=>{const result=await cloneNxSdkSnapshotV1(sdkDirectory,staging,control);console.log("[DEBUG] pinned SDK snapshot reused files="+result.files+" bytes="+result.bytes+" elapsedMs="+Math.round(performance.now()-started));});
     });
     signal.throwIfAborted();
-    await runTool(bun,[join(recipe,"🔏️authorizers/📜️script.ts"),"compile",root,join(staging,".semio-authorizer-source.json"),staging],root,signal,false,store.environment,repositoryCargoPreparationStorageV1(root));
-    if(!await nxAuthorizerSourcesHoldV1(root,authorizer,signal)||!await nxAuthorizerSourcesHoldV1(root,compiler,signal))throw Error("Nx authorizer sources changed during provisioning");
+    const captured=Buffer.from(JSON.stringify(snapshotNxAuthorizerSourcesV1(authorizer))+"\n"),snapshot=join(staging,".semio-authorizer-captured.json"),program=join(staging,".semio-authorizer-compiler.mjs"),sealed=await compileNxAuthorizerSnapshotV1(root,snapshotNxAuthorizerSourcesV1(compiler),store.control,"bun"),snapshotDigest=createHash("sha256").update(captured).digest("hex"),programDigest=createHash("sha256").update(sealed.bytes).digest("hex");writeFileSync(snapshot,captured,{flag:"wx",mode:0o444});writeFileSync(program,sealed.bytes,{flag:"wx",mode:0o444});await store.recheck();
+    try{await withResourceLeases({directory:join(root,".cache/b/l/m/data"),control:store.control,signal,resources:[{resource:"nx-authorizer-source:"+snapshot,mode:"shared"},{resource:"nx-authorizer-compiler:"+program,mode:"shared"}]},async()=>{await runNxSetupCommandV1(bun,[program,"compile",root,snapshot,snapshotDigest,staging],root,"nx:authorizers",store.control,store.environment);await store.recheck();if(createHash("sha256").update(readFileSync(program)).digest("hex")!==programDigest||createHash("sha256").update(readFileSync(snapshot)).digest("hex")!==snapshotDigest)throw Error("Original authorizer compiler/snapshot bytes changed");});}finally{rmSync(snapshot,{force:true});rmSync(program,{force:true});}
     const patches:Record<string,ReturnType<typeof toolPatchReceipt>>={},require=createRequire(join(staging,"package.json"));
     for(const [name,path] of Object.entries(JSON.parse(files.get("package.json")!.toString()).patchedDependencies) as [string,string][])patches[name]=toolPatchReceipt(dirname(require.resolve(name.slice(0,name.lastIndexOf("@"))+"/package.json")),files.get(path)!.toString());
     const authorizers={version:1,mode:"release",sourceSha256:authorizer.digest,entry:"semio-authorizers.mjs",outputs:[{path:"semio-authorizers.mjs",sha256:createHash("sha256").update(readFileSync(join(staging,"semio-authorizers.mjs"))).digest("hex")}]};
@@ -182,3 +186,8 @@ export async function provisionNxTools(workspace: string, store:RepositoryToolin
     return installed(destination);
   } finally { rmSync(staging, { recursive: true, force: true }); }
 }
+
+/** 🎟️ Keeps the actual loader inside the same Original registry and generation custody used by retirement. */
+export function activateNxTools(workspace:string,tooling:NxTooling,store:RepositoryToolingStoreV1):Promise<void>{return withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),resources:[{resource:"nx-tooling-provision",mode:"shared"},{resource:"nx-tooling:"+basename(dirname(tooling.modulePath)),mode:"shared"}],control:store.control,signal:store.control.signal},()=>activateNxToolsOwnedV1(workspace,tooling,store));}
+/** 🛠️ Registers every actual provision reader before immutable receipt or SDK loading. */
+export function provisionNxTools(workspace:string,store:RepositoryToolingStoreV1):Promise<NxTooling>{return withManagedToolingProvisionV1(workspace,store,{version:1,minimumAvailableBytes:retentionSchema.definitions.Protocol.const.minimumInstallerAvailableBytes},()=>provisionNxToolsOwnedV1(workspace,store));}

@@ -1,8 +1,8 @@
 
-use super::*;
-use crate::standards::v1::subsets::any::schema::empty_block3d_snapshot;
-use crate::{Block3dVortexKind, Block3dVortexTemplate};
-use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
+use semio_s_artifact_block_3d_mutations::*;
+use semio_s_artifact_block_3d_schema::empty_block3d_snapshot;
+use semio_s_artifact_block_3d_model::{Block3dVortexKind, Block3dVortexTemplate};
+use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
@@ -30,7 +30,7 @@ fn seeded_snapshot() -> Block3dSnapshot {
         description: String::new(),
         attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }],
     });
-    crate::set_vortex_kinds(&mut base, &[Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
+    semio_s_artifact_block_3d_model::set_vortex_kinds(&mut base, &[Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
     base.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
     base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
     base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
@@ -71,11 +71,11 @@ async fn create_rename_delete_vortex_kind_round_trip() {
     let base = empty_block3d_snapshot();
     let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() };
     let created = round_trip(&base, &create_vortex_kind(vortex_kind));
-    assert_eq!(crate::vortex_kinds_of(&created).len(), 1);
+    assert_eq!(semio_s_artifact_block_3d_model::vortex_kinds_of(&created).len(), 1);
     let renamed = round_trip(&created, &rename_vortex_kind("vk0".into(), "renamed".into()));
-    assert_eq!(crate::vortex_kinds_of(&renamed)[0].name, "renamed");
+    assert_eq!(semio_s_artifact_block_3d_model::vortex_kinds_of(&renamed)[0].name, "renamed");
     let deleted = round_trip(&renamed, &delete_vortex_kind("vk0".into()));
-    assert!(crate::vortex_kinds_of(&deleted).is_empty());
+    assert!(semio_s_artifact_block_3d_model::vortex_kinds_of(&deleted).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -273,7 +273,7 @@ async fn missing_target_is_error_per_verb_family() {
 async fn create_duplicate_id_is_fatal_and_never_applies() {
     let mut base = empty_block3d_snapshot();
     let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
-    crate::set_vortex_kinds(&mut base, &[vortex_kind.clone()]);
+    semio_s_artifact_block_3d_model::set_vortex_kinds(&mut base, &[vortex_kind.clone()]);
     let outcome = create_vortex_kind(vortex_kind).diff(&base);
     assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
@@ -304,7 +304,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 async fn deleting_or_creating_a_middle_row_restores_its_original_index() {
     let mut base = empty_block3d_snapshot();
     let kinds: Vec<Block3dVortexKind> = (0..3).map(|n| Block3dVortexKind { id: format!("vk{n}"), name: format!("vk{n}"), label: format!("VK{n}"), color: "#888".into(), default_cable_kind: "cable.link".into() }).collect();
-    crate::set_vortex_kinds(&mut base, &kinds);
+    semio_s_artifact_block_3d_model::set_vortex_kinds(&mut base, &kinds);
     for n in 0..3 {
         base.vortices.push(Block3dVortexTemplate { id: format!("v{n}"), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
         base.compatibility.push(BlockCompatibilityRule { id: format!("c{n}"), source: "a".into(), target: "b".into(), bidirectional: true });

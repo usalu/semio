@@ -4,6 +4,11 @@
 //! normal form of its edit, so composing, inverting and comparing scripts is plain index arithmetic.
 //! Pure `std`: no snapshot, no codec, no framework type.
 
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+
+
 //#region 🔖️Script
 /// ✂️ One list edit: `cuts` name removed entries by base index and key, `puts` name inserted entries by after index.
 #[derive(Clone, Debug, PartialEq, Eq)]

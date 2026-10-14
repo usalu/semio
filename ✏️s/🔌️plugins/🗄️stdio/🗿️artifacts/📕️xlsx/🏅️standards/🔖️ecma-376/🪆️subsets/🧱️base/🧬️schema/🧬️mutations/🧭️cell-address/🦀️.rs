@@ -1,7 +1,16 @@
 //! 🧭️ Namespace-aware, lineage-bound addresses for authoritative SpreadsheetML cells.
 
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{attribute_value, column_letter, element_matches, expanded_element_name, namespace_scope, REL_TYPE_OFFICE_DOCUMENT_STRICT, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT};
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::attribute_value;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::element_matches;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::expanded_element_name;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::namespace_scope;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, REL_TYPE_OFFICE_DOCUMENT};
 

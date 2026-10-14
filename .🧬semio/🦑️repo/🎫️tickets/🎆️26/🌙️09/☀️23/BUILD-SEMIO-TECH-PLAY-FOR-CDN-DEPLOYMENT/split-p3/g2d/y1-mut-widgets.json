@@ -1,0 +1,49 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "monolith": "semio_s_artifact_procedural_2d_mutations",
+ "package": "semio-s-artifact-procedural-2d-mut-widgets",
+ "description": "Procedural generation2d widget mutation leaves: create, delete, replace and move widgets, clear their layout, set slider values and shift nodes",
+ "owner": "🧩️widgets",
+ "moves": [
+  {
+   "from": "create_widget",
+   "to": "create_widget"
+  },
+  {
+   "from": "delete_widget",
+   "to": "delete_widget"
+  },
+  {
+   "from": "replace_widget",
+   "to": "replace_widget"
+  },
+  {
+   "from": "move_widget",
+   "to": "move_widget"
+  },
+  {
+   "from": "clear_widget_layout",
+   "to": "clear_widget_layout"
+  },
+  {
+   "from": "change_slider_value",
+   "to": "change_slider_value"
+  },
+  {
+   "from": "move_nodes",
+   "to": "move_nodes"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "doc": "🧩️ Generation2d widget mutation leaves: create, delete, replace and move widgets, clear their layout, set slider values and shift nodes. Every leaf is generic over the dispatch enum."
+}

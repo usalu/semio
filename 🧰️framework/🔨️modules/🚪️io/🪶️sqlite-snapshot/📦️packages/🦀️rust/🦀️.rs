@@ -21,7 +21,7 @@ pub use component::{
 };
 
 pub(crate) mod sqlite_snapshot {pub use super::component::*;}
-#[path="../../../⏱️control/🦀️.rs"]
-pub mod control;
+#[path="../../🫴️receiving/🦀️.rs"]
+pub mod receiving;
 #[cfg(test)]
-pub(crate) use control as original_control;
+pub(crate) use semio_framework_io_control as original_control;

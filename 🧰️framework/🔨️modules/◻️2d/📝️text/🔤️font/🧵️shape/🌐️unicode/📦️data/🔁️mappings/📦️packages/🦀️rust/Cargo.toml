@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-unicode-mappings"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🔁️ Pinned Unicode decomposition, composition, mirroring and bracket tables asset."
+
+[package.metadata.semio]
+role = "framework"
+id = "unicode-mappings"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_unicode_mappings"
+path = "../../🦀️.rs"

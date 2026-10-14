@@ -1,6 +1,6 @@
 //! 🧾 `outline` — document field structure for the scoped EN 1998 subject.
 
-use crate::En1998Snapshot;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex",

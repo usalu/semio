@@ -39,12 +39,12 @@ fn point_selection_keeps_the_frontmost_equal_candidate() {
 
 #[test]
 fn lasso_samples_yield_and_select_the_polygon_instead_of_its_rectangle() {
-    use crate::commands::canvas_pointer_move::CanvasPointerMove;
+    use crate::canvas_pointer_move::CanvasPointerMove;
     let inside=stroked_path("Inside",vec![PathSegment::Move { to: [1.0,1.0] },PathSegment::Line { to: [2.0,2.0] }]);
     let outside=stroked_path("Outside",vec![PathSegment::Move { to: [6.0,6.0] },PathSegment::Line { to: [7.0,7.0] }]);
     let expected=layer_id(&inside).to_string();
     let document=DrawingSnapshot { layers: vec![inside,outside].into(),..Default::default() };
-    let mut session=crate::identity_test::session("selectLasso","");
+    let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("selectLasso","");
     session.window_config.viewport=store::Viewport2d { x:0.0,y:0.0,zoom:1.0 };
     session.press(pointer("selectLasso",[0.0,0.0])).unwrap();
     let movement=CanvasPointerMove { shift: false, alt: false,  x:50.0,y:60.0,width:100.0,height:100.0,samples:vec![[60.0,50.0],[50.0,60.0]] };
@@ -175,7 +175,7 @@ fn marquee_maximum_plus_one_faults_without_unbounded_growth() {
 #[test]
 fn a_pen_draft_commits_one_path_layer_as_one_transaction() {
     let document = semio_s_artifact_draw_drawing_model::default_drawing_document("draft", None);
-    let mut session = crate::identity_test::session("pen", "draft-seed");
+    let mut session = semio_s_artifact_draw_drawing_editor::identity_test::session("pen", "draft-seed");
     for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { assert!(session.press(pointer("pen",point)).unwrap().artifact_mutations.is_empty()); }
     assert!(session.tool.matches("drafting"));
     let emit = session.finish_draft(base(&document)).unwrap();
@@ -187,7 +187,7 @@ fn a_pen_draft_commits_one_path_layer_as_one_transaction() {
     assert_eq!(path.segments, vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }, PathSegment::Line { to: [10.0,10.0] }].into());
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { .. })), "a committed creation returns to the default utility");
     assert!(session.tool.at_rest());
-    let mut single = crate::identity_test::session("pen", "");
+    let mut single = semio_s_artifact_draw_drawing_editor::identity_test::session("pen", "");
     single.press(pointer("pen",[0.0,0.0])).unwrap();
     assert!(single.finish_draft(base(&document)).unwrap().artifact_mutations.is_empty(), "one point commits nothing");
 }
@@ -215,7 +215,7 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
     let before = document.clone();
     let start = [80.0,210.0];
     let end = [88.0,220.0];
-    let mut session = crate::identity_test::session("selectDirect","drag-seed");
+    let mut session = semio_s_artifact_draw_drawing_editor::identity_test::session("selectDirect","drag-seed");
     session.window_config.viewport.zoom = 1.0;
     prepare_drag(&mut session,&document,start);
     assert!(session.tool.matches("dragging"));
@@ -241,7 +241,7 @@ fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
     let document = DrawingSnapshot { layers:vec![layer].into(),..Default::default() };
     for cancelled in [true,false] {
-        let mut session = crate::identity_test::session("selectDirect","");
+        let mut session = semio_s_artifact_draw_drawing_editor::identity_test::session("selectDirect","");
         session.window_config.viewport.zoom = 1.0;
         prepare_drag(&mut session,&document,[0.0,0.0]);
         let emit = if cancelled {
@@ -326,7 +326,7 @@ fn repeated_pen_and_polygon_drafts_keep_distinct_layers_and_transactions() {
     for utility in ["pen","shapePolygon"] {
         let mut document=DrawingSnapshot::default();
         let (mut ids,mut transactions)=(std::collections::HashSet::new(),std::collections::HashSet::new());
-        let mut session=crate::identity_test::session(utility,"draft-seed");
+        let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session(utility,"draft-seed");
         for round in 0..3 {
             for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { session.press(pointer(utility,point)).unwrap(); }
             let emit=session.finish_draft(DrawingToolBase { document: Arc::new(document.clone()), operation: Some(AppOperationContext { app_instance_id: 1, parent_document_id: "draft".into(), operation_id: round+1, generation: 1, canonical_base_revision: [round as u8; 32], authoring_seed: "draft-seed".into() }) }).unwrap();
@@ -354,7 +354,7 @@ fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
             assert_eq!(cursor.selection_bounds,Some([10.0,20.0,100.0,80.0]));
             let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);
             query.drag_start=Some(start);
-            let mut session=crate::identity_test::session("selectDirect","");
+            let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("selectDirect","");
             session.window_config.viewport.zoom=1.0;
             session.press(pointer("selectDirect",start)).unwrap();
             session.point_query=Some(query);
@@ -457,7 +457,7 @@ fn node_marquee_collects_snapshot_bound_anchors_in_bounded_steps() {
 fn empty_node_press_starts_marquee_without_changing_point_selection() {
     let path=filled_path("Path",vec![PathSegment::Move {to:[0.0,0.0]},PathSegment::Line {to:[10.0,0.0]}]);
     let id=layer_id(&path).to_string();let document=DrawingSnapshot {layers:vec![path].into(),..Default::default()};
-    let mut session=crate::identity_test::session("editNodes","");
+    let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session("editNodes","");
     session.press(pointer("editNodes",[-20.0,-20.0])).unwrap();
     let mut cursor=TracePointerJob::new_query(&document,[-20.0,-20.0],1.0,false);cursor.node_editing=true;cursor.selected_ids=vec![id.clone()];finish_cached(&mut cursor,&document);
     let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);query.drag_start=Some([-20.0,-20.0]);session.point_query=Some(query);
@@ -506,8 +506,8 @@ fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
 fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.stroke=Some(semio_s_artifact_draw_drawing_model::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
 fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
 fn prepared(document:&DrawingSnapshot)->semio_s_artifact_draw_drawing_scene::paint::scene::PreparedScene{
- let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,crate::geometry_session::limits(),crate::geometry_session::algorithms()).unwrap();while !vector.advance(4096).unwrap().done{}let(mut close,plan)=vector.into_retirement();while !close.advance(4096).unwrap().done{}
- let mut paint=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,crate::geometry_session::paint_limits());while !paint.advance(4096).unwrap().done{}let(mut close,scene)=paint.into_retirement();while !close.advance(4096).unwrap().done{}scene.unwrap()
+ let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();while !vector.advance(4096).unwrap().done{}let(mut close,plan)=vector.into_retirement();while !close.advance(4096).unwrap().done{}
+ let mut paint=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::paint_limits());while !paint.advance(4096).unwrap().done{}let(mut close,scene)=paint.into_retirement();while !close.advance(4096).unwrap().done{}scene.unwrap()
 }
 fn advance_cached(job:&mut TracePointerJob,document:&DrawingSnapshot)->bool{
  let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};let done=job.advance(document,&borrowed);

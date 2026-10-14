@@ -1,5 +1,5 @@
 //! 🛡️ Logical Pptx Strict conformance facts and diagnostics.
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_framework_diagnostic::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use semio_s_artifact_stdio_xml::schema::snapshot::markup_facts::XmlMarkupFacts;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
@@ -25,7 +25,7 @@ pub const CODE_ALTERNATE_CONTENT: &str = "stdio.pptx.strict.alternate-content-pr
 /// Transitional or Strict officeDocument relationship type.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn main_part_path(opc: &OpcPackage) -> Option<String> {
-    crate::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship(opc)
+    semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship(opc)
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

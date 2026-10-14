@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly mesh editing engine"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

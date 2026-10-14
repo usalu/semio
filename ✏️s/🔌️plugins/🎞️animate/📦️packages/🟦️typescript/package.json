@@ -27,6 +27,6 @@
   },
   "bundleKind": "repo",
   "scripts": {
-    "test": "bun repo run @semio-tech/animate-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/animate-js:test"
   }
 }

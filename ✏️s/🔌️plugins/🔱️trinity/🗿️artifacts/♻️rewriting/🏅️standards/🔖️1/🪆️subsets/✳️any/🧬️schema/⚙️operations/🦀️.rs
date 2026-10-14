@@ -9,7 +9,7 @@ pub type RewriteRuleEnvelope = ArtifactEnvelope<RewritingSnapshot, RewriteRuleMu
 pub type RewriteRuleStore = ArtifactStore<RewritingSnapshot, RewriteRuleMutation>;
 
 pub fn create_rewrite_rule_envelope(id: &str, state: RewritingSnapshot) -> RewriteRuleEnvelope {
-    create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
+    create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 
 /// 🔐️ Opens a rewriting store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
@@ -17,7 +17,7 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewritingSnapshot) -> Rewri
 /// insertion requires its exact mutation retirement factory`); the editor app installs the same
 /// catalog through `build_document_store_owners`, every standalone store goes through here.
 pub async fn new_rewrite_rule_store(envelope: RewriteRuleEnvelope, actor: protocol::ActorId) -> Result<OwnedRewriteRuleStore, store::VcsError> {
-    let mut store = RewriteRuleStore::new(envelope, actor).await?;
+    let mut store = RewriteRuleStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<RewritingSnapshot, RewriteRuleMutation>())?;
     Ok(OwnedRewriteRuleStore(store))
 }

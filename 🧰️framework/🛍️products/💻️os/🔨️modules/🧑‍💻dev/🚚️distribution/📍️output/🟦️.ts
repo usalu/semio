@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import { readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { join } from "node:path";
 
@@ -13,12 +14,12 @@ function outputDirectory(playground: PlaygroundReactDistributionRow): string | u
 
 /** 🧭️ Nx output bound to the caller's actual staging project or an explicitly authored directory. */
 export function playgroundReactNxOutput(stagingProjectRoot: string, playground: PlaygroundReactDistributionRow, mode: BuildMode): string {
-  const declared = outputDirectory(playground);
-  return `{workspaceRoot}/${declared ?? `${stagingProjectRoot}/dist/build-${playground.variant}-react`}/${readBuildMode(mode)}`;
+  outputDirectory(playground);
+  return `{workspaceRoot}/.cache/b/p/m/vite/${readBuildMode(mode)}/${createHash("sha256").update("os-dev:"+playground.variant+":react").digest("hex").slice(0,16)}/out`;
 }
 
 /** 📂 Absolute destination bound to the producer's caller-supplied staging directory. */
 export function playgroundReactOutputPath(workspaceRoot: string, stagingPackageRoot: string, playground: PlaygroundReactDistributionRow, mode: BuildMode): string {
-  const declared = outputDirectory(playground);
-  return declared === undefined ? join(stagingPackageRoot, "dist", `build-${playground.variant}-react`, readBuildMode(mode)) : join(workspaceRoot, declared, readBuildMode(mode));
+  outputDirectory(playground);
+  return join(workspaceRoot,".cache/b/p/m/vite",readBuildMode(mode),createHash("sha256").update("os-dev:"+playground.variant+":react").digest("hex").slice(0,16),"out");
 }

@@ -24,9 +24,10 @@ pub use semio_framework_canvas as canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
 
-use semio_framework_artifact_playbook_playbook as playbook;
-
 use semio_framework_artifact_flow_flow::{artifact, retained};
+
+#[path = "../../📝️forms/🧬️schema/🦀️.rs"]
+pub mod forms;
 
 #[path = "../../🗂️catalogue/🦀️.rs"]
 pub mod catalogue;

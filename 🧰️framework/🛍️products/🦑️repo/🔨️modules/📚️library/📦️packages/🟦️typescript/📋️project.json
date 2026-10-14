@@ -335,6 +335,15 @@
         "command": "bun ./📜️script.ts test generated-source-topology"
       }
     },
+    "test-collection-catalog": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test collection-catalog"
+      }
+    },
     "test-package-body-policy": {
       "executor": "repo:script",
       "cache": true,

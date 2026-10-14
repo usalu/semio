@@ -3,8 +3,10 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::generation3d::config::component::mutations::*;
-use crate::editor::generation3d::config::component::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
+use crate::mutations::*;
+use crate::CameraJson;
+use crate::Generation3dConfig;
+use crate::Generation3dPreviewCamera;
 
 impl protocol::OpBinary for Generation3dConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -17,9 +17,9 @@ pub type LateralSurfaceCurves = (semio_framework_3d_brep_representation::arena::
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 
-use crate::euler::make_edge;
-use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::transform::transform_face;
+use semio_framework_3d_brep_construction::euler::make_edge;
+use semio_framework_3d_brep_construction::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
 use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;

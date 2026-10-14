@@ -1,0 +1,22 @@
+{
+  "positive": { "projects": 3, "dependencies": 2, "targets": 5, "configurations": 4, "observations": 20, "expanded": 15 },
+  "refusals": [
+    { "field": "projects", "value": 0 },
+    { "field": "targets", "value": 0 },
+    { "field": "configurations", "value": 0 },
+    { "field": "observations", "value": 0 },
+    { "field": "expanded", "value": 0 },
+    { "field": "commandProjects", "value": 2 },
+    { "field": "commandTargets", "value": 4 },
+    { "field": "commandConfigurations", "value": 3 },
+    { "field": "planProjects", "value": 2 },
+    { "field": "planTargets", "value": 4 },
+    { "field": "planConfigurations", "value": 3 },
+    { "field": "planned", "value": 8 },
+    { "field": "commandFailures", "value": 1 },
+    { "field": "planFailures", "value": 1 },
+    { "field": "sameDigest", "value": 0 },
+    { "field": "allAdmission", "value": 0 },
+    { "field": "authorityVersion", "value": 2 }
+  ]
+}

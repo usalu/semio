@@ -4,7 +4,7 @@
 //! aggregate's own mutation root, so `dsl::Mutations`'s leaf-ownership contract holds.
 
 use super::{Generation3dViewPresence, Generation3dViewPresencePatch};
-use crate::viewer::generation3d::config::Generation3dViewCamera;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
 #[path = "📷️set-preview/🦀️.rs"]
 mod set_preview_camera;

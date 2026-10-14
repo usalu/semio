@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
+      "continuation": null,
+      "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", "packages": ["semio-framework-canvas"], "arguments": [] }
+    }
+  ]
+}

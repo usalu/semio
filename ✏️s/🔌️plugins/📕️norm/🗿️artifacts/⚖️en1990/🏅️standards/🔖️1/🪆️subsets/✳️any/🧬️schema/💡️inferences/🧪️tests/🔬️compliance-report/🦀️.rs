@@ -1,6 +1,6 @@
-use super::*;
-use crate::document::CheckStatus;
-use crate::standards::v1::subsets::any::schema::NaDe;
+use crate::*;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_en1990_checks::NaDe;
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_default_produces_checks() {
@@ -20,7 +20,7 @@ async fn default_subject_complies() {
 
 #[semio_framework_async_macros::async_test]
 async fn high_consequence_office_fails_with_multiple_checks() {
-    let doc = crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot();
     let report = evaluate(&doc);
     let fails: Vec<_> = report.checks.iter().filter(|c| c.status == CheckStatus::Fail).collect();
     assert!(fails.len() >= 2, "expected ≥2 fails, got {} {:?}", fails.len(), fails.iter().map(|c| &c.id).collect::<Vec<_>>());
@@ -30,8 +30,8 @@ async fn high_consequence_office_fails_with_multiple_checks() {
 
 #[semio_framework_async_macros::async_test]
 async fn high_consequence_office_dsl_asset_decodes_and_fails() {
-    let text = crate::standards::v1::subsets::any::examples::high_consequence_office::PRIMARY_TEXT;
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
+    let text = semio_s_artifact_norm_en1990_examples::high_consequence_office::PRIMARY_TEXT;
+    let doc = semio_s_artifact_norm_en1990_io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
     assert_eq!(doc.consequence_class, 3);
     let report = evaluate(&doc);
     assert!(report.summary.fail >= 2, "fail_count={}", report.summary.fail);
@@ -40,7 +40,7 @@ async fn high_consequence_office_dsl_asset_decodes_and_fails() {
 #[semio_framework_async_macros::async_test]
 async fn default_office_dsl_asset_decodes_and_complies() {
     let text = include_str!("../../../../🖼️assets/🏢️default-office/🏢️default-office/🗣️.dsl.semio");
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
+    let doc = semio_s_artifact_norm_en1990_io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
     assert!(evaluate(&doc).complies());
 }
 
@@ -64,7 +64,7 @@ async fn dangling_effect_action_id_fails_referential_integrity() {
 
 #[semio_framework_async_macros::async_test]
 async fn dangling_bridge_sls_member_id_fails_referential_integrity() {
-    let mut doc = crate::standards::v1::subsets::any::examples::road_bridge_compliant::reference_snapshot();
+    let mut doc = semio_s_artifact_norm_en1990_examples::road_bridge_compliant::reference_snapshot();
     doc.bridge_sls[0].member_id = format!("{}-x", doc.bridge_sls[0].member_id);
     let report = evaluate(&doc);
     assert!(report.checks.iter().any(|c| c.id.contains("integrity.bridgeSls") && c.id.contains("memberId") && c.status == CheckStatus::Fail));
@@ -81,7 +81,6 @@ async fn duplicate_member_id_fails_integrity() {
     assert!(!report.complies());
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn every_emitted_subject_path_parses_and_resolves() {
     let doc = En1990Snapshot::default();
@@ -93,8 +92,8 @@ async fn every_emitted_subject_path_parses_and_resolves() {
             if path.is_empty() {
                 continue;
             }
-            crate::app_surface::parse_path(path).unwrap_or_else(|e| panic!("parse '{path}': {e}"));
-            crate::app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("resolve '{path}': {e}"));
+            semio_s_plugin_norm_app_surface::parse_path(path).unwrap_or_else(|e| panic!("parse '{path}': {e}"));
+            semio_s_plugin_norm_app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("resolve '{path}': {e}"));
             seen += 1;
             assert!(!path.contains("members[") || path.contains("members[id="), "entity list path must use [id=…]: {path}");
         }
@@ -115,7 +114,7 @@ async fn editing_gk_changes_str_utilization() {
 
 #[semio_framework_async_macros::async_test]
 async fn remedy_law_beta_writing_required_makes_check_pass() {
-    let mut doc = crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot();
+    let mut doc = semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot();
     let report = evaluate(&doc);
     let fail = report.checks.iter().find(|c| c.id.contains("beta") && c.status == CheckStatus::Fail && c.remedies.iter().any(|r| r.applicable)).expect("β fail");
     let remedy = fail.remedies.iter().find(|r| r.applicable).unwrap();
@@ -127,7 +126,7 @@ async fn remedy_law_beta_writing_required_makes_check_pass() {
 
 #[semio_framework_async_macros::async_test]
 async fn remedy_law_deflection_writing_required_makes_check_pass() {
-    let mut doc = crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot();
+    let mut doc = semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot();
     let report = evaluate(&doc);
     let fail = report
         .checks
@@ -163,7 +162,7 @@ async fn python_oracle_matches_evaluate_json_within_half_percent() {
     assert!(oracle.exists(), "missing oracle {}", oracle.display());
     for (name, doc) in [
         ("default", En1990Snapshot::default()),
-        ("high", crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot()),
+        ("high", semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot()),
     ] {
         let report = evaluate(&doc);
         let ed = report
@@ -178,7 +177,7 @@ async fn python_oracle_matches_evaluate_json_within_half_percent() {
             "g_inf": actions.g_k_inf,
             "q": actions.q_k,
             "cc": doc.consequence_class,
-            "annex": if doc.annex == crate::document::AnnexChoice::De { "de" } else { "en" },
+            "annex": if doc.annex == semio_s_plugin_norm_compliance::AnnexChoice::De { "de" } else { "en" },
             "rust_ed": ed,
             "name": name,
         });
@@ -223,7 +222,7 @@ print('ok', d['name'], ed, rust)
 
 fn apply_path(doc: &mut En1990Snapshot, path: &str, value: f64) {
     let mut root = semio_framework_value::ToValue::to_value(&*doc);
-    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
     *doc = semio_framework_value::FromValue::from_value(root).expect("from_value");
 }
 
@@ -252,8 +251,8 @@ async fn table_2_1_bridge_category_remedy_flips_to_pass() {
 
 #[semio_framework_async_macros::async_test]
 async fn bridge_a2_partial_factors_de_vs_en_diverge_on_rail_gamma_q() {
-    use crate::standards::v1::subsets::any::schema::{combination_str_geo_610a_for, gamma_q_bridge_traffic, ActionSet, NaDe, NaEn};
-    use crate::document::AnnexChoice;
+    use semio_s_artifact_norm_en1990_schema::{combination_str_geo_610a_for, gamma_q_bridge_traffic, ActionSet, NaDe, NaEn};
+    use semio_s_plugin_norm_compliance::AnnexChoice;
     assert!((gamma_q_bridge_traffic(AnnexChoice::De, "rail_traffic") - 1.40).abs() < 1e-12);
     assert!((gamma_q_bridge_traffic(AnnexChoice::En, "rail_traffic") - 1.45).abs() < 1e-12);
     let actions = ActionSet {
@@ -281,19 +280,16 @@ async fn evaluate_reads_project_id_in_subject_labels() {
     );
 }
 
-
-
-
 #[semio_framework_async_macros::async_test]
 async fn road_bridge_compliant_subject_complies() {
-    let doc = crate::standards::v1::subsets::any::examples::road_bridge_compliant::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::road_bridge_compliant::reference_snapshot();
     let report = evaluate(&doc);
     assert!(report.complies(), "bridge compliant must pass, fails={:?}", report.checks.iter().filter(|c| c.status == CheckStatus::Fail).map(|c| &c.id).collect::<Vec<_>>());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn road_bridge_failing_fails_with_multiple_checks() {
-    let doc = crate::standards::v1::subsets::any::examples::road_bridge_failing::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::road_bridge_failing::reference_snapshot();
     let report = evaluate(&doc);
     assert!(report.summary.fail >= 2, "fail_count={}", report.summary.fail);
     assert!(!report.complies());
@@ -301,7 +297,7 @@ async fn road_bridge_failing_fails_with_multiple_checks() {
 
 #[semio_framework_async_macros::async_test]
 async fn accidental_seismic_compliant_activates_6_11_and_6_12b() {
-    let doc = crate::standards::v1::subsets::any::examples::accidental_seismic_compliant::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::accidental_seismic_compliant::reference_snapshot();
     let report = evaluate(&doc);
     let c611 = report.checks.iter().find(|c| c.clause.section == "6.11").expect("6.11");
     let c612 = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("6.12b");
@@ -312,7 +308,7 @@ async fn accidental_seismic_compliant_activates_6_11_and_6_12b() {
 
 #[semio_framework_async_macros::async_test]
 async fn accidental_seismic_failing_fails_6_11_or_6_12b() {
-    let doc = crate::standards::v1::subsets::any::examples::accidental_seismic_failing::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::accidental_seismic_failing::reference_snapshot();
     let report = evaluate(&doc);
     assert!(report.summary.fail >= 2, "fail_count={}", report.summary.fail);
     assert!(report.checks.iter().any(|c| c.clause.section == "6.11" && c.status == CheckStatus::Fail));
@@ -321,7 +317,7 @@ async fn accidental_seismic_failing_fails_6_11_or_6_12b() {
 
 #[semio_framework_async_macros::async_test]
 async fn fatigue_compliant_subject_complies() {
-    let doc = crate::standards::v1::subsets::any::examples::fatigue_compliant::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::fatigue_compliant::reference_snapshot();
     let report = evaluate(&doc);
     let fat = report.checks.iter().find(|c| c.id.contains("fat") || c.clause.section.to_lowercase().contains("fat")).expect("FAT");
     assert_ne!(fat.status, CheckStatus::NotApplicable);
@@ -330,7 +326,7 @@ async fn fatigue_compliant_subject_complies() {
 
 #[semio_framework_async_macros::async_test]
 async fn fatigue_failing_fails_fat_check() {
-    let doc = crate::standards::v1::subsets::any::examples::fatigue_failing::reference_snapshot();
+    let doc = semio_s_artifact_norm_en1990_examples::fatigue_failing::reference_snapshot();
     let report = evaluate(&doc);
     assert!(report.checks.iter().any(|c| (c.id.contains("fat") || c.clause.section.to_lowercase().contains("fat")) && c.status == CheckStatus::Fail));
     assert!(!report.complies());
@@ -382,7 +378,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
         }
         perturb(cur)
     }
-
 
     fn walk(prefix: &str, value: &serde_json::Value, out: &mut Vec<String>) {
         match value {
@@ -531,7 +526,7 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
         }
     }
 
-    fn sig(report: &crate::document::CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> {
+    fn sig(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> {
         report
             .checks
             .iter()
@@ -548,10 +543,10 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
     }
 
     let building = En1990Snapshot::default();
-    let mut building_snow = crate::standards::v1::subsets::any::examples::high_consequence_office::reference_snapshot();
-    building_snow.annex = crate::document::AnnexChoice::De;
+    let mut building_snow = semio_s_artifact_norm_en1990_examples::high_consequence_office::reference_snapshot();
+    building_snow.annex = semio_s_plugin_norm_compliance::AnnexChoice::De;
     building_snow.altitude_m = 0.0;
-    let bridge = crate::standards::v1::subsets::any::examples::road_bridge_compliant::reference_snapshot();
+    let bridge = semio_s_artifact_norm_en1990_examples::road_bridge_compliant::reference_snapshot();
 
     let mut unchanged = Vec::new();
     let mut checked = 0usize;
@@ -592,12 +587,12 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
             checked += 1;
             // Annex DE↔EN is a no-op for office/wind ψ; use seismic example where ψ₂ diverges.
             if path == "annex" {
-                let mut annex_base = crate::standards::v1::subsets::any::examples::accidental_seismic_compliant::reference_snapshot();
+                let mut annex_base = semio_s_artifact_norm_en1990_examples::accidental_seismic_compliant::reference_snapshot();
                 // Category "other" has divergent ψ₂ DE vs EN (see seismic_combination_de_vs_en_diverge_on_other_psi_2).
                 annex_base.variables[0].category = "other".into();
-                annex_base.annex = crate::document::AnnexChoice::De;
+                annex_base.annex = semio_s_plugin_norm_compliance::AnnexChoice::De;
                 let annex_sig = sig(&evaluate(&annex_base));
-                annex_base.annex = crate::document::AnnexChoice::En;
+                annex_base.annex = semio_s_plugin_norm_compliance::AnnexChoice::En;
                 if sig(&evaluate(&annex_base)) == annex_sig {
                     unchanged.push(format!("building:{path}"));
                 }
@@ -654,7 +649,7 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
     
     // Accidental + seismic leaves on committed example (6.11 / 6.12b active).
     {
-        let base = crate::standards::v1::subsets::any::examples::accidental_seismic_compliant::reference_snapshot();
+        let base = semio_s_artifact_norm_en1990_examples::accidental_seismic_compliant::reference_snapshot();
         let base_report = evaluate(&base);
         assert!(base_report.checks.iter().any(|c| c.clause.section == "6.11" && c.status != CheckStatus::NotApplicable));
         assert!(base_report.checks.iter().any(|c| c.clause.section == "6.12b" && c.status != CheckStatus::NotApplicable));

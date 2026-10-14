@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-process-process3d-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d inference owners"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "process3d_inferences_unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-stdio-semio-brep = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

@@ -1,9 +1,9 @@
-use super::ChangeMasonryClass;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-pub fn inverse(_payload: &ChangeMasonryClass, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::change_masonry_class::ChangeMasonryClass;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+pub fn inverse<Op>(_payload: &ChangeMasonryClass, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_masonry_class::ChangeMasonryClass> {
     Ok((|| {
-    vec![En1996Mutation::ChangeMasonryClass(ChangeMasonryClass { new_masonry_class: base.masonry_class })]
+    vec![Op::from(ChangeMasonryClass { new_masonry_class: base.masonry_class })]
 
     })())
 }

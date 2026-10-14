@@ -29,3 +29,15 @@ semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 serde_json = { workspace = true }
+
+[[test]]
+name = "inverse_laws"
+path = "../../🧪️tests/🔬️inverses/🦀️.rs"
+
+[[test]]
+name = "codec_laws"
+path = "../../🧪️tests/🔬️codecs/🦀️.rs"
+
+[[test]]
+name = "catalog_laws"
+path = "../../🧪️tests/🔬️catalog/🦀️.rs"

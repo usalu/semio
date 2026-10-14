@@ -2,10 +2,9 @@
 //! about its own origin: its BASE orientation (identity when absent) is pre-multiplied by the payload's
 //! axis-angle quaternion, so the leaf replays on any base. The attraction graph is re-solved: attracted
 //! objects are re-placed from their turned parents, other touched attractions re-derive.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
-use protocol::list_delta::RowPatch;
-use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_follow, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_outcome, crate::standards::v1::subsets::any::schema::quat_from_axis_angle, crate::standards::v1::subsets::any::schema::quat_mul, crate::standards::v1::subsets::any::schema::Puzzle3dPose, crate::standards::v1::subsets::any::schema::mutations::selection::Puzzle3dSelectionFollow, crate::standards::v1::subsets::any::schema::PUZZLE3D_IDENTITY_QUATERNION};
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumeModification};
+use {crate::puzzle3d_selection, crate::puzzle3d_selection_follow, crate::puzzle3d_selection_outcome, semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul, semio_s_artifact_puzzle_3d_model::Puzzle3dPose, crate::Puzzle3dSelectionFollow, semio_s_artifact_puzzle_3d_model::PUZZLE3D_IDENTITY_QUATERNION};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::RotateSelection, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

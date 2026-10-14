@@ -1,0 +1,9 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs", "crate": "semio_s_artifact_puzzle_2d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", "from_module": "standards::v1::subsets::any::schema::mutations", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs", "to_module": "standards::v1::subsets::any::schema",
+   "select": ["regionx:🔖️Invariants", "regionx:🔖️HandleGeometry"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", "from_module": "standards::v1::subsets::any::schema::mutations", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🦀️.rs", "to_module": "standards::v1::subsets::any::schema::mutations::selection",
+   "doc": "//! ✋️ Puzzle2d selection mutations — dragging, rotating and scaling a selection of nodes and target regions, and the\n//! selection transform they share: the resolved targets, the per-target outcome and the localized amounts.",
+   "mount_in": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", "mount": "#[path = \"✋️selection/🦀️.rs\"]\npub mod selection;",
+   "select": ["regionx:🔖️SelectionTransform"]}
+ ]}

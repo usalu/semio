@@ -1,7 +1,7 @@
 //! 📏️ Block 3D play app — world window option: multi-representation arrangement spacing.
 
-use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
-use crate::editor::block3d::terminology::Block3dLabels;
+use semio_s_artifact_block_3d_editor_config::{block3d_window_view, Block3dConfig};
+use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
 use semio_framework_plugin::WindowMeasure;
 
 pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) -> WindowMeasure {
@@ -17,6 +17,6 @@ pub fn measure(config: &Block3dConfig, window_id: &str, labels: &Block3dLabels) 
         loading: None,
         waiting: None,
         disabled: None,
-        on_change: crate::editor::block3d::block3d_window_action("setWindowSpacing", Some(semio_framework_value::DslValue::object([("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string()))]))),
+        on_change: crate::block3d_window_action("setWindowSpacing", Some(semio_framework_value::DslValue::object([("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string()))]))),
     }
 }

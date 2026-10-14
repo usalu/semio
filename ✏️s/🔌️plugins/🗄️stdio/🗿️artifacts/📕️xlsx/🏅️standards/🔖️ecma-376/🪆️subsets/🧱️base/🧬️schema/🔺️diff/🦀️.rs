@@ -6,11 +6,11 @@
 //! positional list delta of the kernel (`protocol::list_delta`) whose patch carries the part's content type and its document diff.
 
 #[cfg(test)]
-use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxXmlPart};
-#[cfg(test)] use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-use crate::schema::vocabulary::{element_matches, expanded_element_name, namespace_scope, SML_NS, SML_NS_STRICT};
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxXmlPart};
+#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{element_matches, expanded_element_name, namespace_scope, SML_NS, SML_NS_STRICT};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -197,28 +197,13 @@ impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
 /// bespoke encoders would violate this ticket's "concise code" rule for no benefit.
 //#region 🔖️Primitives
 
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️Primitives
 
 //#region 🔖️CellValueCodec
 
-
-
-
 //#endregion 🔖️CellValueCodec
 
 //#region 🔖️WorkbookCodec
-
 
 //#endregion 🔖️WorkbookCodec
 
@@ -235,19 +220,9 @@ impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
 /// helpers" module exists yet, see this file's own `HandcraftedDiffCodec` doc comment).
 //#region 🔖️BinaryPrimitives
 
-
-
-
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️ValueBinaryCodecs
-
-
-
-
-
-
-
 
 //#endregion 🔖️ValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
@@ -311,11 +286,4 @@ pub(crate) fn demo_diff_cases() -> Vec<XlsxDiff> {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️result-apply/🦀️.rs"]
-mod result_apply_tests;

@@ -1,12 +1,12 @@
 //! ↩️ `update-ventilation` inverse.
 
-use crate::mutations::update_ventilation::UpdateVentilation;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::update_ventilation::UpdateVentilation;
 
-pub fn inverse(_payload: &UpdateVentilation, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &UpdateVentilation, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_ventilation::UpdateVentilation> {
     Ok((|| {
-    vec![Din18599Mutation::UpdateVentilation(UpdateVentilation { new_ventilation: base.ventilation.clone() })]
+    vec![Op::from(UpdateVentilation { new_ventilation: base.ventilation.clone() })]
 
     })())
 }

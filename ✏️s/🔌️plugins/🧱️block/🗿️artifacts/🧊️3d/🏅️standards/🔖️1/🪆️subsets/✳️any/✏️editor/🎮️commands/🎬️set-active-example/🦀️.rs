@@ -10,14 +10,14 @@ pub const BLOCK3D_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-lef
 /// it carries no mutation rows, no diff and no history row, so re-selecting the open example leaves `canUndo` false.
 pub fn load_document_effect(document: &Block3dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Block3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block3d", crate::BLOCK_3D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block3d", semio_s_artifact_block_3d_model::BLOCK_3D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️LoadDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
-use crate::Block3dSnapshot;
-use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -29,8 +29,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK3D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
-        BLOCK3D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_CAPSULE => semio_s_artifact_block_3d_io::text::snapshot::parse_dsl(semio_s_artifact_block_3d_io::text::snapshot::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_FOREST_LEFT => semio_s_artifact_block_3d_io::text::snapshot::parse_dsl(semio_s_artifact_block_3d_io::text::snapshot::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

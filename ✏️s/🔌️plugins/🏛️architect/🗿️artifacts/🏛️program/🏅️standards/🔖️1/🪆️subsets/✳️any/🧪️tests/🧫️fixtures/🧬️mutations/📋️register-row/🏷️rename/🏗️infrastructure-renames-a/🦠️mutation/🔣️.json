@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "infrastructureRequirement",
+  "id": "infrastructure-requirement-a",
+  "newName": "Renamed Infrastructure Requirement A"
+}

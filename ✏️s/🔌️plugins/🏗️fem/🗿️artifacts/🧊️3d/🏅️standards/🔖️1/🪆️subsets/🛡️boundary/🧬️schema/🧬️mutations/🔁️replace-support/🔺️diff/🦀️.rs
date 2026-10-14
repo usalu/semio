@@ -1,8 +1,10 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsModification};
-use crate::standards::v1::subsets::any::schema::mutations::target_mismatch;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

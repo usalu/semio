@@ -5,9 +5,14 @@
 //! (with a `reason`) drops it with zero trace — plus the per-window handle flags the Transform utility's options
 //! rail toggles.
 
-use crate::editor::fem2d::interaction::gumball::{fem2d_gumball_tick, set_gumball_flag, Fem2dGumballMotion, Fem2dGumballTool};
-use crate::editor::fem2d::modes::edit::windows::{model as model_window, results as results_window};
-use crate::editor::fem2d::transient::{fem_gumball_drive, FemGumballTransientMutation};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_tick;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::set_gumball_flag;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballTool;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 use crate::editor::fem2d::Fem2dPlayApp;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::UiDirtyScope;
@@ -196,7 +201,4 @@ pub fn fem_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

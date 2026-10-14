@@ -1,8 +1,7 @@
 //! 🪵️ Energy model mutation — `DeleteShadingSurface`: Removes one free-standing solar obstruction. Nothing in the document references a shading surface, so it neither cascades nor restricts.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteShadingSurface {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_shading_surface(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteShadingSurface(DeleteShadingSurface { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_shading_surface<Op: From<DeleteShadingSurface>>(id: crate::model::EntityId) -> Op {
+    DeleteShadingSurface { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteShadingSurface {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteShadingSurface
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteShadingSurface> + From<crate::CreateShadingSurface>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "shading-surface", kind: "delete-shading-surface", record: "DeletedShadingSurface" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

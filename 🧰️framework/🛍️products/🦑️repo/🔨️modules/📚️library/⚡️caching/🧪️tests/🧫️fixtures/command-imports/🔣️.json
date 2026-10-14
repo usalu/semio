@@ -2,7 +2,7 @@
   "entry": "📜️script.ts",
   "discovery": {
     "repetitions": 20,
-    "maximumReadsPerFile": 1,
+    "maximumMemoizedSourceFiles": 9,
     "entries": ["📜️script.ts", "🟦️.ts"]
   },
   "files": {

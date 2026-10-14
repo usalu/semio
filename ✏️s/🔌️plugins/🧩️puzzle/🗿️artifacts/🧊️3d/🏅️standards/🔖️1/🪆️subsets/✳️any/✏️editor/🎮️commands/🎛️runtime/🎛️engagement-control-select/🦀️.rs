@@ -1,6 +1,6 @@
 //! 🖌️ `engagement-control-select` command.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🎚️ The brush placement picker's select — its option values are `puzzle3d.brush.candidate.<index>`.

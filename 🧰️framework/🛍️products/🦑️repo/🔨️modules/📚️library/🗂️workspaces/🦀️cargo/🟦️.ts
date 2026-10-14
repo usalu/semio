@@ -1,3 +1,5 @@
+import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -379,8 +381,8 @@ export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationSt
   return{command:process.execPath,args:[storage.program,"synchronize","--manifest",selection.manifest,...selection.packages.flatMap(name=>["--package",name])],cwd:root,environment:env};
 }
 
-/** 🛠️ Executes the selected native workspace launch through the synchronous Cargo boundary. */
-export function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string,string|undefined>>): void {
+/** 🛠️ Awaits the selected native workspace child under unchanged original control. */
+export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request)return;
- const result=Bun.spawnSync([request.command,...request.args],{cwd:request.cwd,env:request.environment,stdout:"pipe",stderr:"inherit"});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw Error(`Selected Cargo preparation failed: ${request.args[3]} (${result.exitCode})`);
+ const output=await captureOwnedCommandV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);
 }

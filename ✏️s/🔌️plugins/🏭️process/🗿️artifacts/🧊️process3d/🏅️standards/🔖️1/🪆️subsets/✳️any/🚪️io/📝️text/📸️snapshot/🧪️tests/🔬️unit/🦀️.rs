@@ -1,9 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+extern crate semio_framework_os_kernel as store;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::*;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
-use crate::{
-    empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop,
-    WorkshopMachine,
-};
+use semio_s_artifact_process_process3d_model::{snapshot::empty_process3d_snapshot, snapshot::process_working_scene_to_snapshot, snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 
 fn cut_step(id: &str) -> ProcessStep {
     ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -99,8 +98,8 @@ async fn drilled_plate_example_fixture_parses_and_round_trips() {
 /// 🏭️ The exact workshop the shipped `timber-beam-joinery` fixture carries today (generic
 /// catalog + `WoodCatalog`) — reused verbatim so regeneration never drifts the catalog content.
 fn timber_workshop() -> Workshop {
-    let mut machines = crate::generic_machines();
-    machines.extend(<crate::schema::WoodCatalog as crate::MachineCatalog>::machines(&crate::schema::WoodCatalog));
+    let mut machines = semio_s_artifact_process_process3d_model::snapshot::generic_machines();
+    machines.extend(<semio_s_artifact_process_process3d_model::WoodCatalog as semio_s_artifact_process_process3d_model::snapshot::MachineCatalog>::machines(&semio_s_artifact_process_process3d_model::WoodCatalog));
     Workshop { machines }
 }
 
@@ -170,8 +169,8 @@ fn drilled_plate_scene() -> ProcessWorkingScene {
 /// 🧱️ The workshop the shipped `concrete-forest` example carries: the generic catalog plus every
 /// `ConcreteCatalog` machine, so each of its seven steps names a capability that really exists.
 fn concrete_workshop() -> Workshop {
-    let mut machines = crate::generic_machines();
-    machines.extend(<crate::schema::ConcreteCatalog as crate::MachineCatalog>::machines(&crate::schema::ConcreteCatalog));
+    let mut machines = semio_s_artifact_process_process3d_model::snapshot::generic_machines();
+    machines.extend(<semio_s_artifact_process_process3d_model::ConcreteCatalog as semio_s_artifact_process_process3d_model::snapshot::MachineCatalog>::machines(&semio_s_artifact_process_process3d_model::ConcreteCatalog));
     Workshop { machines }
 }
 
@@ -194,7 +193,7 @@ fn concrete_forest_scene() -> ProcessWorkingScene {
     let at = |x: f64, y: f64, z: f64| Pose { position: [x + offset[0], y + offset[1], z + offset[2]], ..Pose::default() };
     let step = |id: &str, label: &str, machine_id: &str, capability_id: &str, measure: ProcessMeasure| ProcessStep { id: id.into(), label: label.into(), enabled: true, origin: Some(StepOrigin { machine_id: machine_id.into(), capability_id: capability_id.into() }), measure };
     ProcessWorkingScene {
-        stock: Stock { id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into(), label: "Hexagonal Cut Concrete Forest Left".into(), solid: WorkingSolid::Reference { reference_id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() }, pose: Pose { position: offset, ..Pose::default() } },
+        stock: Stock { id: semio_s_artifact_process_process3d_model::snapshot::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into(), label: "Hexagonal Cut Concrete Forest Left".into(), solid: WorkingSolid::Reference { reference_id: semio_s_artifact_process_process3d_model::snapshot::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() }, pose: Pose { position: offset, ..Pose::default() } },
         steps: vec![
             step("wall-saw-cut", "Wall Saw Slab Cut", "wallSaw", "wallCut", ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.0045, depth: 6.0, height: 0.32 }, pose: at(5.4, 2.3385, 2.84) }),
             step("beam-relief-cut", "Diamond Saw Beam Relief", "diamondSaw", "crosscut", ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.004, depth: 0.5, height: 0.125 }, pose: at(5.4, 2.338, 2.3475) }),
@@ -222,7 +221,7 @@ async fn concrete_forest_example_fixture_is_the_authored_scene() {
 #[semio_framework_async_macros::async_test]
 async fn concrete_forest_example_applies_every_concrete_machine() {
     let document = parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example");
-    let concrete: Vec<String> = <crate::schema::ConcreteCatalog as crate::MachineCatalog>::machines(&crate::schema::ConcreteCatalog).into_iter().map(|machine| machine.id).collect();
+    let concrete: Vec<String> = <semio_s_artifact_process_process3d_model::ConcreteCatalog as semio_s_artifact_process_process3d_model::snapshot::MachineCatalog>::machines(&semio_s_artifact_process_process3d_model::ConcreteCatalog).into_iter().map(|machine| machine.id).collect();
     let mut origins: Vec<String> = document.step_payloads.iter().filter_map(|step| step.origin.as_ref()).map(|origin| origin.machine_id.clone()).collect();
     origins.sort();
     let mut concrete_sorted = concrete.clone();
@@ -230,11 +229,11 @@ async fn concrete_forest_example_applies_every_concrete_machine() {
     assert_eq!(origins, concrete_sorted, "exactly one step per concrete machine");
     for step in &document.step_payloads {
         let origin = step.origin.as_ref().expect("every step has an origin");
-        let (_, capability) = crate::schema::inferences::find_capability(&document.workshop, &origin.machine_id, &origin.capability_id).expect("origin names a workshop capability");
+        let (_, capability) = semio_s_artifact_process_process3d_inferences::find_capability(&document.workshop, &origin.machine_id, &origin.capability_id).expect("origin names a workshop capability");
         let expected = match capability.recipe.measure_kind() {
-            crate::MeasureKind::Cut => "cut",
-            crate::MeasureKind::Drill => "drill",
-            crate::MeasureKind::Attach => "attach",
+            semio_s_artifact_process_process3d_model::snapshot::MeasureKind::Cut => "cut",
+            semio_s_artifact_process_process3d_model::snapshot::MeasureKind::Drill => "drill",
+            semio_s_artifact_process_process3d_model::snapshot::MeasureKind::Attach => "attach",
         };
         assert_eq!(step.measure.kind_slug(), expected, "step {} measure matches its capability's recipe kind", step.id);
     }
@@ -245,9 +244,9 @@ async fn concrete_forest_example_applies_every_concrete_machine() {
 /// every cut step removes material while the anchor adds it — so no step is a silent no-op.
 #[semio_framework_async_macros::async_test]
 async fn concrete_forest_example_replays_every_step_on_the_kernel() {
-    use crate::schema::inferences::{replay_process, ProcessKernelReplay};
+    use semio_s_artifact_process_process3d_inferences::{replay_process, ProcessKernelReplay};
     use semio_framework_3d_brep_engine::BrepKernel;
-    let scene = crate::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
     let mut session = ProcessKernelReplay::new();
     let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays");
     let stock_volume = session.kernel().volume(&stock).expect("stock volume");

@@ -1,12 +1,12 @@
 //! ↩️ `change-limits` — undo restores BASE's whole limits facet.
 
-use super::ChangeLimits;
-use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::change_limits::ChangeLimits;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeLimits, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeLimits, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_limits::ChangeLimits> {
     Ok((|| {
-    vec![Vdi3805Mutation::ChangeLimits(ChangeLimits { new_limits: base.limits })]
+    vec![Op::from(ChangeLimits { new_limits: base.limits })]
 
     })())
 }

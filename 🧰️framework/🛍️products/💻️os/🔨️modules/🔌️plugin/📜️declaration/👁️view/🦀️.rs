@@ -21,14 +21,14 @@ use std::collections::BTreeMap;
 use pack::snapshot::ArtifactPack;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
 use crate::interaction_topology::empty_domain_hover;
 use crate::interaction_topology::empty_domain_selection;
 use crate::interaction_topology::leftover_selected_ids_of;
 
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
 
 use crate::tool_run_contract::ToolRunView;

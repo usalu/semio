@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-view"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly editor view, paint session and terminology"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+machine = { workspace = true }
+semio-framework-3d = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-pixels = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-config = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-engine = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-geometry = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-objects = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-lowpoly-lowpoly-mut-paint = { workspace = true }

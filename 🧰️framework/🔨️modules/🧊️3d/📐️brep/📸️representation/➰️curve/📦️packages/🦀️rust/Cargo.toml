@@ -18,7 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-3d-brep-polynomial.workspace = true
 semio-framework-3d-brep-vector.workspace = true
-semio-framework-replication.workspace = true
 semio-framework-value.workspace = true
 semio-framework-value-derive.workspace = true
 

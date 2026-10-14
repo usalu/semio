@@ -425,3 +425,6 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+/// 📸️ The snapshot facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

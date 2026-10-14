@@ -1,9 +1,9 @@
 //! Inverse for `change-silo-kind`.
-use super::ChangeSiloKind;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeSiloKind, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_silo_kind::ChangeSiloKind;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeSiloKind, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_silo_kind::ChangeSiloKind> {
     Ok((|| {
-    vec![En1991Mutation::ChangeSiloKind(ChangeSiloKind { new_silo_kind: base.silo_kind.clone() })]
+    vec![Op::from(ChangeSiloKind { new_silo_kind: base.silo_kind.clone() })]
 
     })())
 }

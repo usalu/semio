@@ -1,5 +1,5 @@
 use super::*;
-use crate::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_planar_face_from_points, make_rectangle_wire, make_regular_polygon_wire};
 use semio_framework_3d_brep_queries::mass_properties::solid_volume;
 use semio_framework_3d_brep_validation::validate_body;
 use semio_framework_3d_brep_representation::arena::{ArenaId, SolidId};
@@ -88,11 +88,11 @@ async fn extrude_circle_pcurves_are_consistent() {
     let mut rec = OpRecorder::new();
     let frame = semio_framework_3d_brep_vector::matrix::Frame3::WORLD;
     let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
-    let v = crate::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let edge = crate::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let v = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let edge = semio_framework_3d_brep_construction::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     let surface = body.surfaces.insert(Surface::Plane { frame });
     let loop_id = semio_framework_3d_brep_representation::topology::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-    let face = crate::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let face = semio_framework_3d_brep_construction::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     body.loops.get_mut(loop_id).unwrap().face = face;
     let pc = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
     body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
@@ -136,11 +136,11 @@ async fn extrude_circle_produces_analytic_cylinder() {
     let mut rec = OpRecorder::new();
     let frame = semio_framework_3d_brep_vector::matrix::Frame3::WORLD;
     let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.5 });
-    let v = crate::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let edge = crate::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let v = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.5, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let edge = semio_framework_3d_brep_construction::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     let surface = body.surfaces.insert(Surface::Plane { frame });
     let loop_id = semio_framework_3d_brep_representation::topology::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-    let face = crate::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let face = semio_framework_3d_brep_construction::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     body.loops.get_mut(loop_id).unwrap().face = face;
     let pc = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.5 });
     body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
@@ -202,12 +202,12 @@ async fn revolve_circle_makes_a_torus() {
     let mut rec = OpRecorder::new();
     let frame = semio_framework_3d_brep_vector::matrix::Frame3 { origin: Pnt3::new(3.0, 0.0, 0.0), x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
     let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
-    let v = crate::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let edge = crate::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let v = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let edge = semio_framework_3d_brep_construction::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     let plane_frame = semio_framework_3d_brep_vector::matrix::Frame3 { origin: frame.origin, x: Vec3::X, y: Vec3::Z, z: -Vec3::Y };
     let surface = body.surfaces.insert(Surface::Plane { frame: plane_frame });
     let loop_id = semio_framework_3d_brep_representation::topology::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-    let face = crate::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let face = semio_framework_3d_brep_construction::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     body.loops.get_mut(loop_id).unwrap().face = face;
     let pc = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
     body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
@@ -251,19 +251,19 @@ async fn sweep_circle_along_line_is_a_cylinder() {
     let mut rec = OpRecorder::new();
     let frame = semio_framework_3d_brep_vector::matrix::Frame3::WORLD;
     let circle = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
-    let v = crate::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let edge = crate::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let v = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, frame.to_world(Pnt3::new(1.0, 0.0, 0.0)), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let edge = semio_framework_3d_brep_construction::euler::make_edge(&mut body, circle, (0.0, TAU), v, v, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     let surface = body.surfaces.insert(Surface::Plane { frame });
     let loop_id = semio_framework_3d_brep_representation::topology::make_loop(&mut body, ArenaId::from_raw(0, 0), &[(edge, true)]);
-    let face = crate::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let face = semio_framework_3d_brep_construction::euler::add_face(&mut body, surface, Some(loop_id), vec![], false, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     body.loops.get_mut(loop_id).unwrap().face = face;
     let pc = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Circle { center: Pnt2::new(0.0, 0.0), radius: 1.0 });
     body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().pcurve = Some(pc);
     body.coedges.get_mut(body.loop_coedges(loop_id)[0]).unwrap().prange = (0.0, TAU);
     let path_line = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::Z });
-    let pv0 = crate::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let pv1 = crate::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 5.0), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
-    let path_edge = crate::euler::make_edge(&mut body, path_line, (0.0, 5.0), pv0, pv1, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let pv0 = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let pv1 = semio_framework_3d_brep_construction::euler::make_vertex(&mut body, Pnt3::new(0.0, 0.0, 5.0), semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
+    let path_edge = semio_framework_3d_brep_construction::euler::make_edge(&mut body, path_line, (0.0, 5.0), pv0, pv1, semio_framework_3d_brep_tolerance::Tol::DEFAULT, &mut rec);
     let path = Wire { members: vec![(path_edge, true)], vertices: vec![pv0, pv1], closed: false };
     let solid = sweep_along_path(&mut body, face, &path, &mut rec).unwrap();
     let faces = body.solid_faces(solid);
@@ -287,7 +287,7 @@ async fn pipe_polygon_along_polyline_with_guide_stays_valid() {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn make_polyline_wire_for_test(body: &mut Body, points: &[Pnt3], rec: &mut OpRecorder) -> Wire {
-    crate::primitives::make_polyline_wire(body, points, false, rec).unwrap()
+    semio_framework_3d_brep_construction::primitives::make_polyline_wire(body, points, false, rec).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]

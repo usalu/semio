@@ -1,8 +1,7 @@
 //! 🖌️ Block5d mutation — `UpdatePart2d`: the whole 2D-projection presentation facet atomically — mirrors block2d's `update-presentation` (same shape, same no-identity-field reasoning).
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🖌️ `update-part-2d` payload.
@@ -23,19 +22,19 @@ pub struct UpdatePart2d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_part_2d(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Block5dMutation {
-    Block5dMutation::UpdatePart2d(UpdatePart2d { new_shape, new_radius, new_width, new_height, new_color, new_icon_kind })
+pub fn update_part_2d<Op: From<crate::update_part_2d::UpdatePart2d>>(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Op {
+    Op::from(UpdatePart2d { new_shape, new_radius, new_width, new_height, new_color, new_icon_kind })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart2d {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart2d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_2d::UpdatePart2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-2d", kind: "update-part2d", record: "UpdatedPart2d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::update_part_2d::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_part_2d::inverse::inverse(self, base)?
     
     })
 }
@@ -44,3 +43,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart2d {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

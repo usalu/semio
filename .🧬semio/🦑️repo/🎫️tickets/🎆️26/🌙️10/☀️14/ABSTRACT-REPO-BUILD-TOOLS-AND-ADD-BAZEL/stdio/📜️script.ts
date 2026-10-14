@@ -4,6 +4,8 @@ const root=process.env.SEMIO_WORKSPACE_ROOT!;
 if(!root)throw Error("Workspace root required");
 if(process.argv.length!==4||!process.argv[2]||!isAbsolute(process.argv[2])||!/^[a-f0-9]{64}$/u.test(process.argv[3]??""))throw Error("Explicit absolute immutable graph pin and SHA-256 digest required");
 assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,process.argv[2],"Public entry changed the original graph pin");assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,process.argv[3],"Public entry changed the original graph digest");
+const {readStdioArtifactBuildGraphPin}=await import(join(root,"✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts"));
+assert.equal(readStdioArtifactBuildGraphPin().admission?.selection.kind,"all","Complete Stdio comparison requires whole-workspace admission");Bun.gc(true);
 const {stdioArtifactPackageContract}=await import(join(root,"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts"));
 const {assertStdioArtifactSchema}=await import(join(root,"✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🛂️artifact-contract/🟦️.ts"));
 const {verifyStdioCommandOwnership,testStdioArtifactPackageGraph}=await import(join(root,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts"));

@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::RasterSnapshot;
+use crate::snapshot::RasterSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RasterSnapshot` to its binary pack form.
@@ -28,10 +28,10 @@ mod tests;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::snapshot::*;
+
 use schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument;
+use crate::io::text::snapshot::record::RasterNativeDocument;
 
 impl pack::snapshot::ArtifactPack for RasterSnapshot {
     

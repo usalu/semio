@@ -1,0 +1,9 @@
+[
+ {
+  "from": "crate::standards::v1::subsets::any::schema",
+  "to": "crate",
+  "items": [
+   "lowpoly_artifact_schema_descriptor"
+  ]
+ }
+]

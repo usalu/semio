@@ -1,0 +1,9 @@
+[
+ {
+  "from": "crate::editor::lowpoly::commands::paint",
+  "to": "crate::editor::lowpoly",
+  "items": [
+   "lowpoly_paint_step"
+  ]
+ }
+]

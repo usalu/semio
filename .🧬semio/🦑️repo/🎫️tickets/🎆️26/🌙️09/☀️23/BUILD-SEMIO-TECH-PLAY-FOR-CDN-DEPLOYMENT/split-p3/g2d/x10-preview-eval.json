@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "monolith": "semio_s_artifact_procedural_generation2d",
+ "package": "semio-s-artifact-procedural-2d-preview-eval",
+ "description": "Procedural generation2d preview evaluation: the surface-neutral preview evaluation tool run both surfaces run and the node-graph projection",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval",
+ "moves": [
+  {
+   "from": "preview_eval",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": "monolith"
+}

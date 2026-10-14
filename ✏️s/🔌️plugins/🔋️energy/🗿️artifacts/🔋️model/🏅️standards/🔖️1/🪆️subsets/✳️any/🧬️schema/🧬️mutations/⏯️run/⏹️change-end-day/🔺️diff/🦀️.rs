@@ -2,7 +2,7 @@
 //! payload and BASE, never by applying and capturing.
 
 use crate::diff::{EnergyModelDiff, ModelPatch, RunPeriodPatch};
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRunEndDay, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

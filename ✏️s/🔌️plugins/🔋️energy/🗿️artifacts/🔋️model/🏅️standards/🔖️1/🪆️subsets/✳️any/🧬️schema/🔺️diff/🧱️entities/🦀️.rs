@@ -3,7 +3,7 @@
 //! `Set` assigns a scalar, `Opt` sets or clears an optional field, `List` edits an ordered id list, `Arr` assigns
 //! entries of a fixed array, `Coll`/`Rec` nest a collection or a record.
 
-use super::patch::{patch, record_patch, row_patch, Arr, Coll, Field, FieldPatch, List, Opt, Rec, Row, RowPatch, Set, Unchanged};
+use crate::diff_patch::{patch, record_patch, row_patch, Arr, Coll, Field, FieldPatch, List, Opt, Rec, Row, RowPatch, Set, Unchanged};
 use protocol::MutationApplyError;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 

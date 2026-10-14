@@ -6,7 +6,6 @@ members = [
     "⚖️compliance/📦️packages/🦀️rust",
     "📇️registry/🧬️contract/📦️packages/🦀️rust",
     "📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust",
-    "🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
     "🪟️results/🎚️config/📦️packages/🦀️rust",
 ]
 exclude = [
@@ -109,6 +108,36 @@ path = "⚖️compliance/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-plugin-norm-results-config]
 path = "🪟️results/🎚️config/📦️packages/🦀️rust"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

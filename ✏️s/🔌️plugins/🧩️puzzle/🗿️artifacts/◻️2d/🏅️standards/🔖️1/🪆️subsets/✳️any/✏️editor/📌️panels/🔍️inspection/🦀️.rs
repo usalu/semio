@@ -7,7 +7,7 @@
 //! selection — the same arg shape the context menu sends.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, snapshot_target_regions, puzzle_extension_id, ui_label, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle_extension_id, crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -185,7 +185,7 @@ fn node_fields(node: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
         stepper_row(&mut fields, "node.radius", labels.radius.as_str(), id, "radius", stepper_value(node, "radius", 24.0), 1.0)?;
     }
     read_only(&mut fields, "node.handles", labels.handles.as_str(), node.get("handles").and_then(Value::as_array).map_or(0, Vec::len))?;
-    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::puzzle2d_entity_hidden(node))?;
+    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node))?;
     flag_row(&mut fields, "node.locked", labels.locked.as_str(), "locked", flag(node, "locked"))?;
     Ok(fields)
 }
@@ -196,7 +196,7 @@ fn edge_fields(edge: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
     read_only(&mut fields, "edge.kind", labels.edge_kind.as_str(), text(edge, "edgeKind"))?;
     read_only(&mut fields, "edge.source", labels.source.as_str(), text(edge, "source"))?;
     read_only(&mut fields, "edge.target", labels.target.as_str(), text(edge, "target"))?;
-    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::puzzle2d_entity_hidden(edge))?;
+    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(edge))?;
     flag_row(&mut fields, "edge.locked", labels.locked.as_str(), "locked", flag(edge, "locked"))?;
     Ok(fields)
 }

@@ -3,7 +3,7 @@
 //! holds a plain pure function rather than an `InferredField` dependency chain — nothing here
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.
 
-use crate::Fem3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds

@@ -1,44 +1,51 @@
 //! 🧬️ En1990 closed semantic mutation vocabulary for the basis-of-design subject.
 
-use crate::diff::En1990Diff;
-use crate::En1990Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1990_diff::En1990Diff;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
-pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1990_mutation, inverse_en1990_mutation};
+pub use crate::edit_rules::EDIT_RULES;
 
 //#region 🔖️Leaves
-use super::change_annex;
-use super::change_project_id;
-use super::change_altitude_m;
-use super::change_consequence_class;
-use super::change_reliability_class;
-use super::change_design_working_life_category;
-use super::change_design_working_life_years;
-use super::change_reference_period_years;
-use super::change_supervision_level;
-use super::change_inspection_level;
-use super::change_beta_computed;
-use super::change_permanents;
-use super::change_variables;
-use super::change_accidentals;
-use super::change_seismics;
-use super::change_members;
-use super::change_bridge_sls;
-use super::change_effects;
-use super::insert_permanent;
-use super::insert_variable;
-use super::insert_accidental;
-use super::insert_seismic;
-use super::insert_member;
-use super::insert_effect;
-use super::remove_permanent;
-use super::remove_variable;
-use super::remove_accidental;
-use super::remove_seismic;
-use super::remove_member;
-use super::remove_effect;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_annex;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_project_id;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_altitude_m;
+use semio_s_artifact_norm_en1990_mut_reliability::change_consequence_class;
+use semio_s_artifact_norm_en1990_mut_reliability::change_reliability_class;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_design_working_life_category;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_design_working_life_years;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_reference_period_years;
+use semio_s_artifact_norm_en1990_mut_reliability::change_supervision_level;
+use semio_s_artifact_norm_en1990_mut_reliability::change_inspection_level;
+use semio_s_artifact_norm_en1990_mut_reliability::change_beta_computed;
+use semio_s_artifact_norm_en1990_mut_actions::change_permanents;
+use semio_s_artifact_norm_en1990_mut_actions::change_variables;
+use semio_s_artifact_norm_en1990_mut_accidental::change_accidentals;
+use semio_s_artifact_norm_en1990_mut_accidental::change_seismics;
+use semio_s_artifact_norm_en1990_mut_members::change_members;
+use semio_s_artifact_norm_en1990_mut_members::change_bridge_sls;
+use semio_s_artifact_norm_en1990_mut_members::change_effects;
+use semio_s_artifact_norm_en1990_mut_actions::insert_permanent;
+use semio_s_artifact_norm_en1990_mut_actions::insert_variable;
+use semio_s_artifact_norm_en1990_mut_accidental::insert_accidental;
+use semio_s_artifact_norm_en1990_mut_accidental::insert_seismic;
+use semio_s_artifact_norm_en1990_mut_members::insert_member;
+use semio_s_artifact_norm_en1990_mut_members::insert_effect;
+use semio_s_artifact_norm_en1990_mut_actions::remove_permanent;
+use semio_s_artifact_norm_en1990_mut_actions::remove_variable;
+use semio_s_artifact_norm_en1990_mut_accidental::remove_accidental;
+use semio_s_artifact_norm_en1990_mut_accidental::remove_seismic;
+use semio_s_artifact_norm_en1990_mut_members::remove_member;
+use semio_s_artifact_norm_en1990_mut_members::remove_effect;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -118,13 +125,27 @@ pub const KINDS: &[&str] = &[
 mod tests;
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-
-#[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
+
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_en1990_mutation(base: &semio_s_artifact_norm_en1990_model::En1990Snapshot, mutation: &crate::En1990Mutation) -> Result<(semio_s_artifact_norm_en1990_model::En1990Snapshot, Vec<String>), String> {
+    let raised = <crate::En1990Mutation as protocol::Mutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_en1990_mutation(mutation: &crate::En1990Mutation, base: &semio_s_artifact_norm_en1990_model::En1990Snapshot) -> Result<Vec<crate::En1990Mutation>, semio_framework_value::ValueError> {
+    <crate::En1990Mutation as protocol::Mutation<semio_s_artifact_norm_en1990_model::En1990Snapshot>>::inverse(mutation, base)
+}
+}
+pub use crate::mutation_bridge::*;

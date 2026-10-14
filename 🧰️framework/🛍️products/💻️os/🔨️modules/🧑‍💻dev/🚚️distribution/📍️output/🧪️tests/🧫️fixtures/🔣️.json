@@ -8,7 +8,7 @@
         "variant": "counter"
       },
       "valid": true,
-      "path": "owners/neutral-dev/package/dist/build-counter-react/release"
+      "path": ".cache/b/p/m/vite/release/e2cc83b91440297c/out"
     },
     {
       "id": "declared",
@@ -17,7 +17,7 @@
         "distDir": "owners/counter/site"
       },
       "valid": true,
-      "path": "owners/counter/site/release"
+      "path": ".cache/b/p/m/vite/release/e2cc83b91440297c/out"
     },
     {
       "id": "unicode",
@@ -26,7 +26,7 @@
         "distDir": "🌿️owner/🚚️site"
       },
       "valid": true,
-      "path": "🌿️owner/🚚️site/release"
+      "path": ".cache/b/p/m/vite/release/439a93e7de4ace0f/out"
     },
     {
       "id": "absolute",

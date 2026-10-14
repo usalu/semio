@@ -1,0 +1,839 @@
+{
+ "family": {
+  "semio-s-artifact-lowpoly-lowpoly": {
+   "owner": "",
+   "root": "🦀️.rs",
+   "lib": [
+    "🦀️.rs"
+   ],
+   "test": [
+    "🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-model": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔣️json/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🌳️canonical/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🕸️mesh/🛫️projection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🕸️mesh/🔍️rows/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🕸️mesh/🛬️reconstruction/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🕸️mesh/📏️preflight/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧪️tests/🔬️bytes/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "lowpoly_io_sqlite_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🕸️mesh/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_model_unit",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-lowpoly-lowpoly-model-diff": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-mutations": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/⚖️laws/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧭️normal-channels/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🧪️tests/⛵️inserts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🧪️tests/🚫️removes/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🧪️tests/🔀️moves/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🧪️tests/🏷️retitles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth/🧪️tests/🟢️turns/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🧪️tests/📍️translates/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🧪️tests/🔄️yaws/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🧪️tests/📐️halves/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧪️tests/🕸️attaches/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🧪️tests/✂️detaches/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🧪️tests/🪜️stacks/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🧪️tests/➖️drops/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🧪️tests/🏷️retitles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer/🧪️tests/🙈️hides/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer/🧪️tests/🌫️fades/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer/🧪️tests/✖️switches/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🧪️tests/🖌️paints/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🖌️dabs/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🧽️erases/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/⏸️erases/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/⛔️paints/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/🫓️paints/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🧪️tests/📐️dabs/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/🚚️moves/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/📌️pins/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/🧩️part/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/⏸️still/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/⛔️ghost/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/🕳️bare/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🧪️tests/🔁️twice/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🧪️tests/🌀️turns/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🧪️tests/📐️lifts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🧪️tests/⏸️still/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🧪️tests/🫥️void/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🧪️tests/⛔️ghost/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️wides/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🧩️part/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⏸️still/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🫓️flat/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🧪️tests/📍️sets/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-mut-objects": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-mut-geometry": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-mut-paint": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-inferences": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-examples": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-engine": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-config": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-presence": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-view": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-kit": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-options": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🖌️paint-params-brush/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧽️paint-params-eraser/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️gumball/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️snap/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🌞️sun/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🖌️paint-params-brush/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧽️paint-params-eraser/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️snap/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🌞️sun/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "lowpoly_options_gumball",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️gumball/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️gumball/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-lowpoly-lowpoly-modes": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "lowpoly_modes_model",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_modes_uv",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-lowpoly-lowpoly-commands": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "lowpoly_commands_patch_object",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_add_primitive",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_sun",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_camera",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_chrome",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_engagement",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_document",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_media",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_mesh_edit",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_paint",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_selection",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_object",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_transform",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_commands_uv",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-lowpoly-lowpoly-panels": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "lowpoly_panels_layers",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_panels_artifact",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "lowpoly_panels_catalogue",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-lowpoly-lowpoly-editor": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔌️mounted/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-viewer": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-lowpoly-lowpoly-io": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  }
+ },
+ "consumers": {
+  "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly-model": 1,
+   "semio-s-artifact-lowpoly-lowpoly-mutations": 1
+  },
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎮️command-lowpoly-1/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly-mutations": 1,
+   "semio-s-artifact-lowpoly-lowpoly-model": 2,
+   "semio-s-artifact-lowpoly-lowpoly-commands": 13,
+   "semio-s-artifact-lowpoly-lowpoly-config": 1,
+   "semio-s-artifact-lowpoly-lowpoly-view": 1,
+   "semio-s-artifact-lowpoly-lowpoly-editor": 4
+  },
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📷️io-lowpoly-png-1/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly-io": 2,
+   "semio-s-artifact-lowpoly-lowpoly-model": 1
+  },
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔀️io-lowpoly-1/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly-io": 2,
+   "semio-s-artifact-lowpoly-lowpoly-model": 1
+  },
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️fleet-example-sweep/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly-model": 1
+  },
+  "🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/🦀️.rs": {
+   "semio-s-artifact-lowpoly-lowpoly": 2,
+   "semio-s-artifact-lowpoly-lowpoly-viewer": 1
+  }
+ },
+ "dropped_reexports": [
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   [
+    [
+     "crate::LowpolyObjectPatch",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::schema::mutations::set_vertex_positions::inverse::lowpoly_selection_motion_inverse",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::schema::diff::LowpolySelectionMotion",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::lowpoly_selection_motion_diff",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::lowpoly_selection_moves",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::lowpoly_selection_normal_channels",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::lowpoly_selection_vertex_violation",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️apply-paint-stroke/🦀️.rs",
+   [
+    [
+     "crate::mutations::laws",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-selection/🦀️.rs",
+   [
+    [
+     "crate::mutations::laws",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️rotate-selection/🦀️.rs",
+   [
+    [
+     "crate::mutations::laws",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs",
+   [
+    [
+     "crate::mutations::laws",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/🦀️.rs",
+   [
+    [
+     "crate::mutations::laws",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::kit::LOWPOLY_PLAY_APP_ID",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::lowpoly_action",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::lowpoly_window_action",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::lowpoly_window_engagement",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::lowpoly_window_engagement_with_selection",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::lowpoly_window_measures",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::paint_utility_params_group",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::reset_document_effect",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_label",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_value_bool",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_value_list",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_value_map",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_value_number",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::ui_value_text",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::kit::utility_param_slider",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_PLAY_BODY_MAIN",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::modes::paint::windows::uv::LOWPOLY_PLAY_BODY_UV",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::panels::catalogue::LOWPOLY_PLAY_BODY_CATALOGUE",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::panels::document::LOWPOLY_PLAY_BODY_ARTIFACT",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::panels::inspection::LOWPOLY_PLAY_BODY_INSPECTION",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::panels::layers::LOWPOLY_PLAY_BODY_LAYERS",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::modes::edit::lowpoly_window_engagement",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::modes::edit::lowpoly_window_engagement_with_selection",
+     null
+    ],
+    [
+     "crate::editor::lowpoly::modes::edit::lowpoly_window_measures",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️.rs",
+   [
+    [
+     "crate::editor::lowpoly::lowpoly_paint_step",
+     null
+    ]
+   ]
+  ]
+ ]
+}

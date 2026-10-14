@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "qualityRecord",
+  "id": "quality-record-a",
+  "newName": "Renamed Quality Record A"
+}

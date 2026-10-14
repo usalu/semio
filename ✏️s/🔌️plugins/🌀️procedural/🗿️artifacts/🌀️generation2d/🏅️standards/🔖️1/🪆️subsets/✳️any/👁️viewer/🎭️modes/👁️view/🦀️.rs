@@ -4,7 +4,7 @@
 //! minimal viewer with ≥1 real window — a Generate-mode read-only twin is a follow-up, not a purity or
 //! completeness requirement.
 
-use crate::viewer::generation2d::modes::view::windows::preview;
+use crate::modes::view::windows::preview;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

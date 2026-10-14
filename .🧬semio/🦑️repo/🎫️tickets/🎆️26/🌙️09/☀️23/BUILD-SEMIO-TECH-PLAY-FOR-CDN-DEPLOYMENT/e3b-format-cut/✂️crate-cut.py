@@ -505,7 +505,7 @@ def main():
     for path, (text, used) in external.items():
         open(path, "w", encoding="utf-8").write(text)
         usage[path] = used
-    cache = os.path.join(REPO, ".🧬semio/🦑️repo/⚡️cache/e3b")
+    cache = os.path.join(HERE, "..", "🗑️generated", "e3b", "consumers")
     os.makedirs(cache, exist_ok=True)
     json.dump({os.path.relpath(path, REPO): used for path, used in usage.items()}, open(os.path.join(cache, os.path.basename(config_path).replace(".json", ".consumers.json")), "w", encoding="utf-8"), indent=1, sort_keys=True, ensure_ascii=False)
     print(f"roots={len(writes)} rewritten={len(rewrites)} consumers={len(external)}")

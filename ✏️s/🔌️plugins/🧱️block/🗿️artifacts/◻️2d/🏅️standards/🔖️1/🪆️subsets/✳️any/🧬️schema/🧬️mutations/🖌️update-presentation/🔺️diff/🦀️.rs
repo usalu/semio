@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `UpdatePresentation`.
 
-use crate::standards::v1::subsets::any::schema::diff::{Block2dDiff, Block2dPresentationPatch};
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::{Block2dDiff, Block2dPresentationPatch};
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_s_plugin_block::{BlockOptionalNumber, BlockOptionalText};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdatePresentation, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &crate::update_presentation::UpdatePresentation, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     let presentation = &base.presentation;
     if presentation.shape == payload.new_shape
         && presentation.radius == payload.new_radius

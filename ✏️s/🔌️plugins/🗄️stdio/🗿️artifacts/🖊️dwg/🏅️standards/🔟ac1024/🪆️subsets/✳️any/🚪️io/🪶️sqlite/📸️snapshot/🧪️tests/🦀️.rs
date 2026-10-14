@@ -61,7 +61,7 @@ fn sqlite_snapshot_dwg_controlled_native_admits_all_domain_rows_and_unicode() {
 
 #[test]
 fn sqlite_snapshot_complete_typescript_native_relational_interoperability() {
-    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(12).unwrap();
+    let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|directory| directory.join("✏️s").is_dir()).expect("repository root");
     let base=root.join("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
     let fixture=base.join("🧫️fixtures/🪶️sqlite/🟦️.ts");let provider=base.join("🪶️sqlite/🟦️.ts");
     let physical=root.join("🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts");

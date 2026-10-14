@@ -1,9 +1,9 @@
 //! 👁️ Lowpoly play app command — the show-edges chrome toggle. Config-only.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetShowEdgesEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetShowEdgesEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,4 @@ pub mod toggle_show_edges {
 //#endregion 🔖️ToggleShowEdges
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

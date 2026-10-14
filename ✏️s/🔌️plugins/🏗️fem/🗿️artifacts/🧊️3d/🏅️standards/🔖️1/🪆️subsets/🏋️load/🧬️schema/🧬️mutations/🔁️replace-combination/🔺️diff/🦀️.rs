@@ -5,10 +5,15 @@
 //! `create-combination` runs (`mutation.target-missing` on a case this base does not carry), the
 //! finite-factor bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationsDelta, Fem3dCombinationsModification, Fem3dDiff};
-use crate::standards::v1::subsets::any::schema::mutations::{combination_breach,target_mismatch,invariant,resolve_combination_terms};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dCombinationsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::combination_breach;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_combination_terms;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

@@ -1,17 +1,17 @@
 //! ➕ Puzzle3d mutation — `AddObjectVortex`: attaches a new rim vortex to an object.
-use crate::standards::v1::subsets::any::schema::mutations::RemoveObjectVortex;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use {crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
+use crate::remove_object_vortex::mutation::RemoveObjectVortex;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 
 //#region 🔖️Mutation
 /// ➕ `add-object-vortex` payload — owner object id + new vortex payload at an optional
 /// FINAL-state `index` (`None` appends). A duplicate `vortex.id` on the same object is a no-op.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "add-object-vortex")]
 pub struct AddObjectVortex {
     pub object_id: String,

@@ -4,13 +4,13 @@
 //! Missing target OR a cold cache (documented staleness gap) ⇒ `Vec::new()` — both fail soft to a
 //! no-op inverse, never a panic.
 
-use crate::mutations::{add_layer_asset, RasterMutation};
-use crate::RasterSnapshot;
+use crate::add_layer_asset;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveLayerAsset, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok(match crate::raster_image(&base.assets, &payload.asset_id) {
-        Some(asset) => vec![RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: payload.asset_id.clone(), asset })],
+pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset>>(payload: &crate::remove_layer_asset::mutation::RemoveLayerAsset, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok(match semio_s_artifact_raster_raster_model::raster_image(&base.assets, &payload.asset_id) {
+        Some(asset) => vec![Op::from(add_layer_asset::AddLayerAsset { asset_id: payload.asset_id.clone(), asset })],
         None => Vec::new(),
     })
 }

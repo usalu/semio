@@ -1,7 +1,6 @@
 //! ⚡️ Block3d artifact — OpText/OpBinary codecs + grammar for `Block3dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
-
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,7 +28,6 @@ impl protocol::OpText for Block3dMutation {
         semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
-
 
 //#endregion 🔖️HandcraftedOpCodecs
 

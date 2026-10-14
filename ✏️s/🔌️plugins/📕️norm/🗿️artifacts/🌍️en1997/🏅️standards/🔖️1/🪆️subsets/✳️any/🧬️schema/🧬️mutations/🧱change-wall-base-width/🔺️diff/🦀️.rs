@@ -1,6 +1,6 @@
-use super::ChangeWallBaseWidth;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997RetainingWallsRows, En1997RetainingWallsPatch};
+use crate::change_wall_base_width::ChangeWallBaseWidth;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997RetainingWallsRows, En1997RetainingWallsPatch};
 
 pub fn diff(payload: &ChangeWallBaseWidth, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_base_width.is_finite() || payload.new_base_width <= 0.0 {

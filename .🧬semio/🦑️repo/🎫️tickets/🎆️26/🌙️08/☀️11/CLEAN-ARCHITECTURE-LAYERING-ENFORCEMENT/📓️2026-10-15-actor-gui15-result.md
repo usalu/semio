@@ -1,0 +1,13 @@
+# Actor GUI15 Registered Result
+
+Actual registered `bun repo run @semio-tech/framework-actor:canonical-architecture` terminated **1 after 8,398ms**, before tests. The configured complete bootstrap factory ran before the first child envelope. The original initial policy remains `actor:canonical-architecture:caller`, maximum600000ms. Factory SHA-256 is `726ebda12f15cd8afcbe9b3b6d436011be2dc1772fd294e3170a02beabda42fe`. No trace flag, renewed deadline, installer, cache reset or Source bypass was added.
+
+The actual log reached `cache:dependencies-store`, then refused `Bun current ownership changed during verification` for Repo library `🏗️build/📥️inputs`. This is actual dependency-store activity, not native compiler or test execution. The current Cargo interface cut remains unqualified by this registered attempt.
+
+The defining guard compares retained and current observations under the original control. This stack failed the deterministic byte-sorted, filtered immediate-child `{name,kind}` **list** comparison, rather than content, inode, timestamp or ordering. The old and new list values were not recorded; the exact changed child and writer cannot be reconstructed from this receipt. No attribution to concurrent writers, material publication or this implementation is supported. See [read-only failure trace](ACTOR15-OWNERSHIP-FAILURE-TRACE.md).
+
+The combined Source roster was checked immediately before dispatch against `source-lane-freeze2.json`:44 files, aggregate `6b2bd1e3e92fa1e119927132cc02c6eca61d67d4151444a5cf4745d5e7392624`. All44 file bytes matched again after termination. This finite observation does not cover the actual directory-membership fact and is not complete Source authority or evidence that no concurrent changes occurred elsewhere.
+
+Receipts remain under `🗑️generated/ap-gui15`: `factory.json`, `started.json`, `current.log`, `result.json`, `terminal-source-observations.json` and `terminal-joint-source-observations.json`. Recorder input is `ap15/📜️script.ts`; caller record is `actor-public-canonical-gui-caller15.json`. The immutable joint Source receipt and Root check remain under `🗑️generated/actor-cargo-cut`.
+
+The bounded next change adds deterministic, limited membership/type difference diagnostics to this same refusal without changing retained facts, comparison, control, signal or admission. Existing owning tests and a test-only independent diff oracle will check presentation. A fresh actual capture will use new exclusive outputs and the same original configured policy. Actor15 does not establish a JavaScript material/publication failure and does not justify an initializer on that evidence. Native execution, compiler Store receiving and registered architecture acceptance remain outstanding.

@@ -1,10 +1,10 @@
 //! 🖼️ 🖼️ Raster play app commands command — `duplicate-layer`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::mutations::create_layer;
-use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::{clone_layer, find_layer, locate_layer, require_layer_edit};
-use crate::RasterSnapshot;
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations_layers::create_layer;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{clone_layer, find_layer, locate_layer, require_layer_edit};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -27,7 +27,7 @@ pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnapshot>, 
     let (parent_id,index)=plan(document,&payload.layer_id)?;
     let source=find_layer(&document.layers,&payload.layer_id).ok_or_else(||Fault::from("raster-layer-not-found"))?;
     let layer=clone_layer(source);
-    let selection=crate::editor::raster::layer_selection::select_layer_effect(crate::standards::v1::subsets::any::schema::layer_node_id(&layer))?;
+    let selection=crate::layer_selection::select_layer_effect(semio_s_artifact_raster_raster_model::layer_node_id(&layer))?;
     Ok(Emit {artifact_mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {parent_id,index,layer:Box::new(layer)})],effects:vec![selection],..Default::default()})
 }
 

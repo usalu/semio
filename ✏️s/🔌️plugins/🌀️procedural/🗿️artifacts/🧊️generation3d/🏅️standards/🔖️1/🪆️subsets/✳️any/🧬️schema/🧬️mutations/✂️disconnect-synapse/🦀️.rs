@@ -1,7 +1,6 @@
 //! ✂️ `disconnect-synapse` payload — severs a [`SynapseSpec`] edge by id.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 //#region 🔖️DisconnectSynapse
 /// ✂️ Severs the synapse edge with `id`; diff/inverse leaves capture the full removed edge from
@@ -12,14 +11,17 @@ pub struct DisconnectSynapse {
     pub id: String,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for DisconnectSynapse {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for DisconnectSynapse
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::connect_synapse::ConnectSynapse>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-synapse", record: "DisconnectedSynapse" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::disconnect_synapse::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::disconnect_synapse::inverse::inverse(self, base)?
     

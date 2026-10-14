@@ -143,7 +143,8 @@ pub(crate) mod context {
 
 use super::*;
 use crate::editor::architect::catalog::analysis_kind_from_str;
-use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind};
+use crate::standards::v1::subsets::any::schema::mutations::create_register_row;
+use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
@@ -364,7 +365,7 @@ async fn patch_register_item_updates_element_name() {
     let emit = context::drive(&ArchitectCommand::PatchRegisterItem(patch_register_item::PatchRegisterItem { register_id: "elements".into(), entity_id: element_id.0, patch_json: json!({ "name": "Updated Reception" }).to_string() }), &program);
     assert!(matches!(
         emit.artifact_mutations.first(),
-        Some(ProgramMutation::ReplaceProgramElement(payload)) if payload.program_element.header.name == "Updated Reception"
+        Some(ProgramMutation::ReplaceRegisterRow(payload)) if payload.row.key() == RegisterKey::ProgramElement && payload.row.header().name == "Updated Reception"
     ));
 }
 
@@ -373,9 +374,9 @@ async fn formatted_report_renders_section_headings() {
     let mut program = sample_plugin();
     let initial = ArchitectPlayApp::initial_config();
     let emit = context::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
-    let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("authored report record") };
-    let selected_report_id = payload.report_record.header.id.clone();
-    program.reports.push(payload.report_record.clone());
+    let Some(ProgramMutation::CreateRegisterRow(create_register_row::CreateRegisterRow { row: RegisterRow::ReportRecord(record), .. })) = emit.artifact_mutations.first() else { panic!("authored report record") };
+    let selected_report_id = record.header.id.clone();
+    program.reports.push(record.clone());
     let config = report_window::config::ArchitectReportWindowConfig { selected_report_id: Some(selected_report_id) };
     let json = context::project_render(report_window::render(&program, &config, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("Overview"));

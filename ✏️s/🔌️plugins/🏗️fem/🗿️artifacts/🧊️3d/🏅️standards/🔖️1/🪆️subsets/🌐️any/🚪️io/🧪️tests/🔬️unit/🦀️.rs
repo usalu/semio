@@ -60,3 +60,11 @@ async fn io_declaration_registers_every_declared_hop() {
     foreign.dedup();
     assert_eq!(foreign, vec!["s.stdio.csv", "s.stdio.json", "s.stdio.obj", "s.stdio.stl", "s.stdio.txt"]);
 }
+
+#[test]
+fn computation_artifact_kind_matches_computation_fem3d() {
+    let kind = crate::standards::v1::subsets::any::io::computation_artifact_kind();
+    assert_eq!(kind.id, "computation.fem3d");
+    assert_eq!(kind.component_kind, "fem3d-results");
+    assert_eq!(kind.schema, "computation.fem3d");
+}

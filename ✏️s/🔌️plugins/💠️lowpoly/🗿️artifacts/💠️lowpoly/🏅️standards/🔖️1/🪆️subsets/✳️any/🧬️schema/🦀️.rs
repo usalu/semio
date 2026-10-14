@@ -1,6 +1,47 @@
 //! 🧬️ Lowpoly artifact schema — every field of the artifact with its state class.
 
-use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+//#region 🧩️Modules
+#[path = "🕸️mesh/🦀️.rs"]
+pub mod managed_mesh;
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "../🚪️io/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "../🚪️io/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "../🚪️io/🪶️sqlite/🦀️.rs"]
+                        pub mod sqlite;
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use crate::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::MeshData;
 use semio_framework_3d::mesh::HalfedgeMesh;
@@ -21,23 +62,23 @@ pub struct LowpolyArtifact {
 //#region 🔖️Conversions
 impl Default for LowpolyArtifact {
     fn default() -> Self {
-        Self { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: Vec::new() }
+        Self { schema: crate::snapshot::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: Vec::new() }
     }
 }
 
 impl LowpolyArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::LowpolySnapshot {
-        crate::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
+    pub fn to_snapshot(&self) -> crate::snapshot::LowpolySnapshot {
+        crate::snapshot::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::LowpolySnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::snapshot::LowpolySnapshot) -> Self {
         Self { schema: snapshot.schema, objects: snapshot.objects }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::LowpolySnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::snapshot::LowpolySnapshot) {
         self.schema = snapshot.schema;
         self.objects = snapshot.objects;
     }
@@ -45,34 +86,7 @@ impl LowpolyArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.lowpoly.lowpoly` — twenty handcrafted schema leaves.
-pub fn lowpoly_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.lowpoly.lowpoly",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
+
 //#endregion 🔖️Descriptor
 
 //#region 🔖️DocumentHelpers
@@ -82,13 +96,13 @@ pub const LOWPOLY_DEFAULT_EXAMPLE_LABEL: &str = "Hexagonal Cut Concrete Forest L
 
 /// 🔧️ Shared by the app's compute session and the `edit-paint-layer`/`insert-paint-layer` mutation
 /// leaves — a mutable lookup of an object by id within a projection. Relocated from `⚙️engine`.
-pub fn object_mut<'a>(projection: &'a mut crate::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
+pub fn object_mut<'a>(projection: &'a mut crate::snapshot::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
 /// 🔧️ Shared by the app's compute session and `edit-paint-layer`'s `↩️inverse` leaf (which reads the
 /// currently-stored bytes at each run's offset to compute the undo runs). Relocated from `⚙️engine`.
-pub fn layer_pixels_at<'a>(projection: &'a crate::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
+pub fn layer_pixels_at<'a>(projection: &'a crate::snapshot::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 
@@ -127,12 +141,12 @@ pub fn mesh_data_from_transfer(transfer: &semio_framework_value::DslValue, paint
 }
 
 /// 🧱️ Builds a typed managed mesh document directly from a decoded triangle mesh.
-pub fn lowpoly_snapshot_from_mesh(mesh: &MeshData) -> Result<crate::LowpolySnapshot, String> {
+pub fn lowpoly_snapshot_from_mesh(mesh: &MeshData) -> Result<crate::snapshot::LowpolySnapshot, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|error| format!("{error:?}"))?;
-    let state = crate::LowpolyMeshState::from_mesh(halfedge);
-    let child = crate::managed_mesh_child_handle("obj-1", &state);
-    Ok(crate::LowpolySnapshot { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![LowpolyObject {
-        id: "obj-1".into(), name: "Imported Mesh".into(), transform: crate::LowpolyTransform::default(), smooth_shading: false,
+    let state = crate::managed_mesh::LowpolyMeshState::from_mesh(halfedge);
+    let child = crate::snapshot::managed_mesh_child_handle("obj-1", &state);
+    Ok(crate::snapshot::LowpolySnapshot { schema: crate::snapshot::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![LowpolyObject {
+        id: "obj-1".into(), name: "Imported Mesh".into(), transform: crate::snapshot::LowpolyTransform::default(), smooth_shading: false,
         mesh: Some(child), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new(), mesh_state: Some(state),
     }] })
 }
@@ -163,7 +177,7 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
         }
         let default_pixels;
         let pixels = if layer.pixels.is_empty() {
-            default_pixels = crate::empty_paint_pixels();
+            default_pixels = crate::snapshot::empty_paint_pixels();
             default_pixels.as_slice()
         } else {
             layer.pixels.as_slice()
@@ -320,22 +334,14 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> 
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-//#region 🔖️ExportConcreteForestMeshTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs"]
-mod export_concrete_forest_mesh_tests;
-//#endregion 🔖️ExportConcreteForestMeshTests
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::LowpolyObject;
-pub use crate::LowpolyPaintLayer;
-pub use crate::LowpolySelection;
+pub use crate::snapshot::LowpolyObject;
+pub use crate::snapshot::LowpolyPaintLayer;
+pub use crate::snapshot::LowpolySelection;
 //#endregion 🔁️Re-exports
 
 /// 🩸 Contiguous RGBA octets shared by mutations and sparse deltas.
@@ -347,3 +353,6 @@ pub struct PixelRun {
     #[value(with = "semio_framework_value::bytes")]
     pub bytes: Vec<u8>,
 }
+
+/// 🧬️ The artifact facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const ARTIFACT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };

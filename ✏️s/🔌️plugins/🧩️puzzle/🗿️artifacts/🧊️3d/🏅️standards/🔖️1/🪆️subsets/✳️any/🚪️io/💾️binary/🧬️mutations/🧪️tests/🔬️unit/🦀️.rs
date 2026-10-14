@@ -1,26 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::host::owned::{close_puzzle3d_store, puzzle3d_store};
-
-#[semio_framework_async_macros::async_test]
-async fn puzzle3d_document_vcs_replays_granular_operations() {
-    use crate::standards::v1::subsets::any::schema::empty_puzzle3d_snapshot;
-    use {crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
-    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
-
-    let mut store = (puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
-    (store.dispatch(ArtifactCommand::Apply {
-        mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(
-            Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
-            None,
-        )],
-        transaction: None,
-    }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await
-    .expect("apply");
-    let projection = store.snapshot().expect("projection");
-    assert_eq!(projection.objects.len(), 1);
-    assert_eq!(projection.objects[0].id, "o1");
-    close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
-}
+use crate::io::binary::mutations::*;
 
 /// 🔗️ Minimal scene JSON matching `SceneConfig`'s real wire shape (camelCase, per its
 /// `#[serde(rename = ...)]` attrs) — deserialized rather than struct-literal-built since
@@ -28,7 +6,7 @@ async fn puzzle3d_document_vcs_replays_granular_operations() {
 /// fields, to carry it inside `Puzzle3dEngineCommand::SetScene`). A byte-identical copy of this
 /// helper also lives in `crate::editor::puzzle3d::precompute`'s own test module, for the two
 /// dispatch tests that moved there (a schema test file must not depend on the app).
-pub(crate) fn sample_scene_config() -> crate::standards::v1::subsets::any::schema::SceneConfig {
+pub fn sample_scene_config() -> semio_s_artifact_puzzle_3d_model::SceneConfig {
     let json = r#"{
             "sceneSnapshot": {
                 "objects": [{"id": "host", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [0,0,0], "orientation": [0,0,0,1], "vortices": [{"id": "v0", "vortexKind": "port-a", "position": [0,0,0], "direction": [0,0,-1]}]}],

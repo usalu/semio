@@ -231,7 +231,7 @@ async fn selection_missing_targets_are_errors() {
 #[semio_framework_async_macros::async_test]
 async fn a_board_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
     for mutation in &log {
         semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");

@@ -1,7 +1,7 @@
 
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{Block3dVortexKind, Block3dVortexTemplate};
-use crate::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
+use crate::text::snapshot::*;
+use semio_s_artifact_block_3d_model::{Block3dVortexKind, Block3dVortexTemplate};
+use semio_s_plugin_block::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
 pub fn nakagin_capsule() -> Block3dSnapshot {
     let mut definition = Block3dSnapshot {
@@ -18,7 +18,7 @@ pub fn nakagin_capsule() -> Block3dSnapshot {
         description: String::new(),
         attributes: Vec::new(),
     });
-    crate::set_vortex_kinds(&mut definition, &[Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }]);
+    semio_s_artifact_block_3d_model::set_vortex_kinds(&mut definition, &[Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }]);
     definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, -1.6, 1.2], direction: [0.0, -1.0, 0.0], radius: 0.3, label: Some("door".into()) });
     definition
 }

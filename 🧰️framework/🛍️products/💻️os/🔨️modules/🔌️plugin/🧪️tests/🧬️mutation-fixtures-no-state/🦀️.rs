@@ -1,6 +1,6 @@
 //! 🫧️ Exact no-state store retirement owners for the keyed app fixture: the framework's own zero-payload owners.
 
-use crate::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use crate::app_views::{NoPresence, NoPresenceMutation};
 use crate::store;
 

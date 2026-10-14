@@ -28,6 +28,7 @@ reserved-producer-testing = []
 original-actor-context-testing = []
 
 [dependencies]
+semio-framework-plugin-ownership = { path = "../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value-retirement-owner = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../🏇️mounted-owner/📦️packages/🦀️rust" }

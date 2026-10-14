@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -20,14 +20,26 @@ pub fn decode_op(bytes: &[u8]) -> Result<Vdi3805Mutation, protocol::ProtocolErro
 }
 
 mod native_codec {
-use crate::artifact_schema::mutations::Vdi3805Mutation;
-use crate::artifact_schema::mutations::{
-    add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode, add_curve::AddCurve, add_geometry::AddGeometry,
-    add_product::AddProduct, remove_curve::RemoveCurve, remove_geometry::RemoveGeometry, remove_product::RemoveProduct, remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection,
-    rename_product::RenameProduct, change_curve_points::ChangeCurvePoints, change_geometry_parameters::ChangeGeometryParameters, change_product_configuration::ChangeProductConfiguration, resize_geometry::ResizeGeometry,
-    change_manufacturer_file::ChangeManufacturerFile,
-    change_limits::ChangeLimits,
-};
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection::AddGeometryConnection;
+use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of::ChangeCorrectionAsOf;
+use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile::ChangeEditionProfile;
+use semio_s_artifact_norm_vdi3805_mut_file::change_strict_mode::ChangeStrictMode;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_curve::AddCurve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry::AddGeometry;
+use semio_s_artifact_norm_vdi3805_mut_products::add_product::AddProduct;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_curve::RemoveCurve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry::RemoveGeometry;
+use semio_s_artifact_norm_vdi3805_mut_products::remove_product::RemoveProduct;
+use semio_s_artifact_norm_vdi3805_mut_file::remove_edition_profile::RemoveEditionProfile;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry_connection::RemoveGeometryConnection;
+use semio_s_artifact_norm_vdi3805_mut_products::rename_product::RenameProduct;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_curve_points::ChangeCurvePoints;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_geometry_parameters::ChangeGeometryParameters;
+use semio_s_artifact_norm_vdi3805_mut_products::change_product_configuration::ChangeProductConfiguration;
+use semio_s_artifact_norm_vdi3805_mut_geometry::resize_geometry::ResizeGeometry;
+use semio_s_artifact_norm_vdi3805_mut_file::change_manufacturer_file::ChangeManufacturerFile;
+use semio_s_artifact_norm_vdi3805_mut_file::change_limits::ChangeLimits;
 
 fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;

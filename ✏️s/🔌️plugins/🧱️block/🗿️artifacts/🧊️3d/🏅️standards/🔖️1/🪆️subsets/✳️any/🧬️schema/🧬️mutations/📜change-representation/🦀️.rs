@@ -1,8 +1,7 @@
 //! 📜 Block3d mutation — `ChangeRepresentationDescription`: a representation's `description`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 📜 `change-representation-description` payload.
@@ -19,19 +18,19 @@ pub struct ChangeRepresentationDescription {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_representation_description(id: String, new_description: String) -> Block3dMutation {
-    Block3dMutation::ChangeRepresentationDescription(ChangeRepresentationDescription { id, new_description })
+pub fn change_representation_description<Op: From<crate::change_representation_description::ChangeRepresentationDescription>>(id: String, new_description: String) -> Op {
+    Op::from(ChangeRepresentationDescription { id, new_description })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresentationDescription {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeRepresentationDescription where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_representation_description::ChangeRepresentationDescription> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-description", record: "ChangedRepresentationDescription" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_representation_description::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_representation_description::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresen
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

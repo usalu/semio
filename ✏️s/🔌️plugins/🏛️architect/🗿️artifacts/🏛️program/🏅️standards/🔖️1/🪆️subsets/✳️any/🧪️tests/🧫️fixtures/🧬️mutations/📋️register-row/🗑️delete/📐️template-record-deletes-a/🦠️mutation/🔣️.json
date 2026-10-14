@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "templateRecord",
+  "id": "template-record-a"
+}

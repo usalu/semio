@@ -101,7 +101,7 @@ pub(crate) mod context {
         ];
         app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
-        let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
+        let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("indexed config projection").snapshot;
         assert_eq!(config.indexed_artifacts.len(), 1);
         (app, id)
     }

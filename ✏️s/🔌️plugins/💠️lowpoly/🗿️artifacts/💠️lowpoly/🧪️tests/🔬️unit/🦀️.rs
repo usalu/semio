@@ -1,5 +1,7 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::{snapshot_from_mesh_json};
-use super::*;
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json;
+use semio_framework_os_kernel::Patchable;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::{mesh_child_handle, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySelectionTargets, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+use semio_s_artifact_lowpoly_lowpoly_model::LowpolyArtifact;
 
 #[semio_framework_async_macros::async_test]
 async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
@@ -45,9 +47,9 @@ async fn lowpoly_selection_defaults_target_whole_mesh() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
-    use framework_schema::ArtifactSchemaFields;
+    use semio_framework_schema::ArtifactSchemaFields;
     use semio_framework_schema_state::parse_state_class_kebab;
-    let descriptor = schema::lowpoly_artifact_schema_descriptor();
+    let descriptor = super::lowpoly_artifact_schema_descriptor();
     assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
     let schema: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(descriptor.snapshot.json_schema, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot json");
     assert_eq!(schema["title"], "LowpolySnapshot");
@@ -63,5 +65,5 @@ async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot
     let mut derived: Vec<(String, _)> = LowpolySnapshot::field_states().await.iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
     derived.sort_by(|a, b| a.0.cmp(&b.0));
     assert_eq!(derived, json_states);
-    assert_eq!(schema::LowpolyArtifact::artifact_schema_id().await, "s.lowpoly.lowpoly");
+    assert_eq!(LowpolyArtifact::artifact_schema_id().await, "s.lowpoly.lowpoly");
 }

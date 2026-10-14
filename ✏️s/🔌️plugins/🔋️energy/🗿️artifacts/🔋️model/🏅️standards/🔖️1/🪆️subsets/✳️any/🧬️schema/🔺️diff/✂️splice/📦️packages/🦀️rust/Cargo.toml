@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-energy-model-diff-splice"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model diff splice: the positional splice script of one ordered list"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }

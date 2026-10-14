@@ -3,11 +3,27 @@
 //! value. Revision-bound addresses an inverse must carry are computed against the state the forward leaves behind.
 
 use super::*;
-use crate::schema::diff::{XlsxXmlPartDiff, XlsxXmlPartInsertion, XlsxXmlPartModification, XlsxXmlPartRemoval, XlsxXmlPartsDelta};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartDiff;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartInsertion;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartModification;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartRemoval;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartsDelta;
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
-use crate::schema::snapshot::XlsxXmlPart;
-use crate::schema::vocabulary::{attribute_value, column_index, column_letter, column_letters_of, element_matches, expanded_element_name, namespace_scope, REL_TYPE_WORKSHEET, R_NS, R_NS_STRICT, SML_NS, SML_NS_STRICT, WORKSHEET_CONTENT_TYPE};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::worksheet_to_xml_with_namespace;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::attribute_value;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letter;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letters_of;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::element_matches;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::expanded_element_name;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::namespace_scope;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_WORKSHEET;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::R_NS_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::WORKSHEET_CONTENT_TYPE;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::worksheet_to_xml_with_namespace;
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildModified, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use semio_s_artifact_stdio_zip::opc::{fresh_relationship_id, resolve_relationship_target, OpcRelationship, OpcTargetMode};
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcOwnerInsertion, OpcOwnerModification, OpcOwnerPatch, OpcOwnerRemoval, OpcOwnerRow, OpcOwnersDelta, OpcRelationshipsDelta};
@@ -103,7 +119,7 @@ fn workbook_path(snapshot: &XlsxSnapshot) -> Result<String, String> {
     snapshot
         .opc
         .resolve_relationship("", semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT)
-        .or_else(|| snapshot.opc.resolve_relationship("", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT))
+        .or_else(|| snapshot.opc.resolve_relationship("", semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT))
         .ok_or_else(|| "missing workbook relationship".to_string())
 }
 //#endregion 🔖️DiffHelpers
@@ -172,7 +188,7 @@ fn cell_value_of(snapshot: &XlsxSnapshot, part_path: &str, node: &XmlNode, scope
     let XmlNode::Element { children, .. } = node else { return Err("XLSX cell address resolved a non-element".into()) };
     let cell_type = attribute_value(node, scope, &[""], "t")?;
     let shared = shared_strings(snapshot).map_or(0, |table| table.positions.len());
-    crate::standards::v_ecma_376::subsets::base::schema::inferences::workbook::extract_cell_value(children, scope, namespace, cell_type, shared, part_path).map_err(|error| error.to_string())
+    semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::workbook::extract_cell_value(children, scope, namespace, cell_type, shared, part_path).map_err(|error| error.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

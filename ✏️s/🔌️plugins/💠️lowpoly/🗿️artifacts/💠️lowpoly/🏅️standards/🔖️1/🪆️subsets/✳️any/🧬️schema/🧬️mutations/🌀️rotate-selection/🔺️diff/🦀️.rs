@@ -3,13 +3,14 @@
 //! one absolute position row per vertex it moves: Error `target-missing`, Warning `partial` and Warning `no-op` come from there.
 
 use super::RotateSelection;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RotateSelection, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
     if let Some(reason) = payload.invariant_violation() {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, [payload.object_id.clone()]);
     }
-    crate::mutations::lowpoly_selection_motion_diff(base, &payload.object_id, &payload.vertex_ids, &payload.motion())
+    semio_s_artifact_lowpoly_lowpoly_model_diff::lowpoly_selection_motion_diff(base, &payload.object_id, &payload.vertex_ids, &payload.motion())
 }
 //#endregion 🔖️Diff

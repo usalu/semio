@@ -1,7 +1,8 @@
 //! 🧬️ Shared Generation3d generation-command projection and preview input owner.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::editor::generation3d::Generation3dCommand;
+use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
@@ -19,7 +20,7 @@ pub struct Generation3dGenerationCommandResult {
 }
 
 pub fn generation_command_result(action: &str, args: Option<&semio_framework_value::DslValue>, projection: &Generation3dSnapshot, config: &Generation3dConfig) -> Option<Generation3dGenerationCommandResult> {
-    let spec = flow_host_snapshot_to_form_spec(&projection.host_snapshot);
+    let spec = flow_host_snapshot_to_form_spec(&projection.host_snapshot, &PlaybookFlowFormProducer);
     let mut state = projection.generation.as_state().clone();
     state.selected_generation_id.clone_from(&config.selected_generation_id);
     let operations = if action == "selectGeneration" {
@@ -38,7 +39,7 @@ pub fn generation_command_result(action: &str, args: Option<&semio_framework_val
         eprintln!("[TRACE] gen3d command action={action} before={} after={} ops={} selected={:?}", projection.generation.as_state().generations.len(), state.generations.len(), operations.len(), state.selected_generation_id);
     }
     let config_mutations = (state.selected_generation_id != config.selected_generation_id)
-        .then(|| Generation3dConfigMutation::SetSelectedGeneration(crate::editor::generation3d::config::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }))
+        .then(|| Generation3dConfigMutation::SetSelectedGeneration(semio_s_artifact_procedural_3d_editor_config::SetSelectedGeneration { selected_generation_id: state.selected_generation_id.clone() }))
         .into_iter()
         .collect();
     Some(Generation3dGenerationCommandResult {
@@ -47,26 +48,3 @@ pub fn generation_command_result(action: &str, args: Option<&semio_framework_val
     })
 }
 
-pub fn generation_command_result_for(command: &Generation3dCommand, projection: &Generation3dSnapshot, config: &Generation3dConfig) -> Option<Generation3dGenerationCommandResult> {
-    match command {
-        Generation3dCommand::AddGeneration(_) => generation_command_result("addGeneration", None, projection, config),
-        Generation3dCommand::RemoveGeneration(payload) => {
-            let args = semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]);
-            generation_command_result("removeGeneration", Some(&args), projection, config)
-        }
-        Generation3dCommand::RenameGeneration(payload) => {
-            let args = semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone())), ("name".to_string(), semio_framework_value::DslValue::String(payload.name.clone()))]);
-            generation_command_result("renameGeneration", Some(&args), projection, config)
-        }
-        Generation3dCommand::UpdateGenerationValues(payload) => {
-            let generation_id = payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String);
-            let args = semio_framework_value::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), semio_framework_value::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
-            generation_command_result("updateGenerationValues", Some(&args), projection, config)
-        }
-        Generation3dCommand::SelectGeneration(payload) => {
-            let args = semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]);
-            generation_command_result("selectGeneration", Some(&args), projection, config)
-        }
-        _ => None,
-    }
-}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "owner": "s/stdio/semio/v1",
+  "producerType": "SemioMemberStoreProducer",
+  "producerMacro": "semio_member_owner",
+  "membersMacro": "space_members",
+  "roles": {
+    "producer": {
+      "language": "rust",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+      "symbols": [
+        "SemioMemberStoreProducer",
+        "semio_member_owner"
+      ]
+    },
+    "members": {
+      "language": "rust",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "symbols": [
+        "SemioMembers",
+        "SemioMembersOpen"
+      ]
+    }
+  }
+}

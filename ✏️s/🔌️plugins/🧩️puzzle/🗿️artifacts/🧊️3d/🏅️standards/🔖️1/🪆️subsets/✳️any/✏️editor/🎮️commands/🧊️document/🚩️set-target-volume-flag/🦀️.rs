@@ -1,7 +1,7 @@
 //! 📦️ `set-target-volume-flag` command.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
-use crate::standards::v1::subsets::any::schema::mutations::{change_target_volume_hidden, change_target_volume_locked};
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
+use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked};
 use semio_framework_pack_json::Value;
 
 /// 🚩️ One `change-target-volume-hidden` or `change-target-volume-locked` when the named volume's flag differs.

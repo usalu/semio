@@ -37,3 +37,7 @@ path = "../../🧪️tests/🔬️columns/🦀️.rs"
 [[test]]
 name = "row_mutations"
 path = "../../🧪️tests/🔬️rows/🦀️.rs"
+
+[[test]]
+name = "codec_laws"
+path = "../../🧪️tests/🔬️codecs/🦀️.rs"

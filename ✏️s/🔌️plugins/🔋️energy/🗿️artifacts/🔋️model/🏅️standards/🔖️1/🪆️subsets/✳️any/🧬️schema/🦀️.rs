@@ -1,6 +1,14 @@
 //! 🧬️ EnergyModel artifact schema — every field with its state class.
 
-use crate::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_s_artifact_energy_model_diff as diff;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+
+use crate::snapshot::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
@@ -16,13 +24,13 @@ pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
 /// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
 /// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
 pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
-    Ok(crate::energy_model(snapshot))
+    Ok(crate::snapshot::energy_model(snapshot))
 }
 
 /// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
 /// children in one call via [`crate::energy_snapshot_with_state`].
 pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
-    Ok(crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
+    Ok(crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -125,20 +133,8 @@ pub fn energy_model_artifact_schema_descriptor() -> semio_framework_schema_regis
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
+        snapshot: crate::snapshot::FACET,
+        diff: crate::diff::FACET,
         mutations: semio_framework_schema_registry::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),

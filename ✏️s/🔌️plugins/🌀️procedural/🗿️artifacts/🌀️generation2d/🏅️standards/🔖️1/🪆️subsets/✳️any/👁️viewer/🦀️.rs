@@ -3,10 +3,15 @@
 //! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Generation2dViewer>` (framework
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
-use crate::viewer::generation2d::modes::view;
-use crate::viewer::generation2d::modes::view::windows::preview;
-use crate::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
+use crate::modes::view;
+use crate::modes::view::windows::preview;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_DIALECT;
+use semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -50,7 +55,7 @@ pub struct Generation2dViewer;
 impl ArtifactViewer for Generation2dViewer {
     /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
     fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-        crate::generation2d_document_fault_notices()
+        semio_s_artifact_procedural_2d_model::generation2d_document_fault_notices()
     }
 
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
@@ -58,11 +63,11 @@ impl ArtifactViewer for Generation2dViewer {
     /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(crate::GENERATION2D_CHILD_PROJECTION), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(semio_s_artifact_procedural_2d_model::GENERATION2D_CHILD_PROJECTION), error.to_string()))
     }
 
     type Snapshot = Generation2dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
+    type Mutation = semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -75,7 +80,7 @@ impl ArtifactViewer for Generation2dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
     fn initial_snapshot() -> Generation2dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+        semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a
@@ -121,3 +126,28 @@ pub fn create_generation2d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod view {
+        #[path = "🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod windows {
+            #[path = "🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs"]
+            pub mod preview;
+        }
+    }
+}

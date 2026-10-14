@@ -2,10 +2,10 @@
 //! the canvas offset every addressed widget moves by from its BASE position, so editing the drag in history replays it on
 //! any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_label_number,Generation2dMutation};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use crate::generation2d_label_number;
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️MoveNodes
@@ -21,19 +21,22 @@ pub struct MoveNodes {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_nodes(ids: Vec<String>, dx: f64, dy: f64) -> Generation2dMutation {
-    Generation2dMutation::MoveNodes(MoveNodes { ids, dx, dy })
+pub fn move_nodes<Op: From<MoveNodes>>(ids: Vec<String>, dx: f64, dy: f64) -> Op {
+    Op::from(MoveNodes { ids, dx, dy })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for MoveNodes {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for MoveNodes
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::move_widget::MoveWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "nodes", kind: "move-nodes", record: "MovedNodes" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::move_nodes::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::move_nodes::inverse::inverse(self, base)?
     
     })
 }

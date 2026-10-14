@@ -64,7 +64,7 @@ pub const MINIMAL_THEME_XML: &str = concat!(
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::PptxAnalyzer;
-    use crate::PptxSnapshot;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -108,8 +108,6 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::PptxComposer as PptxRawAnyComposer;
-    use crate::standards::v_ecma_376::subsets::strict::io::PptxStrictComposer;
-    use crate::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -117,23 +115,20 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<PptxRawAnyComposer>(), composer_entry_of::<PptxStrictComposer>(), composer_entry_of::<PptxTransitionalComposer>()]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<PptxRawAnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{PptxParagraph, PptxRun};
-    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -223,7 +218,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::PptxSnapshot;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts

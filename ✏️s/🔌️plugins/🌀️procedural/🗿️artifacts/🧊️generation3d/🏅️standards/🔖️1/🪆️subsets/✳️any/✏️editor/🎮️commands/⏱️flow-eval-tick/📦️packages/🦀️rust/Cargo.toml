@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-flow-eval-tick"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d flow-eval-tick command"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-editor-config = { workspace = true }
+semio-s-artifact-procedural-3d-editor-panels = { workspace = true }
+semio-s-artifact-procedural-3d-mode-edit = { workspace = true }
+semio-s-artifact-procedural-3d-mode-generate = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

@@ -9,9 +9,11 @@
 //! the host's slice (`ViewModel::tree_windows`). No truncation, no `+N` row. Each issue row keeps its
 //! own `focusPreflightIssue` action; this tree binds no interaction domain.
 
-use crate::editor::layout::terminology::{preflight_msg, LayoutLabels};
-use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
-use crate::{Frame, LayoutSnapshot};
+use semio_s_artifact_layout_layout_editor_panels::terminology::preflight_msg;
+use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_ui_locale::Label;
@@ -52,7 +54,7 @@ pub struct PreflightIssue {
     pub page_id: Option<String>,
 }
 
-fn resolve_link_state(link: &crate::ImageLink) -> &str {
+fn resolve_link_state(link: &semio_s_artifact_layout_layout_model::ImageLink) -> &str {
     if let Some(state) = link.state.as_deref() {
         return state;
     }
@@ -86,7 +88,7 @@ fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, cha
 pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
-        let resolved = crate::standards::v1::subsets::any::schema::resolve_page(doc, page);
+        let resolved = semio_s_artifact_layout_layout_model::resolve_page(doc, page);
         for entry in resolved {
             let frame = &entry.frame;
             if !frame.visible() {
@@ -253,7 +255,7 @@ fn issue_row(issue: &PreflightIssue) -> semio_framework_plugin::UiAssemblyResult
 pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let issues = run_layout_preflight(doc, labels);
     PanelTreeBuilder::new(LAYOUT_PREFLIGHT_ROOT)?
-        .window_section_or_placeholder(windows, LAYOUT_PREFLIGHT_ISSUES, Some(crate::editor::layout::ui_label(labels.preflight.as_str())?), true, &issues, issue_row, crate::editor::layout::ui_label(labels.no_issues.as_str())?)?
+        .window_section_or_placeholder(windows, LAYOUT_PREFLIGHT_ISSUES, Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.preflight.as_str())?), true, &issues, issue_row, semio_s_artifact_layout_layout_editor_commands::ui_label(labels.no_issues.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

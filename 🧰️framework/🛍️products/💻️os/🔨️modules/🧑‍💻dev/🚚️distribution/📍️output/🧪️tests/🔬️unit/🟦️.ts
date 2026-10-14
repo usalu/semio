@@ -27,7 +27,7 @@ export async function testDistributionOutputContract(workspace: string, artifact
       assert.equal(new URL(vector.path, pathToFileURL(`${temporary}/`)).pathname, pathToFileURL(actual()).pathname, vector.id);
       assert.equal(nx(), `{workspaceRoot}/${vector.path}`, vector.id);
       const target = cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package", pluginId: "neutral" }], corpus.stagingRoot, workspace);
-      assert.deepEqual(target[`build-${vector.row.variant}-site`].outputs, [nx()], vector.id);
+      assert.deepEqual(target[`build-${vector.row.variant}-site`].outputs.map((path:string)=>path.replace("{options.env.SEMIO_BUILD_MODE}","release")), [nx()], vector.id);
     }
     const configs: string[] = [];
     for (const owner of ["owners/neutral", "✏️s/🔌️plugins/🌿️neutral"]) {
@@ -36,20 +36,20 @@ export async function testDistributionOutputContract(workspace: string, artifact
       writeFileSync(join(temporary, file), '[package]\nname="neutral"\n[package.metadata.component]\npackage="semio:neutral-' + configs.length + '"\n[package.metadata.semio]\ncomponent-kind="plugin"\n[[package.metadata.semio.playground]]\nvariant="counter-' + configs.length + '"\n');
       configs.push(file);
     }
-    const rows = cacheInternals.collectPlaygroundCatalog(configs, temporary);
+    const rows = cacheInternals.collectPlaygroundCatalog(configs, temporary,[{publication:{contributions:[{packageRoots:["owners/neutral","✏️s/🔌️plugins/🌿️neutral"]}]}}]);
     assert.equal(rows.length, 2);
     assert.ok(rows.every((row: any) => row.distDir === undefined));
-    for (const row of rows) assert.equal(playgroundReactOutputPath(temporary, join(temporary, corpus.stagingRoot), row, "release"), join(temporary, corpus.stagingRoot, "dist", `build-${row.variant}-react`, "release"));
+    for (const row of rows) assert.equal(playgroundReactOutputPath(temporary, join(temporary, corpus.stagingRoot), row, "release"), join(temporary,".cache/b/p/m/vite/release",(await import("node:crypto")).createHash("sha256").update("os-dev:"+row.variant+":react").digest("hex").slice(0,16),"out"));
     const nodeSource = `import { readFileSync } from 'node:fs';
       import { pathToFileURL } from 'node:url';
       const { cacheInternals } = await import(pathToFileURL(process.argv[1]).href);
       const corpus = JSON.parse(readFileSync(process.argv[2], 'utf8'));
       const result = corpus.cases.map(v => {
-        try { const rows = cacheInternals.pluginSiteTargetsForCrate('owners/component/package', [{ ...v.row, cratePath: 'owners/component/package' }], corpus.stagingRoot, process.cwd()); return { id: v.id, valid: true, outputs: rows['build-' + v.row.variant + '-site'].outputs }; }
+        try { const rows = cacheInternals.pluginSiteTargetsForCrate('owners/component/package', [{ ...v.row, cratePath: 'owners/component/package' }], corpus.stagingRoot, process.cwd()); return { id: v.id, valid: true, outputs: rows['build-' + v.row.variant + '-site'].outputs.map(p=>p.replace('{options.env.SEMIO_BUILD_MODE}','release')) }; }
         catch { return { id: v.id, valid: false }; }
       });
       process.stdout.write(JSON.stringify(result));`;
-    const nodeRows = JSON.parse(execFileSync("node", ["--input-type=module", "-e", nodeSource, join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"), join(root, "🧪️tests/🧫️fixtures/🔣️.json")], { encoding: "utf8" }));
+    const nodeRows = JSON.parse(execFileSync("node", ["--experimental-transform-types","--input-type=module", "-e", nodeSource, join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"), join(root, "🧪️tests/🧫️fixtures/🔣️.json")], { encoding: "utf8" }));
     assert.deepEqual(nodeRows, corpus.cases.map((v: any) => ({ id: v.id, valid: v.valid, ...(v.valid ? { outputs: [`{workspaceRoot}/${v.path}`] } : {}) })));
     console.log(`Distribution output: ${corpus.cases.length} portable vectors, 2 owner layouts, independent Ajv/URL/Node producer passed`);
   } finally { rmSync(temporary, { recursive: true, force: true }); }

@@ -183,7 +183,7 @@ fn a_mounted_release_that_moves_nothing_and_two_drags_keep_their_shape() {
 fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0), resize_slot("room-a".into(), 3.0, 1.5)];
         for mutation in &log {

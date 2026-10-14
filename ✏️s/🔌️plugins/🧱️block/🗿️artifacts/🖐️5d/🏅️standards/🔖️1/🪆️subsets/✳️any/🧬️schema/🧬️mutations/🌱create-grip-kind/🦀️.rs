@@ -1,8 +1,7 @@
 //! 🌱 Block5d mutation — `CreateGripKind`: a new grip-kind catalog row.
 
-use crate::{Block5dGripKind, Block5dSnapshot};
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dSnapshot};
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🌱 `create-grip-kind` payload.
@@ -20,24 +19,24 @@ pub struct CreateGripKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_grip_kind(grip_kind: Block5dGripKind) -> Block5dMutation {
-    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind, index: None })
+pub fn create_grip_kind<Op: From<crate::create_grip_kind::CreateGripKind>>(grip_kind: Block5dGripKind) -> Op {
+    Op::from(CreateGripKind { grip_kind, index: None })
 }
 
 /// 📍️ Builder — like [`create_grip_kind`] but inserts the row at `index`.
-pub fn create_grip_kind_at(grip_kind: Block5dGripKind, index: u32) -> Block5dMutation {
-    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind, index: Some(index) })
+pub fn create_grip_kind_at<Op: From<crate::create_grip_kind::CreateGripKind>>(grip_kind: Block5dGripKind, index: u32) -> Op {
+    Op::from(CreateGripKind { grip_kind, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateGripKind {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for CreateGripKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::delete_grip_kind::DeleteGripKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "grip-kind", kind: "create-grip-kind", record: "CreatedGripKind" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::create_grip_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::create_grip_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -49,3 +48,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateGripKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

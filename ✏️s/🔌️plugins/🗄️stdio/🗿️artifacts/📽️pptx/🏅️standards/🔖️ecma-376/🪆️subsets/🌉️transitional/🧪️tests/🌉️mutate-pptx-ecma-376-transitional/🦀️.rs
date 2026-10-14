@@ -106,10 +106,13 @@ fn stamp_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_pptx_transitional_mutation, stamp_conformance_class_mutations, PptxTransitionalMutation};
-    use semio_s_artifact_stdio_pptx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
+    use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::apply_pptx_transitional_mutation;
+    use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::stamp_conformance_class_mutations;
+    use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::PptxTransitionalMutation;
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_s_artifact_stdio_pptx_test_oracle::standards::v_ecma_376::subsets::transitional::project_package;
     use semio_repo_test_host::law::wire_operation;
 

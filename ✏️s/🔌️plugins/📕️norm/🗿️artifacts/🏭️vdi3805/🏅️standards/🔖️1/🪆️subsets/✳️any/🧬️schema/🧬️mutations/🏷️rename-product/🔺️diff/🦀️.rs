@@ -1,9 +1,9 @@
 //! 🔺️ `rename-product` — sparse diff construction; missing id is `mutation.target-missing`. The derived
 //! `catalog.index` follows in `Vdi3805Diff::apply`.
 
-use super::RenameProduct;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805ProductsRows, Vdi3805ProductsPatch};
+use crate::rename_product::RenameProduct;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805ProductsRows, Vdi3805ProductsPatch};
 
 //#region 🔖️Diff
 

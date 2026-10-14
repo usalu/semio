@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "owned-present",
+      "source": "pub static V:&str=env!(\"CARGO_PKG_DESCRIPTION\");",
+      "cfg": [],
+      "environment": {
+        "CARGO_PKG_DESCRIPTION": "description"
+      },
+      "expected": {
+        "CARGO_PKG_DESCRIPTION": "description"
+      }
+    },
+    {
+      "id": "owned-absent",
+      "source": "pub static V:Option<&str>=option_env!(\"RUST_MIN_STACK\");",
+      "cfg": [],
+      "environment": {},
+      "expected": {
+        "RUST_MIN_STACK": null
+      }
+    },
+    {
+      "id": "raw-comment",
+      "source": "// option_env!(\"TMPDIR\")\n/* env!(\"TEMP\") */\npub static V:&str=env!(r#\"CARGO_PKG_NAME\"#);",
+      "cfg": [],
+      "environment": {
+        "CARGO_PKG_NAME": "leaf"
+      },
+      "expected": {
+        "CARGO_PKG_NAME": "leaf"
+      }
+    },
+    {
+      "id": "literal-text",
+      "source": "pub static V:&str=\"option_env!(\\\"TMP\\\")\";",
+      "cfg": [],
+      "environment": {},
+      "expected": {}
+    },
+    {
+      "id": "cfg-inactive",
+      "source": "#[cfg(inactive)] pub static V:Option<&str>=option_env!(\"TMPDIR\");",
+      "cfg": [],
+      "environment": {},
+      "expected": {}
+    },
+    {
+      "id": "TMPDIR",
+      "source": "pub static V:Option<&str>=option_env!(\"TMPDIR\");",
+      "cfg": [],
+      "environment": {
+        "TMPDIR": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "TMP",
+      "source": "pub static V:Option<&str>=option_env!(\"TMP\");",
+      "cfg": [],
+      "environment": {
+        "TMP": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "TEMP",
+      "source": "pub static V:Option<&str>=option_env!(\"TEMP\");",
+      "cfg": [],
+      "environment": {
+        "TEMP": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "SEMIO_SCRIPT_PROCESS_INVOCATION",
+      "source": "pub static V:Option<&str>=option_env!(\"SEMIO_SCRIPT_PROCESS_INVOCATION\");",
+      "cfg": [],
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "SEMIO_COMPILER_CAPACITY_HELD",
+      "source": "pub static V:Option<&str>=option_env!(\"SEMIO_COMPILER_CAPACITY_HELD\");",
+      "cfg": [],
+      "environment": {
+        "SEMIO_COMPILER_CAPACITY_HELD": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "SEMIO_COMPILER_PARALLELISM",
+      "source": "pub static V:Option<&str>=option_env!(\"SEMIO_COMPILER_PARALLELISM\");",
+      "cfg": [],
+      "environment": {
+        "SEMIO_COMPILER_PARALLELISM": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "UNOWNED",
+      "source": "pub static V:Option<&str>=option_env!(\"UNOWNED\");",
+      "cfg": [],
+      "environment": {
+        "UNOWNED": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    },
+    {
+      "id": "unresolved",
+      "source": "pub static V:&str=env!(concat!(\"CARGO_PKG_\",\"NAME\"));",
+      "cfg": [],
+      "environment": {},
+      "refusal": "Literal Rust"
+    },
+    {
+      "id": "unresolved",
+      "source": "macro_rules! value {($name:literal)=>{option_env!($name)}}",
+      "cfg": [],
+      "environment": {},
+      "refusal": "Literal Rust"
+    },
+    {
+      "id": "aliased-transient",
+      "source": "use std::option_env as observed; pub static V:Option<&str>=observed!(\"TMPDIR\");",
+      "cfg": [],
+      "environment": {
+        "TMPDIR": "per-invocation"
+      },
+      "refusal": "Transient or unowned"
+    }
+  ]
+}

@@ -1,4 +1,13 @@
-use super::*;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_mode_edit::windows::preview;
+use semio_s_artifact_procedural_2d_mode_edit as edit;
+use semio_s_artifact_procedural_2d_mode_generate as generate;
+use semio_s_artifact_procedural_2d_editor_panels::document;
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_s_artifact_procedural_2d_editor::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
@@ -49,8 +58,9 @@ macro_rules! assert_window_config_codecs {
 
 #[test]
 fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs() {
-    use crate::editor::generation2d::modes::edit::windows::{flow, preview as edit_preview};
-    use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
+    use semio_s_artifact_procedural_2d_mode_edit::windows::flow;
+    use semio_s_artifact_procedural_2d_mode_edit::windows::preview as edit_preview;
+    use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_preview;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")).expect("neutral Generation2d window fixture");
     let main_base: flow::config::Generation2dMainWindowConfig = semio_framework_pack_json::from_json_str(&fixture["baseConfigs"][flow::GENERATION2D_PLAY_WINDOW_MAIN].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral main config");
@@ -77,8 +87,12 @@ fn generation2d_window_camera_ownership_matches_neutral_fixture_and_exact_codecs
 
 #[test]
 fn generation2d_window_camera_raw_handlers_are_explicit_no_ops() {
-    use crate::editor::generation2d::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, node_graph_viewport};
-    use crate::editor::generation2d::unit_tests::context::{empty_history_view, retire_flow_eval_session};
+    use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_down;
+    use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_move;
+    use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_up;
+    use semio_s_artifact_procedural_2d_editor_commands::canvas_wheel;
+    use semio_s_artifact_procedural_2d_editor_commands::node_graph_viewport;
+    use crate::app_fixture::{empty_history_view, retire_flow_eval_session};
 
     let snapshot = Generation2dSnapshot::default();
     let history = empty_history_view();
@@ -108,13 +122,20 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
         .stack_size(4 * 1024 * 1024)
         .spawn(|| {
             block_on_generation2d_window_ownership(Box::pin(async {
-                use crate::editor::generation2d::commands::{add_generation, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, node_graph_viewport, remove_widget};
-                use crate::editor::generation2d::modes::edit::windows::{flow, preview as edit_preview};
-                use crate::editor::generation2d::modes::generate::windows::preview as generate_preview;
+                use semio_s_artifact_procedural_2d_editor_commands::add_generation;
+                use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_down;
+                use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_move;
+                use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_up;
+                use semio_s_artifact_procedural_2d_editor_commands::canvas_wheel;
+                use semio_s_artifact_procedural_2d_editor_commands::node_graph_viewport;
+                use semio_s_artifact_procedural_2d_editor_commands::remove_widget;
+                use semio_s_artifact_procedural_2d_mode_edit::windows::flow;
+                use semio_s_artifact_procedural_2d_mode_edit::windows::preview as edit_preview;
+                use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_preview;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigPack};
 
                 type TestApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
-                fn manifest() -> App { crate::editor::generation2d::unit_tests::context::generation2d_manifest_for_tests() }
+                fn manifest() -> App { crate::app_fixture::generation2d_manifest_for_tests() }
 
                 async fn load_exact<O: WindowConfigOwner>(app: &mut TestApp, window_id: &str, state: O::State) -> Result<(), String> {
                     let envelope_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
@@ -138,7 +159,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let receipt = dispatch(app, Some(view), Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await?;
                     if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Transient) { return Err("AddGeneration must publish no transient of its own".into()); }
                     let meta = ActionMeta { instance_id: 71, view_state: Some(view.clone()), ..artifact_app_laws::meta("generation2d-window-camera-ownership") };
-                    let run = Box::pin(crate::editor::generation2d::unit_tests::context::drive_preview_run(app, &meta, &receipt.effects)).await;
+                    let run = Box::pin(crate::app_fixture::drive_preview_run(app, &meta, &receipt.effects)).await;
                     if app.ephemeral_snapshot().await.transient_generation == before { return Err(format!("the previewEval run did not populate the app preview transient: {run:?}")); }
                     Ok(())
                 }

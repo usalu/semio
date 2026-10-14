@@ -29,7 +29,7 @@ where
         state
     };
     for (index, edited) in edits {
-        let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
+        let mut store = ArtifactStore::<P, Mu>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
         store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, Mu>()).unwrap_or_else(|error| panic!("{guest}: the drag history catalog installs: {error:?}"));
         for leaf in log {
             crate::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));

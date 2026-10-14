@@ -1,8 +1,7 @@
 //! 🚤️ Energy model mutation — `ChangePlantLoopDesignFlow`: Sets the mass flow the loop is designed around, in kg/s.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePlantLoopDesignFlow {
     pub new_design_flow_kg_s: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_plant_loop_design_flow(id: crate::model::EntityId, new_design_flow_kg_s: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePlantLoopDesignFlow(ChangePlantLoopDesignFlow { id, new_design_flow_kg_s })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_plant_loop_design_flow<Op: From<ChangePlantLoopDesignFlow>>(id: crate::model::EntityId, new_design_flow_kg_s: f64) -> Op {
+    ChangePlantLoopDesignFlow { id, new_design_flow_kg_s }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePlantLoopDesignFlow {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePlantLoopDesignFlow
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePlantLoopDesignFlow>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "plant-loop", kind: "change-plant-loop-design-flow", record: "ChangedPlantLoopDesignFlow" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

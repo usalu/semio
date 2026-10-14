@@ -1,0 +1,60 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "crate": "semio_s_artifact_block_5d_editor",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "agg": {
+   "package": "semio-s-artifact-block-5d-editor",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "",
+   "description": "Block 5d editor: the play app, modes, panels and command dispatch"
+  },
+  "commands": {
+   "package": "semio-s-artifact-block-5d-editor-commands",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "prefix": "commands",
+   "description": "Block 5d editor commands"
+  },
+  "config": {
+   "package": "semio-s-artifact-block-5d-editor-config",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "prefix": "config",
+   "description": "Block 5d editor config and editor identities"
+  }
+ },
+ "rules": [
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/",
+   "commands"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/",
+   "config"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "text": "//! 🎮️ block-5d-editor commands.\n"
+  }
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "workspace_root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+ "root_to": "config"
+}

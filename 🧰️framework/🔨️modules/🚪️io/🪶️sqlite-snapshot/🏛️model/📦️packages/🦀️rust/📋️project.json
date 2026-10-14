@@ -1,0 +1,31 @@
+{
+  "name": "@semio-tech/framework-io-sqlite-model-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
+  "targets": {
+    "test-source": {
+      "executor": "repo:script",
+      "metadata": {"semio":{"execution":{"version":1,"kind":"source"}}},
+      "options": {
+        "command": "bun ./📜️script.ts test-source",
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    }
+  }
+}

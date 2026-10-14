@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/store/document-owner-producer/schema.json",
+  "title": "Original Document Store Owner Producer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "selection",
+    "source",
+    "normal",
+    "close",
+    "body"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "selection": {
+      "const": "explicit-original-factory-type"
+    },
+    "source": {
+      "const": "original-typed-catalog-sources"
+    },
+    "normal": {
+      "const": "actual-source-demands-before-construction"
+    },
+    "close": {
+      "const": "same-selected-producer-and-original-grant"
+    },
+    "body": {
+      "const": "zero-sized-type-selection-original-concrete-layout"
+    }
+  }
+}

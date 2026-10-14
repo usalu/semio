@@ -1,8 +1,10 @@
 //! 🧲 `set-frame-layer` — moves one page frame onto another layer of the same page.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,10 +20,10 @@ pub struct SetFrameLayer {
     pub layer_id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetFrameLayer {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_layer::SetFrameLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "frame-layer", kind: "set-frame-layer", record: "SetFrameLayer" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_frame_layer(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_frame_layer(self, base)? 
     })
 }
@@ -45,11 +47,11 @@ pub fn diff_set_frame_layer(payload: &SetFrameLayer, base: &LayoutSnapshot) -> p
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::modification(payload.frame_id.clone(), FramePatch { layer_id: Some(payload.layer_id.clone()), ..Default::default() }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_frame_layer(payload: &SetFrameLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_frame_layer<Op: From<crate::set_frame_layer::SetFrameLayer>>(payload: &SetFrameLayer, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
-    vec![LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), layer_id: frame.layer_id().to_string() })]
+    vec![Op::from(SetFrameLayer { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), layer_id: frame.layer_id().to_string() })]
 
     })())
 }

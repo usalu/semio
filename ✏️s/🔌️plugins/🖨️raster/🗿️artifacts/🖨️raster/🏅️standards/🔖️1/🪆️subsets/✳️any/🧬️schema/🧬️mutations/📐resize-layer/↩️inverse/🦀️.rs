@@ -1,15 +1,16 @@
 //! ↩️ `resize-layer` inverse — the old `width`/`height` from `base` (defaulting like
 //! `apply_layer_patch` does when unset). Not a `Pixel`, or missing target ⇒ `Vec::new()`.
 
-use crate::mutations::RasterMutation;
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterLayerNode, RasterSnapshot};
+
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ResizeLayer, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::resize_layer::mutation::ResizeLayer>>(payload: &crate::resize_layer::mutation::ResizeLayer, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match find_layer(&base.layers, &payload.layer_id) {
         Some(RasterLayerNode::Pixel { width, height, .. }) => {
-            vec![RasterMutation::ResizeLayer(super::ResizeLayer { layer_id: payload.layer_id.clone(), new_width: width.unwrap_or(512), new_height: height.unwrap_or(512) })]
+            vec![Op::from(crate::resize_layer::mutation::ResizeLayer { layer_id: payload.layer_id.clone(), new_width: width.unwrap_or(512), new_height: height.unwrap_or(512) })]
         }
         _ => Vec::new(),
     })

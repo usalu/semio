@@ -2,9 +2,10 @@
 //! settings. The staged form speaks the TYPED optional fields; a results-panel control speaks
 //! `{field, value}` because the host merges a control's own scalar under `value`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
-use crate::{Fem3dSnapshot, FemAnalysisSettings};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -53,6 +54,3 @@ pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapsho
     Ok(Emit::mutations(vec![Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings })]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

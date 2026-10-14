@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Block3dSnapshot;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block3d` DSL — the `ObjectKind` half
 /// of semio_compose_rs's metabolism-kit `Capsule` type.
@@ -46,10 +46,10 @@ pub type Block3dSnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+use crate::text::snapshot::*;
+use semio_s_artifact_block_3d_model::*;
+use semio_s_artifact_block_3d_model::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
+use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
@@ -74,4 +74,4 @@ impl pack::snapshot::ArtifactDsl for Block3dSnapshot {
     }
 }
 }
-#[cfg(test)] pub use snapshot_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_codec::*;

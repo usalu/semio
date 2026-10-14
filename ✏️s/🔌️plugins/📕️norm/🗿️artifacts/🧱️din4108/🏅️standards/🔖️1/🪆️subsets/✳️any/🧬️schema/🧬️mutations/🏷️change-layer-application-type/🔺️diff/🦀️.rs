@@ -1,8 +1,8 @@
 //! 🏷️ `change-layer-application-type` diff — patches the layer's `application_type` inside its element; a missing element or layer is a `mutation.invariant`.
 
-use super::ChangeLayerApplicationType;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
-use crate::Din4108Snapshot;
+use crate::change_layer_application_type::ChangeLayerApplicationType;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeLayerApplicationType, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

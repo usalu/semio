@@ -1,9 +1,9 @@
 //! 🧪️ Raster owned-host laws: the retained initializer, the stepwise clone and candidate authorities and their displaced-owner retirement.
 
 use super::*;
-use crate::mutations::rename_layer;
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document;
-use crate::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
+use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
+use semio_s_artifact_raster_raster_model::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_job::{JobOutcomeBorrow, OperationId};
 use semio_framework_plugin::{ArtifactOwnedDisposer, ArtifactStoreInitializationAuthority};
 
@@ -25,7 +25,7 @@ enum Terminal {
 }
 
 fn empty_raster_initializer(operation: OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -200,7 +200,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
 
     let mut source = empty_raster_document();
     source.layers.push(RasterLayerNode::Pixel { id: "mounted-layer".into(), name: "Mounted".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
-    for index in 0..(crate::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
+    for index in 0..(semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
         source
             .assets
             .insert(
@@ -213,7 +213,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
             .expect("mounted-shaped source admits its second fixed map page");
     }
     retire_raster_value_cold(empty);
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -294,7 +294,7 @@ fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
 fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal() {
     let operation = OperationId(707);
     let generation = semio_framework_job::Generation(39);
-    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     assert_eq!(drive_raster_initializer(&mut authority, operation, generation, 4_096), Terminal::Complete);
     assert!(authority.candidate.is_some());
@@ -362,7 +362,7 @@ fn raster_observed_capacity_and_combined_depth_are_exact() {
 #[test]
 fn raster_populated_owned_map_retires_every_entry_and_page_backing() {
     let mut assets = RasterOwnedMap::new();
-    for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
+    for index in 0..semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
         assets
             .insert(
                 format!("asset-{index:02}"),

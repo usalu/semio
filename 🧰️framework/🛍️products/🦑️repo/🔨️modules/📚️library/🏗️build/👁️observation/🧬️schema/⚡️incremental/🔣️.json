@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Incremental Build Graph Inference Law",
+  "description": "Language-neutral cases for incremental, parallel and concurrent-edit-robust project inference: serial and parallel passes agree byte for byte, only stale projects recompute, a mid-pass edit settles onto one consistent snapshot, an unparseable declaration withholds only its own project, persisted project records carry no module-load facts, optional cache retirement cannot wedge, and graph membership keeps only consumed files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owners",
+    "files",
+    "concurrency",
+    "warm",
+    "stale",
+    "race",
+    "unparseable",
+    "halfWritten",
+    "foreignLibraryFacts",
+    "retirement",
+    "members"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Root"
+      }
+    },
+    "files": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "concurrency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serial",
+        "parallel"
+      ],
+      "properties": {
+        "serial": {
+          "const": 1
+        },
+        "parallel": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 64
+        }
+      }
+    },
+    "warm": {
+      "$ref": "#/$defs/Counts"
+    },
+    "stale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "content",
+        "extra",
+        "recomputed",
+        "untouched"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "content": {
+          "type": "string"
+        },
+        "extra": {
+          "$ref": "#/$defs/Extra"
+        },
+        "recomputed": {
+          "$ref": "#/$defs/Roots"
+        },
+        "untouched": {
+          "$ref": "#/$defs/Roots"
+        }
+      }
+    },
+    "race": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "content",
+        "extra",
+        "untouched"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "content": {
+          "type": "string"
+        },
+        "extra": {
+          "$ref": "#/$defs/Extra"
+        },
+        "untouched": {
+          "$ref": "#/$defs/Roots"
+        }
+      }
+    },
+    "unparseable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "source",
+        "content",
+        "ageMilliseconds",
+        "untouched"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/Root"
+        },
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "content": {
+          "type": "string"
+        },
+        "ageMilliseconds": {
+          "type": "integer",
+          "minimum": 2001
+        },
+        "untouched": {
+          "$ref": "#/$defs/Roots"
+        }
+      }
+    },
+    "halfWritten": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "partial",
+        "completeAfterMilliseconds"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Path"
+        },
+        "partial": {
+          "type": "string"
+        },
+        "completeAfterMilliseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1999
+        }
+      }
+    },
+    "foreignLibraryFacts": {
+      "const": 0
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "usedBytes",
+              "availableBytes",
+              "due"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "usedBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "availableBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "due": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "members": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "expected"
+      ],
+      "properties": {
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        },
+        "expected": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Root": {
+      "type": "string",
+      "pattern": "^[^/]+$"
+    },
+    "Roots": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Root"
+      }
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "Counts": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "Extra": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "content"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

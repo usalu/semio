@@ -1,8 +1,7 @@
 //! 🌇️ Energy model mutation — `ChangeFenestrationShgc`: Sets the solar heat gain coefficient — the fraction of incident solar the glazing passes to the zone, directly and by re-radiation.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationShgc {
     pub new_shgc: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_shgc(id: crate::model::EntityId, new_shgc: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationShgc(ChangeFenestrationShgc { id, new_shgc })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_shgc<Op: From<ChangeFenestrationShgc>>(id: crate::model::EntityId, new_shgc: f64) -> Op {
+    ChangeFenestrationShgc { id, new_shgc }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationShgc {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationShgc
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationShgc>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-shgc", record: "ChangedFenestrationShgc" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

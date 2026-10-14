@@ -1,7 +1,7 @@
 //! 🧪️ `unit_tests` — moved out of `📝️text/🦀️.rs` into its canonical test implementation.
-use crate::standards::v1::subsets::any::io::text::mutations::*;
+use crate::text::mutations::*;
 use protocol::{OpBinary, OpText};
-use crate::artifact_schema::mutations::demo_mutation_cases;
+use semio_s_artifact_norm_en1994_mutations::demo_mutation_cases;
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {

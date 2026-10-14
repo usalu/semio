@@ -3,8 +3,9 @@
 //! re-derives the ABSOLUTE `change-slider-value` leaves of the value against the committed document and the release
 //! commits them as ONE edit. The handler reads the value only, never a gesture.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::change_slider_value;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
@@ -34,7 +35,7 @@ pub(crate) fn patch_leaves(host_snapshot: &FlowHostSnapshot, payload: &PatchFlow
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    Ok(Emit { artifact_mutations: patch_leaves(&doc.snapshot.host_snapshot, payload), ui_scope: crate::editor::generation3d::commands::node_graph_edit::slider_gesture_ui_scope(), ..Default::default() })
+    Ok(Emit { artifact_mutations: patch_leaves(&doc.snapshot.host_snapshot, payload), ui_scope: semio_s_artifact_procedural_3d_node_graph_edit::slider_gesture_ui_scope(), ..Default::default() })
 }
 
 #[cfg(test)]

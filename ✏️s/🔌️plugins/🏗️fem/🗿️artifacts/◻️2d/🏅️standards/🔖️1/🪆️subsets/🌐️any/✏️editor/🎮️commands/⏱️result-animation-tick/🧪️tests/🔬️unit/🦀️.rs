@@ -1,8 +1,15 @@
-use super::*;
-use crate::editor::fem2d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
-use crate::editor::fem2d::modes::edit::windows::results;
-use crate::editor::fem2d::unit_tests::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::result_animation_tick::*;
+use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::{rearm_effect, resting_step, FemPlaybackStep, FemPlaybackTransport};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
+use crate::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, InvocationResult, NoConfig, ViewModel, ViewWindowInstance};
 
 const WINDOW: &str = "results-left";
@@ -173,7 +180,7 @@ async fn history_rows(app: &mut Fem2dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();

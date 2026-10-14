@@ -4,7 +4,7 @@
 //! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
 //! no collection-typed top-level field).
 
-use crate::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["catalog", "edition_profile", "correction_as_of", "strict_mode", "index", "geometry", "curves"];

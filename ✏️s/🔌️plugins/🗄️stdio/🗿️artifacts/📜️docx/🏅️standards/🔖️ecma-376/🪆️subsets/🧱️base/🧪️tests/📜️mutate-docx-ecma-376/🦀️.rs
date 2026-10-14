@@ -89,12 +89,13 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
     use semio_repo_test_host::law::wire_operation;
-    use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::apply_docx_mutation;
-    use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_docx_mutation;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
     fn decode(bytes: &[u8]) -> Result<DocxSnapshot, String> {

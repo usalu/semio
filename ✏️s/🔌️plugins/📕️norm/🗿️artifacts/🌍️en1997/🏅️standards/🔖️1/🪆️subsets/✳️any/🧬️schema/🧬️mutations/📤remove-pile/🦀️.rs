@@ -1,8 +1,8 @@
 //! 🧹 `remove-pile` payload.
 
-use crate::diff::En1997Diff;
-use crate::mutations::En1997Mutation;
-use crate::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -14,16 +14,16 @@ pub struct RemovePile {
     pub index: usize,
 }
 
-impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for RemovePile {
+impl<Op> protocol::MutationKind<En1997Snapshot, Op> for RemovePile where Op: protocol::Mutation<En1997Snapshot, Diff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::insert_pile::InsertPile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove", entity: "pile", kind: "remove-pile", record: "RemovedPile",
     };
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
-        super::diff::diff(self, base)
+        crate::remove_pile::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1997Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_pile::inverse::inverse(self, base)?
     
     })
 }
@@ -31,3 +31,10 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for RemovePile {
         semio_framework_ui_locale::LocalizedLabel::native("Remove pile", "Pfahl entfernen")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

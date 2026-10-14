@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "conflict",
+  "id": "conflict-a",
+  "newName": "Renamed Conflict A"
+}

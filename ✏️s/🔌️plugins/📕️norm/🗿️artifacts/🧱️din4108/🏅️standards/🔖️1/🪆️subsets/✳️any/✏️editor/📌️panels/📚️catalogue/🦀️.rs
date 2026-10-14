@@ -1,8 +1,8 @@
 //! 📚️ DIN 4108 play app panel — examples plus design-λ, Table 3 R_min, and 4108-10 application classes.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::document::ClauseId;
-use crate::artifact_schema::{part_2, part_4, part_10};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_artifact_norm_din4108_checks::{part_2, part_4, part_10};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -16,7 +16,7 @@ pub const BODY_CATALOGUE: &str = "norm.din4108.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -113,7 +113,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

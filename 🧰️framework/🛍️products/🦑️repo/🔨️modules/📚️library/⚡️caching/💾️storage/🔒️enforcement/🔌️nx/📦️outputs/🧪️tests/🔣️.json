@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "path": "/fixed/rust/units/base/out",
+      "partition": "rust",
+      "prefix": "rust-unit:"
+    },
+    {
+      "path": "/fixed/products/next/prototype/out",
+      "partition": "products",
+      "prefix": "artifact:"
+    },
+    {
+      "path": "/fixed/products/vite/release/site/out",
+      "partition": "products",
+      "prefix": "artifact:"
+    }
+  ],
+  "invalid": [
+    "/fixed/products/../foreign/out",
+    "/fixed/products-sibling/out",
+    "/tmp/out",
+    "relative/output"
+  ],
+  "roots": {
+    "rust": "/fixed/rust",
+    "products": "/fixed/products"
+  }
+}

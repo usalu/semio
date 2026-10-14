@@ -213,7 +213,7 @@ impl ArtifactViewer for DrawingViewer {
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(semio_s_artifact_draw_drawing_host::owned::drawing_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(

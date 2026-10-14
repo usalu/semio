@@ -1,7 +1,6 @@
 //! ⚖️ Fem3d mutation — `ChangeLoadCaseSelfWeight` payload + `MutationKind` impl.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,13 +16,16 @@ pub struct ChangeLoadCaseSelfWeight {
     pub new_self_weight: bool,
 }
 
-impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ChangeLoadCaseSelfWeight {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for ChangeLoadCaseSelfWeight
+where
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<change_load_case_self_weight::ChangeLoadCaseSelfWeight>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

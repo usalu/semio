@@ -372,7 +372,11 @@ semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geom
 semio-framework-expression = { path = "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust" }
 semio-framework-raster = { path = "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust" }
 semio-framework-typeset = { path = "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust" }
-semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
+semio-framework-graph-manifest = { path = "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+semio-framework-graph-engine = { path = "🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-graph-algorithms = { path = "🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust" }
+semio-framework-graph-drawing = { path = "🧰️framework/🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
+semio-framework-graph-dsl = { path = "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-graph-layout-run = { path = "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
@@ -388,6 +392,8 @@ semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️a
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-tool-run-entities = { path = "🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust" }
+semio-framework-tool-run-presentation = { path = "🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust" }
 semio-framework-time-travel = { path = "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }

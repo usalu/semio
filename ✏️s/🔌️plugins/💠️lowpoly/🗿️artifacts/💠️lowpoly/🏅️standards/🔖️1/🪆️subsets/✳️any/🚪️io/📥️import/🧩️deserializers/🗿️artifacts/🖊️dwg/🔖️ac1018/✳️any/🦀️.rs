@@ -2,8 +2,8 @@
 //!
 //! Geometry over the real `decode_dwg` / `dwg_drawing_to_mesh` pipeline: polyface-mesh entities
 //! become one lowpoly object of triangles.
-use crate::standards::v1::subsets::any::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::{mesh_geometry::snapshot_from_parts, mesh_geometry::text_error, mesh_geometry::PolygonPart};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
 use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;

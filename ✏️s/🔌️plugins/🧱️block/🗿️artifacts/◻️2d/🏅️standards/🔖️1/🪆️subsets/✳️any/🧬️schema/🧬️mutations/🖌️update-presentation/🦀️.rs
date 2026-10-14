@@ -1,8 +1,7 @@
 //! 🖌️ Block2d mutation — `UpdatePresentation`: the whole rim-presentation facet atomically (shape/radius/width/height/color/iconKind are edited together in the shape inspector — see report).
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 🖌️ `update-presentation` payload.
@@ -23,19 +22,19 @@ pub struct UpdatePresentation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_presentation(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Block2dMutation {
-    Block2dMutation::UpdatePresentation(UpdatePresentation { new_shape, new_radius, new_width, new_height, new_color, new_icon_kind })
+pub fn update_presentation<Op: From<crate::update_presentation::UpdatePresentation>>(new_shape: Option<String>, new_radius: Option<f64>, new_width: Option<f64>, new_height: Option<f64>, new_color: Option<String>, new_icon_kind: Option<String>) -> Op {
+    Op::from(UpdatePresentation { new_shape, new_radius, new_width, new_height, new_color, new_icon_kind })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for UpdatePresentation {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for UpdatePresentation where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::update_presentation::UpdatePresentation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "presentation", kind: "update-presentation", record: "UpdatedPresentation" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::update_presentation::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_presentation::inverse::inverse(self, base)?
     
     })
 }
@@ -44,3 +43,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for UpdatePresenta
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

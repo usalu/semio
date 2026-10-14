@@ -1,10 +1,10 @@
 //! 📎 `insert-effect` diff — inserts the row at its position; a position past the collection's end inserts it last as a
 //! `mutation.clamped` warning.
 
-use super::InsertEffect;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990EffectEdit};
-use crate::En1990Snapshot;
+use crate::insert_effect::InsertEffect;
+use semio_s_artifact_norm_en1990_diff::En1990RowEdit as _;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990EffectEdit};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &InsertEffect, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

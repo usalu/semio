@@ -1,10 +1,15 @@
 //! 🧬️ XLSX snapshot with one authoritative logical document per XML-bearing OPC part.
 
-use crate::STDIO_XLSX_DOCUMENT_SCHEMA;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_XLSX_DOCUMENT_SCHEMA: &str = "stdio.xlsx";
+/// 🧬️ Artifact schema descriptor id.
+pub const XLSX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xlsx";
 
 //#region 🔖️XlsxModel
 /// 🔢️ A cell's decoded value — a real typed union over every SpreadsheetML cell-type ECMA-376
@@ -136,8 +141,8 @@ impl XlsxSnapshot {
 
     /// 🛡️ Refuses duplicate, mismatched, or unresolved XML/package authority.
     pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
-        use crate::schema::refusal::XlsxError;
-        use crate::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+        use crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
+        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
         fn valid_path(path: &str) -> bool {
             !path.is_empty() && !path.starts_with('/') && !path.contains('\\') && path.split('/').all(|segment| !segment.is_empty() && segment != "." && segment != "..")
         }
@@ -201,7 +206,7 @@ impl XlsxSnapshot {
     /// 📑️ Resolves every worksheet part by its ROLE — the targets of the main workbook's worksheet relationships
     /// (Transitional or Strict type), independent of the part's path or its declared content type.
     pub fn worksheet_part_paths(&self) -> Vec<String> {
-        use crate::schema::vocabulary::{REL_TYPE_WORKSHEET, REL_TYPE_WORKSHEET_STRICT};
+        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{REL_TYPE_WORKSHEET, REL_TYPE_WORKSHEET_STRICT};
         let Some(workbook) = self.workbook_part_path() else { return Vec::new() };
         self.opc
             .relationships_for(&workbook)

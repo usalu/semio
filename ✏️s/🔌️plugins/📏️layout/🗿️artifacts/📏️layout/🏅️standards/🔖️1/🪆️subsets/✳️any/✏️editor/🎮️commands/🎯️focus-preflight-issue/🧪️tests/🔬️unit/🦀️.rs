@@ -1,7 +1,8 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry};
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS};
+use semio_s_artifact_layout_layout_editor::unit_tests::context::{dispatch, layout_app, layout_app_with_registry};
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+use semio_s_artifact_layout_layout_editor::LayoutCommand;
+use semio_s_artifact_layout_layout_editor_commands::LAYOUT_INTERACTION_ELEMENTS;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 

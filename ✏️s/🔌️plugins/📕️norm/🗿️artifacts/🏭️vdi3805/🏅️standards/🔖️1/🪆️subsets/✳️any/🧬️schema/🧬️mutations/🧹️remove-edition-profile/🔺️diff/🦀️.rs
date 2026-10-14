@@ -1,8 +1,8 @@
 //! 🔺️ `remove-edition-profile` — sparse diff construction.
 
-use super::RemoveEditionProfile;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805EditionProfileRows};
+use crate::remove_edition_profile::RemoveEditionProfile;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805EditionProfileRows};
 
 //#region 🔖️Diff
 

@@ -1,11 +1,11 @@
 //! ↩️ `change-airtightness-n50` inverse.
 
-use super::ChangeAirtightnessN50;
-use crate::{Din4108Mutation, Din4108Snapshot};
+use crate::change_airtightness_n50::ChangeAirtightnessN50;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
-pub fn inverse(_payload: &ChangeAirtightnessN50, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeAirtightnessN50, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_airtightness_n50::ChangeAirtightnessN50> {
     Ok((|| {
-    vec![Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: base.airtightness_n50 })]
+    vec![Op::from(ChangeAirtightnessN50 { new_airtightness_n50: base.airtightness_n50 })]
 
     })())
 }

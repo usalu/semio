@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "command": { "program": "bun", "cwd": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust", "arguments": ["{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📜️script.ts", "test"], "tail": "test-arguments" },
+      "continuation": null,
+      "request": { "version": 1, "kind": "tests", "manifest": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml", "cwd": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust", "packages": ["semio-framework-schema-state"], "arguments": [] }
+    }
+  ]
+}

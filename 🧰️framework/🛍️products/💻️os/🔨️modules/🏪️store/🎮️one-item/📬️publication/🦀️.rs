@@ -8,7 +8,6 @@ use super::member_owned_batch;
 use super::member_group;
 use super::canonical_edit;
 use super::ArtifactStoreDecodedEditRetirement;
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::os_spr::command::ArtifactMessageSource;

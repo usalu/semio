@@ -1,13 +1,7 @@
 //! 🪵 EN 1995-1-1 / DIN NA / 1-2 / 2 timber compliance formulas and check builders.
 
-use crate::document::{
-    AnnexChoice, CheckBuilder, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy,
-    SubjectRef,
-};
-use crate::{
-    CharacteristicAction, ConnectionAction, MemberRole, SupportType, TimberConnection, TimberMember,
-    TimberProduct, TimberProperties,
-};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckBuilder, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1995_model::{CharacteristicAction, ConnectionAction, MemberRole, SupportType, TimberConnection, TimberMember, TimberProduct, TimberProperties};
 
 fn loc(en: &str, de: &str) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
@@ -1158,7 +1152,7 @@ fn push_duplicate_ids(
                 &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
                 &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
             ))
-            .status(crate::document::CheckStatus::Fail)
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
             .remedy(Remedy::one_of(
                 subject,
                 free,
@@ -1244,7 +1238,7 @@ fn evaluate_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember) -
             member_subject(m, "strengthClass"),
             loc("Strength class", "Festigkeitsklasse"),
         )
-        .status(crate::document::CheckStatus::Fail)
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
         .explanation(loc(&format!("Unknown strength class '{}'.", m.strength_class), &format!("Unbekannte Festigkeitsklasse '{}'.", m.strength_class)))
         .remedy(Remedy::one_of(
             member_subject(m, "strengthClass"),
@@ -1544,7 +1538,6 @@ fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, prop
     out
 }
 
-
 fn assess_fire(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, props: &TimberProperties, uls: Option<&LoadCombo>) -> Assessed<TimberMember> {
     let m_ed = uls.map(|u| u.m_ed_nm).unwrap_or_else(|| enumerate_combos(m).into_iter().filter(|c| c.kind == ComboKind::Uls).map(|c| c.m_ed_nm.abs()).fold(0.0_f64, f64::max));
     let deff = d_ef(m.fire_duration_s, params.beta_n(props.product));
@@ -1669,7 +1662,7 @@ fn evaluate_connection(annex: AnnexChoice, params: &AnnexParams, c: &TimberConne
             conn_subject(c, "strengthClass"),
             loc("Connection timber class", "Holzklasse der Verbindung"),
         )
-        .status(crate::document::CheckStatus::Fail)
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
         .explanation(loc(
             &format!("Unknown strength class '{}'.", c.strength_class),
             &format!("Unbekannte Festigkeitsklasse '{}'.", c.strength_class),

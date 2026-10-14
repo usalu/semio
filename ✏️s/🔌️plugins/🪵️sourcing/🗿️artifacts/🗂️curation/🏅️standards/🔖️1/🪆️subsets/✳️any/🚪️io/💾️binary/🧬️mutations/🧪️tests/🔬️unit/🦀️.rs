@@ -13,8 +13,8 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn curation_document_text_round_trips_through_a_vcs_store() {
     let document = crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new());
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
-    let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut doc_store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
     let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
     let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });

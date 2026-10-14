@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::CODE_NAMESPACE_MISMATCH;
 
     #[semio_framework_async_macros::async_test]
     async fn new_stamps_strict_and_builds_clean() {

@@ -36,6 +36,11 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-graphql = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-json = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-proto = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-rust = { workspace = true }
+semio-s-artifact-stdio-gltf-exports-typescript = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

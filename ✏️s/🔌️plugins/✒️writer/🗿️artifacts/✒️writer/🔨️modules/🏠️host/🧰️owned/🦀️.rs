@@ -22,7 +22,7 @@ const WRITER_ENVELOPE_FIELD_BYTES: usize = store::os_store::owned_schema_decode:
 /// [`writer_document_store_owners`] through `ArtifactEditor::build_document_store_owners`; every
 /// standalone store goes through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
 pub async fn new_writer_store(envelope: WriterDocumentEnvelope, actor: protocol::ActorId) -> Result<OwnedWriterStore, store::VcsError> {
-    let mut store = WriterDocumentStore::new(envelope, actor).await?;
+    let mut store = WriterDocumentStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(writer_document_store_owners()).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     Ok(OwnedWriterStore(store))
 }

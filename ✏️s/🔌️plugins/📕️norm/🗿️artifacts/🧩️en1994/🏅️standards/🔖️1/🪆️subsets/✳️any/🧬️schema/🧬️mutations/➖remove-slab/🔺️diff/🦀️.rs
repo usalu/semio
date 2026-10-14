@@ -1,7 +1,7 @@
 //! Diff for `remove-slab`.
-use super::RemoveSlab;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994SlabsRows};
+use crate::remove_slab::RemoveSlab;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994SlabsRows};
 
 pub fn diff(payload: &RemoveSlab, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.index >= base.slabs.len() {

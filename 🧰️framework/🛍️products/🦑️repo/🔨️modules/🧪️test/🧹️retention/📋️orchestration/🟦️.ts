@@ -10,7 +10,7 @@ export class CleanScript extends Script {
     const over = overIndex === -1 ? undefined : Number(segments[overIndex + 1]);
     if (over !== undefined && !Number.isFinite(over)) {
       console.error("[clean test] --over needs a byte count, for example `--over 104857600`");
-      process.exit(1);
+      {process.exitCode=1;return;}
     }
     const liveTestIds = new Set(discoverTestCases(this.repoRoot).map((entry) => `${entry.owner}::${entry.case}`));
     const report = cleanTestOutputs(this.repoRoot, { dry, stale, over, liveTestIds: stale ? liveTestIds : undefined });
@@ -19,7 +19,7 @@ export class CleanScript extends Script {
     const leaked = report.removals.filter((row) => isExcludedTestPath(this.repoRoot, row.path));
     if (leaked.length > 0) {
       console.error(`[clean test] refusing: ${leaked.length} candidate(s) resolved inside an excluded area`);
-      process.exit(1);
+      {process.exitCode=1;return;}
     }
   }
 }

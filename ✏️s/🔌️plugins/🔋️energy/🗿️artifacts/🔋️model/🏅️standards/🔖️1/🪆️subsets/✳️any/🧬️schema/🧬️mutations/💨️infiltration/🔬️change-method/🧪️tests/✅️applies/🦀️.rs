@@ -5,15 +5,10 @@
 //! (`SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test -p semio-s-plugin-energy`), and the eight law
 //! assertions below read the committed bytes back, never the scenario.
 
-use crate::mutations::fixtures::{self, snapshot, zone, Case};
+use crate::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️infiltration/🔬️change-method/✅️applies/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️infiltration/🔬️change-method/✅️applies/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️infiltration/🔬️change-method/✅️applies/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️infiltration/🔬️change-method/✅️applies/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💨️infiltration/🔬️change-method/✅️applies/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -42,7 +37,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-infiltration-method", directory: "🔬️change-infiltration-method/✅️applies", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case::load("change-infiltration-method", "💨️infiltration/🔬️change-method/✅️applies", scenario)
 }
 
 #[semio_framework_async_macros::async_test]

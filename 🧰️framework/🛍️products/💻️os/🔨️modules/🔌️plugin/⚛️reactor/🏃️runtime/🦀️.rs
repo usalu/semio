@@ -1,5 +1,5 @@
 //! 📤️ WASM component export glue for plugin bundles.
-#[cfg(test)] use crate::bounded_ownership::runtime_lifecycle_step;
+#[cfg(test)] use semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step;
 use crate::app_emission::ActionMeta;
 use crate::plugin_program::{AppInstance, Plugin, PluginProgram};
 use crate::media_contract::ArtifactMediaExportHandle;
@@ -9,7 +9,7 @@ use crate::tool_jobs::{EmitWire, TransactionProposalDraft, TypedOperationLeftove
 use crate::app_contract::{EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, MediaArtifactError, MediaConsumption};
 use crate::plugin_app::PluginApp;
 use semio_framework::MediaError;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::peer_roster::PresenceRosterAdmission;
 use crate::{ArtifactApp, WindowConfigPack, MountedOwnerPolicyV1, MountedOwnerTurnV1, MountedOwnerIdentityV1, MountedOwnerPhaseV1};
 use semio_framework_value::{DslValue,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -1032,7 +1032,7 @@ const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_STEP_CEILING_US;
 struct RuntimeLiveCleanupPump<PA: PluginApp> {
     session: Option<semio_framework_job::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
-    rejected: Option<crate::reserved_job_session::RefusedWorkerSource<RuntimeLiveCleanupJob<PA>>>,
+    rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeLiveCleanupJob<PA>>>,
     pub(crate) outcome_pending: bool,
     terminal: bool,
     pending_status: RuntimeMaintenanceStatus,
@@ -1077,7 +1077,7 @@ impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
 }
 struct RuntimeCloseCleanupPump<PA: PluginApp> {
     session: Option<semio_framework_job::BatchJobSession<RuntimeCloseCleanupJob<PA>>>,
-    rejected: Option<crate::reserved_job_session::RefusedWorkerSource<RuntimeCloseCleanupJob<PA>>>,
+    rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<RuntimeCloseCleanupJob<PA>>>,
     pub(crate) outcome_pending: bool,
     terminal: bool,
     complete: bool,
@@ -1267,7 +1267,7 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
         #[cfg(test)]
-        if matches!(job.progress, Some(crate::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {
+        if matches!(job.progress, Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {
             cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);
         }
         pump.resume_pending=true;
@@ -1283,7 +1283,7 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         if session.terminal_is_empty(){if grant.maximum_copy_bytes<size_of_val(session){return Ok(RuntimeMaintenanceStatus::Ready);}drop(pump.session.take());pump.terminal=false;return Ok(if pump.faulted{RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::PriorOutcome)}else{pump.pending_status});}
         session.close_step(cx)?;return Ok(RuntimeMaintenanceStatus::Ready)
     }
-    if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeMaintenanceStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(RuntimeLiveCleanupJob { instance_id: cell.id, generation, cell: Some(std::sync::Arc::downgrade(cell)), progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
+    if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeMaintenanceStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(RuntimeLiveCleanupJob { instance_id: cell.id, generation, cell: Some(std::sync::Arc::downgrade(cell)), progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
     if let Some(pending)=pump.rejected.as_mut(){
         let config=semio_framework_job::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_runtime_live_cleanup",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:RUNTIME_CLOSE_INNER_GRANT_US};
         match pending.admit_pending_batch(config,cx)?{Some(session)=>{pump.session=Some(session);drop(pump.rejected.take());},None=>return Ok(RuntimeMaintenanceStatus::Ready)}
@@ -1640,7 +1640,7 @@ fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Ar
         drop(pump.session.take());pump.terminal=false;
         return Ok(if pump.faulted{runtime_close_fault(state,RuntimeCleanupFault::PriorOutcome)}else if pump.blocked{RuntimeCloseStatus::ExternalWait}else if pump.complete{RuntimeCloseStatus::Complete}else{pump.pending_status});
     }
-    if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeCloseStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(state)), instance_id: state.instance_id, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
+    if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeCloseStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(state)), instance_id: state.instance_id, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
     if let Some(pending)=pump.rejected.as_mut(){
         let config=semio_framework_job::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_runtime_close_cleanup",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:RUNTIME_CLOSE_INNER_GRANT_US};
         match pending.admit_pending_batch(config,cx)?{Some(session)=>{pump.session=Some(session);drop(pump.rejected.take());},None=>return Ok(RuntimeCloseStatus::Ready)}
@@ -2513,10 +2513,10 @@ pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<P
     instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,receiver,cx).await
 }
 /// 📡️ Interactive workflow entry receives the actual initiating context and its complete failure.
-pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportPoll>, semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let cell = runtime_instance_cell(runtime, instance_id)?;
     let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault("media export original instance is busy or poisoned"))?;
-    instance.app.poll_media_export(handle,cx).await
+    instance.app.poll_media_export(handle,receiver,cx).await
 }
 /// 🛑️ Interactive workflow entry: cancels the exact live operation named by the handle.
 pub async fn plugin_cancel_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
@@ -2524,15 +2524,11 @@ pub async fn plugin_cancel_media_export<PA: PluginApp>(runtime: &PluginRuntime<P
     let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
     instance.app.cancel_media_export(handle).await
 }
-pub async fn plugin_retain_media_export_result<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle, result: ArtifactMediaExportResult) -> Result<(), MediaError> {
-    let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-    let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
-    instance.app.retain_media_export_result(handle, result).await
+pub async fn plugin_retain_media_export_result<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<crate::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let cell=runtime_instance_cell(runtime,instance_id)?;let mut instance=cell.host_instance().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"download publication requires its original instance loan"))?;instance.app.retain_media_export_result(handle,source,status,cx).await
 }
-pub async fn plugin_take_media_export_chunk<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
-    let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-    let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
-    instance.app.take_media_export_chunk(handle).await
+pub async fn plugin_take_media_export_chunk<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let cell=runtime_instance_cell(runtime,instance_id)?;let mut instance=cell.host_instance().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"media chunk requires its original instance loan"))?;instance.app.take_media_export_chunk(handle,receiver,terminal,cx).await
 }
 /// 🧵️ Takes one already-produced bounded action-download chunk without blocking another instance.
 pub async fn plugin_take_segmented_download_chunk<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
@@ -3203,7 +3199,7 @@ fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) 
     if !raised && !drained && !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
     }
-    eprintln!("[TRACE] typed-operation slots instance={instance} live={live}/{} peak={peak}", crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);
+    eprintln!("[TRACE] typed-operation slots instance={instance} live={live}/{} peak={peak}", semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS);
 }
 fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), crate::PluginLifecycleFailure> {
     let mut output=PluginExchangeOutput::default();output.collect_original_receipts(app);if output.ownership_receipt_pending(){return Ok((output,None))}
@@ -3838,9 +3834,6 @@ fn media_export_handle_from_wire(handle: protocol::MediaExportHandleWire) -> Art
     }
 }
 fn media_export_handle_into_wire(handle:ArtifactMediaExportHandle)->protocol::MediaExportHandleWire{protocol::MediaExportHandleWire{app_instance_id:handle.app_instance_id,parent_document_id:handle.parent_document_id,operation_id:handle.operation_id.0,base_revision:handle.base_revision.0,generation:handle.generation.0}}
-fn media_export_handle_to_wire(handle: &ArtifactMediaExportHandle) -> protocol::MediaExportHandleWire {
-    protocol::MediaExportHandleWire { app_instance_id: handle.app_instance_id, parent_document_id: handle.parent_document_id.clone(), operation_id: handle.operation_id.0, base_revision: handle.base_revision.0, generation: handle.generation.0 }
-}
 /// 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
 /// `output.operationId`) — the operation whose inline interaction fold this exchange still
 /// tries to land before the reply is sealed (`TYPED_OPERATION_REPLY_LEFTOVER_PUMPS`).
@@ -4045,7 +4038,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         }
         }else{
         let mut original_media_submission_ready=false;
-        let mut original_media_poll=None;
+        let mut original_media_poll_ready=false;
         let mut original_media_failure:Option<semio_framework_job::OriginalTurnFailure>=None;
         let mut original_media_domain=None;
         let mut original_media_artifact=None;
@@ -4061,10 +4054,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 match plugin_submit_media_export(runtime,instance_id,port,parent,revision,receiver,cx).await{Ok(ready)=>original_media_submission_ready=ready,Err(failure)=>original_media_failure=Some(failure.into())};
                 !original_media_submission_ready
             },
-            Some(protocol::AppCommand::PollMediaExport{handle,..})=>{
-                let loan=crate::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)};
-                match plugin_poll_media_export(runtime,instance_id,loan,cx).await{Ok(result)=>original_media_poll=result,Err(failure)=>original_media_failure=Some(failure.into())};
-                original_media_poll.is_none()
+            Some(protocol::AppCommand::PollMediaExport{..})=>{
+                let(loan,poll,status)=owner.media_poll_parts()?;
+                if poll.is_none()&&status.is_none(){match plugin_poll_media_export(runtime,instance_id,loan,poll,cx).await{Ok(ready)=>original_media_poll_ready=ready,Err(failure)=>original_media_failure=Some(failure)}}else{original_media_poll_ready=true}
+                if original_media_failure.is_none()&&original_media_poll_ready&&(status.is_some()||matches!(poll.as_ref(),Some(ArtifactMediaExportPoll::Complete(_)))){match plugin_retain_media_export_result(runtime,instance_id,loan,poll,status,cx).await{Ok(ready)=>original_media_poll_ready=ready,Err(failure)=>{original_media_failure=Some(failure);original_media_poll_ready=false}}}
+                !original_media_poll_ready
+            },
+            Some(protocol::AppCommand::TakeMediaExportChunk{..})=>{
+                let(loan,receiver,terminal)=owner.media_chunk_parts()?;match plugin_take_media_export_chunk(runtime,instance_id,loan,receiver,terminal,cx).await{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}
             },
             Some(protocol::AppCommand::MediaOut{port,..})=>{
                 let grant=cx.retained_grant();let artifact=identity.encode(|native|{let mut encoder=crate::io::control::NativeSnapshotEncodeOwner::new(native,grant);let result=::semio_framework_async::poll::resolve_ready(plugin_produce_media(runtime,instance_id,port,"",&mut encoder,cx));cx.consume_retained(encoder.progress()).map_err(crate::app_contract::MediaArtifactOperationFailure::from)?;result});
@@ -4356,7 +4353,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             },
             protocol::AppCommand::PollMediaExport { seq, handle } => {
                 let handle = media_export_handle_from_wire(handle);
-                match original_media_poll.take().expect("original media poll is complete before command donation") {
+                if let Some(status)=owner.take_media_status(){frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new()});}else{
+                match owner.take_media_poll().expect("original media poll is retained before command donation") {
                     ArtifactMediaExportPoll::Running { applied_progress, checkpoint_available } => frames.push(protocol::AppFrame::MediaExportStatus {
                         in_reply_to: seq,
                         handle: media_export_handle_into_wire(handle),
@@ -4367,13 +4365,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         total_bytes: 0,
                         detail: String::new(),
                     }),
-                    ArtifactMediaExportPoll::Complete(result) => {
-                        let mime_type=result.mime_type.clone();let total_bytes=result.chunks.bytes() as u64;
-                        match plugin_retain_media_export_result(runtime, instance_id, &handle, result).await {
-                            Ok(()) => frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:total_bytes,checkpoint_available:false,mime_type,total_bytes,detail:String::new()}),
-                            Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
-                        }
-                    }
+                    ArtifactMediaExportPoll::Complete(_) => unreachable!("terminal result donates only to its original download registry before decoded command consumption"),
                     ArtifactMediaExportPoll::Cancelled => frames.push(protocol::AppFrame::MediaExportStatus {
                         in_reply_to: seq,
                         handle: media_export_handle_into_wire(handle),
@@ -4395,7 +4387,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         detail,
                     }),
                 }
-            }
+            }}
             protocol::AppCommand::CancelMediaExport { seq, handle } => {
                 let handle = media_export_handle_from_wire(handle);
                 match plugin_cancel_media_export(runtime, instance_id, &handle).await {
@@ -4403,15 +4395,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
                 }
             }
-            protocol::AppCommand::TakeMediaExportChunk { seq, handle } => {
-                let handle = media_export_handle_from_wire(handle);
-                let wire = media_export_handle_to_wire(&handle);
-                match plugin_take_media_export_chunk(runtime, instance_id, &handle).await {
-                    Ok(Some(data)) => frames.push(protocol::AppFrame::MediaExportChunk { in_reply_to: seq, handle: wire, data, terminal: false }),
-                    Ok(None) => frames.push(protocol::AppFrame::MediaExportChunk { in_reply_to: seq, handle: wire, data: Vec::new(), terminal: true }),
-                    Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
-                }
-            }
+            protocol::AppCommand::TakeMediaExportChunk{seq,handle}=>{let(data,terminal)=owner.take_media_chunk();frames.push(protocol::AppFrame::MediaExportChunk{in_reply_to:seq,handle,data:data.unwrap_or_default(),terminal});},
             protocol::AppCommand::MediaFingerprint { seq, port } => {
                 let fingerprint = with_instances_mut(runtime, |list| {
                     let mut instance = find_instance(list, instance_id)?;
@@ -5206,7 +5190,7 @@ enum ExtensionRequestHandler {
     Plain(fn(&[u8],&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>),
     Owned,
 }
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[path = "../../🧩️extension/🚪️retirement/🦀️.rs"]
 mod extension_retirement;
 pub use extension_retirement::{ExtensionResourceOwner,ExtensionInvokeStep};

@@ -10,8 +10,13 @@ use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 /// comparison exercises TextBox/Picture/Placeholder shape fidelity end to end).
 #[semio_framework_async_macros::async_test]
 async fn pptx_round_trip_is_stable() {
-    use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 
     let pptx1 = build_minimal_pptx(
         PptxPresentation {

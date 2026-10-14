@@ -1,16 +1,15 @@
 //! ↩️ Inverse for `RemoveRepresentationTag`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::remove_representation_tag::RemoveRepresentationTag, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::add_representation_tag::AddRepresentationTag> {
     Ok((|| {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
     if let Some(position) = existing.tags.iter().position(|tag| *tag == payload.tag) {
-        vec![super::super::add_representation_tag::add_representation_tag_at(payload.id.clone(), payload.tag.clone(), position as u32)]
+        vec![crate::add_representation_tag::add_representation_tag_at(payload.id.clone(), payload.tag.clone(), position as u32)]
     } else {
         Vec::new()
     }

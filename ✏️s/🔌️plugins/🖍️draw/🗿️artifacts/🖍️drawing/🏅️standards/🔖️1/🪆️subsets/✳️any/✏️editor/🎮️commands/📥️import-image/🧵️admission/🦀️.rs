@@ -1,8 +1,9 @@
 //! 🧵️ Imports one privately decoded image through cooperative work and explicit child retirement.
-use super::*;
+use crate::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_IMAGE_PUBLICATION_CONTRACTS, DRAWING_IMAGE_RAW_BYTES, DRAWING_IMAGE_TOOL_IDS, DrawingCommand, DrawingPlayApp};
+use semio_s_artifact_draw_drawing_editor_commands::import_image;
 use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use semio_s_artifact_draw_drawing_io::image::DrawingImageAdmissionJob;
-use crate::commands::import_image::publication::DrawingImagePublicationJob;
+use semio_s_artifact_draw_drawing_editor_commands::import_image::publication::DrawingImagePublicationJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;

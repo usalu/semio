@@ -1,7 +1,7 @@
 use super::*;
 use std::f64::consts::PI;
 
-use crate::primitives::{make_box, make_cylinder};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder};
 use semio_framework_3d_brep_queries::mass_properties::{solid_signed_volume, solid_surface_area, solid_volume};
 use semio_framework_3d_brep_validation::validate_body;
 

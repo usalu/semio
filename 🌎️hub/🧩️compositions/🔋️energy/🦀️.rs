@@ -11,8 +11,8 @@ use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, Plugin
 // `s.stdio.semio@v1/{value,table}` members (see `energy_genesis_child_pack`).
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum EnergyApps: PluginApp {
-        ModelEditor(VcsArtifactApp<EditorApp<crate::editor::model::EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>),
-        ModelViewer(VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        ModelEditor(VcsArtifactApp<EditorApp<semio_s_artifact_energy_model_editor::EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>),
+        ModelViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps
@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// one call — `register_document_codec`, registering `EnergyModelSnapshot`/`EnergyModelMutation`'s
 /// pack↔dsl codec directly against `store`'s registry, because this plugin used to have zero
 /// `ArtifactApp`s for `.document_codec::<A>()` to bind to. `ArtifactDeclaration::document_codec_bare::
-/// <Snapshot, Mutation>(schema)` still expresses that — see `crate::declaration()`.
+/// <Snapshot, Mutation>(schema)` still expresses that — see `semio_s_artifact_energy_model::declaration()`.
 ///
 /// 📚️ Ticket 26/09/06/ENERGY-PLUGIN-END-TO-END: `.editor` stamps `EnergyModelEditor::examples()`
 /// onto `PluginManifest.examples`. The navbar dropdown is `examples_for_app` over that manifest, so
@@ -41,12 +41,12 @@ pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
         .label("Energy")
         .version("0.1.0")
         .package_id("semio:energy")
-        .artifact(crate::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::model::EnergyModelEditor>(crate::editor::model::create_energy_model_editor())
-        .editor_mutation_roster::<crate::editor::model::EnergyModelEditor>()
-        .viewer::<crate::viewer::model::EnergyModelViewer>(crate::viewer::model::create_energy_model_viewer())
-        .viewer_mutation_roster::<crate::viewer::model::EnergyModelViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifact_kind().id })
+        .artifact(semio_s_artifact_energy_model::declaration().map_err(PluginAssemblyError::definition)?)
+        .editor::<semio_s_artifact_energy_model_editor::EnergyModelEditor>(semio_s_artifact_energy_model_editor::create_energy_model_editor())
+        .editor_mutation_roster::<semio_s_artifact_energy_model_editor::EnergyModelEditor>()
+        .viewer::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>(semio_s_artifact_energy_model_viewer::create_energy_model_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_energy_model_snapshot::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist energy model edits to the open document".into(), optional: false })
         .try_build()

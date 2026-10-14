@@ -7,8 +7,8 @@ use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_kind_catalog
 use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dPlayApp};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush as brush3d;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsFound;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush as brush3d;
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use std::sync::Arc;
 
 /// 🧵️ Builds the brush suggestions run job for the framework ledger; `None` for any other tool.

@@ -1,8 +1,10 @@
 //! 🏷️ `set-drawing-text` — replaces one text label on the imported plan.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::LayoutDrawingTextRow;
-use crate::{LayoutDiff, LayoutSnapshot};
+use semio_s_artifact_layout_layout_model::drawing_labels;
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::LayoutDrawingTextRow;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
@@ -18,10 +20,10 @@ pub struct SetDrawingText {
     pub text: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetDrawingText {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetDrawingText where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_drawing_text::SetDrawingText> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "drawing-text", kind: "set-drawing-text", record: "SetDrawingText" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_drawing_text(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_drawing_text(self, base)? 
     })
 }
@@ -37,14 +39,6 @@ pub fn first_drawing_text(snapshot: &LayoutSnapshot) -> Option<String> {
     drawing_labels(snapshot).into_iter().next()
 }
 
-pub fn drawing_labels(snapshot: &LayoutSnapshot) -> Vec<String> {
-    let Some(drawing) = snapshot.background_drawing.as_ref() else { return Vec::new() };
-    let mut labels = Vec::new();
-    for layer in &drawing.content.layers {
-        collect_text(&layer.root, &mut labels);
-    }
-    labels
-}
 
 pub fn drawing_text_field(index: usize) -> Option<&'static str> {
     const KEYS: [&str; 32] = ["drawingText", "drawingText.1", "drawingText.2", "drawingText.3", "drawingText.4", "drawingText.5", "drawingText.6", "drawingText.7", "drawingText.8", "drawingText.9", "drawingText.10", "drawingText.11", "drawingText.12", "drawingText.13", "drawingText.14", "drawingText.15", "drawingText.16", "drawingText.17", "drawingText.18", "drawingText.19", "drawingText.20", "drawingText.21", "drawingText.22", "drawingText.23", "drawingText.24", "drawingText.25", "drawingText.26", "drawingText.27", "drawingText.28", "drawingText.29", "drawingText.30", "drawingText.31"];
@@ -57,17 +51,6 @@ pub fn drawing_text_index(field: &str) -> Option<u32> {
     Some(index)
 }
 
-fn collect_text(node: &DrawNode, out: &mut Vec<String>) {
-    match node {
-        DrawNode::Text { value, .. } => out.push(value.clone()),
-        DrawNode::Group { children, .. } => {
-            for child in children {
-                collect_text(child, out);
-            }
-        }
-        DrawNode::Path { .. } | DrawNode::Image { .. } => {}
-    }
-}
 
 pub fn diff_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if payload.text.chars().count() > 256 {
@@ -85,13 +68,13 @@ pub fn diff_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) ->
     protocol::MutationOutcome::new(LayoutDiff { drawing_texts: vec![LayoutDrawingTextRow { index: payload.index, text: payload.text.clone() }], ..Default::default() })
 }
 
-pub fn inverse_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_drawing_text<Op: From<crate::set_drawing_text::SetDrawingText>>(payload: &SetDrawingText, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(previous) = drawing_labels(base).get(payload.index as usize).cloned() else { return Vec::new() };
     if previous == payload.text {
         return Vec::new();
     }
-    vec![LayoutMutation::SetDrawingText(SetDrawingText { index: payload.index, text: previous })]
+    vec![Op::from(SetDrawingText { index: payload.index, text: previous })]
 
     })())
 }

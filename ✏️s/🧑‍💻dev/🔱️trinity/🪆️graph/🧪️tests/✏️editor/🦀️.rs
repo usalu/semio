@@ -144,7 +144,7 @@ fn jack_envelope_wire_of(snapshot: jack::JackSnapshot) -> Vec<u8> {
         "conflicts": []
     }))
     .into_bytes();
-    let envelope = store::os_store::document_materialize::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     jack::drive_retirement_to_terminal(jack::standards::v1::subsets::any::io::binary::mutations::jack_envelope_decode_owner_bundle().retire_envelope(envelope)).expect("Jack fixture envelope retirement");
     wire
 }

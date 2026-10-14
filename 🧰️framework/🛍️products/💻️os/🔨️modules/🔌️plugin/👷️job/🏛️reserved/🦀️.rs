@@ -29,7 +29,7 @@ use crate::artifact_instance::retire_document_window_registry_step;
 use crate::app_contract::ArtifactApp;
 use crate::app_emission::ActionMeta;
 use crate::child_view::MemberKey;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::tool_cancellation::ToolCancellationLease;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
 use crate::tool_contract::ArtifactBoundedToolFault;
@@ -40,13 +40,13 @@ use crate::tool_contract::ArtifactToolPublicationLane;
 use crate::tool_contract::ArtifactToolRegistration;
 use crate::typed_operation::TypedCommandFullOperationJobFactory;
 #[cfg(test)]
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
 #[cfg(test)]
-use crate::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 #[cfg(test)]
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[cfg(test)]
-use crate::bounded_ownership::plugin_demand_grant;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 #[cfg(test)]
 use crate::document_ingress::ActiveArtifactEnvelopeIngress;
 #[cfg(test)]

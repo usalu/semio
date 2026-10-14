@@ -5,8 +5,8 @@
 //! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🗜️scale-frames/🗜️doubles/` (contract D1), authored by
 //! the independent implementation `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️w3-t-layout-author-vectors.py`.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗜️scale-frames/🗜️doubles/📸️snapshot/⬅️before/🔣️.json");
@@ -92,7 +92,7 @@ fn produces_committed_diff() {
 /// 🩹 The committed diff decodes to `LayoutDiff`, re-encodes byte for byte, and carries `before` to `after` on its own.
 #[test]
 fn committed_diff_is_canonical_and_complete() {
-    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff reparses"), "scale-frames/doubles-both-frames-about-their-centroid: committed diff JSON is not canonical");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "scale-frames/doubles-both-frames-about-their-centroid: committed diff did not carry before to after");

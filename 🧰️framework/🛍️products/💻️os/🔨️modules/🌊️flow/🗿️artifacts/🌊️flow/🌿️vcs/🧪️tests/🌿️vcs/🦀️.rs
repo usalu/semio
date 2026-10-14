@@ -316,14 +316,15 @@ fn diff_json_contract_matches_third_party_oracle() {
 #[test]
 fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     assert_eq!(
-        std::any::type_name::<<FlowHostSnapshot as crate::os_store::document_store_owners::MemberStoreOwner<FlowMutation>>::SnapshotOpen>(),
-        std::any::type_name::<crate::os_store::PackMemberSnapshotOpen<FlowHostSnapshot>>(),
-        "a flow member must open through PackMemberSnapshotOpen"
+        std::any::type_name::<<crate::io::binary::snapshot::FlowSnapshotPackProducer as crate::os_store::document_store_owners::MemberStoreProducer<FlowHostSnapshot,FlowMutation>>::SnapshotOpen>(),
+        std::any::type_name::<crate::os_store::ProducedMemberSnapshotOpen<FlowHostSnapshot,crate::io::binary::snapshot::FlowSnapshotPackProducer>>(),
+        "a flow member must open through ProducedMemberSnapshotOpen"
     );
     let snapshot = base();
     let encoded = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
+    let decoded = <crate::io::binary::snapshot::FlowSnapshotPackProducer as crate::os_store::MemberSnapshotDecoder<FlowHostSnapshot>>::decode_snapshot(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded, snapshot, "the opener's decode round-trips the exact member snapshot");
+    assert_eq!(third_party_json(&decoded),cases()["hostSnapshot"],"selected actual child decoder matches independent portable JSON");
     let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4_096 };
     assert!(matches!(cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "zero items refuse before moving any owner");
@@ -340,3 +341,19 @@ fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     snapshot.retire_cold();
 }
 //#endregion 🧪️Laws
+
+
+#[test]
+fn actual_flow_genesis_producer_preserves_original_stored_pack_and_owner_identity(){
+ use ::semio_framework_os_kernel::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
+ let producer=crate::io::binary::snapshot::FlowSnapshotPackProducer;
+ let born=AdmittedArtifactGenesis::born(base(),&producer).unwrap();
+ assert_eq!(third_party_json(born.facts().snapshot()),cases()["hostSnapshot"]);
+ let original=born.pack().to_vec();let pointer=original.as_ptr();let digest=born.facts().digest();
+ let reloaded=AdmittedArtifactGenesis::from_stored_pack(original,&producer).unwrap();
+ assert_eq!(reloaded.pack().as_ptr(),pointer);assert_eq!(reloaded.pack(),born.pack());assert_eq!(reloaded.facts().digest(),digest);
+ assert_eq!(third_party_json(reloaded.facts().snapshot()),cases()["hostSnapshot"]);
+ let alias=reloaded.clone();assert!(Arc::ptr_eq(&reloaded.facts().share_snapshot(),&alias.facts().share_snapshot()));assert!(Arc::ptr_eq(&reloaded.share_pack(),&alias.share_pack()));
+ drop(alias);
+ for genesis in [born,reloaded]{let(snapshot,pack)=genesis.into_owners();drop(pack);Arc::try_unwrap(snapshot).unwrap_or_else(|_|panic!("original genesis snapshot alias retained")).retire_cold();}
+}

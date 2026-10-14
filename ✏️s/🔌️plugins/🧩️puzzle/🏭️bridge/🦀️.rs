@@ -19,7 +19,7 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
     ("Puzzle2dMutation", descriptors::<semio_s_artifact_puzzle_2d::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot, semio_s_artifact_puzzle_2d::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation>),
-    ("Puzzle3dMutation", descriptors::<semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation>),
+    ("Puzzle3dMutation", descriptors::<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation>),
     ("Puzzle5dMutation", descriptors::<semio_s_artifact_puzzle_5d::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot, semio_s_artifact_puzzle_5d::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation>),
 ];
 

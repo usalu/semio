@@ -1,6 +1,6 @@
 //! 🚫️`remove-element`.
 
-use crate::{Din4108Mutation, Din4108Snapshot};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -12,19 +12,19 @@ pub struct RemoveElement {
     pub index: usize,
 }
 
-impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveElement {
+impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for RemoveElement where Op: protocol::Mutation<Din4108Snapshot, Diff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::insert_element::InsertElement> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove",
         entity: "element",
         kind: "remove-element",
         record: "RemovedElement",
     };
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+        crate::remove_element::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_element::inverse::inverse(self, base)?
     
     })
 }
@@ -32,3 +32,10 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveElement 
         semio_framework_ui_locale::LocalizedLabel::native("Remove envelope element", "Hüllbauteil entfernen")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

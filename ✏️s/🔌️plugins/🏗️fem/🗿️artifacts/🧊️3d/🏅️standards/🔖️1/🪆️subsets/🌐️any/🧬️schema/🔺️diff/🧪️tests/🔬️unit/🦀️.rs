@@ -1,7 +1,8 @@
 //! 🧪️ Unit laws of the fem3d diff algebra: `absorb` coalesces same-key rows, `inverse` is the negative delta, and the absorbed diff applies exactly like its parts in sequence.
 
 use super::*;
-use crate::{FemDof, FemLoad, FemLoadCase};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use crate::standards::v1::subsets::any::schema::structure::{FemLoad, FemLoadCase};
 
 fn node(id: &str, x: f64) -> FemNode {
     FemNode { id: id.into(), x, y: 0.0, z: 0.0 }

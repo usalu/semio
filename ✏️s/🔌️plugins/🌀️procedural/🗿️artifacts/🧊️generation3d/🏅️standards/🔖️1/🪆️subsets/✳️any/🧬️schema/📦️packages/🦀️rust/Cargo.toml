@@ -32,3 +32,4 @@ semio-framework-pack-json = { path = "../../../../../../../../../../../../ðŸ§°ï¸
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+

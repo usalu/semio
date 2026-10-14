@@ -1,10 +1,12 @@
-use super::*;
-use crate::editor::fem3d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
-use crate::editor::fem3d::modes::edit::windows::results;
-use crate::app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
-use crate::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
-use crate::editor::fem3d::unit_tests::context::{close, dispatch, fem3d_app, Fem3dApp};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::result_animation_tick::*;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animation::{SetResultAnimation, TICK_ACTION};
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
+use crate::context::{close, dispatch, fem3d_app, Fem3dApp};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, InvocationResult, NoConfig, ViewModel, ViewWindowInstance};
 
 const WINDOW: &str = "results-left";
@@ -175,7 +177,7 @@ async fn history_rows(app: &mut Fem3dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
+    let doc = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();

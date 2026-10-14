@@ -18,7 +18,48 @@
 //! "one accessor every render/export/inference call site funnels through" pattern the migration
 //! recipe's §3 prescribes.
 
-use crate::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod bounds {
+    #[path = "📦bounds/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MeasureKind, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use semio_framework_value::FromValue;
@@ -158,7 +199,7 @@ fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option
             kernel.kind(&handle).ok()?;
             handle
         }
-        WorkingSolid::Reference { reference_id } => crate::reference_solid(reference_id)?.import(kernel)?,
+        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id)?.import(kernel)?,
         // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
         // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         WorkingSolid::ImportedMesh { .. } => return None,
@@ -294,7 +335,7 @@ pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (W
             }
         }
     }
-    for machine in crate::generic_machines() {
+    for machine in semio_s_artifact_process_process3d_model::snapshot::generic_machines() {
         for capability in machine.capabilities.iter() {
             if capability.recipe.measure_kind() == kind {
                 return (machine.clone(), capability.clone());
@@ -337,8 +378,8 @@ pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> 
         .iter()
         .filter_map(|rule| {
             let (quantity, parameter_id, margin, is_min) = match rule {
-                crate::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, true),
-                crate::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, false),
+                semio_s_artifact_process_process3d_model::snapshot::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, true),
+                semio_s_artifact_process_process3d_model::snapshot::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, false),
             };
             let value = parameter_value(capability, parameter_id)?;
             let actual = quantity_value(ctx, quantity);
@@ -371,7 +412,7 @@ pub fn stock_extent(solid: &WorkingSolid) -> [f64; 3] {
         WorkingSolid::Box { width, depth, height } => [*width, *depth, *height],
         WorkingSolid::Cylinder { radius, height } => [*radius * 2.0, *radius * 2.0, *height],
         WorkingSolid::Sphere { radius } => [*radius * 2.0, *radius * 2.0, *radius * 2.0],
-        WorkingSolid::Reference { reference_id } => crate::reference_solid(reference_id).map_or([1.0, 1.0, 1.0], |reference| reference.extent),
+        WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id).map_or([1.0, 1.0, 1.0], |reference| reference.extent),
         WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => [1.0, 1.0, 1.0],
     }
 }
@@ -417,15 +458,11 @@ pub fn process3d_artifact_inference_descriptor() -> semio_framework_schema_regis
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::bounds::BoundingBox;
+pub use crate::bounds::BoundingBox;
 //#endregion 🔁️Re-exports
 
 /// 🧮️ Hashes typed semantic values directly, preserving numeric variants and IEEE words.
@@ -446,7 +483,7 @@ fn hash_intrinsic(value: &semio_framework_value::DslValue, hasher: &mut impl Has
     }
 }
 
-fn hash_value<T: ToValue>(value: &T) -> u64 {
+pub fn hash_value<T: ToValue>(value: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
     let value = semio_framework_value::DecodedValue::new(value.to_value(), <semio_framework_value::DslValue as FromValue>::retire_decoded);
     hash_intrinsic(value.get(), &mut hasher);

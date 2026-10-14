@@ -1,5 +1,12 @@
-pub(crate) mod context {
-    use super::super::*;
+pub mod context {
+    use semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT;
+    use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
+    use semio_s_artifact_layout_layout_editor_panels::catalogue::LAYOUT_PLAY_BODY_CATALOGUE;
+    use semio_s_artifact_layout_layout_editor_panels::inspection::LAYOUT_PLAY_BODY_INSPECTION;
+    use semio_s_artifact_layout_layout_editor_panels::preflight::{LAYOUT_PLAY_BODY_PREFLIGHT, run_layout_preflight};
+    use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
+    use crate::{LayoutCommand, LayoutPlayApp, create_layout_app};
+    use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
@@ -154,8 +161,15 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
-use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
+use semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT;
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
+use semio_s_artifact_layout_layout_editor_panels::catalogue::LAYOUT_PLAY_BODY_CATALOGUE;
+use semio_s_artifact_layout_layout_editor_panels::inspection::LAYOUT_PLAY_BODY_INSPECTION;
+use semio_s_artifact_layout_layout_editor_panels::preflight::{LAYOUT_PLAY_BODY_PREFLIGHT, run_layout_preflight};
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
+use crate::{LayoutCommand, LayoutPlayApp, create_layout_app};
+use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
+use crate::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::PluginApp;
 
@@ -232,11 +246,11 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// pins exact historical bytes (greenfield: no back-compat), only text/binary equivalence.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_round_trip_text_and_binary_either_way() {
-    use crate::LayoutCamera;
+    use semio_s_artifact_layout_layout_model::LayoutCamera;
     let cases: [(LayoutCommand, &str); 3] = [
-        (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: Vec::new() }), "canvas-pointer-move x=1 y=2 width=800 height=600 samples=[ ]"),
-        (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
-        (LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }), "camera camera { x=1 y=2 zoom=1.5 }"),
+        (LayoutCommand::CanvasPointerMove(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: Vec::new() }), "canvas-pointer-move x=1 y=2 width=800 height=600 samples=[ ]"),
+        (LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
+        (LayoutCommand::SetCamera(semio_s_artifact_layout_layout_editor_commands::set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }), "camera camera { x=1 y=2 zoom=1.5 }"),
     ];
     for (command, text) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
@@ -245,42 +259,42 @@ async fn optional_field_rows_round_trip_text_and_binary_either_way() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<LayoutCommand> {
-    use crate::LayoutCamera;
+pub fn every_command() -> Vec<LayoutCommand> {
+    use semio_s_artifact_layout_layout_model::LayoutCamera;
     vec![
-        LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() }),
-        LayoutCommand::FocusPreflightIssue(focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) }),
-        LayoutCommand::EngagementInput(engagement_input::EngagementInput { value: "export png".into() }),
-        LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
-        LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
-        LayoutCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
-        LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
-        LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {}),
-        LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
-        LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }),
-        LayoutCommand::AddPage(add_page::AddPage {}),
-        LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() }),
-        LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }),
-        LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() }),
-        LayoutCommand::ExportPng(export_png::ExportPng { page_id: Some("page-1".into()) }),
-        LayoutCommand::ExportSvg(export_svg::ExportSvg { page_id: None }),
-        LayoutCommand::ExportPdf(export_pdf::ExportPdf { page_id: None }),
-        LayoutCommand::ExportPackage(export_package::ExportPackage {}),
-        LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }),
-        LayoutCommand::DeleteSelection(crate::editor::layout::commands::delete_selection::DeleteSelection {}),
-        LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0, phase: Some("stream".into()), reason: None }),
-        LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25, phase: None, reason: None }),
-        LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25, phase: Some("abort".into()), reason: Some("captureLost".into()) }),
-        LayoutCommand::PatchDocument(patch_document::PatchDocument { field: "name".into(), value: "Press sheet".into() }),
+        LayoutCommand::SetActivePage(semio_s_artifact_layout_layout_editor_commands::set_active_page::SetActivePage { page_id: "page-2".into() }),
+        LayoutCommand::FocusPreflightIssue(semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) }),
+        LayoutCommand::EngagementInput(semio_s_artifact_layout_layout_editor_commands::engagement_input::EngagementInput { value: "export png".into() }),
+        LayoutCommand::CanvasPointerDown(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
+        LayoutCommand::CanvasPointerMove(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
+        LayoutCommand::CanvasPointerUp(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_up::CanvasPointerUp { cancelled: false }),
+        LayoutCommand::CanvasDragOver(semio_s_artifact_layout_layout_editor_commands::canvas_drag_over::CanvasDragOver { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
+        LayoutCommand::CanvasDragLeave(semio_s_artifact_layout_layout_editor_commands::canvas_drag_leave::CanvasDragLeave {}),
+        LayoutCommand::SetCamera(semio_s_artifact_layout_layout_editor_commands::set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }),
+        LayoutCommand::AddPage(semio_s_artifact_layout_layout_editor_commands::add_page::AddPage {}),
+        LayoutCommand::PatchPage(semio_s_artifact_layout_layout_editor_commands::patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() }),
+        LayoutCommand::PatchFrame(semio_s_artifact_layout_layout_editor_commands::patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }),
+        LayoutCommand::CanvasDrop(semio_s_artifact_layout_layout_editor_commands::canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() }),
+        LayoutCommand::ExportPng(semio_s_artifact_layout_layout_editor_commands::export_png::ExportPng { page_id: Some("page-1".into()) }),
+        LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
+        LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),
+        LayoutCommand::ExportPackage(semio_s_artifact_layout_layout_editor_commands::export_package::ExportPackage {}),
+        LayoutCommand::EngagementSubmit(semio_s_artifact_layout_layout_editor_commands::engagement_submit::EngagementSubmit { value: "export png".into() }),
+        LayoutCommand::DeleteSelection(semio_s_artifact_layout_layout_editor_commands::delete_selection::DeleteSelection {}),
+        LayoutCommand::TranslateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0, phase: Some("stream".into()), reason: None }),
+        LayoutCommand::RotateSelection(semio_s_artifact_layout_layout_editor_commands::gumball::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25, phase: None, reason: None }),
+        LayoutCommand::ScaleSelection(semio_s_artifact_layout_layout_editor_commands::gumball::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25, phase: Some("abort".into()), reason: Some("captureLost".into()) }),
+        LayoutCommand::PatchDocument(semio_s_artifact_layout_layout_editor_commands::patch_document::PatchDocument { field: "name".into(), value: "Press sheet".into() }),
     ]
 }
 
 //#region 🔖️ContextMenu
-use crate::editor::layout::commands::focus_preflight_issue::FocusPreflightIssue;
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-use crate::editor::layout::panels::preflight::run_layout_preflight;
-use crate::editor::layout::terminology::layout_labels;
-use crate::editor::layout::unit_tests::context::LayoutApp;
+use semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue::FocusPreflightIssue;
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+use semio_s_artifact_layout_layout_editor_panels::preflight::run_layout_preflight;
+use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
+use crate::unit_tests::context::LayoutApp;
 use semio_framework_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
 async fn context_menu_json(app: &mut LayoutApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> String {
@@ -296,7 +310,7 @@ async fn context_menu_on_empty_canvas_offers_create_verbs_not_delete() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
             selection: vec![],
@@ -318,10 +332,10 @@ async fn context_menu_on_frame_selection_offers_delete_last() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
             text: None,
         }),
     )
@@ -339,7 +353,7 @@ async fn context_menu_on_page_row_offers_set_active_page() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
             kind: "tree".into(),
             hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.page.{page_id}"), label: None }],
             selection: vec![],
@@ -359,7 +373,7 @@ async fn context_menu_on_preview_surface_is_read_only() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW.into(),
             kind: "canvas2d".into(),
             hits: vec![],
             selection: vec![],
@@ -382,10 +396,10 @@ async fn context_menu_on_multi_frame_selection_offers_plural_delete() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: frames }],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: frames }],
             text: None,
         }),
     )
@@ -403,7 +417,7 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
             kind: "tree".into(),
             hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.link.{link_id}"), label: None }],
             selection: vec![],
@@ -427,7 +441,7 @@ async fn context_menu_on_preflight_row_offers_focus_issue() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::panels::preflight::LAYOUT_PLAY_BODY_PREFLIGHT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_panels::preflight::LAYOUT_PLAY_BODY_PREFLIGHT.into(),
             kind: "tree".into(),
             hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: row_id, label: None }],
             selection: vec![],
@@ -448,9 +462,9 @@ async fn context_menu_on_frame_hit_without_selection_offers_select() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
-            hits: vec![semio_framework_plugin::ContextMenuHit { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), id: frame_id.clone(), label: None }],
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), id: frame_id.clone(), label: None }],
             selection: vec![],
             text: None,
         }),
@@ -469,10 +483,10 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
-            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: semio_s_artifact_layout_layout_editor_commands::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
             text: None,
         }),
     )
@@ -495,7 +509,7 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
-            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            surface_id: semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
             kind: "canvas2d".into(),
             hits: vec![],
             selection: vec![],
@@ -567,37 +581,37 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 /// defaults) reach the same rows.
 #[test]
 fn command_from_action_bridges_host_control_contracts() {
-    use crate::LayoutCamera;
+    use semio_s_artifact_layout_layout_model::LayoutCamera;
     let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
     assert_eq!(
         LayoutPlayApp::command_from_action("addFrame", Some((args(serde_json::json!({ "kind": "text", "x": 12, "y": 24.5 }))).clone()), None).expect("addFrame bridge"),
-        LayoutCommand::AddFrame(add_frame::AddFrame { kind: "text".into(), x: Some(12.0), y: Some(24.5) })
+        LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "text".into(), x: Some(12.0), y: Some(24.5) })
     );
-    assert_eq!(LayoutPlayApp::command_from_action("addFrame", None, None).expect("addFrame default kind"), LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
-    assert_eq!(LayoutPlayApp::command_from_action("addPage", Some((args(serde_json::json!({ "windowId": "layout-blueprint" }))).clone()), None).expect("addPage ignores window keys"), LayoutCommand::AddPage(add_page::AddPage {}));
+    assert_eq!(LayoutPlayApp::command_from_action("addFrame", None, None).expect("addFrame default kind"), LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
+    assert_eq!(LayoutPlayApp::command_from_action("addPage", Some((args(serde_json::json!({ "windowId": "layout-blueprint" }))).clone()), None).expect("addPage ignores window keys"), LayoutCommand::AddPage(semio_s_artifact_layout_layout_editor_commands::add_page::AddPage {}));
     assert_eq!(
         LayoutPlayApp::command_from_action("patchFrame", Some((args(serde_json::json!({ "frameId": "frame-1", "field": "columns", "value": 2 }))).clone()), None).expect("patchFrame bridge"),
-        LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: None, field: "columns".into(), value: "2".into() })
+        LayoutCommand::PatchFrame(semio_s_artifact_layout_layout_editor_commands::patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: None, field: "columns".into(), value: "2".into() })
     );
     assert_eq!(
         LayoutPlayApp::command_from_action("patchPage", Some((args(serde_json::json!({ "pageId": "page-1", "field": "width", "value": "300" }))).clone()), None).expect("patchPage bridge"),
-        LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() })
+        LayoutCommand::PatchPage(semio_s_artifact_layout_layout_editor_commands::patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() })
     );
     assert_eq!(
         LayoutPlayApp::command_from_action("setActivePage", Some((args(serde_json::json!({ "pageId": "page-2" }))).clone()), None).expect("setActivePage bridge"),
-        LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() })
+        LayoutCommand::SetActivePage(semio_s_artifact_layout_layout_editor_commands::set_active_page::SetActivePage { page_id: "page-2".into() })
     );
     assert_eq!(
         LayoutPlayApp::command_from_action("setCamera", Some((args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "x": 1, "y": 2, "zoom": 1.5 }))).clone()), None).expect("flat camera bridge"),
-        LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some("layout.play.blueprint".into()), camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
+        LayoutCommand::SetCamera(semio_s_artifact_layout_layout_editor_commands::set_camera::SetCamera { surface_id: Some("layout.play.blueprint".into()), camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
     );
     assert_eq!(
         LayoutPlayApp::command_from_action("canvasPointerDown", Some((args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "button": 0, "shiftKey": true, "x": 10, "y": 20, "width": 800, "height": 600 }))).clone()), None).expect("pointer down bridge"),
-        LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: true, x: 10.0, y: 20.0, width: 800.0, height: 600.0 })
+        LayoutCommand::CanvasPointerDown(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: true, x: 10.0, y: 20.0, width: 800.0, height: 600.0 })
     );
     assert_eq!(
         LayoutPlayApp::command_from_action("engagementSubmit", Some((args(serde_json::json!({ "value": "export png" }))).clone()), None).expect("engagement bridge"),
-        LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() })
+        LayoutCommand::EngagementSubmit(semio_s_artifact_layout_layout_editor_commands::engagement_submit::EngagementSubmit { value: "export png".into() })
     );
     assert!(LayoutPlayApp::command_from_action("patchFrame", Some((args(serde_json::json!({ "field": "fill" }))).clone()), None).is_err(), "a required field must not be defaulted silently");
 }
@@ -610,7 +624,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
         assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
     }
-    assert!(json.contains(edit::LAYOUT_PLAY_MODE_EDIT), "mode missing from the manifest");
+    assert!(json.contains(semio_s_artifact_layout_layout_editor_commands::modes::edit::LAYOUT_PLAY_MODE_EDIT), "mode missing from the manifest");
     for body in [LAYOUT_PLAY_BODY_ARTIFACT, LAYOUT_PLAY_BODY_CATALOGUE, LAYOUT_PLAY_BODY_INSPECTION, LAYOUT_PLAY_BODY_PREFLIGHT] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
@@ -639,8 +653,8 @@ async fn window_kind_actions_scope_authoring_to_blueprint_only() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn sample_fixture_parses() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
-    assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::parse_dsl(semio_s_artifact_layout_layout_model::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
+    assert_eq!(doc.schema, semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA);
     assert!(!doc.pages.is_empty());
 }
 
@@ -678,7 +692,7 @@ async fn registry_backed_add_frame_emits_operation() {
     // 🧾️ Mounted: `result.mutations` is EMPTY, the SETTLED document is the record (bucket 3). What this
     // law proves is that the registry-backed wrapper lets a `Mutation` verb's operation through at all.
     let before = app.snapshot().expect("projection").pages[0].frames.len();
-    dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
+    dispatch(&mut app, LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
     assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
 }
 
@@ -688,7 +702,7 @@ async fn registry_backed_pointer_move_is_view_only() {
     // an operation, which the registry kind-discipline check enforces.
     let mut app = layout_app_with_registry().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
+    let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;
     assert!(result.mutations.is_empty(), "View action must not emit document operations");
 }
 //#endregion 🔖️CrossCutting
@@ -711,7 +725,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let doc = ArtifactView::new(&document, &history);
     let media = LayoutPlayApp::export_media("artifact:out", &doc).expect("export document:out");
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
-    assert_eq!(schema, crate::LAYOUT_DOCUMENT_SCHEMA);
+    assert_eq!(schema, semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
     let decoded = <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(decoded, document);
@@ -723,7 +737,7 @@ async fn import_media_fields_in_sets_typed_dictionary() {
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value: semio_framework_value::DslValue::Object(vec![("name".into(),semio_framework_value::DslValue::String("Ada".into()))]) } };
     app.import_media("fields:in", media, &artifact_app_laws::meta("local")).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
-    assert_eq!(document.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
+    assert_eq!(document.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -735,7 +749,7 @@ async fn layout_io_exposes_declared_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn layout_io_declares_fields_in_and_layout_out_ports() {
-    let io = crate::editor::layout::engine::layout_io();
+    let io = semio_s_artifact_layout_layout_engine::layout_io();
     assert_eq!(io.artifact_schema, "layout.layout");
     assert_eq!(io.artifact.id, "2d.layout");
     let fields_in = io.ports.iter().find(|port| port.id == "fields:in").expect("fields:in declared");
@@ -775,7 +789,7 @@ fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_window() {
-    use blueprint::config::LayoutBlueprintWindowConfigOwner;
+    use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
     use blueprint::transient::LayoutBlueprintWindowTransientOwner;
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();

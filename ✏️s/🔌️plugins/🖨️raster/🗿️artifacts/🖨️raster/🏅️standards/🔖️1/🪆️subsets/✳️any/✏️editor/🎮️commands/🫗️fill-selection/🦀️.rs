@@ -5,10 +5,10 @@
 //! its base, never by the host (design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 
 use super::paint_stroke::{hex_color, paint_target_refusal, raster_fault, selection};
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::mutations::fill_selection::{invariant, FillSelection as FillSelectionLeaf};
-use crate::op::RasterMutation;
-use crate::RasterSnapshot;
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations_pixels::fill_selection::{invariant, FillSelection as FillSelectionLeaf};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

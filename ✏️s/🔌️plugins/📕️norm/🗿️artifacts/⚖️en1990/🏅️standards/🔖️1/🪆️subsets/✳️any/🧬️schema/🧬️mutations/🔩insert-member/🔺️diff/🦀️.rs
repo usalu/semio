@@ -1,9 +1,9 @@
 //! 🔩 `insert-member` diff — inserts the row at its position; a position past the collection's end inserts it last as a
 //! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertMember;
-use crate::diff::{En1990Diff, En1990MemberDelta};
-use crate::En1990Snapshot;
+use crate::insert_member::InsertMember;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990MemberDelta};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &InsertMember, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

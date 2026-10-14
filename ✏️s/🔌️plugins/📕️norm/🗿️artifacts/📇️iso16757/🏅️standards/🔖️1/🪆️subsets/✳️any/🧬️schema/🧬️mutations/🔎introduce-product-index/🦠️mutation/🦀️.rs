@@ -1,6 +1,7 @@
 //! `introduce-product-index` — insert into catalogue.product_indexes.
 
-use crate::{part_1::ProductIndex, Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::part_1::ProductIndex;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -13,16 +14,16 @@ pub struct IntroduceProductIndex {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for IntroduceProductIndex {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for IntroduceProductIndex where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::retire_product_index::mutation::RetireProductIndex> {
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "insert", entity: "productIndex", kind: "introduce-product-index", record: "IntroducedProductIndex" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::introduce_product_index::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::introduce_product_index::inverse::inverse(self, base)?
     
     })
 }

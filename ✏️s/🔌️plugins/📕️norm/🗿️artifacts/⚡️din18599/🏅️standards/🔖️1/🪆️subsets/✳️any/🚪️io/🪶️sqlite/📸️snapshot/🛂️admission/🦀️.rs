@@ -1,5 +1,5 @@
 //! ⚡️ Borrowed building, climate and actual child-reference cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -20,4 +20,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  n::keyed(out,"din18599_renewables",1,&n::cells(n::record(n::field(root,16)?)?,[Real(0),Real(1),Real(2)])?,RENEWABLES_FLOATS)?;Ok(())
 }
 /// 🛂️ Twelve authored SQL tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,Din18599Snapshot::SQLITE_SCHEMA,12,27,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,Din18599Snapshot::SQLITE_SCHEMA,12,27,count(root)?,write)}

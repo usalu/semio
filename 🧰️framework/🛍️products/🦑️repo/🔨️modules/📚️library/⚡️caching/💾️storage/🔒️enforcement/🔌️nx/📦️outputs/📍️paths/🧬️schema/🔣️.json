@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","platform","root","path"],"properties":{"version":{"const":1},"platform":{"enum":["posix","windows"]},"root":{"type":"string","minLength":1,"maxLength":256},"path":{"type":"string","minLength":1,"maxLength":256}}}

@@ -3,7 +3,6 @@
 //! `connect-<nouns>{endpoints,payload}` ↔ `disconnect-<noun>{id}`).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::SynapseSpec;
 //#region 🔖️ConnectSynapse
@@ -16,14 +15,17 @@ pub struct ConnectSynapse {
     pub synapse: SynapseSpec,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ConnectSynapse {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ConnectSynapse
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::disconnect_synapse::DisconnectSynapse>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::connect_synapse::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::connect_synapse::inverse::inverse(self, base)?
     

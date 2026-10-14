@@ -1,8 +1,8 @@
 //! 🔧 `change-delta-c-dev` payload.
 
-use crate::diff::En1992Diff;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -14,14 +14,21 @@ pub struct ChangeDeltaCDev {
     pub new_delta_c_dev: f64,
 }
 
-impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeDeltaCDev {
+impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeDeltaCDev where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_delta_c_dev::ChangeDeltaCDev> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "delta-c-dev", kind: "change-delta-c-dev", record: "ChangedDeltaCDev" };
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_delta_c_dev::diff::diff(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_delta_c_dev::inverse::inverse(self, base)? 
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change cover allowance for deviation Δc,dev to {}", self.new_delta_c_dev), &format!("Vorhaltemaß Δc,dev auf {} ändern", self.new_delta_c_dev))
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

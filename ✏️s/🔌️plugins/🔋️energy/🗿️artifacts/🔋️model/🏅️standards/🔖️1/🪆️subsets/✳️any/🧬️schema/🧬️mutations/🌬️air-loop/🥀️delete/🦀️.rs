@@ -1,8 +1,7 @@
 //! 🥀️ Energy model mutation — `DeleteAirLoop`: Drops one air loop. Refused while an outdoor air system still names it, rather than cascading — the outdoor air system is a document of its own and its owner decides its fate.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteAirLoop {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_air_loop(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteAirLoop(DeleteAirLoop { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_air_loop<Op: From<DeleteAirLoop>>(id: crate::model::EntityId) -> Op {
+    DeleteAirLoop { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteAirLoop {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteAirLoop
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteAirLoop> + From<crate::CreateAirLoop>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "air-loop", kind: "delete-air-loop", record: "DeletedAirLoop" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

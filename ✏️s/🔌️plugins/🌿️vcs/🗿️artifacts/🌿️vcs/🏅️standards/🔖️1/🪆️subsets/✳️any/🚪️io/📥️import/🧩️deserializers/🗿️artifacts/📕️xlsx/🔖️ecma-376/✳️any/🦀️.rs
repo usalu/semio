@@ -6,8 +6,8 @@ use crate::VcsSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_xlsx::schema::snapshot::XlsxCellValue;
-use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 
 pub const XLSX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId::ANY };
 

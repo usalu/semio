@@ -1,8 +1,7 @@
 //! 🪤️ Energy model mutation — `RemoveSpaceListMember`: Takes one space back out of a grouping; the space itself survives.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveSpaceListMember {
     pub space_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_space_list_member(id: crate::model::EntityId, space_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveSpaceListMember(RemoveSpaceListMember { id, space_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_space_list_member<Op: From<RemoveSpaceListMember>>(id: crate::model::EntityId, space_id: crate::model::EntityId) -> Op {
+    RemoveSpaceListMember { id, space_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveSpaceListMember {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveSpaceListMember
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveSpaceListMember> + From<crate::AddSpaceListMember>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "space-list", kind: "remove-space-list-member", record: "RemovedSpaceListMember" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

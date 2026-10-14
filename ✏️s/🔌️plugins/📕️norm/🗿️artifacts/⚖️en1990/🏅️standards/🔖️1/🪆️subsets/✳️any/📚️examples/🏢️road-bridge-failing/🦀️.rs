@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
-use crate::{BridgeSls, Member, MemberEffect, PermanentAction, VariableAction};
+use semio_s_artifact_norm_en1990_model::{BridgeSls, Member, MemberEffect, PermanentAction, VariableAction};
 
 pub const ID: &str = "road-bridge-failing";
 pub fn label() -> LocalizedLabel {
@@ -15,9 +15,9 @@ pub fn source() -> ExampleSource {
 }
 
 /// 🌉 Non-compliant road bridge: A2.4 deflection over limit and undersized R_d.
-pub fn reference_snapshot() -> crate::En1990Snapshot {
-    crate::En1990Snapshot {
-        annex: crate::document::AnnexChoice::De,
+pub fn reference_snapshot() -> semio_s_artifact_norm_en1990_model::En1990Snapshot {
+    semio_s_artifact_norm_en1990_model::En1990Snapshot {
+        annex: semio_s_plugin_norm_compliance::AnnexChoice::De,
         project_id: "road-bridge-failing".into(),
         structure_kind: "rail_bridge".into(),
         altitude_m: 200.0,
@@ -74,8 +74,3 @@ pub fn reference_snapshot() -> crate::En1990Snapshot {
     }
 }
 
-//#region ️TaxonomyMounts
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod example;
-//#endregion ️TaxonomyMounts

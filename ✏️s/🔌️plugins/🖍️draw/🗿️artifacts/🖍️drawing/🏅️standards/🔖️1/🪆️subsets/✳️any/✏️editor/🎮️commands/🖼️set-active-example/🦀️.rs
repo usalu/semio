@@ -23,7 +23,7 @@ pub fn handle(
     payload: &SetActiveExample,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
-    _session: &mut crate::commands::canvas_pointer_down::DrawingSession,
+    _session: &mut semio_s_artifact_draw_drawing_editor_tool::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() {
         default_drawing_document("empty", None)
@@ -31,5 +31,5 @@ pub fn handle(
         let source = examples().iter().find(|source| source.id() == payload.example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.unknown"), format!("Drawing declares no example '{}'", payload.example_id)))?;
         DrawingSnapshot::parse_dsl(&source.document_json()).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.parse"), format!("Drawing example '{}' does not parse as a drawing document", payload.example_id)))?
     };
-    Ok(Emit { effects: vec![crate::drawing_reset_document_effect(&next)], ..Default::default() })
+    Ok(Emit { effects: vec![semio_s_artifact_draw_drawing_editor_interaction::drawing_reset_document_effect(&next)], ..Default::default() })
 }

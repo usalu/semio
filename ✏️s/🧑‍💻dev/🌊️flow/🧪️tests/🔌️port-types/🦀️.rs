@@ -152,7 +152,7 @@ fn a_vector_output_is_refused_by_the_wire_input_that_accepts_the_profile() {
 /// displaced, and adds no synapse — so nothing re-solves.
 #[test]
 fn the_flow_host_refuses_the_drop_and_keeps_the_displaced_wire() {
-    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
+    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone())).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     let before: Vec<(String, String, String, String)> = host.host_snapshot.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.from_port.clone(), synapse.to.clone(), synapse.to_port.clone())).collect();
     let refusal = host.connect_ports("extrusion-axis", "vectorOut", "extrude", "wire");
     assert!(matches!(refusal, Err(semio_framework_os_flow::FlowCoreError::IncompatiblePortTypes { .. })), "the drop must be refused, got {refusal:?}");
@@ -161,7 +161,7 @@ fn the_flow_host_refuses_the_drop_and_keeps_the_displaced_wire() {
     assert!(after.contains(&("profile".into(), "wire".into(), "extrude".into(), "wire".into())), "the profile wire the drop would have displaced must survive");
     assert!(host.connect_ports("extrusion-axis", "vectorOut", "extrude", "vector").is_err(), "that wire already exists");
     retire(host);
-    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone()));
+    let mut host = FlowHost::from_host_snapshot_with_cache_and_infos(hexagonal_mushroom_column(), std::sync::Arc::new(neural_engine::NeuralCache::new()), std::sync::Arc::new(kind_infos().clone())).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.disconnect("e5").expect("the shipped vector wire is there to cut");
     host.connect_ports("extrusion-axis", "vectorOut", "extrude", "vector").expect("and the compatible pair reconnects");
     retire(host);

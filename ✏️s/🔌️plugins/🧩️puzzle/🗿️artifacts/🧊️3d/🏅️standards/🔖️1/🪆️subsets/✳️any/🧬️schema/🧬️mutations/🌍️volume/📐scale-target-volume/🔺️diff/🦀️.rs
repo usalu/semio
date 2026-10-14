@@ -1,7 +1,6 @@
 //! 🔺️ Sparse diff builder for `ScaleTargetVolume` — patches the one addressed target-volume in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumesDelta};
-use protocol::list_delta::RowPatch;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumesDelta};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ScaleTargetVolume, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

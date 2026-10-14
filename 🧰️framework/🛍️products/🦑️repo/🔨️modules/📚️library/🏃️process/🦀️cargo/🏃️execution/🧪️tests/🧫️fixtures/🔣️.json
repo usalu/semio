@@ -1,0 +1,485 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "foreign manifest",
+      "target": "request",
+      "path": [
+        "manifest"
+      ],
+      "value": "other/Cargo.toml"
+    },
+    {
+      "name": "foreign cwd",
+      "target": "request",
+      "path": [
+        "cwd"
+      ],
+      "value": "other"
+    },
+    {
+      "name": "foreign package",
+      "target": "request",
+      "path": [
+        "packages"
+      ],
+      "value": [
+        "foreign"
+      ]
+    },
+    {
+      "name": "foreign arguments",
+      "target": "request",
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "--workspace"
+      ]
+    },
+    {
+      "name": "request policy authority",
+      "target": "request",
+      "path": [
+        "policy"
+      ],
+      "value": {
+        "maximumElapsedMilliseconds": 0
+      }
+    },
+    {
+      "name": "request environment authority",
+      "target": "request",
+      "path": [
+        "environment"
+      ],
+      "value": {
+        "CARGO_NET_OFFLINE": "false"
+      }
+    },
+    {
+      "name": "request storage authority",
+      "target": "request",
+      "path": [
+        "storage"
+      ],
+      "value": {}
+    },
+    {
+      "name": "request target authority",
+      "target": "request",
+      "path": [
+        "targetDirectory"
+      ],
+      "value": "other"
+    },
+    {
+      "name": "foreign action",
+      "target": "request",
+      "path": [
+        "kind"
+      ],
+      "value": "lint"
+    },
+    {
+      "name": "foreign backend program",
+      "target": "backend",
+      "path": [
+        "program"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign backend argv",
+      "target": "backend",
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "foreign",
+        "execute"
+      ]
+    },
+    {
+      "name": "foreign backend cwd",
+      "target": "backend",
+      "path": [
+        "cwd"
+      ],
+      "value": "other"
+    },
+    {
+      "name": "foreign source hash",
+      "target": "backend",
+      "path": [
+        "sources",
+        1,
+        "sha256"
+      ],
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "foreign source bytes",
+      "target": "backend",
+      "path": [
+        "sources",
+        1,
+        "bytes"
+      ],
+      "value": 0
+    },
+    {
+      "name": "foreign source inode",
+      "target": "backend",
+      "path": [
+        "sources",
+        0,
+        "file",
+        "inode"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign command manifest",
+      "target": "command",
+      "path": [
+        "manifest"
+      ],
+      "value": "other/Cargo.toml"
+    },
+    {
+      "name": "foreign command cwd",
+      "target": "command",
+      "path": [
+        "workingDirectory"
+      ],
+      "value": "other"
+    },
+    {
+      "name": "foreign command program",
+      "target": "command",
+      "path": [
+        "program"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign command argv",
+      "target": "command",
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "foreign"
+      ]
+    },
+    {
+      "name": "foreign exact law",
+      "target": "exact",
+      "path": [
+        "groups",
+        0,
+        "laws"
+      ],
+      "value": [
+        "foreign_law"
+      ]
+    },
+    {
+      "name": "foreign exact target",
+      "target": "exact",
+      "path": [
+        "groups",
+        0,
+        "target"
+      ],
+      "value": {
+        "kind": "test",
+        "name": "foreign"
+      }
+    },
+    {
+      "name": "foreign source ancestor",
+      "target": "backend",
+      "path": [
+        "sources",
+        0,
+        "ancestors",
+        0,
+        "inode"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign descriptor selection",
+      "target": "backend",
+      "path": [
+        "request",
+        "manifest"
+      ],
+      "value": "other/Cargo.toml"
+    }
+  ],
+  "invocationMutations": [
+    "control",
+    "policy",
+    "signal",
+    "remaining",
+    "publish",
+    "yield",
+    "capabilities",
+    "policy-bytes",
+    "capability-bytes"
+  ],
+  "environmentMutations": [
+    "SEMIO_BUILD_MODE",
+    "CARGO_NET_OFFLINE",
+    "CARGO_TARGET_DIR"
+  ],
+  "streamCases": [
+    {
+      "name": "byte overflow",
+      "maximumBytes": 1048576,
+      "suppliedBytes": 1048577,
+      "expected": "refused"
+    },
+    {
+      "name": "source changed after payload",
+      "expected": "refused"
+    },
+    {
+      "name": "original cancellation before EOF",
+      "expected": "refused"
+    },
+    {
+      "name": "fragmented original JSON",
+      "chunkBytes": 7,
+      "expected": "accepted"
+    },
+    {
+      "name": "line overflow",
+      "maximumLines": 1,
+      "suppliedLines": 2,
+      "expected": "refused"
+    }
+  ],
+  "sourceMutations": [
+    "bytes",
+    "replacement-inode"
+  ],
+  "declarationCases": [
+    {
+      "name": "ambiguous command",
+      "expected": "refused"
+    },
+    {
+      "name": "foreign declaration reference",
+      "expected": "refused"
+    },
+    {
+      "name": "missing declaration continuation",
+      "remove": [
+        "operations",
+        0,
+        "continuation"
+      ],
+      "expected": "refused"
+    }
+  ],
+  "continuationCases": [
+    {
+      "name": "foreign child program",
+      "nested": true,
+      "path": [
+        "program"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign child cwd",
+      "nested": true,
+      "path": [
+        "cwd"
+      ],
+      "value": "foreign"
+    },
+    {
+      "name": "foreign child argument prefix with same suffix",
+      "nested": true,
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "foreign",
+        "test",
+        "quick",
+        "--lib"
+      ]
+    },
+    {
+      "name": "foreign child argument tail",
+      "nested": true,
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "./📜️script.ts",
+        "test",
+        "long",
+        "--lib"
+      ]
+    },
+    {
+      "name": "truncated child argument owner",
+      "nested": true,
+      "path": [
+        "arguments"
+      ],
+      "value": [
+        "test",
+        "quick",
+        "--lib"
+      ]
+    },
+    {
+      "name": "missing nested continuation",
+      "nested": true,
+      "path": [],
+      "value": null
+    },
+    {
+      "name": "unrequested direct continuation",
+      "nested": false,
+      "path": [],
+      "value": {
+        "program": "bun",
+        "cwd": "package",
+        "arguments": [
+          "./📜️script.ts",
+          "test",
+          "quick",
+          "--lib"
+        ]
+      }
+    },
+    {
+      "name": "missing required backend continuation",
+      "nested": false,
+      "path": [],
+      "value": null,
+      "remove": true
+    }
+  ],
+  "authoredConsumers": [
+    {
+      "name": "Trace",
+      "root": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
+      "package": "semio-framework-trace",
+      "arguments": [
+        [],
+        [
+          "quick",
+          "--lib"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    },
+    {
+      "name": "Async Macros",
+      "root": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
+      "package": "semio-framework-async-macros",
+      "arguments": [
+        [],
+        [
+          "long",
+          "--lib"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    },
+    {
+      "name": "Value Derive",
+      "root": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
+      "package": "semio-framework-value-derive",
+      "arguments": [
+        [],
+        [
+          "quick",
+          "--lib"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    },
+    {
+      "name": "Schema Derive",
+      "root": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
+      "package": "semio-framework-schema-derive",
+      "arguments": [
+        [],
+        [
+          "long",
+          "--lib"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    },
+    {
+      "name": "Schema State",
+      "root": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust",
+      "package": "semio-framework-schema-state",
+      "arguments": [
+        [],
+        [
+          "quick",
+          "--test",
+          "schema-state-neutrality"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    },
+    {
+      "name": "Canvas",
+      "root": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+      "package": "semio-framework-canvas",
+      "arguments": [
+        [],
+        [
+          "long",
+          "--test",
+          "original_scene_retirement"
+        ],
+        [
+          "--lib",
+          "--",
+          "a b",
+          "雪"
+        ]
+      ]
+    }
+  ]
+}

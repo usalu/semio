@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 /// 📜️ Bundled default example document (`.semio` envelope + DSL body).
 pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -34,11 +34,9 @@ pub type Din18599SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{
-    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
-};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_din18599_model::*;
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
 
 /// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec, composed child included.
@@ -86,19 +84,14 @@ pub fn encode_din18599_dsl(snapshot: &Din18599Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{
-    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
-};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_din18599_model::*;
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
 
-
-
-
 }
-#[cfg(test)] pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;

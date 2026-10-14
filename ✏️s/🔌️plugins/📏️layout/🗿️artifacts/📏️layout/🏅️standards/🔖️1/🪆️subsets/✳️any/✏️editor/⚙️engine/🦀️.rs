@@ -5,6 +5,13 @@
 //! (`LayoutEngine` and everything built on it) lives in the `🎬️scene` sibling file, same split the old
 //! engine used purely for size.
 
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
 //#region 🔖️Io
 /// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two
@@ -47,3 +54,8 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
     }
 }
 //#endregion 🔖️Io
+
+//#region 🪢️TaxonomyMounts
+#[path = "🎬️scene/🦀️.rs"]
+pub mod scene;
+//#endregion 🪢️TaxonomyMounts

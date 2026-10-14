@@ -43,20 +43,15 @@ pub fn retire_raster_snapshot(snapshot: RasterSnapshot) {
 /// 🧹️ [`retire_raster_snapshot`] for the artifact-shaped twin the diff vocabulary carries — the same
 /// two owned roots, reached by `RasterDiff::retire_cold` and by every half-built candidate an
 /// `apply` abandons on a rejection.
-pub fn retire_raster_artifact(artifact: crate::standards::v1::subsets::any::schema::RasterArtifact) {
-    let crate::standards::v1::subsets::any::schema::RasterArtifact { schema: _, id: _, title: _, layers, mut assets } = artifact;
+pub fn retire_raster_artifact(artifact: crate::RasterArtifact) {
+    let crate::RasterArtifact { schema: _, id: _, title: _, layers, mut assets } = artifact;
     crate::retire_raster_layers(layers);
     assets.retire();
 }
 //#endregion 🔖️Snapshot
 
 
-
-
-
-
 //#region 🔖️HandcraftedArtifactCodecs
-
 
 
 //#endregion 🔖️HandcraftedArtifactCodecs

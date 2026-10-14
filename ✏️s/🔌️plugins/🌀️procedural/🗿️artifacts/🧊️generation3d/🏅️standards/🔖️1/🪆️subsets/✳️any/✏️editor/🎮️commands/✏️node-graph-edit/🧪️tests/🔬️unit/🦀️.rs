@@ -3,9 +3,12 @@
 //! transaction of the RELATIVE `move-nodes` leaf; each is one edit and one history row labelled from its leaf in English
 //! and German, and two gestures are two transactions.
 
-use super::*;
-use crate::app_fixture::{app, dispatch, snapshot, Generation3dApp};
-use crate::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_node_graph_edit::*;
+use crate::app_fixture::app;
+use crate::app_fixture::dispatch;
+use crate::app_fixture::snapshot;
+use crate::app_fixture::Generation3dApp;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::PluginApp;
@@ -75,7 +78,7 @@ async fn edit_rows(app: &mut Generation3dApp) -> Vec<HistoryEntry> {
 /// 📍️ Lays every widget of the document out on the canvas (the `reorganize` verb, ONE setup edit), so a node drag has base
 /// positions; answers the placed ids with their base positions.
 async fn place_every_widget(app: &mut Generation3dApp) -> Vec<(String, (f64, f64))> {
-    dispatch(app, Generation3dCommand::Reorganize(crate::editor::generation3d::commands::reorganize::Reorganize {})).await;
+    dispatch(app, Generation3dCommand::Reorganize(semio_s_artifact_procedural_3d_editor_commands::reorganize::Reorganize {})).await;
     let read = snapshot(app);
     read.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
 }
@@ -93,7 +96,7 @@ fn german(entry: &HistoryEntry) -> String {
 /// stamped with one tool transaction whose op is the absolute `change-slider-value`, a cancelled press leaves zero trace.
 #[semio_framework_async_macros::async_test]
 async fn every_slider_press_row_is_one_transaction_on_the_released_value() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let table = slider_gesture_table();
     for row in &table.presses {
         assert_eq!(row.dispatches.len(), row.committed.len(), "row {} states one committed value per dispatch", row.row);
@@ -123,7 +126,7 @@ async fn every_slider_press_row_is_one_transaction_on_the_released_value() {
 /// ⚖️ LAW: a slider press row is labelled from its leaf in every locale.
 #[semio_framework_async_macros::async_test]
 async fn a_slider_press_row_is_labelled_from_its_leaf_in_english_and_german() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = app().await;
     send(&mut app, serde_json::json!({ "operations": [{ "operation": "setSlider", "widgetId": "height", "value": 7.25 }], "gesture": "g1", "commit": true })).await;
     let rows = edit_rows(&mut app).await;
@@ -152,7 +155,7 @@ fn a_slider_tick_declares_the_narrow_scope_the_table_states() {
 /// op is the relative `move-nodes` leaf; every dragged widget lands at its base position plus the offset.
 #[semio_framework_async_macros::async_test]
 async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = app().await;
     let placed = place_every_widget(&mut app).await;
     let [(first, (first_x, first_y)), (second, (second_x, second_y))] = [placed[0].clone(), placed[1].clone()];
@@ -176,7 +179,7 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
 /// transactions.
 #[semio_framework_async_macros::async_test]
 async fn a_drag_that_moves_nothing_leaves_zero_trace_and_two_drags_are_two_transactions() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = app().await;
     let (id, (x, y)) = place_every_widget(&mut app).await.remove(0);
     let ids = [id];
@@ -210,7 +213,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
         let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
         assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
         let args: semio_framework_value::DslValue = serde_json::json!({ "operations": batch }).into();
-        assert!(<crate::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
+        assert!(<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
     }
 }
 
@@ -218,7 +221,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
 /// selection is read.
 #[semio_framework_async_macros::async_test]
 async fn a_delete_row_deletes_exactly_the_named_widget_and_wire_as_one_edit() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = app().await;
     let (wire, widget) = {
         let read = snapshot(&app);

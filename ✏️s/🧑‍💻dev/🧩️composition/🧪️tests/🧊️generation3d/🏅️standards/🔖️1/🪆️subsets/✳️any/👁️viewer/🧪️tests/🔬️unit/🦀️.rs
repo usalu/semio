@@ -11,7 +11,7 @@ pub(crate) mod context {
     /// 🧵️ `tessellate_geometry` and the flow-eval neuron kernel cache behind it are process-wide, so
     /// every viewer test that evaluates a flow fixture or tessellates BRep geometry — directly, or
     /// indirectly through the Preview window's `render()` — acquires the crate's ONE serial lock
-    /// first ([`semio_s_artifact_procedural_generation3d::test_serial`], not an editor module, so viewer purity is untouched).
+    /// first ([`semio_s_artifact_procedural_3d_testkit::test_serial`], not an editor module, so viewer purity is untouched).
     ///
     /// 🐛️ This door used to own a SECOND mutex over that same process-global state, so a viewer law
     /// and an editor law ran at the same time over one kernel cache and one registry
@@ -280,7 +280,7 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
     let commands = vec![
         Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),
         Generation3dViewCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
-        Generation3dViewCommand::SetCamera(set_camera::SetCamera { camera: semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewCamera { position: [9.0, 8.0, 7.0], target: [0.0, 0.0, 0.0], fov: 33.0 } }),
+        Generation3dViewCommand::SetCamera(set_camera::SetCamera { camera: semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera { position: [9.0, 8.0, 7.0], target: [0.0, 0.0, 0.0], fov: 33.0 } }),
         Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {}),
         Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 120.0 }),
         Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 42.0 }),

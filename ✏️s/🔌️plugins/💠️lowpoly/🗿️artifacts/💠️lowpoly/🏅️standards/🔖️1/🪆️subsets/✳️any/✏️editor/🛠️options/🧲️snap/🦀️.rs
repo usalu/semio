@@ -1,9 +1,9 @@
 //! 🧲️ Lowpoly play app — the vertex-snap grid-size window-chrome group. Shared verbatim by both windows.
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::utility_param_slider;
-use crate::editor::lowpoly::view::utility_params_value;
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_kit::utility_param_slider;
+use semio_s_artifact_lowpoly_lowpoly_view::utility_params_value;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.

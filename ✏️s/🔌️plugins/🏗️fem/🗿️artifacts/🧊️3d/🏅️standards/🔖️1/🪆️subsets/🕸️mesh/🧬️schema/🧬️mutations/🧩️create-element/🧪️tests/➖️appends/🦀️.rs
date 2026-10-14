@@ -7,26 +7,26 @@
 //!
 //! An axial `Bar` brace joins the 6-DOF `Frame` column — the bar variant carries no `roll`, and must not gain one.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧩️create-element/➖️appends/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `create-element` appends the bracing bar `b1` and carries `before` to exactly the committed `after`.
@@ -36,8 +36,8 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("create-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "create-element/appends-a-diagonal-bracing-bar: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 2, "create-element/appends-a-diagonal-bracing-bar: the brace must be appended beside the frame");
-    assert!(matches!(snapshot.elements[1], crate::FemElement::Bar { .. }), "create-element/appends-a-diagonal-bracing-bar: the brace must stay a Bar, never widen into a Frame");
-    assert!(matches!(snapshot.elements[0], crate::FemElement::Frame { .. }), "create-element/appends-a-diagonal-bracing-bar: the pre-existing column must stay a Frame");
+    assert!(matches!(snapshot.elements[1], semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { .. }), "create-element/appends-a-diagonal-bracing-bar: the brace must stay a Bar, never widen into a Frame");
+    assert!(matches!(snapshot.elements[0], semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement::Frame { .. }), "create-element/appends-a-diagonal-bracing-bar: the pre-existing column must stay a Frame");
 }
 
 /// ↩️ The inverse is a `delete-element` of `b1`, leaving the lone frame behind.
@@ -57,7 +57,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -65,7 +65,7 @@ fn committed_json_is_canonical() {
     }
     let decoded_mutation = mutation();
     let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-element/appends-a-diagonal-bracing-bar: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +76,7 @@ fn committed_json_is_canonical() {
 /// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_value::DslValue::as_str).expect("outcome carries a status");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let refused = produced.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
@@ -86,7 +86,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "create-element/appends-a-diagonal-bracing-bar: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "create-element/appends-a-diagonal-bracing-bar: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-element/appends-a-diagonal-bracing-bar: unknown outcome status {other:?}"),
@@ -101,23 +101,23 @@ fn produces_committed_diff() {
     assert!(outcome.diff().elements.is_some(), "create-element/appends-a-diagonal-bracing-bar: the created brace must surface in the elements delta");
     assert!(outcome.diff().nodes.is_none() && outcome.diff().materials.is_none() && outcome.diff().sections.is_none(), "create-element/appends-a-diagonal-bracing-bar: the referenced node/material/section rows are read-only for this mutation");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
-    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-element/appends-a-diagonal-bracing-bar: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-element/appends-a-diagonal-bracing-bar: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `elements.added` entry on `before` must reproduce frame-then-brace.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-element/appends-a-diagonal-bracing-bar: committed diff did not carry before to after");
 }

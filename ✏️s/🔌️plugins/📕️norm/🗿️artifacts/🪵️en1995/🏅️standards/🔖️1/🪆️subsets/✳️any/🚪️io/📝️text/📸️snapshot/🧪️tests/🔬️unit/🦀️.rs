@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::MemberRole;
+use crate::text::snapshot::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1995_model::MemberRole;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
@@ -20,7 +20,7 @@ async fn glulam_footbridge_example_fixture_parses_and_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_bundled_example_round_trips_through_the_dsl() {
-    for example in crate::examples() {
+    for example in semio_s_artifact_norm_en1995_model::examples() {
         let document = parse_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e:?}", example.id()));
         assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document, "{}", example.id());
     }

@@ -1,6 +1,17 @@
-use super::*;
-use crate::editor::lowpoly::unit_tests::context::{act, app, dispatch, dispatch_refused, select, select_face};
-use crate::editor::lowpoly::LowpolyCommand;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_commands::object::*;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
+use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+use crate::context::{act, app, dispatch, dispatch_refused, select, select_face};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 use semio_framework_3d::mesh::HalfedgeMesh;
 
 fn faces(object: &LowpolyObject) -> usize {
@@ -25,11 +36,11 @@ async fn delete_selection_removes_the_picked_face_and_undo_restores_it() {
 #[semio_framework_async_macros::async_test]
 async fn delete_selection_removes_a_selected_object_but_keeps_the_last() {
     let mut a = app().await;
-    dispatch(&mut a, LowpolyCommand::AddPrimitive(crate::editor::lowpoly::commands::add_primitive::AddPrimitive { kind: Some("box".into()) })).await;
+    dispatch(&mut a, LowpolyCommand::AddPrimitive(semio_s_artifact_lowpoly_lowpoly_commands::add_primitive::AddPrimitive { kind: Some("box".into()) })).await;
     let snapshot = a.snapshot().expect("projection");
     assert_eq!(snapshot.objects.len(), 2);
     let added = snapshot.objects[1].id.clone();
-    select(&mut a, &[("object", &crate::editor::lowpoly::view::document_object_row_id(&added))]).await;
+    select(&mut a, &[("object", &semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&added))]).await;
     dispatch(&mut a, LowpolyCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
     let snapshot = a.snapshot().expect("projection");
     assert_eq!(snapshot.objects.len(), 1, "the selected object is gone");
@@ -53,5 +64,5 @@ async fn duplicate_object_copies_geometry_beside_the_source() {
     assert_eq!(faces(copy), faces(&source));
     assert_eq!(copy.mesh_content, source.mesh_content);
     assert_eq!(copy.transform.position[0], source.transform.position[0] + 1.0);
-    assert_eq!(copy.mesh, Some(crate::mesh_child_handle(&copy.id, &copy.mesh_content)), "the copy's handle is its own");
+    assert_eq!(copy.mesh, Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::mesh_child_handle(&copy.id, &copy.mesh_content)), "the copy's handle is its own");
 }

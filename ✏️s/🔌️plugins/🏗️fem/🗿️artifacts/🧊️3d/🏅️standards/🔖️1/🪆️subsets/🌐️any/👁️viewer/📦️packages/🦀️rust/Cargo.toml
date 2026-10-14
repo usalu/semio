@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-3d-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-fem-3d-editor-session = { workspace = true }
+semio-s-artifact-fem-3d-editor-visual-job = { workspace = true }
+semio-s-artifact-fem-3d-io = { workspace = true }
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-mutations = { workspace = true }
+semio-s-artifact-fem-3d-scene = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+
+[dev-dependencies]
+semio-framework-ui-scene = { workspace = true }

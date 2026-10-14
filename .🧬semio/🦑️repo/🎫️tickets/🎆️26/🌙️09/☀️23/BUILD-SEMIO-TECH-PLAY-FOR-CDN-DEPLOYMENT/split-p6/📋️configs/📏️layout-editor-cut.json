@@ -1,0 +1,227 @@
+{
+ "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "crate": "semio_s_artifact_layout_layout_editor",
+ "aggregator": "editor",
+ "workspace": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+ "aggregatorRole": "library",
+ "monolithManifest": ".🧬semio/🦑️repo/⚡️cache/p6/orig/layout-editor-Cargo.toml",
+ "consumers": [
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+  "🌎️hub/🧩️compositions/📏️layout"
+ ],
+ "crates": {
+  "editor": {
+   "ident": "semio_s_artifact_layout_layout_editor",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "commands": {
+   "ident": "semio_s_artifact_layout_layout_editor_commands",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "doc": "//! 🎮️ Layout editor commands: the canvas, frame, page, document, export and engagement commands with the edit mode's windows, the canvas and the terminology.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "panels": {
+   "ident": "semio_s_artifact_layout_layout_editor_panels",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "doc": "//! 📌️ Layout editor panels: the catalogue, document, inspection and preflight panels.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "export": {
+   "ident": "semio_s_artifact_layout_layout_engine_export",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "json": {
+   "ident": "semio_s_artifact_layout_layout_engine_json",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+   "doc": "//! 🔣️ Layout export JSON: the bounded JSON validation and typed JSON writing cursors of the layout export job.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  }
+ },
+ "rules": [
+  [
+   "",
+   "editor",
+   ""
+  ],
+  [
+   "commands",
+   "commands",
+   ""
+  ],
+  [
+   "modes",
+   "commands",
+   "modes"
+  ],
+  [
+   "canvas",
+   "commands",
+   "canvas"
+  ],
+  [
+   "terminology",
+   "commands",
+   "terminology"
+  ],
+  [
+   "config",
+   "commands",
+   "config"
+  ],
+  [
+   "presence",
+   "commands",
+   "presence"
+  ],
+  [
+   "demo_session",
+   "commands",
+   "demo_session"
+  ],
+  [
+   "example",
+   "commands",
+   "example"
+  ],
+  [
+   "panels",
+   "panels",
+   ""
+  ],
+  [
+   "engine_export",
+   "export",
+   ""
+  ]
+ ],
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+   "to": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+   "items": [
+    "JsonRootState",
+    "JsonArrayState",
+    "JsonObjectState",
+    "JsonContainer",
+    "JsonStringEscape",
+    "JsonNumberState",
+    "JsonLiteral",
+    "JsonToken",
+    "JsonValidationCursor",
+    "TopArrayKind",
+    "RecordOwner",
+    "StringArraySource",
+    "StringSource",
+    "JsonStringWriteCursor",
+    "TypedJsonNode",
+    "TypedJsonCursor",
+    "typed_string_source_owned_bytes",
+    "typed_json_node_owned_bytes",
+    "JsonScalar",
+    "integer_json_scalar",
+    "finite_json_number",
+    "OwnerPage",
+    "FrameStringField",
+    "frame_string",
+    "JSON_INPUT_BYTES_PER_UNIT",
+    "JSON_OUTPUT_BYTES_PER_UNIT",
+    "MAX_LAYOUT_EXPORT_JSON_NODES",
+    "MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES",
+    "MAX_LAYOUT_EXPORT_STRING_BYTES",
+    "MAX_LAYOUT_EXPORT_DECODED_ITEMS",
+    "frame_bounds"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+   "to": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "items": [
+    "LayoutExportJobFactory",
+    "LayoutExportToolJob",
+    "LayoutExportToolPayload",
+    "LayoutMediaExportJob",
+    "LayoutMediaExportJobFactory"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "items": [
+    "LAYOUT_PLAY_APP_ID",
+    "layout_action",
+    "ui_label",
+    "ui_value_text",
+    "ui_value_map",
+    "LAYOUT_INTERACTION_ELEMENTS",
+    "LAYOUT_GRANULARITY_ELEMENT",
+    "LayoutInteractionSnapshot",
+    "layout_select_effect",
+    "layout_hover_effect",
+    "layout_clear_selection_effect",
+    "layout_select_action_args",
+    "layout_hover_action_args"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs",
+   "to": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "items": [
+    "NATIVE_PLACEMENTS",
+    "native_artifact_kind",
+    "NATIVE_OPEN",
+    "native_open"
+   ]
+  }
+ ],
+ "files": [
+  [
+   "⚙️engine/📤️export/🧾️dictionary/🦀️\\.rs$",
+   "json",
+   "dictionary"
+  ]
+ ]
+}

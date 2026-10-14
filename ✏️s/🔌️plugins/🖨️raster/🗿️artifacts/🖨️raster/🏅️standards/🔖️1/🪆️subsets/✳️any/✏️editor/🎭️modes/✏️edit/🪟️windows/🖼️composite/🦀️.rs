@@ -1,9 +1,9 @@
 //! 🖼️ Raster play app — the composite window: the main paintable 2D surface.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::modes::edit::windows::composite::options;
-use crate::editor::raster::raster_scene;
-use crate::RasterSnapshot as RasterDocument;
+use crate::config::RasterConfig;
+use crate::modes::edit::windows::composite::options;
+use crate::raster_scene;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub fn window_measures(config: &RasterConfig, labels: &crate::editor::raster::terminology::RasterPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(config: &RasterConfig, labels: &crate::terminology::RasterPlayLabels) -> Vec<WindowMeasure> {
     let mut measures=vec![options::brush::measure(config,labels),options::eraser::measure(config,labels),options::bucket::measure(config,labels)];
     for measure in &mut measures {if let WindowMeasure::Group{id,children,..}=measure{
         children.push(WindowMeasure::Select{id:format!("{id}-target"),label:Some(labels.paint_target.as_str().into()),value:config.paint_target.clone(),items:[("pixels",labels.paint_pixels.as_str()),("mask",labels.paint_mask.as_str())].into_iter().map(|(value,label)|semio_framework_plugin::MeasureSelectItem{id:value.into(),value:value.into(),label:label.into()}).collect(),on_change:crate::editor::raster::raster_measure_action("setPaintTarget")});
@@ -68,3 +68,17 @@ pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: 
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod options {
+    #[path = "☑️options/🖌️brush/🦀️.rs"]
+    pub mod brush;
+    #[path = "☑️options/🪣️bucket/🦀️.rs"]
+    pub mod bucket;
+    #[path = "☑️options/🧽️eraser/🦀️.rs"]
+    pub mod eraser;
+}
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
+//#endregion 🪢️TaxonomyMounts

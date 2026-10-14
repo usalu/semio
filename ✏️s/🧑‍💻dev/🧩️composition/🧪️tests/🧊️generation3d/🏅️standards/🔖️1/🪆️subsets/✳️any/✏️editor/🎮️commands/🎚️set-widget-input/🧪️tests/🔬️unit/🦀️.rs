@@ -6,7 +6,8 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     use crate::editor_domain::editor_laws::context;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_history_verb};
     use semio_framework_ui_locale::{Locale, Terminology};
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_editor_panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -21,7 +22,7 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();
-    context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::import_document::ImportDocument { name: "selected-input.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
+    context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_3d_import_document::ImportDocument { name: "selected-input.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
     let before = context::snapshot(&app);
     let mut binding = serde_json::Value::Null;
     for action in case["actions"].as_array().unwrap() {
@@ -61,7 +62,8 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
 async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history() {
     use crate::editor_domain::editor_laws::context;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, decode_fixture_scene_with_lanes, meta, settle_history_verb};
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -80,7 +82,7 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
         });
         std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
         let payload = semio_framework_pack_json::to_json_string(&snapshot); snapshot.retire_cold();
-        context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::import_document::ImportDocument { name: "mesh-source.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
+        context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_3d_import_document::ImportDocument { name: "mesh-source.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
         let before = context::snapshot(&app);
         let view = context::preview_views("mesh-source", "second").0;
         let mut args = case["command"].clone(); args["widgetId"] = "construct".into(); args["channel"] = "data".into(); args["facet"] = "meshSource".into();
@@ -112,12 +114,13 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
 #[semio_framework_async_macros::async_test]
 async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
     use crate::editor_domain::editor_laws::context;
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, Generation3dPlayApp};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
     use semio_framework_plugin::ArtifactEditor;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let mut app = context::app().await;
-    context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("brep.mesh.box".into()), format: None, action: None, x: None, y: None })).await;
+    context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_3d_add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("brep.mesh.box".into()), format: None, action: None, x: None, y: None })).await;
     let before = context::snapshot(&app);
     let id = semio_s_artifact_procedural_3d_model::widget_id(before.host_snapshot.widgets.last().unwrap()).to_string();
     let args: semio_framework_value::DslValue = serde_json::json!({"widgetId":id,"channel":"width","value":2.5}).into();
@@ -138,7 +141,8 @@ async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
 async fn widget_input_collection_actions_publish_evaluate_and_restore_history() {
     use crate::editor_domain::editor_laws::context;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, decode_fixture_scene_with_lanes, meta, settle_history_verb};
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -155,7 +159,7 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
         std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
         let payload = semio_framework_pack_json::to_json_string(&snapshot);
         snapshot.retire_cold();
-        context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::import_document::ImportDocument { name: "collection.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
+        context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_3d_import_document::ImportDocument { name: "collection.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
         let before = context::snapshot(&app);
         let view = context::preview_views("collection", "second").0;
         let mut args = case["command"].clone();
@@ -192,7 +196,8 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
 async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     use crate::editor_domain::editor_laws::context;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, decode_fixture_scene_with_lanes, meta, settle_history_verb};
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let mut app = context::app().await;
@@ -211,7 +216,7 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     std::mem::replace(&mut snapshot.host_snapshot, projected).retire_cold();
     let payload = semio_framework_pack_json::to_json_string(&snapshot);
     snapshot.retire_cold();
-    context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::import_document::ImportDocument { name: "variable.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
+    context::dispatch(&mut app, Generation3dCommand::ImportDocument(semio_s_artifact_procedural_3d_import_document::ImportDocument { name: "variable.json".into(), payload, widget_id: None, channel: None, texture_id: None })).await;
     let before = context::snapshot(&app);
     let view = context::preview_views("metadata", "second").0;
     let change = context::act_with_view(&mut app, "setWidgetInput", serde_json::json!({"widgetId":"parameter","facet":"variableName","channel":"name","value":"  Width  "}), view.clone()).await.unwrap();
@@ -227,7 +232,7 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     assert_eq!(context::snapshot(&app), before);
     settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
     assert_eq!(context::snapshot(&app), after);
-    context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_widget::AddWidget { kind:"outputExport".into(), neuron_kind:None, format:None, action:None, x:None, y:None })).await;
+    context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_3d_add_widget::AddWidget { kind:"outputExport".into(), neuron_kind:None, format:None, action:None, x:None, y:None })).await;
     let before_export = context::snapshot(&app);
     let id = before_export.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::OutputExport { id, format } => { assert_eq!(format,"gltf"); Some(id.clone()) }, _ => None }).unwrap();
     context::act_with_view(&mut app, "setWidgetInput", serde_json::json!({"widgetId":id,"facet":"exportFormat","channel":"format","value":"obj"}), view.clone()).await.unwrap();
@@ -245,7 +250,9 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
 async fn widget_input_texture_picker_retains_source_scope_and_restores_history() {
     use crate::editor_domain::editor_laws::context;
     use semio_framework_plugin::{Effect, artifact_app_laws::{close_registered_fixture_app, meta, settle_history_verb}};
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, commands::{import_document, import_document_request}};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_import_document as import_document;
+    use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

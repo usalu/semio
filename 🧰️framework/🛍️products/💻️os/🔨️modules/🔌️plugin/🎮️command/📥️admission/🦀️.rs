@@ -4,16 +4,16 @@ use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{Retai
 use semio_framework_async::PublicationClaimHandle;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
 use crate::app_contract::ArtifactApp;
 use crate::app_emission::ActionMeta;
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::bounded_ownership::{PluginLifecycleStep,PluginLifecycleFailure};
-use crate::bounded_ownership::plugin_typed_owner_demand;
-use crate::bounded_ownership::plugin_typed_owner_step;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleStep,PluginLifecycleFailure};
+use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step;
 use crate::reserved_jobs::QualifiedToolProof;
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use crate::tool_cancellation::ToolCancellationLease;
 use crate::tool_jobs::TYPED_OPERATION_RESULT_PAGE_BYTES;
 

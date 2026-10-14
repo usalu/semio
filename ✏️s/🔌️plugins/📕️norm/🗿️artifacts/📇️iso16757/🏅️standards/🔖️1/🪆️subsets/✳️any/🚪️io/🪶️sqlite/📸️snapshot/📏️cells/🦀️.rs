@@ -1,5 +1,5 @@
 //! 📏️ ISO catalogue native CST admits every authored SQL cell before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{DslField,FieldValue as F,RecordValue as R};
 use semio_framework_value::{DslValue as D,NativeDecodeControl,Number};
 type Result<T>=std::result::Result<T,ValueError>;
@@ -146,7 +146,7 @@ fn geometry_catalogue(r:&R,c:&mut Census,native:&mut NativeDecodeControl<'_>)->R
  for value in list(r.get(1))?{let v=record(Some(value))?;c.row("primitive_kind",&[16,length(v,0)?],native)?;for value in list(v.get(1))?{c.row("primitive_kind_parameter",&[16,text(Some(value))?.len()],native)?;}}Ok(())
 }
 /// 📇️ Admits the exact55-table parent from borrowed native syntax with no secondary document.
-pub(super)fn admit_record(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<()>{
+pub(crate)fn admit_record(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<()>{
  native.scoped_stage(|native|{
   native.begin_stage(0)?;if WIDTHS.len()>limits.max_tables{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"ISO authored tables exceed caller table limit"))}for(_,width)in WIDTHS{native.step()?;if *width>limits.max_columns{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"ISO authored columns exceed caller column limit"))}}let mut c=Census{limits,rows:0,bytes:0};
   let cat=record(root.get(0))?;let metadata=record(cat.get(1))?;let lifecycle=record(metadata.get(1))?;let manufacturer=record(cat.get(2))?;let cat_dictionary=record(cat.get(3))?;let dict=record(root.get(1))?;let dict_reference=record(dict.get(0))?;let selection=record(root.get(3))?;let script=record(root.get(6))?;

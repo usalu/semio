@@ -5,7 +5,7 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-native": "bun repo run @semio-tech/framework-mesh-engine-rs:test-native"
+    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-engine-rs:test-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

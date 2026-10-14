@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 /// 📜️ Bundled reference-catalogue example (`.semio` envelope + DSL body).
 pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -32,9 +32,9 @@ pub type Vdi3805SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_vdi3805_model::*;
+use semio_s_artifact_norm_vdi3805_model::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -46,25 +46,21 @@ pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> { <Vdi3
 
 pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String { pack::snapshot::ArtifactDsl::print_dsl(snapshot) }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::standards::v1::subsets::any::schema::snapshot::attributes_from_records;
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_vdi3805_schema::*;
+use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
 use std::collections::BTreeMap;
-use crate::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use semio_s_artifact_norm_vdi3805_model::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
-use crate::document::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
 /// 📐️ Pure VDI 3805 compliance helpers — native-text parsing with typed record families,
 /// Part 1 structural validation, and sheet attribute catalogues.
-use crate::*;
+use semio_s_artifact_norm_vdi3805_model::*;
 use ::dsl;
-
-
-
-
 
 /// 🔤️ Parse semicolon-delimited native VDI 3805 text into a typed catalogue.
 pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<ManufacturerCatalog, NormError> {
@@ -186,21 +182,19 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
     Ok(ManufacturerCatalog { file, products, extensions: ExtensionBag::default() })
 }
 }
-pub use snapshot_wire_codec::*;
-
-
+pub use crate::text::snapshot::snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
-use super::parse_native_text;
-use crate::standards::v1::subsets::any::schema::*;
+use crate::text::snapshot::parse_native_text;
+use semio_s_artifact_norm_vdi3805_schema::*;
 use std::collections::BTreeMap;
-use crate::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use semio_s_artifact_norm_vdi3805_model::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
-use crate::document::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
 /// 📐️ Pure VDI 3805 compliance helpers — native-text parsing with typed record families,
 /// Part 1 structural validation, and sheet attribute catalogues.
-use crate::*;
+use semio_s_artifact_norm_vdi3805_model::*;
 use ::dsl;
 
 /// 🔤️ Serialize catalogue to semicolon-delimited native text (010-style header + typed records).
@@ -316,6 +310,6 @@ pub fn assert_native_round_trip(catalog: &ManufacturerCatalog, limits: SecurityL
     Ok(())
 }
 }
-pub use snapshot_wire2_codec::*;
+pub use crate::text::snapshot::snapshot_wire2_codec::*;
 
-crate::impl_norm_artifact_record!(@text Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");

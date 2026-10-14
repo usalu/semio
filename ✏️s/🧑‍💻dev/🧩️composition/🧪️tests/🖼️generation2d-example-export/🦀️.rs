@@ -2,9 +2,12 @@
 //! `draw` flow extension its `neuron-kind`s resolve to linked in-process (the served guest receives it
 //! as a host contribution instead). Its own test binary: a linked operator pack is process-wide, and
 //! the lib tests pin the bare host, where the demo's operators are unknown.
-use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
-use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::generation2d_drawing;
-use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
+use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::dxf::v_r12::any as dxf_out;
+use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::pdf::v1_4::any as pdf_out;
+use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::png::v1_2::any as png_out;
+use semio_s_artifact_procedural_2d_io::export::serializers::artifacts::svg::v1_1::any as svg_out;
+use semio_s_artifact_procedural_2d_io::generation2d_drawing;
+use semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn installed() {

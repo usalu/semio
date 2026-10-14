@@ -1,8 +1,8 @@
 //! 📤 `remove-variable` diff — removes the row at the index; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemoveVariable;
-use crate::diff::{En1990Diff, En1990VariableDelta};
-use crate::En1990Snapshot;
+use crate::remove_variable::RemoveVariable;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990VariableDelta};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &RemoveVariable, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

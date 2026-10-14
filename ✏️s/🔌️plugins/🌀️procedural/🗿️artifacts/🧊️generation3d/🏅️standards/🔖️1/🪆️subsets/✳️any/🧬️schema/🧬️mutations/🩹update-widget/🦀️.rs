@@ -3,7 +3,6 @@
 //! exposed here, so whole-body replace is the cohesive facet per `📓️taxonomy.md`'s `update` row).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️UpdateWidget
@@ -29,14 +28,17 @@ pub(crate) fn variable_synapses(previous: &Widget, next: &Widget, synapses: &[se
     }).collect()
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for UpdateWidget {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for UpdateWidget
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "widget", kind: "update-widget", record: "UpdatedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::update_widget::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::update_widget::inverse::inverse(self, base)?
     

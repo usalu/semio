@@ -62,7 +62,10 @@ def main():
     artifact = os.path.dirname(os.path.join(REPO, cfg["root"]))
     ws_root = os.path.join(REPO, cfg["workspace_root"]) if cfg.get("workspace_root") else artifact
     mono_path = os.path.join(artifact, "📦️packages", "🦀️rust", "Cargo.toml")
-    mono = toml_load(mono_path)
+    pristine = os.path.join(REPO, ".🧬semio", "🦑️repo", "⚡️cache", "p9", "pristine", os.path.relpath(mono_path, REPO))
+    mono = toml_load(pristine if os.path.exists(pristine) else mono_path)
+    for extra in cfg.get("extra_candidates", []):
+        mono.setdefault("dependencies", {}).setdefault(extra, {"workspace": True})
     ws_path = os.path.join(ws_root, "Cargo.toml")
     ws_text = open(ws_path, encoding="utf-8").read()
     ws = toml_load(ws_path)
@@ -135,6 +138,11 @@ def main():
                     dev[cand] = {"workspace": True}
             elif in_test and cand not in deps and "dependencies" in specs:
                 dev[cand] = {"workspace": True}
+        for name, feats in cfg.get("dev_features", {}).items():
+            if not feats:
+                dev.pop(name, None)
+            elif name in deps and test.strip():
+                dev[name] = {"workspace": True, "features": feats}
         for t in tt:
             for d in t.get("dev", []):
                 if d not in deps:
@@ -159,8 +167,8 @@ def main():
                     new_rows[d] = {"path": rel(os.path.normpath(os.path.join(mono_dir, spec["path"])), ws_root)}
                 elif isinstance(spec, dict) and "version" in spec:
                     new_rows[d] = {k: v for k, v in spec.items() if k in ("version", "features", "package")}
-                elif d == "semio-s-plugin-norm-mutation-vectors":
-                    new_rows[d] = {"path": rel(os.path.join(REPO, "✏️s/🔌️plugins/📕️norm/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"), ws_root)}
+                elif d == "semio-s-mutation-vectors":
+                    new_rows[d] = {"path": rel(os.path.join(REPO, "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"), ws_root)}
                 elif d == "semio-framework-async-macros" and d not in ws_deps:
                     new_rows[d] = {"path": rel(os.path.join(REPO, "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"), ws_root)}
         for internal in [pkg_of[k] for k in crates if k != key]:

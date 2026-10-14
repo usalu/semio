@@ -1,6 +1,6 @@
 //! 🧱️ Handwritten Block owned relational fields.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
+use semio_s_artifact_block_2d_model::*;
 use std::collections::{BTreeMap, BTreeSet};
 use store::{
     sqlite_snapshot::{
@@ -428,6 +428,3 @@ fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

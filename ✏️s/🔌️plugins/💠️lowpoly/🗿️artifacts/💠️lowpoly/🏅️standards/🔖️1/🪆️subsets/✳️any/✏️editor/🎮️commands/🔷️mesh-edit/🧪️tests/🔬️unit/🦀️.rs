@@ -1,5 +1,9 @@
-use crate::editor::lowpoly::unit_tests::context::{act, app, app_with_registry, dispatch, select_face};
-use crate::editor::lowpoly::LowpolyCommand;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use crate::context::{act, app, app_with_registry, dispatch, select_face};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 
 /// 🧪️ Rewritten (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law
 /// fix) to assert on the persisted `mesh` HANDLE rather than reconstructing a `LowpolyDocument`
@@ -17,7 +21,7 @@ async fn extrude_selected_face_grows_mesh_and_undo_restores() {
     let object_id = a.snapshot().expect("projection").objects[0].id.clone();
     let before_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     select_face(&mut a, &object_id, 0).await;
-    dispatch(&mut a, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: None })).await;
+    dispatch(&mut a, LowpolyCommand::Extrude(semio_s_artifact_lowpoly_lowpoly_commands::mesh_edit::extrude::Extrude { extrude_distance: None })).await;
     let after_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     assert_ne!(after_mesh, before_mesh, "extrude must change the mesh handle");
     act(&mut a, "undo", serde_json::json!({})).await;
@@ -33,8 +37,8 @@ async fn extrude_reads_staged_arg_distance_into_the_operation() {
     let object_id = small.snapshot().expect("projection").objects[0].id.clone();
     select_face(&mut small, &object_id, 0).await;
     select_face(&mut large, &object_id, 0).await;
-    dispatch(&mut small, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(0.1) })).await;
-    dispatch(&mut large, LowpolyCommand::Extrude(super::extrude::Extrude { extrude_distance: Some(1.5) })).await;
+    dispatch(&mut small, LowpolyCommand::Extrude(semio_s_artifact_lowpoly_lowpoly_commands::mesh_edit::extrude::Extrude { extrude_distance: Some(0.1) })).await;
+    dispatch(&mut large, LowpolyCommand::Extrude(semio_s_artifact_lowpoly_lowpoly_commands::mesh_edit::extrude::Extrude { extrude_distance: Some(1.5) })).await;
     let small_handle = small.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh.clone();
     let large_handle = large.snapshot().expect("projection").objects.iter().find(|o| o.id == object_id).unwrap().mesh.clone();
     assert_ne!(small_handle, large_handle, "different staged extrude distances must produce different meshes");
@@ -44,6 +48,6 @@ async fn extrude_reads_staged_arg_distance_into_the_operation() {
 async fn toggle_smooth_emits_op_and_flips_shading() {
     let mut a = app().await;
     let before = a.snapshot().expect("projection").objects[0].smooth_shading;
-    dispatch(&mut a, LowpolyCommand::ToggleSmooth(super::toggle_smooth::ToggleSmooth {})).await;
+    dispatch(&mut a, LowpolyCommand::ToggleSmooth(semio_s_artifact_lowpoly_lowpoly_commands::mesh_edit::toggle_smooth::ToggleSmooth {})).await;
     assert_ne!(a.snapshot().expect("projection").objects[0].smooth_shading, before);
 }

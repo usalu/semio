@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "monolith": "semio_s_artifact_procedural_generation2d",
+ "package": "semio-s-artifact-procedural-2d-mode-generate",
+ "description": "Procedural generation2d generate mode: the form, generations and generation preview windows",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate",
+ "moves": [
+  {
+   "from": "editor::generation2d::modes::generate",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": "monolith"
+}

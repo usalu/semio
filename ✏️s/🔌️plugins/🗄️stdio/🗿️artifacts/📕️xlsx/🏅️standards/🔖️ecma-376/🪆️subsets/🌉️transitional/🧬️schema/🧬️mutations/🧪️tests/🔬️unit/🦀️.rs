@@ -41,10 +41,11 @@ fn kinds_match_enum_and_catalog() {
 //#region 🔖️StampLaw
 /// 🏗️ A three-sheet workbook declaring the strict families, so every stamp kind has something to retarget.
 fn stampable() -> XlsxSnapshot {
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     let workbook = XlsxWorkbook { sheets: ["One", "Two", "Three"].into_iter().map(|name| XlsxSheet { name: name.into(), cells: vec![] }).collect(), shared_strings: vec![] };
-    crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(build_minimal_xlsx(workbook))
+    semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(build_minimal_xlsx(workbook))
 }
 
 /// 🏅️ Every stamp kind satisfies the inverse sum law on a workbook declaring the opposite class, and stamping into the class and back out restores the workbook.

@@ -1,8 +1,8 @@
 //! 🧱️ `insert-retaining-wall` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertRetainingWall;
-use crate::diff::{En1998Diff, En1998RetainingWallDelta};
-use crate::En1998Snapshot;
+use crate::insert_retaining_wall::InsertRetainingWall;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998RetainingWallDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertRetainingWall, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.retaining_walls.iter().any(|existing| existing.id == payload.wall.id) {

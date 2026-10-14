@@ -28,7 +28,7 @@
 use crate::editor::puzzle2d as editor;
 use crate::standards::v1::subsets::any::schema;
 use crate::viewer::puzzle2d as viewer;
-use crate::{Puzzle2dMutation, Puzzle2dSnapshot, PUZZLE2D_DIALECT, PUZZLE_2D_SCHEMA};
+use {crate::Puzzle2dMutation, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::PUZZLE2D_DIALECT, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;

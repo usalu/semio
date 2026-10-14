@@ -1,6 +1,7 @@
 //! ➕️ `add-selection-constraint` — inserts one property constraint into the active selection at `index` (absent appends).
 
-use crate::{part_1::SelectionConstraint, Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::part_1::SelectionConstraint;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,14 +15,14 @@ pub struct AddSelectionConstraint {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for AddSelectionConstraint { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "selection-constraint", kind: "add-selection-constraint", record: "AddedSelectionConstraint" };
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for AddSelectionConstraint where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::remove_selection_constraint::mutation::RemoveSelectionConstraint> { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "selection-constraint", kind: "add-selection-constraint", record: "AddedSelectionConstraint" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::add_selection_constraint::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_selection_constraint::inverse::inverse(self, base)?
     
     })
 }

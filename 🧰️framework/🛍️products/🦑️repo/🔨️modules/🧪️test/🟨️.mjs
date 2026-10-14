@@ -242,7 +242,7 @@ async function testCaseProjects(configFiles, _options, context) {
   if (featureCandidates.length === 0) return results;
   const libraryModule = new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url);
   const libraryRevision = createHash("sha256").update(readAuthoritySource(libraryModule)).digest("hex");
-  const { cacheInternals: native, libraryBootstrap } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
+  const { cacheInternals: native, libraryBootstrap,createScriptInputCache } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
   await libraryBootstrap;
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
@@ -271,7 +271,7 @@ async function testCaseProjects(configFiles, _options, context) {
   }
 
   for (const [ownerRel, owner] of [...owners].sort(([left], [right]) => Buffer.compare(Buffer.from(left), Buffer.from(right)))) {
-    commandInputs ??= compactSourceInputs([...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))], workspaceRoot);
+    commandInputs ??= compactSourceInputs([...await native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot,createScriptInputCache(context)), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))], workspaceRoot);
     const name = projectNameFor(ownerRel, await ownerHash(ownerRel));
     const adapters = [...new Set(owner.cases.flatMap((row) => row.adapters))].sort();
     const inputs = [...new Map(owner.cases.flatMap((row) => inputsFor(workspaceRoot, vocabulary, ownerRel, row.caseRel, row.adapters)).map((input) => [JSON.stringify(input), input])).values()];
@@ -328,9 +328,9 @@ function testCaseDependencies(_options, context) {
 export function testBuildInferenceDirectoryV1(workspace){return repositoryBuildGraphDataDirectoryV1(workspace,"inference");}
 
 /** ♻️ Refreshes resident inference after authored source changes without discarding build state. */
-async function withTestInferenceWriterV1(context,body){const run=invocation=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,()=>body());return context.invocation?run(context.invocation):receiveScriptProcessInvocation(process.env,run);}
+async function withTestInferenceWriterV1(context,body){const run=invocation=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,()=>body(invocation));return context.invocation?run(context.invocation):receiveScriptProcessInvocation(process.env,run);}
 
-async function invokeCurrentImplementation(kind,args){return withTestInferenceWriterV1(kind==="nodes"?args[2]:args[1],()=>invokeCurrentImplementationV1(kind,args));}
+async function invokeCurrentImplementation(kind,args){const index=kind==="nodes"?2:1,context=args[index];return withTestInferenceWriterV1(context,invocation=>{const original=[...args];original[index]={...context,invocation};return invokeCurrentImplementationV1(kind,original);});}
 
 async function invokeCurrentImplementationV1(kind, args) {
   await testBootstrap;

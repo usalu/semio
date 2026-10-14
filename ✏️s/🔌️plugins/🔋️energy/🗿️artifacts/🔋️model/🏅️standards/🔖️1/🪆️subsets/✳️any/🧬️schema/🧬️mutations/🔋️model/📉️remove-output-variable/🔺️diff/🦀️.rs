@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `RemoveOutputVariable` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, OutputVariableSpecPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, OutputVariableSpecPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveOutputVariable, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

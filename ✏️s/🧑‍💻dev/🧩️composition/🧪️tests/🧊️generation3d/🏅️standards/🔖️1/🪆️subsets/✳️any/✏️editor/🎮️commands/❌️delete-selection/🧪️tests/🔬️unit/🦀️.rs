@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app, app_with_registry, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::widget_id;
 
 /// ❌️ `DeleteSelection` carries NO ids at all — its only input is the framework-owned `graph`

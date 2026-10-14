@@ -484,6 +484,57 @@ pub(crate) mod part21 {
         Ok(Record { name: "FILE_SCHEMA".to_string(), parameter: Parameter::List(vec![string_list(&schemas)]) })
     }
 
+    /// 📇️ The three header records as the `StepHeader` wire record.
+    #[cfg(test)]
+    fn header_to_wire(exchange: &Exchange) -> Json {
+        let arguments = |name: &str| header_record(exchange, name).and_then(|record| args(record).ok()).cloned().unwrap_or_default();
+        let text = |items: &[Parameter], index: usize| Json::String(items.get(index).and_then(as_text).unwrap_or_default().to_string());
+        let texts = |items: &[Parameter], index: usize| {
+            Json::Array(match items.get(index) {
+                Some(Parameter::List(values)) => values.iter().filter_map(as_text).map(|value| Json::String(value.to_string())).collect(),
+                _ => Vec::new(),
+            })
+        };
+        let object = |members: Vec<(&str, Json)>| Json::Object(members.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+        let (description, name, schema) = (arguments("FILE_DESCRIPTION"), arguments("FILE_NAME"), arguments("FILE_SCHEMA"));
+        object(vec![
+            ("fileDescription", object(vec![("description", texts(&description, 0)), ("implementationLevel", text(&description, 1))])),
+            (
+                "fileName",
+                object(vec![
+                    ("name", text(&name, 0)),
+                    ("timestamp", text(&name, 1)),
+                    ("author", texts(&name, 2)),
+                    ("organization", texts(&name, 3)),
+                    ("preprocessorVersion", text(&name, 4)),
+                    ("originatingSystem", text(&name, 5)),
+                    ("authorization", text(&name, 6)),
+                ]),
+            ),
+            ("fileSchema", object(vec![("schemas", texts(&schema, 0))])),
+        ])
+    }
+
+    /// 📸️ `set-snapshot`: the whole document becomes the `StepSnapshot` wire record — its typed header and its entities,
+
+    /// 📸️ Replaces the whole document with one `StepSnapshot` wire record — its typed header and its entities, in the
+    /// record's own order — so a committed history input seeds an independent ruststep exchange.
+    #[cfg(test)]
+    pub fn load_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
+        let header = snapshot.get("header").ok_or("a STEP snapshot carries `header`")?;
+        let member = |key: &str| header.get(key).ok_or_else(|| format!("a STEP header carries `{key}`"));
+        exchange.header = vec![file_description_record(member("fileDescription")?)?, file_name_record(member("fileName")?)?, file_schema_record(member("fileSchema")?)?];
+        exchange.data = vec![DataSection { meta: Vec::new(), entities: snapshot.array("entities").iter().map(entity_from_wire).collect::<Result<Vec<_>, String>>()? }];
+        Ok(())
+    }
+
+    /// 📸️ The independently read document as its `StepSnapshot` wire record, the inverse of [`load_snapshot`].
+    #[cfg(test)]
+    pub fn snapshot_of(exchange: &Exchange) -> Result<Json, String> {
+        let entities = exchange.data.iter().flat_map(|section| section.entities.iter()).map(entity_to_wire).collect::<Result<Vec<_>, String>>()?;
+        Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.step".to_string())), ("header".to_string(), header_to_wire(exchange)), ("entities".to_string(), Json::Array(entities))]))
+    }
+
     /// 🔎️ The `id` of every row of a `restore-entities` payload.
     pub fn entity_ids(params: &Json) -> Vec<u64> {
         params.array("entities").iter().filter_map(|row| u64_field(row, "id").ok()).collect()

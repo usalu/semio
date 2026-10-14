@@ -1,0 +1,53 @@
+//! ➕ Puzzle2d mutation — `AddNodeHandle`: attaches a new rim port to a node.
+
+use crate::standards::v1::subsets::any::schema::mutations::remove_node_handle::RemoveNodeHandle;
+use semio_framework_value::paged::PagedUtf8;
+
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::Puzzle2dSnapshot};
+
+//#region 🔖️Mutation
+/// ➕ `add-node-handle` payload — owner node id + new handle payload at an optional FINAL-state
+/// `index` (`None` appends). A duplicate `handle.id` on the same node is a no-op.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "add-node-handle")]
+pub struct AddNodeHandle {
+    pub node_id: PagedUtf8<{ usize::MAX }>,
+    #[dsl(block)]
+    pub handle: Puzzle2dHandle,
+    pub index: Option<usize>,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn add_node_handle<Op: From<AddNodeHandle>>(node_id: PagedUtf8<{ usize::MAX }>, handle: Puzzle2dHandle, index: Option<usize>) -> Op {
+    Op::from(AddNodeHandle { node_id, handle, index })
+}
+
+impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for AddNodeHandle
+where
+    Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<AddNodeHandle> + From<RemoveNodeHandle>,
+{
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-handle", kind: "add-node-handle", record: "AddedNodeHandle" };
+
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.node_id.to_string_owner(), self.handle.id.to_string_owner()]
+    }
+}
+//#endregion 🔖️Mutation

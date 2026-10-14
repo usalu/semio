@@ -1,9 +1,10 @@
 //! 🔺️ `reorder-layers` sparse diff — one tree-aware move row from the layer's base address to the new one, delegating to
 //! `diff_move_layer` (fixed to be genuinely sparse: no clone-mutate-diff of the whole snapshot).
 
-use crate::diff::{diff_move_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
-use crate::{RasterLayerNode, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{diff_move_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::{find_layer, layer_node_id};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Diff
 /// 📐️ Finds `target_id`'s current `(parent_id, index)` address, recursing into groups.
@@ -21,7 +22,7 @@ fn locate(layers: &[RasterLayerNode], parent_id: Option<&str>, target_id: &str) 
     None
 }
 
-pub fn diff(payload: &super::ReorderLayers, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &crate::reorder_layers::mutation::ReorderLayers, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     if find_layer(&base.layers, &payload.layer_id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     }

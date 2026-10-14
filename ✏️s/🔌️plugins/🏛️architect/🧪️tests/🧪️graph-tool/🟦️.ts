@@ -27,7 +27,7 @@ for (const row of fixture.cases) test(`architect graph tool ${row.name}`, () => 
           for (const id of operation.synapseIds) { graph.dropEdge(id); leaves.push("disconnect-adjacency"); }
           const edges = new Set(operation.nodeIds.flatMap(id => graph.edges(id)));
           for (const edge of edges) { graph.dropEdge(edge); leaves.push("disconnect-adjacency"); }
-          for (const id of operation.nodeIds) { graph.dropNode(id); leaves.push("delete-program-element"); }
+          for (const id of operation.nodeIds) { graph.dropNode(id); leaves.push("delete-register-row"); }
         } else throw Error("unsupported row");
       }
     } catch { refused = true; }

@@ -8,8 +8,8 @@
 //! wire ladder spent one host step per byte, `PUZZLE_COMMAND_WIRE_SCAN_STRIDE_BYTES`), so every refusal here answers
 //! with a named, localized notice.
 
-use {crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot, crate::editor::puzzle3d::session::Puzzle3dActionCtx, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::PUZZLE3D_SCENE_SNAPSHOT_SCHEMA};
-use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_SCENE_SNAPSHOT_SCHEMA};
+use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
 
 use semio_framework_pack_json::{parse, Value};
 use semio_framework_plugin::kernel::Effect;
@@ -57,9 +57,9 @@ fn refuse(ctx: &mut Puzzle3dActionCtx<'_>, fault: Puzzle3dImportFault) {
 
 /// 🌱️ The sanctioned whole-document replacement: the imported `document` as a pack plus a fresh, edit-free op log. A
 /// natural-file import is the load path, not a mutation — it carries no inverse and journals no history row.
-pub fn puzzle3d_load_document_effect(document: &crate::Puzzle3dSnapshot) -> Effect {
-    let pack = <crate::Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_APP_ID, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA));
+pub fn puzzle3d_load_document_effect(document: &semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot) -> Effect {
+    let pack = <semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_APP_ID, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 

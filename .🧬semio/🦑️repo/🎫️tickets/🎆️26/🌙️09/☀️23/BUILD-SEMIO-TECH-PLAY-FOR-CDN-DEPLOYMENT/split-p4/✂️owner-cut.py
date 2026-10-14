@@ -396,6 +396,8 @@ class Cut:
     def render(self, loc, self_crate, src_file, line):
         if loc.external is not None:
             return "::".join(loc.external), None
+        if loc.item is None and tuple(loc.module) == () and self_crate in self.crates:
+            return "crate", self_crate
         target = self.crate_of(loc, self_crate if self_crate in self.crates else None)
         if loc.item is not None and loc.file is not None and loc.file in self.old.crate.files:
             defining_module = loc.module
@@ -1078,12 +1080,20 @@ def write_all(cut, config, trees, mounts, by_crate, rewrites, consumers):
                 keep = {x for x in by_crate[cut.aggregator] if x not in mounts or cut.assign[mounts[x][0]] != cut.aggregator}
                 kept = "\n".join(emit_tree([node], keep, os.path.dirname(cut.old_root), 0))
                 edits.append((a, b, kept))
-        dedup, last = [], -1
-        for e in sorted(edits):
-            if e[0] < last:
-                if e[2] == "" and e[1] <= last:
+        dedup = []
+        for e in sorted(edits, key=lambda e: (e[0], -(e[1] - e[0]))):
+            if dedup and e[0] < dedup[-1][1]:
+                prev = dedup[-1]
+                if e[1] <= prev[1] and e[0] >= prev[0]:
+                    if prev[2] == "" or e[0] == e[1] == prev[0]:
+                        continue
+                    if e[0] == e[1]:
+                        continue
+                    print(f"OVERLAP {os.path.relpath(f, REPO)}: {prev[:2]} {prev[2][:60]!r} vs {e[:2]} {e[2][:60]!r}")
                     continue
-            dedup.append(e); last = max(last, e[1])
+                print(f"OVERLAP {os.path.relpath(f, REPO)}: {prev[:2]} {prev[2][:60]!r} vs {e[:2]} {e[2][:60]!r}")
+                continue
+            dedup.append(e)
         texts[f] = apply_edits(old.raw[f], dedup) if dedup else old.raw[f]
     for name, crate in cut.crates.items():
         if name == cut.aggregator:
@@ -1095,6 +1105,8 @@ def write_all(cut, config, trees, mounts, by_crate, rewrites, consumers):
         body = emit_paths(cut, name, sorted(need), trees, mounts, os.path.dirname(root))
         header = config["header"]
         text = texts.get(root)
+        if text is None and os.path.exists(root):
+            text = open(root, encoding="utf-8").read()
         if text is None:
             text = (crate.get("new_root") or f"//! {name}") + "\n"
         lines = text.split("\n")
@@ -1115,7 +1127,7 @@ def write_all(cut, config, trees, mounts, by_crate, rewrites, consumers):
     usage = collections.defaultdict(set)
     for (a, b), rows in cut.samples.items():
         usage[a].add(b)
-    out = os.path.join(REPO, ".🧬semio/🦑️repo/⚡️cache/p4", os.path.basename(config_path).replace(".json", ".usage.json"))
+    out = os.path.join(REPO, ".🧬semio/🦑️repo/⚡️cache/p4", config.get("name", "cut") + ".usage.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({a: sorted(b) for a, b in usage.items()}, open(out, "w"), indent=1, sort_keys=True)
     print(f"written: {len([1 for f, t in texts.items() if t != old.raw.get(f)])} crate files, {len(consumers)} consumer files; usage {out}")

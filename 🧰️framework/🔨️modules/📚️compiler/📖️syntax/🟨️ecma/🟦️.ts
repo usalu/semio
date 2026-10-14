@@ -76,7 +76,7 @@ export function ecmaTokens(content: string, offset = 0, checkCancellation?: () =
       if (kind === "identifier") regexAllowed = prefix.has(text);
       else if (kind !== "punctuation") regexAllowed = false;
       else if (text === "(") {
-        const functionAt = tokens.slice(Math.max(0, tokens.length - 5), -1).findLastIndex(token => token.text === "function");
+        const preceding=tokens.slice(Math.max(0,tokens.length-5),-1),fromEnd=[...preceding].reverse().findIndex(token=>token.text==="function"),functionAt=fromEnd<0?-1:preceding.length-1-fromEnd;
         const head = functionAt < 0 ? -1 : Math.max(0, tokens.length - 5) + functionAt;
         const tail = head < 0 ? [] : tokens.slice(head + 1, -1);
         const before = tokens[head - (tokens[head - 1]?.text === "async" ? 2 : 1)]?.text;

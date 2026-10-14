@@ -1,6 +1,8 @@
 use super::*;
 use crate::standards::v_ap214::subsets::cc1::schema::MAX_RUNG;
-use crate::standards::v_ap214::subsets::base::io::ladder::{has_product_definition_chain, ladder_violations, ShapeRepresentationRow};
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::has_product_definition_chain;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::ladder_violations;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::ShapeRepresentationRow;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::standards::v_ap214::subsets::cc1::io::check_cc1_conformance;
 

@@ -41,6 +41,14 @@ const bounded = (root, path) => {
 };
 
 const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: new Map() });
+/** 🎯️ Admits one explicit immutable ownership selection without creating operation authority. */
+function ownershipSelection(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Explicit Bun ownership selection required");
+  const keys = Object.keys(value);
+  if (value.kind === "all" && keys.length === 1 && keys[0] === "kind") return Object.freeze({ kind: "all" });
+  if (value.kind === "scope" && keys.length === 2 && keys.includes("kind") && keys.includes("owner") && typeof value.owner === "string" && /^(?:\.|[^./\\:\u0000][^/\\:\u0000]*)$/u.test(value.owner)) return Object.freeze({ kind: "scope", owner: value.owner });
+  throw Error("Explicit Bun ownership selection required");
+}
 function* documentPlan(owner, path) {
   if (!owner.documents.has(path)) {
     const text = yield { operation: "readText", path: bounded(owner.root, path) };
@@ -101,9 +109,14 @@ function* nativePatternsPlan(owner, scope) {
   }).sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
 }
 /** 🗂️ Admits current scopes and source membership without reading testing collections. */
-function* membershipPlan(owner) {
+function* scopesPlan(owner, selection) {
   const document = yield* documentPlan(owner, "package.json"), declaration = parseBunWorkspaceDeclaration(document.semio?.workspace), paths = new Set(["package.json"]);
-  for (const pattern of declaration.owners) {
+  if (selection.kind === "scope" && selection.owner !== ".") {
+    const path = join(owner.root, selection.owner);
+    if (!declaration.owners.includes("*/package.json") || opaque.has(selection.owner) || collectionRoot(owner.root, path)) throw Error("Current authored Bun installation scope required");
+    paths.clear(); paths.add(selection.owner + "/package.json");
+  }
+  for (const pattern of selection.kind === "all" ? declaration.owners : []) {
     if (pattern !== "*/package.json") throw Error("Unsupported physical owner recipe: " + pattern);
     const entries = yield { operation: "list", path: owner.root };
     for (const entry of entries) if (!entry.name.startsWith(".") && !opaque.has(entry.name) && !collectionRoot(owner.root, join(owner.root, entry.name))) {
@@ -111,15 +124,20 @@ function* membershipPlan(owner) {
       if (entry.kind === "directory" && (yield { operation: "state", path: join(owner.root, entry.name, "package.json") }) !== "missing") paths.add(entry.name + "/package.json");
     }
   }
-  const scopes = [], all = new Set();
+  const scopes = [];
   for (const path of [...paths].sort()) {
     const row = yield* documentPlan(owner, path);
-    if (row.semio?.workspace === undefined) continue;
+    if (row.semio?.workspace === undefined) { if (selection.kind === "scope") throw Error("Current authored Bun installation scope required"); continue; }
     const d = dirname(path), directory = d === "." ? "." : slash(d), admitted = parseBunWorkspaceDeclaration(row.semio.workspace);
     for (const pattern of admitted.members) bounded(owner.root, join(directory, sourcePrefix(pattern.replace(/^!/u, ""))));
-    const scope = { directory, manifest: path, lock: directory === "." ? "bun.lock" : directory + "/bun.lock", declaration: admitted }, packages = yield* packagesPlan(owner, scope);
-    packages.forEach(path => all.add(path)); scopes.push(scope);
+    scopes.push({ directory, manifest: path, lock: directory === "." ? "bun.lock" : directory + "/bun.lock", declaration: admitted });
   }
+  return scopes;
+}
+/** 🗂️ Computes packages only for the already admitted current installation scopes. */
+function* membershipPlan(owner, selection) {
+  const scopes = yield* scopesPlan(owner, selection), all = new Set();
+  for (const scope of scopes) (yield* packagesPlan(owner, scope)).forEach(path => all.add(path));
   return { scopes, packages: [...all].sort((a, b) => a.localeCompare(b)) };
 }
 function executeOperation(operations, request) { return request.operation === "selection" ? undefined : operations[request.operation](request.path); }
@@ -128,11 +146,24 @@ function drain(plan, operations) {
   try { while (!step.done) step = plan.next(executeOperation(operations, step.value)); return step.value; }
   finally { plan.return(); }
 }
+/** 🔎️ Describes at most eight changed direct children without changing the original observation fence. */
+function ownershipChange(operation, path, previous, current) {
+  if (operation !== "list") return { operation, path, previous, current };
+  const added = [], removed = [], typeChanged = []; let left = 0, right = 0, total = 0;
+  const retain = (rows, row) => { if (total++ < 8) rows.push(row); };
+  while (left < previous.length || right < current.length) {
+    const before = previous[left], after = current[right], order = before && after ? Buffer.from(before.name).compare(Buffer.from(after.name)) : before ? -1 : 1;
+    if (order < 0) { retain(removed, before); left++; }
+    else if (order > 0) { retain(added, after); right++; }
+    else { if (before.kind !== after.kind) retain(typeChanged, { name: before.name, before: before.kind, after: after.kind }); left++; right++; }
+  }
+  return { operation, path, added, removed, typeChanged, total, omitted: Math.max(0, total - 8) };
+}
 function nativeOperations(observations, root) {
   const retain = (operation, path, value) => {
     if (!observations) return;
     const key = JSON.stringify([operation, path]), previous = observations.get(key);
-    if (previous && JSON.stringify(previous.value) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path);
+    if (previous && JSON.stringify(previous.value) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous.value, value)));
     if (!previous) observations.set(key, { operation, path, value });
   };
   return {
@@ -155,12 +186,12 @@ function nativeOperations(observations, root) {
     },
   };
 }
-const readBunRepositoryMembership = (root, operations) => drain(membershipPlan(context(root)), operations);
+const readBunRepositoryMembership = (root, operations) => drain(membershipPlan(context(root), { kind: "all" }), operations);
 const bunRepositoryMembership = root => readBunRepositoryMembership(root, nativeOperations());
 const bunWorkspacePackages = (root, scope) => drain(packagesPlan(context(root), scope), nativeOperations());
 const bunWorkspaceNativePatterns = (root, scope) => drain(nativePatternsPlan(context(root), scope), nativeOperations());
-function* publicationPlan(owner, verifyPublished) {
-  const membership = yield* membershipPlan(owner), scopes = [];
+function* publicationPlan(owner, selection, verifyPublished) {
+  const membership = yield* membershipPlan(owner, selection), scopes = [];
   for (const scope of membership.scopes) {
     const patterns = yield* nativePatternsPlan(owner, scope), packages = yield* packagesPlan(owner, scope), document = owner.documents.get(scope.manifest);
     if (verifyPublished && JSON.stringify(patterns) !== JSON.stringify(document.workspaces)) throw Error("Bun published workspace patterns drift: " + scope.manifest);
@@ -181,10 +212,11 @@ function currentFence(owner, operations, signal) {
   }
 }
 /** 🎛️ Computes complete current ownership through the original caller control. */
-async function controlledOwnership(root, control, verifyPublished) {
+async function controlledOwnership(root, selection, control, verifyPublished, computation = publicationPlan) {
+  selection = ownershipSelection(selection);
   if (!control || !(control.signal instanceof AbortSignal) || typeof control.advance !== "function") throw Error("Original Bun workspace control required");
   if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
-  const owner = context(root), operations = nativeOperations(owner.observations, owner.root), plan = publicationPlan(owner, verifyPublished); let step, completedOperations = 0;
+  const owner = context(root), operations = nativeOperations(owner.observations, owner.root), plan = computation(owner, selection, verifyPublished); let step, completedOperations = 0;
   try {
     control.signal.throwIfAborted(); step = plan.next();
     while (!step.done) {
@@ -201,10 +233,10 @@ async function controlledOwnership(root, control, verifyPublished) {
   } finally { plan.return(); }
 }
 /** 🎛️ Verifies the complete exact current native projection. */
-async function inspectBunWorkspaceOwnership(root, control) { return (await controlledOwnership(root, control, true)).report; }
+async function inspectBunWorkspaceOwnership(root, selection, control) { return (await controlledOwnership(root, selection, control, true)).report; }
 /** 📣️ Publishes every affected scope before installation while preserving current Source guards. */
-async function publishBunWorkspaceOwnership(root, control) {
-  const current = await controlledOwnership(root, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root);
+async function publishCurrentOwnership(root, selection, control) {
+  const current = await controlledOwnership(root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root);
   const validate = async () => {
     control.signal.throwIfAborted();
     if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
@@ -233,6 +265,28 @@ async function publishBunWorkspaceOwnership(root, control) {
   }
   await validate();
   currentFence(owner, operations, control.signal);
-  return report;
+  return { report, recheck: async () => { await validate(); currentFence(owner, operations, control.signal); } };
 }
-module.exports = { parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages };
+/** 📣️ Publishes current selected native ownership without issuing authority through the report. */
+async function publishBunWorkspaceOwnership(root, selection, control) { return (await publishCurrentOwnership(root, selection, control)).report; }
+/** 🪢️ Holds original full Source and topology observations through the complete installation callback. */
+async function withPublishedBunWorkspaceOwnershipV1(root, selection, control, body) {
+  if (typeof body !== "function") throw Error("Original Bun installation callback required");
+  const current = await publishCurrentOwnership(root, selection, control), scopes = Object.freeze(current.report.scopes.map(scope => Object.freeze({ manifest: scope.manifest, packages: Object.freeze([...scope.packages]) })));
+  let live = true;
+  const recheck = async () => { if (!live) throw Error("Original Bun installation callback released"); await current.recheck(); if (!live) throw Error("Original Bun installation callback released"); control.signal.throwIfAborted(); };
+  try { const result = await body(Object.freeze({ scopes, recheck })); await recheck(); return result; }
+  finally { live = false; }
+}
+/** 🧭️ Enumerates current declared owner manifests without scanning their package trees. */
+async function discoverCurrentBunWorkspaceScopesV1(root, selection, control) {
+  const computation = function* (owner, selected) {
+    const scopes = yield* scopesPlan(owner, selected);
+    for (const [path, text] of owner.texts) if ((yield { operation: "readText", path: bounded(owner.root, path) }) !== text) throw Error("Bun current manifest changed during verification: " + path);
+    for (const observation of owner.observations.values()) yield { operation: observation.operation, path: observation.path };
+    return scopes;
+  };
+  const current = await controlledOwnership(root, selection, control, false, computation);
+  return Object.freeze(current.report.map(scope => Object.freeze({ ...scope, declaration: Object.freeze({ ...scope.declaration, members: Object.freeze([...scope.declaration.members]), owners: Object.freeze([...scope.declaration.owners]) }) })));
+}
+module.exports = { withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages };

@@ -10,7 +10,14 @@ pub mod transient;
 type StressContourTriangle = ([(f64, f64); 3], [f64; 3]);
 
 use semio_s_fem_app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
-use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers_with, find_node_2d, screen_2d, MOMENT_SCALE_2D};
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_deformed_shape_layers;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_model_extent;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_region_mesh_triangles;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_structure_layers_with;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::MOMENT_SCALE_2D;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
 use semio_s_fem_model::ElementResult;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -247,7 +254,7 @@ pub fn render(
     display: &ResultDisplay,
     camera: &Viewport2d,
     window: &config::Fem2dResultsWindowConfig,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     operation: Option<semio_framework_plugin::AppRenderOperationContext>,
     window_instance_id: Option<&str>,
     active_utility: &str,
@@ -332,16 +339,16 @@ fn place_reaction_label(anchor_x: f64, anchor_y: f64, stack_index: usize, conten
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
-    let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
-    crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta)
+fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
+    let gumball_meta = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
+    semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta)
 }
 
 fn render_static(
     doc: &Fem2dSnapshot,
     source_id: Option<&str>,
     camera: &Viewport2d,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
@@ -374,7 +381,7 @@ fn static_layers(
     doc: &Fem2dSnapshot,
     case_id: &str,
     result: &semio_s_fem_model::StaticResult,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
     amplitude: f64,
 ) -> Vec<Value> {
@@ -487,7 +494,7 @@ fn render_modal(
     doc: &Fem2dSnapshot,
     mode_index: usize,
     camera: &Viewport2d,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
@@ -522,7 +529,7 @@ fn render_buckling(
     source_id: Option<&str>,
     mode_index: usize,
     camera: &Viewport2d,
-    interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot,
+    interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
@@ -551,6 +558,19 @@ fn render_buckling(
     semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
+
+/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
+/// the panel itself has no window context.
+pub fn results_window_instance_id(view_state: &semio_framework_plugin::ViewModel) -> Option<String> {
+    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == WINDOW_KIND_ID);
+    view_state
+        .window_id
+        .as_deref()
+        .filter(|id| is_results(id))
+        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
+        .map(str::to_string)
+        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == WINDOW_KIND_ID).map(|window| window.id.clone()))
+}
 
 //#region 🧪️Tests
 #[cfg(test)]

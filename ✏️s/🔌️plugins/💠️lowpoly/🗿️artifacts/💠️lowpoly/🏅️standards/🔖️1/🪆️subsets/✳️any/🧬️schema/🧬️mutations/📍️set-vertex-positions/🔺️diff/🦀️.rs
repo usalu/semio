@@ -4,8 +4,9 @@
 //! actually moves, read against the base positions, and one absolute channel row per named Normal channel whose content changes.
 
 use super::SetVertexPositions;
-use crate::diff::LowpolyVertexPosition;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyVertexPosition;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &SetVertexPositions, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
@@ -26,12 +27,12 @@ pub fn diff(payload: &SetVertexPositions, base: &LowpolySnapshot) -> protocol::M
     let partial = (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} named vertices skipped (not on object \"{object_id}\").", skipped.len(), payload.positions.len())).at([object_id.to_string()]));
     let mut rows: Vec<LowpolyVertexPosition> = present.into_iter().filter(|row| row.position.map(f32::to_bits) != state.vertices[row.vertex as usize].position.map(f32::to_bits)).cloned().collect();
     rows.sort_by_key(|row| row.vertex);
-    let mut channels: Vec<crate::LowpolyMeshAttribute> = payload.channels.iter().filter(|channel| state.attributes.iter().any(|held| held.name == channel.name && held != *channel)).cloned().collect();
+    let mut channels: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute> = payload.channels.iter().filter(|channel| state.attributes.iter().any(|held| held.name == channel.name && held != *channel)).cloned().collect();
     channels.sort_by(|left, right| left.name.cmp(&right.name));
     if rows.is_empty() && channels.is_empty() {
         let no_op = protocol::MutationMessage::warning("mutation.no-op", format!("Every named vertex of object \"{object_id}\" already sits there.")).at([object_id.to_string()]);
         return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op]));
     }
-    protocol::MutationOutcome::new(crate::diff::diff_mesh_vertices(object_id.to_string(), rows, channels)).absorb_messages(partial)
+    protocol::MutationOutcome::new(semio_s_artifact_lowpoly_lowpoly_model_diff::diff_mesh_vertices(object_id.to_string(), rows, channels)).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

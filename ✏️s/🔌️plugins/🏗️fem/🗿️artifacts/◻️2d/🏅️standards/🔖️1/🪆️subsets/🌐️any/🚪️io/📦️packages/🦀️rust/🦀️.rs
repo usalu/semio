@@ -21,6 +21,18 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    pub mod text {
+                        #[path = "../../📝️text/💡️inferences/🦀️.rs"]
+                        pub mod inferences;
+                    }
+                    #[path = "."]
+                    pub mod binary {
+                        #[path = "../../💾️binary/💡️inferences/🦀️.rs"]
+                        pub mod inferences;
+                    }
+                    #[path = "../../📋️reports/🦀️.rs"]
+                    pub mod reports;
+                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {

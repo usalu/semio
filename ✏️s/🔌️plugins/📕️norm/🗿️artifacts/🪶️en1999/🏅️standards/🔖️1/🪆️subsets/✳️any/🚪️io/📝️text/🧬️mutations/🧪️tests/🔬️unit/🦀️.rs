@@ -1,7 +1,7 @@
 //! 🔬️ Updated for hierarchical EN 1999 subject.
 
-use crate::En1999Snapshot;
-use crate::mutations::En1999Mutation;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
 
 #[test]
 fn default_snapshot_has_members() {

@@ -3,15 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-native-literal-refusal-source": "bun repo run @semio-tech/value-rs:test-native-literal-refusal-source",
-    "test-native-literal-refusal-native": "bun repo run @semio-tech/value-rs:test-native-literal-refusal-native",
-    "test-native-recipient-source": "bun repo run @semio-tech/value-rs:test-native-recipient-source",
-    "test-native-recipient": "bun repo run @semio-tech/value-rs:test-native-recipient",
-    "test-portable": "bun repo run @semio-tech/value-rs:test-portable",
-    "test-type-ownership": "bun repo run @semio-tech/value-rs:test-type-ownership",
-    "test-decode-ownership": "bun repo run @semio-tech/value-rs:test-decode-ownership",
-    "test-refusal-codec": "bun repo run @semio-tech/value-rs:test-refusal-codec",
-    "test-ordered-retirement-source": "bun repo run @semio-tech/value-rs:test-ordered-retirement-source"
+    "test-native-literal-refusal-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-source",
+    "test-native-literal-refusal-native": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-native",
+    "test-native-recipient-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-recipient-source",
+    "test-native-recipient": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-recipient",
+    "test-portable": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-portable",
+    "test-type-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-type-ownership",
+    "test-decode-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-decode-ownership",
+    "test-refusal-codec": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-refusal-codec",
+    "test-ordered-retirement-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-ordered-retirement-source"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

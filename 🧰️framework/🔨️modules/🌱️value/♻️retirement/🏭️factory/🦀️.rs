@@ -1,6 +1,10 @@
 //! 🏭️ Admitted factory tickets retain original aliases and publish each ownership currency.
-use crate::{ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use std::{alloc::Layout, sync::Arc, mem::ManuallyDrop};
+pub use semio_framework_value_control_contract::*;
+pub use semio_framework_value_control_contract as retained_clone;
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetireOwned,factory_ticket_demands,close_factory_ticket};
+pub use semio_framework_value_retirement::retirement;
+pub use semio_framework_value_derive::FactoryPayloadRetirement;
+use std::{alloc::Layout, sync::Arc, mem::ManuallyDrop, marker::PhantomData};
 
 #[path="📦️owned/🦀️.rs"]
 pub mod owned;
@@ -132,27 +136,10 @@ impl<T:FactoryPayloadRetirement> ErasedSnapshotRetirement for FactoryTicket<T> {
 impl<T:FactoryPayloadRetirement> Drop for FactoryTicket<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"factory ticket abandoned its original alias and payload");if self.terminal_is_empty(){unsafe {ManuallyDrop::drop(&mut self.alias);ManuallyDrop::drop(&mut self.state);}}}}
 
 /// 📏️ Borrows each exact currency including the final admitted ticket-frame release.
-pub fn factory_ticket_demands<T:ErasedSnapshotRetirement+?Sized>(ticket:&Box<T>,copy:usize)->Result<RetirementDemand,ValueError> {
-    if ticket.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:size_of_val(ticket.as_ref()),depth:1,..Default::default()});}
-    ticket.next_demand(copy)
-}
+
 
 /// 🧹️ Preserves the caller's independent grants through payload and final ticket-frame release.
-pub fn close_factory_ticket<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<Box<T>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-    let empty=RetainedCloneProgress::default();
-    let Some(ticket)=slot.as_mut()else{return Ok(RetainedCloneStep::Complete(empty));};
-    if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-    if ticket.terminal_is_empty() {
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal ticket requires admitted depth"));}
-        let bytes=size_of_val(ticket.as_ref());
-        if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
-        drop(slot.take());
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
-    }
-    let step=ticket.close_step(grant)?;
-    let step=crate::retained_clone::admit_retained_clone_close(grant,step,ticket.terminal_is_empty(),"factory ticket payload")?;
-    Ok(RetainedCloneStep::Progress(step.progress()))
-}
+
 
 
 /// 🔐️ Owns the original factory capability until its admitted typed payload ticket closes.
@@ -207,3 +194,51 @@ impl Drop for FactoryAuthority{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+pub trait SnapshotRetirementFactory<P>: crate::FactoryRetirement + Send + Sync {
+    /// 📦️ Publishes the retained cursor birth allocation before snapshot ownership transfers.
+    fn retirement_birth_bytes(&self, snapshot: &Arc<P>) -> usize;
+    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)>;
+}
+
+pub trait ArtifactOwnedValueRetirementFactory<T>: crate::FactoryRetirement + Send + Sync {
+    fn retirement_birth_bytes(&self, value: &T) -> usize;
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)>;
+}
+
+pub fn admit_original_owned_retirement<T>(original:&mut Option<T>,factory:&dyn ArtifactOwnedValueRetirementFactory<T>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> {
+    let Some(value)=original.as_ref()else{return Ok(None)};
+    let refusal=if grant.maximum_items==0{Some((crate::ValueRefusalKind::WorkLimit,"owned retirement requires one admitted item"))}else if grant.maximum_depth==0{Some((crate::ValueRefusalKind::DepthLimit,"owned retirement requires admitted depth"))}else if factory.retirement_birth_bytes(value)>grant.maximum_capacity_bytes{Some((crate::ValueRefusalKind::OwnershipLimit,"owned retirement exceeds admitted frame capacity"))}else{None};
+    if let Some((kind,message))=refusal{return Err(crate::ValueError::literal(kind,message));}
+    match factory.retire_owned(original.take().expect("observed exact original owned value"),grant){Ok(admitted)=>Ok(Some(admitted)),Err((error,value))=>{*original=Some(value);Err(error)}}
+}
+#[derive(semio_framework_value_derive::FactoryPayloadRetirement)]
+#[value(crate="crate")]
+pub struct OwnedValueRetirementFactory<T>(PhantomData<fn() -> T>);
+impl<T> Default for OwnedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
+impl<T:RetireOwned> ArtifactOwnedValueRetirementFactory<T> for OwnedValueRetirementFactory<T> {
+    fn retirement_birth_bytes(&self,_:&T)->usize {retirement::owned_retirement_birth_bytes::<T>()}
+    fn retire_owned(&self,value:T,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,T)> {retirement::admit_owned_retirement(value,grant)}
+}
+
+/// 🔗️ Retires one store-owned snapshot alias as a lease: the last alias to close retires the payload, every other alias only drops its count, so sequentially closed owners of one Arc never wait on each other.
+#[derive(semio_framework_value_derive::FactoryPayloadRetirement)]
+#[value(crate="crate")]
+pub struct SharedValueRetirementFactory<T>(PhantomData<fn() -> T>);
+impl<T> Default for SharedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
+impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementFactory<T> {
+    fn retirement_birth_bytes(&self,_:&Arc<T>)->usize {retirement::shared::shared_retirement_birth_bytes::<T>()}
+    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {retirement::shared::admit_shared_retirement(value,grant,true)}
+}
+
+
+
+#[path="../🔗️shared/🏭️factory/🦀️.rs"]
+pub mod shared;
+pub use shared::FactorySharedRetirement;
+
+#[cfg(test)]
+#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
+mod allocation_testing;
+#[cfg(test)]
+pub(crate) use allocation_testing::observe_retirement_allocations;

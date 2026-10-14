@@ -4,7 +4,7 @@
 Each `🧬️mutations/<leaf>` becomes `🧬️mutations/<group>/<leaf>`. Every relative literal path in a moved file (`#[path]`,
 `include_str!`, `include_bytes!`) that leaves the moved leaf is recomputed from the new location; the leaf descriptor's
 `owner` follows; every `#[path]`/include literal elsewhere in `--rewrite` files that pointed into a moved leaf is retargeted.
-Prints the `mutationDomainOwners` rows (`group → {leaf → semantic kind}`) for the taxonomy.
+A directory without a leaf descriptor (an editor command) moves the same way. Prints the `mutationDomainOwners` rows (`group → {leaf → semantic kind}`) for the taxonomy.
 
 usage: 🗂️group-leaves.py <mutations dir> <groups.json> [--rewrite file ...] [--apply]
 groups.json: {"<emoji+group>": ["<leaf dir>", ...], ...}
@@ -48,8 +48,8 @@ changed = []
 for old, new in moves.items():
     leaf = os.path.basename(old)
     group = os.path.basename(os.path.dirname(new))
-    descriptor = json.load(open(os.path.join(old, "🔣️.json"), encoding="utf-8"))
-    rows.setdefault(group, {})[leaf] = descriptor["semanticKind"]
+    if os.path.exists(os.path.join(old, "🔣️.json")):
+        rows.setdefault(group, {})[leaf] = json.load(open(os.path.join(old, "🔣️.json"), encoding="utf-8"))["semanticKind"]
     for dirpath, _, files in os.walk(old):
         for name in files:
             if not name.endswith(".rs"):
@@ -74,6 +74,8 @@ for old, new in moves.items():
     os.makedirs(os.path.dirname(new), exist_ok=True)
     shutil.move(old, new)
     descriptor_path = os.path.join(new, "🔣️.json")
+    if not os.path.exists(descriptor_path):
+        continue
     text = open(descriptor_path, encoding="utf-8").read()
     old_owner = os.path.relpath(old, REPO)
     new_owner = os.path.relpath(new, REPO)

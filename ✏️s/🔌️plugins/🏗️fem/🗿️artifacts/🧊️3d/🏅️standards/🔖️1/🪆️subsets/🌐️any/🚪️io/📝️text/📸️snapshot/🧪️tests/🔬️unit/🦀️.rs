@@ -1,5 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use std::collections::BTreeMap;
 
 // #region 🔖️Fixtures
@@ -45,7 +46,7 @@ fn solid_slab_doc() -> Fem3dSnapshot {
         elements: vec![],
         materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
         sections: vec![],
-        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: crate::FemAxis::Z }],
+        solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: crate::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
         supports: vec![
             FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
             FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },

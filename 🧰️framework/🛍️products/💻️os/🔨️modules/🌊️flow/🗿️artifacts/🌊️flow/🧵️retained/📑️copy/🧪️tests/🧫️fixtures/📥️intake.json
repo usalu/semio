@@ -1,0 +1,76 @@
+{
+  "schema": "framework.job.original-snapshot-intake.v1",
+  "contract": "typed-original-owner",
+  "cases": [
+    {
+      "name": "close-original-source-0",
+      "cancelAfter": 0,
+      "copyBytes": 1,
+      "expected": {
+        "sameSourceAllocation": true,
+        "takeAfterClose": false,
+        "finalRootDrops": 1,
+        "terminalEmpty": true,
+        "terminalReleaseIsConcreteBody": true
+      }
+    },
+    {
+      "name": "close-original-source-1",
+      "cancelAfter": 1,
+      "copyBytes": 1,
+      "expected": {
+        "sameSourceAllocation": true,
+        "takeAfterClose": false,
+        "finalRootDrops": 1,
+        "terminalEmpty": true,
+        "terminalReleaseIsConcreteBody": true
+      }
+    },
+    {
+      "name": "close-original-source-4",
+      "cancelAfter": 4,
+      "copyBytes": 1,
+      "expected": {
+        "sameSourceAllocation": true,
+        "takeAfterClose": false,
+        "finalRootDrops": 1,
+        "terminalEmpty": true,
+        "terminalReleaseIsConcreteBody": true
+      }
+    },
+    {
+      "name": "close-original-source-25",
+      "cancelAfter": 25,
+      "copyBytes": 1,
+      "expected": {
+        "sameSourceAllocation": true,
+        "takeAfterClose": false,
+        "finalRootDrops": 1,
+        "terminalEmpty": true,
+        "terminalReleaseIsConcreteBody": true
+      }
+    },
+    {
+      "name": "close-original-source-4097",
+      "cancelAfter": 4097,
+      "copyBytes": 1,
+      "expected": {
+        "sameSourceAllocation": true,
+        "takeAfterClose": false,
+        "finalRootDrops": 1,
+        "terminalEmpty": true,
+        "terminalReleaseIsConcreteBody": true
+      }
+    }
+  ],
+  "producer": {
+    "source": "original-typed-owner",
+    "quote": "actual-source-and-concrete-intake-body",
+    "refusal": "unchanged-source-or-admitted-concrete-intake",
+    "methods": [
+      "source_demands",
+      "preserve_source",
+      "admit"
+    ]
+  }
+}

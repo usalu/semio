@@ -5,14 +5,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::document::AnnexChoice;
-use crate::artifact_schema::mutations::En1999Mutation;
-use crate::artifact_schema::mutations::{
-    change_annex, change_bolt_count, change_material_designation, change_member_buckling_length, change_member_m_y_ed, change_member_n_ed, change_plate_thickness,
-    change_weld_throat, add_member, remove_member, change_cold_formed, change_connections, change_fatigue_details, change_fire_scenarios, change_materials, change_members,
-    change_sections, change_shells,
-};
-use crate::snapshot::{AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
+use semio_s_artifact_norm_en1999_mut_inputs::{change_annex, change_cold_formed, change_connections, change_fatigue_details, change_fire_scenarios, change_materials, change_members, change_sections, change_shells};
+use semio_s_artifact_norm_en1999_mut_members::{change_bolt_count, change_material_designation, change_member_buckling_length, change_member_m_y_ed, change_member_n_ed, change_plate_thickness, change_weld_throat, add_member, remove_member};
+use semio_s_artifact_norm_en1999_model::{AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario};
 use protocol::OpText;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
@@ -56,8 +53,6 @@ impl OpText for En1999MutationDsl {
         semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
-
-
 
 fn json_of<T: pack::value::ToValue>(value: &T) -> String {
     semio_framework_pack_json::to_json_string(value)
@@ -122,42 +117,40 @@ impl OpText for En1999Mutation {
     }
 }
 
-
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::En1999Diff;
-use crate::En1999Snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::change_materials;
-use crate::standards::v1::subsets::any::schema::mutations::change_sections;
-use crate::standards::v1::subsets::any::schema::mutations::change_members;
-use crate::standards::v1::subsets::any::schema::mutations::change_connections;
-use crate::standards::v1::subsets::any::schema::mutations::change_fire_scenarios;
-use crate::standards::v1::subsets::any::schema::mutations::change_fatigue_details;
-use crate::standards::v1::subsets::any::schema::mutations::change_cold_formed;
-use crate::standards::v1::subsets::any::schema::mutations::change_shells;
-use crate::standards::v1::subsets::any::schema::mutations::add_member;
-use crate::standards::v1::subsets::any::schema::mutations::remove_member;
-use crate::standards::v1::subsets::any::schema::mutations::change_member_n_ed;
-use crate::standards::v1::subsets::any::schema::mutations::change_member_m_y_ed;
-use crate::standards::v1::subsets::any::schema::mutations::change_member_buckling_length;
-use crate::standards::v1::subsets::any::schema::mutations::change_material_designation;
-use crate::standards::v1::subsets::any::schema::mutations::change_plate_thickness;
-use crate::standards::v1::subsets::any::schema::mutations::change_weld_throat;
-use crate::standards::v1::subsets::any::schema::mutations::change_bolt_count;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1999_mutations::*;
+use semio_s_artifact_norm_en1999_diff::En1999Diff;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_mut_inputs::change_annex;
+use semio_s_artifact_norm_en1999_mut_inputs::change_materials;
+use semio_s_artifact_norm_en1999_mut_inputs::change_sections;
+use semio_s_artifact_norm_en1999_mut_inputs::change_members;
+use semio_s_artifact_norm_en1999_mut_inputs::change_connections;
+use semio_s_artifact_norm_en1999_mut_inputs::change_fire_scenarios;
+use semio_s_artifact_norm_en1999_mut_inputs::change_fatigue_details;
+use semio_s_artifact_norm_en1999_mut_inputs::change_cold_formed;
+use semio_s_artifact_norm_en1999_mut_inputs::change_shells;
+use semio_s_artifact_norm_en1999_mut_members::add_member;
+use semio_s_artifact_norm_en1999_mut_members::remove_member;
+use semio_s_artifact_norm_en1999_mut_members::change_member_n_ed;
+use semio_s_artifact_norm_en1999_mut_members::change_member_m_y_ed;
+use semio_s_artifact_norm_en1999_mut_members::change_member_buckling_length;
+use semio_s_artifact_norm_en1999_mut_members::change_material_designation;
+use semio_s_artifact_norm_en1999_mut_members::change_plate_thickness;
+use semio_s_artifact_norm_en1999_mut_members::change_weld_throat;
+use semio_s_artifact_norm_en1999_mut_members::change_bolt_count;
 
 pub fn decode_en1999_mutation_json(text: &str) -> Result<En1999Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

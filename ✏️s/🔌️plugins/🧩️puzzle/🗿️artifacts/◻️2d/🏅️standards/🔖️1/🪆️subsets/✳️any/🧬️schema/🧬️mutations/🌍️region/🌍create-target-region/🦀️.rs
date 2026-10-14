@@ -1,0 +1,52 @@
+//! 🌍 Puzzle2d mutation — `CreateTargetRegion`: brings a new id-keyed fill target region into existence.
+
+
+use crate::standards::v1::subsets::any::schema::mutations::delete_target_region::DeleteTargetRegion;
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use {crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
+
+//#region 🔖️Mutation
+/// 🌍 `create-target-region` payload — full initial payload at an optional FINAL-state `index`
+/// (`None` appends). A duplicate `target_region.id` is fatal (an id-keyed entity that already
+/// exists cannot be re-created).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "create-target-region")]
+pub struct CreateTargetRegion {
+    #[dsl(block)]
+    pub target_region: Puzzle2dTargetRegion,
+    pub index: Option<usize>,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn create_target_region<Op: From<CreateTargetRegion>>(target_region: Puzzle2dTargetRegion, index: Option<usize>) -> Op {
+    Op::from(CreateTargetRegion { target_region, index })
+}
+
+impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for CreateTargetRegion
+where
+    Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<CreateTargetRegion> + From<DeleteTargetRegion>,
+{
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "target region", kind: "create-target-region", record: "CreatedTargetRegion" };
+
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.target_region.id.to_string_owner()]
+    }
+}
+//#endregion 🔖️Mutation

@@ -1,8 +1,10 @@
 //! ↕️ `change-page-height` — sets a page's `height` scalar.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,12 +20,12 @@ pub struct ChangePageHeight {
     pub new_height: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangePageHeight where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_page_height::ChangePageHeight> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "page-height", kind: "change-page-height", record: "ChangedPageHeight" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_page_height(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_page_height(self, base)?
     
@@ -54,13 +56,19 @@ pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot
 //#endregion ↕️ChangePageHeight
 
 //#region ↕️ChangePageHeight
-pub fn inverse_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_page_height<Op: From<crate::change_page_height::ChangePageHeight>>(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
-        Some(page) => vec![LayoutMutation::ChangePageHeight(ChangePageHeight { id: payload.id.clone(), new_height: page.height })],
+        Some(page) => vec![Op::from(ChangePageHeight { id: payload.id.clone(), new_height: page.height })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion ↕️ChangePageHeight
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/↕️lengthens/🦀️.rs"]
+mod tests_lengthens_page_1;
+//#endregion 🪢️TaxonomyMounts

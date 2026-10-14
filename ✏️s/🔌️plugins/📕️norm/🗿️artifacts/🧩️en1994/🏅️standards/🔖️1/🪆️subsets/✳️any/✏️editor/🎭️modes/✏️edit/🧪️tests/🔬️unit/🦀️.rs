@@ -1,4 +1,4 @@
-use super::*;
+use crate::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_both_window_kinds() {
@@ -9,5 +9,5 @@ async fn the_default_layout_lists_both_window_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_mode_is_the_apps_default() {
-    assert_eq!(definition().id, crate::app_surface::MODE_EDIT);
+    assert_eq!(definition().id, semio_s_plugin_norm_app_surface::MODE_EDIT);
 }

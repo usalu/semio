@@ -18,8 +18,8 @@ pub type EnergyModelInferenceText = String;
 #[allow(unused_imports)]
 mod inferences_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::entries::*;
-use crate::EnergyModelSnapshot;
+use crate::entries::*;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value::{DslValue, ToValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::hash_map::DefaultHasher;
@@ -31,7 +31,7 @@ use std::hash::{Hash, Hasher};
 /// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
 /// hash crate needed for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let model = crate::energy_model(snapshot);
+    let model = crate::snapshot::energy_model(snapshot);
     let json = semio_framework_pack_json::to_json_string(&model);
     let bytes = json.as_bytes();
     let entry_count = match model.to_value() {
@@ -47,8 +47,8 @@ pub use inferences_codec::*;
 
 mod energy_inference_adapter {
 use super::*;
-use crate::EnergyModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::EnergyModelInference;
+use crate::snapshot::EnergyModelSnapshot;
+use crate::EnergyModelInference;
 impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
     fn infer(snapshot: &EnergyModelSnapshot) -> Result<Self, semio_framework_value::ValueError> {
         Ok({

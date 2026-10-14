@@ -1,6 +1,6 @@
 //! 🧯️ Exact closure of the owners a registered fixture job retains, quoted and granted per independent axis.
 
-use crate::bounded_ownership::{plugin_typed_owner_demand, plugin_typed_owner_step};
+use semio_framework_plugin_ownership::bounded_ownership::{plugin_typed_owner_demand, plugin_typed_owner_step};
 use crate::app_contract::ArtifactApp;
 use crate::owned_context::ArtifactOwnedContextHandle;
 use crate::tool_contract::ArtifactToolCompletion;

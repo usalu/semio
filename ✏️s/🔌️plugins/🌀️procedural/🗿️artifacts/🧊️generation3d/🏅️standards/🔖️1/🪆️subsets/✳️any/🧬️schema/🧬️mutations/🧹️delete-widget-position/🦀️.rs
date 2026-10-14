@@ -1,7 +1,6 @@
 //! 🗑️ `delete-widget-position` payload — removes a widget's per-widget canvas-position override.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 //#region 🔖️DeleteWidgetPosition
 /// 🗑️ Removes the position override for `id`; diff/inverse leaves capture the removed position
@@ -12,14 +11,17 @@ pub struct DeleteWidgetPosition {
     pub id: String,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for DeleteWidgetPosition {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for DeleteWidgetPosition
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::move_widget::MoveWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget-position", kind: "delete-widget-position", record: "DeletedWidgetPosition" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::delete_widget_position::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::delete_widget_position::inverse::inverse(self, base)?
     

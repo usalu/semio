@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-support`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -11,11 +11,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "add-support")]
 pub struct AddSupport {
     pub node_id: String,
-    pub fixed: Vec<crate::FemDof>,
+    pub fixed: Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof>,
 }
 
 pub fn handle(payload: &AddSupport, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSupport(crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: crate::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() }, index: None })]))
+    let id = semio_s_fem_app_surface::next_id(snapshot.supports.iter().map(|s| s.id.clone()), "sup");
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport { id, node_id: payload.node_id.clone(), fixed: payload.fixed.clone() }, index: None })]))
 }

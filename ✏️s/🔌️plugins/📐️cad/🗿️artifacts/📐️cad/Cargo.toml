@@ -29,9 +29,9 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️documents/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️nodes/📦️packages/🦀️rust",
@@ -165,10 +165,6 @@ path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
-[workspace.dependencies.graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
-package = "semio-framework-graph"
-
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-framework-os-kernel"
@@ -217,7 +213,6 @@ package = "semio-framework-io-base64"
 [workspace.dependencies.machine]
 path = "../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust"
 package = "semio-framework-machine"
-default-features = false
 
 [workspace.dependencies.semio-framework-ui-scene]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust"
@@ -233,6 +228,9 @@ path = "📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-cad-cad-model]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-cad-cad-model-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-cad-cad-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
@@ -254,9 +252,6 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️
 
 [workspace.dependencies.semio-s-artifact-cad-cad-io]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-cad-cad-io-sqlite]
-path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-cad-cad-play]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust"
@@ -338,6 +333,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️p
 
 [workspace.dependencies.semio-s-artifact-cad-cad-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-manifest]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

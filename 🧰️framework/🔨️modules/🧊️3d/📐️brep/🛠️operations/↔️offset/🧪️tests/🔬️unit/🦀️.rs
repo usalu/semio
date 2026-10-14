@@ -1,5 +1,5 @@
 use super::*;
-use crate::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
 use semio_framework_3d_brep_queries::mass_properties::solid_volume;
 use std::f64::consts::PI;
 

@@ -1,8 +1,7 @@
 //! 📙️ Energy model mutation — `RemoveAnnualScheduleRule`: Takes one date rule out of a year's ordered rule list, addressed by its BASE-state index. Every later rule moves up one, and a day the removed rule used to answer falls through to the next matching rule or to the default profile.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveAnnualScheduleRule {
     pub index: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_annual_schedule_rule(id: crate::schedule::ScheduleId, index: u32) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveAnnualScheduleRule(RemoveAnnualScheduleRule { id, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_annual_schedule_rule<Op: From<RemoveAnnualScheduleRule>>(id: crate::schedule::ScheduleId, index: u32) -> Op {
+    RemoveAnnualScheduleRule { id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveAnnualScheduleRule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveAnnualScheduleRule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveAnnualScheduleRule> + From<crate::InsertAnnualScheduleRule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "annual-schedule", kind: "remove-annual-schedule-rule", record: "RemovedAnnualScheduleRule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

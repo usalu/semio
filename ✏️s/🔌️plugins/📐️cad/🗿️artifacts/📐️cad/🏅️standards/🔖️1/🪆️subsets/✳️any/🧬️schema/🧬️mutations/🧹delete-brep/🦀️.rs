@@ -1,5 +1,6 @@
 //! 🧹️ Removes an exact topology sibling and preserves its ordered inverse authority.
-use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, diff::CadDiff, diff::CadBrepsDelta};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadBrepsDelta};
 use protocol::MutationKind;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -13,7 +14,7 @@ pub struct DeleteBrep {
 
 impl<Op> MutationKind<CadSnapshot, Op> for DeleteBrep
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::create_brep::CreateBrep>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_brep::CreateBrep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "brep", kind: "delete-brep", record: "DeletedBrep" };
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

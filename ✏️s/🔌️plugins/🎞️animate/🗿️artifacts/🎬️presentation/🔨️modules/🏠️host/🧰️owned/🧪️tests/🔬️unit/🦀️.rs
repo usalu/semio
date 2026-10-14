@@ -11,7 +11,7 @@ async fn presentation_deck_materializes() {
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
@@ -28,7 +28,7 @@ async fn document_text_round_trip_with_operation_applied() {
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],

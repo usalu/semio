@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-artifact-stdio-docx-strict"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧩️ The docx ecma-376 strict subset: composer, builder and analyzer, conversions, editor, viewer and examples."
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-2d = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+serde_json = { workspace = true }
+semio-s-artifact-stdio-docx-base = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }
+semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-docx-strict-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+zip = { version = "6", default-features = false, features = ["deflate"] }
+semio-framework-async-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

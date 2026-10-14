@@ -1,5 +1,8 @@
 //! 🔒️ Shared immutable values expose strong handles and retain their original issuer.
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+pub use semio_framework_value_control_contract::*;
+pub use semio_framework_value_control_contract as retained_clone;
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetireOwned,retirement,factory_ticket_demands,close_factory_ticket};
+use retirement::{RetirementCursor,RetirementStep};
 use std::{mem::ManuallyDrop,sync::{Arc,atomic::{AtomicPtr,AtomicU8,AtomicU64,Ordering}}};
 
 static NEXT_ISSUANCE:AtomicU64=AtomicU64::new(1);
@@ -33,7 +36,7 @@ impl<T:Send+Sync+'static> SharedAliasReturn<T>{
 }
 impl<T:Send+Sync+'static> Drop for SharedAliasReturn<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"issuer slot retains an original returned alias");}}
 impl<T:Send+Sync+'static> SealedShared<T>{
- pub fn birth_bytes()->usize{super::arc_bytes::<T>()}
+ pub fn birth_bytes()->usize{retirement::shared::arc_bytes::<T>()}
  pub fn prepare_birth(grant:RetainedCloneGrant)->Result<SealedSharedBirth<T>,ValueError>{
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<Self::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed issuance requires genuine header birth authority"));}
   let issuance=NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"))?;
@@ -121,3 +124,9 @@ impl<T:Send+Sync+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thr
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="../../../🧪️testing/💾️allocator/🦀️.rs"]
+mod allocation_testing;
+#[cfg(test)]
+pub(crate) use allocation_testing::observe_retirement_allocations;

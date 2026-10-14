@@ -1,12 +1,9 @@
 //! 📚️ DIN V 18599 play app panel — examples plus GEG / DIN V 18599 reference tables.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::artifact_schema::{
-    din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_lighting_hours, din_v_18599_12_tabelle5_qp_specific, din_v_18599_4_lighting_power_density, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u,
-    geg_anlage4_primary_energy_factors,
-};
-use crate::document::ClauseId;
-use crate::MonthlyClimate;
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_din18599_checks::{din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_lighting_hours, din_v_18599_12_tabelle5_qp_specific, din_v_18599_4_lighting_power_density, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors};
+use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_artifact_norm_din18599_model::MonthlyClimate;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -20,7 +17,7 @@ pub const BODY_CATALOGUE: &str = "norm.din18599.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -219,7 +216,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

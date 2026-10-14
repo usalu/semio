@@ -29,21 +29,21 @@ use crate::store_publication::ChildPublicationResultV1;
 use crate::app_emission::ChildEmit;
 #[cfg(test)]
 use crate::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
-use crate::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
 use crate::app_contract::ArtifactApp;
 use crate::app_emission::ActionMeta;
 use crate::app_views::InteractionHoverState;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::artifact_instance::VcsArtifactApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::bounded_ownership::plugin_retirement_fault;
-use crate::bounded_ownership::plugin_text_close;
-use crate::bounded_ownership::plugin_text_retirement_demand;
-use crate::bounded_ownership::plugin_turn_admitted;
-use crate::bounded_ownership::plugin_typed_owner_demand;
-use crate::bounded_ownership::plugin_typed_owner_step;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_text_close;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_text_retirement_demand;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_turn_admitted;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step;
 use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
 use crate::media_contract::ArtifactOutputChunks;
@@ -52,7 +52,7 @@ use crate::tool_contract::ArtifactReservedToolJob;
 use crate::tool_contract::ArtifactReservedToolJobState;
 use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 use crate::tool_contract::ToolOwnerWitness;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::store_publication::MountedTypedCommandFullOperationStage;
 use crate::store_publication::MountedWorkerFaultCapture;
 use crate::store_publication::PendingArtifactStorePublication;
@@ -127,7 +127,7 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
     pub(crate) publication_lanes: &'static [ArtifactToolPublicationLane],
     pub(crate) session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
-    pub(crate) session_rejected: Option<crate::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
+    pub(crate) session_rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
     pub(crate) reserved_producer: Option<ArtifactReservedToolJob>,
     pub(crate) completion: Option<ArtifactToolCompletion<A>>,
     pub(crate) completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
@@ -252,7 +252,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub(crate) fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         if self.source_identity!=(cx.operation(),cx.generation()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
         let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&self.session_rejected.as_ref().is_some_and(|source|source.admission_pending()){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
@@ -273,7 +273,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty())?;Ok((match step{
+            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty())?;Ok((match step{
                 semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation rejected-session close awaits its worker handback"},
 
@@ -310,7 +310,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation original worker close quote awaits its handback"}),
                 Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())
             };
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
+            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=session.close_step(cx)?;Ok((match step{
                 semio_framework_job::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&session.terminal_is_empty()=>PluginLifecycleStep::Progress(progress),
                 semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted session close awaits its worker handback"},
@@ -497,7 +497,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// ♻️ Closes the original mounted worker session, its refused admission and its inline capture markers under the unchanged grant.
     fn retire_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();let demand=self.worker_retirement_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if let Some(rejected) = self.session_rejected.as_mut() {
@@ -507,7 +507,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes: bytes, ..item }));
             }
             let demand = rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
                 let step = rejected.close_step(cx)?.admit(grant, rejected.terminal_is_empty())?;
                 Ok((match step {
                     semio_framework_job::InteractiveJobCloseStep::Pending { progress } | semio_framework_job::InteractiveJobCloseStep::Complete { progress } => PluginLifecycleStep::Progress(progress),
@@ -529,7 +529,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Err(semio_framework_job::WorkerJobDemandError::Contention(_)) => return Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original worker close quote awaits its handback" }),
                 Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
             };
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
+            return semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant| {
                 let step = session.close_step(cx)?;
                 Ok((match step {
                     semio_framework_job::WorkerJobCloseStep::Pending { progress } if progress.fits(grant) => PluginLifecycleStep::Progress(progress),
@@ -571,7 +571,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// 🎟️ Returns each original mounted owner under the caller's unchanged grant.
     pub(crate) fn retirement_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
@@ -623,7 +623,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// 🎟️ Withdraws inline result custody before closing retained originals.
     pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if !plugin_grant_funds(demand, grant) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
@@ -1481,7 +1481,7 @@ fn released_slot_census<A: ArtifactApp>(app: &VcsArtifactApp<A>, continuations: 
 fn fixture_close_receipt<A:ArtifactApp>(app:&mut VcsArtifactApp<A>,mounted_policy:crate::MountedOwnerPolicyV1)->Result<PluginLifecycleStep,Fault>{
     let grant=mounted_policy.close;
     let demand=app.close_retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-    crate::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|Ok((app.close_step(grant)?,app.close_terminal_is_empty())))
+    semio_framework_plugin_ownership::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|Ok((app.close_step(grant)?,app.close_terminal_is_empty())))
 }
 
 #[cfg(test)]

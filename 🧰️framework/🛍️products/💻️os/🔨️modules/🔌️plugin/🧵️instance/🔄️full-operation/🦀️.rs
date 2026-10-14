@@ -14,7 +14,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>
  pub(crate) fn granted_mounted_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,crate::PluginLifecycleFailure>{
   if self.next_granted_mounted_retirement().is_none(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let grant=cx.retained_grant();let demand=self.granted_mounted_retirement_demands(grant.maximum_copy_bytes)?;
-  let step=crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
+  let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
    self.granted_mounted_retirement_original(same,actual).map(|step|(PluginLifecycleStep::Progress(step.progress()),false))
   })?;
   Ok(RetainedCloneStep::Progress(step.progress().unwrap_or_default()))

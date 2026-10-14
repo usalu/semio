@@ -1,8 +1,7 @@
 //! 🌱️ Block2d mutation — `CreateHandleKind`: a new handle-kind catalog row.
 
-use crate::{Block2dHandleKind, Block2dSnapshot};
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dSnapshot};
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 🌱️ `create-handle-kind` payload.
@@ -20,24 +19,24 @@ pub struct CreateHandleKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_handle_kind(handle_kind: Block2dHandleKind) -> Block2dMutation {
-    Block2dMutation::CreateHandleKind(CreateHandleKind { handle_kind, index: None })
+pub fn create_handle_kind<Op: From<crate::create_handle_kind::CreateHandleKind>>(handle_kind: Block2dHandleKind) -> Op {
+    Op::from(CreateHandleKind { handle_kind, index: None })
 }
 
 /// 📍️ Builder — like [`create_handle_kind`] but inserts the row at `index`.
-pub fn create_handle_kind_at(handle_kind: Block2dHandleKind, index: u32) -> Block2dMutation {
-    Block2dMutation::CreateHandleKind(CreateHandleKind { handle_kind, index: Some(index) })
+pub fn create_handle_kind_at<Op: From<crate::create_handle_kind::CreateHandleKind>>(handle_kind: Block2dHandleKind, index: u32) -> Op {
+    Op::from(CreateHandleKind { handle_kind, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for CreateHandleKind {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for CreateHandleKind where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::delete_handle_kind::DeleteHandleKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "handle-kind", kind: "create-handle-kind", record: "CreatedHandleKind" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::create_handle_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::create_handle_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -49,3 +48,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for CreateHandleKi
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,8 +1,7 @@
 //! 🐛️ Energy model mutation — `ChangeFaultType`: Sets one fault's degradation mechanism.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFaultType {
     pub new_fault_type: crate::model::FaultType,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fault_type(id: crate::model::EntityId, new_fault_type: crate::model::FaultType) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFaultType(ChangeFaultType { id, new_fault_type })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fault_type<Op: From<ChangeFaultType>>(id: crate::model::EntityId, new_fault_type: crate::model::FaultType) -> Op {
+    ChangeFaultType { id, new_fault_type }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFaultType {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFaultType
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFaultType>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fault", kind: "change-fault-type", record: "ChangedFaultType" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

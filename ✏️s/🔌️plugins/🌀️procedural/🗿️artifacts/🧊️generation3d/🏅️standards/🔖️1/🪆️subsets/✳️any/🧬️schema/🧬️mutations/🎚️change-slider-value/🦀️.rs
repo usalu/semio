@@ -4,7 +4,6 @@
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use crate::generation3d_label_number;
-use crate::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -18,18 +17,21 @@ pub struct ChangeSliderValue {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_slider_value(id: impl Into<String>, value: f64) -> Generation3dMutation {
-    Generation3dMutation::ChangeSliderValue(ChangeSliderValue { id: id.into(), value })
+pub fn change_slider_value<Op: From<ChangeSliderValue>>(id: impl Into<String>, value: f64) -> Op {
+    Op::from(ChangeSliderValue { id: id.into(), value })
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeSliderValue {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ChangeSliderValue
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::update_widget::UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slider-value", kind: "change-slider-value", record: "ChangedSliderValue" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_slider_value::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_slider_value::inverse::inverse(self, base)?
     

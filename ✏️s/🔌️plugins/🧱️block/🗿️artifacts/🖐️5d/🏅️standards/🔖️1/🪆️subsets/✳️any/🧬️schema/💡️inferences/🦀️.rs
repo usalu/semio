@@ -11,11 +11,18 @@
 //! templates' `position`/`radius3d` fields (the part's 3d-projection rim geometry), expressed as a
 //! plain `Inference` impl (no per-entity `InferredField` caching needed).
 
-use crate::Block5dSnapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
-
-use super::bounds::{compute_block5d_bounds};
+use crate::bounds::compute_block5d_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block5d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -51,9 +58,6 @@ impl protocol::InferenceSpec<Block5dSnapshot> for Block5dInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️PuzzleCatalogFragment
-//#endregion 🔖️PuzzleCatalogFragment
-
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block5d_artifact_schema_descriptor`'s registration.
@@ -79,5 +83,10 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::bounds::Block5dBounds;
+pub use crate::bounds::Block5dBounds;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "📦bounds/🦀️.rs"]
+pub mod bounds;
+//#endregion 🪢️Mounts

@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1994Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -60,12 +68,11 @@ pub fn en1994_artifact_inference_descriptor() -> semio_framework_schema_registry
 mod tests;
 //#endregion 🧪️Tests
 
-
 //#region 🔖️ComplianceReport
 /// ©️ En1994Snapshot → CheckReport — complete composite structure assessment.
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_2, part_column, part_en1990, part_slab, AnnexParams};
-use crate::{CharacteristicAction, CompositeBeam, CompositeColumn, CompositeSlab, SteelSection};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1994_checks::{part_1_1, part_1_2, part_2, part_column, part_en1990, part_slab, AnnexParams};
+use semio_s_artifact_norm_en1994_model::{CharacteristicAction, CompositeBeam, CompositeColumn, CompositeSlab, SteelSection};
 
 fn lc(en: impl Into<String>, de: impl Into<String>) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
@@ -206,7 +213,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         }
     }
     report.push(bending.build());
-
 
     // Construction-stage steel-alone demand (EN 1994-1-1 §9.3 / §6.2) — reads construction actions.
     let m_c = uls_c.m_nm;
@@ -756,7 +762,6 @@ fn evaluate_slab(report: &mut CheckReport, doc: &En1994Snapshot, slab: &Composit
     report.push(vv.build());
 }
 
-
 fn push_dual_source_action_check(report: &mut CheckReport, annex: AnnexChoice, member_id: &str, path: &str, action: &CharacteristicAction) {
     let fatigue_load = action.kind == "fatigue" && (action.q_area_pa.abs() > 1e-12 || action.f_k_n.abs() > 1e-12);
     let dual = action.kind != "fatigue" && action.q_area_pa.abs() > 1e-12 && action.f_k_n.abs() > 1e-12;
@@ -916,17 +921,12 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
 
 //#endregion 🔖️ComplianceReport
 
-
-
-
-
-//#region 🧪️ComplianceReportTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
-mod compliance_report_tests;
-//#endregion 🧪️ComplianceReportTests
-
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1994Outline;
+pub use crate::outline::En1994Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

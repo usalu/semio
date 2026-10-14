@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve,relative } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readRustSourceClosureV1, rustCfgMatchesV1, selectRustSourceV1 } from "../🟦️.ts";
 
-const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { name: string; cfg: string[]; source: string; expected: string }[] };
+const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { name: string; cfg: string[]; source: string; expected: string }[]; closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[] };
 const normalize = (source: string) => source.replace(/\s+/gu, " ").trim();
 test("portable cfg source corpus is closed and validated by Ajv", () => {
   const validate = new Ajv().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/schema.json"), "utf8")));
@@ -62,4 +62,11 @@ test("a unit owns manifest-relative inputs and the token output it emits, while 
   expect(emitted).toEqual(["derive/lib.rs:include_str"]);
   await expect(readRustSourceClosureV1(["derive/lib.rs"], root, [], read)).rejects.toThrow("explicit generated-input observer");
   await expect(readRustSourceClosureV1(["generated/lib.rs"], root, [], read, owner("generated"))).rejects.toThrow("Generated Rust input requires compiler ownership");
+});
+
+for(const row of corpus.closures)test(row.name,async()=>{
+ const root=resolve("virtual-source-role"),read=async(path:string)=>{const local=relative(root,path).replaceAll("\\","/");return Object.hasOwn(row.files,local)?new TextEncoder().encode(row.files[local]!):null;},inputs=await readRustSourceClosureV1([row.entry],root,row.cfg,read);
+ expect(inputs.map(({path,kind})=>({path,kind}))).toEqual(row.expected);
+ if(row.name==="inactive inner file Source")expect(inputs[0]!.activeLines).toBe(0);
+ console.log("[DEBUG] Exact authored Rust Source membership "+row.name);
 });

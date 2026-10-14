@@ -123,7 +123,8 @@ def run(move, mode):
             chosen.add(it.i)
     kept_names = {it.name for it in items if it.kind in DEFINITION and it.kind != "mod" and it.i not in chosen}
     for it in items:
-        if it.kind == "macro" and it.i not in chosen:
+        previous = items[it.i - 1] if it.i else None
+        if it.kind == "macro" and it.i not in chosen and previous is not None and previous.i in chosen and previous.region == it.region:
             idents = set(re.findall(IDENT, it.stripped))
             if idents & names and not idents & kept_names:
                 chosen.add(it.i)

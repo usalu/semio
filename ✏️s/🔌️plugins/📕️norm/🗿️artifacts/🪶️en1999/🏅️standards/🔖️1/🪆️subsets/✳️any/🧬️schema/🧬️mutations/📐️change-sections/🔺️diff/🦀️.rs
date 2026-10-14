@@ -1,8 +1,8 @@
 //! 🔺️ `change-sections` diff.
 
-use crate::mutations::change_sections::ChangeSections;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999SectionsRows};
+use crate::change_sections::ChangeSections;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999SectionsRows};
 
 pub fn diff(payload: &ChangeSections, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.sections == &payload.sections {

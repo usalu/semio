@@ -1,8 +1,8 @@
-use super::*;
-use crate::artifact_schema::{resolve_params, DesignApproach};
-use crate::document::AnnexChoice;
-use crate::editor::en1997::unit_tests::context;
-use crate::app_surface::CatalogueCell;
+use crate::panels::catalogue::*;
+use semio_s_artifact_norm_en1997_checks::{resolve_params, DesignApproach};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use crate::unit_tests::context;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

@@ -1,8 +1,7 @@
 //! 🐬️ Energy model mutation — `ChangeFenestrationFinDepth`: Sets how far the two vertical projections beside the window jambs reach out of the glazing plane, in metres — ANSI/ASHRAE 140 §5.2 cases 630/930 are exactly this field.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationFinDepth {
     pub new_fin_depth_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_fin_depth(id: crate::model::EntityId, new_fin_depth_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationFinDepth(ChangeFenestrationFinDepth { id, new_fin_depth_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_fin_depth<Op: From<ChangeFenestrationFinDepth>>(id: crate::model::EntityId, new_fin_depth_m: f64) -> Op {
+    ChangeFenestrationFinDepth { id, new_fin_depth_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationFinDepth {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationFinDepth
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationFinDepth>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-fin-depth", record: "ChangedFenestrationFinDepth" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

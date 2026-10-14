@@ -1,4 +1,4 @@
-import {createScriptProcessEnvelope,scriptProcessEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createScriptProcessEnvelope,scriptProcessEnvironment,receiveScriptProcessInvocation,findWorkspaceRoot} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 import {lstatSync} from "node:fs";
 import {isAbsolute} from "node:path";
@@ -19,3 +19,14 @@ export function cargoPreparationFixtureEnvironmentV1(root:string):Record<string,
  cargoPreparationRuntimeV1(root);const original=fixture.originalProcess,policy={version:1 as const,owner:"physical-cargo-fixture",maximumElapsedMilliseconds:original.maximumElapsedMilliseconds},capabilities={version:1,buildMode:original.buildMode,repositoryRoot:root,artifactDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR,command:{kind:"native-owner-command",manifest:"Cargo.toml",workingDirectory:".",program:process.execPath,arguments:["prepare","--manifest","Cargo.toml"]},transport:original.transport,child:{maximumElapsedMilliseconds:original.maximumElapsedMilliseconds},network:{offline:true}};
  return scriptProcessEnvironment(createScriptProcessEnvelope(policy,capabilities,Date.now()),{...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(capabilities)});
 }
+
+import {prepareCargoWorkspaceInvocation} from "../../🟦️.ts";
+import type {CargoPreparationStorageV1} from "../../🛠️preparation/📦️storage/🟦️.ts";
+import {nativeCallerPhaseV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+/** 🎛️ Awaits the real preparation executable through the independently authored original fixture grant. */
+export async function prepareCargoFixtureV1(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Record<string,string|undefined>):Promise<void>{await receiveScriptProcessInvocation(environment,original=>prepareCargoWorkspaceInvocation(storage,root,args,cwd,environment,nativeCallerPhaseV1(original,root).leaseControl));}
+
+import {withRepositoryCargoPreparationV1} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+/** 🦀️ Runs the independent Cargo oracle only while authentic backing and original fixture custody remain live. */
+export async function captureCargoFixtureV1(root:string,args:readonly string[]):Promise<string>{const environment=cargoPreparationFixtureEnvironmentV1(root);return receiveScriptProcessInvocation(environment,original=>withRepositoryCargoPreparationV1(findWorkspaceRoot(import.meta.dir),root,original,environment,async(bounded,phase)=>{let output="";await runOwnedCommand("cargo",[...args],root,"cargo:fixture-oracle",phase.budget(),{...phase.options(bounded),stdout:"stderr",onLine:(line,stream)=>{if(stream==="stdout")output+=line+"\n";}});return output;}));}

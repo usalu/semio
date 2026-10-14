@@ -1,0 +1,45 @@
+{
+  "scope": "read during active real GUI capture, not assertion qualification",
+  "sources": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "sha256": "447a89f03ce0f25a7792f6adcce3151edcad7305a0625c6b97468a838a3b7215"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🟦️.ts",
+      "sha256": "a3b988b7fcde0f5ce084f318d3899817a3342252aee2566afa5aa8862e63cf9a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧪️tests/🟦️.ts",
+      "sha256": "3e97c9582d5f5136b923e4863e0deabc465f34cfd6a5c3584a60ff8601140a62"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts",
+      "sha256": "5f7c306eca4755e6dfeaeab67155b3460f5414119abe16aa72151b7423669834"
+    }
+  ],
+  "initialFactoryKeys": [
+    "tool",
+    "workspaceRoot",
+    "arguments",
+    "selection",
+    "buildMode",
+    "native",
+    "launches"
+  ],
+  "started": {
+    "pid": 59985,
+    "startedAt": "2026-10-14T18:34:37.894Z",
+    "argv": [
+      "bun",
+      "repo",
+      "run",
+      "@semio-tech/framework-process:test-compiler-capacity"
+    ],
+    "initialPolicy": {
+      "version": 1,
+      "owner": "process:compiler-capacity:caller",
+      "maximumElapsedMilliseconds": 300000
+    }
+  }
+}

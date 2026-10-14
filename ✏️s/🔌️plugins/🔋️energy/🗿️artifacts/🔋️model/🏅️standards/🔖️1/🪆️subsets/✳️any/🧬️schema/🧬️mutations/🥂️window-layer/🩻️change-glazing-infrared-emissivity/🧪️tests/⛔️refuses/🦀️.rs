@@ -5,15 +5,10 @@
 //! (`SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test -p semio-s-artifact-energy-model`), and the ten law
 //! assertions below read the committed bytes back, never the scenario.
 
-use crate::mutations::fixtures::{self, snapshot, zone, Case};
+use crate::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -25,7 +20,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-glazing-material-infrared-emissivity", directory: "🩻️change-glazing-material/⛔️refuses", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case::load("change-glazing-material-infrared-emissivity", "🥂️window-layer/🩻️change-glazing-infrared-emissivity/⛔️refuses", scenario)
 }
 
 #[semio_framework_async_macros::async_test]

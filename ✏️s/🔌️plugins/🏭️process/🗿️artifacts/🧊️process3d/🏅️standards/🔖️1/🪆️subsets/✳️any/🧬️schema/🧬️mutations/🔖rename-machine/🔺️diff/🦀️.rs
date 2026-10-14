@@ -3,8 +3,8 @@
 //! absent, Warning `no-op` when the new label equals the old (machine `label` is a non-unique
 //! display string, not a key, so no `duplicate-id` case applies here).
 
-use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

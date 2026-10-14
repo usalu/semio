@@ -1,27 +1,31 @@
 //! 🧰️ Process3d editor kit: identifiers, the dispatch context, ui-value plumbing, the io ports and the installed machine
 //! catalogs every command, mode and panel builds on.
-use crate::{MachineCatalog, MachineCatalogs, Process3dSnapshot, WorkshopMachine, editor::process3d::commands::document, editor::process3d::config::Process3dConfig, editor::process3d::config::Process3dConfigMutation, editor::process3d::modes::edit::windows::workpiece, standards::v1::subsets::any::schema::mutations::Process3dMutation};
+
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod process3d {
+        #[path = "../🗣️terminology/🦀️.rs"]
+        pub mod terminology;
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ActionDefinition, ActionKind, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use pack::snapshot::ArtifactPack;
-use camera::set_camera;
-use contribution::set_contributions;
-use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};
-use document::{set_active_example, set_snapshot};
-use engagement::{engagement_abort, engagement_input, engagement_submit};
-use inspector::patch_inspector;
-use media::{export_model, import_model_file, load_model_request};
-use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
-use stock::set_stock;
-use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
-use world::{world_face_drag_end, world_pointer_down};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
-pub(crate) const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
+pub const PROCESS_3D_PLAY_CONTROLLER_ID: &str = "process3d-play";
 /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the app's sole interaction domain — the
 /// stock, every process step, and every installed workshop machine share the "object" granularity
 /// (as their raw ids / `"machine:{id}"`), the processed mesh's picked faces use "face" (u32 ids
@@ -121,11 +125,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 pub fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
-/// 🧰️ Host effect that programmatically switches the workpiece window's active utility. Shared by
-/// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
-pub fn set_active_utility_effect(utility: &str) -> Effect {
-    Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
-}
+
 /// 🎨️ `tree_item_with_action` (SDK)? carries no icon slot, so this app-wide wrapper layers `icon_id` on
 /// top via struct-update syntax — shared by the `🛍️catalogue` and `🛠️workshop` panels.
 pub fn iconed_tree_item_with_action(
@@ -151,7 +151,7 @@ pub fn iconed_tree_item_with_action(
 /// dispatched its boot `setActiveExample`.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("process3d", semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 /// 🚨 Typed host-action decoding fault with one stable app-specific code.
@@ -159,84 +159,6 @@ pub fn process3d_action_fault(action: &str, detail: impl Into<String>) -> Fault 
     Fault::new(FaultOrigin::App, FaultCode::new("process3d.action.invalid"), format!("action '{action}': {}", detail.into()))
 }
 //#endregion 🔖️Constants
-//#region 🔖️Commands
-semio_framework_plugin::app_commands! {
-    /// 🎯️ `Process3dPlayApp::Command` — the SOLE dispatch surface for process3d's own behavior, assembled
-    /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
-    /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
-    /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
-    /// variant ordinal: appending is safe, reordering is a wire-format break.**
-    pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation, ctx = Process3dDispatchCtx {
-        "setSnapshot" as "document" => set_snapshot::SetDocument,
-        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
-        "addStep" as "add-step" => add_step::AddStep,
-        "addWorkshopMachine" as "add-workshop-machine" => add_workshop_machine::AddWorkshopMachine,
-        "removeWorkshopMachine" as "remove-workshop-machine" => remove_workshop_machine::RemoveWorkshopMachine,
-        "updateWorkshopMachine" as "update-workshop-machine" => update_workshop_machine::UpdateWorkshopMachine,
-        "removeStep" as "remove-step" => remove_step::RemoveStep,
-        "removeSelectedStep" as "remove-selected-step" => remove_selected_step::RemoveSelectedStep,
-        "moveStep" as "move-step" => move_step::MoveStep,
-        "updateStep" as "update-step" => update_step::UpdateStep,
-        "setStepEnabled" as "set-step-enabled" => set_step_enabled::SetStepEnabled,
-        "setStock" as "stock" => set_stock::SetStock,
-        "patchInspector" as "patch-inspector" => patch_inspector::PatchInspector,
-        "setCursor" as "cursor" => set_cursor::SetCursor,
-        "stepCursor" as "step-cursor" => step_cursor::StepCursor,
-        "stepCursorBack" as "step-cursor-back" => step_cursor_back::StepCursorBack,
-        "stepCursorForward" as "step-cursor-forward" => step_cursor_forward::StepCursorForward,
-        "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
-        "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
-        "worldFaceDragEnd" as "world-face-drag-end" => world_face_drag_end::WorldFaceDragEnd,
-        "importModelFile" as "import-model-file" => import_model_file::ImportModelFile,
-        "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
-        "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
-        "setCamera" as "camera" => set_camera::SetCamera,
-        "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
-        "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
-        "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
-        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
-        "setContributions" as "contributions" => set_contributions::SetContributions,
-        "exportModel" as "export-model" => export_model::ExportModel,
-        "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
-    }
-}
-//#endregion 🔖️Commands
-//#region 🔖️Io
-/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `crate::
-/// artifact_kind()`'s literal for `"3d.process"` (schema/media type/export+import formats/presentation
-/// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
-/// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
-/// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
-pub fn process3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
-        artifact_schema: crate::PROCESS_3D_SCHEMA.into(),
-        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
-        ports: vec![
-            semio_framework_plugin::MediaPortSpec {
-                id: "geometry:in".into(),
-                label: "Geometry".into(),
-                direction: semio_framework_plugin::MediaPortDirection::In,
-                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
-                kind_id: None,
-                required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
-            },
-            semio_framework_plugin::MediaPortSpec {
-                id: "brep:out".into(),
-                label: "Brep".into(),
-                direction: semio_framework_plugin::MediaPortDirection::Out,
-                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
-                kind_id: Some("3d.process".into()),
-                required: false,
-                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
-            },
-        ],
-        export_formats: vec![],
-        import_formats: vec![],
-        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
-    }
-}
-//#endregion 🔖️Io
 //#region 🔧️Behavior
 /// 🧭️ Axis-angle rotation that maps world-up `[0,0,1]` onto an arbitrary unit `normal`, so a box
 /// primitive's local Z axis (its `height` dimension) ends up flush with a picked face's normal. Pure
@@ -256,50 +178,10 @@ pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
     let axis = if len > 1e-9 { [cross[0] / len, cross[1] / len, cross[2] / len] } else { [0.0, 0.0, 1.0] };
     (axis, dot.acos())
 }
-/// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
-/// 🔓️ `pub` (not private): a variant payload of `crate::MachineCatalogs`
-/// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
-/// itself `pub` — a variant field can never be less visible than the enum wrapping it.
-#[derive(Clone)]
-pub struct ContributedMachineCatalog {
-    catalog_id: String,
-    label: String,
-    icon_id: String,
-    machines: Vec<WorkshopMachine>,
-}
-impl MachineCatalog for ContributedMachineCatalog {
-    fn catalog_id(&self) -> &str {
-        &self.catalog_id
-    }
 
-    fn label(&self) -> &str {
-        &self.label
-    }
 
-    fn icon_id(&self) -> &str {
-        &self.icon_id
-    }
-
-    fn machines(&self) -> Vec<WorkshopMachine> {
-        self.machines.clone()
-    }
-}
 //#endregion 🔧️Behavior
 //#region 🔧️Behavior
-//#region 🔖️ProcessMachinesTopicPayload
-/// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
-/// `contributed_machine_catalogs` decodes. See `TopicContribution` in
-/// `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`.
-#[derive(semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-struct ProcessMachinesTopicPayload {
-    app_id: String,
-    module_id: String,
-    label: String,
-    icon_id: String,
-    machines_json: String,
-}
-//#endregion 🔖️ProcessMachinesTopicPayload
 //#endregion 🔧️Behavior
 //#region 🔧️Behavior
 const PROCESS_CONTRIBUTION_MAX_BYTES: usize = 256 * 1024;
@@ -439,8 +321,8 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
     }
     catalogs
 }
-fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
-    vec![crate::schema::GenericCatalog.into(), crate::schema::wood_catalog().into(), crate::schema::concrete_catalog().into(), crate::schema::metal_catalog().into(), crate::schema::robotic_catalog().into()]
+pub fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
+    vec![semio_s_artifact_process_process3d_model::GenericCatalog.into(), semio_s_artifact_process_process3d_model::wood_catalog().into(), semio_s_artifact_process_process3d_model::concrete_catalog().into(), semio_s_artifact_process_process3d_model::metal_catalog().into(), semio_s_artifact_process_process3d_model::robotic_catalog().into()]
 }
 /// 🧩️ Every machine catalog installed in this build, in stable display order — the built-in generic
 /// catalog first (so it renders as the default-open section), then every `process.machines` contribution
@@ -472,3 +354,14 @@ pub fn catalog_machine(contributions_json: &str, catalog_id: &str, machine_id: &
     Some(machine)
 }
 //#endregion 🔧️Behavior
+
+//#region 🔖️Process3dPlayApp
+//#region 🧵️RetainedCommands
+/// 📏️ The retained `contributions_json` lane, sized from the REAL pack: the four shipped
+/// `process-extension-*` bundles are 19 823 bytes of `process.machines` entries once the host has
+/// scoped them by this receiver's `consumes` row (measured 2026-09-16, ticket
+/// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS). `installable_contributions` distils the host pack to
+/// exactly those entries before anything is retained, so the app never stores the whole closure.
+pub const PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES: usize = 24_576;
+//#endregion 🧵️RetainedCommands
+//#endregion 🔖️Process3dPlayApp

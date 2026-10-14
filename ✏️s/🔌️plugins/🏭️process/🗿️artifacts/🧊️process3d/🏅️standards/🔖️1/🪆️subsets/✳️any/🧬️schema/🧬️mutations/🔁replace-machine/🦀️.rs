@@ -2,8 +2,8 @@
 //! [`WorkshopMachine`]'s `capabilities` list (large structured field, per
 //! `📓️derivation-rules.md` rule 2).
 
-use crate::diff::Process3dDiff;
-use crate::{Capability, Process3dSnapshot};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceMachineCapabilities
@@ -18,7 +18,7 @@ pub struct ReplaceMachineCapabilities {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ReplaceMachineCapabilities
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::replace_machine_capabilities::ReplaceMachineCapabilities>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "machine", kind: "replace-machine-capabilities", record: "ReplacedMachineCapabilities" };
 

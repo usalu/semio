@@ -255,3 +255,7 @@ impl Default for FemAnalysisSettings {
         Self { modal_count: 3, buckling_count: 3, deformation_scale: 50.0 }
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

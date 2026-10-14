@@ -2,9 +2,9 @@
 use super::{FontFace,FontProgress,FontReader};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy)]
-pub(crate) struct Index{at:usize,glyph:u16,class:bool,format:u16,low:usize,high:usize,value:i32,done:bool}
+pub struct Index{at:usize,glyph:u16,class:bool,format:u16,low:usize,high:usize,value:i32,done:bool}
 impl Index{
- pub(crate) fn new(r:FontReader<'_>,at:usize,glyph:u16,class:bool)->Result<Self,String>{
+ pub fn new(r:FontReader<'_>,at:usize,glyph:u16,class:bool)->Result<Self,String>{
   let format=r.u16(at)?;let mut index=Self{at,glyph,class,format,low:0,high:0,value:if class{0}else{-1},done:false};
   match(class,format){
    (false,1)=>{index.high=usize::from(r.u16(at+2)?);r.range(at+4,index.high*2)?;},
@@ -14,7 +14,7 @@ impl Index{
   }
   Ok(index)
  }
- pub(crate) fn step(&mut self,r:FontReader<'_>)->Result<bool,String>{
+ pub fn step(&mut self,r:FontReader<'_>)->Result<bool,String>{
   if self.done{return Ok(true);}
   if self.low==self.high{self.done=true;return Ok(true);}
   let n=(self.low+self.high)/2;
@@ -22,7 +22,7 @@ impl Index{
   if self.glyph<from{self.high=n;}else if self.glyph>to{self.low=n+1;}else{self.value=value;self.done=true;}
   Ok(self.done)
  }
- pub(crate) fn result(&self)->i32{self.value}
+ pub fn result(&self)->i32{self.value}
 }
 fn value(r:FontReader<'_>,at:usize,format:u16)->Result<i32,String>{if format&0xff00!=0{return Err("Unsupported font pair value".into());}if format&4==0{return Ok(0);}Ok(i32::from(r.i16(at+(format&3).count_ones()as usize*2)?))}
 pub struct FontKerningCursor{face:FontFace,left:u16,right:u16,max_work:u64,byte_pointer:Option<usize>,phase:u8,scripts:usize,features:usize,lookups:usize,count:usize,at:usize,script:usize,fallback:usize,lang:usize,record:usize,record_count:usize,record_at:usize,selected:[u16;32],selected_count:usize,selected_at:usize,lookup:usize,lookup_kind:u16,sub_count:usize,sub_at:usize,sub:usize,format:u16,sizes:[usize;2],formats:[u16;2],probe:Option<Index>,class:i32,low:usize,high:usize,set:usize,flags:u16,total:i32,output:Option<i32>,work:u64,cancelled:bool,failure:Option<String>}

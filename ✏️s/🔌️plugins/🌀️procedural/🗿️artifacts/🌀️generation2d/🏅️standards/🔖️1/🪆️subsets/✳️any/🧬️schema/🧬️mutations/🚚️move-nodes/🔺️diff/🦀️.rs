@@ -1,10 +1,14 @@
 //! 🔺️ Sparse diff builder for `MoveNodes` — every addressed widget's layout entry moves by the payload offset from its BASE
 //! position; a widget without a stored position or without a widget is skipped (`mutation.partial`).
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dLayoutDelta, Generation2dLayoutRow};
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_partial,generation2d_targets_invariant,widget_index};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dLayoutDelta;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dLayoutRow;
+use crate::generation2d_partial;
+use crate::generation2d_targets_invariant;
+use semio_s_artifact_procedural_2d_model::widget_index;
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 
 /// 🏗️ None left to move is `target-missing` (no such widget) or `target-mismatch` (no stored position); a zero offset is

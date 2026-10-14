@@ -5,7 +5,8 @@
 //! lane — so this route's publication contract is `HostOnly` and the `ViewEmit` fallback below is
 //! empty (it is handed no session).
 
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 

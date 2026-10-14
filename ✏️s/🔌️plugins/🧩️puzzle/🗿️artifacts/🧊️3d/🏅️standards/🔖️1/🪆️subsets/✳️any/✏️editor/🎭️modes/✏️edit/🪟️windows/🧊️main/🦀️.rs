@@ -9,17 +9,16 @@
 //! three-point "Perspective" pane, and every view-local option (camera, grid, LOD, vortex display,
 //! sun, selection method) is per instance — see `🦀️config.rs`'s `load_window`/`save_window`.
 
-use crate::editor::puzzle3d::session::hash_optional_dsl_value;
-use crate::editor::puzzle3d::config::WINDOW_KIND_ID;
-use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::modes::edit::options;
-use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
-use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
-use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
-use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
-use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id, crate::standards::v1::subsets::any::schema::quat_rotate_vector, crate::editor::puzzle3d::snapshot::target_volume_scale_json, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dSceneMetadata, crate::editor::puzzle3d::snapshot::Puzzle3dInteractionSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::Puzzle3dVortex, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_ALWAYS};
+use semio_s_artifact_puzzle_3d_editor_session::hash_optional_dsl_value;
+use semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use crate::options;
+use semio_s_artifact_puzzle_3d_precompute::Puzzle3dPrecomputeSession;
+use crate::tools::fill as fill_tool;
+use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_localized, Puzzle3dLabels};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_model::quat_rotate_vector, semio_s_artifact_puzzle_3d_editor_snapshot::target_volume_scale_json, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneMetadata, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dVortex, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_config::PUZZLE3D_VORTEX_SHOW_ALWAYS};
 use {semio_framework_plugin::world3d_camera_projection_json, semio_framework_plugin::world3d_chunking_json, semio_framework_plugin::world3d_environment_json, semio_framework_plugin::world3d_fit_json, semio_framework_plugin::World3dScene, semio_framework_plugin::world3d_selection_json, semio_framework_plugin::SurfaceKind, semio_framework_plugin::WindowEngagement, semio_framework_plugin::WindowEngagementInput, semio_framework_plugin::WindowEngagementSlot, semio_framework_plugin::WindowKindDefinition, semio_framework_plugin::WindowMeasure, semio_framework_plugin::WindowOptions, semio_framework_plugin::ToolRunView};
-use crate::editor::puzzle3d::precompute::brush::BrushSuggestionsFound;
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
 use std::hash::{Hash, Hasher};
@@ -50,7 +49,7 @@ pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKi
         // `ArtifactApp::window_measures`, never frozen into the static manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement(envelope, labels, None)) },
         actions: Vec::new(),
-        utilities: vec![utilities::transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
+        utilities: vec![semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::volume_brush::UTILITY_ID.into(), utilities::world_relocate::UTILITY_ID.into()],
         interactions: vec![semio_framework_plugin::InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -71,7 +70,7 @@ pub fn window_measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec
         options::grid::measure(&envelope.runtime, labels),
         options::select::measure(&envelope.runtime, labels),
         options::sun::measure(&envelope.runtime, labels.is_de()),
-        utilities::transform::options(&envelope.runtime, labels),
+        semio_s_artifact_puzzle_3d_editor_transform::options(&envelope.runtime, labels),
         utilities::brush::options(envelope, labels),
         utilities::volume_brush::options(&envelope.runtime, labels),
     ]
@@ -92,7 +91,7 @@ pub fn scene_mode(active_utility: &str) -> &str {
 
 /// 🎚️ The gumball handle the world engine draws when a transform utility is active.
 pub fn transform_handle(active_utility: &str) -> Option<&'static str> {
-    if active_utility == utilities::transform::UTILITY_ID {
+    if active_utility == semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID {
         Some("transform")
     } else {
         None
@@ -132,7 +131,7 @@ const PUZZLE3D_FRAMING_MINIMUM_DISTANCE: f64 = 1.4;
 /// stored `WindowConfig` has ever replaced. Position == target is degenerate in any pose — a camera
 /// standing exactly on what it looks at has no view direction at all — so it is the one reading that
 /// can never be a real user pose.
-pub fn camera_unset(camera: &crate::editor::puzzle3d::config::Puzzle3dCamera) -> bool {
+pub fn camera_unset(camera: &semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera) -> bool {
     camera.position == camera.target
 }
 
@@ -181,12 +180,12 @@ fn framing_projection(window_id: &str) -> semio_framework_plugin::WorldProjectio
 /// every pane's published camera at all zeros until the first `setCamera` lands, so the world lane
 /// carries no view direction at boot and two panes of one document publish the SAME (zero) pose
 /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B15; B12 §4.1 measured it live).
-pub fn framed_camera(window_id: &str, scene_snapshot: &Puzzle3dSceneSnapshot) -> crate::editor::puzzle3d::config::Puzzle3dCamera {
+pub fn framed_camera(window_id: &str, scene_snapshot: &Puzzle3dSceneSnapshot) -> semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera {
     let (target, span) = framing_bounds(scene_snapshot);
     let projection = framing_projection(window_id);
     let distance = (span * PUZZLE3D_FRAMING_SPANS).max(PUZZLE3D_FRAMING_MINIMUM_DISTANCE);
     let (position, up) = semio_framework_plugin::world3d_projection_pose(&projection, target, distance);
-    crate::editor::puzzle3d::config::Puzzle3dCamera { position, target, zoom: 1.0, up: Some(up), projection }
+    semio_s_artifact_puzzle_3d_editor_config::Puzzle3dCamera { position, target, zoom: 1.0, up: Some(up), projection }
 }
 
 /// 📷️ Gives a scene whose pane has never been framed its opening pose, and leaves a pane the user (or
@@ -197,18 +196,6 @@ pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
         scene.runtime.camera = framed_camera(window_id, &scene.scene_snapshot);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// 🎯️ Padding `WorldAutoFit` frames a swapped document with — 1.25 leaves a quarter of the radius of
 /// air around the bounding sphere, matching the host's own default.
@@ -231,21 +218,6 @@ pub fn world_fit_revision(scene_snapshot: &Puzzle3dSceneSnapshot) -> u32 {
     hash_optional_dsl_value(scene_snapshot.meta.kind_compatibility.as_ref(), &mut hasher);
     (hasher.finish() >> 32) as u32
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 fn world_vortex_direction(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
     let direction = vortex.direction.unwrap_or([0.0, 0.0, -1.0]);
@@ -311,7 +283,7 @@ pub fn world_vortices_json(scene_snapshot: &Puzzle3dSceneSnapshot, runtime: &Puz
             continue;
         }
         for vortex in &object.vortices {
-            let position = crate::editor::puzzle3d::snapshot::world_vortex_position(object, vortex);
+            let position = semio_s_artifact_puzzle_3d_editor_snapshot::world_vortex_position(object, vortex);
             let direction = world_vortex_direction(object, vortex);
             let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
             records.push(json!({
@@ -345,7 +317,7 @@ pub fn world_attractions_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String 
             vortices.entry(puzzle3d_vortex_full_id(&object.id, &vortex.id)).or_insert((object, vortex));
         }
     }
-    let position = |full_id: &str| vortices.get(full_id).map(|(object, vortex)| crate::editor::puzzle3d::snapshot::world_vortex_position(object, vortex));
+    let position = |full_id: &str| vortices.get(full_id).map(|(object, vortex)| semio_s_artifact_puzzle_3d_editor_snapshot::world_vortex_position(object, vortex));
     let records: Vec<Value> = scene_snapshot
         .attractions
         .iter()
@@ -455,7 +427,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
         "voxelDims": runtime.voxel_dims,
         "gridFactor": runtime.grid_spacing,
         "suggestionMenu": suggestion_menu,
-        "meshResidency": crate::editor::puzzle3d::precompute::shared_brush_mesh_installs(),
+        "meshResidency": semio_s_artifact_puzzle_3d_precompute::shared_brush_mesh_installs(),
         "meshReuploadUrls": session.mesh_reupload_requests(),
     });
     // 🐁️ `hoveredVortexFullId` is the host's Alt+right-click suggestion target and its context-menu
@@ -573,7 +545,7 @@ pub fn render(
     // declared explicitly because the host's own default (`"handle"`) is not one of this domain's
     // granularities and `validate_state` would prune every id picked under it.
     scene.domain_id = Some(PUZZLE3D_INTERACTION_DOMAIN.into());
-    scene.domain_granularity_id = Some(crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT.into());
+    scene.domain_granularity_id = Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT.into());
     semio_framework_plugin::scene_surface(SURFACE_VIEWPORT, semio_framework_ui_contract::SurfaceKind::World3d, &scene)
 }
 
@@ -596,7 +568,7 @@ pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: O
         input: Some(WindowEngagementInput {
             id: Some("puzzle3d-engagement".into()),
             value: Some(envelope.runtime.engagement_input.clone()),
-            placeholder: Some(crate::editor::puzzle3d::snapshot::PUZZLE3D_ENGAGEMENT_VERBS.join(", ")),
+            placeholder: Some(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_ENGAGEMENT_VERBS.join(", ")),
             disabled: None,
             on_change: Some(puzzle3d_action("engagementInput", None)),
             on_submit: Some(puzzle3d_action("engagementSubmit", None)),
@@ -634,7 +606,7 @@ pub fn scene_for(snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view
     scene
 }
 
-use crate::editor::puzzle3d::modes::edit::windows::main;
+use crate::windows::main;
 use semio_framework::kernel::UiDirtyScope;
 
 pub fn puzzle3d_viewport_scope() -> UiDirtyScope {

@@ -1,8 +1,8 @@
 //! 🚫️ `remove-element` diff — removes the row at the index; an index past the list's end is a `mutation.invariant`.
 
-use super::RemoveElement;
-use crate::diff::{Din4108Diff, Din4108ElementDelta};
-use crate::Din4108Snapshot;
+use crate::remove_element::RemoveElement;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &RemoveElement, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if payload.index >= base.elements.len() {

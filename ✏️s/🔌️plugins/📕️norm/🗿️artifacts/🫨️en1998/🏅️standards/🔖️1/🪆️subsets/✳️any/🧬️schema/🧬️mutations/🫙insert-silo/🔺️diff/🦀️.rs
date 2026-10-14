@@ -1,8 +1,8 @@
 //! 🫙 `insert-silo` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertSilo;
-use crate::diff::{En1998Diff, En1998SiloDelta};
-use crate::En1998Snapshot;
+use crate::insert_silo::InsertSilo;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998SiloDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertSilo, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.silos.iter().any(|existing| existing.id == payload.silo.id) {

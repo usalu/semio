@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use crate::SnapshotRead;
 use semio_s_artifact_procedural_3d_model::example_snapshot;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
@@ -92,7 +92,7 @@ fn the_keyboard_order_is_the_reading_order_the_fixture_declares() {
 #[test]
 fn every_step_the_fixture_names_is_a_declared_arg_free_verb() {
     let fixture = fixture();
-    let definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     for (_, verb) in fixture["verbs"].as_object().expect("verbs") {
         let id = verb.as_str().expect("verb id");
         let action = definition

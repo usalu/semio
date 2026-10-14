@@ -1,8 +1,7 @@
 //! 🛏️ Energy model mutation — `CreateRoomAirModelAssignment`: Overrides the room air model of one zone. This collection carries no id of its own — `zone_id` IS the key (vocabulary §5.5), so it is a keyed map and a second override for one zone is a duplicate.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct CreateRoomAirModelAssignment {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_room_air_model_assignment(zone_id: crate::model::EntityId, model: crate::model::RoomAirModelType, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateRoomAirModelAssignment(CreateRoomAirModelAssignment { zone_id, model, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_room_air_model_assignment<Op: From<CreateRoomAirModelAssignment>>(zone_id: crate::model::EntityId, model: crate::model::RoomAirModelType, index: Option<u32>) -> Op {
+    CreateRoomAirModelAssignment { zone_id, model, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateRoomAirModelAssignment {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateRoomAirModelAssignment
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateRoomAirModelAssignment> + From<crate::DeleteRoomAirModelAssignment>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "room-air-model-assignment", kind: "create-room-air-model-assignment", record: "CreatedRoomAirModelAssignment" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

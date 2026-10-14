@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-block-5d-schema"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Block 5d artifact schema and descriptor"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-block-5d-diff = { workspace = true }
+semio-s-artifact-block-5d-model = { workspace = true }
+semio-s-artifact-block-5d-mutations = { workspace = true }
+semio-s-plugin-block = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
+serde = { workspace = true }

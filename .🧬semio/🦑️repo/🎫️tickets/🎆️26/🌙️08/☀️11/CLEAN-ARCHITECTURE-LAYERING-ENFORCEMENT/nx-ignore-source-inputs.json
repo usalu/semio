@@ -1,0 +1,25 @@
+{
+  "scope": "Four owned Source files only; independent concurrent Source preserved",
+  "rows": [
+    {
+      "path": ".gitignore",
+      "bytes": 11605,
+      "sha256": "11166ab084616a0b59687559ef53e2942e9ef66d52459718b758ab87adcd1295"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🔣️.json",
+      "bytes": 909,
+      "sha256": "cf35f9a640e89489e61d0bb679286294548aae6ab41e803df188f7891794edda"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🟦️.ts",
+      "bytes": 1971,
+      "sha256": "ee88102485feacc3c6f57becf908ac21717313589bef18f56b5dba95430ea336"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "bytes": 175317,
+      "sha256": "adf8be8473aab089dcf550a2e7fba9c742dfc5641b591d825c0655d825756efe"
+    }
+  ]
+}

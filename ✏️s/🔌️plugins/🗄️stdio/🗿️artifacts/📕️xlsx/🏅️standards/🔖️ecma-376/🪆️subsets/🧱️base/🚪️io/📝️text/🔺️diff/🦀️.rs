@@ -15,9 +15,9 @@ use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 #[cfg(test)]
-use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxXmlPart};
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -42,9 +42,9 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 #[cfg(test)]
-use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxXmlPart};
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};

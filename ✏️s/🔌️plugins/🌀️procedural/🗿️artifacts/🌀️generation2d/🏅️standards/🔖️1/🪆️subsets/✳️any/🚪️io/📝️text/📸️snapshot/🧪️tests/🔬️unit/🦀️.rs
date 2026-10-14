@@ -1,6 +1,13 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::snapshot::*;
 use semio_framework_os_kernel::os_store::test_support;
 use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
+
+#[test]
+fn default_snapshot_parses_the_bundled_example() {
+    let snapshot = Generation2dSnapshotRead::new(default_snapshot());
+    assert!(!snapshot.host_snapshot.widgets.is_empty());
+}
 
 //#region 🔖️DslTests
 #[test]
@@ -11,7 +18,7 @@ fn dsl_round_trip_empty_projection() {
 
 #[test]
 fn dsl_round_trip_example_fixture() {
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::parse_dsl(GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture"));
+    let projection = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::parse_dsl(GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture"));
     test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
@@ -29,7 +36,7 @@ fn dsl_round_trip_with_generation_state() {
     projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
     projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
     projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    let projection = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(projection);
     test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
@@ -46,7 +53,7 @@ fn dsl_round_trip_covers_every_widget_kind() {
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.host_snapshot.synapses = vec![];
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    let projection = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(projection);
     test_support::assert_dsl_round_trip_cold(&*projection, Generation2dSnapshot::retire_cold);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
 }
@@ -62,17 +69,17 @@ fn dsl_round_trip_covers_every_widget_kind() {
 /// carries no `note-*` widget at all.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
+    use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::os_store::store_schema::ArtifactCommand;
 
-    let document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
-    let replaced_id = crate::widget_id(document.host_snapshot.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
-    let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    let document = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
+    let replaced_id = semio_s_artifact_procedural_2d_model::widget_id(document.host_snapshot.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();
+    let mut store = semio_s_artifact_procedural_2d_testkit::store_fixture::document_store(Generation2dSnapshot::default()).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![semio_s_artifact_procedural_2d_mut_widgets::replace_widget(Widget::InputNote { id: replaced_id, text: String::new() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
-    crate::store_fixture::close(store);
+    semio_s_artifact_procedural_2d_testkit::store_fixture::close(store);
 }
 //#endregion 🔖️CommandEnvelopeTests
 

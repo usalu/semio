@@ -1,8 +1,10 @@
 //! 🔄️ `rotate-frame` — sets a frame's `bounds.rotation` in radians.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +21,12 @@ pub struct RotateFrame {
     pub new_rotation: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for RotateFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for RotateFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rotate_frame::RotateFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "frame", kind: "rotate-frame", record: "RotatedFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rotate_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_rotate_frame(self, base)?
     
@@ -64,7 +66,7 @@ pub fn diff_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> protoc
 //#endregion 🔄️RotateFrame
 
 //#region 🔄️RotateFrame
-pub fn inverse_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_rotate_frame<Op: From<crate::rotate_frame::RotateFrame>>(payload: &RotateFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -72,8 +74,14 @@ pub fn inverse_rotate_frame(payload: &RotateFrame, base: &LayoutSnapshot) -> Res
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
         return Vec::new();
     };
-    vec![LayoutMutation::RotateFrame(RotateFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_rotation: frame.bounds().rotation })]
+    vec![Op::from(RotateFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_rotation: frame.bounds().rotation })]
 
     })())
 }
 //#endregion 🔄️RotateFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🌀️rotates/🦀️.rs"]
+mod tests_rotates_the_rect_frame;
+//#endregion 🪢️TaxonomyMounts

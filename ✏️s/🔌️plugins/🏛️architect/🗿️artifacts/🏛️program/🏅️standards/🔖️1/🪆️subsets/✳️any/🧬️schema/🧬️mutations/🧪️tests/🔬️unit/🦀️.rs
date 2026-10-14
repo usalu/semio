@@ -25,21 +25,21 @@ async fn stakeholders_create_rename_replace_delete_round_trip() {
     new_stakeholder.header.id = new_id.clone();
     new_stakeholder.header.name = "New Stakeholder".into();
 
-    let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: new_stakeholder, index: None });
+    let create = ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(new_stakeholder), index: None });
     let with_new = round_trip(&snapshot, &create);
     assert_eq!(with_new.stakeholders.len(), snapshot.stakeholders.len() + 1);
 
-    let rename = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: new_id.clone(), new_name: "Renamed".into() });
+    let rename = ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: new_id.clone(), new_name: "Renamed".into() });
     let renamed = round_trip(&with_new, &rename);
     assert_eq!(renamed.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().header.name, "Renamed");
 
     let mut replacement = renamed.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().clone();
     replacement.role = "Sponsor".into();
-    let replace = ProgramMutation::ReplaceStakeholder(super::super::replace_stakeholder::ReplaceStakeholder { stakeholder: replacement });
+    let replace = ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(replacement) });
     let replaced = round_trip(&renamed, &replace);
     assert_eq!(replaced.stakeholders.iter().find(|s| s.header.id == new_id).unwrap().role, "Sponsor");
 
-    let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: new_id });
+    let delete = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: new_id });
     let deleted = round_trip(&replaced, &delete);
     assert_eq!(deleted.stakeholders.len(), snapshot.stakeholders.len());
 }
@@ -47,7 +47,7 @@ async fn stakeholders_create_rename_replace_delete_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn delete_stakeholder_of_a_missing_id_has_an_empty_inverse() {
     let snapshot = sample_plugin();
-    let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: EntityId("nope".into()) });
+    let delete = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: EntityId("nope".into()) });
     assert!(delete.inverse(&snapshot).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 //#endregion 👥stakeholders
@@ -61,21 +61,21 @@ async fn elements_create_rename_replace_delete_round_trip() {
     new_element.header.id = new_id.clone();
     new_element.header.name = "Storage".into();
 
-    let create = ProgramMutation::CreateProgramElement(super::super::create_program_element::CreateProgramElement { program_element: new_element, index: None });
+    let create = ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::ProgramElement(new_element), index: None });
     let with_new = round_trip(&snapshot, &create);
     assert_eq!(with_new.elements.len(), snapshot.elements.len() + 1);
 
-    let rename = ProgramMutation::RenameProgramElement(super::super::rename_program_element::RenameProgramElement { id: new_id.clone(), new_name: "Storage Room".into() });
+    let rename = ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::ProgramElement, id: new_id.clone(), new_name: "Storage Room".into() });
     let renamed = round_trip(&with_new, &rename);
     assert_eq!(renamed.elements.iter().find(|e| e.header.id == new_id).unwrap().header.name, "Storage Room");
 
     let mut replacement = renamed.elements.iter().find(|e| e.header.id == new_id).unwrap().clone();
     replacement.code = "STO".into();
-    let replace = ProgramMutation::ReplaceProgramElement(super::super::replace_program_element::ReplaceProgramElement { program_element: replacement });
+    let replace = ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::ProgramElement(replacement) });
     let replaced = round_trip(&renamed, &replace);
     assert_eq!(replaced.elements.iter().find(|e| e.header.id == new_id).unwrap().code, "STO");
 
-    let delete = ProgramMutation::DeleteProgramElement(super::super::delete_program_element::DeleteProgramElement { id: new_id });
+    let delete = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::ProgramElement, id: new_id });
     let deleted = round_trip(&replaced, &delete);
     assert_eq!(deleted.elements.len(), snapshot.elements.len());
 }
@@ -204,10 +204,10 @@ async fn connect_and_disconnect_trace_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn program_mutation_op_text_round_trips_a_sample_of_variants() {
     let stakeholder = sample_plugin().stakeholders[0].clone();
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: stakeholder.clone(), index: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: stakeholder.header.id.clone() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: stakeholder.header.id.clone(), new_name: "X".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceStakeholder(super::super::replace_stakeholder::ReplaceStakeholder { stakeholder }));
+    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(stakeholder.clone()), index: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone() }));
+    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id.clone(), new_name: "X".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(stakeholder) }));
     store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::RenameMeta(super::super::rename_meta::RenameMeta { new_title: "Clinic".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::DisconnectAdjacency { id: EntityId("a1".into()) }));
 }
@@ -223,12 +223,12 @@ async fn create_stakeholder_obeys_the_inverse_and_absorb_laws() {
     let base = sample_plugin();
     let mut new_stakeholder = base.stakeholders[0].clone();
     new_stakeholder.header.id = EntityId::new_serial("stakeholder", "stakeholder");
-    let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: new_stakeholder.clone(), index: None });
+    let create = ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(new_stakeholder.clone()), index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
     let d1 = create.diff(&base).into_parts().0;
     let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
-    let d2 = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
+    let d2 = ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
@@ -264,16 +264,16 @@ async fn replace_of_a_middle_row_keeps_its_position_and_obeys_the_sum_law() {
     replacement.role = "Sponsor".into();
     replacement.department = Some("Operations".into());
     let order: Vec<EntityId> = base.stakeholders.iter().map(|row| row.header.id.clone()).collect();
-    let replace = ProgramMutation::ReplaceStakeholder(super::super::replace_stakeholder::ReplaceStakeholder { stakeholder: replacement });
+    let replace = ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::Stakeholder(replacement) });
     let after = protocol::apply_diff(replace.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.stakeholders.iter().map(|row| row.header.id.clone()).collect::<Vec<_>>(), order, "the replaced row keeps its position");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&replace, &base).await;
     let mut created = base.stakeholders[0].clone();
     created.header.id = EntityId("stakeholder-new".into());
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: created, index: None }), &base).await;
-    let rename = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: order[1].clone(), new_name: "Renamed".into() });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(created), index: None }), &base).await;
+    let rename = ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: order[1].clone(), new_name: "Renamed".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&rename, &base).await;
-    let delete_last = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: order[2].clone() });
+    let delete_last = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: order[2].clone() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_last, &base).await;
 }
 
@@ -289,12 +289,12 @@ async fn composed_table_kinds_obey_the_sum_law() {
     let mut renamed_benchmark = benchmark.clone();
     renamed_benchmark.metric = "Other metric".into();
     for mutation in [
-        ProgramMutation::DeleteKnowledgeRecord(super::super::delete_knowledge_record::DeleteKnowledgeRecord { id: knowledge.header.id.clone() }),
-        ProgramMutation::RenameKnowledgeRecord(super::super::rename_knowledge_record::RenameKnowledgeRecord { id: knowledge.header.id.clone(), new_name: "Renamed".into() }),
-        ProgramMutation::ReplaceKnowledgeRecord(super::super::replace_knowledge_record::ReplaceKnowledgeRecord { knowledge_record: renamed_knowledge }),
-        ProgramMutation::DeleteBenchmarkRecord(super::super::delete_benchmark_record::DeleteBenchmarkRecord { id: benchmark.header.id.clone() }),
-        ProgramMutation::RenameBenchmarkRecord(super::super::rename_benchmark_record::RenameBenchmarkRecord { id: benchmark.header.id.clone(), new_name: "Renamed".into() }),
-        ProgramMutation::ReplaceBenchmarkRecord(super::super::replace_benchmark_record::ReplaceBenchmarkRecord { benchmark_record: renamed_benchmark }),
+        ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::KnowledgeRecord, id: knowledge.header.id.clone() }),
+        ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::KnowledgeRecord, id: knowledge.header.id.clone(), new_name: "Renamed".into() }),
+        ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::KnowledgeRecord(renamed_knowledge) }),
+        ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::BenchmarkRecord, id: benchmark.header.id.clone() }),
+        ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::BenchmarkRecord, id: benchmark.header.id.clone(), new_name: "Renamed".into() }),
+        ProgramMutation::ReplaceRegisterRow(super::super::replace_register_row::ReplaceRegisterRow { row: RegisterRow::BenchmarkRecord(renamed_benchmark) }),
     ] {
         let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
         assert_eq!(after.knowledge, crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&after.knowledge_payload), "the knowledge handle follows its rows");
@@ -337,7 +337,7 @@ async fn create_at_an_index_and_delete_of_a_middle_row_obey_the_sum_law() {
     let order: Vec<EntityId> = base.stakeholders.iter().map(|row| row.header.id.clone()).collect();
     let mut inserted = base.stakeholders[0].clone();
     inserted.header.id = EntityId("stakeholder-inserted".into());
-    let create_at = |index: Option<usize>| ProgramMutation::CreateStakeholder(super::super::create_stakeholder::CreateStakeholder { stakeholder: inserted.clone(), index });
+    let create_at = |index: Option<usize>| ProgramMutation::CreateRegisterRow(super::super::create_register_row::CreateRegisterRow { row: RegisterRow::Stakeholder(inserted.clone()), index: index });
     let after = protocol::apply_diff(create_at(Some(1)).diff(&base).diff(), &base).expect("valid mutation diff");
     let ids: Vec<&str> = after.stakeholders.iter().map(|row| row.header.id.0.as_str()).collect();
     assert_eq!(ids, vec![order[0].0.as_str(), "stakeholder-inserted", order[1].0.as_str(), order[2].0.as_str()], "the row lands at the requested index");
@@ -347,7 +347,7 @@ async fn create_at_an_index_and_delete_of_a_middle_row_obey_the_sum_law() {
     let beyond = create_at(Some(order.len() + 1)).diff(&base);
     assert!(beyond.messages().iter().any(|message| message.code.0 == "mutation.target-missing"), "an index past the end is rejected");
     for id in &order {
-        let delete = ProgramMutation::DeleteStakeholder(super::super::delete_stakeholder::DeleteStakeholder { id: id.clone() });
+        let delete = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::Stakeholder, id: id.clone() });
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;
     }
 }
@@ -362,7 +362,7 @@ async fn middle_deletes_of_edges_and_composed_rows_restore_their_position() {
     knowledge.header.id = EntityId("knowledge-three".into());
     base.knowledge_payload.push(knowledge);
     base.knowledge = crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&base.knowledge_payload);
-    let delete = ProgramMutation::DeleteKnowledgeRecord(super::super::delete_knowledge_record::DeleteKnowledgeRecord { id: base.knowledge_payload[1].header.id.clone() });
+    let delete = ProgramMutation::DeleteRegisterRow(super::super::delete_register_row::DeleteRegisterRow { register: RegisterKey::KnowledgeRecord, id: base.knowledge_payload[1].header.id.clone() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;
     let mut trace = TraceLink::new(base.elements[0].header.id.clone(), base.elements[1].header.id.clone(), TraceKind::FunctionToProgramElement);
     for suffix in ["a", "b", "c"] {
@@ -377,10 +377,10 @@ async fn middle_deletes_of_edges_and_composed_rows_restore_their_position() {
 //#region 📋️DescriptorLaws
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(ProgramMutation::kinds().len(), 266);
+    assert_eq!(ProgramMutation::kinds().len(), 14);
     let stakeholder = sample_plugin().stakeholders[0].clone();
-    let mutation = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::RenameStakeholder { id: stakeholder.header.id, new_name: "X".into() });
-    assert_eq!(mutation.semantics().kind, "rename-stakeholder");
-    assert_eq!(mutation.semantics().record, "RenamedStakeholder");
+    let mutation = ProgramMutation::RenameRegisterRow(super::super::rename_register_row::RenameRegisterRow { register: RegisterKey::Stakeholder, id: stakeholder.header.id, new_name: "X".into() });
+    assert_eq!(mutation.semantics().kind, "rename-register-row");
+    assert_eq!(mutation.semantics().record, "RenamedRegisterRow");
 }
 //#endregion 📋️DescriptorLaws

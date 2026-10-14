@@ -7,8 +7,8 @@
 //! `⚙️engine/📐️geometry/🎛flatten`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES);
 //! this leaf holds the `InferredField` chains that drive incremental per-entity caching over that math.
 
-use crate::standards::v1::subsets::any::schema::inferences::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
-use {crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::Puzzle3dSnapshot};
+use crate::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 use std::collections::HashMap;
 
 //#region 🔖️DependencyHashChains
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 // BFS on every `dep_input`/`compute` call, so a full `infer_field` pass here is O(n²) rather than
 // O(n) — acceptable at pilot/example scale. A later wave can thread the assignment through once per
 // `infer_field` call (e.g. by widening `InferredField::plan`'s contract) instead of re-deriving it.
-pub(crate) fn assignment_for(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenParent> {
+pub fn assignment_for(snapshot: &Puzzle3dSnapshot) -> HashMap<String, FlattenParent> {
     flatten_objects_with_assignment(&snapshot.objects, &snapshot.attractions, None).2
 }
 

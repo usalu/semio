@@ -1,5 +1,5 @@
 use super::*;
-use crate::RasterTransform;
+use semio_s_artifact_raster_raster_model::RasterTransform;
 
 fn pixel_layer(id: &str) -> RasterLayerNode {
     RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }
@@ -31,13 +31,13 @@ fn apply(delta: &RasterLayersDelta, base: &[RasterLayerNode]) -> Vec<RasterLayer
 
 fn same(left: Vec<RasterLayerNode>, right: Vec<RasterLayerNode>, message: &str) {
     let equal = left == right;
-    crate::retire_raster_layers(left);
-    crate::retire_raster_layers(right);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(left);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(right);
     assert!(equal, "{message}");
 }
 
 fn retire_delta(delta: RasterLayersDelta) {
-    crate::retire_raster_layers(delta.inserted.into_iter().map(|row| row.layer).collect());
+    semio_s_artifact_raster_raster_model::retire_raster_layers(delta.inserted.into_iter().map(|row| row.layer).collect());
 }
 
 fn sum(first: &RasterLayersDelta, later: &RasterLayersDelta) -> RasterLayersDelta {
@@ -58,8 +58,8 @@ async fn a_reorder_is_one_move_row_and_never_carries_the_layer() {
     assert_eq!(delta.moved, vec![RasterLayerRelocation { id: "a".into(), from: RasterLayerAddress { parent_id: None, index: 0 }, to: RasterLayerAddress { parent_id: None, index: 2 } }]);
     let after = apply(&delta, &base);
     assert_eq!(after.iter().map(|node| layer_node_id(node).to_string()).collect::<Vec<_>>(), vec!["g", "d", "a"], "the layer lands at the final index");
-    crate::retire_raster_layers(after);
-    crate::retire_raster_layers(base);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(after);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -71,8 +71,8 @@ async fn the_inverse_of_a_move_moves_back_and_the_sum_is_empty() {
     assert_eq!(inverse.moved, vec![RasterLayerRelocation { id: "b".into(), from: RasterLayerAddress { parent_id: None, index: 0 }, to: RasterLayerAddress { parent_id: Some("g".into()), index: 0 } }], "the inverse is the same move run backwards across containers");
     same(apply(&inverse, &after), tree(), "the inverse restores the base");
     assert!(sum(&delta, &inverse).is_empty(), "a move and its inverse sum to nothing");
-    crate::retire_raster_layers(after);
-    crate::retire_raster_layers(base);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(after);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -86,8 +86,8 @@ async fn removal_inverse_reinserts_the_base_subtree_at_its_base_address() {
     same(apply(&inverse, &after), tree(), "the inverse restores the removed subtree");
     assert!(sum(&delta, &inverse).is_empty(), "remove then reinsert is nothing");
     retire_delta(inverse);
-    crate::retire_raster_layers(after);
-    crate::retire_raster_layers(base);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(after);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,12 +118,12 @@ async fn every_pair_of_moves_absorbs_to_the_sequential_result_and_inverts() {
             let total = sum(&first, &second);
             same(apply(&total, &base), after.iter().cloned().collect(), "absorb(first, second) equals the sequential application");
             same(apply(&inverse_layers(&total, &base), &after), tree(), "the inverse of the absorbed delta restores the base");
-            crate::retire_raster_layers(after);
+            semio_s_artifact_raster_raster_model::retire_raster_layers(after);
             checked += 1;
         }
-        crate::retire_raster_layers(middle);
+        semio_s_artifact_raster_raster_model::retire_raster_layers(middle);
     }
-    crate::retire_raster_layers(base);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(base);
     assert!(checked > 1000, "the sweep covers every move pair, got {checked}");
 }
 
@@ -142,7 +142,7 @@ async fn three_moves_of_one_layer_are_one_middle_row() {
     same(apply(&total, &base), three.iter().cloned().collect(), "the single row reaches the same tree");
     same(apply(&inverse_layers(&total, &base), &three), tree(), "and inverts to the base");
     for layers in [one, two, three, base] {
-        crate::retire_raster_layers(layers);
+        semio_s_artifact_raster_raster_model::retire_raster_layers(layers);
     }
 }
 
@@ -162,7 +162,7 @@ async fn insert_then_move_lands_at_the_final_slot_and_insert_then_remove_cancels
     retire_delta(total);
     retire_delta(created);
     for layers in [one, base] {
-        crate::retire_raster_layers(layers);
+        semio_s_artifact_raster_raster_model::retire_raster_layers(layers);
     }
 }
 
@@ -185,7 +185,7 @@ async fn move_then_remove_removes_at_the_base_address_and_a_patch_of_an_inserted
     retire_delta(folded);
     retire_delta(created);
     for layers in [one, base] {
-        crate::retire_raster_layers(layers);
+        semio_s_artifact_raster_raster_model::retire_raster_layers(layers);
     }
 }
 
@@ -195,5 +195,5 @@ async fn a_stale_base_address_is_refused() {
     let stale = RasterLayersDelta { moved: vec![RasterLayerRelocation { id: "a".into(), from: RasterLayerAddress { parent_id: None, index: 2 }, to: RasterLayerAddress { parent_id: None, index: 0 } }], ..Default::default() };
     assert!(apply_layers_delta(&base, &stale).is_err(), "a move whose layer is not at its base address does not apply");
     assert_eq!(shape_of(&base), vec!["a", "g", "b", "c", "d"]);
-    crate::retire_raster_layers(base);
+    semio_s_artifact_raster_raster_model::retire_raster_layers(base);
 }

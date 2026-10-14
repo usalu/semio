@@ -1,8 +1,8 @@
 //! 🔍️ EN 1992 play app panel — the inspection tab: one computed check in full, chosen by the config's
 //! `selected_check_index` (the only view state a norm app carries).
 
-use crate::document::NormHost;
-use crate::editor::en1992::En1992Family;
+use semio_s_plugin_norm_compliance::NormHost;
+use crate::En1992Family;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -15,13 +15,13 @@ pub const BODY_INSPECTION: &str = "norm.en1992.play.inspection";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_INSPECTION_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"), PanelGroup::Details, BODY_INSPECTION)
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<En1992Family>, selected_check_index: Option<u32>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
+    semio_s_plugin_norm_app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
 }
 //#endregion 🔖️Render
 

@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::standards::v1::subsets::any::io::component::text::snapshot::*;
 use semio_s_artifact_cad_cad_testing::sample_scene;
 
 /// 🧪️ The bundled composed document preserves its literal child fields through native Text.

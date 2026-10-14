@@ -1,7 +1,8 @@
 //! 🔺️ `change-exchange-process` — sparse diff construction.
 
-use super::mutation::ChangeExchangeProcess;
-use crate::{Iso16757Diff, Iso16757Snapshot};
+use crate::change_exchange_process::mutation::ChangeExchangeProcess;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeExchangeProcess, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

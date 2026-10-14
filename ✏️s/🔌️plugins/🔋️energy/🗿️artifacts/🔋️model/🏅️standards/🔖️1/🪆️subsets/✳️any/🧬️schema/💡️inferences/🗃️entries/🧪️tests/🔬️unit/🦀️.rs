@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::inferences::compute_energy_model_entries;
+use crate::text::compute_energy_model_entries;
 use super::*;
 
 /// 🌱 `crate::model::Model` has exactly 44 top-level fields (name/version/site/zones/spaces/
@@ -24,7 +24,7 @@ async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
 
 #[semio_framework_async_macros::async_test]
 async fn top_level_field_count_is_stable_regardless_of_content() {
-    let snapshot = crate::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), ..crate::model::Model::default() }, None);
+    let snapshot = crate::snapshot::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), ..crate::model::Model::default() }, None);
     let entries = compute_energy_model_entries(&snapshot);
     assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
 }
@@ -42,7 +42,7 @@ async fn cache_miss_still_yields_a_deterministic_census() {
 
 #[semio_framework_async_macros::async_test]
 async fn different_bodies_yield_different_digests() {
-    let a = crate::energy_snapshot_with_state("energy.model", &crate::model::Model::default(), None);
-    let b = crate::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "x".into(), ..crate::model::Model::default() }, None);
+    let a = crate::snapshot::energy_snapshot_with_state("energy.model", &crate::model::Model::default(), None);
+    let b = crate::snapshot::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "x".into(), ..crate::model::Model::default() }, None);
     assert_ne!(compute_energy_model_entries(&a).content_digest, compute_energy_model_entries(&b).content_digest);
 }

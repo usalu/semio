@@ -5,6 +5,14 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.norm.en1997` dialect only.
+
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
@@ -13,8 +21,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::En1997Analyzer;
-    use crate::En1997Snapshot;
+    use crate::En1997Analyzer;
+    use semio_s_artifact_norm_en1997_model::En1997Snapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1997", standard: StandardId("1"), subset: SubsetId("*") };
@@ -46,14 +54,14 @@ pub mod derived_composition {
         }
     }
 }
-pub use derived_composition::*;
+pub use crate::derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚪️IoRegistry
 /// 🚪️ Composer registry (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated
 /// verbatim from the deleted `⚙️engine`; io is exactly where composer dispatch belongs.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::En1997Composer as En1997AnyComposer;
+    use crate::En1997Composer as En1997AnyComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -75,7 +83,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{En1997Diff, En1997Mutation, En1997Snapshot};
+    use semio_s_artifact_norm_en1997_diff::En1997Diff;
+    use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
+    use semio_s_artifact_norm_en1997_model::En1997Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -122,10 +132,10 @@ pub mod derived_construction {
         }
     }
 }
-pub use derived_construction::*;
+pub use crate::derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::En1997Snapshot;
+    use semio_s_artifact_norm_en1997_model::En1997Snapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -169,7 +179,7 @@ pub mod derived_analysis {
         }
     }
 }
-pub use derived_analysis::*;
+pub use crate::derived_analysis::*;
 
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1997BuilderFacets {
@@ -182,23 +192,4 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: En1997Composer,
 );
 
-//#region 🌉️ExternalCodecBridge
-/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
-pub mod mutation_bridge {
-    use crate::{En1997Mutation, En1997Snapshot};
-
-    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
-    pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -> Result<(En1997Snapshot, Vec<String>), String> {
-        let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);
-        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-        Ok((applied, messages))
-    }
-
-    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-    pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
-        <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(mutation, base)
-    }
-}
 pub use mutation_bridge::*;
-//#endregion 🌉️ExternalCodecBridge

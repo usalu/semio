@@ -1,14 +1,15 @@
 //! 🩹️ Fem3d play app command — `patch-load`: one-field edit of a load (`nodeId`, `dof`, `value`,
 //! `elementId`, `wx`, `wy`, `wz`, `solidId`, `pressure`) → `ReplaceLoad`.
 
-use crate::editor::fem3d::interaction::fem3d_load_owner;
-use crate::standards::v1::subsets::any::schema::mutations::replace_load;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{FemDof, FemLoad};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️PatchLoad
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -58,7 +59,4 @@ pub fn handle(payload: &PatchLoad, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: 
 //#endregion 🔖️PatchLoad
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

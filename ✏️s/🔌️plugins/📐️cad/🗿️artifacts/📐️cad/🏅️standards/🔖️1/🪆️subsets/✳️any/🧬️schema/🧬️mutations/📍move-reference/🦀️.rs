@@ -18,11 +18,11 @@ pub struct MoveReference {
 
 impl<Op> MutationKind<CadSnapshot, Op> for MoveReference
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::move_reference::MoveReference>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::move_reference::MoveReference>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "reference", kind: "move-reference", record: "MovedReference" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

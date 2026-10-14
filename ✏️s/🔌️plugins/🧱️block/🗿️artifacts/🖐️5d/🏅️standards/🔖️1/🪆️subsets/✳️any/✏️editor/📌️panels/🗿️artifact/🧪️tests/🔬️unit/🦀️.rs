@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::block5d::terminology::block5d_labels;
-use crate::editor::block5d::unit_tests::context::{new_app, render as render_body};
+use crate::panels::document::*;
+use crate::terminology::block5d_labels;
+use crate::unit_tests::context::{new_app, render as render_body};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 fn oversized_document() -> Block5dSnapshot {
     let mut document = Block5dSnapshot::default();
     document.grip_kinds = (0..40)
-        .map(|index| crate::Block5dGripKind {
+        .map(|index| semio_s_artifact_block_5d_model::Block5dGripKind {
             id: format!("kind-{index:03}"),
             name: format!("kind-{index:03}"),
             label: format!("Kind {index}"),
@@ -51,7 +51,7 @@ fn oversized_document() -> Block5dSnapshot {
         })
         .collect();
     document.grips = (0..160)
-        .map(|index| crate::Block5dGripTemplate {
+        .map(|index| semio_s_artifact_block_5d_model::Block5dGripTemplate {
             id: format!("grip-{index:03}"),
             grip_kind: format!("kind-{:03}", index % 40),
             angle: index as f64 * 0.01,

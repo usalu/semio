@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::generation3d::transient::mutations::*;
-use crate::editor::generation3d::transient::Generation3dTransient;
+use crate::mutations::*;
+use crate::Generation3dTransient;
 
 impl protocol::OpText for Generation3dTransientMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -30,8 +30,8 @@ impl protocol::OpText for Generation3dTransientMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::generation3d::transient::mutations::*;
-use crate::editor::generation3d::transient::Generation3dTransient;
+use crate::mutations::*;
+use crate::Generation3dTransient;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dTransient`.

@@ -102,10 +102,10 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   const { testPlaygroundPreferences } = await import("../../../🎮️playground/🔒️preferences/🧪️tests/🔒️playground-preferences/🟦️.ts");
   await testPlaygroundPreferences();
   await testBrowserModuleRelocation(workspace);
-  await testBrowserDistribution(workspace, output);
+  await testBrowserDistribution(workspace, output,invocation);
   const { testProductionBrowserArtifacts } = await import("../../../../../../💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts");
   await testProductionBrowserArtifacts(workspace, output);
-  await testServiceReadiness(workspace, output);
+  await testServiceReadiness(workspace, output,invocation);
   await testBunDependencies(workspace, output);
   await testNativePreparation(workspace, output, invocation);
   const { testGeneratorOwnership, testWgpuGeneratorOwnership, testWgpuGeneratorPublication, testBrowserTransportOwnership, testBrowserInputClosure } = await import("../🧬️generator-ownership/🟦️.ts");
@@ -136,7 +136,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
     const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
-    const inputs = cacheInternals.projectInputs({ name: "fixture", targets: {} }, "domain/📦️packages/🦀️rust", root, new Map());
+    const inputs = await cacheInternals.projectInputs({ name: "fixture", targets: {} }, "domain/📦️packages/🦀️rust", root, new Map());
     assert.ok(Array.isArray(inputs.nativeSources), "Cargo projects need separate native source inputs");
     const match = (path: string) => {
       const positive = inputs.nativeSources.filter((item: unknown) => typeof item === "string" && !item.startsWith("!")).map((s: string) => s.replace("{workspaceRoot}/", "").replace("{projectRoot}/", "domain/📦️packages/🦀️rust/"));
@@ -149,14 +149,14 @@ export async function testCommandInputs(workspace: string, output: string, invoc
     assert.equal(rust.exitCode, 0, rust.stderr.toString());
     const dependencies = readFileSync(depfile, "utf8");
     for (const path of cases.included.filter((s: string) => !s.endsWith("Cargo.toml"))) assert.ok(dependencies.includes(join(root, path)), `rustc did not consume ${path}`);
-    const entry = join(workspace, library, "⚡️caching/🦀️cargo/📜️script.ts"), actual = cacheInternals.relativeScriptInputs([entry], workspace);
+    const entry = join(workspace, library, "⚡️caching/🦀️cargo/📜️script.ts"), actual = await cacheInternals.relativeScriptInputs([entry], workspace);
     const built = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     const expected = Object.keys(built.metafile.inputs).map((path) => "{workspaceRoot}/" + relative(workspace, resolve(workspace, path))).sort();
     const missing = expected.filter((path: string) => !actual.includes(path)), extra = actual.filter((path: string) => !expected.includes(path));
     assert.deepEqual({ missing: missing.slice(0, 20), extra: extra.slice(0, 20) }, { missing: [], extra: [] }, "Command import ownership must match the runtime compiler");
     for (const [path, content] of Object.entries(cases.commandRouter.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     assert.equal(typeof cacheInternals.nativeTargetCommandInputs, "function", "Native target normalization must inspect its executable router");
-    const routerInputs = cacheInternals.nativeTargetCommandInputs({ options: { cwd: cases.commandRouter.cwd, command: cases.commandRouter.command } }, root, []);
+    const routerInputs = await cacheInternals.nativeTargetCommandInputs({ options: { cwd: cases.commandRouter.cwd, command: cases.commandRouter.command } }, root, []);
     const routerPaths = routerInputs.filter((input: unknown) => typeof input === "string").map((input: string) => input.replace("{workspaceRoot}/", ""));
     for (const path of cases.commandRouter.included) assert.ok(routerPaths.includes(path), `missing native command input ${path}`);
     for (const path of cases.commandRouter.excluded) assert.ok(!routerPaths.includes(path), `unrelated native command input ${path}`);
@@ -244,7 +244,7 @@ export async function testBunDependencies(workspace: string, output: string): Pr
   for (const row of cases.resolutions) assert.equal(graph.resolve(row.from, row.name), row.key);
   for (const row of cases.importers) assert.equal(graph.resolveImport(row.file, row.name), row.key);
   for (const name of cases.unresolvedImports) assert.equal(graph.resolveImport("domain/📜️script.ts", name), undefined);
-  const native = cacheInternals.cargoTargets("🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", workspace).build.inputs;
+  const native = await cacheInternals.nativeTargetCommandInputs((await cacheInternals.cargoTargets("🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", workspace)).build,workspace);
   assert.deepEqual(native.flatMap((input: any) => input.externalDependencies ?? []), cases.nativeInputs.externalDependencies);
   for (const path of cases.nativeInputs.excluded) assert.equal(native.includes(path), false);
   const { HashPlanner, transferProjectGraph } = require("nx/src/native"), { transformProjectGraphForRust } = require("nx/src/native/transform-objects");
@@ -412,7 +412,7 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
       assert.deepEqual(target.dependsOn, row.targets);
       assert.deepEqual(target.inputs.find((input: any) => input.projects)?.projects ?? [], [...visited].map((id) => (packages.get(id) as any).name).filter((name) => name !== row.root).sort());
     }
-    const declared = cacheInternals.projectInputs({ name: "fixture", namedInputs: { nativeSources: ["{workspaceRoot}/external.bin"] }, targets: {} }, "app", root, new Map());
+    const declared = await cacheInternals.projectInputs({ name: "fixture", namedInputs: { nativeSources: ["{workspaceRoot}/external.bin"] }, targets: {} }, "app", root, new Map());
     assert.ok(declared.nativeTestSources.includes("{workspaceRoot}/external.bin"), "tests inherit declared production native inputs");
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
@@ -833,7 +833,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
     for (const name of ["test", "lint", "build", "verify"]) assert.equal(workspace.targets[name]?.cache, true, name);
     assert.equal(workspace.targets.dev, undefined, "the playground variant switch is dissolved: playgrounds are dashboard commands");
-    assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
+    assert.equal((await cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root)).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
     const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);

@@ -7,17 +7,28 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
 
 
 #[cfg(test)]
 
 
-use crate::standards::v1::subsets::any::io::text::snapshot::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
-    WidgetLayoutDsl,
-};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_io_text::snapshot::camera_from_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::camera_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::form_generation_from_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::form_generation_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::layout_from_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::layout_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::synapse_from_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::synapse_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::widget_from_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::widget_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::CameraJsonDsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::FormGenerationDsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::SynapseSpecDsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::WidgetDsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::WidgetLayoutDsl;
+#[cfg(test)] use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::OpBinary;
 
 //#region 🔖️OpTextMirror
@@ -295,7 +306,7 @@ pub const GENERATION2D_FORBIDDEN_3D_DISCRIMINATOR: [u8; 4] = *b"P3D3";
 
 #[cfg(test)]
 pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::*;
+    use semio_s_artifact_procedural_2d_mutations::*;
     let synapse = semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };
     let mut values = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
     values.insert("nested".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"array": [true, null, 3.5], "text": "retained"})));
@@ -316,13 +327,13 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
         clear_widget_layout("retained-a".into()),
         update_camera(semio_framework_artifact_flow_flow::CameraJson { x: 3.0, y: 4.0, zoom: 1.5 }),
         change_schema("flow.host_snapshot.retained".into()),
-        Generation2dMutation::CreateGeneration(crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: Some(0) }),
+        Generation2dMutation::CreateGeneration(semio_s_artifact_procedural_2d_mut_generations::create_generation::CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: Some(0) }),
         delete_generation("retained-generation".into()),
         rename_generation("retained-generation".into(), "Renamed Generation".into()),
         change_generation_value("retained-generation".into(), "deep-answer".into(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"object": {"array": [1.0, false, "value"]}}))),
         change_slider_value("retained-slider", 7.25),
         move_nodes(vec!["retained-a".into(), "retained-b".into()], 12.5, -4.0),
-        crate::standards::v1::subsets::any::schema::mutations::select_generation("retained-generation".to_string().into()),
+        semio_s_artifact_procedural_2d_mut_generations::select_generation("retained-generation".to_string().into()),
     ]
 }
 
@@ -330,7 +341,11 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 
-use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
-#[cfg(test)] use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
+use semio_s_artifact_procedural_2d_io_text::mutations::Generation2dOperationDsl;
+use semio_s_artifact_procedural_2d_io_text::mutations::generation2d_operation_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::mutations::generation2d_operation_from_dsl;
+#[cfg(test)] use semio_s_artifact_procedural_2d_mutations::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
 #[cfg(test)]
-use crate::central_apply::{generation2d_apply_retained_mutations_for_test, generation2d_retire_mutations_cold};
+use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_apply_retained_mutations_for_test;
+#[cfg(test)]
+use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire_mutations_cold;

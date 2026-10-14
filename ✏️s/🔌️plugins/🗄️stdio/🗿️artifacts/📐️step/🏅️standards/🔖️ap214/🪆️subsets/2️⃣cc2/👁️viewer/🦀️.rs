@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation;
-use crate::standards::v_ap214::subsets::cc2::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation;
+use semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::schema::snapshot::StepSnapshot;
 use crate::viewer::step_cc2::modes::view;
 use crate::viewer::step_cc2::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
@@ -72,7 +72,7 @@ impl ArtifactViewer for StepCc2Viewer {
     const DOCUMENT_SCHEMA: &'static str = STEP_CC2_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> StepSnapshot {
-        <crate::standards::v_ap214::subsets::cc2::io::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc2::io::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc2 initial owner")
+        <semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::io::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::io::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc2 initial owner")
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

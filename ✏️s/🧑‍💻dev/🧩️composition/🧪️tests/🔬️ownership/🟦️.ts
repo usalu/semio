@@ -8,13 +8,23 @@ import { parse } from "@iarna/toml";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
-const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")) as { package: string; suites: { target: string; path: string; targetPath: string; previousPath: string; sha256: string; laws: string[] }[]; retainedArtifactUnits: { path: string; sha256: string; laws: string[] }[] };
+const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json")) as { package: string; suites: { target: string; path: string; targetPath: string; previousPath: string; sha256: string; laws: string[] }[]; retainedArtifactUnits: RetainedArtifactUnit[] };
+/** 🧩️ One retained artifact test file: the family package and Cargo target that compile it and its exact laws. */
+type RetainedArtifactUnit = { path: string; package: string; target: { kind: "lib" | "test"; name: string }; sha256: string; laws: string[] };
+/** 🏷️ The selection that names every retained artifact unit group at once. */
+export const RETAINED_ARTIFACT_UNITS = "retained-artifact-units";
+const unitKey = (unit: RetainedArtifactUnit) => `${unit.package} ${unit.target.kind} ${unit.target.name}`;
+
+/** 🧩️ Each retained artifact unit runs in the family package and Cargo target that compile it. */
+export function retainedLawGroups() {
+  return [...new Map(fixture.retainedArtifactUnits.map(unit => [unitKey(unit), unit])).values()].map(owner => ({ package: owner.package, target: owner.target, laws: fixture.retainedArtifactUnits.filter(unit => unitKey(unit) === unitKey(owner)).flatMap(unit => unit.laws) }));
+}
 
 /** 🧾️ Each Cargo target executes the exact preserved laws in its own process. */
 export function compositionLawGroups() {
   return [
     ...[...new Set(fixture.suites.map(suite => suite.target))].map(target => ({ package: fixture.package, target: { kind: "test" as const, name: target }, laws: fixture.suites.filter(suite => suite.target === target).flatMap(suite => suite.laws) })),
-    ...(fixture.retainedArtifactUnits.length ? [{ package: "semio-s-artifact-procedural-generation3d", target: { kind: "lib" as const, name: "semio_s_artifact_procedural_generation3d" }, laws: fixture.retainedArtifactUnits.flatMap(suite => suite.laws) }] : []),
+    ...retainedLawGroups(),
   ];
 }
 
@@ -33,7 +43,7 @@ export function testCompositionOwnership(target?: string): void {
     assert(manifest.test.some((target: any) => target.name === suite.target && resolve(root, "📦️packages/🦀️rust", target.path) === resolve(root, suite.targetPath)), suite.target);
     for (const law of suite.laws) assert(source.includes(`fn ${law.split("::").at(-1)}(`), law);
   }
-  for (const suite of target === undefined || target === "semio_s_artifact_procedural_generation3d" ? fixture.retainedArtifactUnits : []) {
+  for (const suite of fixture.retainedArtifactUnits.filter(unit => target === undefined || target === RETAINED_ARTIFACT_UNITS || unit.target.name === target)) {
     const source = readFileSync(resolve(root, "../../..", suite.path), "utf8");
     assert.equal(createHash("sha256").update(source).digest("hex"), suite.sha256, suite.path);
     for (const law of suite.laws) assert(source.includes(`fn ${law.split("::").at(-1)}(`), law);
@@ -42,10 +52,13 @@ export function testCompositionOwnership(target?: string): void {
   const targetNames = new Set(compositionLawGroups().map(group => group.target.name));
   for (const [name, declaration] of Object.entries(project.targets)) {
     const selected = declaration.options?.command?.match(/(?:^|\s)--test\s+(\S+)/)?.[1];
-    if (selected !== undefined) assert(targetNames.has(selected), `${name}: unknown native law target ${selected}`);
+    if (selected !== undefined) assert(targetNames.has(selected) || selected === RETAINED_ARTIFACT_UNITS, `${name}: unknown native law target ${selected}`);
   }
-  const artifact = parse(read("../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml")) as { package: { name: string }; lib: { name?: string } };
-  for (const group of compositionLawGroups().filter(group => group.target.kind === "lib")) {
-    assert.equal(group.target.name, artifact.lib.name ?? artifact.package.name.replaceAll("-", "_"));
+  const family = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d";
+  const members = (parse(read(`${family}/Cargo.toml`)) as { workspace: { members: string[] } }).workspace.members.map(member => parse(read(`${family}/${member}/Cargo.toml`)) as { package: { name: string }; lib?: { name?: string }; test?: { name: string }[] });
+  for (const unit of fixture.retainedArtifactUnits) {
+    const owner = members.find(member => member.package.name === unit.package);
+    assert(owner, unit.package);
+    assert(unit.target.kind === "lib" ? unit.target.name === (owner.lib?.name ?? owner.package.name.replaceAll("-", "_")) : (owner.test ?? []).some(test => test.name === unit.target.name), `${unit.package} ${unit.target.name}`);
   }
 }

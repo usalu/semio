@@ -1,5 +1,5 @@
 //! 🕸️ One authored mesh cell visitor supplies owned SQL and borrowed semantic admission.
-use crate::{LowpolyMeshState,LowpolyMeshAttributeDomain as Domain,LowpolyMeshAttributeSemantic as Semantic,LowpolyMeshAttributeInterpolation as Interpolation};
+use crate::{managed_mesh::LowpolyMeshState, managed_mesh::LowpolyMeshAttributeDomain as Domain, managed_mesh::LowpolyMeshAttributeSemantic as Semantic, managed_mesh::LowpolyMeshAttributeInterpolation as Interpolation};
 use store::sqlite_snapshot::artifact::{RowWriter,Cell,FloatColumn};
 use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind};
 const VERTEX:&[FloatColumn]=&[FloatColumn::Binary32(3),FloatColumn::Binary32(4),FloatColumn::Binary32(5),FloatColumn::Binary32(6),FloatColumn::Binary32(7),FloatColumn::Binary32(8)];

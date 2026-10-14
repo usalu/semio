@@ -1,8 +1,7 @@
 //! ♨️ Energy model mutation — `ChangeMaterialSpecificHeat`: Sets specific heat (J/kg·K) on one material, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeMaterialSpecificHeat {
     pub new_specific_heat_j_kg_k: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_material_specific_heat(id: crate::model::EntityId, new_specific_heat_j_kg_k: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeMaterialSpecificHeat(ChangeMaterialSpecificHeat { id, new_specific_heat_j_kg_k })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_material_specific_heat<Op: From<ChangeMaterialSpecificHeat>>(id: crate::model::EntityId, new_specific_heat_j_kg_k: f64) -> Op {
+    ChangeMaterialSpecificHeat { id, new_specific_heat_j_kg_k }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeMaterialSpecificHeat {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeMaterialSpecificHeat
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeMaterialSpecificHeat>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material", kind: "change-material-specific-heat", record: "ChangedMaterialSpecificHeat" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -553,7 +553,7 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     assert_eq!((field("documentId"), field("schema"), field("name"), field("storage"), field("target")), (imported.id.clone(), S_SPACE_SCHEMA.to_owned(), name.to_owned(), "folder".to_owned(), String::new()));
     let pack = protocol::base64_standard_decode(field("pack")).expect("the pack is base64");
     let spr = protocol::base64_standard_decode(field("spr")).expect("the spr is base64");
-    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr)).expect("the kept pair parses");
+    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("the kept pair parses");
     let envelope = parsed.into_envelope();
     let same = envelope.id == imported.id && envelope.schema == S_SPACE_SCHEMA;
     envelope.retire_unadopted();

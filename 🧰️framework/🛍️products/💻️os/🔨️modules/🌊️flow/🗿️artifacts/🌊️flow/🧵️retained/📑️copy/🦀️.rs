@@ -579,18 +579,16 @@ impl<R:RetireOwned+Sync> FlowHostSnapshotCopy<R>{
         let cursor=CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory_close:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,factory_source:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})};let copy=Self{cursor};match cx.consume_retained(progress){Ok(())=>Ok(copy),Err(error)=>Err((error.into(),FlowSnapshotCopyIntakeSource::Copy(copy)))}
     }
 }
-/// 🗿️ The existing typed copy keeps its concrete original read behind the normal session's funded intake owner.
-pub trait FlowHostSnapshotIntake:Send{
-    fn next_normal_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
-    fn advance(&mut self,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<usize>,semio_framework_job::OriginalTurnFailure>;
-    fn complete(&self)->bool;
-    fn take(&mut self)->Option<FlowHostSnapshot>;
-    fn begin_close(&mut self);
-    fn next_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
-    fn terminal_is_empty(&self)->bool;
+/// 🏭️ The concrete Flow copy producer retains the original Store projection function.
+pub struct FlowSnapshotIntakeProducer<R:RetireOwned+Sync>{pub project:for<'source>fn(&'source R)->&'source FlowHostSnapshot}
+impl<R:RetireOwned+Sync+'static> semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<R>> for FlowSnapshotIntakeProducer<R>{
+ type Intake=FlowHostSnapshotCopy<R>;
+ type Rejected=FlowSnapshotCopyIntakeSource<R>;
+ fn source_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>())}
+ fn preserve_source(&self,source:SnapshotRead<R>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
+ fn admit(&self,source:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,self.project,revision,source_generation,cx)}
 }
-impl<R:RetireOwned+Sync> FlowHostSnapshotIntake for FlowHostSnapshotCopy<R>{
+impl<R:RetireOwned+Sync> semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot> for FlowHostSnapshotCopy<R>{
     fn next_normal_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.next_normal_demands(body)}
     fn advance(&mut self,revision:[u8;32],cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<usize>,semio_framework_job::OriginalTurnFailure>{self.advance(revision,cx)}
     fn complete(&self)->bool{self.complete()}

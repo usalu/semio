@@ -1,42 +1,49 @@
 //! 🧬️ En1998 artifact — closed semantic mutation dispatch enum.
 
-use crate::diff::En1998Diff;
-use crate::En1998Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1998_diff::En1998Diff;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
-pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1998_mutation, inverse_en1998_mutation};
+pub use crate::edit_rules::EDIT_RULES;
 
-use super::change_annex;
-use super::update_site;
-use super::insert_building;
-use super::remove_building;
-use super::change_system_v_rd_n;
-use super::change_storey_permanent_gk_n;
-use super::change_storey_stiffness_x;
-use super::change_storey_drift_xm;
-use super::change_building_plan_regular;
-use super::change_elevation_regular;
-use super::change_member_detailing;
-use super::change_masonry_wall_ratio;
-use super::insert_bridge;
-use super::change_bridge_v_rd_n;
-use super::insert_assessment;
-use super::change_assessment_rkn;
-use super::insert_silo;
-use super::insert_tank;
-use super::insert_foundation;
-use super::insert_retaining_wall;
-use super::insert_tower;
-use super::change_tower_m_rd_nm;
-use super::remove_bridge;
-use super::remove_assessment;
-use super::remove_silo;
-use super::remove_tank;
-use super::remove_foundation;
-use super::remove_retaining_wall;
-use super::remove_tower;
+use semio_s_artifact_norm_en1998_mut_buildings::change_annex;
+use semio_s_artifact_norm_en1998_mut_buildings::update_site;
+use semio_s_artifact_norm_en1998_mut_buildings::insert_building;
+use semio_s_artifact_norm_en1998_mut_buildings::remove_building;
+use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm;
+use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular;
+use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular;
+use semio_s_artifact_norm_en1998_mut_members::change_member_detailing;
+use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n;
+use semio_s_artifact_norm_en1998_mut_members::insert_assessment;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge;
+use semio_s_artifact_norm_en1998_mut_members::remove_assessment;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -114,23 +121,30 @@ fn replace_all<T: Clone>(base: &[T], target: &[T], remove: impl Fn(usize) -> En1
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 //#endregion 🧪️Tests
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_en1998_mutation(base: &semio_s_artifact_norm_en1998_model::En1998Snapshot, mutation: &crate::En1998Mutation) -> Result<(semio_s_artifact_norm_en1998_model::En1998Snapshot, Vec<String>), String> {
+    let raised = <crate::En1998Mutation as protocol::Mutation<semio_s_artifact_norm_en1998_model::En1998Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_en1998_mutation(mutation: &crate::En1998Mutation, base: &semio_s_artifact_norm_en1998_model::En1998Snapshot) -> Result<Vec<crate::En1998Mutation>, semio_framework_value::ValueError> {
+    <crate::En1998Mutation as protocol::Mutation<semio_s_artifact_norm_en1998_model::En1998Snapshot>>::inverse(mutation, base)
+}
+}
+pub use crate::mutation_bridge::*;

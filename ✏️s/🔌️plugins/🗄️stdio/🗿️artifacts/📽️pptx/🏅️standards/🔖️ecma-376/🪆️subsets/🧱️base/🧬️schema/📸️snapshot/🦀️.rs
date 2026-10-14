@@ -9,10 +9,15 @@
 //! variants are derived projections. Unmodeled XML parts use `XmlDocument`; binary media
 //! retain their genuine content bytes in `opc`.
 
-use crate::STDIO_PPTX_DOCUMENT_SCHEMA;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_PPTX_DOCUMENT_SCHEMA: &str = "stdio.pptx";
+/// 🧬️ Artifact schema descriptor id.
+pub const PPTX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pptx";
 
 //#region 🔖️PptxModel
 /// ✍️ One `a:r` run — same shape as `docx::DocxRun` (shared text-model convention), plus
@@ -205,17 +210,7 @@ impl PptxSnapshot {
 
 //#region 🔖️HandcraftedArtifactCodecs
 
-
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️shadow/🦀️.rs"]
-mod shadow_tests;
 //#endregion 🔖️HandcraftedArtifactCodecs
-
-
-
-
 
 #[path = "🛡️subset/🦀️.rs"]
 pub(crate) mod subset;

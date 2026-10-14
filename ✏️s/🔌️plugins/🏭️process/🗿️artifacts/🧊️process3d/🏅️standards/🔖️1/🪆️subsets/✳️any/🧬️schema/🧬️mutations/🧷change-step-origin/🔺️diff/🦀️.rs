@@ -1,9 +1,9 @@
 //! 🔺️ `change-step-origin` sparse diff construction — sets (or clears) an id-keyed [`ProcessStep`]'s `origin` provenance in the
 //! durable `step_payloads` timeline. Error `target-missing` when the step is absent, Warning `no-op` when the origin is unchanged.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStepOrigin, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

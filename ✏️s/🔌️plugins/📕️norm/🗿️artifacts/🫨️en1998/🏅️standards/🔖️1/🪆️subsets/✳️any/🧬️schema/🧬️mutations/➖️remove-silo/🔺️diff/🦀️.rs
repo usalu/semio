@@ -1,8 +1,8 @@
 //! ➖️ `remove-silo` diff — removes the row at the index, guarded by the row's own id; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemoveSilo;
-use crate::diff::{En1998Diff, En1998SiloDelta};
-use crate::En1998Snapshot;
+use crate::remove_silo::RemoveSilo;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998SiloDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &RemoveSilo, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if payload.index >= base.silos.len() {

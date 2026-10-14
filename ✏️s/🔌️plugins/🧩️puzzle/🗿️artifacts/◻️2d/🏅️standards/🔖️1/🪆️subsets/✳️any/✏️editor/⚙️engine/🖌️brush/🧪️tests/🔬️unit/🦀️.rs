@@ -1518,7 +1518,7 @@ mod tests {
         let raw_candidates = brush_candidate_count_for_catalogs(&snapshot["meta"]["kindCatalogs"].to_string());
         assert_eq!(raw_candidates, 0, "pushing the document catalogs verbatim must install nothing, else this guard proves nothing");
 
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
+        let catalogs = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
         let translated_candidates = brush_candidate_count_for_catalogs(&catalogs);
         assert!(translated_candidates > 0, "translated document catalogs must yield brush candidates, got {translated_candidates}");
     }
@@ -1557,7 +1557,7 @@ mod tests {
     #[test]
     fn manifest_only_documents_resolve_engine_kind_catalogs() {
         let snapshot = json!({ "meta": { "manifestId": "nakagin" } });
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("nakagin manifest catalogs");
+        let catalogs = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json(&snapshot).expect("nakagin manifest catalogs");
         let parsed: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&catalogs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog json");
         let node_kinds = parsed["nodeKinds"].as_array().expect("nodeKinds slice");
         assert!(!node_kinds.is_empty(), "the nakagin manifest must contribute node kinds");
@@ -1606,7 +1606,7 @@ mod tests {
                 }
             }
         });
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
+        let catalogs = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
         let mut catalog_host = BoardHost::new();
         catalog_host.set_size(800, 600, 1.0);
         catalog_host.set_suggestion_offset(40.0);

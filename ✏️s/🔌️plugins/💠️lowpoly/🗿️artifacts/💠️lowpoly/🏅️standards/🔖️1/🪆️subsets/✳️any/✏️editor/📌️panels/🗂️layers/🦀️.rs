@@ -1,9 +1,9 @@
 //! 🗂️ Lowpoly play app panel — the active object's paint layer stack.
 
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{active_object, LowpolyView};
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_number};
-use crate::LowpolyPaintLayer;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{active_object, LowpolyView};
+use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_number};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -52,7 +52,4 @@ pub fn render(view: LowpolyView<'_>, labels: &LowpolyLabels, windows: &TreeWindo
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

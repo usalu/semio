@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::puzzle_catalog::*;
+use semio_s_artifact_block_2d_io_write::puzzle_catalog::*;
 
-use super::*;
-use crate::BlockKindIdentity;
-use crate::{BLOCK_2D_SCHEMA, Block2dHandleKind, Block2dHandleTemplate};
+use crate::*;
+use semio_s_plugin_block::BlockKindIdentity;
+use semio_s_artifact_block_2d_model::{BLOCK_2D_SCHEMA, Block2dHandleKind, Block2dHandleTemplate};
 use protocol::Inference;
 use std::f64::consts::FRAC_PI_2;
 

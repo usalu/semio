@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "additional-field",
+      "schema": false
+    },
+    {
+      "kind": "digest",
+      "schema": true
+    },
+    {
+      "kind": "bytes",
+      "schema": true
+    },
+    {
+      "kind": "missing-file",
+      "schema": true
+    },
+    {
+      "kind": "duplicate-path",
+      "schema": true
+    },
+    {
+      "kind": "escaping-path",
+      "schema": true
+    },
+    {
+      "kind": "noncanonical-base64",
+      "schema": false
+    },
+    {
+      "kind": "unsorted",
+      "schema": true
+    }
+  ]
+}

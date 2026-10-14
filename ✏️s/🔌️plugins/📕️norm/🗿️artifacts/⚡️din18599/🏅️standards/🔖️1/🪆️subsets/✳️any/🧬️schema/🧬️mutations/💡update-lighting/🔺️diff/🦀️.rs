@@ -1,8 +1,8 @@
 //! 🔺️ `update-lighting` sparse diff.
 
-use crate::mutations::update_lighting::UpdateLighting;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599LightingPatch};
+use crate::update_lighting::UpdateLighting;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599LightingPatch};
 
 pub fn diff(payload: &UpdateLighting, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

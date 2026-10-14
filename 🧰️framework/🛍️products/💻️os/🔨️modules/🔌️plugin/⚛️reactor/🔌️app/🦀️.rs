@@ -34,7 +34,7 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use crate::app_emission::ActionMeta;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::document_ingress::ArtifactStoreConstructorKind;
 use crate::document_ingress::ArtifactStoreConstructorPhase;
 use crate::media_contract::ArtifactMediaExportHandle;
@@ -44,7 +44,7 @@ use crate::peer_roster::PresenceRosterAdmission;
 use crate::peer_roster::PresenceRosterOutcome;
 use crate::reserved_jobs::FrameworkReservedCommitProgress;
 use crate::tool_contract::ToolOwnerWitness;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::store_publication::ComposedGestureResult;
 use crate::tool_contract::ArtifactToolPublicContract;
 use crate::tool_jobs::EmitWire;
@@ -477,19 +477,15 @@ pub trait PluginApp: Send + 'static {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"checked media submission has no owning source receiver").into())
     }
     /// 📡️ Advances exactly one bounded worker slice and returns current progress/checkpoint/result.
-    async fn poll_media_export(&mut self, _handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportPoll>,semio_framework_job::OriginalTurnFailure> {
+    async fn poll_media_export(&mut self, _handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<ArtifactMediaExportPoll>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media polling has no owning source receiver").into())
     }
     /// 🛑️ Cancels an externally held live export handle.
     async fn cancel_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
         Err(MediaError::NotImplemented)
     }
-    async fn retain_media_export_result(&mut self, _handle: &ArtifactMediaExportHandle, _result: ArtifactMediaExportResult) -> Result<(), MediaError> {
-        Err(MediaError::NotImplemented)
-    }
-    async fn take_media_export_chunk(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
-        Err(MediaError::NotImplemented)
-    }
+    async fn retain_media_export_result(&mut self,_handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_source:&mut Option<ArtifactMediaExportPoll>,_status:&mut Option<crate::media_contract::ArtifactMediaExportPublishedStatus>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"download publication has no original receiving port").into())}
+    async fn take_media_export_chunk(&mut self,_handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_receiver:&mut Option<Vec<u8>>,_terminal:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media chunk has no original receiving port").into())}
     /// 🧵️ Takes one bounded action-download chunk by its operation handle.
     async fn take_segmented_download_chunk(&mut self, _operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
         Err(plugin_sdk_fault("segmented download not implemented"))

@@ -25,8 +25,11 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, RunStyle};
 use semio_s_artifact_stdio_semio_presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxTransform};
-use semio_s_artifact_stdio_pptx::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

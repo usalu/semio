@@ -2,13 +2,13 @@
 //! transform/UV-unwrap operation runs here; paint operations are scoped on BOTH this window and the UV
 //! window since the paint utilities apply to both).
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{document_object_row_id, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{document_object_row_id, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
-use crate::editor::lowpoly::lowpoly_window_measures;
-use crate::schema::mesh_data_from_transfer;
+use crate::lowpoly_window_measures;
+use semio_s_artifact_lowpoly_lowpoly_model::mesh_data_from_transfer;
 use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
@@ -83,7 +83,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ The live chrome measures for this window, collected from the app-level `🛠️options/*` shared by
 /// both windows (see the master ticket's TEMPLATE.md §12.2 pattern).
 pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
-    lowpoly_window_measures(config, labels, &crate::editor::lowpoly::options::select::SelectState::default())
+    lowpoly_window_measures(config, labels, &semio_s_artifact_lowpoly_lowpoly_options::select::SelectState::default())
 }
 //#endregion 🔖️Definition
 
@@ -133,7 +133,7 @@ fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, act
     }
     // 🧲️ The composable gumball: every handle group the window toggles left on shows at once
     // (`UnifiedGumball` reads `gumballConfig` over the single-mode `transformMode` fallback).
-    let handles = crate::editor::lowpoly::options::gumball::GumballHandles::from_config(config);
+    let handles = semio_s_artifact_lowpoly_lowpoly_options::gumball::GumballHandles::from_config(config);
     entries.push((
         "gumballConfig".to_string(),
         semio_framework_value::DslValue::object([
@@ -263,7 +263,7 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
                 world_meshes_json(loaded, texture_cache),
                 world_instances_json(view),
                 world_selection_json_for(view, loaded, active_utility, selection),
-                &crate::editor::lowpoly::config::lowpoly_sun_config(config),
+                &semio_s_artifact_lowpoly_lowpoly_config::lowpoly_sun_config(config),
             );
             // 🕹️ Bound to the "mesh" domain: object hits resolve through each instance's `interactionId`,
             // component hits through `<interactionId>.<granularity>.<id>` (`World3dHost`).
@@ -277,9 +277,6 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
 //#endregion 🔖️Scene
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
-use crate::standards::v1::subsets::any::schema::inferences::euler_degrees_to_quaternion;
+use semio_s_artifact_lowpoly_lowpoly_inferences::euler_degrees_to_quaternion;

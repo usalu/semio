@@ -7,11 +7,16 @@ static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWit
 mod typed_input_law;
 
 use semio_framework_plugin::{authoring_law::author_through_document_store, ArtifactEditor, EditorApp};
-use semio_s_artifact_block_3d::editor::block3d::Block3dPlayApp;
-use semio_s_artifact_block_3d::standards::v1::subsets::any::schema::mutations::{
-    change_object_kind_label::change_object_kind_label, create_representation::create_representation, create_vortex::create_vortex, move_camera3d::move_camera3d, rename_object_kind::rename_object_kind, scale_camera3d::scale_camera3d,
-};
-use semio_s_artifact_block_3d::{Block3dMutation, Block3dSnapshot, Block3dVortexTemplate, BlockAttribute, BlockRepresentation};
+use semio_s_artifact_block_3d_editor::Block3dPlayApp;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_label::change_object_kind_label;
+use semio_s_artifact_block_3d_mut_representations::create_representation::create_representation;
+use semio_s_artifact_block_3d_mut_vortices::create_vortex::create_vortex;
+use semio_s_artifact_block_3d_mut_meta::move_camera3d::move_camera3d;
+use semio_s_artifact_block_3d_mut_object_kind::rename_object_kind::rename_object_kind;
+use semio_s_artifact_block_3d_mut_meta::scale_camera3d::scale_camera3d;
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexTemplate};
+use semio_s_plugin_block::{BlockAttribute, BlockRepresentation};
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use std::sync::Arc;
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};

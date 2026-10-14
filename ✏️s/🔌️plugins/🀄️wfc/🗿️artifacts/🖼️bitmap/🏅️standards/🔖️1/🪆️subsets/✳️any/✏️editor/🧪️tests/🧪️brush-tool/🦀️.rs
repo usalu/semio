@@ -364,7 +364,7 @@ fn a_mounted_blur_ends_the_open_stroke_with_zero_trace() {
 fn a_stroke_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new(store::os_store::document_materialize::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<BitmapSnapshot, BitmapMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, ([0]).to_vec())];
         for mutation in &log {

@@ -18,45 +18,54 @@
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::{Iso16757Diff, Iso16757Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
 
 //#region 🔖️Mutations
-use super::add_selection_constraint;
+use semio_s_artifact_norm_iso16757_mut_selection::add_selection_constraint;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
 //#region 🔖️Leaves
-use super::change_exchange_process;
-use super::change_part_number_input;
-use super::change_selection_class;
-use super::change_selection_series;
-use super::introduce_product;
-use super::introduce_product_group;
-use super::introduce_property_definition;
-use super::introduce_subject;
-use super::retire_product;
-use super::retire_product_group;
-use super::retire_property_definition;
-use super::retire_subject;
-use super::remove_part_number_input;
-use super::remove_selection_constraint;
-use super::rename_catalogue;
-use super::rename_manufacturer;
-use super::rename_product;
-use super::rename_product_group;
-use super::replace_part_number_rule;
-use super::change_script_limits;
-use super::introduce_product_class;
-use super::retire_product_class;
-use super::introduce_product_series;
-use super::retire_product_series;
-use super::introduce_product_index;
-use super::retire_product_index;
-use super::introduce_geometry_object;
-use super::retire_geometry_object;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_exchange_process;
+use semio_s_artifact_norm_iso16757_mut_selection::change_part_number_input;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_class;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_series;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_group;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_property_definition;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_subject;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_group;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_property_definition;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_subject;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_part_number_input;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_selection_constraint;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_catalogue;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_manufacturer;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product_group;
+use semio_s_artifact_norm_iso16757_mut_selection::replace_part_number_rule;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_script_limits;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_class;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_class;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_series;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_series;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_product_index;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_product_index;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -133,7 +142,6 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -153,13 +161,27 @@ mod tests;
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::Iso16757Mutation;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutation) -> Result<(Iso16757Snapshot, Vec<String>), String> {
+        let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+        <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use crate::mutation_bridge::*;

@@ -1,6 +1,6 @@
 //! 🧨️ `delete-mesh` — clears an object's `mesh` CHILD slot. Idempotent; inverse escrows from BASE.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -15,13 +15,16 @@ pub struct DeleteMesh {
     pub id: String,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for DeleteMesh {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for DeleteMesh
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::create_mesh::CreateMesh>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "mesh", kind: "delete-mesh", record: "DeletedMesh" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

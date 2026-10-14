@@ -2,7 +2,7 @@
 //! payload and BASE, never by applying and capturing.
 
 use crate::diff::{EnergyModelDiff, GroundTemperatureConfigPatch, ModelPatch};
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeGroundDeep, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

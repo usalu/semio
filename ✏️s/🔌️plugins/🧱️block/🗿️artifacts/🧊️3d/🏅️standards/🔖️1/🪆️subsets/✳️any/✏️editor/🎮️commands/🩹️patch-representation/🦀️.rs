@@ -1,8 +1,8 @@
 //! 🩹️ Block 3D play app command — `patch-representation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
-use crate::Block3dSnapshot;
-use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,7 +18,7 @@ pub fn handle(payload: &PatchRepresentation, doc: &ArtifactView<'_, Block3dSnaps
     if !doc.snapshot.representations.iter().any(|representation| representation.id == payload.id) {
         return Ok(Emit::default());
     }
-    use crate::standards::v1::subsets::any::schema::mutations as m;
+    use semio_s_artifact_block_3d_mutations as m;
     let mutation = match payload.field.as_str() {
         "name" => m::rename_representation(payload.id.clone(), payload.value.clone()),
         "meshUrl" | "mesh_url" => m::change_representation_mesh_url(payload.id.clone(), if payload.value.is_empty() { None } else { Some(payload.value.clone()) }),

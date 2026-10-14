@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-mode-edit",
+ "description": "Procedural generation3d edit mode: the node-graph flow window and the 3D preview window with its payload assembly and interaction marks",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+ "moves": [
+  {
+   "from": "editor::generation3d::modes::edit",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith"
+}

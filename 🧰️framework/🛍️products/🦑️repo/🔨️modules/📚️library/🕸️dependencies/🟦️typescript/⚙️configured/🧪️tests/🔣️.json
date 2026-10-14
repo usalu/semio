@@ -1,0 +1,121 @@
+{
+  "contract": {
+    "version": 1,
+    "entries": [
+      "app/entry.ts"
+    ],
+    "project": "tsconfig.json",
+    "packages": {
+      "fixture-domain": "domain/entry.ts"
+    },
+    "externalDependencies": [],
+    "maximumFiles": 32,
+    "maximumBytes": 65536
+  },
+  "files": {
+    "tsconfig.json": "{\"extends\":\"./base.json\",\"compilerOptions\":{\"target\":\"ES2022\"}}",
+    "app/entry.ts": "import { value } from '@/lib/value'; import data from '@/lib/data.json'; import { domain } from 'fixture-domain'; import type { Hidden } from './type.ts'; export const result = value + data.count + domain; export async function lazy(){return (await import('../source/lazy.ts')).lazy;}",
+    "app/type.ts": "export interface Hidden {secret:string}",
+    "source/value.ts": "export const value = 7;",
+    "source/data.json": "{\"count\":2}",
+    "source/lazy.ts": "export const lazy = 13;",
+    "domain/entry.ts": "export const domain = 3;",
+    "base.json": "{\"compilerOptions\":{\"moduleResolution\":\"bundler\",\"resolveJsonModule\":true,\"baseUrl\":\".\",\"paths\":{\"@/lib/*\":[\"source/*\"]}}}"
+  },
+  "expected": [
+    "app/entry.ts",
+    "base.json",
+    "domain/entry.ts",
+    "source/data.json",
+    "source/lazy.ts",
+    "source/value.ts",
+    "tsconfig.json"
+  ],
+  "result": 12,
+  "lazy": 13,
+  "changed": "export { value } from './replacement.ts';",
+  "replacement": "export const value = 17;",
+  "changedResult": 22,
+  "changedExpected": [
+    "app/entry.ts",
+    "base.json",
+    "domain/entry.ts",
+    "source/data.json",
+    "source/lazy.ts",
+    "source/replacement.ts",
+    "source/value.ts",
+    "tsconfig.json"
+  ],
+  "invalid": [
+    {
+      "source": "export const lazy = () => import(globalThis.path);",
+      "reason": "literal"
+    },
+    {
+      "source": "import value from '@/lib/missing'; export { value };",
+      "reason": "unresolved"
+    },
+    {
+      "source": "import value from 'undeclared-external'; export { value };",
+      "reason": "external"
+    }
+  ],
+  "priority": {
+    "original": "export const value = 7;",
+    "higher": "export const value = 27;",
+    "entry": "export { value } from './priority';",
+    "lower": "export const value = 3;"
+  },
+  "loaderCases": [
+    {
+      "source": "import {createRequire} from 'node:module'; const sdk=createRequire(import.meta.url); const dependency=sdk('pg');",
+      "expected": [
+        "node:module",
+        "pg"
+      ]
+    },
+    {
+      "source": "import {createRequire} from 'node:module'; const dependency=createRequire(new URL('./package.json',import.meta.url))('pg');",
+      "expected": [
+        "node:module",
+        "pg"
+      ]
+    }
+  ],
+  "byteCases": [
+    {
+      "filename": "absent-admitted.ts",
+      "source": "import {value} from './owned'; import type {Hidden} from './types'; export {other} from './next'; export async function lazy(){return import('./lazy');} export const result=value;",
+      "expected": ["./owned", "./next", "./lazy"]
+    }
+  ],
+  "configurationDiscovery": {
+    "expectedDirectoryReads": 0,
+    "maximumBytes": 1024,
+    "oversizedCharacters": 4096
+  },
+  "resolutionDiscovery": {
+    "maximumBytes": 1024,
+    "oversizedCharacters": 4096,
+    "entry": "import {value} from './nested'; export {value};",
+    "main": "index.ts",
+    "changedMain": "alternate.ts",
+    "changedSource": "export const value=2;",
+    "changedResult": 2,
+    "expected": ["entry.ts", "nested/index.ts", "nested/package.json", "tsconfig.json"],
+    "changedExpected": ["entry.ts", "nested/alternate.ts", "nested/package.json", "tsconfig.json"]
+  },
+  "declarationRuntime": {
+    "files": {
+      "tsconfig.json": "{\"compilerOptions\":{\"moduleResolution\":\"bundler\",\"baseUrl\":\".\",\"paths\":{\"typed-package\":[\"typed\"]}}}",
+      "entry.ts": "import {value} from \"typed-package\"; export const result=value;",
+      "typed/package.json": "{\"types\":\"index.d.ts\",\"main\":\"runtime.ts\"}",
+      "typed/index.d.ts": "export declare const value:number;",
+      "typed/runtime.ts": "export const value=31;"
+    },
+    "specifier": "typed-package",
+    "runtime": "typed/runtime.ts",
+    "reason": "declaration",
+    "result": 31
+  }
+}

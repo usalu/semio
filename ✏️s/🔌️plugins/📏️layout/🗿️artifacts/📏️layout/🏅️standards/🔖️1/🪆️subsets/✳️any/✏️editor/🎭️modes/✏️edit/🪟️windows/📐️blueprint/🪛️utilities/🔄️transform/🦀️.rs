@@ -9,12 +9,12 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §13).
 #![allow(unexpected_cfgs)]
 
-use crate::mutations::drag_frames::DragFrames;
-use crate::mutations::rotate_frames::RotateFrames;
-use crate::mutations::scale_frames::ScaleFrames;
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
-use machine::Command;
+use semio_s_artifact_layout_layout_mutations_frames::drag_frames::DragFrames;
+use semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames;
+use semio_s_artifact_layout_layout_mutations_frames::scale_frames::ScaleFrames;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use crate::modes::edit::windows::blueprint::transform::machine::Command;
 use semio_framework_plugin::Emit;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NoConfigMutation;
@@ -102,7 +102,7 @@ impl LayoutFrameRecord {
     /// 🔎️ Whether this record moves anything on `base`: an admissible non-identity motion and at least one target that
     /// is an unlocked frame of its page.
     pub fn applies_to(&self, base: &LayoutSnapshot) -> bool {
-        self.moves() && self.target_frames(base).any(|(page, frame)| !crate::frame_edits_blocked(base, page, frame))
+        self.moves() && self.target_frames(base).any(|(page, frame)| !semio_s_artifact_layout_layout_model::frame_edits_blocked(base, page, frame))
     }
 
     /// 🔒️ The tool-level refusal: the motion moves, yet every target that is a frame of the page is locked. A record with
@@ -111,7 +111,7 @@ impl LayoutFrameRecord {
         self.moves() && !self.applies_to(base) && self.target_frames(base).next().is_some()
     }
 
-    fn target_frames<'a>(&'a self, base: &'a LayoutSnapshot) -> impl Iterator<Item = (&'a crate::Page, &'a crate::Frame)> + 'a {
+    fn target_frames<'a>(&'a self, base: &'a LayoutSnapshot) -> impl Iterator<Item = (&'a semio_s_artifact_layout_layout_model::Page, &'a semio_s_artifact_layout_layout_model::Frame)> + 'a {
         base.pages.iter().filter(|page| page.id == self.page_id).flat_map(move |page| page.frames.iter().filter(|frame| self.targets.iter().any(|id| id == frame.id())).map(move |frame| (page, frame)))
     }
 

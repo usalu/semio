@@ -1,9 +1,9 @@
 //! 📚️ EN 1990 play app panel — examples plus DE NA / EN ψ tables and importance factors.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::artifact_schema::{psi_for_category, NaDe, NaEn};
-use crate::document::{ClauseId, NationalAnnex};
-use crate::ImportanceClass;
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1990_checks::{psi_for_category, NaDe, NaEn};
+use semio_s_plugin_norm_compliance::{ClauseId, NationalAnnex};
+use semio_s_artifact_norm_en1990_model::ImportanceClass;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -14,7 +14,7 @@ use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 pub const BODY_CATALOGUE: &str = "norm.en1990.play.catalogue";
 
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 
 /// 📚️ Normative reference tables beside examples (EN 1990 A1.1 / DIN EN 1990/NA ψ + EN 1998-1 γ_I).
@@ -117,7 +117,7 @@ pub fn render(
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let tables = reference_tables();
-    crate::app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 
 #[cfg(test)]

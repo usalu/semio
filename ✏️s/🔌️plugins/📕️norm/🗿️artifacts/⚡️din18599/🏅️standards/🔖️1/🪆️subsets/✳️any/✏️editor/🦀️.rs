@@ -6,13 +6,21 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::document::NormHost;
-use crate::editor::din18599::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
-use crate::editor::din18599::modes::edit as edit_mode;
-use crate::editor::din18599::modes::edit::windows::{inputs, results};
-use crate::editor::din18599::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::NormHost;
+use crate::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
+use crate::modes::edit as edit_mode;
+use crate::modes::edit::windows::{inputs, results};
+use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_plugin::AppIo;
@@ -72,7 +80,7 @@ pub struct Din18599PlayApp;
 impl ArtifactEditor for Din18599PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source(), crate::examples::compliant_detached::source(), crate::examples::noncompliant_detached::source(), crate::examples::compliant_two_zone::source(), crate::examples::cooled_office::source()]
+        vec![semio_s_artifact_norm_din18599_examples::demo::source(), semio_s_artifact_norm_din18599_examples::compliant_detached::source(), semio_s_artifact_norm_din18599_examples::noncompliant_detached::source(), semio_s_artifact_norm_din18599_examples::compliant_two_zone::source(), semio_s_artifact_norm_din18599_examples::cooled_office::source()]
     }
     /// 🪆️ The derived `climateTable` child (`s.stdio.semio@v1/table`) opens through the stdio semio member family.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
@@ -89,11 +97,11 @@ impl ArtifactEditor for Din18599PlayApp {
 
     type Command = Din18599Command;
 
-    const DIALECT: Dialect = crate::DIN18599_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_norm_din18599_model::DIN18599_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.din18599/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        crate::app_surface::norm_artifact_store_preparation::<Self>()
+        semio_s_plugin_norm_app_surface::norm_artifact_store_preparation::<Self>()
     }
 
     semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
@@ -103,7 +111,7 @@ impl ArtifactEditor for Din18599PlayApp {
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        crate::app_surface::build_norm_tool_job::<Self>(request)
+        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -113,13 +121,13 @@ impl ArtifactEditor for Din18599PlayApp {
         artifact_schema: "semio.norm.din18599/v1",
         factory: "Din18599BoundedCommandJobFactory",
         factory_type: Din18599BoundedCommandJobFactory,
-        contract: crate::app_surface::norm_bounded_contract(),
+        contract: semio_s_plugin_norm_app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::app_surface::app_schema_descriptor())
+        Some(semio_s_plugin_norm_app_surface::app_schema_descriptor())
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -131,22 +139,22 @@ impl ArtifactEditor for Din18599PlayApp {
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::din18599_child_restore_projection(snapshot)
+        semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
-        Ok(crate::genesis_din18599_child_pack(snapshot, slot, child_id))
+        Ok(semio_s_artifact_norm_din18599_model::genesis_din18599_child_pack(snapshot, slot, child_id))
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+        Some(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
     fn command_id(command: &Din18599Command) -> &'static str {
         command.command_id()
     }
 
-    semio_s_plugin_norm_app_surface::norm_command_from_action!(Din18599Command, text, crate::standards::v1::subsets::any::io::text::snapshot::decode_din18599_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(Din18599Command, text, semio_s_artifact_norm_din18599_io::text::snapshot::decode_din18599_snapshot_json);
 
     fn handle(
         command: &Din18599Command,
@@ -157,7 +165,7 @@ impl ArtifactEditor for Din18599PlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Din18599Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        crate::app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
+        semio_s_plugin_norm_app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Din18599Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -170,8 +178,8 @@ impl ArtifactEditor for Din18599PlayApp {
             results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
             document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
-            _ => crate::app_surface::render_unknown_body(body_key, view_state.locale),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, semio_s_plugin_norm_results_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
+            _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
@@ -181,26 +189,26 @@ impl ArtifactEditor for Din18599PlayApp {
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, Din18599Snapshot>) -> Result<Media, MediaError> {
-        crate::app_surface::export_media::<DinV18599Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
+        semio_s_plugin_norm_app_surface::export_media::<DinV18599Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Din18599Snapshot>) -> Result<Emit<Din18599Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media)
+        semio_s_plugin_norm_app_surface::import_media(port, media)
     }
     //#endregion ðï¸MediaPorts
 }
 //#endregion ðï¸Din18599PlayApp
 
 //#region 🧵️RetainedCommands
-crate::norm_owned_tool_job_factory!(Din18599BoundedCommandJobFactory, Din18599PlayApp);
+semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory!(Din18599BoundedCommandJobFactory, Din18599PlayApp);
 
-impl crate::app_surface::NormRetainedEditor for Din18599PlayApp {
+impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Din18599PlayApp {
     type Family = DinV18599Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
 
-    fn selected_check_window_mutation(command: &Din18599Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
+    fn selected_check_window_mutation(command: &Din18599Command) -> Option<semio_s_plugin_norm_results_config::NormResultsWindowConfigMutation> {
         match command {
             Din18599Command::SetSelectedCheckIndex(payload) => Some(selected_check::window_mutation(payload)),
             _ => None,
@@ -219,16 +227,16 @@ impl crate::app_surface::NormRetainedEditor for Din18599PlayApp {
 /// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
 pub struct DinV18599Family;
 
-impl crate::document::NormFamily for DinV18599Family {
+impl semio_s_plugin_norm_compliance::NormFamily for DinV18599Family {
     type Document = Din18599Snapshot;
     type Mutation = Din18599Mutation;
 
-    fn family_id() -> crate::document::NormFamilyId {
-        crate::document::NormFamilyId::DinV18599
+    fn family_id() -> semio_s_plugin_norm_compliance::NormFamilyId {
+        semio_s_plugin_norm_compliance::NormFamilyId::DinV18599
     }
 
-    fn evaluate(document: &Din18599Snapshot) -> crate::document::CheckReport {
-        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    fn evaluate(document: &Din18599Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+        semio_s_artifact_norm_din18599_inferences::evaluate(document)
     }
 }
 
@@ -237,12 +245,12 @@ pub type Host = NormHost<DinV18599Family>;
 
 //#region ðï¸Manifest
 pub fn create_din18599_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::DIN18599_DIALECT)
+    Editor::builder(semio_s_artifact_norm_din18599_model::DIN18599_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifact_kind())
-            .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+            .artifact_kind(semio_s_artifact_norm_din18599_model::artifact_kind())
+            .io(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
-            .default_mode_id(crate::app_surface::MODE_EDIT)
+            .default_mode_id(semio_s_plugin_norm_app_surface::MODE_EDIT)
             .window_kind_def(inputs::definition())
             .window_kind_def(results::definition())
             .default_layout(edit_mode::layout())
@@ -313,3 +321,45 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]
+    pub mod apply_remedy;
+    #[path = "🎮️commands/🧮️evaluate/🦀️.rs"]
+    pub mod evaluate;
+    #[path = "🎮️commands/➕insert-item/🦀️.rs"]
+    pub mod insert_item;
+    #[path = "🎮️commands/➖remove-item/🦀️.rs"]
+    pub mod remove_item;
+    #[path = "🎮️commands/☑️selected-check/🦀️.rs"]
+    pub mod selected_check;
+    #[path = "🎮️commands/✏️set-field/🦀️.rs"]
+    pub mod set_field;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/📚️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

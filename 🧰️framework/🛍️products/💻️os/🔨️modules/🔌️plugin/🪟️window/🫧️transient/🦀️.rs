@@ -1,11 +1,11 @@
 //! 🫧️ Exact-window transient state with independent generation authority.
 
-use crate::store_lifecycle::ArtifactOwnedDisposer;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use super::window_config::registry::{WindowRegistry, fits};
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress};
 #[cfg(test)] use semio_framework_value::{RetainedCloneStep};
-use super::transient_publication::transient_store_disposer;
+use semio_framework_plugin_ownership::transient_publication::transient_store_disposer;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use std::any::Any;
@@ -40,7 +40,7 @@ pub trait WindowTransientOwner: Send + Sync + 'static {
     type State: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type Mutation: protocol::Mutation<Self::State> + PartialEq + Send + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
-    fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
+    fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_owners() -> WindowTransientOwnerBundle<Self::State, Self::Mutation>;
 }
 
@@ -139,7 +139,7 @@ pub(crate) struct WindowTransientAuthority {
     pub generation: u64,
     pub snapshot: WindowTransientSnapshot,
     pending_snapshot:Option<WindowTransientSnapshot>,
-    retired_snapshots:semio_framework_value::retirement::queue::RetirementQueue,
+    retired_snapshots:semio_framework_value::retirement_queue::RetirementQueue,
 }
 
 pub(crate) trait ErasedWindowTransientPublication: Send {

@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-din18599-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "DIN V 18599 inferences"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-din18599-checks = { workspace = true }
+semio-s-artifact-norm-din18599-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+serde = { workspace = true }

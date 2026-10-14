@@ -1,8 +1,8 @@
 //! 🔺️ `change-manufacturer-file` — sparse diff construction.
 
-use super::ChangeManufacturerFile;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805ManufacturerFilePatch};
+use crate::change_manufacturer_file::ChangeManufacturerFile;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805ManufacturerFilePatch};
 
 //#region 🔖️Diff
 /// 🏷️ Sparse header patch: `manufacturer_file` applies onto `catalog.file` (single stored header).

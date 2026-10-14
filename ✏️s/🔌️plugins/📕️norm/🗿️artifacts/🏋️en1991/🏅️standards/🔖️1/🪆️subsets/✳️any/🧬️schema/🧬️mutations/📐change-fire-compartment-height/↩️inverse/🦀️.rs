@@ -1,9 +1,9 @@
 //! Inverse for `change-fire-compartment-height`.
-use super::ChangeFireCompartmentHeight;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeFireCompartmentHeight, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_fire_compartment_height::ChangeFireCompartmentHeight;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeFireCompartmentHeight, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_fire_compartment_height::ChangeFireCompartmentHeight> {
     Ok((|| {
-    vec![En1991Mutation::ChangeFireCompartmentHeight(ChangeFireCompartmentHeight { new_fire_compartment_height: base.fire_compartment_height })]
+    vec![Op::from(ChangeFireCompartmentHeight { new_fire_compartment_height: base.fire_compartment_height })]
 
     })())
 }

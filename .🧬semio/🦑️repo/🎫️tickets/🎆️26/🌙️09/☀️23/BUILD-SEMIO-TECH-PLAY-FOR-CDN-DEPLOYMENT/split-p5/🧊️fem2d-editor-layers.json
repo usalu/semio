@@ -1,0 +1,132 @@
+{
+ "order": [
+  "transient",
+  "terminology",
+  "interaction",
+  "model-window",
+  "results-window",
+  "commands",
+  "session",
+  "panels",
+  "editor",
+  "aggregator"
+ ],
+ "allow": {
+  "interaction": [
+   "transient"
+  ],
+  "model-window": [
+   "interaction",
+   "transient"
+  ],
+  "results-window": [
+   "model-window",
+   "interaction",
+   "transient"
+  ],
+  "commands": [
+   "interaction",
+   "transient",
+   "terminology",
+   "model-window",
+   "results-window"
+  ],
+  "session": [
+   "model-window",
+   "interaction",
+   "transient"
+  ],
+  "panels": [
+   "commands",
+   "interaction",
+   "results-window",
+   "model-window",
+   "terminology",
+   "transient",
+   "session"
+  ],
+  "editor": [
+   "transient",
+   "terminology",
+   "interaction",
+   "model-window",
+   "results-window",
+   "commands",
+   "session",
+   "panels"
+  ],
+  "aggregator": [
+   "transient",
+   "terminology",
+   "interaction",
+   "model-window",
+   "results-window",
+   "commands",
+   "session",
+   "panels",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🫧️transient/",
+   "transient"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🗣️terminology/",
+   "terminology"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🕹️interaction/",
+   "interaction"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/",
+   "model-window"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/",
+   "results-window"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎮️commands/(🖱️canvas|🎯️focus|🎥️set-camera|⏯️|⏱️|👁️set-result|🧭️gumball)",
+   "editor"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎮️commands/",
+   "commands"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🧵️session/",
+   "session"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/📌️panels/",
+   "panels"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/",
+   "editor"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "aggregator"
+  ],
+  [
+   "🏅️standards/🔖️1/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

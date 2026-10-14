@@ -18,7 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
@@ -26,18 +25,18 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-draw-drawing-geometry = { workspace = true }
+semio-s-artifact-draw-drawing-host-arena = { workspace = true }
+semio-s-artifact-draw-drawing-host-digest = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
-semio-s-artifact-draw-drawing-transform = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-trace = { workspace = true }
-semio-s-artifact-draw-drawing-diff = { workspace = true }
 semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-s-artifact-draw-drawing-metadata = { workspace = true }
 semio-s-artifact-draw-drawing-style = { workspace = true }
+semio-s-artifact-draw-drawing-transform = { workspace = true }
 serde_json = { workspace = true }

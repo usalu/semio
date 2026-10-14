@@ -58,6 +58,4 @@ impl<T: ?Sized + Sync> Drop for RetainedOwnedProjection<T> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

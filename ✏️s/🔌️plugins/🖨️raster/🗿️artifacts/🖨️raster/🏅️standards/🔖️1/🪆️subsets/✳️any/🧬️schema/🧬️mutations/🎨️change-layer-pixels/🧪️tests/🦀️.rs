@@ -1,5 +1,6 @@
 //! 🧪️ Pixel content replacement preserves metadata and has an exact nullable inverse.
-use crate::{RasterSnapshot, RasterMutation};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
@@ -22,15 +23,15 @@ fn change_layer_pixels_matches_independent_json_and_round_trips() {
         let (change, _) = undo.diff(&restored).into_parts();
         let previous = protocol::apply_diff(&change, &restored).unwrap();
         MutationDiff::retire_cold(change);
-        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(restored);
+        semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);
         restored = previous;
         Mutation::retire_cold(undo);
     }
     assert_eq!(restored, base);
     MutationDiff::retire_cold(diff);
     Mutation::retire_cold(mutation);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(restored);
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(restored);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }
 
 /// 🔢️ JSON numbers compare by value regardless of integer or floating-point token spelling.

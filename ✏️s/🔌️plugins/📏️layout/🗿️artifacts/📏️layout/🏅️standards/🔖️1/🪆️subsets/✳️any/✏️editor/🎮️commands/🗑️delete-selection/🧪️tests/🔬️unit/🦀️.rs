@@ -1,12 +1,13 @@
 use super::*;
-use crate::editor::layout::commands::focus_preflight_issue::FocusPreflightIssue;
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-use crate::editor::layout::unit_tests::context::layout_app_with_registry;
-use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS};
+use semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue::FocusPreflightIssue;
+use crate::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+use semio_s_artifact_layout_layout_editor::unit_tests::context::layout_app_with_registry;
+use semio_s_artifact_layout_layout_editor::LayoutCommand;
+use crate::LAYOUT_INTERACTION_ELEMENTS;
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-async fn selected_frames(app: &semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::layout::LayoutPlayApp>>) -> Vec<String> {
+async fn selected_frames(app: &semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_layout_layout_editor::LayoutPlayApp>>) -> Vec<String> {
     app.interaction_state().await.selection.get(LAYOUT_INTERACTION_ELEMENTS).map(|selection| selection.ids.clone()).unwrap_or_default()
 }
 

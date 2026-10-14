@@ -1,9 +1,10 @@
 //! 🧬️ Generation2d command — add generation.
 
-use crate::editor::generation2d::commands::generation::handle_generation;
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use crate::generation::handle_generation;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfigMutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,6 +17,3 @@ pub fn handle(_payload: &AddGeneration, doc: &ArtifactView<'_, Generation2dSnaps
     Ok(handle_generation("addGeneration", None, doc, cfg).emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

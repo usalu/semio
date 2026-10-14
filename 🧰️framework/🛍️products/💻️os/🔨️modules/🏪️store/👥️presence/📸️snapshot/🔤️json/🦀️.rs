@@ -1,5 +1,5 @@
 //! 🔤️ Every value-projectable presence owns one canonical JSON native codec under the original snapshot owners.
-use semio_framework_io_sqlite_snapshot::control::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_io_control::{NativeSnapshotBodyWallet, NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_pack_json::{JsonBorrowedWriteCursor, JsonError, JsonGrammarCursor, JsonMemberPolicy};
 use semio_framework_value::{retirement::RetireOwned, DslValue, FromValue, RetainedCloneGrant, RetainedCloneProgress, ToValue, ValueError, ValueRefusalKind};
 

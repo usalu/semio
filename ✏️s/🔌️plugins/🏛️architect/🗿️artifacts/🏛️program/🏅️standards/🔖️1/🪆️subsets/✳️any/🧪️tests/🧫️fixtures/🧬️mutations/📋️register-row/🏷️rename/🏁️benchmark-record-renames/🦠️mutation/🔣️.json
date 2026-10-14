@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "benchmarkRecord",
+  "id": "benchmark-record-a",
+  "newName": "Renamed Benchmark Record A"
+}

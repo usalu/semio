@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-2d-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d document io: derived composition, construction and analysis, the io registry, import deserializers and export serializers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-procedural-2d-io-text = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

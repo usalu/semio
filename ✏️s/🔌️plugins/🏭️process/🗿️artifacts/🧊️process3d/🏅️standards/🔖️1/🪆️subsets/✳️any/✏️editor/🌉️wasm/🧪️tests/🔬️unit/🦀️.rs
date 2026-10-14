@@ -1,12 +1,12 @@
 use super::*;
-use crate::mutations::change_step_enabled::ChangeStepEnabled;
-use crate::mutations::change_step_origin::ChangeStepOrigin;
-use crate::mutations::change_stock_label::ChangeStockLabel;
-use crate::mutations::create_step::CreateStep;
-use crate::mutations::delete_step::DeleteStep;
-use crate::mutations::replace_stock_solid::ReplaceStockSolid;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
+use semio_s_artifact_process_process3d_mut_steps::change_step_enabled::ChangeStepEnabled;
+use semio_s_artifact_process_process3d_mut_steps::change_step_origin::ChangeStepOrigin;
+use semio_s_artifact_process_process3d_mut_stock::change_stock_label::ChangeStockLabel;
+use semio_s_artifact_process_process3d_mut_steps::create_step::CreateStep;
+use semio_s_artifact_process_process3d_mut_steps::delete_step::DeleteStep;
+use semio_s_artifact_process_process3d_mut_stock::replace_stock_solid::ReplaceStockSolid;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::brep_child_handle, snapshot::brep_snapshot_for_working_solid, snapshot::empty_process3d_snapshot, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkingSolid, snapshot::PROCESS_3D_SCHEMA};
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, Author};
 
 fn cut_step(id: &str) -> ProcessStep {
@@ -42,7 +42,7 @@ fn close_store(mut store: Process3dStore) {
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..1_048_576 {
         let demand = disposer.retirement_demands(&store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close demand");
-        match disposer.close_step(&mut store, crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
+        match disposer.close_step(&mut store, semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
             semio_framework_plugin::PluginLifecycleStep::Complete(_) => {
                 assert!(disposer.terminal_is_empty(&store));
                 return;

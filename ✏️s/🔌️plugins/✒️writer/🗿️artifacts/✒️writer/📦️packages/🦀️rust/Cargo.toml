@@ -34,10 +34,10 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-graph.workspace = true
+semio-framework-graph-manifest.workspace = true
 semio-framework-job.workspace = true
 semio-framework-ui-contract.workspace = true
-semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }

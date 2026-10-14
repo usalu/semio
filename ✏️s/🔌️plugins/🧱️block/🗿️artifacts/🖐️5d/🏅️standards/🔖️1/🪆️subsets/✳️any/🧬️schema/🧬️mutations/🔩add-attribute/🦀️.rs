@@ -1,9 +1,8 @@
 //! 🔩 Block5d mutation — `AddAttribute`: a free-form key/value attribute attachment.
 
-use crate::BlockAttribute;
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🔩 `add-attribute` payload.
@@ -21,24 +20,24 @@ pub struct AddAttribute {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_attribute(attribute: BlockAttribute) -> Block5dMutation {
-    Block5dMutation::AddAttribute(AddAttribute { attribute, index: None })
+pub fn add_attribute<Op: From<crate::add_attribute::AddAttribute>>(attribute: BlockAttribute) -> Op {
+    Op::from(AddAttribute { attribute, index: None })
 }
 
 /// 📍️ Builder — like [`add_attribute`] but inserts the row at `index`.
-pub fn add_attribute_at(attribute: BlockAttribute, index: u32) -> Block5dMutation {
-    Block5dMutation::AddAttribute(AddAttribute { attribute, index: Some(index) })
+pub fn add_attribute_at<Op: From<crate::add_attribute::AddAttribute>>(attribute: BlockAttribute, index: u32) -> Op {
+    Op::from(AddAttribute { attribute, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddAttribute {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for AddAttribute where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::remove_attribute::RemoveAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "attribute", kind: "add-attribute", record: "AddedAttribute" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::add_attribute::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_attribute::inverse::inverse(self, base)?
     
     })
 }
@@ -50,3 +49,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddAttribute {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

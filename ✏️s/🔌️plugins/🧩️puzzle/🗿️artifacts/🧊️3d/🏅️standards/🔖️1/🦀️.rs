@@ -8,10 +8,9 @@
 //! `🖍️draw`/`🔱️trinity`'s identical documented deviation); `extensions: ["puzzle3d-play"]` is the
 //! real, carried-over value from `definition()`'s `s.puzzle3d.codec.document-1` row.
 
-use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 
 pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
-    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle3d+json"], extensions: &["puzzle3d-play"] }, subsets: vec![subsets::any::subset::<PA>()] }
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle3d+json"], extensions: &["puzzle3d-play"] }, subsets: vec![crate::standards::v1::subsets::any::subset::<PA>()] }
 }

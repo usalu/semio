@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "communicationRequirement",
+  "id": "communication-requirement-a",
+  "newName": "Renamed Communication Requirement A"
+}

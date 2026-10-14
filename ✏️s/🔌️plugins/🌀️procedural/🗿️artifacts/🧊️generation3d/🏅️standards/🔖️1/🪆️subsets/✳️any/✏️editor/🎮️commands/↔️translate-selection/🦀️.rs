@@ -3,8 +3,10 @@
 //! the dispatch is one transaction, `stream` ticks accumulate in the window's ONE open transaction, `commit` releases it and
 //! `abort` (with a `reason`) drops it with zero trace.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::editor::generation3d::transform_commands::{gumball_once, GumballMotion};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_transforms::gumball_once;
+use semio_s_artifact_procedural_3d_transforms::GumballMotion;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

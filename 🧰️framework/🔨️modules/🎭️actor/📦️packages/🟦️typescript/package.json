@@ -15,7 +15,7 @@
     "./liveness": "./🫀️liveness/🟦️.ts"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/framework-actor:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor:test"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {
@@ -25,6 +25,7 @@
   },
   "bundleKind": "library",
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "immer": "10.1.1"
   }
 }

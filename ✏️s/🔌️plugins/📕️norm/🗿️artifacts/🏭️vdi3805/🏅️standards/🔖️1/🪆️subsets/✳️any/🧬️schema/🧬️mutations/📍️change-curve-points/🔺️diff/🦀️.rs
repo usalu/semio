@@ -1,9 +1,9 @@
 //! 🔺️ `change-curve-points` — sparse diff construction; missing id is
 //! `mutation.target-missing`.
 
-use super::ChangeCurvePoints;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805CurvesRows, Vdi3805CurvesPatch};
+use crate::change_curve_points::ChangeCurvePoints;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805CurvesRows, Vdi3805CurvesPatch};
 
 //#region 🔖️Diff
 

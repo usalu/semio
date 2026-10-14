@@ -1,7 +1,7 @@
 //! 👁️ Replaces the app-local Generation2d preview output.
 
 use super::{Generation2dTransientPatch, Generation2dTransient, Generation2dTransientMutation};
-use crate::editor::generation2d::transient::Generation2dPreviewTextChange;
+use crate::Generation2dPreviewTextChange;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

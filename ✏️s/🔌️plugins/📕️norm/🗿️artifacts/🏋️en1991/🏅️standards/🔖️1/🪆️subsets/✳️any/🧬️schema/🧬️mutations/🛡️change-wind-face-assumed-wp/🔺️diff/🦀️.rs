@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `change-wind-face-assumed-wp`.
-use super::ChangeWindFaceAssumedWp;
-use crate::{En1991Diff, En1991Snapshot};
-use crate::diff::{En1991WindFaceDelta, En1991WindFacePatch};
+use crate::change_wind_face_assumed_wp::ChangeWindFaceAssumedWp;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_diff::{En1991WindFaceDelta, En1991WindFacePatch};
 pub fn diff(payload: &ChangeWindFaceAssumedWp, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.wind_faces.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);

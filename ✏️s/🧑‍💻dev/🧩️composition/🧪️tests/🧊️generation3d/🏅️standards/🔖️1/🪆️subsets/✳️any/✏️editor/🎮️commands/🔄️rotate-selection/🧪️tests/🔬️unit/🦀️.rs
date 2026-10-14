@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app, app_with_registry, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
 
@@ -22,7 +22,7 @@ async fn rotate_selection_composes_world_axes_and_preserves_the_result_selection
     let angle = crate::gumball_param_number(&snapshot.host_snapshot, ROTATE_ID, "angle", 0.0);
     assert!((angle - std::f64::consts::TAU / 3.0).abs() < 1e-12);
     drop(snapshot);
-    dispatch(&mut app, Generation3dCommand::TranslateSelection(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::translate_selection::TranslateSelection { node_ids: Vec::new(), dx: 1.0, dy: 0.0, dz: 0.0, phase: None, reason: None, window_id: None })).await;
+    dispatch(&mut app, Generation3dCommand::TranslateSelection(semio_s_artifact_procedural_3d_editor_commands::translate_selection::TranslateSelection { node_ids: Vec::new(), dx: 1.0, dy: 0.0, dz: 0.0, phase: None, reason: None, window_id: None })).await;
     let snapshot = context::snapshot(&app);
     assert!(snapshot.host_snapshot.synapses.iter().any(|wire| wire.from == ROTATE_ID && wire.to == "extrude__gumball_rotate__gumball_translate"));
     drop(snapshot);

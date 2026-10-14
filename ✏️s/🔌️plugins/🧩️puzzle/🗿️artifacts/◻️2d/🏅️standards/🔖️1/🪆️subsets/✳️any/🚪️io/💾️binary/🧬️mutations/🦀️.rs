@@ -51,7 +51,6 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
@@ -94,28 +93,6 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::{ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_node::{scale_node, ScaleNode};
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::{scale_selection, ScaleSelection};
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle2dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl pack::snapshot::ArtifactPack for Puzzle2dPlaySnapshot {
-    
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle2dSnapshot as pack::snapshot::ArtifactPack>::record_spec()
-    }
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dPlaySnapshot {
-fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
-    }
-}
 }
 #[cfg(test)] pub use mutations_codec::*;
 
@@ -123,7 +100,6 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
-#[cfg(test)] use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 #[cfg(test)] pub use mutations_codec::*;
 
 impl OpBinary for Puzzle2dMutation {

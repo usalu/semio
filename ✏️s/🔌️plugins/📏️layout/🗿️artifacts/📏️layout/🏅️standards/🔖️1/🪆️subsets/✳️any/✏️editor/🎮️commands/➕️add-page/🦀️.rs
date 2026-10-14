@@ -1,10 +1,11 @@
 //! ✏️ ✏️ Layout play app commands command — `add-page`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::layout::modes::edit::windows::blueprint::config::current;
-use crate::mutations::create_page::CreatePage;
-use crate::mutations::LayoutMutation;
-use crate::{LayoutSnapshot, PageColumns, PageMargins};
+use crate::modes::edit::windows::blueprint::config::current;
+use semio_s_artifact_layout_layout_mutations_content::create_page::CreatePage;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::{PageColumns, PageMargins};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -22,7 +23,7 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     let page_id = format!("page-{}", document.pages.len() + 1);
     let layer_id = format!("layer-{page_id}");
     let index = document.pages.len();
-    let page = crate::Page {
+    let page = semio_s_artifact_layout_layout_model::Page {
         id: page_id.clone(),
         name: format!("Page {}", document.pages.len() + 1),
         spread_id,
@@ -33,7 +34,7 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         columns,
         guides: Vec::new(),
         layer_ids: vec![layer_id.clone()],
-        layers: vec![crate::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
+        layers: vec![semio_s_artifact_layout_layout_model::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
         frames: Vec::new(),
         overrides: Vec::new(),
     };

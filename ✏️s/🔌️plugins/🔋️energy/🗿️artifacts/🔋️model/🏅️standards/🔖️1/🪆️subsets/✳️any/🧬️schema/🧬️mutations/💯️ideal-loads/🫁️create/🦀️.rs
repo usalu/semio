@@ -1,8 +1,7 @@
 //! 🫁️ Energy model mutation — `CreateIdealLoadsSystem`: Creates the ideal-loads air system that serves one zone. Both capacity limits are optional — `present` false is the autosized reading, and then the value has to be zero.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -26,8 +25,8 @@ pub struct CreateIdealLoadsSystem {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_ideal_loads_system(
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_ideal_loads_system<Op: From<CreateIdealLoadsSystem>>(
     id: crate::model::EntityId,
     zone_id: crate::model::EntityId,
     max_heating_supply_air_temp_c: f64,
@@ -39,8 +38,8 @@ pub fn create_ideal_loads_system(
     outdoor_air_per_person_m3_s: f64,
     outdoor_air_per_area_m3_s_m2: f64,
     index: Option<u32>,
-) -> EnergyModelMutation {
-    EnergyModelMutation::CreateIdealLoadsSystem(CreateIdealLoadsSystem {
+) -> Op {
+    CreateIdealLoadsSystem {
         id,
         zone_id,
         max_heating_supply_air_temp_c,
@@ -50,17 +49,20 @@ pub fn create_ideal_loads_system(
         max_cooling_capacity_present,
         max_cooling_capacity_w,
         outdoor_air_per_person_m3_s,
-        outdoor_air_per_area_m3_s_m2, index })
+        outdoor_air_per_area_m3_s_m2, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateIdealLoadsSystem {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateIdealLoadsSystem
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateIdealLoadsSystem> + From<crate::DeleteIdealLoadsSystem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "ideal-loads-system", kind: "create-ideal-loads-system", record: "CreatedIdealLoadsSystem" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -14,7 +14,7 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
 }
 
 fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job::BatchJobSession<J>{
-    let mut original=crate::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
+    let mut original=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
     for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
     panic!("original session admission exceeded its supplied fixture turns")
 }
@@ -512,8 +512,8 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
     let state: InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
-    let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut interaction = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
     let mut receiving = crate::local_interaction::query::tests::original_receiving_recipient();
     crate::local_interaction::query::tests::install_original_interaction_owners(&mut interaction, &mut receiving);
     let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;

@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ReorderConstructionLayers` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ConstructionPatch, ListEdit, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ConstructionPatch, ModelPatch};
+use crate::diff_patch::{ListEdit, Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReorderConstructionLayers, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

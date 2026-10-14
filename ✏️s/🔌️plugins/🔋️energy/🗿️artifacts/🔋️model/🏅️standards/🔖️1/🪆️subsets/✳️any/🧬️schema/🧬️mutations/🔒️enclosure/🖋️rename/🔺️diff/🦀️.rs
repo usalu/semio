@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `RenameThermalEnclosure` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ThermalEnclosurePatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, ThermalEnclosurePatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameThermalEnclosure, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

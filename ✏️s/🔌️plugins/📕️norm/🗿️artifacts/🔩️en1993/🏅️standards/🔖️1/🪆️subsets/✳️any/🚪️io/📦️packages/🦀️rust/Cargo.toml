@@ -16,7 +16,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-plugin-norm-compliance = { workspace = true }
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -37,10 +36,11 @@ semio-s-artifact-norm-en1993-mut-general = { workspace = true }
 semio-s-artifact-norm-en1993-mut-thin-walled = { workspace = true }
 semio-s-artifact-norm-en1993-mut-towers = { workspace = true }
 semio-s-artifact-norm-en1993-mutations = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-norm-en1993-checks = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

@@ -7,18 +7,37 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-use crate::artifact_schema::mutations::Iso16757Mutation;
+use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
 
-use crate::artifact_schema::mutations::{
-    add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput, change_selection_class::mutation::ChangeSelectionClass,
-    change_selection_series::mutation::ChangeSelectionSeries, introduce_geometry_object::mutation::IntroduceGeometryObject, introduce_product::mutation::IntroduceProduct, introduce_product_class::mutation::IntroduceProductClass,
-    introduce_product_group::mutation::IntroduceProductGroup, introduce_product_index::mutation::IntroduceProductIndex, introduce_product_series::mutation::IntroduceProductSeries, introduce_property_definition::mutation::IntroducePropertyDefinition,
-    introduce_subject::mutation::IntroduceSubject, retire_geometry_object::mutation::RetireGeometryObject, retire_product::mutation::RetireProduct, retire_product_class::mutation::RetireProductClass,
-    retire_product_group::mutation::RetireProductGroup, retire_product_index::mutation::RetireProductIndex, retire_product_series::mutation::RetireProductSeries, retire_property_definition::mutation::RetirePropertyDefinition,
-    retire_subject::mutation::RetireSubject, remove_part_number_input::mutation::RemovePartNumberInput, remove_selection_constraint::mutation::RemoveSelectionConstraint, rename_catalogue::mutation::RenameCatalogue,
-    rename_manufacturer::mutation::RenameManufacturer, rename_product::mutation::RenameProduct, rename_product_group::mutation::RenameProductGroup, replace_part_number_rule::mutation::ReplacePartNumberRule,
-    change_script_limits::mutation::ChangeScriptLimits,
-};
+use semio_s_artifact_norm_iso16757_mut_selection::add_selection_constraint::mutation::AddSelectionConstraint;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_exchange_process::mutation::ChangeExchangeProcess;
+use semio_s_artifact_norm_iso16757_mut_selection::change_part_number_input::mutation::ChangePartNumberInput;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_class::mutation::ChangeSelectionClass;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_series::mutation::ChangeSelectionSeries;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object::mutation::IntroduceGeometryObject;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product::mutation::IntroduceProduct;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_class::mutation::IntroduceProductClass;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_group::mutation::IntroduceProductGroup;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_product_index::mutation::IntroduceProductIndex;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_series::mutation::IntroduceProductSeries;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_property_definition::mutation::IntroducePropertyDefinition;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_subject::mutation::IntroduceSubject;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object::mutation::RetireGeometryObject;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product::mutation::RetireProduct;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_class::mutation::RetireProductClass;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_group::mutation::RetireProductGroup;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_product_index::mutation::RetireProductIndex;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_series::mutation::RetireProductSeries;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_property_definition::mutation::RetirePropertyDefinition;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_subject::mutation::RetireSubject;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_part_number_input::mutation::RemovePartNumberInput;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_selection_constraint::mutation::RemoveSelectionConstraint;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_catalogue::mutation::RenameCatalogue;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_manufacturer::mutation::RenameManufacturer;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product::mutation::RenameProduct;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product_group::mutation::RenameProductGroup;
+use semio_s_artifact_norm_iso16757_mut_selection::replace_part_number_rule::mutation::ReplacePartNumberRule;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_script_limits::mutation::ChangeScriptLimits;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -222,48 +241,10 @@ impl protocol::OpText for Iso16757Mutation {
 /// consolidation used by `OpText` above applies equally here — one `write_str_bin` per field
 /// regardless of that field's own structural complexity.
 
-
-
-
-
-
-
-
-
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `Iso16757Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🏷️WireTags
-
 
 //#endregion 🔖️OpBinaryCodec
 
@@ -344,7 +325,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
         }),
         Iso16757Mutation::RetireProductIndex(RetireProductIndex { id: "index-cv50".into() }),
         Iso16757Mutation::IntroduceGeometryObject(IntroduceGeometryObject {
-            geometry_object: crate::part_2::GeometryObject {
+            geometry_object: semio_s_artifact_norm_iso16757_model::part_2::GeometryObject {
                 id: "geom-new".into(),
                 shape: None,
                 symbolic: None,
@@ -367,38 +348,39 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{Iso16757Diff, Iso16757Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::add_selection_constraint;
-use crate::standards::v1::subsets::any::schema::mutations::change_exchange_process;
-use crate::standards::v1::subsets::any::schema::mutations::change_part_number_input;
-use crate::standards::v1::subsets::any::schema::mutations::change_selection_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_selection_series;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_product;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_product_group;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_property_definition;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_subject;
-use crate::standards::v1::subsets::any::schema::mutations::retire_product;
-use crate::standards::v1::subsets::any::schema::mutations::retire_product_group;
-use crate::standards::v1::subsets::any::schema::mutations::retire_property_definition;
-use crate::standards::v1::subsets::any::schema::mutations::retire_subject;
-use crate::standards::v1::subsets::any::schema::mutations::remove_part_number_input;
-use crate::standards::v1::subsets::any::schema::mutations::remove_selection_constraint;
-use crate::standards::v1::subsets::any::schema::mutations::rename_catalogue;
-use crate::standards::v1::subsets::any::schema::mutations::rename_manufacturer;
-use crate::standards::v1::subsets::any::schema::mutations::rename_product;
-use crate::standards::v1::subsets::any::schema::mutations::rename_product_group;
-use crate::standards::v1::subsets::any::schema::mutations::replace_part_number_rule;
-use crate::standards::v1::subsets::any::schema::mutations::change_script_limits;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_product_class;
-use crate::standards::v1::subsets::any::schema::mutations::retire_product_class;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_product_series;
-use crate::standards::v1::subsets::any::schema::mutations::retire_product_series;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_product_index;
-use crate::standards::v1::subsets::any::schema::mutations::retire_product_index;
-use crate::standards::v1::subsets::any::schema::mutations::introduce_geometry_object;
-use crate::standards::v1::subsets::any::schema::mutations::retire_geometry_object;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_iso16757_mutations::*;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_mut_selection::add_selection_constraint;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_exchange_process;
+use semio_s_artifact_norm_iso16757_mut_selection::change_part_number_input;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_class;
+use semio_s_artifact_norm_iso16757_mut_selection::change_selection_series;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_group;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_property_definition;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_subject;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_group;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_property_definition;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_subject;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_part_number_input;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_selection_constraint;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_catalogue;
+use semio_s_artifact_norm_iso16757_mut_catalogue::rename_manufacturer;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product_group;
+use semio_s_artifact_norm_iso16757_mut_selection::replace_part_number_rule;
+use semio_s_artifact_norm_iso16757_mut_catalogue::change_script_limits;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_class;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_class;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_series;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_series;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_product_index;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_product_index;
+use semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object;
+use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object;
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
 /// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
@@ -410,7 +392,7 @@ pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, Str
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

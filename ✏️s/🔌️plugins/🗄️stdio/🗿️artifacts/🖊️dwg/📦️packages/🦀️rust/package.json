@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-controlled-metadata": "bun repo run @semio-tech/stdio-dwg-rs:test-controlled-metadata",
-    "test-grammar-shape": "bun repo run @semio-tech/stdio-dwg-rs:test-grammar-shape"
+    "test-controlled-metadata": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-dwg-rs:test-controlled-metadata",
+    "test-grammar-shape": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-dwg-rs:test-grammar-shape"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

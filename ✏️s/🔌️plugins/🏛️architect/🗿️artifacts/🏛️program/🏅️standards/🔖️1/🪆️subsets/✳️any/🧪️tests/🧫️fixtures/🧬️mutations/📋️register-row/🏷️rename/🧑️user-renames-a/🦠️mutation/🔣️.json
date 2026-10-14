@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "userProfile",
+  "id": "user-profile-a",
+  "newName": "Renamed User Profile A"
+}

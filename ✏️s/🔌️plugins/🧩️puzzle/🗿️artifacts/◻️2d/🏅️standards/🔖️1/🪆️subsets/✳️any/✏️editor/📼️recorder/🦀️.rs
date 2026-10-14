@@ -4,12 +4,12 @@
 //! (applied through the central applier), so a later row of the same gesture — a second clone's label, a second
 //! wire's id — reads what the earlier rows made.
 
-use super::{board_snapshot_edges, board_snapshot_nodes, new_edge_id, new_node_id, patched_field_value, puzzle2d_next_node_label, puzzle2d_placed_handles, set_member, unique_edge_id, unique_node_id};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::new_edge_id, crate::editor::puzzle2d::snapshot::new_node_id, crate::editor::puzzle2d::snapshot::patched_field_value, crate::editor::puzzle2d::snapshot::puzzle2d_next_node_label, crate::editor::puzzle2d::snapshot::puzzle2d_placed_handles, crate::editor::puzzle2d::snapshot::set_member, crate::editor::puzzle2d::snapshot::unique_edge_id, crate::editor::puzzle2d::snapshot::unique_node_id};
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dSnapshot, Puzzle2dTargetRegion};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::Puzzle2dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
 use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use semio_framework_pack_json::{json, Value};
 use semio_framework_value::paged::PagedUtf8;

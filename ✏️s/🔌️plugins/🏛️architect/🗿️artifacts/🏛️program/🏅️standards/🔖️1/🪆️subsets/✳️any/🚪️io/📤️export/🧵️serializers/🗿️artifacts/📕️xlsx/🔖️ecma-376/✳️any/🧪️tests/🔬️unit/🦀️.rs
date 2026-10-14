@@ -1,6 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
 
 #[semio_framework_async_macros::async_test]
 async fn exports_every_program_table_to_a_real_workbook() {

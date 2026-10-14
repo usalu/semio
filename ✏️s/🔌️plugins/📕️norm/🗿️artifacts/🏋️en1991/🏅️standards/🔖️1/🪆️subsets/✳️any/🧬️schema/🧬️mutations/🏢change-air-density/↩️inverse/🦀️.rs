@@ -1,9 +1,9 @@
 //! Inverse for `change-air-density`.
-use super::ChangeAirDensity;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAirDensity, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_air_density::ChangeAirDensity;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAirDensity, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_air_density::ChangeAirDensity> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAirDensity(ChangeAirDensity { new_air_density: base.air_density })]
+    vec![Op::from(ChangeAirDensity { new_air_density: base.air_density })]
 
     })())
 }

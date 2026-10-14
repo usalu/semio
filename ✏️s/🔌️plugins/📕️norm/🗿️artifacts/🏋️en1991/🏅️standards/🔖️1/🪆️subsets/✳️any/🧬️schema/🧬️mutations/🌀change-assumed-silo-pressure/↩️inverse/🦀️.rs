@@ -1,9 +1,9 @@
 //! Inverse for `change-assumed-silo-pressure`.
-use super::ChangeAssumedSiloPressure;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAssumedSiloPressure, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_assumed_silo_pressure::ChangeAssumedSiloPressure;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAssumedSiloPressure, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_assumed_silo_pressure::ChangeAssumedSiloPressure> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAssumedSiloPressure(ChangeAssumedSiloPressure { new_assumed_silo_pressure: base.assumed_silo_pressure })]
+    vec![Op::from(ChangeAssumedSiloPressure { new_assumed_silo_pressure: base.assumed_silo_pressure })]
 
     })())
 }

@@ -5,7 +5,8 @@ use std::{mem::ManuallyDrop,sync::Arc};
 /// 🧳️ An original typed box carries the factory that owns its payload retirement.
 pub struct FactoryBoxedValue<T:Send+'static>{pub original:Box<T>,pub factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>}
 /// 📭️ Publication moves the payload while retaining both original box allocations and its issuer.
-#[derive(crate::RetireOwned)]
+#[derive(semio_framework_value_derive::RetireOwned)]
+#[value(crate="crate")]
 pub struct FactoryBoxedPublication<T:Send+'static>{payload:OriginalBoxSlot<T>,carrier:OriginalBoxSlot<FactoryBoxedValue<T>>,issuer:CapturedIssuer<T>}
 struct CapturedIssuer<T:Send+'static>{factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>}
 impl<T:Send+'static> RetireOwned for CapturedIssuer<T>{fn retirement(self)->Box<dyn RetirementCursor>{let factory:Arc<dyn FactoryRetirement>=self.factory;FactoryAuthority::new(factory).retirement()}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<FactoryAuthority>())}fn controlled_retirement_supported()->bool{true}}

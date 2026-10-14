@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun repo run os-hub-ts:test"
+    "test": "bun --cwd \"../../..\" repo run os-hub-ts:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"

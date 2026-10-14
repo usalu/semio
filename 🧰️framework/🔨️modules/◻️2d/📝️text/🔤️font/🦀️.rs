@@ -19,7 +19,7 @@ semio_framework_value::artifact_retire_leaf!(StaticFontBytes);
 #[derive(semio_framework_value::RetireOwned)]
 pub struct AdmittedFont<S:RetireOwned>{pub source:S,pub face:FontFace}
 #[derive(Clone,Copy)]
-pub(crate) struct FontReader<'a>{bytes:&'a[u8],start:usize,end:usize}
+pub struct FontReader<'a>{bytes:&'a[u8],start:usize,end:usize}
 impl<'a> FontReader<'a>{
  pub fn new(bytes:&'a[u8],table:FontTable)->Result<Self,String>{let end=table.offset.checked_add(table.length).ok_or("Font byte span exceeded")?;if end>bytes.len(){return Err("Invalid font byte span".into());}Ok(Self{bytes,start:table.offset,end})}
  pub fn whole(bytes:&'a[u8])->Self{Self{bytes,start:0,end:bytes.len()}}
@@ -60,7 +60,7 @@ impl FontCmapCursor{
  pub fn result(&self)->Result<u16,String>{if !self.done{return Err("Unicode font mapping incomplete".into());}Ok(self.glyph)}
 }
 pub fn font_advance(face:FontFace,bytes:&[u8],glyph:u16)->Result<u16,String>{if glyph>=face.glyphs||bytes.len()!=face.byte_length{return Err("Font glyph metric index invalid".into());}FontReader::new(bytes,face.hmtx)?.u16(face.hmtx.offset+usize::from(glyph.min(face.metrics-1))*4)}
-pub(crate) fn reserve_slot<T>(values:&mut PagedList<T,{usize::MAX}>)->Result<bool,String>{if values.has_reserved_slot(){return Ok(true);}let capacity=values.next_allocation_bytes().map_err(|error|error.to_string())?;values.reserve_one(capacity).map_err(|error|error.refusal().to_string())?;Ok(false)}
+pub fn reserve_slot<T>(values:&mut PagedList<T,{usize::MAX}>)->Result<bool,String>{if values.has_reserved_slot(){return Ok(true);}let capacity=values.next_allocation_bytes().map_err(|error|error.to_string())?;values.reserve_one(capacity).map_err(|error|error.refusal().to_string())?;Ok(false)}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
@@ -68,9 +68,3 @@ mod tests;
 pub mod outline;
 #[path="🤝️kerning/🦀️.rs"]
 pub mod kerning;
-#[path="🧵️run/🦀️.rs"]
-pub mod run;
-#[path="📇️catalog/🦀️.rs"]
-pub mod catalog;
-#[path="🧵️shape/🦀️.rs"]
-pub mod shape;

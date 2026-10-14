@@ -1,10 +1,18 @@
 //! 💡️ Din16798 inference schema — outline + compliance evaluate.
 
-use crate::Din16798Snapshot;
-use crate::document::CheckReport;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
+use semio_s_plugin_norm_compliance::CheckReport;
 use framework_schema::ArtifactSchema;
 
-pub use super::outline::Din16798Outline;
+pub use crate::outline::Din16798Outline;
 
 //#region 🔖️Inference
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -43,7 +51,7 @@ impl protocol::InferenceSpec<Din16798Snapshot> for Din16798Inference {
 
 /// ✅️ NormFamily evaluate entry.
 pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
-    crate::artifact_schema::check_full_environment(document)
+    semio_s_artifact_norm_din16798_checks::check_full_environment(document)
 }
 
 pub fn din16798_artifact_inference_descriptor() -> semio_framework_schema_registry::ArtifactInferenceDescriptor {
@@ -62,3 +70,8 @@ pub fn din16798_artifact_inference_descriptor() -> semio_framework_schema_regist
 #[cfg(test)]
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

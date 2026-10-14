@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-editor-panels",
+ "description": "Procedural generation3d editor panels: the catalogue, artifact and inspection panels",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+ "moves": [
+  {
+   "from": "editor::generation3d::panels",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith",
+ "doc": "📌️ Generation3d editor panels: the catalogue, artifact and inspection panels."
+}

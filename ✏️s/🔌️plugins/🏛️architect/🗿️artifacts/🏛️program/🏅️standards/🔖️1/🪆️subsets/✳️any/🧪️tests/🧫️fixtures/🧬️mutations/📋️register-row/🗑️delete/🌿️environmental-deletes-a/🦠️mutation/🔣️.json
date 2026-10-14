@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "environmentalRequirement",
+  "id": "environmental-requirement-a"
+}

@@ -4,8 +4,8 @@
 //! stroke replays onto whatever the layer holds by then and every brush parameter stays editable in history
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
-use crate::schema::PixelRun;
-use crate::{LowpolyMutation, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolySnapshot, snapshot::LOWPOLY_PAINT_TEXTURE_SIZE};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -66,9 +66,9 @@ impl ApplyPaintStroke {
         let mut after = before.clone();
         let [red, green, blue] = self.color_bytes();
         for point in &self.points {
-            crate::schema::stamp_brush_on(&mut after, side, point[0], point[1], self.radius, [red, green, blue, u8::MAX], self.hardness, self.opacity, self.eraser);
+            semio_s_artifact_lowpoly_lowpoly_model::stamp_brush_on(&mut after, side, point[0], point[1], self.radius, [red, green, blue, u8::MAX], self.hardness, self.opacity, self.eraser);
         }
-        Some(crate::schema::pixel_runs_from_diff(&before, &after).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect())
+        Some(semio_s_artifact_lowpoly_lowpoly_model::pixel_runs_from_diff(&before, &after).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect())
     }
 
     /// ➕️ This stroke followed by `tick` as ONE stroke — the dabs appended — when both land on the same layer with the
@@ -79,13 +79,16 @@ impl ApplyPaintStroke {
     }
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ApplyPaintStroke {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for ApplyPaintStroke
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "paint-stroke", kind: "apply-paint-stroke", record: "AppliedPaintStroke" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -107,6 +110,4 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ApplyPaintStro
 //#endregion 🔖️Payload
 
 //#region 🧪️Laws
-#[cfg(test)]
-pub use crate::mutations::laws;
 //#endregion 🧪️Laws

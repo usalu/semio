@@ -1,0 +1,16 @@
+{
+  "files": {
+    "entry.ts": "export const value=1;",
+    "nested/route.ts": "export const route=2;",
+    "icon.ico": "import 'unowned-as-code';",
+    "robots.txt": "User-agent: *"
+  },
+  "expected": [
+    "entry.ts",
+    "icon.ico",
+    "nested/route.ts",
+    "robots.txt"
+  ],
+  "maximumEntries": 16,
+  "added": "nested/opengraph-image.png"
+}

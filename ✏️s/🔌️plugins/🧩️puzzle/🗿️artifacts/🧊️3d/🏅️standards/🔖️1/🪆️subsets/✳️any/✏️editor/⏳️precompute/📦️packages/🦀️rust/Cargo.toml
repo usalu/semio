@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-precompute"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 3d play app"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-io-base64 = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute-fill = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute-geometry = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-puzzle-3d-model = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-precompute-fill = { workspace = true, features = ["testing"] }
+semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
+serde_json = { workspace = true }

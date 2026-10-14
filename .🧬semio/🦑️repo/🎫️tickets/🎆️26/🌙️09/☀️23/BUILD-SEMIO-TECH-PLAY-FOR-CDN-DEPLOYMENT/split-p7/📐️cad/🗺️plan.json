@@ -28,10 +28,15 @@
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🚦️frontiers/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️frontiers/🦀️.rs"
    ],
    "test": [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🧪️tests/🔬️unit/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
    ],
    "targets": [
     {
@@ -41,6 +46,34 @@
       "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🦀️.rs"
      ]
     },
+    {
+     "name": "cad_io_sqlite_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"
+     ]
+    },
+    {
+     "name": "cad_binary_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-model-diff": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
     {
      "name": "cad_model_diff",
      "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
@@ -54,7 +87,9 @@
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
    "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
    "lib": [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs"
    ],
    "test": [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
@@ -76,9 +111,18 @@
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🧪️tests/📐️appends-drawing-2/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
    ],
-   "targets": []
+   "targets": [
+    {
+     "name": "cad_binary_mutations",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
   },
   "semio-s-artifact-cad-cad-mut-slots": {
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️slots",
@@ -176,7 +220,9 @@
    "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
    "lib": [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🦀️.rs"
    ],
    "test": [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
@@ -190,48 +236,15 @@
    "lib": [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/💡️inferences/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"
    ],
    "test": [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️dwg-import/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️dwg-import/🦀️.rs"
    ],
    "targets": []
-  },
-  "semio-s-artifact-cad-cad-io-sqlite": {
-   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
-   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
-   "lib": [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️frontiers/🦀️.rs"
-   ],
-   "test": [],
-   "targets": [
-    {
-     "name": "cad_io_sqlite_snapshot",
-     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
-     "files": [
-      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
-      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
-      "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"
-     ]
-    }
-   ]
   },
   "semio-s-artifact-cad-cad-play": {
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import",
@@ -634,21 +647,8 @@
    ]
   ],
   [
-   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
-   [
-    [
-     "crate::mutations::CadMutation",
-     null
-    ]
-   ]
-  ],
-  [
    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
    [
-    [
-     "crate::mutations::CadMutation",
-     null
-    ],
     [
      "crate::mutations::CadNodePatch",
      null

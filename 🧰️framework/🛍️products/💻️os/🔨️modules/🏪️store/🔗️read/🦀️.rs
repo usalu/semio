@@ -10,7 +10,7 @@ use super::history_read_admission;
 use super::ArtifactStoreDecodedEditRetirementFactory;
 use super::ArtifactStoreDecodedEditRetirement;
 use super::ArtifactStoreChangeRetirementFactory;
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisCodec};
+use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use super::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress};
@@ -28,7 +28,7 @@ use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
 use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 use crate::os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use semio_framework_value::retirement::shared::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use crate::os_vcs::{Author, VcsError};
 use crate::os_vcs::{
     Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable,

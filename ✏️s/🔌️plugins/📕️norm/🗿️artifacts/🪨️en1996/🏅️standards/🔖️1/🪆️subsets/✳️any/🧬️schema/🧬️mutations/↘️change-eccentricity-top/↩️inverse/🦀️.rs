@@ -1,9 +1,9 @@
-use super::ChangeEccentricityTop;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-pub fn inverse(payload: &ChangeEccentricityTop, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::change_eccentricity_top::ChangeEccentricityTop;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+pub fn inverse<Op>(payload: &ChangeEccentricityTop, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_eccentricity_top::ChangeEccentricityTop> {
     Ok((|| {
-    if payload.index >= base.walls.len() { Vec::new() } else { vec![En1996Mutation::ChangeEccentricityTop(ChangeEccentricityTop { index: payload.index, new_eccentricity_top_m: base.walls[payload.index].eccentricity_top_m })] }
+    if payload.index >= base.walls.len() { Vec::new() } else { vec![Op::from(ChangeEccentricityTop { index: payload.index, new_eccentricity_top_m: base.walls[payload.index].eccentricity_top_m })] }
 
     })())
 }

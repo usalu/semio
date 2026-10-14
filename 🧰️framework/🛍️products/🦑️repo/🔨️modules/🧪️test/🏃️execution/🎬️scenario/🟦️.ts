@@ -1,3 +1,4 @@
+import {repositoryTestArtifactEnvironmentV1} from "../../💾️storage/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { materializeHost } from "../../🖥️host/🏗️materialization/🟦️.ts";
@@ -24,7 +25,7 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   let command = host.command;
   if (host.preparation !== undefined) {
-    const prepared = runProbe(host.preparation.command, [...host.preparation.args], { cwd: host.cwd, env: host.env, budgetMs: buildBudgetMs() });
+    const prepared = runProbe(host.preparation.command, [...host.preparation.args], { cwd: host.cwd, env: repositoryTestArtifactEnvironmentV1(repoRoot,host.env), budgetMs: buildBudgetMs() });
     if ((prepared.status ?? 1) !== 0) {
       problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status}`);
       if (prepared.stdout.trim() !== "") problems.push(prepared.stdout.trimEnd());
@@ -34,7 +35,7 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
     command = host.preparation.executableFromStdout(prepared.stdout) ?? "";
     if (command === "") return { results: [], problems: [...problems, `${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`] };
   }
-  const probe = runProbe(command, [...host.args], { cwd: host.cwd, env: host.env, budgetMs: testLevelBudgetMs(level) });
+  const probe = runProbe(command, [...host.args], { cwd: host.cwd, env: repositoryTestArtifactEnvironmentV1(repoRoot,host.env), budgetMs: testLevelBudgetMs(level) });
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());
   const { results, problems: readProblems } = readResults(plan.resultsPath);
   if ((probe.status ?? 1) !== 0 && results.length === 0) {

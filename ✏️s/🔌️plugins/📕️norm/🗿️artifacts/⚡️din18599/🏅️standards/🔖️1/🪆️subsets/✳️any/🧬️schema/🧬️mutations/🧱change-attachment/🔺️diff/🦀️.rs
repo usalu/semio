@@ -1,8 +1,8 @@
 //! 🔺️ `change-attachment` sparse diff.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::change_attachment::ChangeAttachment;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use crate::change_attachment::ChangeAttachment;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 pub fn diff(payload: &ChangeAttachment, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

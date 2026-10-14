@@ -1,8 +1,7 @@
 //! 🌆️ Energy model mutation — `DeleteSolarThermalSystem`: Removes one solar thermal collector loop. Nothing in the document references one, so this never refuses for use.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteSolarThermalSystem {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_solar_thermal_system(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteSolarThermalSystem(DeleteSolarThermalSystem { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_solar_thermal_system<Op: From<DeleteSolarThermalSystem>>(id: crate::model::EntityId) -> Op {
+    DeleteSolarThermalSystem { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteSolarThermalSystem {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteSolarThermalSystem
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteSolarThermalSystem> + From<crate::CreateSolarThermalSystem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "solar-thermal-system", kind: "delete-solar-thermal-system", record: "DeletedSolarThermalSystem" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

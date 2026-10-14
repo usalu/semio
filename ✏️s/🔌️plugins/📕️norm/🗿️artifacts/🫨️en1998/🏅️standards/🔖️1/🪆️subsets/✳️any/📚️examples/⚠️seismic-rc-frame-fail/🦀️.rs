@@ -1,6 +1,6 @@
 //! ⚠️ Non-compliant DE office RC frame example.
 
-use crate::En1998Snapshot;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

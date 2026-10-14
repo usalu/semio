@@ -31,9 +31,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
-use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
-use crate::offset::exact_pcurve;
-use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use crate::exact_pcurve;
+use semio_framework_3d_brep_construction::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_queries::mass_properties::edge_length;
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_curve::bspline::KnotVector;

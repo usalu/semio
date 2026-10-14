@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

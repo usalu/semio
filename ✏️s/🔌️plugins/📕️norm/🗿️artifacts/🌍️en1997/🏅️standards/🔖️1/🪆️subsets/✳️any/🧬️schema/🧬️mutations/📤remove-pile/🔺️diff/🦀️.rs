@@ -1,6 +1,6 @@
-use super::RemovePile;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997PilesRows};
+use crate::remove_pile::RemovePile;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997PilesRows};
 
 pub fn diff(payload: &RemovePile, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if payload.index >= base.piles.len() {

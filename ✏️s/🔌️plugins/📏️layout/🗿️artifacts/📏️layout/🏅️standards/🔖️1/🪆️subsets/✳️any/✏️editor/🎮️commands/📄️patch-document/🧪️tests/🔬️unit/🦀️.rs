@@ -1,7 +1,7 @@
 use super::*;
-use crate::editor::layout::commands::{patch_frame, patch_page};
-use crate::editor::layout::unit_tests::context::{dispatch, layout_app};
-use crate::editor::layout::LayoutCommand;
+use crate::{patch_frame, patch_page};
+use semio_s_artifact_layout_layout_editor::unit_tests::context::{dispatch, layout_app};
+use semio_s_artifact_layout_layout_editor::LayoutCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn patch_document_renames_sets_print_target_and_clears_it() {
@@ -12,7 +12,7 @@ async fn patch_document_renames_sets_print_target_and_clears_it() {
     let snapshot = app.snapshot().expect("projection");
     assert_eq!(snapshot.name, "Press sheet");
     assert_eq!(snapshot.print_target.as_deref(), Some("cmyk"));
-    assert_eq!(snapshot.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"title".into(),value:semio_framework_value::DslValue::String("A".into())}]}));
+    assert_eq!(snapshot.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"title".into(),value:semio_framework_value::DslValue::String("A".into())}]}));
     dispatch(&mut app, LayoutCommand::PatchDocument(PatchDocument { field: "printTarget".into(), value: "  ".into() })).await;
     assert_eq!(app.snapshot().expect("projection").print_target, None);
 }
@@ -65,7 +65,7 @@ async fn patch_frame_sets_text_inset_and_patch_page_updates_a_layer() {
     dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "layer-1.locked".into(), value: "true".into() })).await;
     let snapshot = app.snapshot().expect("projection");
     let frame = snapshot.pages.iter().find(|page| page.id == "page-1").unwrap().frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
-    let crate::Frame::Text { inset, .. } = frame else { panic!("text frame") };
+    let semio_s_artifact_layout_layout_model::Frame::Text { inset, .. } = frame else { panic!("text frame") };
     assert_eq!(inset.x, 8.0);
     let layer = snapshot.pages.iter().find(|page| page.id == "page-1").unwrap().layers.iter().find(|layer| layer.id == "layer-1").unwrap();
     assert_eq!(layer.name, "Art");
@@ -125,8 +125,8 @@ async fn patch_frame_limits_a_character_style_to_a_span() {
     let run = &story.style_runs[0];
     assert_eq!(run.start, 0);
     assert_eq!(run.end, u64::try_from(story.content.char_indices().nth(5).unwrap().0).unwrap());
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     let glyphs = &list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
     assert!(glyphs.iter().any(|glyph| (glyph.font_size - 24.0).abs() < 0.1), "{glyphs:?}");
     assert!(glyphs.iter().any(|glyph| (glyph.font_size - 12.0).abs() < 0.1), "{glyphs:?}");

@@ -3,7 +3,7 @@
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetsDelta;
 use crate::delete_widget::DeleteWidget;
-use crate::widget_index;
+use semio_s_artifact_procedural_3d_model::widget_index;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta removing one widget by id.

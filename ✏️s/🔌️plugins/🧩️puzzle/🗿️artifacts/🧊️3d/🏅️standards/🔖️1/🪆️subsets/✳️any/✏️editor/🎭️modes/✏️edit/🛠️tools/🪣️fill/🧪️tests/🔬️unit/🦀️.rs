@@ -7,7 +7,7 @@ fn fill_all_objects_preparation_requires_real_geometry() {
         let url = case["url"].as_str().expect("url");
         if case["registered"].as_bool().expect("registered") {
             let (positions, indices) = puzzle3d_fallback_mesh_buffers();
-            assert!(crate::editor::puzzle3d::precompute::derive_brush_mesh(url, &positions, &indices).is_some());
+            assert!(semio_s_artifact_puzzle_3d_precompute::derive_brush_mesh(url, &positions, &indices).is_some());
         }
         let identity = ToolRunIdentity::new(semio_framework_tool_run::ToolRunId { app_instance_id: 113, run: 1 }, [0; 32]);
         let scene = SceneConfig {

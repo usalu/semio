@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeLightingGainZone` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, LightingGainPatch, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, LightingGainPatch, ModelPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeLightingGainZone, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

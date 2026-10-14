@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::model::interaction::energy_target_id;
+use crate::editor_interaction::energy_target_id;
 use semio_framework_plugin::World3dScene;
 
 fn scene_of(node: &BuiltNode) -> World3dScene {
@@ -258,7 +258,7 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
     assert_eq!(strip.children.iter().count(), 10, "min label, eight bands, max label");
 
     let sources = swatch_sources(strip);
-    let bands = crate::editor::model::results::legend_bands();
+    let bands = crate::editor_results::legend_bands();
     assert_eq!(sources.len(), 8, "one swatch per ramp band: {sources:?}");
     for (source, band) in sources.iter().zip(bands.iter()) {
         // 🎨️ `#` is percent-encoded in a data URI, so the band hex appears as `%23rrggbb`.
@@ -268,7 +268,7 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
     // 🌡️ The strip and the meshes must agree band for band: `band_color` indexes this same array.
     for (index, band) in bands.iter().enumerate() {
         let value = index as f64 / (bands.len() - 1) as f64 * 412.3;
-        assert_eq!(crate::editor::model::results::band_color(value, 0.0, 412.3), *band, "band {index} of the strip is not the colour the mesh at that value takes");
+        assert_eq!(crate::editor_results::band_color(value, 0.0, 412.3), *band, "band {index} of the strip is not the colour the mesh at that value takes");
     }
 
     let labels = text_values(legend);

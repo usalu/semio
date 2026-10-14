@@ -1,10 +1,43 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
+import {mkdtempSync,mkdirSync,statSync,existsSync,rmSync} from "node:fs";
+import {join} from "node:path";
+import {createHash} from "node:crypto";
+import {spawnSync} from "node:child_process";
 import fixture from "./🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {resourceLeaseMaximumPagesV1} from "../../🟦️.ts";
+import {acquireResourceLease,resourceLeaseMaximumPagesV1} from "../../🟦️.ts";
+import {acquireQueuedResourceLease,retireResourceQueueClaimsV1,resourceQueueClaimV1,resourceQueueTicketV1,resourceLeasePathV1,type ResourceLeaseControl} from "../../🟦️.ts";
+import catalogLaw from "./🎟️catalog.json";
+import retention from "../../🧬️schema/🎟️retention.json";
+
+test("canonical catalog admission retains original nonblocking and shorter requested deadlines",async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original lease catalog artifacts required");const root=mkdtempSync(join(output,"lt-")),directory=join(root,"d"),holder=await acquireResourceLease({directory,resource:retention.properties.resource.const,mode:"exclusive",signal:new AbortController().signal});
+ try{for(const timeoutMs of catalogLaw.requestedTimeouts){const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),300),started=performance.now(),control:ResourceLeaseControl={signal:abort.signal,remainingMilliseconds:()=>5000-(performance.now()-started),publish:()=>{},yieldContinuation:async()=>{await new Promise(accept=>setImmediate(accept));}};let failure:unknown;try{const lease=await acquireQueuedResourceLease({directory,resource:catalogLaw.resource,mode:"shared",owner:"t",signal:abort.signal,timeoutMs,onWait:()=>{},...(timeoutMs?{control}:{})});lease.release();}catch(error){failure=error;}finally{clearTimeout(timer);}expect(String(failure)).toContain("Resource lease timed out");expect(abort.signal.aborted).toBe(false);expect(performance.now()-started).toBeLessThan(250);}}
+ finally{holder.release();rmSync(root,{recursive:true,force:true});}
+});
+
+test("canonical claim catalog excludes retirement across both admission routes and retains held SQLite owners",async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original lease catalog artifacts required");const root=mkdtempSync(join(output,"lc-")),directory=join(root,"d"),signal=new AbortController().signal,deadline=performance.now()+5000;let waited!:()=>void;const waiting=new Promise<void>(accept=>waited=accept),control:ResourceLeaseControl={signal,remainingMilliseconds:()=>deadline-performance.now(),publish:()=>waited(),yieldContinuation:async()=>{await new Promise(accept=>setImmediate(accept));}};let catalog:Awaited<ReturnType<typeof acquireResourceLease>>|undefined,held:Awaited<ReturnType<typeof acquireResourceLease>>|undefined;
+ try{const claims=[catalogLaw.retiredOwner,catalogLaw.heldOwner].map(owner=>resourceQueueClaimV1(directory,catalogLaw.resource,resourceQueueTicketV1({arrivedAtMs:catalogLaw.arrival,pid:catalogLaw.pid,owner})));const paths=claims.map(row=>resourceLeasePathV1(row.directory,row.resource));for(const row of claims){const lease=await acquireResourceLease({...row,mode:"shared",signal,control,maximumDatabaseBytes:16384});if(row===claims[1])held=lease;else lease.release();}
+ catalog=await acquireResourceLease({directory,resource:retention.properties.resource.const,mode:"shared",signal,control,maximumDatabaseBytes:16384});const direct=new Database(resourceLeasePathV1(directory,retention.properties.resource.const));try{expect(()=>direct.exec("BEGIN EXCLUSIVE")).toThrow(/locked|busy/u);}finally{direct.close();}
+ const pending=retireResourceQueueClaimsV1(directory,control);await waiting;expect(paths.every(path=>existsSync(path))).toBe(true);catalog.release();catalog=undefined;const result=await pending;expect({examined:result.examined,retired:result.retired,heldPresent:existsSync(paths[1]!),retiredPresent:existsSync(paths[0]!)}).toEqual(catalogLaw.expected);if(!held)throw Error("Original held queue claim missing");held.release();held=undefined;expect((await retireResourceQueueClaimsV1(directory,control)).retired).toBe(1);expect(existsSync(paths[1]!)).toBe(false);
+ const foreign=join(root,"foreign");await expect(acquireQueuedResourceLease({directory,resource:catalogLaw.resource,mode:"shared",owner:"q",signal,control,claimCatalogDirectory:foreign} as any)).rejects.toThrow("selectors are forbidden");expect(existsSync(foreign)).toBe(false);catalog=await acquireResourceLease({directory,resource:retention.properties.resource.const,mode:"shared",signal,control,maximumDatabaseBytes:16384});let blocked!:()=>void;const blockedPromise=new Promise<void>(accept=>blocked=accept);const queued=acquireQueuedResourceLease({directory,resource:catalogLaw.resource,mode:"shared",owner:"q",signal,control:{...control,publish:()=>blocked()}});await blockedPromise;catalog.release();catalog=undefined;const admitted=await queued;admitted.release();expect((await retireResourceQueueClaimsV1(directory,control)).retired).toBe(1);
+ console.log("[DEBUG] One canonical per-namespace catalog excludes actual queue admission and retirement, releases only settled original claims and preserves held SQLite owners");
+ }finally{catalog?.release();held?.release();rmSync(root,{recursive:true,force:true});}
+});
 
 test("closed bootstrap SQLite admission agrees with independent schema and SQL page division",()=>{
  const validate=new Ajv({strict:true}).compile(schema),database=new Database(":memory:");try{for(const row of fixture.cases){expect(validate({version:1,maximumDatabaseBytes:row.maximumDatabaseBytes})).toBe(row.accepted);if(row.accepted){const oracle=database.query("SELECT ?1/4096 AS pages").get(row.maximumDatabaseBytes) as {pages:number};expect(resourceLeaseMaximumPagesV1(row.maximumDatabaseBytes)).toBe(oracle.pages);expect(oracle.pages).toBe(row.maximumPages!);}else expect(()=>resourceLeaseMaximumPagesV1(row.maximumDatabaseBytes)).toThrow();}}finally{database.close();}
+});
+
+/** 🧱️ Actual full SQLite initialization preserves its primary refusal after system rollback. */
+test("bounded lease initialization retains primary SQLITE_FULL after automatic rollback",async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original bounded lease artifact root required");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"lease-full-")),law=fixture.initializationRefusal,resource=law.resourceCharacter.repeat(law.resourceCharacters),oraclePath=join(root,"oracle.sqlite"),path=join(root,createHash("sha256").update(resource).digest("hex")+".sqlite"),node=Bun.which("node");if(!node)throw Error("Independent system Node SQLite oracle required");
+ const program="const{DatabaseSync}=require('node:sqlite');const db=new DatabaseSync(process.argv[1]);let refused=false;try{db.exec('PRAGMA page_size=4096;PRAGMA max_page_count='+process.argv[2]+';BEGIN EXCLUSIVE;CREATE TABLE resource(value TEXT NOT NULL)');try{db.prepare('INSERT INTO resource VALUES(?)').run(process.argv[3]);}catch(error){refused=true;console.log(JSON.stringify({primaryCode:error.errcode,inTransaction:db.isTransaction}));}if(!refused)throw Error('Expected actual bounded SQLite refusal');}finally{db.close();}";
+ const oracle=spawnSync(node,["-e",program,oraclePath,String(resourceLeaseMaximumPagesV1(law.maximumDatabaseBytes)),resource],{encoding:"utf8",timeout:5000,maxBuffer:4096});expect(oracle.error).toBeUndefined();expect(oracle.status,oracle.stderr).toBe(0);const expected=JSON.parse(oracle.stdout);expect(expected).toEqual(law.expected);const admitted=new Ajv({strict:true}).addSchema(schema,"bounded-lease").compile({$ref:"bounded-lease#/$defs/InitializationRefusal"});expect(admitted(expected)).toBe(true);
+ let failure:unknown;try{const lease=await acquireResourceLease({directory:root,resource,mode:"exclusive",signal:new AbortController().signal,timeoutMs:5000,maximumDatabaseBytes:law.maximumDatabaseBytes});lease.release();}catch(error){failure=error;}expect(failure).toBeDefined();expect((failure as {errno?:number;errcode?:number}).errno??(failure as {errcode?:number}).errcode).toBe(expected.primaryCode);expect(statSync(path).size).toBeLessThanOrEqual(law.maximumDatabaseBytes);
+ const actual=new Database(path,{readonly:true});try{expect(actual.inTransaction).toBe(expected.inTransaction);expect(actual.query("PRAGMA application_id").get()).toEqual({application_id:0});expect(actual.query("SELECT count(*) AS owners FROM sqlite_schema WHERE name='semio_resource_lease'").get()).toEqual({owners:0});}finally{actual.close();}
+ console.log("[DEBUG] Original bounded Bun lease retains actual primary SQLITE_FULL and no published owner after automatic rollback; independent Node SQLite agrees",expected);
 });

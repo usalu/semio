@@ -1,8 +1,7 @@
 //! 🏯️ Energy model mutation — `DeleteThermalEnclosure`: Removes one thermal enclosure. The zones themselves are untouched — an enclosure owns membership, not the members.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteThermalEnclosure {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_thermal_enclosure(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteThermalEnclosure(DeleteThermalEnclosure { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_thermal_enclosure<Op: From<DeleteThermalEnclosure>>(id: crate::model::EntityId) -> Op {
+    DeleteThermalEnclosure { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteThermalEnclosure {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteThermalEnclosure
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteThermalEnclosure> + From<crate::CreateThermalEnclosure>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "thermal-enclosure", kind: "delete-thermal-enclosure", record: "DeletedThermalEnclosure" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

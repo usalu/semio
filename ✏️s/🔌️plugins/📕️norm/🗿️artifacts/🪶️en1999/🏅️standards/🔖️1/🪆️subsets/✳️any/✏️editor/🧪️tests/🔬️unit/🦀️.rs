@@ -1,7 +1,7 @@
 //! 🔬️ Editor unit-test harness for EN 1999.
 
 pub(crate) mod context {
-    use super::super::*;
+    use crate::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
@@ -45,11 +45,11 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::*;
 
 #[test]
 fn editor_module_links() {
     let _ = create_en1999_app();
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("norm", super::En1999PlayApp, || semio_framework_plugin::App { definition: super::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_framework_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

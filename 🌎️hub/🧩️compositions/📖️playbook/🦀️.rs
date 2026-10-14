@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -28,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// runs `Isolated` (its one `🧩️extensions/🌀️procedural` runs `Declarative` instead — see that
 /// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<PlaybookApps>, PluginAssemblyError> {
-    Plugin::<PlaybookApps>::builder("playbook")
+    PluginBuilder::<_, PlaybookApps>::new("playbook")
         .label("Playbook")
         .version("0.1.0")
         .package_id("semio:playbook")

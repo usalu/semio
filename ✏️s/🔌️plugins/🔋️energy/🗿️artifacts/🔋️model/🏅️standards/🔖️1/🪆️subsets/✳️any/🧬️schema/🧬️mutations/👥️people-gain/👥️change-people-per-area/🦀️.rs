@@ -1,8 +1,7 @@
 //! 👥️ Energy model mutation — `ChangePeopleGainPeoplePerArea`: Sets occupant density (people/m²) on one people gain, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePeopleGainPeoplePerArea {
     pub new_people_per_area: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_people_gain_people_per_area(id: crate::model::EntityId, new_people_per_area: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePeopleGainPeoplePerArea(ChangePeopleGainPeoplePerArea { id, new_people_per_area })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_people_gain_people_per_area<Op: From<ChangePeopleGainPeoplePerArea>>(id: crate::model::EntityId, new_people_per_area: f64) -> Op {
+    ChangePeopleGainPeoplePerArea { id, new_people_per_area }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePeopleGainPeoplePerArea {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePeopleGainPeoplePerArea
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePeopleGainPeoplePerArea>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "people-gain", kind: "change-people-gain-people-per-area", record: "ChangedPeopleGainPeoplePerArea" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

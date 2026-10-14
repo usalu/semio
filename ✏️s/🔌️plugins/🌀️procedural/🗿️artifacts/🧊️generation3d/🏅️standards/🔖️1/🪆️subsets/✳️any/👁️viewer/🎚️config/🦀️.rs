@@ -13,6 +13,10 @@
 //! scope.mutation_root`, `descriptor.owner` an immediate child of the aggregate's mutation root)
 //! holds by construction. MUST NOT import anything from the sibling `✏️editor` module
 //! (`policyViewerPurityBreaches`).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -253,3 +257,6 @@ impl protocol::DiffAlgebra<Generation3dViewConfig> for Generation3dViewConfigPat
         self.lod_mode.is_none() && self.show_mode.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.active_example_id.is_none()
     }
 }
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

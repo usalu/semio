@@ -1,6 +1,6 @@
 //! Serialize stdio.pptx to stdio.binary (encode ZIP bytes).
 
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 
 //#region Codec

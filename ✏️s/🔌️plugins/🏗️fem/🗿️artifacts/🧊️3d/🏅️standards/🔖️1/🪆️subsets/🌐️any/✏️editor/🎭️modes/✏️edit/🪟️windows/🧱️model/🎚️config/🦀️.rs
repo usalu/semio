@@ -3,39 +3,11 @@
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::*;
-
-impl Default for Fem3dGumballConfig {
-    /// 🧭️ Every handle a FEM entity can honestly take: moves along axes and planes, a rotation, and
-    /// scaling per axis or uniformly — the options rail turns the ones a gesture does not need off.
-    fn default() -> Self {
-        Self { move_axes: true, move_planes: true, rotate: true, scale_axes: true, scale_uniform: true }
-    }
-}
-
-impl Fem3dGumballConfig {
-    /// 🎚️ Sets, or with `pressed = None` toggles, one named handle flag; an unknown flag is refused.
-    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_framework_plugin::Fault> {
-        let slot = match flag {
-            "move" | "moveAxes" => &mut self.move_axes,
-            "movePlanes" => &mut self.move_planes,
-            "rotate" => &mut self.rotate,
-            "scaleAxes" => &mut self.scale_axes,
-            "scaleUniform" => &mut self.scale_uniform,
-            other => return Err(semio_framework_plugin::Fault::from(format!("fem3d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
-        };
-        *slot = pressed.unwrap_or(!*slot);
-        Ok(())
-    }
-
-    /// 🫥️ An all-off gumball would draw nothing to grab.
-    pub fn any(&self) -> bool {
-        self.move_axes || self.move_planes || self.rotate || self.scale_axes || self.scale_uniform
-    }
-}
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig;
 
 impl Default for Fem3dModelWindowConfig {
     fn default() -> Self {
-        Self { camera: crate::viewport::INITIAL, gumball: Fem3dGumballConfig::default() }
+        Self { camera: semio_s_artifact_fem_3d_scene::viewport::INITIAL, gumball: Fem3dGumballConfig::default() }
     }
 }
 

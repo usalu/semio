@@ -1,6 +1,6 @@
 //! 🗂 Asks the host to pick a scene_snapshot JSON file and re-dispatch import.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_plugin::kernel::Effect;
 
 /// 🗂 Opens a file picker that re-dispatches `importSnapshot` with the picked bytes.

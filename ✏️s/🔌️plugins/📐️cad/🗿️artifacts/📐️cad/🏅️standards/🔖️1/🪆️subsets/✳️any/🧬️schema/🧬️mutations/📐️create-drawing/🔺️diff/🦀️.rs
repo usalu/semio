@@ -1,7 +1,7 @@
 //! 🔺️ `create-drawing` — sparse diff construction from an exact composed drawing child handle.
 
 use super::CreateDrawing;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadDrawingsDelta};
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadDrawingsDelta};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff

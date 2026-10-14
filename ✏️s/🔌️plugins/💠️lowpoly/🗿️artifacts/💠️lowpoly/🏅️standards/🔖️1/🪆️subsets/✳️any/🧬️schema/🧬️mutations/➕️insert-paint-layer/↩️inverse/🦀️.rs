@@ -1,13 +1,13 @@
 //! ↩️ `insert-paint-layer` — undo is `remove-paint-layer` at the same (now-final) index.
 
 use super::InsertPaintLayer;
-use crate::mutations::remove_paint_layer;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use crate::remove_paint_layer;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &InsertPaintLayer, _base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::remove_paint_layer::RemovePaintLayer>>(payload: &InsertPaintLayer, _base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LowpolyMutation::RemovePaintLayer(remove_paint_layer::RemovePaintLayer { object_id: payload.object_id.clone(), index: payload.index })]
+    vec![Op::from(remove_paint_layer::RemovePaintLayer { object_id: payload.object_id.clone(), index: payload.index })]
 
     })())
 }

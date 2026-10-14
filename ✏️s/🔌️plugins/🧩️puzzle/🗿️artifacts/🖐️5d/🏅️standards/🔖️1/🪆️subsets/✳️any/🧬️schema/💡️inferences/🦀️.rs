@@ -76,5 +76,5 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_s_artifact_puzzle_3d::FlattenPose;
+pub use semio_s_artifact_puzzle_3d_inferences::flatten::FlattenPose;
 //#endregion 🔁️Re-exports

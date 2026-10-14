@@ -1,8 +1,8 @@
 //! 🔧 `insert-assessment` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertAssessment;
-use crate::diff::{En1998Diff, En1998AssessmentDelta};
-use crate::En1998Snapshot;
+use crate::insert_assessment::InsertAssessment;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998AssessmentDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertAssessment, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.assessments.iter().any(|existing| existing.id == payload.assessment.id) {

@@ -2,7 +2,6 @@
 //! restored when a saved document is loaded), set or cleared.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ChangeGenerationPreview
@@ -13,14 +12,17 @@ pub struct ChangeGenerationPreview {
     pub text: Option<String>,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeGenerationPreview {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ChangeGenerationPreview
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<ChangeGenerationPreview>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "preview", kind: "change-generation-preview", record: "ChangedGenerationPreview" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_generation_preview::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         crate::change_generation_preview::inverse::inverse(self, base)
     }
 

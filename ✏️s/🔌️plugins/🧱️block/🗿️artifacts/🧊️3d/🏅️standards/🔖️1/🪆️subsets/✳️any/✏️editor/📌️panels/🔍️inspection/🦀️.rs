@@ -1,9 +1,9 @@
 //! 🔍️ Block 3D play app panel — the inspector: the object kind's identity fields, active-representation
 //! select, plus a vortex count.
 
-use crate::Block3dSnapshot;
-use crate::editor::block3d::terminology::Block3dLabels;
-use crate::editor::block3d::{block3d_action, ui_label, ui_value_map, ui_value_text};
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
+use crate::{block3d_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;

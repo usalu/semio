@@ -1,7 +1,7 @@
 //! 🔺️ `create-shape-model ` — sparse diff construction from an exact composed model child handle.
 
 use super::CreateShapeModel;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadModelSlot};
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadModelSlot};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff

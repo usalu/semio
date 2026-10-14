@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "verify-framework-ui-protocol-ownership": "bun repo run @semio-tech/s-space-composition-tests:verify-framework-ui-protocol-ownership"
+    "verify-framework-ui-protocol-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/s-space-composition-tests:verify-framework-ui-protocol-ownership"
   },
   "semio": {
     "role": "test",

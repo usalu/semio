@@ -1,8 +1,10 @@
 //! 🎚️ `update-link` — replaces the print size, resolution, and color profile of one image link.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutLinksDelta, LayoutLinksModification};
-use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutLinksModification;
+use semio_s_artifact_layout_layout_diff::{ImageLinkPatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -24,10 +26,10 @@ pub struct UpdateLink {
     pub color_profile: Option<String>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateLink {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateLink where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_link::UpdateLink> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "link", kind: "update-link", record: "UpdatedLink" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_link(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_update_link(self, base)? 
     })
 }
@@ -62,10 +64,10 @@ pub fn diff_update_link(payload: &UpdateLink, base: &LayoutSnapshot) -> protocol
     })
 }
 
-pub fn inverse_update_link(payload: &UpdateLink, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_link<Op: From<crate::update_link::UpdateLink>>(payload: &UpdateLink, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(link) = base.links.iter().find(|link| link.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateLink(UpdateLink { id: link.id.clone(), width: link.width, height: link.height, dpi: link.dpi, color_profile: link.color_profile.clone() })]
+    vec![Op::from(UpdateLink { id: link.id.clone(), width: link.width, height: link.height, dpi: link.dpi, color_profile: link.color_profile.clone() })]
 
     })())
 }

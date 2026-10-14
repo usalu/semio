@@ -1,10 +1,10 @@
-use super::ChangeConnectionServiceClass;
-use crate::mutations::En1995Mutation;
-use crate::En1995Snapshot;
-pub fn inverse(payload: &ChangeConnectionServiceClass, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+use crate::change_connection_service_class::ChangeConnectionServiceClass;
+
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+pub fn inverse<Op>(payload: &ChangeConnectionServiceClass, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_connection_service_class::ChangeConnectionServiceClass> {
     Ok((|| {
     let Some(item) = base.connections.iter().find(|item| item.id == payload.connection_id) else { return Vec::new(); };
-    vec![En1995Mutation::ChangeConnectionServiceClass(ChangeConnectionServiceClass { connection_id: payload.connection_id.clone(), new_value: item.service_class })]
+    vec![Op::from(ChangeConnectionServiceClass { connection_id: payload.connection_id.clone(), new_value: item.service_class })]
 
     })())
 }

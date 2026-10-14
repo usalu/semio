@@ -10,16 +10,15 @@
 //! eyedropper only samples into config (design
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetPaintColorEdit};
-use crate::editor::lowpoly::session::{lowpoly_paint_drive, lowpoly_tool_emit, paint_uv_from_command, LowpolyScratch, LowpolyTransientMutation};
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetPaintColorEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::lowpoly_tool_emit, editor::lowpoly::session::paint_uv_from_command, editor::lowpoly::session::LowpolyScratch, editor::lowpoly::session::LowpolyTransientMutation};
 use semio_framework_tool_machine::GesturePhase;
-use crate::editor::lowpoly::view::{resolve_active_object_id, utility_param_f32, utility_params_value};
-use crate::editor::lowpoly::LowpolyPlayApp;
-use crate::schema::PixelRun;
-use crate::mutations::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from};
-use crate::{LowpolyPaintLayer, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_view::{resolve_active_object_id, utility_param_f32, utility_params_value};
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
+use semio_s_artifact_lowpoly_lowpoly_mut_paint::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot};
 use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault};
@@ -106,50 +105,7 @@ fn paint_once(verb: &str, phase: Option<&str>, reason: Option<&str>, object_id: 
     })
 }
 
-/// 🛠️ The retained route of every paint verb: builds the dispatch's tick on the committed `snapshot`, drives the
-/// dispatching window's paint tool through its phase against the gesture the transient holds for that window, and
-/// publishes the committed transaction as ONE edit stamped with its ref plus the window's next transient. A stream
-/// tick of a window with no open gesture opens one only when `opens` (a press), so a stray canvas move leaves nothing.
-#[expect(clippy::too_many_arguments, reason = "One retained paint dispatch: its phase, reason, target and points, whether it may open a gesture, plus the retained inputs it reads.")]
-pub fn lowpoly_paint_step(
-    phase: Option<&str>,
-    reason: Option<&str>,
-    object_id: Option<&str>,
-    points: &[(f32, f32)],
-    opens: bool,
-    snapshot: &LowpolySnapshot,
-    config: &LowpolyConfig,
-    context: &ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>,
-    operation: &AppOperationContext,
-) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
-    let phase = GesturePhase::parse(phase, reason).ok_or_else(|| Fault::from("lowpoly.paint.phase-unknown"))?;
-    let window = context.view_state.as_ref().and_then(|view| view.window_id.clone()).unwrap_or_default();
-    if phase == GesturePhase::Stream && !opens && context.transient.paint(&window).is_none() {
-        return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
-    }
-    let gesture_object = context.transient.paint(&window).and_then(|gesture| match &gesture.leaf {
-        LowpolyMutation::ApplyPaintStroke(stroke) => Some(stroke.object_id.clone()),
-        LowpolyMutation::EditPaintLayer(fill) => Some(fill.object_id.clone()),
-        _ => None,
-    });
-    let object_id = object_id.map(str::to_string).or(gesture_object).unwrap_or_else(|| resolve_active_object_id(snapshot, config));
-    let tick = match lowpoly_paint_tick(snapshot, config, &object_id, points) {
-        LowpolyPaintTick::Sample(mutation) => return Ok(ArtifactCommandWorkStep::Complete(Emit::config(vec![mutation]))),
-        LowpolyPaintTick::Leaf(leaf) => Some(leaf),
-        LowpolyPaintTick::Nothing => None,
-    };
-    let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
-    let drive = lowpoly_paint_drive(&context.transient, &window, phase, tick, &operation.authoring_seed, &base_revision)?;
-    let emit = match drive.committed {
-        Some((reference, mutations)) if !operation.authoring_seed.is_empty() => Emit::commit_transaction(reference, mutations),
-        Some((_, mutations)) => Emit::mutations(mutations),
-        None => Emit::default(),
-    };
-    Ok(match drive.transient {
-        Some(transient) => ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } },
-        None => ArtifactCommandWorkStep::Complete(emit),
-    })
-}
+
 //#endregion 🖌️PaintTick
 
 //#region 🔖️PaintAt
@@ -379,13 +335,10 @@ pub mod add_paint_layer {
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let name = payload.name.as_deref().unwrap_or("Layer");
         let index = doc.snapshot.objects.iter().find(|object| object.id == object_id).map_or(0, |object| object.paint_layers.len());
-        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(crate::mutations::insert_paint_layer::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
+        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(semio_s_artifact_lowpoly_lowpoly_mut_paint::insert_paint_layer::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
     }
 }
 //#endregion 🔖️AddPaintLayer
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

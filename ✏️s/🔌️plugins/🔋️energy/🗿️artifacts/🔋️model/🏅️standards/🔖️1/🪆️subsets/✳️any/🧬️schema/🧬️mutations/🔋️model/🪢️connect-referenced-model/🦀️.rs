@@ -1,8 +1,7 @@
 //! 🪢️ Energy model mutation — `ConnectReferencedModel`: Creates the relationship between this energy model and the geometry model it was derived from, addressed by the target's `ArtifactRef` identity.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ConnectReferencedModel {
     pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_referenced_model(target: semio_framework_artifact_reference::ArtifactRef) -> EnergyModelMutation {
-    EnergyModelMutation::ConnectReferencedModel(ConnectReferencedModel { target })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn connect_referenced_model<Op: From<ConnectReferencedModel>>(target: semio_framework_artifact_reference::ArtifactRef) -> Op {
+    ConnectReferencedModel { target }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ConnectReferencedModel {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ConnectReferencedModel
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ConnectReferencedModel> + From<crate::DisconnectReferencedModel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "referenced-model", kind: "connect-referenced-model", record: "ConnectedReferencedModel" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -17,7 +17,7 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::editor::model::interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
+use crate::editor_interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
 use crate::scene::{energy_model_scene, EnergySceneStyle};
 use semio_framework_plugin::plugin_app_close_prelude::column;
 use semio_framework_plugin::plugin_app_close_prelude::image;
@@ -89,7 +89,7 @@ pub fn definition() -> WindowKindDefinition {
         // once where the domain is declared.
         interactions: Vec::new(),
         params_schema: None,
-        artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
+        artifact_snapshot_schema: Some(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
@@ -139,13 +139,13 @@ pub fn legend_swatch_src(hex: &str) -> String {
 /// `crate::editor::model::results::legend_bands()`, which is the SAME array `band_color` indexes to
 /// paint the meshes, so the strip can never describe a ramp the scene is not using.
 fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
-    let (low, high) = crate::editor::model::results::legend_bounds_labels(minimum, maximum);
+    let (low, high) = crate::editor_results::legend_bounds_labels(minimum, maximum);
     let cell = |id: &str, value: String| -> UiAssemblyResult<BuiltNode> {
         let label = SemanticLabel::try_from(value).map_err(|_| caption_error("a legend bound exceeds its UI label bound"))?;
         text(label).try_id(id).map_err(|_| caption_error("a legend bound node id was refused"))?.try_build().map_err(|_| caption_error("a legend bound node was refused"))
     };
     let mut children = vec![cell(LEGEND_MINIMUM_NODE_ID, low)?];
-    for (index, band) in crate::editor::model::results::legend_bands().into_iter().enumerate() {
+    for (index, band) in crate::editor_results::legend_bands().into_iter().enumerate() {
         let source = UiText::try_from_string(legend_swatch_src(band)).map_err(|_| caption_error("a legend swatch source exceeds its UI text bound"))?;
         children.push(
             image(source)

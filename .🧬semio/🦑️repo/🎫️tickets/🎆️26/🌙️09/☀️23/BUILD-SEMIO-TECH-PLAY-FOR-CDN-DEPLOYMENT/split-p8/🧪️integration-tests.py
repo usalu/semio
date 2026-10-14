@@ -16,7 +16,11 @@ REPO = os.path.abspath(os.path.join(HERE, *[".."] * 8))
 CENSUS = os.path.join(HERE, "🕸️module-graph.py")
 census = {}
 exec(compile(open(CENSUS, encoding="utf-8").read().rsplit("\nmain()", 1)[0], CENSUS, "exec"), census)
-Crate, strip = census["Crate"], census["strip"]
+Crate = census["Crate"]
+CUT = os.path.join(HERE, "✂️crate-cut.py")
+cut = {"__file__": CUT}
+exec(compile(open(CUT, encoding="utf-8").read().rsplit("\nmain()", 1)[0].replace("\naggregator_layer = None", ""), CUT, "exec"), cut)
+strip = cut["strip"]
 SEP = r"\s*::\s*"
 
 
@@ -32,8 +36,8 @@ def main():
     crate = Crate(root)
     root_raw = open(root, encoding="utf-8").read()
     aliases = [line for line in root_raw.splitlines() if line.startswith("extern crate ")]
-    removals, writes = {}, {}
-    mount = re.compile(r'(?m)^[ \t]*(?:#\[cfg\(\s*test\s*\)\]\s*)?#\[path\s*=\s*"(?P<path>[^"]+)"\]\s*(?:#\[cfg\(\s*test\s*\)\]\s*)?(?:#\[[^\]]*\]\s*)*(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*;[ \t]*\n')
+    removals, writes, path_edits = {}, {}, {}
+    mount = re.compile(r'(?m)^[ \t]*(?:#\[cfg\(\s*test\s*\)\]\s*(?:[ \t]*//[^\n]*\n\s*)*)?#\[path\s*=\s*"(?P<path>[^"]+)"\]\s*(?:#\[cfg\(\s*test\s*\)\]\s*)?(?:#\[[^\]]*\]\s*)*(?:pub(?:\s*\([^)]*\))?\s+)?mod\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*;[ \t]*\n')
     claimed = set()
     for target in spec["targets"]:
         rules = [re.compile(r) for r in target["tests"]]
@@ -74,17 +78,13 @@ def main():
                 edits.append((p.start(), p.end(), rep))
             for p in re.finditer(r"(?<![\w:])super\s*::\s*\*", stripped):
                 pass
-            out, last = [], 0
-            for a, b, rep in sorted(edits):
-                out.append(raw[last:a]); out.append(rep); last = b
-            out.append(raw[last:])
-            writes[f] = "".join(out)
+            path_edits[f] = edits
             leaf = m.group("name") if m.group("name") not in ("tests", "unit") else re.sub(r"[^A-Za-z0-9_]", "_", "_".join(modpath[-2:]))
             if any(n == leaf for _, n in mounts) or any(re.search(r"\bmod " + leaf + r";", writes.get(target_root, "")) for _ in [0]):
                 distinct = next((seg for seg in modpath if sum(1 for g in chosen if seg in crate.files[g]) == 1), None) or str(len(mounts))
                 leaf = re.sub(r"[^A-Za-z0-9_]", "_", distinct + "_" + leaf)
             mounts.append((os.path.relpath(f, os.path.dirname(target_root)), leaf))
-        mounted_text = "\n".join(writes.get(os.path.normpath(os.path.join(os.path.dirname(target_root), p)), "") for p, _ in mounts)
+        mounted_text = "\n".join(open(os.path.normpath(os.path.join(os.path.dirname(target_root), p)), encoding="utf-8").read() for p, _ in mounts)
         used_aliases = [a for a in aliases if re.search(r"(?<![\w:])" + re.match(r"extern crate \S+ as (\w+);", a).group(1) + r"\s*::", mounted_text)] if all(re.match(r"extern crate \S+ as (\w+);", a) for a in aliases) else aliases
         body = target["doc"] + "\n\n" + "\n".join(used_aliases) + ("\n\n" if used_aliases else "") + "".join(f'#[path = "{p}"]\nmod {n};\n' for p, n in mounts)
         writes[target_root] = body
@@ -92,12 +92,19 @@ def main():
         if f'name = "{target["name"]}"' not in mtext:
             mtext = mtext.rstrip("\n") + "\n" + row
         print(f"target {target['name']}: {len(mounts)} modules -> {target['root']}")
-    for parent, spans in removals.items():
-        raw = writes.get(parent) or open(parent, encoding="utf-8").read()
-        for a, b in sorted(spans, reverse=True):
-            raw = raw[:a] + raw[b:]
-        writes[parent] = re.sub(r"\n{3,}", "\n\n", raw).rstrip("\n") + "\n"
-        print(f"unmount {len(spans)} in {os.path.relpath(parent, REPO)}")
+    for f in set(path_edits) | set(removals):
+        raw = open(f, encoding="utf-8").read()
+        edits = sorted(path_edits.get(f, []) + [(a, b, "") for a, b in removals.get(f, [])])
+        out, last = [], 0
+        for a, b, rep in edits:
+            if a < last:
+                continue
+            out.append(raw[last:a]); out.append(rep); last = b
+        out.append(raw[last:])
+        text = "".join(out)
+        writes[f] = re.sub(r"\n{3,}", "\n\n", text).rstrip("\n") + "\n" if f in removals else text
+        if f in removals:
+            print(f"unmount {len(removals[f])} in {os.path.relpath(f, REPO)}")
     if mode == "apply":
         import shutil, time
         backup = os.path.join(REPO, ".🧬semio/🦑️repo/⚡️cache/p8/backup", "it-" + time.strftime("%H%M%S"))

@@ -1,0 +1,146 @@
+{
+ "order": [
+  "terminology",
+  "interaction",
+  "visual-job",
+  "session",
+  "model-window",
+  "results-window",
+  "commands",
+  "panels",
+  "viewer",
+  "editor",
+  "aggregator"
+ ],
+ "allow": {
+  "interaction": [],
+  "visual-job": [],
+  "session": [
+   "visual-job"
+  ],
+  "model-window": [
+   "interaction",
+   "visual-job",
+   "session"
+  ],
+  "results-window": [
+   "model-window",
+   "interaction",
+   "visual-job",
+   "session",
+   "terminology"
+  ],
+  "commands": [
+   "interaction",
+   "terminology",
+   "model-window",
+   "results-window"
+  ],
+  "panels": [
+   "commands",
+   "interaction",
+   "results-window",
+   "model-window",
+   "terminology",
+   "session",
+   "visual-job"
+  ],
+  "viewer": [
+   "visual-job",
+   "session",
+   "model-window",
+   "results-window",
+   "interaction",
+   "terminology"
+  ],
+  "editor": [
+   "terminology",
+   "interaction",
+   "visual-job",
+   "session",
+   "model-window",
+   "results-window",
+   "commands",
+   "panels",
+   "viewer"
+  ],
+  "aggregator": [
+   "terminology",
+   "interaction",
+   "visual-job",
+   "session",
+   "model-window",
+   "results-window",
+   "commands",
+   "panels",
+   "viewer",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🗣️terminology/",
+   "terminology"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🕹️interaction/",
+   "interaction"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/",
+   "visual-job"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🧵️session/",
+   "session"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/",
+   "model-window"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/",
+   "results-window"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎮️commands/(🎯️focus|🎥️set-camera|⏯️|⏱️|👁️set-result|🧭️gumball)",
+   "editor"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/🎮️commands/",
+   "commands"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/📌️panels/",
+   "panels"
+  ],
+  [
+   "🪆️subsets/🌐️any/👁️viewer/",
+   "viewer"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/",
+   "editor"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "aggregator"
+  ],
+  [
+   "🏅️standards/🔖️1/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

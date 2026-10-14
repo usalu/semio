@@ -1,9 +1,12 @@
 //! 🖇️ `create-link` — brings a new {@link ImageLink} into existence in the id-keyed `links`
 //! collection.
 
-use crate::mutations::{delete_link, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutLinksDelta, LayoutLinkInsertion};
-use crate::{ImageLink, LayoutDiff, LayoutSnapshot};
+use crate::delete_link;
+use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutLinkInsertion;
+use semio_s_artifact_layout_layout_model::ImageLink;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +22,12 @@ pub struct CreateLink {
     pub index: Option<usize>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLink {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLink where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_link::DeleteLink> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "link", kind: "create-link", record: "CreatedLink" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_link(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_create_link(self, base)?
     
@@ -52,10 +55,16 @@ pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol
 //#endregion 🖇️CreateLink
 
 //#region 🖇️CreateLink
-pub fn inverse_create_link(payload: &CreateLink, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_link<Op: From<crate::delete_link::DeleteLink>>(payload: &CreateLink, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::DeleteLink(delete_link::DeleteLink { id: payload.link.id.clone() })]
+    vec![Op::from(delete_link::DeleteLink { id: payload.link.id.clone() })]
 
     })())
 }
 //#endregion 🖇️CreateLink
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔗️appends-link-3/🦀️.rs"]
+mod tests_appends_link_3;
+//#endregion 🪢️TaxonomyMounts

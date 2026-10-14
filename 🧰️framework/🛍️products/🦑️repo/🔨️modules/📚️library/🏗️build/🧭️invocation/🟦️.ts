@@ -1,7 +1,11 @@
 import dependencySchema from "../🧬️schema/📥️dependencies.json";
+import authoringSchema from "../🧬️schema/📥️authoring.json";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {readFileSync} from "node:fs";
-import {join} from "node:path";
+import {join,resolve,isAbsolute} from "node:path";
+import {checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {buildInvocationGraphSelectionV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
+import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {semioBuildParallelFlag} from "../../🏃️process/🌿️environment/🟦️.ts";
 import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -143,6 +147,29 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
 
 /** 🧭️ Resolves the public selection and compiler configuration before any backend prepares. */
 export function resolveBuildInvocationV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Selection { return resolveBuildModeV1(resolveBuildSelectionV1(root,[...args]),environment); }
+
+/** 🧬️ Resolves an original declared caller without deriving authority from ambient task fields. */
+export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):BuildGraphSelectionV1|undefined{
+ const caller=value as {workspaceRoot?:unknown;native?:unknown;arguments?:string[];selection?:string[];launches?:string[][];buildMode?:string;tool?:string}|undefined;
+ if(!caller||caller.native===undefined&&caller.selection===undefined)return undefined;
+ if(validateJsonSchemaSubset(authoringSchema,caller).length||typeof caller.workspaceRoot!=="string"||!isAbsolute(caller.workspaceRoot)||resolve(caller.workspaceRoot)!==resolve(root))throw Error("Original nested build caller authority required");
+ const namespace=caller.arguments![0];if(!["repo","nx"].includes(namespace!)||caller.selection![0]!==namespace||!caller.launches!.some(launch=>JSON.stringify(launch)===JSON.stringify(caller.selection)))throw Error("Original nested build launch authority required");
+ const selection=(args:readonly string[])=>{if(args[0]!==namespace)throw Error("Original nested build namespace changed");const parsed=parseBuildInvocationV1(args.slice(1),{SEMIO_BUILD_TOOL:caller.tool??"nx"});return buildInvocationGraphSelectionV1(resolveBuildInvocationV1(root,parsed.args,{SEMIO_BUILD_MODE:caller.buildMode}).args);},ancestor=selection(caller.arguments!);
+ if(!caller.launches!.some(launch=>JSON.stringify(selection(launch))===JSON.stringify(ancestor)))throw Error("Original nested build request is undeclared");
+ return ancestor;
+}
+
+/** 🪆️ Validates an inherited original pin before genuinely publishing a different nested selection. */
+export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,reuse:boolean,read?:(root:string,invocation:ScriptInvocation,options:{selection:BuildGraphSelectionV1;reuse:boolean})=>Promise<BuildGraphV1>):Promise<BuildGraphV1>{
+ checkScriptInvocation(original);if(current.control!==original.control||current.policy!==original.policy)throw Error("Original nested build process control changed");
+ const selection=buildInvocationGraphSelectionV1(args),load=read??(await import("../🕸️graph/🟦️.ts")).loadBuildGraphV1,ancestor=reuse?readBuildGraphAncestorSelectionV1(root,original.capabilities):undefined;
+ if(ancestor&&JSON.stringify(ancestor)!==JSON.stringify(selection)){
+  if((current.capabilities as {native?:unknown}).native!==(original.capabilities as {native?:unknown}).native)throw Error("Original nested build native resources changed");
+  await load(root,original,{selection:ancestor,reuse:true});checkScriptInvocation(original);await advanceScriptInvocation(original,"build:nested-selection","running");checkScriptInvocation(original);
+  return load(root,current,{selection,reuse:false});
+ }
+ return load(root,current,{selection,reuse});
+}
 
 
 /** 📥️ An explicit dependency selection enters its original owner before any installed graph tool. */

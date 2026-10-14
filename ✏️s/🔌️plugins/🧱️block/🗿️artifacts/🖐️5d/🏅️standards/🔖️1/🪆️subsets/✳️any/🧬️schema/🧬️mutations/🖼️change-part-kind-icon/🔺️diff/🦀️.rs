@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `ChangePartKindIcon`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangePartKindIcon, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::change_part_kind_icon::ChangePartKindIcon, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if payload.new_icon == base.part_kind.icon {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Part kind icon is unchanged.");
     }

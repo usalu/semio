@@ -1,7 +1,9 @@
 //! 🧩️ Generation3d play app commands command — `set-contributions`: the host's `flow.extension`
 //! closure, installed into the plugin's process-wide flow extension registry one page at a time.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

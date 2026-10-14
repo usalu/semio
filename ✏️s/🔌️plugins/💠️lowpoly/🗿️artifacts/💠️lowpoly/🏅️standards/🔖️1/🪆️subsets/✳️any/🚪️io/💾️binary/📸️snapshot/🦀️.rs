@@ -12,8 +12,8 @@ mod tests;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::snapshot::*;
+use crate::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for LowpolySnapshot {

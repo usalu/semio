@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::schema::mutations::KINDS;
+use crate::KINDS;
 
 #[semio_framework_async_macros::async_test]
 async fn kinds_are_unique_and_non_empty() {

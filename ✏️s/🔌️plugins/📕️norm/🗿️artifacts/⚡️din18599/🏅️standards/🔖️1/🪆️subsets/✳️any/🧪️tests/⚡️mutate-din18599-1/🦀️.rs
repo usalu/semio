@@ -14,17 +14,17 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::{Din18599Mutation};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::{apply_din18599_mutation,inverse_din18599_mutation};
+    use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+    use semio_s_artifact_norm_din18599_mutations::mutation_bridge::{apply_din18599_mutation, inverse_din18599_mutation};
 
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::mutations::{decode_din18599_mutation_json};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::{Din18599Snapshot};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::binary::snapshot::{encode_din18599_pack};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::binary::snapshot::{decode_din18599_pack};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{encode_din18599_dsl};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{decode_din18599_dsl};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{decode_din18599_snapshot_json};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{encode_din18599_snapshot_json};
+    use semio_s_artifact_norm_din18599_io::text::mutations::decode_din18599_mutation_json;
+    use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+    use semio_s_artifact_norm_din18599_io::binary::snapshot::encode_din18599_pack;
+    use semio_s_artifact_norm_din18599_io::binary::snapshot::decode_din18599_pack;
+    use semio_s_artifact_norm_din18599_io::text::snapshot::encode_din18599_dsl;
+    use semio_s_artifact_norm_din18599_io::text::snapshot::decode_din18599_dsl;
+    use semio_s_artifact_norm_din18599_io::text::snapshot::decode_din18599_snapshot_json;
+    use semio_s_artifact_norm_din18599_io::text::snapshot::encode_din18599_snapshot_json;
     use semio_repo_test_host::law;
 
     /// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
@@ -159,7 +159,7 @@ pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
     #[cfg(feature = "sut")]
     {
-        for kind in semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::KINDS {
+        for kind in semio_s_artifact_norm_din18599_mutations::KINDS {
             built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind)).subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
         }
         built = built.subject("identity-round-trip", subject::round_trip);

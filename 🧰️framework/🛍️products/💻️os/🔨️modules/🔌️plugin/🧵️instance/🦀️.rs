@@ -30,7 +30,7 @@ use crate::peer_roster::PeerRosterPublicationStage;
 use crate::child_view::CHILD_CONTENT_SLOTS;
 use crate::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
 use crate::tool_cancellation::TOOL_CANCELLATION_SLOTS;
-use crate::bounded_ownership::plugin_turn_admitted;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_turn_admitted;
 use crate::command_history::HISTORY_STEP_BLOCKED_CODE;
 use crate::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
 use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
@@ -108,7 +108,7 @@ use crate::typed_operation::PendingPublicationOutcome;
 use crate::tool_jobs::tool_machine::ToolDispatch;
 use crate::child_content::advance_original_child_root_retirement;
 use crate::child_content::original_child_root_retirement_demands;
-use crate::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;
 use crate::child_content::MountedPrivateChildGroup;
 use crate::child_content::MountedCommandPrune;
 use crate::child_content::PagedCommandLog;
@@ -154,13 +154,13 @@ use crate::app_views::InteractionHoverState;
 use crate::app_views::InteractionView;
 use crate::window_transient::TransientView;
 use crate::artifact_registration::PluginRuntimeRegistry;
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::bounded_ownership::ArtifactFixedQueue;
-use crate::bounded_ownership::ArtifactFixedRegistry;
-use crate::bounded_ownership::DOCUMENT_ARCHIVE_LOAD_SLOTS;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::bounded_ownership::plugin_demand_grant;
-use crate::bounded_ownership::plugin_retirement_fault;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::bounded_ownership::DOCUMENT_ARCHIVE_LOAD_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
 #[cfg(test)]
 use crate::child_content::ChildAdmissionTestState;
 use crate::child_content::ChildContentRetirement;
@@ -281,12 +281,12 @@ use crate::reserved_jobs::register_framework_reserved_factories;
 use crate::reserved_jobs::reserved_pump_fault_detail;
 use crate::reserved_jobs::reserved_pump_fault_is_transient;
 use crate::reserved_jobs::retained_payload_eq_slice;
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactDisposal;
-use crate::store_lifecycle::ArtifactDocumentStoreDisposer;
-use crate::store_lifecycle::ArtifactOwnedDisposer;
-use crate::store_lifecycle::ArtifactSnapshotCloseLease;
-use crate::store_lifecycle::ArtifactSnapshotCloseRetention;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDocumentStoreDisposer;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseRetention;
 use crate::store_publication::ChildPublicationResultV1;
 use crate::store_publication::ComposedGestureResult;
 use crate::store_publication::MountedTypedCommandFullOperationStage;
@@ -521,7 +521,7 @@ impl OriginalRenderInteractionStamp<'_> {
 struct MediaExportPreparation<A:ArtifactApp>{
  canonical_revision:[u8;32],metadata:ManuallyDrop<Option<[Vec<u8>;6]>>,metadata_stage:usize,metadata_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;6]>>>,
  request_close:ManuallyDrop<Option<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>>,parts:ManuallyDrop<Option<crate::media_export::MediaExportOwnedParts>>,parts_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<crate::media_export::MediaExportOwnedParts>>>,handle:ManuallyDrop<Option<ArtifactMediaExportHandle>>,handle_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,operation:Option<semio_framework_job::Operation>,body_ready:bool,operation_bound:bool,assembled:bool,published:bool,
- snapshot_source:crate::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
+ snapshot_source:semio_framework_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource<A::Snapshot>,
  snapshot:ManuallyDrop<Option<std::sync::Arc<A::Snapshot>>>,snapshot_lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<A::Snapshot>>>,snapshot_retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,
  request:ManuallyDrop<Option<ArtifactMediaExportJobRequest<A>>>,body:ManuallyDrop<Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>>,producer:ManuallyDrop<Option<ArtifactReservedToolJob>>,
  source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation,usize),port_identity:(usize,usize),key:ToolOperationKey,
@@ -539,14 +539,14 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   if let Some(job)=self.body.as_ref(){return if job.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(&**job),..one})}else{Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.max(1)})}}
   if let Some(owner)=self.request_close.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.retirement_demands(body)}}
   if self.request.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..one})}
-  if self.parts.is_some()||self.parts_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.parts,&self.parts_close,body)}
-  if self.handle.is_some()||self.handle_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.handle,&self.handle_close,body)}
-  if self.metadata.is_some()||self.metadata_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}
+  if self.parts.is_some()||self.parts_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.parts,&self.parts_close,body)}
+  if self.handle.is_some()||self.handle_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.handle,&self.handle_close,body)}
+  if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}
   if self.snapshot.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<std::sync::Arc<A::Snapshot>>(),..one})}
   if let Some(lease)=self.snapshot_lease.as_ref(){return Ok(if lease.terminal_is_empty(){one}else{lease.retirement_demands()})}
-  if self.completion.is_some()||self.completion_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
-  if self.credit.is_some()||self.credit_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.credit,&self.credit_close,body)}
-  if self.chunks.is_some()||self.chunks_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.chunks,&self.chunks_close,body)}
+  if self.completion.is_some()||self.completion_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
+  if self.credit.is_some()||self.credit_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.credit,&self.credit_close,body)}
+  if self.chunks.is_some()||self.chunks_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.chunks,&self.chunks_close,body)}
   if self.operation.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_job::Operation>(),..one})}
   Ok(one)
  }
@@ -557,14 +557,14 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   if let Some(job)=self.body.as_mut(){if job.terminal_is_empty(){let bytes=size_of_val(&**job);self.body.take();return Ok(Some(RetainedCloneProgress{released_bytes:bytes,..item}))}job.begin_close();return job.close_step(cx).map(|step|Some(step.progress()))}
   if let Some(owner)=self.request_close.as_mut(){if owner.terminal_is_empty(){self.request_close.take();return Ok(Some(item))}return owner.close_step(grant).map(|step|Some(step.progress())).map_err(Into::into)}
   if let Some(request)=self.request.take(){*self.request_close=Some(crate::media_contract::ArtifactMediaExportRequestRetirement::new(request));return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<crate::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..item}))}
-  if self.parts.is_some()||self.parts_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.parts,&mut self.parts_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if self.handle.is_some()||self.handle_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.handle,&mut self.handle_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if self.metadata.is_some()||self.metadata_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.parts.is_some()||self.parts_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.parts,&mut self.parts_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.handle.is_some()||self.handle_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.handle,&mut self.handle_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.metadata.is_some()||self.metadata_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.metadata,&mut self.metadata_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
   if let Some(snapshot)=self.snapshot.as_ref(){if !self.snapshot_lease.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending media snapshot lost its paired supplier").into())}self.snapshot.take();return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<std::sync::Arc<A::Snapshot>>(),..item}))}
   if let Some(lease)=self.snapshot_lease.as_mut(){if lease.terminal_is_empty(){self.snapshot_lease.take();return Ok(Some(item))}return lease.close_step(grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if self.completion.is_some()||self.completion_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.completion,&mut self.completion_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if self.credit.is_some()||self.credit_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.credit,&mut self.credit_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
-  if self.chunks.is_some()||self.chunks_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_step(&mut self.chunks,&mut self.chunks_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.completion.is_some()||self.completion_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.completion,&mut self.completion_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.credit.is_some()||self.credit_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.credit,&mut self.credit_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
+  if self.chunks.is_some()||self.chunks_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.chunks,&mut self.chunks_close,grant).map(|step|Some(step.progress())).map_err(Into::into)}
   if self.operation.is_some(){self.operation.take();return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<semio_framework_job::Operation>(),..item}))}
   Ok(None)
  }
@@ -706,6 +706,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     latest_wins_turn: bool,
     media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
     media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
+    media_download_preparation:ManuallyDrop<Option<crate::media_export::MediaDownloadPreparation>>,
     pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
     reserved_commits: std::collections::VecDeque<FrameworkReservedCommit>,
     reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
@@ -716,7 +717,7 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: SpaceMember + MemberFactory = NoMem
     media_submission_refusal_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
     media_submission_refusal_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<crate::media_operation_refusal::MediaOperationRefusal>>>,
     pub(crate) segmented_downloads: ArtifactFixedRegistry<ArtifactDownloadOutput>,
-    pub(crate) segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>,
+    pub(crate) segmented_closures: ArtifactFixedRegistry<crate::media_export::MediaDownloadRetirement>,
     pub(crate) close_started: bool,
     pub(crate) close_cancellation_cursor: usize,
     pending_document_window_admission:std::mem::ManuallyDrop<Option<DocumentWindowResetAdmission>>,
@@ -1358,7 +1359,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let step_grant = self.mounted_policy.preparation;
         let close_grant = self.mounted_policy.close;
         let source=(cx.operation(),cx.generation());
-        let mut pending=crate::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,source);
+        let mut pending=semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,source);
         let config=semio_framework_job::BatchDriveConfig{retained:step_grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:proof.contract().max_work_units_per_step,step_budget_us:semio_framework_job::INTERACTIVE_LANE_WALL_US};
         let mut session=loop{plugin_job_yield_once().await;if let Some(session)=pending.admit_pending(config,cx)?{break session}};
         drop(pending);
@@ -1632,22 +1633,22 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             semio_framework_schema_registry::register_referenced_schema_documents(documents);
         }
         let snapshot = Self::isolate_artifact_app_initial_snapshot().await;
-        let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None);
+        let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(A::DIALECT.into());
         let config_id = format!("{}-config", app_id);
         let config_envelope = create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema().await, &config_id, A::initial_config().await, None);
         let draft_id = format!("{}-draft", app_id);
-        let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None);
+        let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let interaction_id = format!("{}-interaction", app_id);
-        let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-        let mut store = ArtifactStore::new(envelope, actor.clone()).await.expect("failed to create document store");
+        let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor.clone()).await.expect("failed to create document store");
         store.install_operation_wire(store::ArtifactOperationWire::semantic::<A::Snapshot>().with_batch_digest());
         store.enable_convergence_early_exit();
         store.defer_remote_replays(Some(time_travel::time_travel_replay_turn_budget()));
         store.defer_local_replays(Some(time_travel::time_travel_replay_turn_budget()));
-        let config_store = ConfigStore::new(config_envelope.await, actor.clone()).await.expect("failed to create config store");
-        let draft_store = store::DraftStore::new(draft_envelope, actor.clone()).await.expect("failed to create draft store");
-        let interaction_store = ConfigStore::new(interaction_envelope, actor.clone()).await.expect("failed to create interaction store");
+        let config_store = ConfigStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(config_envelope.await, actor.clone()).await.expect("failed to create config store");
+        let draft_store = store::DraftStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(draft_envelope, actor.clone()).await.expect("failed to create draft store");
+        let interaction_store = ConfigStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(interaction_envelope, actor.clone()).await.expect("failed to create interaction store");
         let genesis_mutations = A::genesis().await;
         if !genesis_mutations.is_empty() {
             store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, transaction: None }, identity).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -1823,6 +1824,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             latest_wins_turn: true,
             media_exports: ArtifactFixedRegistry::new(),
             media_export_preparation:ManuallyDrop::new(None),
+            media_download_preparation:ManuallyDrop::new(None),
             pending_reserved: ArtifactFixedRegistry::new(),
             reserved_commits: std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS),
             reserved_commit_outcome: None,
@@ -3172,7 +3174,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     #[inline(never)]
     pub(crate) fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=self.typed_operation_retirement_demands(operation_id,grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
     }
 
     fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
@@ -3225,7 +3227,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
             if self.tool_operations.get(operation_id).is_some_and(|operation|operation.granted_retirement_ready()&&operation.granted_retirement_pending()){
                 let grant=crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.close,cx.retained_grant());
-                let demand=self.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?;let step=crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{let step=self.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(same,actual)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;let step=RetainedCloneStep::Progress(step.progress().unwrap_or_default());
+                let demand=self.tool_operations.get(operation_id).unwrap().granted_retirement_demands(grant.maximum_copy_bytes)?;let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{let step=self.tool_operations.get_mut(operation_id).unwrap().granted_retirement_step(same,actual)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;let step=RetainedCloneStep::Progress(step.progress().unwrap_or_default());
                 if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typed operation retirement exceeded its issuer grant").with_retained_progress(step.progress()).into());}
                 let progress=step.progress();if progress==RetainedCloneProgress::default(){return Ok(());}
                 let owner=self.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
@@ -5919,7 +5921,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if !self.prepare_render_closure_failure(cx)?{return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?))}
         match self.close_pending_render_tree_on_original(cx){Ok(Some(true))=>{},Ok(_)=>return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?)),Err(failure)=>{self.retain_render_closure_failure(failure,cx);return Ok(PluginLifecycleStep::Progress(original_render_posted_since(before,cx.retained_progress())?))}}
         let demand=self.render_failure_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             if let Some(owner)=self.pending_render_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.pending_render_retirement.take());self.pending_render_identity=None;self.pending_render_tree_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}
                 let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
@@ -6012,9 +6014,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(true)
     }
 
-    pub(crate) fn media_submission_refusal_terminal_is_empty(&self)->bool{self.media_export_preparation.is_none()&&self.media_submission_refusal.is_none()&&self.media_submission_refusal_retirement.is_none()&&self.media_submission_refusal_identity.is_none()}
+    pub(crate) fn media_submission_refusal_terminal_is_empty(&self)->bool{self.media_download_preparation.is_none()&&self.media_export_preparation.is_none()&&self.media_submission_refusal.is_none()&&self.media_submission_refusal_retirement.is_none()&&self.media_submission_refusal_identity.is_none()}
     pub(crate) fn media_submission_refusal_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         use semio_framework_value::retirement::RetireOwned;
+        if let Some(original)=self.media_download_preparation.as_ref(){return original.retirement_demands(body)}
         if let Some(original)=self.media_export_preparation.as_ref(){
             if original.producer.is_some()||original.body.is_some()||original.request.is_some()||original.request_close.is_some()||original.parts.is_some()||original.parts_close.is_some()||original.handle.is_some()||original.handle_close.is_some()||original.metadata.is_some()||original.metadata_close.is_some()||original.snapshot.is_some()||original.snapshot_lease.is_some()||original.completion.is_some()||original.completion_close.is_some()||original.credit.is_some()||original.credit_close.is_some()||original.chunks.is_some()||original.chunks_close.is_some()||original.operation.is_some(){return original.retirement_demands(body)}
             if let Some(owner)=original.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(&self.tool_cancellations,body)}}
@@ -6028,6 +6031,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(Default::default())
     }
     pub(crate) fn close_media_submission_refusal(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        if let Some(original)=self.media_download_preparation.as_ref(){self.snapshot_retirements.get(original.operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending download lost its original snapshot source"))?.validate_retirement(cx)?}
         if let Some(original)=self.media_export_preparation.as_ref(){
             if let Some(retention)=original.snapshot_retention.as_ref(){if !retention.terminal_is_empty(){retention.validate_retirement(cx)?}}
             else if let Some(retention)=self.snapshot_retirements.get(original.key.operation_id.0){retention.validate_retirement(cx)?}
@@ -6035,7 +6039,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             else if original.source_identity!=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"empty media preparation footer requires its unchanged original receiving source").into())}
         }
         let demand=self.media_submission_refusal_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+            if let Some(original)=self.media_download_preparation.as_mut(){if let Some(step)=original.close_step(grant)?{return Ok((PluginLifecycleStep::Progress(step.progress()),false))}self.media_download_preparation.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}
             if let Some(original)=self.media_export_preparation.as_mut(){
                 if let Some(progress)=original.close_material_step(cx,grant)?{return Ok((PluginLifecycleStep::Progress(progress),false))}
                 let step=if let Some(owner)=original.retirement.as_mut(){if owner.terminal_is_empty(){RetainedCloneStep::Progress(crate::tool_cancellation::original_lease_cursor_release(&mut original.retirement,grant)?)}else{owner.close_step(&self.tool_cancellations,grant)?}}else if original.lease.is_some(){let(owner,progress)=crate::tool_cancellation::original_lease_cursor_admit(&mut original.lease,grant)?;original.retirement=owner;RetainedCloneStep::Progress(progress)}
@@ -6088,7 +6093,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<MediaExportPreparation<A>>(){return Ok(false)}
             let Some(slot)=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot|self.media_exports.slot_is_vacant(*slot)&&self.media_closures.slot_is_vacant(*slot)&&self.snapshot_retirements.slot_is_vacant(*slot))else{return Ok(false)};
             let revision=self.store.content_revision_now();let operation_id=semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64,slot as u64);let key=ToolOperationKey{app_instance_id,document:ArtifactDocumentAuthority(app_instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),generation:semio_framework_job::Generation(self.store.generation_now())};
-            *self.media_export_preparation=Some(MediaExportPreparation{canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:crate::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None});
+            *self.media_export_preparation=Some(MediaExportPreparation{canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:semio_framework_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None});
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)
         }
         let original=self.media_export_preparation.as_mut().unwrap();if original.retirement.is_some(){return Ok(false)}
@@ -6136,7 +6141,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let operation=original.request.as_ref().map_or_else(||semio_framework_job::Operation::new(original.key.operation_id,original.key.base_revision,original.key.generation,original.key.operation_id.0^original.key.base_revision.0),|request|request.operation);let operation_id=operation.operation;
         let retention=original.snapshot_retention.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media publication lost its actual snapshot supplier"))?;
         self.snapshot_retirements.insert_admitted(operation_id.0,retention);
-        let active=ActiveMediaExport{parts:ManuallyDrop::new(original.parts.take()),parts_retirement:ManuallyDrop::new(None),cancellation_retirement:None,operation,contract,session:None,session_rejected:Some(crate::reserved_job_session::RefusedWorkerSource::pending(original.producer.take().unwrap(),(cx.operation(),cx.generation()))),outcome_pending:false,resume_pending:false,lease:ManuallyDrop::new(original.lease.take()),checkpoint_available:false,applied_progress:0,close_stage:ActiveMediaExportCloseStage::Live};
+        let active=ActiveMediaExport{parts:ManuallyDrop::new(original.parts.take()),parts_retirement:ManuallyDrop::new(None),cancellation_retirement:None,operation,contract,session:None,session_rejected:Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(original.producer.take().unwrap(),(cx.operation(),cx.generation()))),outcome_pending:false,resume_pending:false,lease:ManuallyDrop::new(original.lease.take()),checkpoint_available:false,applied_progress:0,download_pending:false,close_stage:ActiveMediaExportCloseStage::Live};
         self.media_exports.insert_admitted(operation_id.0,active);self.current_media_export=Some(operation_id.0);original.published=true;
         cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
         Ok(false)
@@ -6277,7 +6282,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download cleanup authority is saturated".into()));
             }
             let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "media export download changed before cancellation".into()))?;
-            self.segmented_closures.insert_admitted(operation_id, output);
+            self.segmented_closures.insert_admitted(operation_id,crate::media_export::MediaDownloadRetirement::pending(output));
             return Ok(());
         }
         if !self.media_closures.can_insert(operation_id) {
@@ -6720,7 +6725,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let mounted=self.tool_operations.get_mut(id).expect("original producer owns its admitted slot");
         let job=mounted.reserved_producer.as_ref().expect("original reserved producer remains retained").clone();
         let dispatched=self.tool_jobs.dispatch(semio_framework::ToolOperationSpec::new(key.controller_id,key.tool_id,proof.schema_id(),job,mounted.operation)).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-        mounted.session_rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(dispatched.job,mounted.source_identity));
+        mounted.session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatched.job,mounted.source_identity));
         mounted.terminal_seen=false;
         mounted.stage=MountedTypedCommandFullOperationStage::Worker;
         Ok(started)
@@ -7266,7 +7271,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         }
         if state.publication.is_none(){state.publication=state.completion.as_ref().ok_or_else(||plugin_sdk_fault("original preview completion source is absent"))?.take()?;return Ok(None)}
-        if state.completion.is_some()||state.completion_close.is_some(){let step=crate::bounded_ownership::plugin_typed_owner_step(&mut state.completion,&mut state.completion_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;return Ok(None)}
+        if state.completion.is_some()||state.completion_close.is_some(){let step=semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut state.completion,&mut state.completion_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;return Ok(None)}
         if let Some(owner)=state.lease_close.as_mut(){let step=if owner.terminal_is_empty(){crate::tool_cancellation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant()).map(RetainedCloneStep::Progress)?}else{owner.close_step(&self.tool_cancellations,cx.retained_grant())?};cx.consume_retained(step.progress())?;return Ok(None)}
         if state.lease.is_some(){let(owner,progress)=crate::tool_cancellation::original_lease_cursor_admit(&mut state.lease,cx.retained_grant())?;state.lease_close=owner;cx.consume_retained(progress)?;return Ok(None)}
         if let Some(caller)=state.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){state.caller.take();}return Ok(None)}
@@ -7654,7 +7659,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await?;
             } else {
                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
-                self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,crate::bounded_ownership::original_lifecycle_grant(cx,crate::plugin_runtime::remaining_plugin_turn_grant(turn,*spent))))?;
+                self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,crate::plugin_runtime::remaining_plugin_turn_grant(turn,*spent))))?;
                 let receipt = mounted.publication_ownership_progress.take();
                 if let Some((_, unit)) = receipt {
                     cx.consume_retained(unit)?;
@@ -7674,7 +7679,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 }
             }
             if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-            if mounted.owned_child_group.is_some(){let delta=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;*spent=spent.checked_add(delta)?;}
+            if mounted.owned_child_group.is_some(){let delta=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;*spent=spent.checked_add(delta)?;}
             if mounted.stage != MountedTypedCommandFullOperationStage::Publishing {
                 return Ok(());
             }
@@ -8932,7 +8937,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         } else {
             self.tool_jobs.dispatch(operation_spec).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?
         };
-        let session=None;let session_rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,(cx.operation(),cx.generation())));
+        let session=None;let session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,(cx.operation(),cx.generation())));
         self.tool_operations.insert_admitted(
             operation_id.0,
             MountedTypedCommandFullOperation {
@@ -9080,7 +9085,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     fn receive_configuration_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.pending_configuration_failure.is_none(){return Ok(false)}if self.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration failure requires its unchanged original caller").into())}if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.pending_configuration_failure,cx)?{self.pending_configuration_identity=None;return Err(failure)}Ok(true)}
     pub(crate) fn configuration_failure_terminal_is_empty(&self)->bool{self.pending_configuration_completion.is_none()&&self.pending_configuration_command.is_none()&&self.pending_configuration_command_close.is_none()&&self.pending_configuration_permit.is_none()&&self.pending_configuration_failure.is_none()&&self.pending_configuration_retirement.is_none()&&self.pending_configuration_identity.is_none()}
     pub(crate) fn configuration_failure_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.pending_configuration_completion.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.demand(body)}}if let Some(owner)=self.pending_configuration_command_close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}self.pending_configuration_retirement.as_ref().map_or(Ok(RetirementDemand{depth:usize::from(!self.configuration_failure_terminal_is_empty()),..Default::default()}),|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)})}
-    pub(crate) fn close_configuration_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{let demand=self.configuration_failure_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{if let Some(owner)=self.pending_configuration_completion.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_completion.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(owner)=self.pending_configuration_command_close.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_command_close.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(command)=self.pending_configuration_command.take(){match ControlledRetirement::new(command){Ok(owner)=>self.pending_configuration_command_close=Some(owner),Err((error,command))=>{*self.pending_configuration_command=Some(command);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(permit)=self.pending_configuration_permit.take(){self.finish_reserved_emit_producer(permit);return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(owner)=self.pending_configuration_retirement.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_retirement.take();return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(source)=self.pending_configuration_failure.take(){match ControlledRetirement::new(source){Ok(owner)=>self.pending_configuration_retirement=Some(owner),Err((error,source))=>{*self.pending_configuration_failure=Some(source);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}self.pending_configuration_identity=None;Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))})}
+    pub(crate) fn close_configuration_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{let demand=self.configuration_failure_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{if let Some(owner)=self.pending_configuration_completion.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_completion.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(owner)=self.pending_configuration_command_close.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_command_close.take();return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(command)=self.pending_configuration_command.take(){match ControlledRetirement::new(command){Ok(owner)=>self.pending_configuration_command_close=Some(owner),Err((error,command))=>{*self.pending_configuration_command=Some(command);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(permit)=self.pending_configuration_permit.take(){self.finish_reserved_emit_producer(permit);return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}if let Some(owner)=self.pending_configuration_retirement.as_mut(){if owner.terminal_is_empty(){self.pending_configuration_retirement.take();return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}let step=owner.step(grant)?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}if let Some(source)=self.pending_configuration_failure.take(){match ControlledRetirement::new(source){Ok(owner)=>self.pending_configuration_retirement=Some(owner),Err((error,source))=>{*self.pending_configuration_failure=Some(source);return Err(error.into())}}return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}self.pending_configuration_identity=None;Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))})}
 
     /// 🧾️ Whether a verb of this declared kind may dirty the history panel. `dispatch_emit` records a
     /// command-log row for EVERY dispatch, view actions included (`ActionKind::View` is also the
@@ -9271,13 +9276,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     }
     fn mounted_owner_maintenance_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let identity=turn.identity();if self.live_runtime_instance_id!=Some(identity.instance_id)||!matches!(turn.phase(),MountedOwnerPhaseV1::Preparation|MountedOwnerPhaseV1::Maintenance){return Err(plugin_sdk_fault("mounted maintenance does not own this live instance and phase").into())}
-        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_maintenance_demands(identity.instance_id,loan.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_maintenance_step(identity.instance_id,same,actual)?,true)))}else{self.maintenance_step(cx,loan)})?;
+        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_maintenance_demands(identity.instance_id,loan.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_maintenance_step(identity.instance_id,same,actual)?,true)))}else{self.maintenance_step(cx,loan)})?;
         Ok(match step{PluginLifecycleStep::Complete(progress)if !self.maintenance_terminal_is_empty()=>PluginLifecycleStep::Progress(progress),step=>step})
     }
 
     fn mounted_owner_close_step(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let identity=turn.identity();if self.live_runtime_instance_id!=Some(identity.instance_id)||turn.phase()!=MountedOwnerPhaseV1::Close{return Err(plugin_sdk_fault("mounted close does not own this live instance and phase").into())}
-        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_close_demands(identity.instance_id,loan.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_close_step(identity.instance_id,same,actual)?,A::mounted_jobs_terminal_is_empty(identity.instance_id))))}else{self.close_step(cx,loan)})?;
+        let step=turn.advance_lifecycle(|cx,loan|if !A::mounted_jobs_terminal_is_empty(identity.instance_id){let demand=A::mounted_job_close_demands(identity.instance_id,loan.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|Ok((A::mounted_job_close_step(identity.instance_id,same,actual)?,A::mounted_jobs_terminal_is_empty(identity.instance_id))))}else{self.close_step(cx,loan)})?;
         Ok(match step{PluginLifecycleStep::Complete(progress)if !self.close_terminal_is_empty()=>PluginLifecycleStep::Progress(progress),step=>step})
     }
 
@@ -9307,7 +9312,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         if self.has_constructor_receipt(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"original constructor receipt awaits its phase recipient"})}
         let demand=self.close_retirement_demands(loan.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             if !self.constructor_terminal_is_empty(){self.close_store_constructor_unit(grant)?;let progress=self.constructor_receipt().map_or(Default::default(),|(_,_,_,progress)|*progress);self.take_constructor_receipt();return Ok((PluginLifecycleStep::Progress(progress),false))}
             let step=self.close_ladder_step(same,grant)?;let terminal=self.close_terminal_is_empty();Ok((PluginLifecycleStep::retained(step,terminal),terminal))
         })
@@ -9439,7 +9444,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             self.drive_tool_run_turn(cx, identity).await?;
             if cx.retained_progress()!=tool_run_before{
                 if !self.tool_runs.has_original_receipt(){
-                    let progress=crate::bounded_ownership::original_lifecycle_delta(tool_run_before,cx.retained_progress())?;
+                    let progress=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(tool_run_before,cx.retained_progress())?;
                     self.tool_runs.retain_original_receipt(retained,progress)?;
                 }
                 return Ok(())
@@ -10034,7 +10039,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         if !self.admit_document_window_reset(cx)?{return Ok(false)}
         let head = <A::Snapshot as ArtifactPack>::decode_pack(head).map_err(|error| plugin_sdk_fault(format!("the pure head snapshot does not decode: {error:?}")))?;
         let id = self.store.envelope().id.clone();
-        let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &id, head, None);
+        let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &id, head, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let mut window_reset=Some(self.prepare_document_window_reset()?);
         let actor = self.store.local_actor_id().clone();
         self.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
@@ -10278,7 +10283,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     async fn load_config_pack(&mut self, files: &store::os_store::serialization::ArtifactPackFiles) -> Result<(), Fault> {
-        let parsed: store::os_store::text_format::ParsedDocumentText<A::Config, A::ConfigMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr).await.map_err(|error| error.into_fault())?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<A::Config, A::ConfigMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.into_fault())?;
         self.config_store.reset(parsed.into_envelope()).await.map_err(|error| error.into_fault())?;
         self.cache = None;
         Ok(())
@@ -10796,48 +10801,72 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         self.receive_owned_media_export(port,app_instance_id,Some(receiver),cx).await
     }
 
-    async fn poll_media_export(&mut self,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<ArtifactMediaExportPoll>,semio_framework_job::OriginalTurnFailure>{
-        if self.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(None)}
-        if self.media_exports.get(handle.operation_id.0).is_none_or(|active|active.handle.original_loan()!=handle){return self.retain_media_submission_refusal(MediaError::Payload(handle.parent_document_id.to_owned(),"unknown or superseded media export handle".into()),cx)}
-        self.receive_owned_media_poll(handle.operation_id.0,cx).await
+    async fn poll_media_export(&mut self,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.receive_media_submission_refusal(cx)?||cx.should_yield(){return Ok(false)}
+        self.snapshot_retirements.get(handle.operation_id.0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media polling lost its original source"))?.validate(cx)?;
+        if receiver.is_some(){return Ok(true)}
+        if self.media_exports.get(handle.operation_id.0).is_none_or(|active|active.handle.original_loan()!=handle){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media polling requires its exact original live handle").into())}
+        let grant=cx.retained_grant();let bytes=size_of::<ArtifactMediaExportPoll>()+size_of::<bool>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        let Some(poll)=self.receive_owned_media_poll(handle.operation_id.0,cx).await?else{return Ok(false)};
+        if matches!(poll,ArtifactMediaExportPoll::Complete(_)){self.media_closures.get_mut(handle.operation_id.0).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal media poll lost its original close owner"))?.download_pending=true}
+        *receiver=Some(poll);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
-
 
     async fn cancel_media_export(&mut self, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
         self.cancel_owned_media_export(handle).await
     }
 
-    async fn retain_media_export_result(&mut self, handle: &ArtifactMediaExportHandle, result: ArtifactMediaExportResult) -> Result<(), MediaError> {
-        let operation_id = handle.operation_id.0;
-        if !self.segmented_downloads.can_insert(operation_id) {
-            return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download authority is saturated or already occupied".into()));
+    async fn retain_media_export_result(&mut self,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<crate::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let operation_id=handle.operation_id.0;let identity=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
+        if handle.parent_document_id.len()>crate::media_contract::ARTIFACT_OUTPUT_METADATA_BYTES{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"download handle document metadata exceeds its original limit").into())}
+        self.snapshot_retirements.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its original source"))?.validate(cx)?;
+        if self.media_download_preparation.is_none()&&status.is_some()&&source.is_none(){return if self.segmented_downloads.get(operation_id).is_some_and(|output|output.owns_media_export_loan(handle)){Ok(true)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published download lost its exact registry recipient").into())}}
+        if self.media_download_preparation.is_none(){
+            let active=self.media_closures.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its original completed operation"))?;
+            if active.handle.original_loan()!=handle{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its exact completed business handle").into())}
+            if let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref(){if !result.chunks.same_operation(&active.output_chunks){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its original supplied chunks").into())}}
         }
-        let active = self.media_closures.get_mut(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "completed media export lost its close authority".into()))?;
-        if active.handle != *handle || !result.chunks.same_operation(&active.output_chunks) {
-            return Err(MediaError::Payload(handle.parent_document_id.clone(), "completed media export authority mismatch".into()));
+        let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+        if self.media_download_preparation.is_none(){
+            if status.is_some()||!self.segmented_downloads.can_insert(operation_id){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving slot is occupied").into())}
+            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its retained completion").into())};
+            let bytes=size_of::<crate::media_export::MediaDownloadPreparation>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+            *self.media_download_preparation=Some(crate::media_export::MediaDownloadPreparation{operation_id,source_identity:identity,document_identity:(handle.parent_document_id.as_ptr()as usize,handle.parent_document_id.len()),mime_identity:(result.mime_type.as_ptr()as usize,result.mime_type.len()),chunks_identity:result.chunks.original_identity(),coordinates:(handle.app_instance_id,handle.base_revision,handle.generation),buffers:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),buffers_close:ManuallyDrop::new(None),stage:0,handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),output:ManuallyDrop::new(None),output_close:ManuallyDrop::new(None),published:false});
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
         }
-        let output = ArtifactDownloadOutput::from_media_export(handle.clone(), result.mime_type, result.chunks).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-        active.output_chunks = ArtifactOutputChunks::new(active.contract.max_output_bytes);
-        self.segmented_downloads.insert_admitted(operation_id, output);
-        Ok(())
+        let original=self.media_download_preparation.as_mut().unwrap();if original.operation_id!=operation_id||original.source_identity!=identity||original.coordinates!=(handle.app_instance_id,handle.base_revision,handle.generation)||original.document_identity!=(handle.parent_document_id.as_ptr()as usize,handle.parent_document_id.len()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download publication requires its unchanged original source and handle").into())}
+        if let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref(){if original.chunks_identity!=result.chunks.original_identity(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its same actual result root").into())}}
+        if original.published{
+            if source.is_some()||status.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published download has inconsistent original receiving slots").into())}
+            let bytes=size_of::<crate::media_export::MediaDownloadPreparation>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}self.media_download_preparation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
+        }
+        if original.stage<2{
+            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"partial download metadata lost its retained result").into())};if original.mime_identity!=(result.mime_type.as_ptr()as usize,result.mime_type.len()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"partial download requires its unchanged original MIME source").into())}
+            let input=if original.stage==0{handle.parent_document_id.as_bytes()}else{result.mime_type.as_bytes()};let output=&mut original.buffers.as_mut().unwrap()[original.stage];
+            if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+            if output.capacity()==0&&!input.is_empty(){if grant.maximum_capacity_bytes<input.len(){return Ok(false)}output.try_reserve_exact(input.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"download metadata allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+            if output.len()<input.len(){let count=(input.len()-output.len()).min(grant.maximum_copy_bytes);if count==0{return Ok(false)}let start=output.len();output.extend_from_slice(&input[start..start+count]);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+            if grant.maximum_copy_bytes<size_of::<usize>(){return Ok(false)}original.stage+=1;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+        }
+        if original.handle.is_none()&&status.is_none(){
+            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download metadata donation lost its original result").into())};let total_bytes=result.chunks.bytes()as u64;let bytes=size_of::<ArtifactMediaExportHandle>()+size_of::<crate::media_contract::ArtifactMediaExportPublishedStatus>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+            let buffers=original.buffers.as_mut().unwrap();let document=String::from_utf8(std::mem::take(&mut buffers[0])).expect("copied original document remains UTF-8");let mime_type=String::from_utf8(std::mem::take(&mut buffers[1])).expect("copied original MIME remains UTF-8");*original.handle=Some(ArtifactMediaExportHandle{app_instance_id:handle.app_instance_id,parent_document_id:document,operation_id:handle.operation_id,base_revision:handle.base_revision,generation:handle.generation});*status=Some(crate::media_contract::ArtifactMediaExportPublishedStatus{mime_type,total_bytes});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+        }
+        if original.output.is_none(){let _=ArtifactDownloadOutput::receive_media_export_original(&mut original.handle,source,&mut original.output,cx)?;return Ok(false)}
+        let bytes=size_of::<ArtifactDownloadOutput>()+2*size_of::<bool>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}if !self.segmented_downloads.can_insert(operation_id){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download registry receiving slot changed before publication").into())}
+        self.segmented_downloads.insert_admitted(operation_id,original.output.take().unwrap());original.published=true;if let Some(active)=self.media_closures.get_mut(operation_id){active.download_pending=false}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
     }
 
-    async fn take_media_export_chunk(&mut self, handle: &ArtifactMediaExportHandle) -> Result<Option<Vec<u8>>, MediaError> {
-        let operation_id = handle.operation_id.0;
-        let output = self.segmented_downloads.get(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "unknown media export download handle".into()))?;
-        if !output.owns_media_export(handle) {
-            return Err(MediaError::Payload(handle.parent_document_id.clone(), "media export download handle authority mismatch".into()));
-        }
-        let chunk = output.chunks.take_chunk().map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-        if chunk.is_none() {
-            let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), "terminal media export download changed before exact removal".into()))?;
-            if !output.terminal_is_empty() {
-                self.segmented_downloads.insert_admitted(operation_id, output);
-                return Err(MediaError::Payload(handle.parent_document_id.clone(), "terminal media export download retained unread chunks".into()));
-            }
-            drop(output);
-        }
-        Ok(chunk)
+    async fn take_media_export_chunk(&mut self,handle:crate::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;
+        if *terminal&&self.segmented_downloads.get(operation_id).is_none(){return Ok(true)}
+        self.snapshot_retirements.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving lost its original source"))?.validate(cx)?;
+        let output=self.segmented_downloads.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving has no exact output"))?;
+        if !output.owns_media_export_loan(handle){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving requires its exact handle").into())}
+        if !*terminal{if !output.chunks.take_chunk_original(receiver,terminal,cx)?{return Ok(false)}return Ok(receiver.is_some())}
+        if !output.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download EOF retains unread original chunks").into())}
+        let grant=cx.retained_grant();let bytes=size_of::<ArtifactDownloadOutput>()+size_of::<crate::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        if !self.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.segmented_downloads.remove(operation_id).expect("checked exact original download");self.segmented_closures.insert_admitted(operation_id,crate::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
     async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {

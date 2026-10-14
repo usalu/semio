@@ -3,18 +3,18 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires "at least one window"
 //! for a viewer packet.
 
-use crate::viewer::vdi3805::modes::view::windows::report;
+use crate::modes::view::windows::report;
 use semio_framework_plugin::{ModeDefinition, WindowLayout};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::vdi3805::create_vdi3805_viewer`.
 pub fn definition() -> ModeDefinition {
-    crate::app_surface::view_mode_definition()
+    semio_s_plugin_norm_app_surface::view_mode_definition()
 }
 
 /// 🪟️ Single full-pane Report window — the read-only viewer has no inputs/results split to allocate.
 pub fn layout() -> WindowLayout {
-    crate::app_surface::single_window_layout(report::WINDOW_KIND_ID, "Report")
+    semio_s_plugin_norm_app_surface::single_window_layout(report::WINDOW_KIND_ID, "Report")
 }
 //#endregion 🔖️Definition
 
@@ -23,3 +23,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📊️report/🦀️.rs"]
+    pub mod report;
+}
+//#endregion 🪢️Mounts

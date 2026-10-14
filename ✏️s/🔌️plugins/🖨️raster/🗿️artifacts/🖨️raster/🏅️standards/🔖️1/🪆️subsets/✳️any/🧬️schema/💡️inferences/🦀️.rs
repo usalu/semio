@@ -4,10 +4,10 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::RasterSnapshot;
+use crate::snapshot::RasterSnapshot;
 use schema::ArtifactSchema;
 
-use super::topology::compute_raster_topology;
+use crate::inferences::topology::compute_raster_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a raster snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — `layers` is a
@@ -74,5 +74,10 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::topology::RasterTopology;
+pub use crate::inferences::topology::RasterTopology;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧭topology/🦀️.rs"]
+pub mod topology;
+//#endregion 🪢️TaxonomyMounts

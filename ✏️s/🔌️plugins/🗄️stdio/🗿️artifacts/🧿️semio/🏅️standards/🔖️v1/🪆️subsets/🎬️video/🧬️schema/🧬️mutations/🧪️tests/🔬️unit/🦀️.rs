@@ -295,18 +295,4 @@ async fn op_text_binary_roundtrip_law() {
 //#endregion 🔖️OpTextBinaryRoundtripLaw
 
 //#region ↩️LeafInverseLaws
-#[path = "../../➕️insert-sample/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_insert_sample;
-#[path = "../../🎥insert-stream/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_insert_stream;
-#[path = "../../📀set-sample-data/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_set_sample_data;
-#[path = "../../📋set-stream-meta/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_set_stream_meta;
-#[path = "../../🗑️remove-stream/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_remove_stream;
-#[path = "../../🚩set-sample-flags/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_set_sample_flags;
-#[path = "../../🚮remove-sample/🧪️tests/↩️inverts/🦀️.rs"]
-mod inverts_remove_sample;
 //#endregion ↩️LeafInverseLaws

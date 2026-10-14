@@ -1,14 +1,14 @@
 //! 🧪️ Keyed-diff algebra of Iso16757: id-keyed row coalescing and position tracking, positional constraint rows, map entries and the negative diff.
 
-use super::Iso16757Diff;
-use crate::mutations::add_selection_constraint::mutation::AddSelectionConstraint;
-use crate::mutations::change_part_number_input::mutation::ChangePartNumberInput;
-use crate::mutations::introduce_product_group::mutation::IntroduceProductGroup;
-use crate::mutations::remove_selection_constraint::mutation::RemoveSelectionConstraint;
-use crate::mutations::rename_product_group::mutation::RenameProductGroup;
-use crate::mutations::retire_product_group::mutation::RetireProductGroup;
-use crate::mutations::Iso16757Mutation;
-use crate::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+use semio_s_artifact_norm_iso16757_mut_selection::add_selection_constraint::mutation::AddSelectionConstraint;
+use semio_s_artifact_norm_iso16757_mut_selection::change_part_number_input::mutation::ChangePartNumberInput;
+use semio_s_artifact_norm_iso16757_mut_products::introduce_product_group::mutation::IntroduceProductGroup;
+use semio_s_artifact_norm_iso16757_mut_selection::remove_selection_constraint::mutation::RemoveSelectionConstraint;
+use semio_s_artifact_norm_iso16757_mut_products::rename_product_group::mutation::RenameProductGroup;
+use semio_s_artifact_norm_iso16757_mut_products::retire_product_group::mutation::RetireProductGroup;
+use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn diff_of(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Iso16757Diff {
@@ -27,7 +27,7 @@ async fn law(base: &Iso16757Snapshot, first: &Iso16757Mutation, second: impl Fn(
     sum
 }
 
-fn group(base: &Iso16757Snapshot) -> crate::part_1::ProductGroup {
+fn group(base: &Iso16757Snapshot) -> semio_s_artifact_norm_iso16757_model::part_1::ProductGroup {
     let mut group = base.catalogue.product_groups[0].clone();
     group.id = "group-created".into();
     group
@@ -70,7 +70,7 @@ async fn constraint_rows_follow_positions() {
 async fn part_number_inputs_are_added_then_changed_in_place() {
     let base = Iso16757Snapshot::default();
     let value = base.part_number_inputs.values().next().expect("input").clone();
-    let set = |value: crate::CatalogueValue| Iso16757Mutation::ChangePartNumberInput(ChangePartNumberInput { key: "input-created".into(), new_value: value });
+    let set = |value: semio_s_artifact_norm_iso16757_model::CatalogueValue| Iso16757Mutation::ChangePartNumberInput(ChangePartNumberInput { key: "input-created".into(), new_value: value });
     let sum = law(&base, &set(value.clone()), |_| set(value.clone())).await;
     assert_eq!(sum.part_number_inputs.expect("inputs").added.len(), 1);
 }

@@ -1,6 +1,6 @@
 //! 🗑️ `remove-geometry` — removes an id-keyed parametric geometry definition.
 
-use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +13,15 @@ pub struct RemoveGeometry {
     pub id: String,
 }
 
-impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveGeometry {
+impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for RemoveGeometry where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::add_geometry::AddGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "geometry", kind: "remove-geometry", record: "RemovedGeometry" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+        crate::remove_geometry::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_geometry::inverse::inverse(self, base)?
     
     })
 }
@@ -33,3 +33,10 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveGeometry
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

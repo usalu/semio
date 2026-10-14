@@ -1,6 +1,6 @@
 //! 📊️ Xlsx viewer (ecma-376/🌉️transitional) — sparse, windowed, read-only worksheet grids.
 
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_framework_plugin::app::{TableWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::TreeWindows;
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure sparse-grid projection with no command-driven cell edits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &XlsxSnapshot, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view::windows::main::render(document, locale, windows)
+    semio_s_artifact_stdio_xlsx_base::viewer::xlsx::standards::v_ecma_376::subsets::base::modes::view::windows::main::render(document, locale, windows)
 }
 //#endregion 🔖️Render
 

@@ -25,7 +25,7 @@ use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
 /// 🏭️ Proves that each concrete factory field is Copy before declaring its payload heap-empty.
-#[proc_macro_derive(FactoryPayloadRetirement, attributes(factory_child, factory_owned))]
+#[proc_macro_derive(FactoryPayloadRetirement, attributes(factory_child, factory_owned, value))]
 pub fn derive_factory_payload_retirement(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     factory::expand(&input).unwrap_or_else(|error| error.to_compile_error()).into()
@@ -86,14 +86,14 @@ pub fn value_codec(input: TokenStream) -> TokenStream {
 }
 
 /// 🧬️ Implements bounded native-owner cloning for a struct or enum; `#[retained_clone(bitwise)]` on a `Copy` struct of bitwise fields makes vectors and arrays of it clone in bulk pages.
-#[proc_macro_derive(RetainedClone, attributes(retained_clone))]
+#[proc_macro_derive(RetainedClone, attributes(retained_clone,value))]
 pub fn derive_retained_clone(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     retained_clone::expand_retained_clone(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()
 }
 
 /// ♻️ Implements exact incremental retirement for every owned field of a struct or enum.
-#[proc_macro_derive(RetireOwned)]
+#[proc_macro_derive(RetireOwned, attributes(value))]
 pub fn derive_retire_owned(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     retained_clone::expand_retire_owned(&derive_input).unwrap_or_else(|error| error.to_compile_error()).into()

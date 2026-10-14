@@ -11,7 +11,8 @@
 //! Every other node (rows, columns, styles, merged ranges, the other parts, the OPC layer) has no kind and is refused.
 
 use super::*;
-use crate::schema::vocabulary::{column_index, column_letters_of};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_index;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::column_letters_of;
 use canonical_edit::{node_cell_value, part_role, shared_string_position, shared_string_text, sheet_element_name, PartRole};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
@@ -354,7 +355,3 @@ pub fn special(event: &SnapshotEditEvent, snapshot: &XlsxSnapshot) -> Result<Opt
         PartRole::Other => Ok(None),
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

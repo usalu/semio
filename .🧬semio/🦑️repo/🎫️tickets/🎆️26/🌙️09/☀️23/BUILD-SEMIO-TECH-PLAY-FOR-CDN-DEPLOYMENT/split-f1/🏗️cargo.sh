@@ -1,12 +1,13 @@
 #!/bin/bash
-# 🏗️ One F1 cargo invocation inside a fleet slot with the private F1 target and build dirs; logs to `⚡️cache/f1/logs/<tag>.log`.
-# usage: 🏗️cargo.sh <tag> <cargo args...>
+# 🏗️ One F1 cargo invocation through `🚦️cargo-slot.sh` (issued launcher, shared store); logs to `⚡️cache/f1/logs/<tag>.log`.
+# usage: 🏗️cargo.sh <tag> <cargo subcommand> <args...>
 TAG=$1; shift
 ROOT="/Users/ueli/Documents/semio"; F1="$ROOT/.🧬semio/🦑️repo/⚡️cache/f1"; mkdir -p "$F1/logs"
-export CARGO_TARGET_DIR="$F1/target" CARGO_BUILD_BUILD_DIR="$F1/build" CARGO_TERM_COLOR=never CARGO_INCREMENTAL=0
+unset CARGO_TARGET_DIR CARGO_BUILD_BUILD_DIR
+export CARGO_TERM_COLOR=never
 cd "$ROOT" || exit 2
 s=$(date +%s)
-"$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "f1-$TAG" -- cargo "$@" > "$F1/logs/$TAG.log" 2>&1
+bash "$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "f1-$TAG" -- cargo "$@" > "$F1/logs/$TAG.log" 2>&1
 rc=$?
-echo "rc=$rc wall=$(( $(date +%s) - s ))s errors=$(grep -c '^error' "$F1/logs/$TAG.log") warnings=$(grep -c '^warning' "$F1/logs/$TAG.log")"
+echo "rc=$rc wall=$(( $(date +%s) - s ))s errors=$(grep -cE '^error|: error' "$F1/logs/$TAG.log") warnings=$(grep -cE '^warning|: warning' "$F1/logs/$TAG.log")"
 exit $rc

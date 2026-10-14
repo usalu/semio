@@ -1,6 +1,6 @@
 //! 👥️ Raster presence — shareable live ephemeral state + mutations.
 
-use crate::RasterCamera;
+use semio_s_artifact_raster_raster_model::RasterCamera;
 use protocol::Mutation;
 use pack::snapshot::ArtifactPack;
 
@@ -231,3 +231,8 @@ pub fn raster_presence_store_disposer() -> Box<dyn semio_framework_plugin::Artif
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

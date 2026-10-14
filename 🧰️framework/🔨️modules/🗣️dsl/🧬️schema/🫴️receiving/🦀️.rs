@@ -1,6 +1,6 @@
 //! 🫴️ Typed fields retain every partial destination inside the original native receiving owner.
 use crate::{FieldValue,RecordValue};
-pub use semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner;
+pub use semio_framework_io_control::NativeSnapshotDecodeOwner;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::RetireOwned};
 #[path="📥️owned/🦀️.rs"]
 pub mod owned;

@@ -1,8 +1,8 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Iso16757 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
-use super::Iso16757Mutation;
-use crate::Iso16757Snapshot;
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::Iso16757Mutation;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 /// 📚 Every path a Iso16757 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

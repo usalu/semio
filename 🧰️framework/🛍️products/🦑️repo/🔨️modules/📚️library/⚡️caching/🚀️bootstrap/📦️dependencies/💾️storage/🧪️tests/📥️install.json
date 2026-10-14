@@ -1,0 +1,262 @@
+{
+  "protocol": {
+    "version": 2,
+    "excludedTopLevelFields": [
+      "semio"
+    ],
+    "keyOrder": "recursive-utf8-keys-preserve-array-order",
+    "sourceCustody": "exact-current-full-bytes-path-kind-mode",
+    "membershipCustody": "original-controlled-publisher-observations"
+  },
+  "mutations": [
+    {
+      "name": "task metadata",
+      "before": {
+        "name": "owned",
+        "semio": {
+          "project": {
+            "tasks": [
+              "source"
+            ]
+          }
+        }
+      },
+      "after": {
+        "name": "owned",
+        "semio": {
+          "project": {
+            "tasks": [
+              "native"
+            ]
+          }
+        }
+      },
+      "sameInstallMaterial": true
+    },
+    {
+      "name": "metadata addition",
+      "before": {
+        "name": "owned"
+      },
+      "after": {
+        "name": "owned",
+        "semio": {
+          "workspace": {
+            "members": [
+              "w"
+            ]
+          }
+        }
+      },
+      "sameInstallMaterial": true
+    },
+    {
+      "name": "dependency",
+      "before": {
+        "dependencies": {
+          "a": "1"
+        }
+      },
+      "after": {
+        "dependencies": {
+          "a": "2"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "development dependency",
+      "before": {
+        "devDependencies": {
+          "a": "1"
+        }
+      },
+      "after": {
+        "devDependencies": {
+          "a": "2"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "optional dependency",
+      "before": {
+        "optionalDependencies": {
+          "a": "1"
+        }
+      },
+      "after": {
+        "optionalDependencies": {
+          "a": "2"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "peer dependency",
+      "before": {
+        "peerDependencies": {
+          "a": "1"
+        }
+      },
+      "after": {
+        "peerDependencies": {
+          "a": "2"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "name",
+      "before": {
+        "name": "a"
+      },
+      "after": {
+        "name": "b"
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "version",
+      "before": {
+        "version": "1"
+      },
+      "after": {
+        "version": "2"
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "exports",
+      "before": {
+        "exports": {
+          ".": "./a.ts"
+        }
+      },
+      "after": {
+        "exports": {
+          ".": "./b.ts"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "patch",
+      "before": {
+        "patchedDependencies": {
+          "a@1": "a.patch"
+        }
+      },
+      "after": {
+        "patchedDependencies": {
+          "a@1": "b.patch"
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "membership",
+      "before": {
+        "workspaces": [
+          "w"
+        ]
+      },
+      "after": {
+        "workspaces": [
+          "w",
+          "other"
+        ]
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "nested semio remains native",
+      "before": {
+        "custom": {
+          "semio": 1
+        }
+      },
+      "after": {
+        "custom": {
+          "semio": 2
+        }
+      },
+      "sameInstallMaterial": false
+    },
+    {
+      "name": "key order",
+      "before": {
+        "name": "a",
+        "dependencies": {
+          "z": "1",
+          "a": "2"
+        }
+      },
+      "after": {
+        "dependencies": {
+          "a": "2",
+          "z": "1"
+        },
+        "name": "a"
+      },
+      "sameInstallMaterial": true
+    },
+    {
+      "name": "array order",
+      "before": {
+        "files": [
+          "a",
+          "b"
+        ]
+      },
+      "after": {
+        "files": [
+          "b",
+          "a"
+        ]
+      },
+      "sameInstallMaterial": false
+    }
+  ],
+  "membership": {
+    "members": [
+      "packages/**"
+    ],
+    "owners": [],
+    "initial": [
+      "packages/a"
+    ],
+    "deleted": "packages/a/package.json",
+    "addition": "packages/b/package.json",
+    "expectedAfterDeletion": [],
+    "expectedAfterAddition": [
+      "packages/b"
+    ],
+    "metadataBefore": {
+      "semio": {
+        "project": {
+          "task": "source"
+        }
+      }
+    },
+    "metadataAfter": {
+      "semio": {
+        "project": {
+          "task": "native"
+        }
+      }
+    }
+  },
+  "delayedCustody": {
+    "sequence": [
+      "body-entered",
+      "recheck-paused",
+      "body-returned",
+      "custody-released",
+      "recheck-resumed"
+    ],
+    "result": {
+      "refusal": "Original Bun installation callback released"
+    }
+  }
+}

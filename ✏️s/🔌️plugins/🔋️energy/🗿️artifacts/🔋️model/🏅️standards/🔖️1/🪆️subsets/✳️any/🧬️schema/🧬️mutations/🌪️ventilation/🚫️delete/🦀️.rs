@@ -1,8 +1,7 @@
 //! 🚫️ Energy model mutation — `DeleteMechanicalVentilation`: Removes one mechanical ventilation specification.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteMechanicalVentilation {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_mechanical_ventilation(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteMechanicalVentilation(DeleteMechanicalVentilation { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_mechanical_ventilation<Op: From<DeleteMechanicalVentilation>>(id: crate::model::EntityId) -> Op {
+    DeleteMechanicalVentilation { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteMechanicalVentilation {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteMechanicalVentilation
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteMechanicalVentilation> + From<crate::CreateMechanicalVentilation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "mechanical-ventilation", kind: "delete-mechanical-ventilation", record: "DeletedMechanicalVentilation" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

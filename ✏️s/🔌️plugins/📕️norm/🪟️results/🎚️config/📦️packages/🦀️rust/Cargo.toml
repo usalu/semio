@@ -20,10 +20,14 @@ name = "config_mutation"
 path = "../../🧪️tests/🎚️config/🦀️.rs"
 
 [dependencies]
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
@@ -32,4 +36,5 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde = { workspace = true }
 serde_json = { workspace = true }

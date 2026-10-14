@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `CreateNode` — always a `delete-node` of the created id.
 use super::CreateNode;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_node,Fem3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_node;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateNode, _base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<delete_node::DeleteNode>>(payload: &CreateNode, _base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: payload.node.id.clone() })]
+    vec![Op::from(delete_node::DeleteNode { id: payload.node.id.clone() })]
 
     })())
 }

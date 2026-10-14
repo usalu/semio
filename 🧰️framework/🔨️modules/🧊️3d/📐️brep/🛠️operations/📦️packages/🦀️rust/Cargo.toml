@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-3d-brep-operations"
+name = "semio-framework-3d-brep-construction"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Topology-mutating boundary-representation operations of the 3D kernel - euler editors, primitives, booleans, blends, offsets, sweeps, sewing and transforms"
+description = "Constructive boundary-representation operations of the 3D kernel - euler editors, primitives, the staged-operation contract, sewing and transforms"
 
 [lints]
 workspace = true
@@ -25,7 +25,6 @@ semio-framework-3d-brep-tessellation.workspace = true
 semio-framework-3d-brep-validation.workspace = true
 semio-framework-3d-brep-queries.workspace = true
 semio-framework-3d-brep-representation.workspace = true
-semio-framework-job.workspace = true
 semio-framework-value.workspace = true
 
 [dev-dependencies]

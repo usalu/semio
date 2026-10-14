@@ -1,108 +1,749 @@
 {
  "_comment": "🧬️ P9 decision N5: the package-only mutation group directories of every norm artifact (emoji+slug -> leaf modules in enum order). Groups follow the snapshot sections and Eurocode/DIN parts the leaves edit; every leaf pair that names the other in its inverse shares a group; at most 10 leaves per group.",
  "⚖️en1990": {
-  "🏛️design-basis": ["change_annex", "change_project_id", "change_altitude_m", "change_design_working_life_category", "change_design_working_life_years", "change_reference_period_years"],
-  "🎯️reliability": ["change_consequence_class", "change_reliability_class", "change_beta_computed", "change_supervision_level", "change_inspection_level"],
-  "⚓️actions": ["change_permanents", "remove_permanent", "insert_permanent", "change_variables", "remove_variable", "insert_variable"],
-  "🌋️accidental": ["change_accidentals", "remove_accidental", "insert_accidental", "change_seismics", "remove_seismic", "insert_seismic"],
-  "🏗️members": ["change_members", "remove_member", "insert_member", "change_bridge_sls", "change_effects", "remove_effect", "insert_effect"]
+  "🏛️design-basis": [
+   "change_annex",
+   "change_project_id",
+   "change_altitude_m",
+   "change_design_working_life_category",
+   "change_design_working_life_years",
+   "change_reference_period_years"
+  ],
+  "🎯️reliability": [
+   "change_consequence_class",
+   "change_reliability_class",
+   "change_beta_computed",
+   "change_supervision_level",
+   "change_inspection_level"
+  ],
+  "⚓️actions": [
+   "change_permanents",
+   "remove_permanent",
+   "insert_permanent",
+   "change_variables",
+   "remove_variable",
+   "insert_variable"
+  ],
+  "🌋️accidental": [
+   "change_accidentals",
+   "remove_accidental",
+   "insert_accidental",
+   "change_seismics",
+   "remove_seismic",
+   "insert_seismic"
+  ],
+  "🏗️members": [
+   "change_members",
+   "remove_member",
+   "insert_member",
+   "change_bridge_sls",
+   "change_effects",
+   "remove_effect",
+   "insert_effect"
+  ]
  },
  "⚡️din18599": {
-  "🏢️building": ["change_building_category", "change_attachment", "change_use_class", "change_method", "change_net_floor_area_m2", "change_heated_volume_m3", "change_geg_qp_factor", "change_delta_u_wb", "change_automation_class"],
-  "⚙️systems": ["specify_heating_system", "specify_dhw_system", "update_ventilation", "update_cooling", "update_lighting", "update_renewables"],
-  "🗺️zoning": ["replace_zones", "replace_elements", "change_element_u", "update_climate"]
+  "🏢️building": [
+   "change_building_category",
+   "change_attachment",
+   "change_use_class",
+   "change_method",
+   "change_net_floor_area_m2",
+   "change_heated_volume_m3",
+   "change_geg_qp_factor",
+   "change_delta_u_wb",
+   "change_automation_class"
+  ],
+  "⚙️systems": [
+   "specify_heating_system",
+   "specify_dhw_system",
+   "update_ventilation",
+   "update_cooling",
+   "update_lighting",
+   "update_renewables"
+  ],
+  "🗺️zoning": [
+   "replace_zones",
+   "replace_elements",
+   "change_element_u",
+   "update_climate"
+  ]
  },
  "🌍️en1997": {
-  "🌍️design": ["change_annex", "change_geotechnical_category", "change_design_situation", "change_design_approach", "change_groundwater_level", "change_investigation_depth"],
-  "🪨️ground": ["change_slope_angle", "change_layer_phi_prime", "change_layer_oedometric_modulus", "insert_layer", "remove_layer"],
-  "🏗️foundations": ["change_footing_width", "change_footing_embedment", "change_pile_length", "change_pile_count", "change_wall_base_width", "insert_footing", "remove_footing", "insert_pile", "remove_pile"]
+  "🌍️design": [
+   "change_annex",
+   "change_geotechnical_category",
+   "change_design_situation",
+   "change_design_approach",
+   "change_groundwater_level",
+   "change_investigation_depth"
+  ],
+  "🪨️ground": [
+   "change_slope_angle",
+   "change_layer_phi_prime",
+   "change_layer_oedometric_modulus",
+   "insert_layer",
+   "remove_layer"
+  ],
+  "🏗️foundations": [
+   "change_footing_width",
+   "change_footing_embedment",
+   "change_pile_length",
+   "change_pile_count",
+   "change_wall_base_width",
+   "insert_footing",
+   "remove_footing",
+   "insert_pile",
+   "remove_pile"
+  ]
  },
  "🌬️din16798": {
-  "🏠️building": ["change_annex", "change_theta_rm", "change_outdoor_co2", "change_envelope_n50", "change_envelope_volume", "change_cellar_area", "change_cellar_ventilation", "change_night_setback"],
-  "🗺️zones": ["insert_zone", "remove_zone", "change_zone_usage_type", "change_zone_floor_area", "change_zone_occupants", "change_zone_comfort_category", "change_zone_pollution_class", "change_zone_vent_system_id", "change_zone_vent_method"],
-  "🌡️thermal": ["change_zone_comfort_model", "change_zone_t_op_winter", "change_zone_t_op_summer", "change_zone_air_speed", "change_zone_clothing", "change_zone_metabolic_rate", "change_zone_rh", "change_zone_turbulence"],
-  "🔆️indoor": ["change_zone_outdoor_air", "change_zone_co2", "change_zone_illuminance", "change_zone_noise"],
-  "🌀️ventilation": ["insert_vent_system", "remove_vent_system", "change_vent_system_type", "change_vent_sfp", "change_vent_sfp_class", "change_vent_heat_recovery", "change_vent_design_airflow"],
-  "🧹️air-hygiene": ["change_vent_oda_class", "change_vent_filter_sup", "change_vent_inspection", "change_vent_duct_class", "change_vent_duct_leakage"]
+  "🏠️building": [
+   "change_annex",
+   "change_theta_rm",
+   "change_outdoor_co2",
+   "change_envelope_n50",
+   "change_envelope_volume",
+   "change_cellar_area",
+   "change_cellar_ventilation",
+   "change_night_setback"
+  ],
+  "🗺️zones": [
+   "insert_zone",
+   "remove_zone",
+   "change_zone_usage_type",
+   "change_zone_floor_area",
+   "change_zone_occupants",
+   "change_zone_comfort_category",
+   "change_zone_pollution_class",
+   "change_zone_vent_system_id",
+   "change_zone_vent_method"
+  ],
+  "🌡️thermal": [
+   "change_zone_comfort_model",
+   "change_zone_t_op_winter",
+   "change_zone_t_op_summer",
+   "change_zone_air_speed",
+   "change_zone_clothing",
+   "change_zone_metabolic_rate",
+   "change_zone_rh",
+   "change_zone_turbulence"
+  ],
+  "🔆️indoor": [
+   "change_zone_outdoor_air",
+   "change_zone_co2",
+   "change_zone_illuminance",
+   "change_zone_noise"
+  ],
+  "🌀️ventilation": [
+   "insert_vent_system",
+   "remove_vent_system",
+   "change_vent_system_type",
+   "change_vent_sfp",
+   "change_vent_sfp_class",
+   "change_vent_heat_recovery",
+   "change_vent_design_airflow"
+  ],
+  "🧹️air-hygiene": [
+   "change_vent_oda_class",
+   "change_vent_filter_sup",
+   "change_vent_inspection",
+   "change_vent_duct_class",
+   "change_vent_duct_leakage"
+  ]
  },
  "🏋️en1991": {
-  "🌍️general": ["change_annex", "change_height", "change_width", "change_depth", "change_structure_kind", "change_storey_count", "insert_accidental_cases", "remove_accidental_cases", "change_accidental_assumed_force"],
-  "❄️snow": ["change_snow_zone", "change_altitude", "change_en_sk", "change_north_german_lowland_snow", "change_roof_assumed_sk", "insert_roofs", "remove_roofs"],
-  "🌬️wind": ["change_wind_zone", "change_en_vb", "change_terrain_category", "change_mixed_terrain_upwind", "change_mixed_terrain_distance", "change_orography_factor", "change_coast_or_island", "change_air_density"],
-  "🪁️wind-faces": ["change_wind_face_assumed_wp", "insert_wind_faces", "remove_wind_faces"],
-  "🌡️thermal": ["change_assumed_delta_t", "change_t_max", "change_t_min", "change_initial_temperature", "change_thermal_element_type", "change_thermal_bridge_type", "change_linear_temperature_gradient"],
-  "🏢️gravity": ["change_construction_activity", "change_assumed_construction_qk", "change_floor_assumed_qk", "change_self_weight_assumed_gk", "insert_floors", "remove_floors", "insert_self_weight_elements", "remove_self_weight_elements"],
-  "🔥️fire": ["change_fire_mode", "change_fire_curve", "change_fire_duration", "change_assumed_gas_temperature", "change_assumed_h_net", "change_fire_occupancy", "change_fire_load_density_qf", "change_assumed_qf_d"],
-  "🧱️compartment": ["change_fire_compartment_area", "change_fire_compartment_height", "change_fire_opening_factor", "change_fire_thermal_inertia"],
-  "🌉️traffic": ["change_bridge_lane", "change_bridge_span", "change_bridge_lane_width", "change_assumed_bridge_tandem", "change_assumed_bridge_udl", "change_assumed_bridge_lm2", "change_assumed_bridge_footway", "change_assumed_bridge_lm3", "change_assumed_bridge_lm4", "change_bridge_load_group"],
-  "🏗️cranes": ["change_crane_claimed", "change_crane_class", "change_hoist_class", "change_hoisting_speed", "change_assumed_crane_wheel", "change_assumed_crane_horizontal"],
-  "🏭️silos": ["change_silo_claimed", "change_silo_kind", "change_silo_bulk_density", "change_silo_height", "change_silo_hydraulic_radius", "change_silo_mu", "change_silo_k", "change_assumed_silo_pressure", "change_assumed_silo_patch", "change_assumed_silo_wall_friction"]
+  "🌍️general": [
+   "change_annex",
+   "change_height",
+   "change_width",
+   "change_depth",
+   "change_structure_kind",
+   "change_storey_count",
+   "insert_accidental_cases",
+   "remove_accidental_cases",
+   "change_accidental_assumed_force"
+  ],
+  "❄️snow": [
+   "change_snow_zone",
+   "change_altitude",
+   "change_en_sk",
+   "change_north_german_lowland_snow",
+   "change_roof_assumed_sk",
+   "insert_roofs",
+   "remove_roofs"
+  ],
+  "🌬️wind": [
+   "change_wind_zone",
+   "change_en_vb",
+   "change_terrain_category",
+   "change_mixed_terrain_upwind",
+   "change_mixed_terrain_distance",
+   "change_orography_factor",
+   "change_coast_or_island",
+   "change_air_density"
+  ],
+  "🪁️wind-faces": [
+   "change_wind_face_assumed_wp",
+   "insert_wind_faces",
+   "remove_wind_faces"
+  ],
+  "🌡️thermal": [
+   "change_assumed_delta_t",
+   "change_t_max",
+   "change_t_min",
+   "change_initial_temperature",
+   "change_thermal_element_type",
+   "change_thermal_bridge_type",
+   "change_linear_temperature_gradient"
+  ],
+  "🏢️gravity": [
+   "change_construction_activity",
+   "change_assumed_construction_qk",
+   "change_floor_assumed_qk",
+   "change_self_weight_assumed_gk",
+   "insert_floors",
+   "remove_floors",
+   "insert_self_weight_elements",
+   "remove_self_weight_elements"
+  ],
+  "🔥️fire": [
+   "change_fire_mode",
+   "change_fire_curve",
+   "change_fire_duration",
+   "change_assumed_gas_temperature",
+   "change_assumed_h_net",
+   "change_fire_occupancy",
+   "change_fire_load_density_qf",
+   "change_assumed_qf_d"
+  ],
+  "🧱️compartment": [
+   "change_fire_compartment_area",
+   "change_fire_compartment_height",
+   "change_fire_opening_factor",
+   "change_fire_thermal_inertia"
+  ],
+  "🌉️traffic": [
+   "change_bridge_lane",
+   "change_bridge_span",
+   "change_bridge_lane_width",
+   "change_assumed_bridge_tandem",
+   "change_assumed_bridge_udl",
+   "change_assumed_bridge_lm2",
+   "change_assumed_bridge_footway",
+   "change_assumed_bridge_lm3",
+   "change_assumed_bridge_lm4",
+   "change_bridge_load_group"
+  ],
+  "🏗️cranes": [
+   "change_crane_claimed",
+   "change_crane_class",
+   "change_hoist_class",
+   "change_hoisting_speed",
+   "change_assumed_crane_wheel",
+   "change_assumed_crane_horizontal"
+  ],
+  "🏭️silos": [
+   "change_silo_claimed",
+   "change_silo_kind",
+   "change_silo_bulk_density",
+   "change_silo_height",
+   "change_silo_hydraulic_radius",
+   "change_silo_mu",
+   "change_silo_k",
+   "change_assumed_silo_pressure",
+   "change_assumed_silo_patch",
+   "change_assumed_silo_wall_friction"
+  ]
  },
  "🏛️en1992": {
-  "🏛️project": ["change_annex", "change_title", "change_design_working_life", "change_delta_c_dev", "change_cement_type", "change_concrete_f_ck", "change_reinforcement_f_yk"],
-  "📏️members": ["insert_member", "remove_member", "reorder_members", "change_member_width", "change_member_height", "change_member_effective_depth", "change_member_cover", "change_member_exposure", "change_member_span"],
-  "⚖️resistance": ["change_member_stirrup_spacing", "change_member_axis_distance", "change_member_fire_rating", "change_bar_layer_count", "change_bar_layer_diameter", "change_action_mk", "change_action_nk", "change_action_vk"],
-  "⚓️anchors": ["insert_anchor", "remove_anchor", "change_anchor_h_ef", "change_anchor_a_s"]
+  "🏛️project": [
+   "change_annex",
+   "change_title",
+   "change_design_working_life",
+   "change_delta_c_dev",
+   "change_cement_type",
+   "change_concrete_f_ck",
+   "change_reinforcement_f_yk"
+  ],
+  "📏️members": [
+   "insert_member",
+   "remove_member",
+   "reorder_members",
+   "change_member_width",
+   "change_member_height",
+   "change_member_effective_depth",
+   "change_member_cover",
+   "change_member_exposure",
+   "change_member_span"
+  ],
+  "⚖️resistance": [
+   "change_member_stirrup_spacing",
+   "change_member_axis_distance",
+   "change_member_fire_rating",
+   "change_bar_layer_count",
+   "change_bar_layer_diameter",
+   "change_action_mk",
+   "change_action_nk",
+   "change_action_vk"
+  ],
+  "⚓️anchors": [
+   "insert_anchor",
+   "remove_anchor",
+   "change_anchor_h_ef",
+   "change_anchor_a_s"
+  ]
  },
  "🏭️vdi3805": {
-  "📄️file": ["change_manufacturer_file", "change_limits", "change_correction_as_of", "change_strict_mode", "change_edition_profile", "remove_edition_profile"],
-  "📦️products": ["add_product", "remove_product", "rename_product", "change_product_configuration"],
-  "📐️geometry": ["add_geometry", "remove_geometry", "resize_geometry", "add_geometry_connection", "remove_geometry_connection", "change_geometry_parameters", "add_curve", "remove_curve", "change_curve_points"]
+  "📄️file": [
+   "change_manufacturer_file",
+   "change_limits",
+   "change_correction_as_of",
+   "change_strict_mode",
+   "change_edition_profile",
+   "remove_edition_profile"
+  ],
+  "📦️products": [
+   "add_product",
+   "remove_product",
+   "rename_product",
+   "change_product_configuration"
+  ],
+  "📐️geometry": [
+   "add_geometry",
+   "remove_geometry",
+   "resize_geometry",
+   "add_geometry_connection",
+   "remove_geometry_connection",
+   "change_geometry_parameters",
+   "add_curve",
+   "remove_curve",
+   "change_curve_points"
+  ]
  },
  "🔩️en1993": {
-  "🏗️general": ["change_annex", "update_member_properties", "update_stainless_inputs", "update_through_thickness_inputs", "insert_material", "remove_material", "insert_section", "remove_section", "insert_member", "remove_member"],
-  "🔩️connections": ["update_bolt_inputs", "update_weld_inputs", "update_hss_inputs", "insert_load_case", "remove_load_case", "insert_member_action", "remove_member_action", "insert_joint", "remove_joint"],
-  "🔥️fire-fatigue": ["update_fire_inputs", "update_fatigue_inputs", "update_bridge_inputs", "insert_fatigue_detail", "remove_fatigue_detail", "insert_fire_exposure", "remove_fire_exposure", "insert_bridge_fatigue", "remove_bridge_fatigue"],
-  "🥶️thin-walled": ["update_cold_formed_inputs", "update_plated_inputs", "update_silo_shell_inputs", "insert_cold_formed_member", "remove_cold_formed_member", "insert_plated_panel", "remove_plated_panel", "insert_silo_shell", "remove_silo_shell"],
-  "🗼️towers": ["update_tower_inputs", "update_pile_inputs", "insert_tower_leg", "remove_tower_leg", "insert_pile", "remove_pile"],
-  "🪝️cranes": ["update_tension_component_inputs", "update_crane_inputs", "insert_tension_component", "remove_tension_component", "insert_crane_runway", "remove_crane_runway"]
+  "🏗️general": [
+   "change_annex",
+   "update_member_properties",
+   "update_stainless_inputs",
+   "update_through_thickness_inputs",
+   "insert_material",
+   "remove_material",
+   "insert_section",
+   "remove_section",
+   "insert_member",
+   "remove_member"
+  ],
+  "🔩️connections": [
+   "update_bolt_inputs",
+   "update_weld_inputs",
+   "update_hss_inputs",
+   "insert_load_case",
+   "remove_load_case",
+   "insert_member_action",
+   "remove_member_action",
+   "insert_joint",
+   "remove_joint"
+  ],
+  "🔥️fire-fatigue": [
+   "update_fire_inputs",
+   "update_fatigue_inputs",
+   "update_bridge_inputs",
+   "insert_fatigue_detail",
+   "remove_fatigue_detail",
+   "insert_fire_exposure",
+   "remove_fire_exposure",
+   "insert_bridge_fatigue",
+   "remove_bridge_fatigue"
+  ],
+  "🥶️thin-walled": [
+   "update_cold_formed_inputs",
+   "update_plated_inputs",
+   "update_silo_shell_inputs",
+   "insert_cold_formed_member",
+   "remove_cold_formed_member",
+   "insert_plated_panel",
+   "remove_plated_panel",
+   "insert_silo_shell",
+   "remove_silo_shell"
+  ],
+  "🗼️towers": [
+   "update_tower_inputs",
+   "update_pile_inputs",
+   "insert_tower_leg",
+   "remove_tower_leg",
+   "insert_pile",
+   "remove_pile"
+  ],
+  "🪝️cranes": [
+   "update_tension_component_inputs",
+   "update_crane_inputs",
+   "insert_tension_component",
+   "remove_tension_component",
+   "insert_crane_runway",
+   "remove_crane_runway"
+  ]
  },
  "🧩️en1994": {
-  "🏗️project": ["change_annex", "change_structure_kind", "change_steel_fy_pa", "change_fire_rating", "change_insulation_thickness_m", "change_fatigue_detail"],
-  "🌉️beams": ["insert_beam", "remove_beam", "change_beam_action_q_area_pa", "change_beam_span_m", "change_beam_slab_thickness_m", "change_beam_construction"],
-  "📌️studs": ["change_beam_stud_spacing_m", "change_beam_stud_diameter_m", "change_beam_stud_count", "change_beam_stud_fu_pa", "change_beam_transverse_as"],
-  "🏛️columns-slabs": ["insert_column", "remove_column", "change_column_action_force_n", "change_column_kind", "insert_slab", "remove_slab", "change_slab_action_q_area_pa", "change_slab_thickness_m"]
+  "🏗️project": [
+   "change_annex",
+   "change_structure_kind",
+   "change_steel_fy_pa",
+   "change_fire_rating",
+   "change_insulation_thickness_m",
+   "change_fatigue_detail"
+  ],
+  "🌉️beams": [
+   "insert_beam",
+   "remove_beam",
+   "change_beam_action_q_area_pa",
+   "change_beam_span_m",
+   "change_beam_slab_thickness_m",
+   "change_beam_construction"
+  ],
+  "📌️studs": [
+   "change_beam_stud_spacing_m",
+   "change_beam_stud_diameter_m",
+   "change_beam_stud_count",
+   "change_beam_stud_fu_pa",
+   "change_beam_transverse_as"
+  ],
+  "🏛️columns-slabs": [
+   "insert_column",
+   "remove_column",
+   "change_column_action_force_n",
+   "change_column_kind",
+   "insert_slab",
+   "remove_slab",
+   "change_slab_action_q_area_pa",
+   "change_slab_thickness_m"
+  ]
  },
  "🧱️din4108": {
-  "🏠️building": ["change_climate_zone", "change_usage", "change_t_int_c", "change_rh_int", "change_airtightness_n50", "change_has_mechanical_ventilation", "change_bb2_details_conform"],
-  "🗺️zones": ["insert_zone", "remove_zone", "change_zone_floor_area", "change_zone_heaviness", "change_zone_night_ventilation"],
-  "🪟️windows": ["insert_zone_window", "remove_zone_window", "change_zone_window_area", "change_zone_window_g_value", "change_zone_window_shading_fc", "change_zone_window_orientation", "change_zone_window_inclination_deg"],
-  "🧱️elements": ["insert_element", "remove_element", "change_element_area", "change_element_adjacent", "change_element_kind", "change_element_orientation_deg", "change_element_inclination_deg", "change_element_delta_u_g", "change_element_delta_u_f", "change_element_delta_u_r"],
-  "📚️layers": ["insert_layer", "remove_layer", "reorder_layers", "change_layer_thickness", "change_layer_lambda", "change_layer_mu", "change_layer_material_id", "change_layer_application_type", "change_layer_compressive_class"],
-  "🌉️thermal-bridge": ["insert_thermal_bridge", "remove_thermal_bridge", "change_thermal_bridge_psi", "change_thermal_bridge_length", "change_thermal_bridge_bb2_type"]
+  "🏠️building": [
+   "change_climate_zone",
+   "change_usage",
+   "change_t_int_c",
+   "change_rh_int",
+   "change_airtightness_n50",
+   "change_has_mechanical_ventilation",
+   "change_bb2_details_conform"
+  ],
+  "🗺️zones": [
+   "insert_zone",
+   "remove_zone",
+   "change_zone_floor_area",
+   "change_zone_heaviness",
+   "change_zone_night_ventilation"
+  ],
+  "🪟️windows": [
+   "insert_zone_window",
+   "remove_zone_window",
+   "change_zone_window_area",
+   "change_zone_window_g_value",
+   "change_zone_window_shading_fc",
+   "change_zone_window_orientation",
+   "change_zone_window_inclination_deg"
+  ],
+  "🧱️elements": [
+   "insert_element",
+   "remove_element",
+   "change_element_area",
+   "change_element_adjacent",
+   "change_element_kind",
+   "change_element_orientation_deg",
+   "change_element_inclination_deg",
+   "change_element_delta_u_g",
+   "change_element_delta_u_f",
+   "change_element_delta_u_r"
+  ],
+  "📚️layers": [
+   "insert_layer",
+   "remove_layer",
+   "reorder_layers",
+   "change_layer_thickness",
+   "change_layer_lambda",
+   "change_layer_mu",
+   "change_layer_material_id",
+   "change_layer_application_type",
+   "change_layer_compressive_class"
+  ],
+  "🌉️thermal-bridge": [
+   "insert_thermal_bridge",
+   "remove_thermal_bridge",
+   "change_thermal_bridge_psi",
+   "change_thermal_bridge_length",
+   "change_thermal_bridge_bb2_type"
+  ]
  },
  "🪨️en1996": {
-  "🏢️project": ["change_annex", "change_is_basement", "change_storeys", "change_fire_rei", "change_imposed_category"],
-  "🧱️walls": ["insert_wall", "remove_wall", "change_wall_length", "change_wall_height", "change_wall_thickness", "change_wall_type", "change_wall_label_de", "change_wall_label_en", "change_support_sides", "change_exposure"],
-  "📐️eccentricity": ["change_eccentricity_bottom", "change_eccentricity_top", "change_phi_infinity", "change_slab_span", "change_slab_bearing_depth", "change_tributary_area"],
-  "⚖️loads": ["insert_load_case", "remove_load_case", "change_load_case_situation", "change_design_situation", "change_gk_slab", "change_qk_imposed", "change_qk_snow", "change_qp_wind", "change_hk_earth", "change_c_pe"],
-  "📍️concentrated": ["insert_concentrated", "remove_concentrated", "change_concentrated_force", "change_concentrated_bearing_length", "change_concentrated_bearing_area"],
-  "🪟️openings": ["insert_opening", "remove_opening", "change_opening_height", "change_opening_sill", "change_opening_width"],
-  "🟫️units": ["change_unit_fb", "change_unit_group", "change_unit_height", "change_unit_length", "change_unit_material", "change_unit_width", "change_density", "change_masonry_class"],
-  "🪣️mortar": ["change_mortar_class", "change_mortar_type", "change_bed_joint_thickness", "change_fm", "change_mu"],
-  "🔩️reinforcement": ["change_reinforced", "change_as_horizontal", "change_as_vertical", "change_f_yd"]
+  "🏢️project": [
+   "change_annex",
+   "change_is_basement",
+   "change_storeys",
+   "change_fire_rei",
+   "change_imposed_category"
+  ],
+  "🧱️walls": [
+   "insert_wall",
+   "remove_wall",
+   "change_wall_length",
+   "change_wall_height",
+   "change_wall_thickness",
+   "change_wall_type",
+   "change_wall_label_de",
+   "change_wall_label_en",
+   "change_support_sides",
+   "change_exposure"
+  ],
+  "📐️eccentricity": [
+   "change_eccentricity_bottom",
+   "change_eccentricity_top",
+   "change_phi_infinity",
+   "change_slab_span",
+   "change_slab_bearing_depth",
+   "change_tributary_area"
+  ],
+  "⚖️loads": [
+   "insert_load_case",
+   "remove_load_case",
+   "change_load_case_situation",
+   "change_design_situation",
+   "change_gk_slab",
+   "change_qk_imposed",
+   "change_qk_snow",
+   "change_qp_wind",
+   "change_hk_earth",
+   "change_c_pe"
+  ],
+  "📍️concentrated": [
+   "insert_concentrated",
+   "remove_concentrated",
+   "change_concentrated_force",
+   "change_concentrated_bearing_length",
+   "change_concentrated_bearing_area"
+  ],
+  "🪟️openings": [
+   "insert_opening",
+   "remove_opening",
+   "change_opening_height",
+   "change_opening_sill",
+   "change_opening_width"
+  ],
+  "🟫️units": [
+   "change_unit_fb",
+   "change_unit_group",
+   "change_unit_height",
+   "change_unit_length",
+   "change_unit_material",
+   "change_unit_width",
+   "change_density",
+   "change_masonry_class"
+  ],
+  "🪣️mortar": [
+   "change_mortar_class",
+   "change_mortar_type",
+   "change_bed_joint_thickness",
+   "change_fm",
+   "change_mu"
+  ],
+  "🔩️reinforcement": [
+   "change_reinforced",
+   "change_as_horizontal",
+   "change_as_vertical",
+   "change_f_yd"
+  ]
  },
  "🪵️en1995": {
-  "🪵️members": ["change_annex", "insert_member", "remove_member", "change_member_label_en", "change_member_label_de", "change_member_role", "change_member_strength_class", "change_member_service_class", "change_member_support", "change_member_fire_duration"],
-  "📏️geometry": ["change_member_b", "change_member_h", "change_member_span", "change_member_support_length", "change_member_bearing_length", "change_member_notch_depth", "change_member_notch_distance"],
-  "📐️stability": ["change_member_buckling_length_y", "change_member_buckling_length_z", "change_member_restraint_spacing", "change_member_m_crit"],
-  "🌉️footbridges": ["change_member_mass_kg_per_m", "change_member_mass_kg_per_m2", "change_member_damping_xi", "change_member_bridge_n_obs", "change_member_bridge_tl_years", "change_member_bridge_beta", "change_member_bridge_a", "change_member_bridge_b", "change_member_bridge_crowd"],
-  "⚖️actions": ["insert_member_action", "remove_member_action", "change_member_action_kind", "change_member_action_category", "change_member_load_duration", "change_member_action_q_line", "change_member_action_f_point"],
-  "↔️effects": ["change_member_action_mk", "change_member_action_vk", "change_member_action_nk", "change_member_action_ntk", "change_member_action_fc90_k"],
-  "🔩️connections": ["insert_connection", "remove_connection", "change_connection_label_en", "change_connection_label_de", "change_connection_fastener_type", "change_connection_strength_class", "change_connection_service_class"],
-  "📍️fasteners": ["change_connection_diameter", "change_connection_number", "change_connection_rows", "change_connection_spacing", "change_connection_edge_distance", "change_connection_end_distance", "change_connection_fuk"],
-  "🪚️plates": ["change_connection_t1", "change_connection_t2", "change_connection_steel_plate", "change_connection_plate_thickness", "change_connection_shear_planes"],
-  "⚡️joint-actions": ["insert_connection_action", "remove_connection_action", "change_connection_action_kind", "change_connection_load_duration", "change_connection_action_fk"]
+  "🪵️members": [
+   "change_annex",
+   "insert_member",
+   "remove_member",
+   "change_member_label_en",
+   "change_member_label_de",
+   "change_member_role",
+   "change_member_strength_class",
+   "change_member_service_class",
+   "change_member_support",
+   "change_member_fire_duration"
+  ],
+  "📏️geometry": [
+   "change_member_b",
+   "change_member_h",
+   "change_member_span",
+   "change_member_support_length",
+   "change_member_bearing_length",
+   "change_member_notch_depth",
+   "change_member_notch_distance"
+  ],
+  "📐️stability": [
+   "change_member_buckling_length_y",
+   "change_member_buckling_length_z",
+   "change_member_restraint_spacing",
+   "change_member_m_crit"
+  ],
+  "🌉️footbridges": [
+   "change_member_mass_kg_per_m",
+   "change_member_mass_kg_per_m2",
+   "change_member_damping_xi",
+   "change_member_bridge_n_obs",
+   "change_member_bridge_tl_years",
+   "change_member_bridge_beta",
+   "change_member_bridge_a",
+   "change_member_bridge_b",
+   "change_member_bridge_crowd"
+  ],
+  "⚖️actions": [
+   "insert_member_action",
+   "remove_member_action",
+   "change_member_action_kind",
+   "change_member_action_category",
+   "change_member_load_duration",
+   "change_member_action_q_line",
+   "change_member_action_f_point"
+  ],
+  "↔️effects": [
+   "change_member_action_mk",
+   "change_member_action_vk",
+   "change_member_action_nk",
+   "change_member_action_ntk",
+   "change_member_action_fc90_k"
+  ],
+  "🔩️connections": [
+   "insert_connection",
+   "remove_connection",
+   "change_connection_label_en",
+   "change_connection_label_de",
+   "change_connection_fastener_type",
+   "change_connection_strength_class",
+   "change_connection_service_class"
+  ],
+  "📍️fasteners": [
+   "change_connection_diameter",
+   "change_connection_number",
+   "change_connection_rows",
+   "change_connection_spacing",
+   "change_connection_edge_distance",
+   "change_connection_end_distance",
+   "change_connection_fuk"
+  ],
+  "🪚️plates": [
+   "change_connection_t1",
+   "change_connection_t2",
+   "change_connection_steel_plate",
+   "change_connection_plate_thickness",
+   "change_connection_shear_planes"
+  ],
+  "⚡️joint-actions": [
+   "insert_connection_action",
+   "remove_connection_action",
+   "change_connection_action_kind",
+   "change_connection_load_duration",
+   "change_connection_action_fk"
+  ]
  },
  "🪶️en1999": {
-  "🧾️inputs": ["change_annex", "change_materials", "change_sections", "change_members", "change_connections", "change_fire_scenarios", "change_fatigue_details", "change_cold_formed", "change_shells"],
-  "📏️members": ["add_member", "remove_member", "change_member_n_ed", "change_member_m_y_ed", "change_member_buckling_length", "change_material_designation", "change_plate_thickness", "change_weld_throat", "change_bolt_count"]
+  "🧾️inputs": [
+   "change_annex",
+   "change_materials",
+   "change_sections",
+   "change_members",
+   "change_connections",
+   "change_fire_scenarios",
+   "change_fatigue_details",
+   "change_cold_formed",
+   "change_shells"
+  ],
+  "📏️members": [
+   "add_member",
+   "remove_member",
+   "change_member_n_ed",
+   "change_member_m_y_ed",
+   "change_member_buckling_length",
+   "change_material_designation",
+   "change_plate_thickness",
+   "change_weld_throat",
+   "change_bolt_count"
+  ]
  },
  "🫨️en1998": {
-  "🏢️buildings": ["change_annex", "update_site", "insert_building", "remove_building", "change_system_v_rd_n", "change_storey_permanent_gk_n", "change_storey_stiffness_x", "change_storey_drift_xm", "change_building_plan_regular", "change_elevation_regular"],
-  "🧱️members": ["change_member_detailing", "change_masonry_wall_ratio", "insert_assessment", "remove_assessment", "change_assessment_rkn"],
-  "🗼️bridges-towers": ["insert_bridge", "remove_bridge", "change_bridge_v_rd_n", "insert_tower", "remove_tower", "change_tower_m_rd_nm"],
-  "🏭️silos-tanks": ["insert_silo", "remove_silo", "insert_tank", "remove_tank"],
-  "🏗️foundations": ["insert_foundation", "remove_foundation", "insert_retaining_wall", "remove_retaining_wall"]
+  "🏢️buildings": [
+   "change_annex",
+   "update_site",
+   "insert_building",
+   "remove_building",
+   "change_system_v_rd_n",
+   "change_storey_permanent_gk_n",
+   "change_storey_stiffness_x",
+   "change_storey_drift_xm",
+   "change_building_plan_regular",
+   "change_elevation_regular"
+  ],
+  "🧱️members": [
+   "change_member_detailing",
+   "change_masonry_wall_ratio",
+   "insert_assessment",
+   "remove_assessment",
+   "change_assessment_rkn"
+  ],
+  "🗼️bridges-towers": [
+   "insert_bridge",
+   "remove_bridge",
+   "change_bridge_v_rd_n",
+   "insert_tower",
+   "remove_tower",
+   "change_tower_m_rd_nm"
+  ],
+  "🏭️silos-tanks": [
+   "insert_silo",
+   "remove_silo",
+   "insert_tank",
+   "remove_tank"
+  ],
+  "🏗️foundations": [
+   "insert_foundation",
+   "remove_foundation",
+   "insert_retaining_wall",
+   "remove_retaining_wall"
+  ]
+ },
+ "📇️iso16757": {
+  "📇️catalogue": [
+   "change_exchange_process",
+   "change_script_limits",
+   "rename_catalogue",
+   "rename_manufacturer"
+  ],
+  "🎯️selection": [
+   "replace_part_number_rule",
+   "change_part_number_input",
+   "remove_part_number_input",
+   "change_selection_class",
+   "change_selection_series",
+   "add_selection_constraint",
+   "remove_selection_constraint"
+  ],
+  "📦️products": [
+   "introduce_product_group",
+   "retire_product_group",
+   "rename_product_group",
+   "introduce_product",
+   "retire_product",
+   "rename_product",
+   "introduce_product_class",
+   "retire_product_class",
+   "introduce_product_series",
+   "retire_product_series"
+  ],
+  "📐️definitions": [
+   "introduce_property_definition",
+   "retire_property_definition",
+   "introduce_subject",
+   "retire_subject",
+   "introduce_product_index",
+   "retire_product_index",
+   "introduce_geometry_object",
+   "retire_geometry_object"
+  ]
  }
 }

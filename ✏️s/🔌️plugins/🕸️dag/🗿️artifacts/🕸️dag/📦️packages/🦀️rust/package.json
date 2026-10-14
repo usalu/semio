@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-dag-document-contract": "bun repo run @semio-tech/dag-dag-rs:verify-dag-document-contract"
+    "verify-dag-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/dag-dag-rs:verify-dag-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

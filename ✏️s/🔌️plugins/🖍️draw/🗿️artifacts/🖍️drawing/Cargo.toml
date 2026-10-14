@@ -3,13 +3,17 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
@@ -20,6 +24,8 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/🧱️structure/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/🧰️owned/🏟️arena/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/🧰️owned/🔏️digest/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -231,6 +237,24 @@ version = "0.11.4"
 
 [workspace.dependencies.ttf-parser]
 version = "0.25.1"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-host-arena]
+path = "🔨️modules/🏠️host/🧰️owned/🏟️arena/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-host-digest]
+path = "🔨️modules/🏠️host/🧰️owned/🔏️digest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-descriptor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-editor-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-editor-interaction]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-draw-drawing-editor-tool]
+path = "✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

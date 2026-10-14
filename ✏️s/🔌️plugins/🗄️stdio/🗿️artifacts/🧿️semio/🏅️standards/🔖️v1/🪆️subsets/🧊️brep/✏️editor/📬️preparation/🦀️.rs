@@ -88,7 +88,7 @@ mod tests {
         use crate::schema::snapshot::{BrepCurve, BrepEdge, BrepVertex};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧪️tests/🧫️fixtures/🧵️retained-native/🔣️.json"))).expect("retained native fixture")
+        serde_json::from_str(include_str!("../../../../../../../../📇️registry/🧬️contract/✏️editing/🧪️tests/🧫️fixtures/🧵️retained-native/🔣️.json")).expect("retained native fixture")
     }
 
     fn snapshot() -> SemioBrepSnapshot {

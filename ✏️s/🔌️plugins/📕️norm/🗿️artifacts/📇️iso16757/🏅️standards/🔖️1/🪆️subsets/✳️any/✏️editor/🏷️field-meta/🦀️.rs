@@ -1,6 +1,6 @@
 //! 🏷️ ISO 16757 NormFieldMeta — en/de labels, SI display units, `[]` wildcards, localized choices.
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const EXCHANGE_PROCESS: &[NormFieldChoice] = &[
     NormFieldChoice { value: "createFromDictionary", label_en: "Create from dictionary", label_de: "Aus Wörterbuch erstellen" },
@@ -61,7 +61,6 @@ const PROPERTY_KINDS: &[NormFieldChoice] = &[
     NormFieldChoice { value: "selection", label_en: "Selection", label_de: "Auswahl" },
     NormFieldChoice { value: "external", label_en: "External", label_de: "Extern" },
 ];
-
 
 const TABLE: &[(&str, NormFieldMeta)] = &[
     ("catalogue", NormFieldMeta { label_en: "Catalogue", label_de: "Katalog", unit: None, choices: None }),
@@ -334,6 +333,3 @@ pub fn iso16757_field_meta(path: &str) -> Option<NormFieldMeta> {
     lookup_norm_field_meta(TABLE, path)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

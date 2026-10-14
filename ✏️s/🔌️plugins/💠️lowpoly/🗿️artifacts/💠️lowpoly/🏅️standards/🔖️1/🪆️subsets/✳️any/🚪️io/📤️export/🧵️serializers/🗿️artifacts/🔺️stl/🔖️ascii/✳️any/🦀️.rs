@@ -7,9 +7,9 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: STL is one triangle soup — object boundaries, names, n-gons, paint and
 //! transforms (already applied) do not survive.
-use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
-use crate::standards::v1::subsets::any::schema::inferences::triangle_normal;
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::mesh_geometry::world_parts;
+use semio_s_artifact_lowpoly_lowpoly_inferences::triangle_normal;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::engine::encode_stl_ascii;
 use semio_s_artifact_stdio_stl::schema::snapshot::StlTriangle;
 use semio_s_artifact_stdio_stl::StlSnapshot;

@@ -15,8 +15,6 @@ reports
 📤️dist
 📤️distribution
 target*
-🎯️target/
-🎯️target-*/
 .tmp*
 🗑️generated
 🗑generated

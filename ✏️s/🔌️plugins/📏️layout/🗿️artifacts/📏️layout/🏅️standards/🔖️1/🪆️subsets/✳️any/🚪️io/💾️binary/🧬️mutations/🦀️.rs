@@ -16,7 +16,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::LayoutMutation;
+use crate::LayoutMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
@@ -32,18 +32,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError
 //#region 🔖️Store
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️Store
 
 //#region 🧪️Tests
@@ -54,7 +42,7 @@ mod tests;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-pub use crate::mutations::LayoutMutation;
+pub use crate::LayoutMutation;
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for LayoutMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

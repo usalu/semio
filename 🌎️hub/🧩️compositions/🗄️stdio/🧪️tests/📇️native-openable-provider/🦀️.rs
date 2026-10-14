@@ -25,7 +25,7 @@ fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
     for row in fixture["cases"].as_array().unwrap() {
         let plugin_id = format!("builder-topic-{}", row["id"].as_str().unwrap());
         let contributions: Vec<semio_framework::TopicContribution> = serde_json::from_value(row["contributions"].clone()).unwrap();
-        let mut builder = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder(&plugin_id).label("Topic Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
+        let mut builder = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new(&plugin_id).label("Topic Fixture").version("0.1.0").package_id(format!("semio:{plugin_id}"));
         for contribution in contributions {
             builder = builder.contributes_topic(contribution);
         }

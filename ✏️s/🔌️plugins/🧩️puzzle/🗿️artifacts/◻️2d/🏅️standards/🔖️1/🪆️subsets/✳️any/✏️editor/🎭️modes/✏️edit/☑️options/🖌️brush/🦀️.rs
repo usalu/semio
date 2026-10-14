@@ -4,7 +4,7 @@
 //! Shared by all three canvas windows.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{puzzle2d_action, puzzle2d_kind_ids, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::puzzle2d_kind_ids, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 #[cfg(test)] use semio_framework_pack_json::json;
 use std::collections::BTreeMap;

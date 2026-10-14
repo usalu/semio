@@ -1,9 +1,9 @@
-use super::ChangeReinforced;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-pub fn inverse(payload: &ChangeReinforced, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::change_reinforced::ChangeReinforced;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+pub fn inverse<Op>(payload: &ChangeReinforced, base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_reinforced::ChangeReinforced> {
     Ok((|| {
-    if payload.index >= base.walls.len() { Vec::new() } else { vec![En1996Mutation::ChangeReinforced(ChangeReinforced { index: payload.index, new_reinforced: base.walls[payload.index].reinforced })] }
+    if payload.index >= base.walls.len() { Vec::new() } else { vec![Op::from(ChangeReinforced { index: payload.index, new_reinforced: base.walls[payload.index].reinforced })] }
 
     })())
 }

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden",
+  "semanticKind": "change-target-region-hidden",
+  "displayName": "Change Target Region Hidden",
+  "emoji": "🙈",
+  "aggregateVariant": "ChangeTargetRegionHidden",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-target-region-hidden",
+  "binaryTag": 31,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-playbook-document-contract": "bun repo run @semio-tech/playbook-playbook-rs:verify-playbook-document-contract"
+    "verify-playbook-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/playbook-playbook-rs:verify-playbook-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

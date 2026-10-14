@@ -1,0 +1,11 @@
+{
+ "lib": "semio_s_artifact_puzzle_3d_precompute_fill",
+ "lib_root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+ "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+ "parent_module": "",
+ "rewrites": [],
+ "targets": [
+  {"name": "precompute-fill", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs", "doc": "",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs", "module": "tests"}]}
+ ]
+}

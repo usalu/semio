@@ -1,12 +1,12 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🖼️assets/🎬️demo/🗣️.dsl.semio")).expect("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio").leak();
     assert!(text.len() > 8);
 }
 
 //#region 🧪️InferenceLaws
-use crate::standards::v1::subsets::any::schema::inferences::Process3dInference;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_inferences::Process3dInference;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

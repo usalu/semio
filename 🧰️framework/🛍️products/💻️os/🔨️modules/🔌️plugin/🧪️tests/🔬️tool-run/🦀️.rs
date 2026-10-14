@@ -2352,8 +2352,8 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_release_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..caller.policy.close };
             assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth,"actual demand fits original independent page and caller ceilings");
             assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
-            match { let step = crate::bounded_ownership::original_lifecycle_step(caller.context,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original close step"); let _ = app.take_constructor_receipt(); step } {
-                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
+            match { let step = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(caller.context,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original close step"); let _ = app.take_constructor_receipt(); step } {
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
                     assert!(progress.fits(grant));
                     let released_items = progress.copied_items;
                     let released_bytes = progress.released_bytes;
@@ -2363,7 +2363,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
                     }
                     last = format!("Pending {{ {released_items}, {released_bytes} }}");
                 }
-                crate::bounded_ownership::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
+                semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
                 step => last = format!("{step:?}"),
             }
         }

@@ -1,6 +1,6 @@
-use super::ChangeInvestigationDepth;
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
+use crate::change_investigation_depth::ChangeInvestigationDepth;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 pub fn diff(payload: &ChangeInvestigationDepth, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_investigation_depth.is_finite() || payload.new_investigation_depth <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "investigation depth must be positive", Vec::<String>::new());

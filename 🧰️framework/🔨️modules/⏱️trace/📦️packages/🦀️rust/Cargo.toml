@@ -9,6 +9,7 @@ description = "Zero-dependency interactivity tracing/observability primitives: S
 [package.metadata.semio]
 role = "framework"
 id = "trace"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

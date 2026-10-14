@@ -6,7 +6,8 @@
 //! cannot express a structural cycle, so this is a static invariant, not an empirical result;
 //! `nodeCount` is the total flattened layer count (`Pixel`/`Group`/`Adjustment` all counted).
 
-use crate::{RasterLayerNode, RasterSnapshot};
+use crate::RasterLayerNode;
+use crate::snapshot::RasterSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology

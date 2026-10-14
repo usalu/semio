@@ -3,8 +3,9 @@
 //! order is unchanged.
 
 use super::ReorderObjects;
-use crate::diff::diff_objects_move;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_objects_move;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReorderObjects, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

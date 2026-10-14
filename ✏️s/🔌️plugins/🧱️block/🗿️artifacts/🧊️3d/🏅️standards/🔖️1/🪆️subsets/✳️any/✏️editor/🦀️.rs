@@ -9,23 +9,31 @@
 //! this surface's own typed media I/O surface (below — constitutional: general, an artifact must never
 //! depend on a surface, so it lives here rather than under `🗿️artifacts`).
 
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
-use crate::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
-use crate::editor::block3d::commands::patch_object_kind;
-use crate::editor::block3d::commands::set_camera;
-use crate::editor::block3d::commands::{add_representation, patch_representation, remove_representation};
-use crate::editor::block3d::commands::{add_vortex, remove_vortex};
-use crate::editor::block3d::commands::{add_vortex_kind, remove_vortex_kind};
-use crate::editor::block3d::commands::{edit, set_active_example};
-use crate::editor::block3d::commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
-use crate::editor::block3d::commands::{set_active_representation, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
-use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
-use crate::editor::block3d::modes::edit as edit_mode;
-use crate::editor::block3d::modes::edit::windows::world;
-use crate::editor::block3d::modes::edit::windows::world::transient::{Block3dBrushPreview, Block3dWorldWindowTransientOwner, SetBrushPreview};
-use crate::editor::block3d::panels::{document as document_panel, inspection as inspection_panel};
-use crate::editor::block3d::terminology::block3d_labels;
-use crate::BlockCamera3d;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
+use semio_s_artifact_block_3d_editor_commands::patch_object_kind;
+use semio_s_artifact_block_3d_editor_commands::set_camera;
+use semio_s_artifact_block_3d_editor_commands::{add_representation, patch_representation, remove_representation};
+use semio_s_artifact_block_3d_editor_commands::{add_vortex, remove_vortex};
+use semio_s_artifact_block_3d_editor_commands::{add_vortex_kind, remove_vortex_kind};
+use semio_s_artifact_block_3d_editor_commands::{edit, set_active_example};
+use semio_s_artifact_block_3d_editor_commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
+use semio_s_artifact_block_3d_editor_commands::{set_active_representation, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
+use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
+use semio_s_artifact_block_3d_editor_modes::edit as edit_mode;
+use semio_s_artifact_block_3d_editor_modes::edit::windows::world;
+use semio_s_artifact_block_3d_editor_modes::edit::windows::world::transient::{Block3dBrushPreview, Block3dWorldWindowTransientOwner, SetBrushPreview};
+use crate::panels::{document as document_panel, inspection as inspection_panel};
+use semio_s_artifact_block_3d_editor_terminology::block3d_labels;
+use semio_s_plugin_block::BlockCamera3d;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::AppOperationContext;
@@ -66,15 +74,8 @@ use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
-/// 👁️✏️ Plain string tag (NOT the authoring trait's `APP_ID` — that const is removed, contract §2.1) —
-/// stays a controller/action-factory id, exactly the way `world_3d_scene`'s `controller_id` needs a
-/// stable string distinct from the derived `surface_app_id()`.
-pub const BLOCK3D_PLAY_APP_ID: &str = "block3d-play";
-pub const BLOCK3D_PLAY_SURFACE_ID: &str = "block3d.play.world";
 pub const BLOCK3D_DEFAULT_WINDOW_ID: &str = "block3d-world";
-pub const BLOCK3D_WORLD_OBJECT_ID: &str = "block3d-object";
 pub const BLOCK3D_UTILITY_SELECT: &str = "select";
-pub const BLOCK3D_UTILITY_SURFACE_BRUSH: &str = "surfaceBrush";
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the framework-owned hover/selection
 /// domain over this surface's representations ("surface" granularity) and rim-vortex templates ("vortex"
 /// granularity, the default) — replaces the deleted `Block3dConfig.selected_ids`/`hovered_vortex_full_id`.
@@ -89,12 +90,6 @@ use semio_s_plugin_block_catalog::ARTIFACT_ID;
 /// contract-built node (`📌️panels/*`) binds its `on_change`/item actions with.
 pub fn block3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(BLOCK3D_PLAY_APP_ID).action(action, args)
-}
-
-/// 🪟️ Bridges window chrome (`☑️options/*`'s [`semio_framework_plugin::WindowMeasure`]s), which still
-/// carries the retained WGPU action descriptor rather than a contract action binding.
-pub fn block3d_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 /// 🏷️ Admits resolved block3d text into the semantic UI contract's fixed-capacity label.
@@ -118,7 +113,6 @@ pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
 pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
     semio_framework_plugin::UiValue::Number(value.into())
 }
-
 
 /// 📚️ Admits one fixed UI list action value without dynamic staging.
 pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -290,7 +284,7 @@ fn block3d_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(BLOCK3D_RETAINED_RAW_BYTES, 4_096, 1, 262_144, 7_500)
 }
 
-fn block3d_retained_extent(command: &Block3dCommand, snapshot: &Block3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn block3d_retained_extent(command: &Block3dCommand, snapshot: &Block3dSnapshot, _interaction: &crate::protocol::InteractionState) -> Option<usize> {
     if !BLOCK3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return None;
     }
@@ -305,7 +299,7 @@ fn block3d_retained_reduce(
     snapshot: &Block3dSnapshot,
     config: &Block3dConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    _interaction: &crate::protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     operation: &AppOperationContext,
@@ -333,7 +327,7 @@ impl ArtifactCommandWork<EditorApp<Block3dPlayApp>> for Block3dWindowPreviewWork
         &self,
         command: &Block3dCommand,
         _snapshot: &Block3dSnapshot,
-        _interaction: &protocol::InteractionState,
+        _interaction: &crate::protocol::InteractionState,
         context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block3dPlayApp>>>,
     ) -> Option<usize> {
         let view_state = context.and_then(|context| context.view_state.as_ref())?;
@@ -444,79 +438,79 @@ fn block3d_artifact_mutation_retained_bytes(mutation: &Block3dMutation) -> Resul
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "block3d-artifact-mutation-encode-failed".to_string())
 }
 
-fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+fn admit_block3d_artifact_mutation(mutation: &Block3dMutation) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = block3d_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("block3d-artifact-mutation-envelope".into());
     }
-    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(crate::store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Block3dArtifactStorePreparationFactory;
 
 struct Block3dArtifactStorePreparation {
-    owners: store::OneItemOwners<Block3dSnapshot, Block3dMutation>,
+    owners: crate::store::OneItemOwners<Block3dSnapshot, Block3dMutation>,
     retained_bytes: usize,
-    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    checkpoint: crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparationFactory {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Block3dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Block3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<crate::protocol::Edit<Block3dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn crate::store::ArtifactStoreBatchDigest<Block3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { crate::store::admit_artifact_batch_digest(edit, grant) }
 
-    fn preflight(&self, mutation: &Block3dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::os_store::store_schema::HistoryLane::Document {
+    fn preflight(&self, mutation: &Block3dMutation, lane: crate::store::os_store::store_schema::HistoryLane) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != crate::store::os_store::store_schema::HistoryLane::Document {
             return Err("block3d-artifact-lane".into());
         }
         admit_block3d_artifact_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &Block3dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Block3dMutation, _lane: crate::store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block3dArtifactStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>)> {
+    fn begin(&self, request: crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let retained_bytes = block3d_artifact_mutation_retained_bytes(&request.mutation).unwrap_or(BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES.saturating_add(1));
-        if request.lane != store::os_store::store_schema::HistoryLane::Document
+        if request.lane != crate::store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > crate::store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
         Ok((Box::new(Block3dArtifactStorePreparation {
-            owners: store::OneItemOwners::from_request(request),
+            owners: crate::store::OneItemOwners::from_request(request),
             retained_bytes,
-            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        use protocol::Mutation as _;
+impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparation {
+    fn advance(&mut self, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use crate::protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-mutation-owner-missing"))?;
         let inverse = mutation.inverse(base.get())?;
-        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+        let post = crate::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-authority-missing"))?;
         let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
@@ -527,17 +521,17 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Bloc
                 return Err(error);
             }
         };
-        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&crate::store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<crate::store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -549,79 +543,79 @@ fn block3d_config_mutation_retained_bytes(mutation: &Block3dConfigMutation) -> R
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "block3d-config-mutation-encode-failed".to_string())
 }
 
-fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+fn admit_block3d_config_mutation(mutation: &Block3dConfigMutation) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = block3d_config_mutation_retained_bytes(mutation)?;
     if retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("block3d-config-mutation-envelope".into());
     }
-    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(crate::store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Block3dConfigStorePreparationFactory;
 
 struct Block3dConfigStorePreparation {
-    owners: store::OneItemOwners<Block3dConfig, Block3dConfigMutation>,
+    owners: crate::store::OneItemOwners<Block3dConfig, Block3dConfigMutation>,
     retained_bytes: usize,
-    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    checkpoint: crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparationFactory {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Block3dConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Block3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
+impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparationFactory {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<crate::protocol::Edit<Block3dConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn crate::store::ArtifactStoreBatchDigest<Block3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { crate::store::admit_artifact_batch_digest(edit, grant) }
 
-    fn preflight(&self, mutation: &Block3dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::os_store::store_schema::HistoryLane::Document {
+    fn preflight(&self, mutation: &Block3dConfigMutation, lane: crate::store::os_store::store_schema::HistoryLane) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != crate::store::os_store::store_schema::HistoryLane::Document {
             return Err("block3d-config-lane".into());
         }
         admit_block3d_config_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &Block3dConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Block3dConfigMutation, _lane: crate::store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block3dConfigStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>)> {
+    fn begin(&self, request: crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let retained_bytes = block3d_config_mutation_retained_bytes(&request.mutation).unwrap_or(BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES.saturating_add(1));
-        if request.lane != store::os_store::store_schema::HistoryLane::Document
+        if request.lane != crate::store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > crate::store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
         Ok((Box::new(Block3dConfigStorePreparation {
-            owners: store::OneItemOwners::from_request(request),
+            owners: crate::store::OneItemOwners::from_request(request),
             retained_bytes,
-            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        use protocol::Mutation as _;
+impl crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparation {
+    fn advance(&mut self, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use crate::protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-mutation-owner-missing"))?;
         let inverse = mutation.inverse(base.get())?;
-        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
+        let post = crate::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-authority-missing"))?;
         let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-mutation-owner-missing"))?;
         let edit = authority.next_edit(forward, inverse);
@@ -632,17 +626,17 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Bloc
                 return Err(error);
             }
         };
-        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(crate::store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> crate::store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&crate::store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<crate::store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: crate::store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -664,8 +658,8 @@ impl ArtifactEditor for Block3dPlayApp {
     type ConfigMutation = Block3dConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = crate::editor::block3d::presence::Block3dPresence;
-    type PresenceMutation = crate::editor::block3d::presence::Block3dPresenceMutation;
+    type Presence = semio_s_artifact_block_3d_editor_presence::Block3dPresence;
+    type PresenceMutation = semio_s_artifact_block_3d_editor_presence::Block3dPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -674,45 +668,45 @@ impl ArtifactEditor for Block3dPlayApp {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn crate::store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn crate::store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(Box::new(
             semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Self::Presence::default()), |value| value == &Self::Presence::default())
                 .expect("default Block3d presence is the exact empty terminal"),
         ))
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<crate::store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Block3dArtifactStorePreparationFactory))
     }
 
     /// 📬️ Required by the Config publication lane: 11 of the 22 retained tools are config-only, and
     /// `VcsArtifactApp` rejects any tool whose declared lane has no one-item preparation factory with
     /// `interactive-job.publication-authority-missing`.
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn crate::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Block3dConfigStorePreparationFactory))
     }
 
@@ -752,7 +746,7 @@ impl ArtifactEditor for Block3dPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
-        registry.register(Block3dRetainedCommandJobFactory::new(&controller_id))
+        registry.register(crate::Block3dRetainedCommandJobFactory::new(&controller_id))
     }
 
     fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
@@ -768,7 +762,7 @@ impl ArtifactEditor for Block3dPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match tool_id {
-            "worldSurfaceHover" | "worldSurfaceLeave" | "worldSurfacePlace" => Box::new(Block3dWindowPreviewWork::new(tool_id)),
+            "worldSurfaceHover" | "worldSurfaceLeave" | "worldSurfacePlace" => Box::new(crate::Block3dWindowPreviewWork::new(tool_id)),
             _ => Box::new(BoundedArtifactCommandWork::new(tool_id, block3d_retained_reduce, block3d_retained_extent)),
         };
         let operation_context = AppOperationContext {
@@ -794,7 +788,7 @@ impl ArtifactEditor for Block3dPlayApp {
     /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
     /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot()
+        semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -977,9 +971,9 @@ impl ArtifactEditor for Block3dPlayApp {
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
             let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
-            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
+            return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: crate::store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle3d_catalog_fragment(doc.snapshot, &[]);
+        let fragment = semio_s_artifact_block_3d_io_write::puzzle_catalog::puzzle3d_catalog_fragment(doc.snapshot, &[]);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -1113,9 +1107,15 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
 }
 //#endregion 🔖️Manifest
 
-//#region 🧪️UnitTests
+//#region 🪢️Mounts
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
-//#endregion 🧪️UnitTests
-
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+}
+//#endregion 🪢️Mounts

@@ -11052,7 +11052,8 @@
         "🧵️parallel",
         "🩺️diag",
         "🪜️hierarchy",
-        "🪶️soft"
+        "🪶️soft",
+        "⚖️static"
       ],
       "source": "registry"
     },
@@ -11552,7 +11553,8 @@
         "🗜️dynamic",
         "🗺️geometry-import",
         "🧱️brep",
-        "🪜️ladder"
+        "🪜️ladder",
+        "📋️reports"
       ],
       "source": "registry"
     },
@@ -11820,6 +11822,15 @@
         "members-of-editor"
       ],
       "memberNames": [
+        "🏛️structure",
+        "🏢️building",
+        "📏️fem",
+        "🔥️energy",
+        "📐️shape",
+        "〰️shape-curves",
+        "🗺️shape-surfaces",
+        "🧊️shape-solids",
+        "✂️shape-edits",
         "🚧️retained-command-limits",
         "⚛️react",
         "🌞️sun",
@@ -11840,7 +11851,8 @@
         "🧭️session",
         "🧱️chain",
         "🪟️opening",
-        "🫧️overlay"
+        "🫧️overlay",
+        "🎞️visual-job"
       ],
       "source": "registry"
     },
@@ -11855,7 +11867,13 @@
         "🎞️h264",
         "🎵️modal-buckling",
         "🕸️meshing",
-        "🗺️mesh-preview"
+        "🗺️mesh-preview",
+        "🔺️ldlt",
+        "🔁️pcg",
+        "🎵️subspace",
+        "🧬️derived",
+        "🗂️model",
+        "🧩️assembly"
       ],
       "source": "registry"
     },
@@ -13022,6 +13040,14 @@
         "schema"
       ],
       "memberNames": [
+        "🧱️reference-solids",
+        "🏭️machines",
+        "🪜️steps",
+        "🪵️stock",
+        "🗂️slots",
+        "📄️documents",
+        "🕸️nodes",
+        "🖼️references",
         "🎞️media",
         "🎯️calibration",
         "⚙️params",
@@ -13068,7 +13094,15 @@
         "🕸️media-projection",
         "🎟️details-arena-headroom",
         "📇️directory-projection",
-        "✂️text-splice"
+        "✂️text-splice",
+        "🏗️structure",
+        "🛡️guards",
+        "🌉️apply",
+        "🧩️widgets",
+        "🪢️synapses",
+        "🎲️generations",
+        "📄️document",
+        "🧭️transforms"
       ],
       "source": "registry"
     },
@@ -14559,7 +14593,29 @@
         "🪟️infer-bim-1-opening-frames",
         "🧷️app",
         "🧩️example",
-        "🧰️testkit"
+        "🧰️testkit",
+        "🧰️support",
+        "🔬️elements2d",
+        "🔬️continuum",
+        "🔬️plate",
+        "🔬️elements3d",
+        "🔬️shell",
+        "🔬️solid",
+        "🔬️topology-kinds",
+        "🔬️section-kinds",
+        "🔬️region-kinds",
+        "🔬️solid-kinds",
+        "🔬️selection-kinds",
+        "🔬️case-kinds",
+        "🔬️load-kinds",
+        "🔬️combination-kinds",
+        "🔬️support-kinds",
+        "🔬️material-kinds",
+        "🔬️settings-kinds",
+        "🔬️analysis-kinds",
+        "⚖️laws",
+        "🔬️app",
+        "🔬️emphasis"
       ],
       "source": "registry"
     },
@@ -17262,9 +17318,18 @@
       "projectionContractId": "artifact-example-model-catalog-v1",
       "consumerIdentity": "cad-editor-interaction",
       "ownership": "external",
-      "sourcePathPattern": "^✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️\\.rs$",
+      "sourcePathPattern": "^✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/(?:⚙️engine/🕹️interaction|🗂️catalog/[^/]+)/🦀️\\.rs$",
       "sourcePathIdentities": [
-        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs"
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏛️structure/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏢️building/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📏️fem/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🔥️energy/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📐️shape/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/〰️shape-curves/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🗺️shape-surfaces/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧊️shape-solids/🦀️.rs",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/✂️shape-edits/🦀️.rs"
       ],
       "adapters": [
         "rust"
@@ -27198,9 +27263,6 @@
       "target": "@semio-tech/framework-graph:generate",
       "previewTarget": "@semio-tech/framework-graph:preview-generated",
       "checkTarget": "@semio-tech/framework-graph:check-generated",
-      "nativeConsumers": [
-        "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
-      ],
       "inputPatterns": [
         "🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts",
         "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
@@ -27984,11 +28046,11 @@
             "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
-            "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
+            "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
             "🧰️framework/🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts",
@@ -28158,10 +28220,10 @@
         "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
         "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
@@ -30153,409 +30215,31 @@
       }
     },
     "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
-      "🔑️access-rule": {
-        "🌱️create": "create-access-rule",
-        "🗑️delete": "delete-access-rule",
-        "🏷️rename": "rename-access-rule",
-        "♻️replace": "replace-access-rule"
-      },
-      "♿️accessibility": {
-        "🌱️create": "create-accessibility-requirement",
-        "🗑️delete": "delete-accessibility-requirement",
-        "🏷️rename": "rename-accessibility-requirement",
-        "♻️replace": "replace-accessibility-requirement"
-      },
-      "🏃️activity": {
-        "🌱️create": "create-activity",
-        "🗑️delete": "delete-activity",
-        "🏷️rename": "rename-activity",
-        "♻️replace": "replace-activity"
-      },
       "🧲️adjacency": {
         "🧲️connect": "connect-adjacency",
         "🫷️disconnect": "disconnect-adjacency"
-      },
-      "🔬️analysis-record": {
-        "🌱️create": "create-analysis-record",
-        "🗑️delete": "delete-analysis-record",
-        "🏷️rename": "rename-analysis-record",
-        "♻️replace": "replace-analysis-record"
-      },
-      "👍️approval-record": {
-        "🌱️create": "create-approval-record",
-        "🗑️delete": "delete-approval-record",
-        "🏷️rename": "rename-approval-record",
-        "♻️replace": "replace-approval-record"
-      },
-      "💭️assumption": {
-        "🌱️create": "create-assumption",
-        "🗑️delete": "delete-assumption",
-        "🏷️rename": "rename-assumption",
-        "♻️replace": "replace-assumption"
-      },
-      "📒️audit": {
-        "🌱️create": "create-audit-event",
-        "🗑️delete": "delete-audit-event",
-        "🏷️rename": "rename-audit-event",
-        "♻️replace": "replace-audit-event"
-      },
-      "🏁️benchmark-record": {
-        "🌱️create": "create-benchmark-record",
-        "🗑️delete": "delete-benchmark-record",
-        "🏷️rename": "rename-benchmark-record",
-        "♻️replace": "replace-benchmark-record"
-      },
-      "🔀️change-record": {
-        "🌱️create": "create-change-record",
-        "🗑️delete": "delete-change-record",
-        "🏷️rename": "rename-change-record",
-        "♻️replace": "replace-change-record"
-      },
-      "🤝️collaboration": {
-        "🌱️create": "create-collaboration-record",
-        "🗑️delete": "delete-collaboration-record",
-        "🏷️rename": "rename-collaboration-record",
-        "♻️replace": "replace-collaboration-record"
-      },
-      "📡️communication": {
-        "🌱️create": "create-communication-requirement",
-        "🗑️delete": "delete-communication-requirement",
-        "🏷️rename": "rename-communication-requirement",
-        "♻️replace": "replace-communication-requirement"
-      },
-      "🛂️compliance-record": {
-        "🌱️create": "create-compliance-record",
-        "🗑️delete": "delete-compliance-record",
-        "🏷️rename": "rename-compliance-record",
-        "♻️replace": "replace-compliance-record"
-      },
-      "⚔️conflict": {
-        "🌱️create": "create-conflict",
-        "🗑️delete": "delete-conflict",
-        "🏷️rename": "rename-conflict",
-        "♻️replace": "replace-conflict"
-      },
-      "🚧️constraint-record": {
-        "🌱️create": "create-constraint-record",
-        "🗑️delete": "delete-constraint-record",
-        "🏷️rename": "rename-constraint-record",
-        "♻️replace": "replace-constraint-record"
-      },
-      "💰️cost": {
-        "🌱️create": "create-cost-requirement",
-        "🗑️delete": "delete-cost-requirement",
-        "🏷️rename": "rename-cost-requirement",
-        "♻️replace": "replace-cost-requirement"
-      },
-      "✅️decision": {
-        "🌱️create": "create-decision",
-        "🗑️delete": "delete-decision",
-        "🏷️rename": "rename-decision",
-        "♻️replace": "replace-decision"
-      },
-      "🚚️delivery-constraint": {
-        "🌱️create": "create-delivery-constraint",
-        "🗑️delete": "delete-delivery-constraint",
-        "🏷️rename": "rename-delivery-constraint",
-        "♻️replace": "replace-delivery-constraint"
-      },
-      "📃️document": {
-        "🌱️create": "create-document",
-        "🗑️delete": "delete-document",
-        "🏷️rename": "rename-document",
-        "♻️replace": "replace-document"
-      },
-      "🌿️environmental": {
-        "🌱️create": "create-environmental-requirement",
-        "🗑️delete": "delete-environmental-requirement",
-        "🏷️rename": "rename-environmental-requirement",
-        "♻️replace": "replace-environmental-requirement"
-      },
-      "🛠️equipment": {
-        "🌱️create": "create-equipment",
-        "🗑️delete": "delete-equipment",
-        "🏷️rename": "rename-equipment",
-        "♻️replace": "replace-equipment"
-      },
-      "🧩️flexibility": {
-        "🌱️create": "create-flexibility-requirement",
-        "🗑️delete": "delete-flexibility-requirement",
-        "🏷️rename": "rename-flexibility-requirement",
-        "♻️replace": "replace-flexibility-requirement"
-      },
-      "🌊️flow": {
-        "🌱️create": "create-flow-requirement",
-        "🗑️delete": "delete-flow-requirement",
-        "🏷️rename": "rename-flow-requirement",
-        "♻️replace": "replace-flow-requirement"
-      },
-      "⚙️function": {
-        "🌱️create": "create-function",
-        "🗑️delete": "delete-function",
-        "🏷️rename": "rename-function",
-        "♻️replace": "replace-function"
       },
       "🏛️governance": {
         "🏷️rename": "rename-governance",
         "♻️replace": "replace-governance"
       },
-      "📈️growth-plan": {
-        "🌱️create": "create-growth-plan",
-        "🗑️delete": "delete-growth-plan",
-        "🏷️rename": "rename-growth-plan",
-        "♻️replace": "replace-growth-plan"
-      },
-      "🧠️human": {
-        "🌱️create": "create-human-factor-requirement",
-        "🗑️delete": "delete-human-factor-requirement",
-        "🏷️rename": "rename-human-factor-requirement",
-        "♻️replace": "replace-human-factor-requirement"
-      },
-      "ℹ️information": {
-        "🌱️create": "create-information-requirement",
-        "🗑️delete": "delete-information-requirement",
-        "🏷️rename": "rename-information-requirement",
-        "♻️replace": "replace-information-requirement"
-      },
-      "🏗️infrastructure": {
-        "🌱️create": "create-infrastructure-requirement",
-        "🗑️delete": "delete-infrastructure-requirement",
-        "🏷️rename": "rename-infrastructure-requirement",
-        "♻️replace": "replace-infrastructure-requirement"
-      },
-      "🐛️issue": {
-        "🌱️create": "create-issue",
-        "🗑️delete": "delete-issue",
-        "🏷️rename": "rename-issue",
-        "♻️replace": "replace-issue"
-      },
-      "📚️knowledge-record": {
-        "🌱️create": "create-knowledge-record",
-        "🗑️delete": "delete-knowledge-record",
-        "🏷️rename": "rename-knowledge-record",
-        "♻️replace": "replace-knowledge-record"
-      },
-      "🗓️meeting-record": {
-        "🌱️create": "create-meeting-record",
-        "🗑️delete": "delete-meeting-record",
-        "🏷️rename": "rename-meeting-record",
-        "♻️replace": "replace-meeting-record"
-      },
       "🏷️meta": {
         "🏷️rename": "rename-meta",
         "♻️replace": "replace-meta"
-      },
-      "📋️operational": {
-        "🌱️create": "create-operational-requirement",
-        "🗑️delete": "delete-operational-requirement",
-        "🏷️rename": "rename-operational-requirement",
-        "♻️replace": "replace-operational-requirement"
-      },
-      "⚖️option": {
-        "🌱️create": "create-option-evaluation",
-        "🗑️delete": "delete-option-evaluation",
-        "🏷️rename": "rename-option-evaluation",
-        "♻️replace": "replace-option-evaluation"
-      },
-      "🏢️organizational": {
-        "🌱️create": "create-organizational-requirement",
-        "🗑️delete": "delete-organizational-requirement",
-        "🏷️rename": "rename-organizational-requirement",
-        "♻️replace": "replace-organizational-requirement"
-      },
-      "📊️performance": {
-        "🌱️create": "create-performance-criterion",
-        "🗑️delete": "delete-performance-criterion",
-        "🏷️rename": "rename-performance-criterion",
-        "♻️replace": "replace-performance-criterion"
-      },
-      "⭐️priority-record": {
-        "🌱️create": "create-priority-record",
-        "🗑️delete": "delete-priority-record",
-        "🏷️rename": "rename-priority-record",
-        "♻️replace": "replace-priority-record"
-      },
-      "🔒️privacy": {
-        "🌱️create": "create-privacy-requirement",
-        "🗑️delete": "delete-privacy-requirement",
-        "🏷️rename": "rename-privacy-requirement",
-        "♻️replace": "replace-privacy-requirement"
-      },
-      "🔄️process": {
-        "🌱️create": "create-process",
-        "🗑️delete": "delete-process",
-        "🏷️rename": "rename-process",
-        "♻️replace": "replace-process"
-      },
-      "🧱️program-element": {
-        "🌱️create": "create-program-element",
-        "🗑️delete": "delete-program-element",
-        "🏷️rename": "rename-program-element",
-        "♻️replace": "replace-program-element"
       },
       "🏙️project": {
         "🏷️rename": "rename-project",
         "♻️replace": "replace-project"
       },
-      "💎️quality-record": {
-        "🌱️create": "create-quality-record",
-        "🗑️delete": "delete-quality-record",
-        "🏷️rename": "rename-quality-record",
-        "♻️replace": "replace-quality-record"
-      },
-      "🔢️quantity": {
-        "🌱️create": "create-quantity-requirement",
-        "🗑️delete": "delete-quantity-requirement",
-        "🏷️rename": "rename-quantity-requirement",
-        "♻️replace": "replace-quantity-requirement"
-      },
-      "📜️regulatory": {
-        "🌱️create": "create-regulatory-requirement",
-        "🗑️delete": "delete-regulatory-requirement",
-        "🏷️rename": "rename-regulatory-requirement",
-        "♻️replace": "replace-regulatory-requirement"
-      },
-      "🕸️relationship": {
-        "🌱️create": "create-relationship",
-        "🗑️delete": "delete-relationship",
-        "🏷️rename": "rename-relationship",
-        "♻️replace": "replace-relationship"
-      },
-      "📑️report-record": {
-        "🌱️create": "create-report-record",
-        "🗑️delete": "delete-report-record",
-        "🏷️rename": "rename-report-record",
-        "♻️replace": "replace-report-record"
-      },
-      "📌️requirement": {
-        "🌱️create": "create-requirement",
-        "🗑️delete": "delete-requirement",
-        "🏷️rename": "rename-requirement",
-        "♻️replace": "replace-requirement"
-      },
-      "💪️resilience": {
-        "🌱️create": "create-resilience-requirement",
-        "🗑️delete": "delete-resilience-requirement",
-        "🏷️rename": "rename-resilience-requirement",
-        "♻️replace": "replace-resilience-requirement"
-      },
-      "📦️resource": {
-        "🌱️create": "create-resource",
-        "🗑️delete": "delete-resource",
-        "🏷️rename": "rename-resource",
-        "♻️replace": "replace-resource"
-      },
-      "⚠️risk": {
-        "🌱️create": "create-risk",
-        "🗑️delete": "delete-risk",
-        "🏷️rename": "rename-risk",
-        "♻️replace": "replace-risk"
-      },
-      "🦺️safety": {
-        "🌱️create": "create-safety-requirement",
-        "🗑️delete": "delete-safety-requirement",
-        "🏷️rename": "rename-safety-requirement",
-        "♻️replace": "replace-safety-requirement"
-      },
-      "🎬️scenario": {
-        "🌱️create": "create-scenario",
-        "🗑️delete": "delete-scenario",
-        "🏷️rename": "rename-scenario",
-        "♻️replace": "replace-scenario"
-      },
-      "📅️schedule": {
-        "🌱️create": "create-schedule-requirement",
-        "🗑️delete": "delete-schedule-requirement",
-        "🏷️rename": "rename-schedule-requirement",
-        "♻️replace": "replace-schedule-requirement"
-      },
-      "🔍️search-filter": {
-        "🌱️create": "create-search-filter",
-        "🗑️delete": "delete-search-filter",
-        "🏷️rename": "rename-search-filter",
-        "♻️replace": "replace-search-filter"
-      },
-      "🛡️security": {
-        "🌱️create": "create-security-requirement",
-        "🗑️delete": "delete-security-requirement",
-        "🏷️rename": "rename-security-requirement",
-        "♻️replace": "replace-security-requirement"
-      },
-      "🛎️service": {
-        "🌱️create": "create-service-requirement",
-        "🗑️delete": "delete-service-requirement",
-        "🏷️rename": "rename-service-requirement",
-        "♻️replace": "replace-service-requirement"
-      },
-      "📍️site": {
-        "🌱️create": "create-site-context",
-        "🗑️delete": "delete-site-context",
-        "🏷️rename": "rename-site-context",
-        "♻️replace": "replace-site-context"
-      },
-      "👥️stakeholder": {
-        "🌱️create": "create-stakeholder",
-        "🗑️delete": "delete-stakeholder",
-        "🏷️rename": "rename-stakeholder",
-        "♻️replace": "replace-stakeholder"
-      },
-      "📶️status-record": {
-        "🌱️create": "create-status-record",
-        "🗑️delete": "delete-status-record",
-        "🏷️rename": "rename-status-record",
-        "♻️replace": "replace-status-record"
-      },
-      "🗄️storage": {
-        "🌱️create": "create-storage-requirement",
-        "🗑️delete": "delete-storage-requirement",
-        "🏷️rename": "rename-storage-requirement",
-        "♻️replace": "replace-storage-requirement"
-      },
-      "🗳️survey": {
-        "🌱️create": "create-survey",
-        "🗑️delete": "delete-survey",
-        "🏷️rename": "rename-survey",
-        "♻️replace": "replace-survey"
-      },
-      "♻️sustainability": {
-        "🌱️create": "create-sustainability-requirement",
-        "🗑️delete": "delete-sustainability-requirement",
-        "🏷️rename": "rename-sustainability-requirement",
-        "♻️replace": "replace-sustainability-requirement"
-      },
-      "📐️template-record": {
-        "🌱️create": "create-template-record",
-        "🗑️delete": "delete-template-record",
-        "🏷️rename": "rename-template-record",
-        "♻️replace": "replace-template-record"
+      "📋️register-row": {
+        "🌱️create": "create-register-row",
+        "🗑️delete": "delete-register-row",
+        "🏷️rename": "rename-register-row",
+        "♻️replace": "replace-register-row"
       },
       "🧵️trace": {
         "🧵️connect": "connect-trace",
         "✂️disconnect": "disconnect-trace"
-      },
-      "🧑️user": {
-        "🌱️create": "create-user-profile",
-        "🗑️delete": "delete-user-profile",
-        "🏷️rename": "rename-user-profile",
-        "♻️replace": "replace-user-profile"
-      },
-      "✔️validation-record": {
-        "🌱️create": "create-validation-record",
-        "🗑️delete": "delete-validation-record",
-        "🏷️rename": "rename-validation-record",
-        "♻️replace": "replace-validation-record"
-      },
-      "🧭️wayfinding": {
-        "🌱️create": "create-wayfinding-requirement",
-        "🗑️delete": "delete-wayfinding-requirement",
-        "🏷️rename": "rename-wayfinding-requirement",
-        "♻️replace": "replace-wayfinding-requirement"
-      },
-      "🎓️workshop": {
-        "🌱️create": "create-workshop",
-        "🗑️delete": "delete-workshop",
-        "🏷️rename": "rename-workshop",
-        "♻️replace": "replace-workshop"
       }
     },
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations": {
@@ -30736,6 +30420,60 @@
         "✂️unbind": "unbind-morph-target-attribute",
         "🚚️move": "move-morph-target-attribute",
         "🔀️reorder": "reorder-morph-target-attributes"
+      }
+    },
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+      "🧊️object": {
+        "🌱create-object": "create-object",
+        "🗑️delete-object": "delete-object",
+        "🏗️change-object-kind": "change-object-kind",
+        "⚓change-object-anchor": "change-object-anchor",
+        "🧱change-object-mesh": "change-object-mesh",
+        "🖋️edit-object-label": "edit-object-label",
+        "👁️change-object-hidden": "change-object-hidden",
+        "🔒change-object-locked": "change-object-locked"
+      },
+      "🧭️pose": {
+        "📍move-object": "move-object",
+        "🔃rotate-object": "rotate-object",
+        "📏scale-object": "scale-object"
+      },
+      "🌀️vortex": {
+        "➕add-object-vortex": "add-object-vortex",
+        "➖remove-object-vortex": "remove-object-vortex",
+        "🔌replace-object-vortex": "replace-object-vortex",
+        "🪢️connect-vortices": "connect-vortices",
+        "✂️disconnect-vortices": "disconnect-vortices",
+        "🧮replace-attraction-geometry": "replace-attraction-geometry"
+      },
+      "🌍️volume": {
+        "🌍create-target-volume": "create-target-volume",
+        "🪦delete-target-volume": "delete-target-volume",
+        "🚀move-target-volume": "move-target-volume",
+        "🌀rotate-target-volume": "rotate-target-volume",
+        "📐scale-target-volume": "scale-target-volume",
+        "🙈change-target-volume-hidden": "change-target-volume-hidden",
+        "🔐change-target-volume-locked": "change-target-volume-locked"
+      },
+      "🖼️reference": {
+        "🖼️create-reference": "create-reference",
+        "🚮delete-reference": "delete-reference",
+        "🎯move-reference": "move-reference",
+        "📎resize-reference": "resize-reference",
+        "🖇️replace-reference-source": "replace-reference-source",
+        "👀change-reference-hidden": "change-reference-hidden",
+        "🗝️change-reference-locked": "change-reference-locked"
+      },
+      "📚️catalog": {
+        "🌐change-domain": "change-domain",
+        "🤝connect-kind-compatibility": "connect-kind-compatibility",
+        "💔disconnect-kind-compatibility": "disconnect-kind-compatibility",
+        "📚replace-kind-catalogs": "replace-kind-catalogs"
+      },
+      "✋️selection": {
+        "✋️drag-selection": "drag-selection",
+        "🔄️rotate-selection": "rotate-selection",
+        "🔍️scale-selection": "scale-selection"
       }
     }
   },

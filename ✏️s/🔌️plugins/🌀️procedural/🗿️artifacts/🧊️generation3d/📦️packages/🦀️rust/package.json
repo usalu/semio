@@ -5,8 +5,8 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-generation3d-document-io": "bun repo run @semio-tech/procedural-generation3d-rs:verify-generation3d-document-io",
-    "verify-generation3d-preview-window-transient": "bun repo run @semio-tech/procedural-generation3d-rs:verify-generation3d-preview-window-transient"
+    "verify-generation3d-document-io": "bun --cwd \"../../../../../../..\" repo run @semio-tech/procedural-generation3d-rs:verify-generation3d-document-io",
+    "verify-generation3d-preview-window-transient": "bun --cwd \"../../../../../../..\" repo run @semio-tech/procedural-generation3d-rs:verify-generation3d-preview-window-transient"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

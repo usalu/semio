@@ -1,8 +1,8 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Vdi3805 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
-use super::Vdi3805Mutation;
-use crate::Vdi3805Snapshot;
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use crate::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 /// 📚 Every path a Vdi3805 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

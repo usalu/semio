@@ -21,6 +21,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-control-contract = { path="../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path="../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-token = { path="../../../🔤️token/📦️packages/🦀️rust" }
 

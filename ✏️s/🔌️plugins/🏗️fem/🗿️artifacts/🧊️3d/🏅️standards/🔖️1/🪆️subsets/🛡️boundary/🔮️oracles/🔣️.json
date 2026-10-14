@@ -81,5 +81,13 @@
         "replace-support"
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-fem-3d-mutations",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The subject half drives the production JSON apply/undo bridge of the dispatch enum the mutations crate owns."
+    }
   ]
 }

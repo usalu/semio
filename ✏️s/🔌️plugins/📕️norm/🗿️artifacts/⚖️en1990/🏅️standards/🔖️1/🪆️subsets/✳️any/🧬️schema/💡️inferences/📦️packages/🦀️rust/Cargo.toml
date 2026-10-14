@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1990-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1990 inferences"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1990-checks = { workspace = true }
+semio-s-artifact-norm-en1990-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-norm-en1990-examples = { workspace = true }
+semio-s-artifact-norm-en1990-io = { workspace = true }
+semio-s-artifact-norm-en1990-schema = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

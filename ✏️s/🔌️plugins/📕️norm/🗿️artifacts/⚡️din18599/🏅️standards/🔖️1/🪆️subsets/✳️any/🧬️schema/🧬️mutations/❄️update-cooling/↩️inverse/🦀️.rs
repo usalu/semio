@@ -1,12 +1,12 @@
 //! ↩️ `update-cooling` inverse.
 
-use crate::mutations::update_cooling::UpdateCooling;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::update_cooling::UpdateCooling;
 
-pub fn inverse(_payload: &UpdateCooling, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &UpdateCooling, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_cooling::UpdateCooling> {
     Ok((|| {
-    vec![Din18599Mutation::UpdateCooling(UpdateCooling { new_cooling: base.cooling.clone() })]
+    vec![Op::from(UpdateCooling { new_cooling: base.cooling.clone() })]
 
     })())
 }

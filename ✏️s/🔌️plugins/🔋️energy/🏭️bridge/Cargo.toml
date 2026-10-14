@@ -19,4 +19,8 @@ semio-framework-diagnostic = { path = "../../../../🧰️framework/🔨️modul
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-energy-model = { path = "../🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-editor-config = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-editor-edit = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-mutations = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-snapshot = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-viewer = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }

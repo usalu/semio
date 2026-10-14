@@ -1,8 +1,8 @@
 //! 🔺️ `change-connections` diff.
 
-use crate::mutations::change_connections::ChangeConnections;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999ConnectionsRows};
+use crate::change_connections::ChangeConnections;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999ConnectionsRows};
 
 pub fn diff(payload: &ChangeConnections, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.connections == &payload.connections {

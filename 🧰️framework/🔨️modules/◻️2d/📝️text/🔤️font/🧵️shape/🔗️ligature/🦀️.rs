@@ -1,5 +1,6 @@
 //! 🔗️ Bounded actual GSUB ligature sets borrow original glyph sequence and captured font authority.
-use super::{FontLookup,super::{FontFace,FontProgress,FontReader,kerning::Index}};
+use super::FontLookup;
+use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,kerning::Index};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct FontLigatureMatch{pub glyph:u16,pub consumed:usize}

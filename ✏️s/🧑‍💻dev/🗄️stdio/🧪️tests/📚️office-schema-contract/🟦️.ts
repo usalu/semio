@@ -2,15 +2,18 @@ import type { ScriptInvocation } from "../../../../../🧰️framework/🔨️mo
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import contractFixture from './🧫️fixtures/🔣️.json';
 import type { ValidateFunction } from 'ajv';
 import { getWorkspaceRoot } from '../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts';
-import { semioSchemaAjvV1 } from '../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts';
+import { semioSchemaAjvV1, addSemioMutationLeafSchemasV1 } from '../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts';
 import { runStdioTypeScriptCompiler } from '../../🏘️composition/🏗️build/🟦️.ts';
 import { parseDocxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parseXlsxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parsePptxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parsePptxSnapshot } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
-import { parsePptxSetSnapshotMutation } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot/🦠️mutation/🟦️.ts';
+import { parsePptxSnapshotJson } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts';
+import { parsePptxMutation } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts';
 import { parseXmlDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parseDocxXmlAddress } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts';
 
@@ -35,10 +38,10 @@ const valid = (validate: ValidateFunction, value: Json, label: string): void => 
 const invalid = (validate: ValidateFunction, value: Json, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
 
 /** 🧪️ Validates current OOXML snapshot/diff fixtures through Ajv and their complete TypeScript guards. */
-export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = getWorkspaceRoot()): Promise<void> {
+export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): void {
   const artifacts = join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts');
   const addressRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address');
-  const addresses = json(join(addressRoot, '🧫️fixtures/🔣️.json')) as { valid: Json[]; invalid: Json[] };
+  const addresses = json(join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🧭️xml-address/🔣️.json')) as { valid: Json[]; invalid: Json[] };
   const validateAddress = semioSchemaAjvV1().compile(json(join(addressRoot, '🔣️.json')));
   for (const address of addresses.valid) {
     valid(validateAddress, address, 'DOCX canonical XML address');
@@ -68,11 +71,11 @@ export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocatio
     for (const address of addresses.invalid) invalid(validate, { ...row.payload, [row.field]: address }, `DOCX ${row.leaf} malformed address`);
     if ('index' in row.payload) for (const index of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1]) invalid(validate, { ...row.payload, [row.field]: addresses.valid[0], index }, `DOCX ${row.leaf} invalid index`);
   }
-  const docxTableRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/🧭️table-run-projection');
+  const docxTableRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧭️table-run-projection');
   const docxTable = json(join(docxTableRoot, '🔣️.json')) as { blocks: Json[][]; paths: Json[][] } & { [key: string]: Json };
   assert.equal(docxTable.blocks.length, docxTable.paths.length);
   for (const [index, runs] of docxTable.blocks.entries()) assert.equal(runs.length, docxTable.paths[index].length);
-  const sparse = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🌿️sparse-triples/🔣️.json')) as { valid: Json[]; invalid: Json[] };
+  const sparse = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔺️diff/🌿️sparse-triples/🔣️.json')) as { valid: Json[]; invalid: Json[] };
   const validateXmlDiff = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
   for (const diff of sparse.valid) {
     valid(validateXmlDiff, diff, 'XML sparse triple');
@@ -82,18 +85,16 @@ export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocatio
     invalid(validateXmlDiff, diff, 'XML null triple');
     assert.throws(() => parseXmlDiff(diff));
   }
-  for (const row of cases) await runStdioTypeScriptCompiler(join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
-  await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
   for (const row of cases) {
     const base = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
     const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
     const diffSchema = json(join(base, '🧬️schema/🔺️diff/🔣️.json'));
-    const fixture = join(base, '🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug);
+    const fixture = contractFixture.snapshots[row.artifact as keyof typeof contractFixture.snapshots];
     const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema);
     const validateSnapshot = ajv.compile(snapshotSchema);
     const validateDiff = ajv.compile(diffSchema);
-    for (const state of ['⬅️before', '➡️after']) valid(validateSnapshot, json(join(fixture, '📸️snapshot', state, '🔣️.json')), `${row.artifact} ${state}`);
-    const diff = json(join(fixture, '🔺️diff/🔣️.json'));
+    for (const state of ['⬅️before', '➡️after']) valid(validateSnapshot, fixture[state as keyof typeof fixture] as Json, `${row.artifact} ${state}`);
+    const diff = contractFixture.diff;
     valid(validateDiff, diff, `${row.artifact} diff`);
     assert.deepEqual(wireJson(row.parse(diff)), diff, `${row.artifact} TypeScript guard`);
     invalid(validateSnapshot, { schema: `s.stdio.${row.artifact}`, entries: [] }, `${row.artifact} legacy snapshot`);
@@ -102,7 +103,7 @@ export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocatio
   for (const row of publicCases) {
     const subsets = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets');
     const schemas = row.subsets.map((subset) => json(join(subsets, subset, '🧬️schema/🔣️.json')));
-    const fixture = json(join(subsets, '🧱️base/🧫️fixtures/🧬️mutations/📸️set-snapshot', row.slug, '📸️snapshot/⬅️before/🔣️.json'));
+    const fixture = contractFixture.snapshots[row.artifact as keyof typeof contractFixture.snapshots]['⬅️before'];
     const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema);
     const validators = [ajv.compile(schemas[0]), ...schemas.slice(1).map((schema) => ajv.compile(schema))];
     for (const [index, validate] of validators.entries()) {
@@ -112,11 +113,11 @@ export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocatio
   }
   const docx = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
   const docxDiffSchema = json(join(docx, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
-  const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧫️fixtures/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
+  const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔺️diff/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
   const docxAjv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
   const validateDocxDiff = docxAjv.getSchema(docxDiffSchema.$id)!;
   for (const row of optionalClear.cases) {
-    const diff = { xmlParts: { modified: [{ key: 'custom/document.xml', diff: { document: row.diff } }] } };
+    const diff = { xmlParts: { modified: [{ id: 'custom/document.xml', patch: { document: row.diff } }] } };
     valid(validateDocxDiff, diff, `DOCX canonical XML ${row.name}`);
     assert.deepEqual(wireJson(parseDocxDiff(diff)), diff);
   }
@@ -127,42 +128,56 @@ export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocatio
   };
   const propertyNodes = ['w:rPr', 'w:pPr', 'w:tcPr', 'w:trPr', 'w:tblPr'];
   for (const name of propertyNodes) {
-    const diff = { xmlParts: { modified: [{ key: 'custom/document.xml', diff: { document: { root: { kind: 'element', name, children: xmlChildren } } } }] } };
+    const diff = { xmlParts: { modified: [{ id: 'custom/document.xml', patch: { document: { root: { kind: 'element', name, children: xmlChildren } } } }] } };
     valid(validateDocxDiff, diff, `DOCX canonical XML property ${name}`);
     assert.deepEqual(wireJson(parseDocxDiff(diff)), diff);
   }
   invalid(validateDocxDiff, { document: { body: {} } }, 'DOCX semantic shadow diff');
   const base = join(artifacts, '📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
   const schema = json(join(base, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
-  const fixture = json(join(base, '🧬️schema/🔺️diff/🧫️fixtures/🏷️placeholder-kind/🔣️.json')) as { expectedDiff: Json };
+  const placeholderDiff = { xmlParts: { modified: [{ id: 'ppt/slides/slide1.xml', patch: { document: { root: { kind: 'element', attributes: { modified: [{ name: 'type', value: 'title' }] } } } } }] } };
   const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
   const ajv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(snapshotSchema).addSchema(schema);
-  valid(ajv.getSchema(schema.$id)!, fixture.expectedDiff, 'PPTX canonical placeholder kind diff');
-  assert.deepEqual(wireJson(parsePptxDiff(fixture.expectedDiff)), fixture.expectedDiff);
-  assert.throws(() => parsePptxDiff({ presentation: {} }));
-  const boundary = json(join(base, '🧫️fixtures/🧭️xml-document-boundaries/🔣️.json')) as { snapshot: Json; diff: Json; setSnapshot: { snapshot: Json } & Json; invalidXmlAttribute: Json };
+  valid(ajv.getSchema(schema.$id)!, placeholderDiff, 'PPTX canonical placeholder kind diff');
+  assert.deepEqual(wireJson(parsePptxDiff(placeholderDiff)), placeholderDiff);
+  invalid(ajv.getSchema(schema.$id)!, { presentation: {} }, 'PPTX removed semantic shadow');
+  assert.throws(() => parsePptxDiff({ xmlParts: null }));
+  const boundary = json(join(base, '🧪️tests/🧫️fixtures/🧭️xml-document-boundaries/🔣️.json')) as { snapshot: Json; invalidXmlAttribute: Json };
   const validatePptxSnapshot = ajv.compile(snapshotSchema);
-  const validatePptxReplacement = ajv.compile(json(join(base, '🧬️schema/🧬️mutations/📸️set-snapshot/🧬️schema/🔣️.json')));
+  const mutations = join(base, '🧬️schema/🧬️mutations');
+  const mutationAjv = addSemioMutationLeafSchemasV1(semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(snapshotSchema).addSchema(json(join(mutations, '🧭️xml-address/🔣️.json'))), pathToFileURL(mutations));
+  const validatePptxMutation = mutationAjv.compile(json(join(mutations, '🔣️.json')));
+  assert.equal(contractFixture.pptx.mutations.length, 12);
+  for (const mutation of contractFixture.pptx.mutations) { valid(validatePptxMutation, mutation, 'PPTX canonical mutation'); assert.deepEqual(wireJson(parsePptxMutation(mutation)), mutation); }
+  for (const address of contractFixture.pptx.invalidAddresses) { const mutation = { mutation: 'replaceXmlNode', address, node: contractFixture.pptx.mutations[7].node }; invalid(validatePptxMutation, mutation, 'PPTX malformed revision address'); assert.throws(() => parsePptxMutation(mutation)); }
+  assert.throws(() => parsePptxMutation({ mutation: 'setSnapshot', snapshot: boundary.snapshot }));
   valid(validatePptxSnapshot, boundary.snapshot, 'PPTX XML document boundary snapshot');
-  valid(ajv.getSchema(schema.$id)!, boundary.diff, 'PPTX XML document boundary diff');
-  valid(validatePptxReplacement, boundary.setSnapshot, 'PPTX XML document boundary replacement');
-  assert.deepEqual(wireJson(parsePptxSnapshot(boundary.snapshot)), boundary.snapshot);
-  assert.deepEqual(wireJson(parsePptxDiff(boundary.diff)), boundary.diff);
-  assert.deepEqual(wireJson(parsePptxSetSnapshotMutation(boundary.setSnapshot).snapshot), boundary.setSnapshot.snapshot);
-  const invalidBoundary = parsePptxSnapshot(boundary.snapshot);
-  invalidBoundary.xmlParts[0].document.doctype!.prologPosition = 3n;
+  const typedBoundary = parsePptxSnapshotJson(boundary.snapshot);
+  const boundaryDiff = { xmlParts: { inserted: [{ index: 0, row: typedBoundary.xmlParts[0] }] } };
+  valid(ajv.getSchema(schema.$id)!, wireJson(boundaryDiff), 'PPTX XML document boundary diff');
+  assert.deepEqual(wireJson(parsePptxSnapshot(typedBoundary)), boundary.snapshot);
+  assert.deepEqual(wireJson(parsePptxDiff(boundaryDiff)), wireJson(boundaryDiff));
+  const invalidBoundary = parsePptxSnapshot(typedBoundary);
+  invalidBoundary.xmlParts[0].document.doctype!.prologPosition = -1n;
+  invalid(validatePptxSnapshot, wireJson(invalidBoundary), 'PPTX unsigned doctype position');
   assert.throws(() => parsePptxSnapshot(invalidBoundary));
-  assert.throws(() => parsePptxDiff({ xmlParts: invalidBoundary.xmlParts }));
-  assert.throws(() => parsePptxSetSnapshotMutation({ snapshot: invalidBoundary }));
-  const baseline = parsePptxSnapshot(boundary.snapshot);
+  assert.throws(() => parsePptxDiff({ xmlParts: { inserted: [{ index: 0, row: invalidBoundary.xmlParts[0] }] } }));
+  const baseline = parsePptxSnapshot(typedBoundary);
   const invalidPart = { ...baseline.xmlParts[0], document: { ...baseline.xmlParts[0].document, root: { kind: 'element', name: 'p:presentation', attrs: [boundary.invalidXmlAttribute], children: [] } } };
   const invalidAttributeSnapshot = wireJson({ ...baseline, xmlParts: [invalidPart] });
-  const invalidAttributeDiff = wireJson({ xmlParts: [invalidPart] });
-  const invalidAttributeReplacement = { mutation: 'setSnapshot', snapshot: invalidAttributeSnapshot };
+  const invalidAttributeDiff = { xmlParts: { inserted: [{ index: 0, row: invalidPart }] } };
+  const invalidAttributeReplacement = { mutation: 'replaceXmlNode', address: contractFixture.pptx.address, node: invalidPart.document.root };
   invalid(validatePptxSnapshot, invalidAttributeSnapshot, 'PPTX misplaced XML attribute field snapshot');
-  invalid(ajv.getSchema(schema.$id)!, invalidAttributeDiff, 'PPTX misplaced XML attribute field diff');
-  invalid(validatePptxReplacement, invalidAttributeReplacement, 'PPTX misplaced XML attribute field replacement');
-  assert.throws(() => parsePptxSnapshot(invalidAttributeSnapshot));
+  invalid(ajv.getSchema(schema.$id)!, wireJson(invalidAttributeDiff), 'PPTX misplaced XML attribute field diff');
+  invalid(validatePptxMutation, invalidAttributeReplacement, 'PPTX misplaced XML attribute field replacement');
+  assert.throws(() => parsePptxSnapshotJson(invalidAttributeSnapshot));
   assert.throws(() => parsePptxDiff(invalidAttributeDiff));
-  assert.throws(() => parsePptxSetSnapshotMutation(invalidAttributeReplacement));
+  assert.throws(() => parsePptxMutation(invalidAttributeReplacement));
+}
+
+/** 🧪️ Runs current schema/parser laws before the original owned TypeScript compiler checks. */
+export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = getWorkspaceRoot()): Promise<void> {
+  testStdioOfficeSchemaFixtures(repoRoot);
+  for (const row of cases) await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts', row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
+  await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
 }

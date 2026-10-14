@@ -111,9 +111,10 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
     use semio_framework_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
     fn authored_id(emit: &semio_framework_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::standards::v1::subsets::any::schema::kernel::EntityId {
-        let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
+        let Some(ProgramMutation::CreateRegisterRow(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
         assert_eq!(emit.artifact_mutations.len(), 1);
-        payload.report_record.header.id.clone()
+        assert_eq!(payload.row.key(), crate::standards::v1::subsets::any::schema::registers::RegisterKey::ReportRecord);
+        payload.row.header().id.clone()
     }
 
     let program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();

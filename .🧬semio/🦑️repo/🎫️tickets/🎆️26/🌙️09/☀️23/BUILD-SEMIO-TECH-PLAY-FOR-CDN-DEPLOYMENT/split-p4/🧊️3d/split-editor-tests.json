@@ -1,0 +1,15 @@
+{
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+ "context": {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/🦀️.rs",
+             "doc": "🧰️ Shared fixture of the puzzle3d editor integration targets — the raw app, its runtime budgets, render and dispatch drivers, and the heap witness."},
+ "chunks": [
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "doc": "🕹️ Puzzle3d editor surface laws — action roster, local interaction reads, operations, command envelopes, inspector, manifest, suggestions and the paged scene carrier."},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs",
+   "doc": "🪟️ Puzzle3d editor window laws — window options, fill, distribution, UI scope, utilities, world selection, gumball, history references, kit in-port, convergence and close.",
+   "from": "//#region 🔖️WindowOptions"},
+  {"path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️budgets/🦀️.rs",
+   "doc": "⏱️ Puzzle3d editor budget and defect laws — session caches, interactive step budgets, checked defects, opening camera, settings scope, rendered-vs-mutated document, shipped kind catalog and initial snapshot cost.",
+   "from": "/// 🎟️ Wave W-P: `Puzzle3dPlayApp` used to be rebuilt from `default()` on every dispatch and every render,"}
+ ]
+}

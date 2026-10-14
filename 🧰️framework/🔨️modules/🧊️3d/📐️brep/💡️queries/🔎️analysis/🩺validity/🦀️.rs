@@ -8,7 +8,7 @@ use semio_framework_3d_brep_representation::topology::Body;
 
 /// 🚦 How serious one issue is; `warning-` codes never make a shape invalid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum IssueSeverity {
     Error,
@@ -17,7 +17,7 @@ pub enum IssueSeverity {
 
 /// 🩹 One finding: the arena entity label it names, a stable kebab-case code and a message.
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ValidityIssue {
     pub entity: String,
     pub code: String,
@@ -27,7 +27,7 @@ pub struct ValidityIssue {
 
 /// 🩺️ The validity of one shape.
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ValidityReport {
     pub ok: bool,
     pub errors: usize,

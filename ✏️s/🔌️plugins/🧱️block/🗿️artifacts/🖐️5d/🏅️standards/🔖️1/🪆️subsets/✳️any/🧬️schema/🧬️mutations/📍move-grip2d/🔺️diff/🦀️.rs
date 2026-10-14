@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `MoveGrip2d`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block5dGripsDelta, Block5dGripsPatchEntry, Block5dGripTemplatePatch};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
+use semio_s_artifact_block_5d_diff::{Block5dGripsDelta, Block5dGripsPatchEntry, Block5dGripTemplatePatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::MoveGrip2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::move_grip_2d::MoveGrip2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     let Some(existing) = base.grips.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "grip", payload.id), vec![payload.id.clone()]);
     };

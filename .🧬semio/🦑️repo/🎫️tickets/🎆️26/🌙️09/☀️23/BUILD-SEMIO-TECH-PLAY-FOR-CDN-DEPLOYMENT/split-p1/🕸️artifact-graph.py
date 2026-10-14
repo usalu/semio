@@ -31,8 +31,10 @@ for m in re.finditer(r"(?m)^pub use crate::((?:[a-z_0-9]+::)+)\{?([^;}]*)\}?;", 
     mods = tuple(m.group(1).strip(":").split("::"))
     for name in [x.strip() for x in m.group(2).split(",") if x.strip()]:
         root_items[name] = crate.resolve(mods + (name,))
+ENGINE_MODS = {re.sub(r"^[^a-z_]+", "", d) for d in os.listdir(ENGINE) if os.path.isdir(os.path.join(ENGINE, d))} | {"epw"}
 def resolve(mp):
     mp = tuple(mp)
+    if mp and mp[0] in ENGINE_MODS: return "ENGINE:" + mp[0]
     if mp and mp[0] in SHIMS:
         mp = SHIMS[mp[0]] + mp[1:]
     if len(mp) >= 1 and mp[0] in root_items and (len(mp) == 1 or mp[0][0].isupper() or mp[0] not in {m[0] for m in crate.mods if m}):
@@ -75,6 +77,7 @@ def references(file):
         out[target] = out.get(target, True) and t
     return out
 def layer(f):
+    if f.startswith("ENGINE:"): return "engine"
     if f.startswith(ENGINE): return "engine:" + re.sub(r"^[^a-z_]+", "", f[len(ENGINE):].split("/")[0])
     if "/🧩️extensions/🌦️epw/" in f: return "epw"
     if f == crate.root: return "root"
@@ -105,7 +108,7 @@ if __name__ == "__main__":
             kind = "test" if (is_test(f) or testonly) else "lib"
             edges[(kind, a, b)] += 1; pairs[(a, b)].add((os.path.relpath(f, REPO), os.path.relpath(t, REPO), kind))
     if "--json" in sys.argv:
-        json.dump({"files": {os.path.relpath(f, REPO): {"layer": layer(f), "test": is_test(f), "module": "::".join(crate.files[f]), "refs": {os.path.relpath(t, REPO): v for t, v in fg[f].items()}} for f in crate.files}}, open(sys.argv[sys.argv.index("--json") + 1], "w"), ensure_ascii=False, indent=0)
+        json.dump({"files": {os.path.relpath(f, REPO): {"layer": layer(f), "test": is_test(f), "module": "::".join(crate.files[f]), "refs": {(t if t.startswith("ENGINE:") else os.path.relpath(t, REPO)): v for t, v in fg[f].items()}} for f in crate.files}}, open(sys.argv[sys.argv.index("--json") + 1], "w"), ensure_ascii=False, indent=0)
     if "--edges" in sys.argv:
         i = sys.argv.index("--edges"); a, b = sys.argv[i + 1], sys.argv[i + 2]
         for x in sorted(pairs[(a, b)]): print(x[2], x[0], "->", x[1])

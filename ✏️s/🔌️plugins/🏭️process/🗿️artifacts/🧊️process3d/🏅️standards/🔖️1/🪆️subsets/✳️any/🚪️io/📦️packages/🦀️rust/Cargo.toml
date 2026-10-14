@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-process-process3d-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d io: text and binary codecs, import and export"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-process-process3d-inferences = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-process-process3d-model-diff = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true }
+semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-step-geometry = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

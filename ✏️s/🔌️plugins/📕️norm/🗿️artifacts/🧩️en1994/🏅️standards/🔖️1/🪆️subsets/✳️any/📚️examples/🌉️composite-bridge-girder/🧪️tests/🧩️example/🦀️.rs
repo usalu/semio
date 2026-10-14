@@ -6,8 +6,8 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1994Inference;
-    use crate::En1994Snapshot;
+    use semio_s_artifact_norm_en1994_inferences::En1994Inference;
+    use semio_s_artifact_norm_en1994_model::En1994Snapshot;
     use protocol::Inference;
     let snapshot = En1994Snapshot::default();
     assert_eq!(En1994Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1994Inference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -15,8 +15,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1994Inference;
-    use crate::En1994Snapshot;
+    use semio_s_artifact_norm_en1994_inferences::En1994Inference;
+    use semio_s_artifact_norm_en1994_model::En1994Snapshot;
     use protocol::Inference;
     assert_eq!(En1994Inference::infer(&En1994Snapshot::default()).expect("valid materialized inference fixture"), En1994Inference::default());
 }

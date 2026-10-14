@@ -1,8 +1,26 @@
-use super::*;
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::terminology::lowpoly_play_labels;
-use crate::editor::lowpoly::unit_tests::context::{app, render as render_body};
-use crate::{LowpolySnapshot, LowpolyTransform};
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_panels::layers::*;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{active_object, LowpolyView};
+use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_number};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::lowpoly_play_labels;
+use crate::context::{app, render as render_body};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolySnapshot, snapshot::LowpolyTransform};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 #[semio_framework_async_macros::async_test]
@@ -17,7 +35,7 @@ async fn layers_panel_lists_the_base_layer() {
 /// layers panel reads `paint_layers` alone, so the stack is all this law needs.
 fn oversized(layers: usize) -> (LowpolySnapshot, LowpolyConfig) {
     let mut snapshot = LowpolySnapshot::default();
-    snapshot.objects.push(crate::LowpolyObject { mesh_state:None,
+    snapshot.objects.push(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyObject { mesh_state:None,
         id: "obj-0".into(),
         name: "Object 0".into(),
         transform: LowpolyTransform::default(),

@@ -1,6 +1,6 @@
 //! 🧪️ `remove-content-type` satisfies the inverse sum law for a removed default and a removed override at their positions.
 
-use super::super::*;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 
 #[semio_framework_async_macros::async_test]
 async fn remove_content_type_restores_the_entry_at_its_position() {

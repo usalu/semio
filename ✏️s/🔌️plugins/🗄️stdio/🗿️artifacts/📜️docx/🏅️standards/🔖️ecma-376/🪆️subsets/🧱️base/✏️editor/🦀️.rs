@@ -5,8 +5,16 @@
 
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
-use crate::schema::mutations::{docx_run_formatting, edit_rules, prepare_addressed_xml_mutation, set_run_formatting, set_run_text, DocxRunFormatting, DocxXmlAddress};
-use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::prepare_addressed_xml_mutation;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_formatting;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxRunFormatting;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxXmlAddress;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::retained_command::ArtifactCommandInputs;
 use semio_framework_plugin::retained_command::ArtifactCommandWork;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
@@ -341,7 +349,7 @@ macro_rules! canonical_docx_set_page_work {
                 let copied = self.copied_text.take().ok_or_else(|| semio_framework_plugin::Fault::from("stdio.docx.set-page.copy-incomplete"))?;
                 self.complete = true;
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit {
-                    artifact_mutations: vec![DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: copied })],
+                    artifact_mutations: vec![DocxMutation::SetRunText(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: copied })],
                     ..Default::default()
                 }))
             }
@@ -464,8 +472,8 @@ impl ArtifactEditor for DocxEditor {
     }
 
     fn initial_snapshot() -> DocxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument {
-            body: vec![crate::schema::snapshot::DocxBlock::Paragraph(crate::schema::snapshot::DocxParagraph::default())],
+        semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
+            body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
         })
     }

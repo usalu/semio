@@ -1,9 +1,13 @@
-use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node::*;
+use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::context::{dispatch, fem3d_demo_app};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchNode) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {

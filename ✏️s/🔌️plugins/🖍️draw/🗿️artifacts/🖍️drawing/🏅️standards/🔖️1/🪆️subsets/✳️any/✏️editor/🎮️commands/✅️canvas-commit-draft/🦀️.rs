@@ -1,6 +1,6 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-commit-draft`.
 
-use crate::commands::canvas_pointer_down::DrawingSession;
+use crate::DrawingSession;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

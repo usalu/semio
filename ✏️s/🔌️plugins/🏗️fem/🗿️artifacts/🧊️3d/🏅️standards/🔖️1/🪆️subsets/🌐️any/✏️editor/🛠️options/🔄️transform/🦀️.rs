@@ -2,10 +2,11 @@
 //! Read from that window's captured config (a panel/measure projection binds to the focused pane),
 //! written through `setTransformGumballFlag`.
 
-use crate::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;
-use crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig;
-use crate::editor::fem3d::terminology::Fem3dLabels;
-use crate::editor::fem3d::{fem3d_measure_action, FEM3D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_measure_action;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::FEM3D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
 use semio_framework_plugin::WindowMeasure;
 

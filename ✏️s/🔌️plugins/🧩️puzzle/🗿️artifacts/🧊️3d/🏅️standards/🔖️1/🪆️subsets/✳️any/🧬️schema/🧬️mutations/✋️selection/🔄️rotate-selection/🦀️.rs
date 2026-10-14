@@ -2,21 +2,21 @@
 //! volumes, each about its own origin, by one world-axis rotation. The gesture's own inputs (which ids,
 //! which axis, which angle) are the payload, so editing the turn in history re-derives every orientation
 //! from whatever base it replays on.
-use crate::standards::v1::subsets::any::schema::mutations::{MoveObject, ReplaceAttractionGeometry, RotateObject, RotateTargetVolume, ScaleObject};
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_items, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_number};
+use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::RotateTargetVolume, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use {crate::puzzle3d_selection_items, crate::puzzle3d_selection_number};
 
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// 🔄️ `rotate-selection` payload — object and target-volume ids, the world axis and the angle in
 /// radians (right-handed about the axis).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "rotate-selection")]
 pub struct RotateSelection {
     pub targets: Vec<String>,

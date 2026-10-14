@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "registry": {
+    "version": 1,
+    "owners": [
+      {
+        "name": "app",
+        "root": "app",
+        "manifest": "app/📋️project.json",
+        "packages": []
+      },
+      {
+        "name": "registry",
+        "root": "registry",
+        "manifest": "registry/📋️project.json",
+        "packages": []
+      },
+      {
+        "name": "provider",
+        "root": "provider",
+        "manifest": "provider/📋️project.json",
+        "packages": []
+      }
+    ],
+    "catalogProviders": [
+      {
+        "ownerRoot": "provider",
+        "sourcePath": "provider/publication.ts",
+        "consumerRoots": [
+          "registry"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "imported consumer Source",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build"
+          }
+        ]
+      },
+      "dependsOn": [],
+      "registryTargets": [
+        "catalog"
+      ],
+      "inputs": [],
+      "expectedProviders": []
+    },
+    {
+      "name": "actual consumer task",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "registry",
+            "target": "catalog"
+          }
+        ]
+      },
+      "dependsOn": [],
+      "registryTargets": [
+        "catalog"
+      ],
+      "inputs": [],
+      "expectedProviders": [
+        "provider/publication.ts"
+      ]
+    },
+    {
+      "name": "declared consumer prerequisite",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build"
+          }
+        ]
+      },
+      "dependsOn": [
+        "registry:catalog"
+      ],
+      "registryTargets": [
+        "catalog"
+      ],
+      "inputs": [],
+      "expectedProviders": [
+        "provider/publication.ts"
+      ]
+    },
+    {
+      "name": "absent optional consumer task",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build"
+          }
+        ]
+      },
+      "dependsOn": [
+        "^missing"
+      ],
+      "registryTargets": [],
+      "inputs": [],
+      "expectedProviders": []
+    },
+    {
+      "name": "explicit provider Source input",
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build"
+          }
+        ]
+      },
+      "dependsOn": [],
+      "registryTargets": [
+        "catalog"
+      ],
+      "inputs": [
+        "{workspaceRoot}/provider/publication.ts"
+      ],
+      "expectedProviders": [
+        "provider/publication.ts"
+      ]
+    },
+    {
+      "name": "intentional all owners",
+      "selection": {
+        "kind": "all"
+      },
+      "dependsOn": [],
+      "registryTargets": [
+        "catalog"
+      ],
+      "inputs": [],
+      "expectedProviders": [
+        "provider/publication.ts"
+      ]
+    }
+  ]
+}

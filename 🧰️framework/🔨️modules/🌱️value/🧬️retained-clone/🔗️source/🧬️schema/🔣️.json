@@ -3,7 +3,11 @@
   "$id": "https://semio.tech/schemas/value/original-clone-source-custody",
   "type": "object",
   "additionalProperties": false,
-  "required": ["cases"],
+  "required": [
+    "cases",
+    "currency",
+    "bindingIdentity"
+  ],
   "properties": {
     "cases": {
       "type": "array",
@@ -11,23 +15,118 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "owner", "metadata", "denied", "expected"],
+        "required": [
+          "name",
+          "owner",
+          "metadata",
+          "denied",
+          "expected"
+        ],
         "properties": {
-          "name": {"type": "string", "minLength": 1},
-          "owner": {"type": "string"},
-          "metadata": {"type": "string"},
-          "denied": {"type": "array", "items": {"enum": ["items", "copy", "capacity", "release", "depth"]}, "uniqueItems": true},
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "string"
+          },
+          "denied": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "items",
+                "capacity",
+                "release",
+                "depth"
+              ]
+            },
+            "uniqueItems": true
+          },
           "expected": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["originalRetained", "aliasRetained", "terminal", "source"],
+            "required": [
+              "originalRetained",
+              "aliasRetained",
+              "terminal"
+            ],
             "properties": {
-              "originalRetained": {"const": true},
-              "aliasRetained": {"const": true},
-              "terminal": {"const": true},
-              "source": {"enum": ["owned", "borrowed"]}
+              "originalRetained": {
+                "const": true
+              },
+              "aliasRetained": {
+                "const": true
+              },
+              "terminal": {
+                "const": true
+              }
             }
           }
+        }
+      }
+    },
+    "currency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadataCopyBytes",
+        "minimumCopyBudget",
+        "negativeCopyBudgetRepresentable",
+        "bindingDenied",
+        "transferDenied",
+        "sourceModes"
+      ],
+      "properties": {
+        "metadataCopyBytes": {
+          "const": 0
+        },
+        "minimumCopyBudget": {
+          "const": 0
+        },
+        "negativeCopyBudgetRepresentable": {
+          "const": false
+        },
+        "bindingDenied": {
+          "const": [
+            "items",
+            "depth"
+          ]
+        },
+        "transferDenied": {
+          "const": [
+            "items",
+            "release",
+            "depth"
+          ]
+        },
+        "sourceModes": {
+          "const": [
+            "owned",
+            "borrowed"
+          ]
+        }
+      }
+    },
+    "bindingIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameOrigin",
+        "differentProjection",
+        "differentOrigin"
+      ],
+      "properties": {
+        "sameOrigin": {
+          "const": true
+        },
+        "differentProjection": {
+          "const": false
+        },
+        "differentOrigin": {
+          "const": false
         }
       }
     }

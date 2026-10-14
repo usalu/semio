@@ -1,13 +1,13 @@
 //! ↩️ `add-member` inverse.
 
-use crate::mutations::add_member::AddMember;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
-use crate::mutations::remove_member;
+use crate::add_member::AddMember;
 
-pub fn inverse(payload: &AddMember, _base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use crate::remove_member;
+
+pub fn inverse<Op>(payload: &AddMember, _base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_member::RemoveMember> {
     Ok((|| {
-    vec![En1999Mutation::RemoveMember(remove_member::RemoveMember { id: payload.member.id.clone() })]
+    vec![Op::from(remove_member::RemoveMember { id: payload.member.id.clone() })]
 
     })())
 }

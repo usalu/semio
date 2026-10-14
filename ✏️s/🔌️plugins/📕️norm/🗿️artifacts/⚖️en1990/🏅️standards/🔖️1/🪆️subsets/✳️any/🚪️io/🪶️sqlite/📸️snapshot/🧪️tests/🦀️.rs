@@ -4,12 +4,12 @@ mod original_owners;
 
 #[test]
 fn sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability() {
-    let codec = store::bare_artifact_codec::<crate::standards::v1::subsets::any::io::sqlite::snapshot::En1990Snapshot, crate::En1990Mutation>(crate::EN1990_DOCUMENT_SCHEMA);
+    let codec = store::bare_artifact_codec::<semio_s_artifact_norm_en1990_model::En1990Snapshot, semio_s_artifact_norm_en1990_mutations::En1990Mutation>(semio_s_artifact_norm_en1990_model::EN1990_DOCUMENT_SCHEMA);
     assert!(codec.snapshot_sqlite.is_some(), "EN1990 has no owned relational capability");
 }
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::En1990Snapshot;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 #[test]
 fn sqlite_snapshot_en1990_owned_native_decoder_controls_both_physical_payloads(){
  use store::io::IoPayload;
@@ -122,8 +122,8 @@ fn sqlite_snapshot_en1990_large_owned_text_cancels_before_projection_reconstruct
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words() {
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::IoPayload,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("norm").label("EN1990 owned SQLite").version("0.0.1").package_id("semio:norm").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let codec = store::os_store::codec_registry::document_codec(crate::EN1990_DOCUMENT_SCHEMA).await.unwrap().unwrap(); let provider = codec.snapshot_sqlite.as_ref().unwrap();
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("norm").label("EN1990 owned SQLite").version("0.0.1").package_id("semio:norm").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+    let codec = store::os_store::codec_registry::document_codec(semio_s_artifact_norm_en1990_model::EN1990_DOCUMENT_SCHEMA).await.unwrap().unwrap(); let provider = codec.snapshot_sqlite.as_ref().unwrap();
     let dialect = ArtifactDialect { artifact_kind: "s.norm.en1990".into(), standard: "1".into(), subset: "*".into() };
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️binary64.json")).unwrap();
     for word in corpus["ieee754Binary64Bits"].as_array().unwrap() {
@@ -181,6 +181,6 @@ fn sqlite_snapshot_en1990_borrowed_complete_gate_copied_limits_exact_and_one_sho
  let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️semantic.json")).unwrap();let defaults=SqliteDatabaseLimits::default();
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let extent=norm_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(<En1990Snapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&source,&Default::default()).unwrap()),SnapshotEncoding::Text=>store::io::IoPayload::Text(<En1990Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&source))};
- for(role,total)in[("rows",case["rows"].as_u64().unwrap()as usize),("bytes",case["valueBytes"].as_u64().unwrap()as usize),("schema",contract["schemaBytes"].as_u64().unwrap()as usize),("tables",9),("columns",36)]{for accepted in[true,false]{let maximum=total-usize::from(!accepted);let limits=match role{"rows"=>SqliteDatabaseLimits{max_rows:maximum,..defaults},"bytes"=>SqliteDatabaseLimits{max_value_bytes:maximum,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:maximum,..defaults},"tables"=>SqliteDatabaseLimits{max_tables:maximum,..defaults},"columns"=>SqliteDatabaseLimits{max_columns:maximum,..defaults},_=>unreachable!()};let result=store::decode_sqlite_snapshot_record_native(&payload,<En1990Snapshot as pack::snapshot::ArtifactDsl>::envelope_id(),En1990Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::admit(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },&mut SqliteSnapshotControl::new(&mut |_|true,defaults));assert_eq!(result.is_ok(),accepted,"borrowed full CST before typed ownership {encoding:?} {role} {limits:?}");}}}
+ for(role,total)in[("rows",case["rows"].as_u64().unwrap()as usize),("bytes",case["valueBytes"].as_u64().unwrap()as usize),("schema",contract["schemaBytes"].as_u64().unwrap()as usize),("tables",9),("columns",36)]{for accepted in[true,false]{let maximum=total-usize::from(!accepted);let limits=match role{"rows"=>SqliteDatabaseLimits{max_rows:maximum,..defaults},"bytes"=>SqliteDatabaseLimits{max_value_bytes:maximum,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:maximum,..defaults},"tables"=>SqliteDatabaseLimits{max_tables:maximum,..defaults},"columns"=>SqliteDatabaseLimits{max_columns:maximum,..defaults},_=>unreachable!()};let result=store::decode_sqlite_snapshot_record_native(&payload,<En1990Snapshot as pack::snapshot::ArtifactDsl>::envelope_id(),En1990Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semio_s_artifact_norm_en1990_io::sqlite::snapshot::admission::admit(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },&mut SqliteSnapshotControl::new(&mut |_|true,defaults));assert_eq!(result.is_ok(),accepted,"borrowed full CST before typed ownership {encoding:?} {role} {limits:?}");}}}
  source.retire_sqlite_snapshot();}
 }

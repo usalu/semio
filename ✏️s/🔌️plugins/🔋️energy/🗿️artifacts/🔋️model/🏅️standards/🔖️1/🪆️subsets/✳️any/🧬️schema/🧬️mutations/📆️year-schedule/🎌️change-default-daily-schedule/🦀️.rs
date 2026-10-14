@@ -1,8 +1,7 @@
 //! 🎌️ Energy model mutation — `ChangeAnnualScheduleDefaultDailySchedule`: Re-points the profile a year falls back to on every day no rule matches.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeAnnualScheduleDefaultDailySchedule {
     pub new_default_daily_schedule_id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_annual_schedule_default_daily_schedule(id: crate::schedule::ScheduleId, new_default_daily_schedule_id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeAnnualScheduleDefaultDailySchedule(ChangeAnnualScheduleDefaultDailySchedule { id, new_default_daily_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_annual_schedule_default_daily_schedule<Op: From<ChangeAnnualScheduleDefaultDailySchedule>>(id: crate::schedule::ScheduleId, new_default_daily_schedule_id: crate::schedule::ScheduleId) -> Op {
+    ChangeAnnualScheduleDefaultDailySchedule { id, new_default_daily_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeAnnualScheduleDefaultDailySchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeAnnualScheduleDefaultDailySchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeAnnualScheduleDefaultDailySchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annual-schedule", kind: "change-annual-schedule-default-daily-schedule", record: "ChangedAnnualScheduleDefaultDailySchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -4,8 +4,8 @@
 //! This plugin owns no tiff byte codec and never will.
 //!
 //! 🧾️ stdio's TIFF codec decodes/encodes IFD 0 as canonical RGBA8 strips.
-use crate::standards::v1::subsets::any::io::{raster_composite_image, semio_image_to_format, TIFF_DIALECT};
-use crate::RasterSnapshot;
+use crate::{raster_composite_image, semio_image_to_format, TIFF_DIALECT};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("tiff export not available for this raster document: {reason}"))?;

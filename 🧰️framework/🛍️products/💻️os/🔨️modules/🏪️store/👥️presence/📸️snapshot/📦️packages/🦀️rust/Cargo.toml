@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }

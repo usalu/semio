@@ -5,8 +5,8 @@
 //!    object (falling back to `g` groups, then a single object), names from the file, vertex
 //!    indices remapped per object, n-gons kept as n-gons. More than 64 parts merge into one
 //!    object; a file without faces is rejected loudly.
-use crate::standards::v1::subsets::any::io::mesh_geometry::{compact_part, snapshot_from_parts, text_error, PolygonPart};
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::{mesh_geometry::compact_part, mesh_geometry::snapshot_from_parts, mesh_geometry::text_error, mesh_geometry::PolygonPart};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_obj::engine::decode_obj;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 

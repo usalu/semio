@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/dsl-record-emission-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

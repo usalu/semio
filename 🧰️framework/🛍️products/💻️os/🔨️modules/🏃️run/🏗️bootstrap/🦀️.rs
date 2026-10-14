@@ -223,8 +223,8 @@ fn main() {
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = protocol::os_store::document_materialize::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None);
-    let mut document_store = protocol::ArtifactStore::new(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
+    let envelope = protocol::os_store::document_materialize::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut document_store = protocol::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
     protocol::install_unscheduled_catalog(&mut document_store, protocol::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>()).map_err(|error| error.to_string())?;
     let applied = async {
         if !sink.mutations.is_empty() {
@@ -271,7 +271,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceSnapshot` manifest is later-wave work.
-    let parsed: protocol::os_store::text_format::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::os_store::text_format::parse_document_pack(&space_pack, &space_spr).await.map_err(|error| error.to_string())?;
+    let parsed: protocol::os_store::text_format::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::os_store::text_format::parse_document_pack(&space_pack, &space_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();
@@ -299,7 +299,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: protocol::os_store::text_format::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::os_store::text_format::parse_document_pack(&run_pack, &run_spr).await.map_err(|error| error.to_string())?;
+            let parsed: protocol::os_store::text_format::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::os_store::text_format::parse_document_pack(&run_pack, &run_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };

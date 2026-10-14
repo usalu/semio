@@ -18,7 +18,7 @@ pub struct DocumentTraceInput{pub plan:DocumentScenePlan,pub limits:DocumentTrac
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentTraceProgress{pub phase:&'static str,pub assets:usize,pub nodes:usize,pub resolved:usize,pub admitted_images:usize,pub pixels:usize,pub source_bytes:usize,pub segments:usize,pub work:u64,pub trace:Option<BitmapTraceProgress>,pub done:bool}
 fn invalid(message:impl Into<String>)->DocumentSceneError{DocumentSceneError::Invalid(message.into())}
-fn identity(v:&str)->Result<(),DocumentSceneError>{if v.is_empty()||v.len()>4096{Err(invalid("Invalid document trace identity"))}else{Ok(())}}
+pub fn identity(v:&str)->Result<(),DocumentSceneError>{if v.is_empty()||v.len()>4096{Err(invalid("Invalid document trace identity"))}else{Ok(())}}
 struct TraceMask(Arc<Vec<u8>>);
 impl AsRef<[u8]> for TraceMask{fn as_ref(&self)->&[u8]{self.0.as_slice()}}
 impl RetireOwned for TraceMask{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<Vec<u8>>>())}fn controlled_retirement_supported()->bool{true}}

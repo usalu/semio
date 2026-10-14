@@ -13,7 +13,7 @@ const repoRoot = resolve(dir, "../../../../..");
 
 export default defineOwnedBuildConfig({
   root: dir,
-  cacheDir: viteCacheDirectory(resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/hub-admin"), process.env, import.meta.url),
+  cacheDir: viteCacheDirectory(repoRoot,process.env),
   base: "/admin/",
   define: { "import.meta.vitest": "undefined" },
   plugins: [semioEmojiIndexHtmlVitePlugin(dir), ...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined), uiReactBuildPlugin(), ...uiTailwindBuildPlugins()],

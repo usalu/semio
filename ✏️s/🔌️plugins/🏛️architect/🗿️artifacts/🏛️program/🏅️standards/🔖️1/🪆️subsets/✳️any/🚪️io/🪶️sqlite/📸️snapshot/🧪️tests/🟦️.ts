@@ -4,7 +4,7 @@ import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import laws from"./🧫️fixtures/🔣️.json";
-import snapshot from"../../../../🧪️tests/🧫️fixtures/🧬️mutations/👥️stakeholder/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json";
+import snapshot from"../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/👥️stakeholder-creates-a/📸️snapshot/➡️after/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import ioSchema from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json";
 import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";

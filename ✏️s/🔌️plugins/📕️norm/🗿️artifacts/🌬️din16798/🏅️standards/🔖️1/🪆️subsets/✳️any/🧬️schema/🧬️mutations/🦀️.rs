@@ -1,53 +1,61 @@
 //! 🧬️ Din16798 mutations — hierarchical zone/vent subject vocabulary.
 
-use crate::{Din16798Diff, Din16798Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din16798_diff::Din16798Diff;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::{resolve_edit, EDIT_RULES};
-pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_din16798_mutation, inverse_din16798_mutation};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
 
-use super::change_annex;
-use super::change_theta_rm;
-use super::change_outdoor_co2;
-use super::change_envelope_n50;
-use super::change_envelope_volume;
-use super::change_cellar_area;
-use super::change_cellar_ventilation;
-use super::change_night_setback;
-use super::insert_zone;
-use super::remove_zone;
-use super::change_zone_usage_type;
-use super::change_zone_floor_area;
-use super::change_zone_occupants;
-use super::change_zone_comfort_category;
-use super::change_zone_pollution_class;
-use super::change_zone_comfort_model;
-use super::change_zone_t_op_winter;
-use super::change_zone_t_op_summer;
-use super::change_zone_air_speed;
-use super::change_zone_clothing;
-use super::change_zone_metabolic_rate;
-use super::change_zone_rh;
-use super::change_zone_outdoor_air;
-use super::change_zone_co2;
-use super::change_zone_illuminance;
-use super::change_zone_noise;
-use super::change_zone_vent_system_id;
-use super::change_zone_turbulence;
-use super::change_zone_vent_method;
-use super::insert_vent_system;
-use super::remove_vent_system;
-use super::change_vent_system_type;
-use super::change_vent_sfp;
-use super::change_vent_sfp_class;
-use super::change_vent_heat_recovery;
-use super::change_vent_oda_class;
-use super::change_vent_filter_sup;
-use super::change_vent_inspection;
-use super::change_vent_duct_class;
-use super::change_vent_duct_leakage;
-use super::change_vent_design_airflow;
+use semio_s_artifact_norm_din16798_mut_building::change_annex;
+use semio_s_artifact_norm_din16798_mut_building::change_theta_rm;
+use semio_s_artifact_norm_din16798_mut_building::change_outdoor_co2;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_n50;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_volume;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_area;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_ventilation;
+use semio_s_artifact_norm_din16798_mut_building::change_night_setback;
+use semio_s_artifact_norm_din16798_mut_zones::insert_zone;
+use semio_s_artifact_norm_din16798_mut_zones::remove_zone;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_usage_type;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_floor_area;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_occupants;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_comfort_category;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_pollution_class;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_comfort_model;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_winter;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_summer;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_air_speed;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_clothing;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_metabolic_rate;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_rh;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_outdoor_air;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_co2;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_illuminance;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_noise;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_system_id;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_turbulence;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_method;
+use semio_s_artifact_norm_din16798_mut_ventilation::insert_vent_system;
+use semio_s_artifact_norm_din16798_mut_ventilation::remove_vent_system;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_system_type;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp_class;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_heat_recovery;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_oda_class;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_filter_sup;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -145,10 +153,30 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_din16798_mutation(base: &semio_s_artifact_norm_din16798_model::Din16798Snapshot, mutation: &crate::Din16798Mutation) -> Result<(semio_s_artifact_norm_din16798_model::Din16798Snapshot, Vec<String>), String> {
+    let raised = <crate::Din16798Mutation as protocol::Mutation<semio_s_artifact_norm_din16798_model::Din16798Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|m| format!("{:?}:{}", m.level, m.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|e| format!("{e:?}"))?;
+    Ok((applied, messages))
+}
+
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_din16798_mutation(mutation: &crate::Din16798Mutation, base: &semio_s_artifact_norm_din16798_model::Din16798Snapshot) -> Result<Vec<crate::Din16798Mutation>, semio_framework_value::ValueError> {
+    <crate::Din16798Mutation as protocol::Mutation<semio_s_artifact_norm_din16798_model::Din16798Snapshot>>::inverse(mutation, base)
+}
+}
+pub use crate::mutation_bridge::*;
+
+//#region 🪢️Mounts
 #[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod mutation_leaf_tests;
+//#endregion 🪢️Mounts

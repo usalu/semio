@@ -1,8 +1,9 @@
 //! 🌉️ Central apply entry points: the only code of this artifact that turns a mutation's diff into the next snapshot with `protocol::apply_diff`; the schema and mutation leaves only build diffs and inverses.
 #![allow(unused_imports)]
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::Mutation;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 #[cfg(test)]
@@ -10,7 +11,8 @@ use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
-use crate::standards::v1::subsets::any::schema::mutations::*;
+use crate::*;
+use semio_s_artifact_procedural_2d_mut_widgets::generation2d_targets_invariant;
 
 pub(crate) const GENERATION2D_OWNER_BYTES: usize = 4_096;
 
@@ -53,7 +55,7 @@ pub(crate) fn generation2d_retire_displaced_cold(value: Generation2dReplayDispla
 pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<Option<Generation2dReplayDisplaced>, &'static str> {
     let retired = match mutation {
         Generation2dMutation::CreateWidget(payload) => {
-            if snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == crate::widget_id(&payload.widget)) {
+            if snapshot.host_snapshot.widgets.iter().any(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == semio_s_artifact_procedural_2d_model::widget_id(&payload.widget)) {
                 return Err("generation2d-replay.widget-duplicate");
             }
             let index = payload.index.min(snapshot.host_snapshot.widgets.len());
@@ -61,12 +63,12 @@ pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generati
             None
         }
         Generation2dMutation::ReplaceWidget(payload) => {
-            let id = crate::widget_id(&payload.widget);
-            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == id).ok_or("generation2d-replay.widget-missing")?;
+            let id = semio_s_artifact_procedural_2d_model::widget_id(&payload.widget);
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == id).ok_or("generation2d-replay.widget-missing")?;
             Some(Generation2dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], generation2d_copy_widget(&payload.widget)?)))
         }
         Generation2dMutation::DeleteWidget(payload) => {
-            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
             Some(Generation2dReplayDisplaced::Widget(snapshot.host_snapshot.widgets.remove(index)))
         }
         Generation2dMutation::ConnectSynapse(payload) => {
@@ -161,7 +163,7 @@ pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generati
             if !payload.value.is_finite() {
                 return Err("generation2d-replay.slider-nonfinite");
             }
-            let index = snapshot.host_snapshot.widgets.iter().position(|entry| crate::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
+            let index = snapshot.host_snapshot.widgets.iter().position(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == payload.id).ok_or("generation2d-replay.widget-missing")?;
             let mut next = generation2d_copy_widget(&snapshot.host_snapshot.widgets[index])?;
             if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut next, payload.value) {
                 next.retire_cold();
@@ -177,7 +179,7 @@ pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generati
             let mut updates = Vec::new();
             updates.try_reserve_exact(payload.ids.len()).map_err(|_| "generation2d-replay.layout-preflight")?;
             for id in &payload.ids {
-                if !snapshot.host_snapshot.widgets.iter().any(|entry| crate::widget_id(entry) == id) {
+                if !snapshot.host_snapshot.widgets.iter().any(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == id) {
                     continue;
                 }
                 if let Some(layout) = snapshot.host_snapshot.layout.get(id) {
@@ -467,17 +469,5 @@ pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutati
             Ok(())
         }
         Err(error) => Err(messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect()),
-    }
-}
-
-/// 🎚️ The slider fields after `target` lands on it (the range widened exactly like the canvas knob), computed on a probe copy; `None` when no range can hold the value.
-pub(crate) fn generation2d_slider_landing(value: f64, min: f64, max: f64, step: f64, target: f64) -> Option<(f64, f64, f64, f64)> {
-    let mut landing = semio_framework_artifact_flow_flow::Widget::InputSlider { id: String::new(), label: String::new(), value, min, max, step };
-    if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut landing, target) {
-        return None;
-    }
-    match landing {
-        semio_framework_artifact_flow_flow::Widget::InputSlider { value, min, max, step, .. } => Some((value, min, max, step)),
-        _ => None,
     }
 }

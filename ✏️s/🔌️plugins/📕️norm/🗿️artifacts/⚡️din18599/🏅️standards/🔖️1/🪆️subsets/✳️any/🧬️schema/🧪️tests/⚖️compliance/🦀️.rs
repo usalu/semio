@@ -1,15 +1,14 @@
 //! ⚖️ DIN V 18599 / GEG compliance numeric + remedy tests.
 
-use crate::app_surface::{get_value_at_path, parse_path, set_value_at_path};
+use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_at_path};
 use semio_framework_value::ToValue;
 
-use crate::document::{CheckReport, CheckStatus};
-use crate::standards::v1::subsets::any::schema::{
-    derive_balance, evaluate_document, geg_ht_prime_limit, h_t_prime, primary_energy_factor, required_u_for_ht_prime, transmission_loss_coefficient, usage_profile_row, ventilation_loss_coefficient, zone_balances, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_INFILTRATION_N_INF,
-};
-use crate::{examples, Attachment, AutomationClass, ElementKind, UsageProfile};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
+use crate::{derive_balance, evaluate_document, geg_ht_prime_limit, h_t_prime, primary_energy_factor, required_u_for_ht_prime, transmission_loss_coefficient, usage_profile_row, ventilation_loss_coefficient, zone_balances, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_INFILTRATION_N_INF};
+use semio_s_artifact_norm_din18599_examples as examples;
+use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, ElementKind, UsageProfile};
 
-fn apply_path_f64(doc: &mut crate::Din18599Snapshot, path: &str, value: f64) {
+fn apply_path_f64(doc: &mut semio_s_artifact_norm_din18599_model::Din18599Snapshot, path: &str, value: f64) {
     if path == "deltaUWbWM2k" {
         doc.delta_u_wb_w_m2k = value;
         return;
@@ -74,7 +73,7 @@ fn apply_path_f64(doc: &mut crate::Din18599Snapshot, path: &str, value: f64) {
     }
 }
 
-fn apply_path_text(doc: &mut crate::Din18599Snapshot, path: &str, value: &str) {
+fn apply_path_text(doc: &mut semio_s_artifact_norm_din18599_model::Din18599Snapshot, path: &str, value: &str) {
     if path == "automationClass" {
         doc.automation_class = match value {
             "A" => AutomationClass::A,
@@ -92,7 +91,7 @@ fn apply_path_text(doc: &mut crate::Din18599Snapshot, path: &str, value: &str) {
 
 #[test]
 fn ventilation_hv_matches_hand_derivation() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.ventilation.airflow_m3_h = 120.0;
     doc.ventilation.heat_recovery_eta = 0.0;
     // H_V = ρ·c_a · (V̇_mech + n_Außen·V + n_inf·V_e) with η=0 (DIN V 18599-2 / -10).
@@ -105,7 +104,7 @@ fn ventilation_hv_matches_hand_derivation() {
 
 #[test]
 fn potsdam_compliant_house_passes_geg_gates() {
-    let doc = crate::subjects::compliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let report = evaluate_document(&doc);
     assert!(report.complies(), "expected compliant, fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
     let ht = h_t_prime(&doc);
@@ -117,7 +116,7 @@ fn potsdam_compliant_house_passes_geg_gates() {
 
 #[test]
 fn noncompliant_house_fails_ht_and_qp_with_remedies() {
-    let doc = crate::subjects::noncompliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     let report = evaluate_document(&doc);
     assert!(!report.complies());
     let fails: Vec<_> = report.failing().collect();
@@ -136,12 +135,12 @@ fn noncompliant_house_fails_ht_and_qp_with_remedies() {
 
 #[test]
 fn remedy_lowering_worst_u_improves_ht_prime() {
-    let doc = crate::subjects::noncompliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     let limit = geg_ht_prime_limit(doc.attachment, doc.net_floor_area_m2);
     assert!(h_t_prime(&doc) > limit);
     let mut fixed = doc.clone();
     for el in &mut fixed.elements {
-        el.u_value_w_m2k = crate::standards::v1::subsets::any::schema::reference_u(el.kind);
+        el.u_value_w_m2k = crate::reference_u(el.kind);
     }
     fixed.delta_u_wb_w_m2k = 0.05;
     assert!(h_t_prime(&fixed) <= limit + 1e-6, "after reference envelope H'T={} limit={}", h_t_prime(&fixed), limit);
@@ -151,7 +150,7 @@ fn remedy_lowering_worst_u_improves_ht_prime() {
 
 #[test]
 fn remedy_law_apply_required_u_makes_ht_check_pass() {
-    let doc = crate::subjects::noncompliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     let report = evaluate_document(&doc);
     let ht = report.checks.iter().find(|c| c.id == "din18599.geg.ht-prime").expect("ht check");
     assert_eq!(ht.status, CheckStatus::Fail);
@@ -166,7 +165,7 @@ fn remedy_law_apply_required_u_makes_ht_check_pass() {
 
 #[test]
 fn remedy_law_apply_pv_makes_qp_check_pass() {
-    let doc = crate::subjects::noncompliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     let report = evaluate_document(&doc);
     let qp = report.checks.iter().find(|c| c.id == "din18599.geg.qp").expect("qp");
     assert_eq!(qp.status, CheckStatus::Fail);
@@ -180,7 +179,7 @@ fn remedy_law_apply_pv_makes_qp_check_pass() {
 
 #[test]
 fn remedy_law_automation_oneof_makes_automation_pass() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.automation_class = AutomationClass::D;
     let report = evaluate_document(&doc);
     let auto = report.checks.iter().find(|c| c.id == "din18599.11.automation").unwrap();
@@ -202,14 +201,14 @@ fn primary_energy_factor_table_geg_annex4() {
 
 #[test]
 fn transmission_ht_increases_with_u() {
-    let good = crate::subjects::compliant_detached_house();
-    let bad = crate::subjects::noncompliant_detached_house();
+    let good = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
+    let bad = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     assert!(transmission_loss_coefficient(&bad) > transmission_loss_coefficient(&good));
 }
 
 #[test]
 fn automation_class_d_fails() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.automation_class = AutomationClass::D;
     let report = evaluate_document(&doc);
     let auto = report.checks.iter().find(|c| c.id == "din18599.11.automation").unwrap();
@@ -219,7 +218,7 @@ fn automation_class_d_fails() {
 
 #[test]
 fn q_p_ref_changes_with_geometry() {
-    let small = crate::subjects::compliant_detached_house();
+    let small = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let mut large = small.clone();
     large.net_floor_area_m2 *= 2.0;
     large.heated_volume_m3 *= 2.0;
@@ -239,7 +238,7 @@ fn q_p_ref_changes_with_geometry() {
 
 #[test]
 fn q_p_ref_changes_when_only_wall_area_grows() {
-    let base = crate::subjects::compliant_detached_house();
+    let base = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let mut wider = base.clone();
     for el in &mut wider.elements {
         if el.kind == ElementKind::Wall {
@@ -262,7 +261,7 @@ fn example_assets_decode_and_match_claimed_verdict() {
         ("compliant-two-zone", examples::compliant_two_zone::PRIMARY_TEXT, true),
         ("cooled-office", examples::cooled_office::PRIMARY_TEXT, false),
     ] {
-        let doc = <crate::Din18599Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
+        let doc = <semio_s_artifact_norm_din18599_model::Din18599Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
         let report = evaluate_document(&doc);
         if expect_comply {
             assert!(report.complies(), "{id} should comply; fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
@@ -275,7 +274,7 @@ fn example_assets_decode_and_match_claimed_verdict() {
 
 #[test]
 fn dhw_remedy_inverts_profile_limit() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.dhw.specific_demand_kwh_person_a = 900.0;
     doc.dhw.storage_loss_kwh_a = 800.0;
     doc.dhw.distribution_loss_kwh_a = 400.0;
@@ -291,10 +290,9 @@ fn dhw_remedy_inverts_profile_limit() {
     assert!(dhw2.utilization <= 1.0 + 1e-6, "u={}", dhw2.utilization);
 }
 
-
 #[test]
 fn norm_table_rows_match_cited_sources() {
-    use crate::standards::v1::subsets::any::schema::{
+    use semio_s_artifact_norm_din18599_schema::{
         din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_HOURS_PER_MONTH, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_UTILIZATION_A, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
     };
     // GEG Anlage 4
@@ -332,10 +330,9 @@ fn norm_table_rows_match_cited_sources() {
     assert!((GEG_SECTION10_QP_FACTOR_DEFAULT - 0.55).abs() < 1e-12);
 }
 
-
 #[test]
 fn remedy_law_apply_delta_u_wb_makes_ht_check_pass() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.delta_u_wb_w_m2k = 0.55;
     let report = evaluate_document(&doc);
     let ht = report.checks.iter().find(|c| c.id == "din18599.geg.ht-prime").expect("ht");
@@ -355,7 +352,7 @@ fn remedy_law_apply_delta_u_wb_makes_ht_check_pass() {
 
 #[test]
 fn every_emitted_path_resolves_via_get_value_at_path() {
-    let doc = crate::subjects::noncompliant_detached_house();
+    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
     let report = evaluate_document(&doc);
     let tree = semio_framework_value::ToValue::to_value(&doc);
     let mut saw_id = false;
@@ -392,7 +389,7 @@ fn every_emitted_path_resolves_via_get_value_at_path() {
 
 #[test]
 fn two_zone_moving_element_changes_zone_balances() {
-    let mut doc = crate::subjects::compliant_two_zone_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house();
     let before = zone_balances(&doc, &doc.elements, doc.delta_u_wb_w_m2k);
     let living_before = before.iter().find(|z| z.zone_id == "zone-living").unwrap();
     let office_before = before.iter().find(|z| z.zone_id == "zone-office").unwrap();
@@ -426,7 +423,7 @@ fn two_zone_moving_element_changes_zone_balances() {
 
 #[test]
 fn usage_profile_change_changes_zone_hours_and_gains() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let q_l0 = derive_balance(&doc).q_l_kwh;
     let aux0 = derive_balance(&doc).q_f_aux_kwh;
     doc.zones[0].usage_profile = UsageProfile::Office;
@@ -438,16 +435,11 @@ fn usage_profile_change_changes_zone_hours_and_gains() {
 
 #[test]
 
-
-
-
-
-
 fn every_editable_leaf_influences_a_check() {
-    let fixtures: [(&str, crate::Din18599Snapshot); 3] = [
-        ("cooled_office_building", crate::subjects::cooled_office_building()),
-        ("compliant_two_zone_house", crate::subjects::compliant_two_zone_house()),
-        ("compliant_detached_house", crate::subjects::compliant_detached_house()),
+    let fixtures: [(&str, semio_s_artifact_norm_din18599_model::Din18599Snapshot); 3] = [
+        ("cooled_office_building", semio_s_artifact_norm_din18599_model::subjects::cooled_office_building()),
+        ("compliant_two_zone_house", semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house()),
+        ("compliant_detached_house", semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house()),
     ];
     for (fixture_name, base) in fixtures {
         assert_fixture_leaves_influence_checks(fixture_name, &base);
@@ -471,7 +463,7 @@ fn check_sig(report: &CheckReport) -> Vec<(String, CheckStatus, i64, i64, i64)> 
         .collect()
 }
 
-fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din18599Snapshot) {
+fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &semio_s_artifact_norm_din18599_model::Din18599Snapshot) {
     let base_sig = check_sig(&evaluate_document(base));
     let value = serde_json::to_value(base).expect("json");
     let mut leaves = Vec::new();
@@ -529,7 +521,7 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din1
             }
             _ => continue,
         }
-        let Ok(mut perturbed) = serde_json::from_value::<crate::Din18599Snapshot>(tree) else {
+        let Ok(mut perturbed) = serde_json::from_value::<semio_s_artifact_norm_din18599_model::Din18599Snapshot>(tree) else {
             continue;
         };
         let sig = check_sig(&evaluate_document(&perturbed));
@@ -543,13 +535,13 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &crate::Din1
     );
 }
 
-fn assert_climate_payload_influences_checks(fixture_name: &str, base: &crate::Din18599Snapshot) {
+fn assert_climate_payload_influences_checks(fixture_name: &str, base: &semio_s_artifact_norm_din18599_model::Din18599Snapshot) {
     let base_sig = check_sig(&evaluate_document(base));
     let mut cold = base.clone();
     for t in &mut cold.climate.theta_e_c {
         *t -= 5.0;
     }
-    cold.climate_table = crate::din18599_climate_table_child(&cold.climate);
+    cold.climate_table = semio_s_artifact_norm_din18599_model::din18599_climate_table_child(&cold.climate);
     let sig_t = check_sig(&evaluate_document(&cold));
     assert!(
         sig_t != base_sig,
@@ -559,14 +551,13 @@ fn assert_climate_payload_influences_checks(fixture_name: &str, base: &crate::Di
     for g in &mut bright.climate.g_h_w_m2 {
         *g = (*g * 2.0).max(50.0);
     }
-    bright.climate_table = crate::din18599_climate_table_child(&bright.climate);
+    bright.climate_table = semio_s_artifact_norm_din18599_model::din18599_climate_table_child(&bright.climate);
     let sig_g = check_sig(&evaluate_document(&bright));
     assert!(
         sig_g != base_sig,
         "{fixture_name}: climate G_h payload must change Q_h/Q_c/q_p checks"
     );
 }
-
 
 fn perturb_string(path: &str, s: &str) -> String {
     if path.ends_with("usageProfile") || path.contains("usageProfile") {
@@ -633,10 +624,9 @@ fn walk_leaves(path: &str, value: &serde_json::Value, visit: &mut dyn FnMut(&str
     }
 }
 
-
 #[test]
 fn duplicate_zone_id_fails_integrity() {
-    let mut doc = crate::subjects::compliant_two_zone_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house();
     assert!(doc.zones.len() >= 2);
     let first = doc.zones[0].id.clone();
     doc.zones[1].id = first;
@@ -653,7 +643,7 @@ fn duplicate_zone_id_fails_integrity() {
 
 #[test]
 fn duplicate_element_id_fails_integrity() {
-    let mut doc = crate::subjects::compliant_detached_house();
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     assert!(doc.elements.len() >= 1);
     let dup = doc.elements[0].clone();
     doc.elements.push(dup);
@@ -671,10 +661,10 @@ fn duplicate_element_id_fails_integrity() {
 #[test]
 fn no_identical_en_de_explanations_in_committed_examples() {
     let examples = [
-        crate::subjects::compliant_detached_house(),
-        crate::subjects::noncompliant_detached_house(),
-        crate::subjects::compliant_two_zone_house(),
-        crate::subjects::cooled_office_building(),
+        semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house(),
+        semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house(),
+        semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house(),
+        semio_s_artifact_norm_din18599_model::subjects::cooled_office_building(),
     ];
     let mut identical = Vec::new();
     for snap in examples {

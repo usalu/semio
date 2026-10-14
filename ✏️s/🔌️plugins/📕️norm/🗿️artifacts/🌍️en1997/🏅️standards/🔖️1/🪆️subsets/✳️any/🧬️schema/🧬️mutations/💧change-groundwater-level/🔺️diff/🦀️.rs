@@ -1,6 +1,6 @@
-use super::ChangeGroundwaterLevel;
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
+use crate::change_groundwater_level::ChangeGroundwaterLevel;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 pub fn diff(payload: &ChangeGroundwaterLevel, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_groundwater_level.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "groundwater level must be finite", Vec::<String>::new());

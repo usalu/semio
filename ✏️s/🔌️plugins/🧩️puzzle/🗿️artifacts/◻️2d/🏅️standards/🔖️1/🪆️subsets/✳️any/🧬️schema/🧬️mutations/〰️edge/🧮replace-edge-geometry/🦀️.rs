@@ -1,0 +1,58 @@
+//! 🧮 Puzzle2d mutation — `ReplaceEdgeGeometry`: whole-value swap of an edge's connection-pose —
+//! `gap`+`shift`+`rise`+`rotation`+`turn`+`tilt`+`x`+`y` together are the one connection geometry.
+
+use semio_framework_value::paged::PagedUtf8;
+
+use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
+use crate::Puzzle2dSnapshot;
+
+//#region 🔖️Mutation
+/// 🧮 `replace-edge-geometry` payload — new connection pose.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "replace-edge-geometry")]
+pub struct ReplaceEdgeGeometry {
+    pub id: PagedUtf8<{ usize::MAX }>,
+    pub new_gap: f64,
+    pub new_shift: f64,
+    pub new_rise: f64,
+    pub new_rotation: f64,
+    pub new_turn: f64,
+    pub new_tilt: f64,
+    pub new_x: f64,
+    pub new_y: f64,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+#[allow(clippy::too_many_arguments)]
+pub fn replace_edge_geometry<Op: From<ReplaceEdgeGeometry>>(id: PagedUtf8<{ usize::MAX }>, new_gap: f64, new_shift: f64, new_rise: f64, new_rotation: f64, new_turn: f64, new_tilt: f64, new_x: f64, new_y: f64) -> Op {
+    Op::from(ReplaceEdgeGeometry { id, new_gap, new_shift, new_rise, new_rotation, new_turn, new_tilt, new_x, new_y })
+}
+
+impl<Op> protocol::MutationKind<Puzzle2dSnapshot, Op> for ReplaceEdgeGeometry
+where
+    Op: protocol::Mutation<Puzzle2dSnapshot, Diff = Puzzle2dDiff> + From<ReplaceEdgeGeometry>,
+{
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "edge", kind: "replace-edge-geometry", record: "ReplacedEdgeGeometry" };
+
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace edge \"{}\" geometry", self.id), &format!("Geometrie von Kante \"{}\" ersetzen", self.id))
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.id.to_string_owner()]
+    }
+}
+//#endregion 🔖️Mutation

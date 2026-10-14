@@ -1,8 +1,8 @@
 //! 🔺️ `change-member-buckling-length` diff.
 
-use crate::mutations::change_member_buckling_length::ChangeMemberBucklingLength;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999MembersRows, En1999MembersPatch};
+use crate::change_member_buckling_length::ChangeMemberBucklingLength;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999MembersRows, En1999MembersPatch};
 
 pub fn diff(payload: &ChangeMemberBucklingLength, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !payload.new_length.is_finite() || payload.new_length <= 0.0 {

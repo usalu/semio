@@ -1,6 +1,6 @@
 //! ✂️ `remove-selection-constraint` — removes one property constraint by BASE-state index.
 
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,14 +13,14 @@ pub struct RemoveSelectionConstraint {
     pub index: usize,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemoveSelectionConstraint { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "selection-constraint", kind: "remove-selection-constraint", record: "RemovedSelectionConstraint" };
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RemoveSelectionConstraint where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::add_selection_constraint::mutation::AddSelectionConstraint> { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "selection-constraint", kind: "remove-selection-constraint", record: "RemovedSelectionConstraint" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::remove_selection_constraint::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_selection_constraint::inverse::inverse(self, base)?
     
     })
 }

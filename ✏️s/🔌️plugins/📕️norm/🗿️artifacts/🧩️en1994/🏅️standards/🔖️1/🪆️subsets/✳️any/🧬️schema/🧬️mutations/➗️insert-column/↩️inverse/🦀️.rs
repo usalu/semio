@@ -1,10 +1,10 @@
 //! Inverse for `insert-column`.
-use super::InsertColumn;
-use crate::artifact_schema::mutations::remove_column::RemoveColumn;
-use crate::{En1994Mutation, En1994Snapshot};
-pub fn inverse(payload: &InsertColumn, _base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+use crate::insert_column::InsertColumn;
+use crate::remove_column::RemoveColumn;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+pub fn inverse<Op>(payload: &InsertColumn, _base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_column::RemoveColumn> {
     Ok((|| {
-    vec![En1994Mutation::RemoveColumn(RemoveColumn { index: payload.index })]
+    vec![Op::from(RemoveColumn { index: payload.index })]
 
     })())
 }

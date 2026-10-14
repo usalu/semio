@@ -1,7 +1,24 @@
-use super::*;
-use crate::editor::process3d::commands::step::add_step;
-use crate::editor::process3d::unit_tests::context;
-use crate::editor::process3d::{Process3dCommand, PROCESS3D_INTERACTION_DOMAIN};
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_process_process3d_panels::inspection::*;
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_label, editor::process3d::terminology::Process3dLabels};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_s_artifact_process_process3d_commands::step::add_step;
+use semio_s_artifact_process_process3d_editor::Process3dCommand;
+use semio_s_artifact_process_process3d_kit::PROCESS3D_INTERACTION_DOMAIN;
 use semio_framework::DslValue;
 
 #[semio_framework_async_macros::async_test]
@@ -70,7 +87,7 @@ async fn selected_stock_id_renders_its_dimensions() {
     // 📏️ The dimensions come from the seeded document, never from a literal: the curated default
     // example is a timber beam (3 × 0.2 × 0.3), not the 1 × 1 × 1 box this law used to assume, and
     // `push_working_solid_fields` prints exactly this `WorkingSolid`'s own extents.
-    let crate::WorkingSolid::Box { width, height, .. } = &stock.solid else { panic!("the seeded example's stock is a box: {:?}", stock.solid) };
+    let semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Box { width, height, .. } = &stock.solid else { panic!("the seeded example's stock is a box: {:?}", stock.solid) };
     select(&mut app, &stock_id);
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
     assert!(rendered.contains("process3d-play-inspector.stock"), "expected the stock section: {rendered}");
@@ -110,9 +127,9 @@ async fn selected_machine_id_renders_its_capabilities() {
 /// not the framework's selection admission (which its four neighbours above already exercise).
 #[semio_framework_async_macros::async_test]
 async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open() {
-    use crate::{Capability, CapabilityParameter, MeasureRecipe, Workshop, WorkshopMachine};
+    use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::MeasureRecipe, snapshot::Workshop, snapshot::WorkshopMachine};
     use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
-    let mut fixture = crate::empty_process3d_snapshot();
+    let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     fixture.workshop = Workshop {
         machines: vec![WorkshopMachine {
             id: "saw".into(),
@@ -132,7 +149,7 @@ async fn a_capability_section_stamps_its_total_closed_and_materialises_it_open()
             }],
         }],
     };
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let section = "process3d-play-inspector.capability.cut";
     let project = |windows: &TreeWindows<'_>| {
         let node = render(&fixture, &["machine:saw".to_string()], labels, windows).expect("inspector renders");

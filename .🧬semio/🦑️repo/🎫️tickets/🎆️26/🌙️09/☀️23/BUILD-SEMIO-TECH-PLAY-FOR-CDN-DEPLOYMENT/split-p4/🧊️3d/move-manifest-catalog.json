@@ -1,0 +1,2 @@
+[{"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️precompute-model/🦀️.rs", "fns": ["concrete_forest_kind_catalog_matches_puzzle3d_default_manifest"], "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/🔬️manifest-catalog/🦀️.rs",
+  "header": "//! 🔗️ The authored concrete-forest example's kind catalog names only wire and edge kinds the compiled `puzzle3d-default` graph manifest registers.\n\nuse semio_s_artifact_puzzle_3d_model::KindCatalogBundle;"}]

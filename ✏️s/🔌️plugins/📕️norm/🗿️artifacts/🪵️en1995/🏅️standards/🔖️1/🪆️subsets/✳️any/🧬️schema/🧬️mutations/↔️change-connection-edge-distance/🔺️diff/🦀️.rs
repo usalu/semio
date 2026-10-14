@@ -1,6 +1,7 @@
-use super::ChangeConnectionEdgeDistance;
-use crate::{En1995Diff, En1995Snapshot};
-use crate::diff::{En1995ConnectionDelta, En1995ConnectionPatch};
+use crate::change_connection_edge_distance::ChangeConnectionEdgeDistance;
+use semio_s_artifact_norm_en1995_diff::En1995Diff;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+use semio_s_artifact_norm_en1995_diff::{En1995ConnectionDelta, En1995ConnectionPatch};
 pub fn diff(payload: &ChangeConnectionEdgeDistance, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     let Some(idx) = base.connections.iter().position(|item| item.id == payload.connection_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown connection id.", vec![payload.connection_id.clone()]);

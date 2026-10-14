@@ -1,11 +1,11 @@
 //! Inverse for `remove-slab`.
-use super::RemoveSlab;
-use crate::artifact_schema::mutations::insert_slab::InsertSlab;
-use crate::{En1994Mutation, En1994Snapshot};
-pub fn inverse(payload: &RemoveSlab, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+use crate::remove_slab::RemoveSlab;
+use crate::insert_slab::InsertSlab;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+pub fn inverse<Op>(payload: &RemoveSlab, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_slab::InsertSlab> {
     Ok((|| {
     let Some(slab) = base.slabs.get(payload.index).cloned() else { return Vec::new(); };
-    vec![En1994Mutation::InsertSlab(InsertSlab { index: payload.index, slab })]
+    vec![Op::from(InsertSlab { index: payload.index, slab })]
 
     })())
 }

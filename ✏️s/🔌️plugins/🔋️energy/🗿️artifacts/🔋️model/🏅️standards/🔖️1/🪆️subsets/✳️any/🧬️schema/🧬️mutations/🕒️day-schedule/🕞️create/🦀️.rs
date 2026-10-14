@@ -1,8 +1,7 @@
 //! 🕞️ Energy model mutation — `CreateDailySchedule`: Defines one twenty-four-hour profile. The optional lower and upper bound are one facet — both together or neither — and the values are clamped to them on every lookup, which is why a half-stated pair is refused rather than half-applied.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -21,19 +20,22 @@ pub struct CreateDailySchedule {
     pub limits_max: Option<f64>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_daily_schedule(index: u32, id: crate::schedule::ScheduleId, hourly_values: Vec<f64>, interpolation: crate::schedule::ScheduleInterpolation, limits_min: Option<f64>, limits_max: Option<f64>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateDailySchedule(CreateDailySchedule { index, id, hourly_values, interpolation, limits_min, limits_max })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_daily_schedule<Op: From<CreateDailySchedule>>(index: u32, id: crate::schedule::ScheduleId, hourly_values: Vec<f64>, interpolation: crate::schedule::ScheduleInterpolation, limits_min: Option<f64>, limits_max: Option<f64>) -> Op {
+    CreateDailySchedule { index, id, hourly_values, interpolation, limits_min, limits_max }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateDailySchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateDailySchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateDailySchedule> + From<crate::DeleteDailySchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "daily-schedule", kind: "create-daily-schedule", record: "CreatedDailySchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

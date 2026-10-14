@@ -3,7 +3,7 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() {
     let pixels = [10,20,30,255];
-    let image = crate::standards::v1::subsets::any::schema::semio_image_from_rgba8(1,1,pixels.to_vec());
+    let image = semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,pixels.to_vec());
     let bytes = png_bytes_from_semio_image(&image).unwrap();
     let source = base64_codec::base64_standard_encode(&bytes);
     let (asset_id, asset, layer) = raster_image_layer_and_asset(&source).unwrap();
@@ -17,7 +17,7 @@ async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() 
 /// through the real png funnel), so it must reach the artifact's own retirement seam instead of
 /// `RasterOwnedMap`'s fail-closed `Drop`.
 fn retire(document: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
 
 /// 🧪️ Builds a real one-pixel-layer document whose asset child carries genuinely PNG-encoded
@@ -43,10 +43,10 @@ async fn composite_applies_persisted_mask_assets_and_linked_transforms() {
         let mut document=document_with_solid_layer(255,0,0,255,3,1);
         let asset=crate::mint_raster_asset_child("mask-alpha",&RasterImageAsset {mime:"image/png".into(),data:bytes.clone()});
         document.assets.insert("mask-alpha".into(),asset).unwrap();
-        let mask=crate::RasterLayerMask {enabled:case["enabled"].as_bool().unwrap(),linked:case["linked"].as_bool().unwrap(),invert:case["invert"].as_bool().unwrap(),width:Some(3),height:Some(1),image_key:Some("mask-alpha".into()),transform:RasterTransform {x:case["maskX"].as_f64().unwrap(),..RasterTransform::default()}};
+        let mask=semio_s_artifact_raster_raster_model::RasterLayerMask {enabled:case["enabled"].as_bool().unwrap(),linked:case["linked"].as_bool().unwrap(),invert:case["invert"].as_bool().unwrap(),width:Some(3),height:Some(1),image_key:Some("mask-alpha".into()),transform:RasterTransform {x:case["maskX"].as_f64().unwrap(),..RasterTransform::default()}};
         if case["group"].as_bool().unwrap() {
             let mut children=std::mem::take(&mut document.layers);let mut second=children[0].clone();if let RasterLayerNode::Pixel {id,..}=&mut second{id.push_str("-second");}children.push(second);
-            let mut group=crate::standards::v1::subsets::any::schema::create_layer_of_kind("group");
+            let mut group=semio_s_artifact_raster_raster_model::create_layer_of_kind("group");
             if let RasterLayerNode::Group {children:target,mask:target_mask,transform,opacity,..}=&mut group {*target=children;*target_mask=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
             document.layers.push(group);
         }else if let RasterLayerNode::Pixel {mask:target,transform,opacity,..}=&mut document.layers[0] {*target=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
@@ -78,13 +78,13 @@ async fn composite_preserves_centered_pixels_at_negative_coordinates() {
     let composite=raster_composite_image(&document).unwrap();
     assert_eq!((composite.width,composite.height),(3,2));
     assert_eq!(composite.frames[0].rgba8,[12,34,56,255].repeat(6));
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn composite_applies_a_visible_brightness_adjustment() {
     let mut document = document_with_solid_layer(64, 64, 64, 255, 2, 2);
-    let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
+    let mut adjustment=semio_s_artifact_raster_raster_model::create_layer_of_kind("adjustment");
     if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),semio_framework_value::DslValue::float(0.2)).unwrap();}
     document.layers.push(adjustment);
     let result=raster_composite_image(&document);
@@ -97,7 +97,7 @@ async fn composite_applies_group_opacity_once_after_overlapping_children() {
     let mut document=document_with_solid_layer(255,0,0,255,2,2);
     let mut children=std::mem::take(&mut document.layers);
     let mut second=children[0].clone();if let RasterLayerNode::Pixel {id,..}=&mut second{id.push_str("-second");}children.push(second);
-    let mut group=crate::standards::v1::subsets::any::schema::create_layer_of_kind("group");
+    let mut group=semio_s_artifact_raster_raster_model::create_layer_of_kind("group");
     if let RasterLayerNode::Group {children:target,opacity,..}=&mut group {*target=children;*opacity=0.5;}
     document.layers.push(group);
     let result=raster_composite_image(&document);
@@ -108,7 +108,7 @@ async fn composite_applies_group_opacity_once_after_overlapping_children() {
 #[semio_framework_async_macros::async_test]
 async fn composite_svg_matches_adjusted_pixel_export() {
     let mut document=document_with_solid_layer(64,64,64,255,2,2);
-    let mut adjustment=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
+    let mut adjustment=semio_s_artifact_raster_raster_model::create_layer_of_kind("adjustment");
     if let RasterLayerNode::Adjustment {params,..}=&mut adjustment {params.insert("brightness".into(),semio_framework_value::DslValue::float(0.2)).unwrap();}
     document.layers.push(adjustment);
     let svg=raster_document_json_to_svg(&document);
@@ -134,13 +134,13 @@ async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
 
 #[semio_framework_async_macros::async_test]
 async fn composite_refuses_a_document_with_nothing_to_flatten() {
-    let error = raster_composite_image(&crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()).expect_err("an empty document has no composite");
+    let error = raster_composite_image(&semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()).expect_err("an empty document has no composite");
     assert!(error.contains("nothing to flatten"), "{error}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn composite_exports_a_blank_pixel_layer_as_transparent() {
-    let document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document();
+    let document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document();
     let result=raster_composite_image(&document);
     retire(document);
     let image=result.unwrap();
@@ -155,9 +155,9 @@ async fn composite_exports_a_blank_pixel_layer_as_transparent() {
 #[semio_framework_async_macros::async_test]
 async fn bmp_export_writes_real_bytes_that_import_reads_back() {
     let document = document_with_solid_layer(200, 100, 50, 255, 3, 2);
-    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+    let bytes = crate::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
     assert_eq!(&bytes[..2], b"BM", "real BITMAPFILEHEADER magic, not DSL text");
-    let reimported = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes).expect("bmp import");
+    let reimported = crate::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes).expect("bmp import");
     let composite = raster_composite_image(&reimported).expect("composite of the reimported document");
     assert_eq!((composite.width, composite.height), (3, 2));
     assert_eq!(&composite.frames[0].rgba8[..3], &[200, 100, 50]);
@@ -170,7 +170,7 @@ async fn bmp_export_writes_real_bytes_that_import_reads_back() {
 #[semio_framework_async_macros::async_test]
 async fn png_export_writes_a_real_png_signature() {
     let document = document_with_solid_layer(0, 128, 255, 255, 2, 2);
-    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
+    let bytes = crate::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
     assert_eq!(&bytes[..8], &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]);
     retire(document);
 }
@@ -221,7 +221,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
     for text in BMP_PARITY_FIXTURES {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
         let document = parity_document(width, height, rgba8);
-        let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+        let bytes = crate::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
         assert_eq!(hex_of(&bytes), bmp_hex, "the Rust bmp writer drifted from the TypeScript twin");
         retire(document);
     }
@@ -232,7 +232,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
 async fn bmp_import_matches_the_typescript_parity_fixture() {
     for text in BMP_PARITY_FIXTURES {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
-        let document = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
+        let document = crate::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
         let composite = raster_composite_image(&document).expect("composite of the imported document");
         assert_eq!((composite.width, composite.height), (width, height));
         assert_eq!(composite.frames[0].rgba8, rgba8, "the Rust bmp reader drifted from the TypeScript twin");

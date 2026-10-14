@@ -1,6 +1,7 @@
-use super::ChangeOpeningHeight;
-use crate::{En1996Diff, En1996Snapshot};
-use crate::diff::{En1996OpeningDelta, En1996OpeningPatch, En1996WallDelta, En1996WallPatch};
+use crate::change_opening_height::ChangeOpeningHeight;
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use semio_s_artifact_norm_en1996_diff::{En1996OpeningDelta, En1996OpeningPatch, En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeOpeningHeight, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.wall_index >= base.walls.len() || payload.index >= base.walls[payload.wall_index].openings.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid opening index."), Vec::<String>::new());

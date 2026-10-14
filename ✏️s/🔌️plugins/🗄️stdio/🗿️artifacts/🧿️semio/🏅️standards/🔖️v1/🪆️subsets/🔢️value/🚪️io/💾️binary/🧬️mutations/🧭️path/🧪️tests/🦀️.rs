@@ -1,5 +1,5 @@
 //! 🧪️ Neutral original binary path frames preserve exact keys and indices.
-use super::*;
+use semio_s_artifact_stdio_semio_value_mutations::io::binary::mutations::path_codec::*;
 #[test]
 fn semio_value_binary_paths_match_shared_frames_and_reject_truncated_children(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

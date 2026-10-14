@@ -1,0 +1,51 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly io root: import, export and composers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-inferences = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-las = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-ply = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+gltf = { workspace = true, features = ["import", "utils"] }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pixels = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

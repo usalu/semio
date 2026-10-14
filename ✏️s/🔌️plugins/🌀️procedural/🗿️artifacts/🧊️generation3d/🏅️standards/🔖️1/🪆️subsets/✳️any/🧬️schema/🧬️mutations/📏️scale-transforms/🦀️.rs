@@ -2,9 +2,8 @@
 //! the generator graph multiplies into its own. Editing it in history re-derives the operator on any base.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::generation3d_label_items;
-use crate::generation3d_label_number;
-use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_items;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_number;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -20,18 +19,21 @@ pub struct ScaleTransforms {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_transforms(targets: Vec<String>, factors: [f64; 3]) -> Generation3dMutation {
-    Generation3dMutation::ScaleTransforms(ScaleTransforms { targets, sx: factors[0], sy: factors[1], sz: factors[2] })
+pub fn scale_transforms<Op: From<ScaleTransforms>>(targets: Vec<String>, factors: [f64; 3]) -> Op {
+    Op::from(ScaleTransforms { targets, sx: factors[0], sy: factors[1], sz: factors[2] })
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ScaleTransforms {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ScaleTransforms
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "transforms", kind: "scale-transforms", record: "ScaledTransforms" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::scale_transforms::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::scale_transforms::inverse::inverse(self, base)?
     

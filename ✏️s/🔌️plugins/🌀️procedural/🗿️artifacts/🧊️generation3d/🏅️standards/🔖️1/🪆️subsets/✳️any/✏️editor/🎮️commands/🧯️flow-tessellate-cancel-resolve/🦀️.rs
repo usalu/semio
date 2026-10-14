@@ -1,8 +1,9 @@
 //! 🧯️ Generation3d play app commands command — `flow-tessellate-cancel-resolve`: the acknowledgement
 //! half of the kernel release, whose request half is `🔓️flow-eval-release`.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

@@ -1,8 +1,8 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Din18599 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{NormEdit, NormEditRules, SelectorKey, SetFieldRule};
-use super::Din18599Mutation;
-use crate::Din18599Snapshot;
+use semio_s_plugin_norm_app_surface::{NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use crate::Din18599Mutation;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 /// 📚 Every path a Din18599 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

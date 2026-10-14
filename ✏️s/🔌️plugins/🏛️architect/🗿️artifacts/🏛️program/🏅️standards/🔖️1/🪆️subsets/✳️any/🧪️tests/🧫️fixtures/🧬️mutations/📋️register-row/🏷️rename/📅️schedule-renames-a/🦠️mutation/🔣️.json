@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "scheduleRequirement",
+  "id": "schedule-requirement-a",
+  "newName": "Renamed Schedule Requirement A"
+}

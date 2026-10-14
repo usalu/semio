@@ -1,12 +1,14 @@
 //! 🎚️ Typed operator inputs and source text are editable through the document's event history: a committed field is ONE
 //! absolute `change-widget-input` leaf (design §19), so a history edit changes exactly that typed value.
+#![allow(clippy::result_large_err)]
 
 use semio_s_artifact_procedural_3d_io_text::value::widget_input_literal;
 use semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal;
 use semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal_as;
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
@@ -74,7 +76,7 @@ pub(crate) fn edit_input_value(types: &[String], current: Option<&semio_framewor
     let schema = current.and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).or_else(|| types.first().map(String::as_str)).ok_or("Connect a compatible output to this input")?;
     if !types.iter().any(|kind| kind == schema) || !matches!(schema, "number" | "text" | "boolean" | "point" | "vector" | "plane") { return Err("Connect a compatible output to this input".into()); }
     if schema=="plane"{
-        use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
+        use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputPlane;
         let(part,axis)=component.and_then(|value|value.split_once('.')).filter(|(part,axis)|matches!(*part,"origin"|"normal")&&matches!(*axis,"x"|"y"|"z")).ok_or("Choose a plane origin or normal coordinate")?;
         let mut plane=match current{Some(value)=>match widget_input_of_literal(value){Some(WidgetInputValue::Plane(plane))=>plane,_=>return Err("Plane input must contain a point origin and vector normal".into())},None=>WidgetInputPlane{origin:[0.0;3],normal:[0.0,0.0,1.0]}};
         if !plane.origin.iter().chain(&plane.normal).all(|value|value.is_finite()){return Err("Plane input must contain finite coordinates".into())}
@@ -385,7 +387,7 @@ pub(crate) fn widget_facet_leaf(host: &FlowHostSnapshot, payload: &SetWidgetInpu
         }
         _ => return Err("Widget facet does not match its target or field".into()),
     };
-    Ok((&next != widget).then(|| Generation3dMutation::UpdateWidget(semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget { widget: next })))
+    Ok((&next != widget).then(|| Generation3dMutation::UpdateWidget(semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget { widget: next })))
 }
 
 pub fn handle(payload: &SetWidgetInput, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

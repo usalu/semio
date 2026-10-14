@@ -1,8 +1,8 @@
 //! 🐍️ Python balance oracle + third-party JSON-schema validation.
 
-use crate::standards::v1::subsets::any::schema::evaluate_document;
-use crate::standards::v1::subsets::any::io::text::snapshot::encode_din18599_snapshot_json;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_checks::evaluate_document;
+use semio_s_artifact_norm_din18599_io::text::snapshot::encode_din18599_snapshot_json;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -22,9 +22,9 @@ fn json_schema_validates_default_and_noncompliant_snapshots() {
     let _ = std::fs::create_dir_all(&tmp);
     for (name, doc) in [
         ("default", Din18599Snapshot::default()),
-        ("noncompliant", crate::subjects::noncompliant_detached_house()),
-        ("cooled", crate::subjects::cooled_office_building()),
-        ("two_zone", crate::subjects::compliant_two_zone_house()),
+        ("noncompliant", semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house()),
+        ("cooled", semio_s_artifact_norm_din18599_model::subjects::cooled_office_building()),
+        ("two_zone", semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house()),
     ] {
         let snap = tmp.join(format!("{name}.snap.json"));
         std::fs::write(&snap, encode_din18599_snapshot_json(&doc)).expect("write snap");
@@ -46,10 +46,10 @@ fn python_oracle_matches_evaluate_within_half_percent() {
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);
     for (name, doc) in [
-        ("compliant", crate::subjects::compliant_detached_house()),
-        ("noncompliant", crate::subjects::noncompliant_detached_house()),
-        ("two_zone", crate::subjects::compliant_two_zone_house()),
-        ("cooled", crate::subjects::cooled_office_building()),
+        ("compliant", semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house()),
+        ("noncompliant", semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house()),
+        ("two_zone", semio_s_artifact_norm_din18599_model::subjects::compliant_two_zone_house()),
+        ("cooled", semio_s_artifact_norm_din18599_model::subjects::cooled_office_building()),
     ] {
         let snap = tmp.join(format!("{name}.oracle.snap.json"));
         let report = evaluate_document(&doc);

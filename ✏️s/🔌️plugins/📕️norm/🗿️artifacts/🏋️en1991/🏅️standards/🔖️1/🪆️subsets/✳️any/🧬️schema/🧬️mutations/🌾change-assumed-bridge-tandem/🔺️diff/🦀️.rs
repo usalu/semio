@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-assumed-bridge-tandem`.
-use super::ChangeAssumedBridgeTandem;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_assumed_bridge_tandem::ChangeAssumedBridgeTandem;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeAssumedBridgeTandem, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.assumed_bridge_tandem == payload.new_assumed_bridge_tandem {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

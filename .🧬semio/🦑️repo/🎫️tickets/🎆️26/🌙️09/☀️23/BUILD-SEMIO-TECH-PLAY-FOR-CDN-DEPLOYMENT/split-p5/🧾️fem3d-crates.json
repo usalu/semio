@@ -1,0 +1,411 @@
+{
+ "workspace": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml",
+ "registry_roots": [
+  "🧰️framework",
+  "✏️s/🔨️modules/🏗️fem",
+  "✏️s/🔌️plugins/🏗️fem",
+  "✏️s/🔌️plugins/🗄️stdio"
+ ],
+ "crates": [
+  {
+   "name": "semio-s-artifact-fem-3d-model",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d model: structural entities, schema, snapshot, diff, inferences, their codecs and mutation guards",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-engine",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/⚙️engine/🧊️3d/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d engine bridge: meshing, mesh preview and modal/buckling over the shared fem engine",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-mesh-topology",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d node and element mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-mesh",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d section and solid mutations and the selection move",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-load",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d load case, load and combination mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-boundary",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d support mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-material",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d material mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-analysis",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d analysis-settings mutation",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-mutations",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d mutation dispatch enum, codecs, inverse delegate and central apply",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   },
+   "tests": [
+    [
+     "load_case_kinds",
+     "../../../../../🏋️load/🧪️tests/🔬️case-kinds/🦀️.rs"
+    ],
+    [
+     "load_combination_kinds",
+     "../../../../../🏋️load/🧪️tests/🔬️combination-kinds/🦀️.rs"
+    ],
+    [
+     "load_kinds",
+     "../../../../../🏋️load/🧪️tests/🔬️load-kinds/🦀️.rs"
+    ],
+    [
+     "analysis_kinds",
+     "../../../../../📈️analysis/🧪️tests/🔬️analysis-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_section_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️section-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_selection_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️selection-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_solid_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️solid-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_topology_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds/🦀️.rs"
+    ],
+    [
+     "boundary_kinds",
+     "../../../../../🛡️boundary/🧪️tests/🔬️support-kinds/🦀️.rs"
+    ],
+    [
+     "material_kinds",
+     "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀️.rs"
+    ]
+   ]
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-io",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d stdio import and export, composers, languages, artifact kinds and examples",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-scene",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🎬️scene/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d World3d scene and initial viewport",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-terminology",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d editor terminology and controller identity",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-interaction",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d editor interaction: picking, selection record and gumball",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-visual-job",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d page visual job: mesh and solve pipeline and paged world-snapshot publication",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-session",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d mounted editor session",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-model-window",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d model window",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-results-window",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d results window, playback transient and results cache",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-commands",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d document commands",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor-panels",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d editor panels",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-viewer",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d viewer",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-editor",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 3d play app editor: app, manifest, view commands, options and edit mode",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   },
+   "tests": [
+    [
+     "editor_app",
+     "../../🧪️tests/🔬️app/🦀️.rs"
+    ]
+   ]
+  },
+  {
+   "name": "semio-s-artifact-fem-3d",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+   "lib": "../../🦀️.rs",
+   "role": "artifact",
+   "description": "FEM 3d artifact: definition, declaration and registration over the fem 3d crates",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  }
+ ]
+}

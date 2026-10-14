@@ -1,7 +1,7 @@
 //! 🌍️ `world-relocate` command.
 
-use crate::editor::puzzle3d::modes::edit::windows::main::utilities::transform::puzzle3d_relocate_record;
-use {crate::editor::puzzle3d::snapshot::value_as_vec3, crate::editor::puzzle3d::session::Puzzle3dActionCtx};
+use semio_s_artifact_puzzle_3d_editor_transform::puzzle3d_relocate_record;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::value_as_vec3, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🚚️ Drops one unlocked, visible object at the world `position` a finished Relocate drag names, as ONE

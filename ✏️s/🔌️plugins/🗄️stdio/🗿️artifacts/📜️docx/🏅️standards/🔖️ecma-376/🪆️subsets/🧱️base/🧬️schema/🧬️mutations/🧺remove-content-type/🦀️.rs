@@ -34,7 +34,3 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveContentType {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

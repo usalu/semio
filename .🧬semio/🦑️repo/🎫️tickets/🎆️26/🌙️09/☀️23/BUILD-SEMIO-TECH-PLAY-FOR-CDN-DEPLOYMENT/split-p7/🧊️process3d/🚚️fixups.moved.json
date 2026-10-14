@@ -1,0 +1,47 @@
+[
+ {
+  "from": "crate::editor::process3d::kit",
+  "to": "crate::editor::process3d",
+  "items": [
+   "process3d_io"
+  ]
+ },
+ {
+  "from": "crate::editor::process3d::kit",
+  "to": "crate::editor::process3d::modes::edit::windows::workpiece",
+  "items": [
+   "set_active_utility_effect"
+  ]
+ },
+ {
+  "from": "crate::editor::process3d",
+  "to": "crate::editor::process3d::kit",
+  "items": [
+   "PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES"
+  ]
+ },
+ {
+  "from": "crate::host::owned",
+  "to": "crate::standards::v1::subsets::any::io::binary::mutations",
+  "items": [
+   "PROCESS3D_MAXIMUM_DOMAIN_ITEMS",
+   "PROCESS3D_OWNER_BYTES"
+  ]
+ },
+ {
+  "from": "crate::standards::v1::subsets::any::schema",
+  "to": "crate::standards::v1::subsets::any::schema::mutations",
+  "items": [
+   "insert_step_mutations",
+   "remove_step_mutations"
+  ]
+ },
+ {
+  "from": "crate::editor::process3d::kit",
+  "to": "crate::standards::v1::subsets::any::schema::snapshot",
+  "items": [
+   "ContributedMachineCatalog",
+   "ProcessMachinesTopicPayload"
+  ]
+ }
+]

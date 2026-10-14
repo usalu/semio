@@ -1,6 +1,6 @@
 //! ➖️ `remove-beam` mutation leaf.
 
-use crate::{En1994Mutation, En1994Snapshot};
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +13,15 @@ pub struct RemoveBeam {
     pub index: usize,
 }
 
-impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveBeam {
+impl<Op> protocol::MutationKind<En1994Snapshot, Op> for RemoveBeam where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::insert_beam::InsertBeam> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "beam", kind: "remove-beam", record: "RemovedBeam" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+        crate::remove_beam::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_beam::inverse::inverse(self, base)?
     
     })
 }
@@ -30,3 +30,10 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for RemoveBeam {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

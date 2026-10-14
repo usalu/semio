@@ -24,7 +24,7 @@ import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚
 import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
-import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
+import { actorCodecRuntimeSourceV1 } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 
@@ -906,7 +906,7 @@ self.addEventListener("message", async (event) => {
  * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
  * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
  * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`, and `codec` — the component's `codec` interface
- * answered by `actorCodecAnswer` (`🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts`), the browser's
+ * answered by `actorCodecAnswer` (`🎭️actor/🧬️codec/🟦️.ts`), the browser's
  * kind identity and document genesis.
  *
  * DROPS the old `runSerialized` retry/reload loop entirely (design-runtime.md §3: "recovery is the
@@ -948,7 +948,7 @@ const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = ${ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BY
 const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
 const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
 const commandIngressKinds = new Map([${COMMAND_INGRESS_KINDS.map((tag, kind) => `[${kind}, "${tag}"]`).join(", ")}]);
-const codecAnswer = ${actorCodecAnswer.toString()};
+${actorCodecRuntimeSourceV1()}
 const HOST_CHANNEL = ${APP_CHANNEL_VERSION};
 const admitGuestChannelVersion = ${admitGuestChannelVersion.toString()};
 

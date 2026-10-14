@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -32,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// default holds), and it asks the broker for document write access because `FormsPlayApp`
 /// persists question/field edits back to the open document.
 pub fn plugin() -> Result<Plugin<FormsApps>, PluginAssemblyError> {
-    Plugin::<FormsApps>::builder("forms")
+    PluginBuilder::<_, FormsApps>::new("forms")
         .label("Forms")
         .version("0.1.0")
         .package_id("semio:forms")

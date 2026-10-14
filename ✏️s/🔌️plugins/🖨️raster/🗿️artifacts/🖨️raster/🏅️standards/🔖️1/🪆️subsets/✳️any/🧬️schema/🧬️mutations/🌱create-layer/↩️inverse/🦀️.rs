@@ -1,12 +1,13 @@
 //! ↩️ `create-layer` inverse — `delete-layer` addressed by the created layer's own id (no `base`
 //! lookup needed, the id is already on the payload).
 
-use crate::mutations::{delete_layer, RasterMutation};
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
-use crate::{RasterLayerNode, RasterSnapshot};
+use crate::delete_layer;
+use semio_s_artifact_raster_raster_model::{find_layer, layer_node_id};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateLayer, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::delete_layer::mutation::DeleteLayer>>(payload: &crate::create_layer::mutation::CreateLayer, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let new_id = layer_node_id(&payload.layer);
     // 🚫️ A REFUSED create applied NOTHING — `🔺️diff` faults on a duplicate id or a non-group parent
@@ -22,7 +23,7 @@ pub fn inverse(payload: &super::CreateLayer, base: &RasterSnapshot) -> Result<Ve
             return Vec::new();
         }
     }
-    vec![RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: new_id.to_string() })]
+    vec![Op::from(delete_layer::DeleteLayer { layer_id: new_id.to_string() })]
 
     })())
 }

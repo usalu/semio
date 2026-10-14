@@ -5,9 +5,12 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{write_pixel_region,apply_filter,transform_image,fill_selection,fill_region,paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
-pub use crate::mutations::{inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
-use crate::{SemioImageSnapshot, RasterLayerNode};
+use semio_s_artifact_raster_raster_diff::io::text::RasterImageDsl;
+use semio_s_artifact_raster_raster_mutations_pixels::{write_pixel_region, apply_filter, transform_image, fill_selection, fill_region, paint_stroke, change_layer_mask, change_layer_pixels, add_layer_asset, remove_layer_asset};
+use semio_s_artifact_raster_raster_mutations_layers::{change_layer_transform, change_layer_locked, change_layer_adjustment_parameter, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
+pub use crate::{inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use protocol::OpText;
 
 //#region 📖️SemioGrammar
@@ -16,58 +19,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar)]
-enum RasterImageColorspaceDsl { Rgb, Rgba, Grayscale, GrayscaleAlpha, Indexed }
-
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct RasterImageFrameDsl { delay_ms: u32, rgba8: Vec<u8> }
-
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct RasterImageMetadataDsl { key: String, value: String }
-
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct RasterImageDsl {
-    schema: String,
-    width: u32,
-    height: u32,
-    colorspace: RasterImageColorspaceDsl,
-    bit_depth: u8,
-    #[dsl(table)]
-    frames: Vec<RasterImageFrameDsl>,
-    icc: Option<Vec<u8>>,
-    #[dsl(table)]
-    metadata: Vec<RasterImageMetadataDsl>,
-}
-
-impl From<&SemioImageSnapshot> for RasterImageDsl {
-    fn from(image: &SemioImageSnapshot) -> Self {
-        use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace;
-        Self {
-            schema: image.schema.clone(), width: image.width, height: image.height, bit_depth: image.bit_depth,
-            colorspace: match image.colorspace { SemioColorspace::Rgb => RasterImageColorspaceDsl::Rgb, SemioColorspace::Rgba => RasterImageColorspaceDsl::Rgba, SemioColorspace::Grayscale => RasterImageColorspaceDsl::Grayscale, SemioColorspace::GrayscaleAlpha => RasterImageColorspaceDsl::GrayscaleAlpha, SemioColorspace::Indexed => RasterImageColorspaceDsl::Indexed },
-            frames: image.frames.iter().map(|frame| RasterImageFrameDsl { delay_ms: frame.delay_ms, rgba8: frame.rgba8.clone() }).collect(),
-            icc: image.icc.clone(), metadata: image.metadata.iter().map(|entry| RasterImageMetadataDsl { key: entry.key.clone(), value: entry.value.clone() }).collect(),
-        }
-    }
-}
-
-impl From<RasterImageDsl> for SemioImageSnapshot {
-    fn from(image: RasterImageDsl) -> Self {
-        use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
-        Self {
-            schema: image.schema, width: image.width, height: image.height, bit_depth: image.bit_depth,
-            colorspace: match image.colorspace { RasterImageColorspaceDsl::Rgb => SemioColorspace::Rgb, RasterImageColorspaceDsl::Rgba => SemioColorspace::Rgba, RasterImageColorspaceDsl::Grayscale => SemioColorspace::Grayscale, RasterImageColorspaceDsl::GrayscaleAlpha => SemioColorspace::GrayscaleAlpha, RasterImageColorspaceDsl::Indexed => SemioColorspace::Indexed },
-            frames: image.frames.into_iter().map(|frame| SemioImageFrame { delay_ms: frame.delay_ms, rgba8: frame.rgba8 }).collect(),
-            icc: image.icc, metadata: image.metadata.into_iter().map(|entry| SemioImageMetadataEntry { key: entry.key, value: entry.value }).collect(),
-        }
-    }
-}
 
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `RasterMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum RasterMutationDsl {
+pub enum RasterMutationDsl {
     CreateLayer {
         #[dsl(key = "parent")]
         parent_id: Option<String>,
@@ -140,9 +97,9 @@ pub(crate) enum RasterMutationDsl {
         layer_id:String,
         parameter:String,
         #[dsl(key = "expected")]
-        expected:Option<crate::RasterAdjustmentNumber>,
+        expected:Option<semio_s_artifact_raster_raster_model::RasterAdjustmentNumber>,
         #[dsl(key = "value")]
-        value:Option<crate::RasterAdjustmentNumber>,
+        value:Option<semio_s_artifact_raster_raster_model::RasterAdjustmentNumber>,
     },
     ChangeLayerTransform {
         #[dsl(key="id")]
@@ -156,18 +113,18 @@ pub(crate) enum RasterMutationDsl {
         #[dsl(key = "id")]
         layer_id: String,
         #[dsl(block)]
-        expected: Option<crate::RasterLayerMask>,
+        expected: Option<semio_s_artifact_raster_raster_model::RasterLayerMask>,
         #[dsl(block)]
-        mask: Option<crate::RasterLayerMask>,
+        mask: Option<semio_s_artifact_raster_raster_model::RasterLayerMask>,
     },
     ChangeLayerPixels {
         #[dsl(key = "id")]
         layer_id: String,
         expected_image_key: Option<String>,
         #[dsl(block)]
-        content: crate::RasterPixelContent,
+        content: semio_s_artifact_raster_raster_model::RasterPixelContent,
         #[dsl(block)]
-        transform: Option<crate::RasterTransform>,
+        transform: Option<semio_s_artifact_raster_raster_model::RasterTransform>,
     },
     RemoveLayerAsset {
         #[dsl(key = "id")]
@@ -257,7 +214,7 @@ impl OpText for RasterMutationDsl {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-pub(crate) fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
+pub fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
     match mutation {
         RasterMutation::CreateLayer(payload) => RasterMutationDsl::CreateLayer { parent_id: payload.parent_id.clone(), index: payload.index, layer: payload.layer.clone() },
         RasterMutation::DeleteLayer(payload) => RasterMutationDsl::DeleteLayer { layer_id: payload.layer_id.clone() },
@@ -330,7 +287,7 @@ pub(crate) fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutatio
     }
 }
 
-pub(crate) fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
+pub fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
     match mutation {
         RasterMutationDsl::CreateLayer { parent_id, index, layer } => RasterMutation::CreateLayer(create_layer::mutation::CreateLayer { parent_id, index, layer }),
         RasterMutationDsl::DeleteLayer { layer_id } => RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id }),
@@ -413,37 +370,37 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::RasterDiff;
-use crate::RasterSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::add_layer_asset;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_adjustment_kind;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_blend_mode;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_opacity;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_visible;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_locked;
-use crate::standards::v1::subsets::any::schema::mutations::create_layer;
-use crate::standards::v1::subsets::any::schema::mutations::delete_layer;
-use crate::standards::v1::subsets::any::schema::mutations::move_layer;
-use crate::standards::v1::subsets::any::schema::mutations::remove_layer_asset;
-use crate::standards::v1::subsets::any::schema::mutations::rename_layer;
-use crate::standards::v1::subsets::any::schema::mutations::reorder_layers;
-use crate::standards::v1::subsets::any::schema::mutations::resize_layer;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_pixels;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_mask;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_transform;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_adjustment_parameter;
-use crate::standards::v1::subsets::any::schema::mutations::paint_stroke;
-use crate::standards::v1::subsets::any::schema::mutations::fill_region;
-use crate::standards::v1::subsets::any::schema::mutations::apply_filter;
-use crate::standards::v1::subsets::any::schema::mutations::transform_image;
-use crate::standards::v1::subsets::any::schema::mutations::fill_selection;
+use crate::*;
+
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_visible;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_locked;
+use semio_s_artifact_raster_raster_mutations_layers::create_layer;
+use semio_s_artifact_raster_raster_mutations_layers::delete_layer;
+use semio_s_artifact_raster_raster_mutations_layers::move_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
+use semio_s_artifact_raster_raster_mutations_layers::reorder_layers;
+use semio_s_artifact_raster_raster_mutations_layers::resize_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_transform;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_region;
+use semio_s_artifact_raster_raster_mutations_pixels::apply_filter;
+use semio_s_artifact_raster_raster_mutations_pixels::transform_image;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_selection;
 
 /// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️.json` document together with the
 /// `🦠️mutation/🔣️.json` payload beside it — the same bytes the leaf's own fixture test
 /// reads — into real typed values.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
+pub fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
     let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
     // 🧹️ A decoded before-document owns two fixed-capacity maps (`assets`, every adjustment's
     // `params`) whose `Drop` fails closed, so the snapshot cannot simply fall off this frame when
@@ -460,44 +417,44 @@ pub(crate) fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Re
 
 /// 🧹️ The bridge's own retirement seam for a displaced document — the artifact's real
 /// `retire_raster_snapshot`, named once here so every bridge frame retires the same way.
-pub(crate) fn retire_bridge_snapshot(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+pub fn retire_bridge_snapshot(snapshot: RasterSnapshot) {
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 }
 pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::RasterDiff;
-use crate::RasterSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::add_layer_asset;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_adjustment_kind;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_blend_mode;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_opacity;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_visible;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_locked;
-use crate::standards::v1::subsets::any::schema::mutations::create_layer;
-use crate::standards::v1::subsets::any::schema::mutations::delete_layer;
-use crate::standards::v1::subsets::any::schema::mutations::move_layer;
-use crate::standards::v1::subsets::any::schema::mutations::remove_layer_asset;
-use crate::standards::v1::subsets::any::schema::mutations::rename_layer;
-use crate::standards::v1::subsets::any::schema::mutations::reorder_layers;
-use crate::standards::v1::subsets::any::schema::mutations::resize_layer;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_pixels;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_mask;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_transform;
-use crate::standards::v1::subsets::any::schema::mutations::change_layer_adjustment_parameter;
-use crate::standards::v1::subsets::any::schema::mutations::paint_stroke;
-use crate::standards::v1::subsets::any::schema::mutations::fill_region;
-use crate::standards::v1::subsets::any::schema::mutations::apply_filter;
-use crate::standards::v1::subsets::any::schema::mutations::transform_image;
-use crate::standards::v1::subsets::any::schema::mutations::fill_selection;
+use crate::*;
+
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_mutations_pixels::add_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_kind;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_blend_mode;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_opacity;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_visible;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_locked;
+use semio_s_artifact_raster_raster_mutations_layers::create_layer;
+use semio_s_artifact_raster_raster_mutations_layers::delete_layer;
+use semio_s_artifact_raster_raster_mutations_layers::move_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::remove_layer_asset;
+use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
+use semio_s_artifact_raster_raster_mutations_layers::reorder_layers;
+use semio_s_artifact_raster_raster_mutations_layers::resize_layer;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels;
+use semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_transform;
+use semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_region;
+use semio_s_artifact_raster_raster_mutations_pixels::apply_filter;
+use semio_s_artifact_raster_raster_mutations_pixels::transform_image;
+use semio_s_artifact_raster_raster_mutations_pixels::fill_selection;
 
 /// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
 /// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
+pub fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
     let value = semio_framework_pack_json::object([
         ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))),
         ("messages".to_string(), semio_framework_pack_json::Value::Array(messages.into_iter().map(semio_framework_pack_json::Value::from).collect())),
@@ -558,10 +515,10 @@ pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
     Ok(rendered)
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::retire_bridge_mutations;
+use crate::retire_bridge_mutations;
 
 
-use crate::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🌉️Apply
 // The central-apply entry points of the native bridge live here, outside the schema tree: only editors, io and stores call
@@ -577,14 +534,14 @@ pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutatio
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
+pub fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
     use protocol::Mutation;
     // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
     // insertion carries), so it is cold-retired here rather than dropped.
     let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
     let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
     let applied = protocol::apply_diff(&diff, snapshot);
-    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(diff);
+    <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(diff);
     match applied {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),

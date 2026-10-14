@@ -19,6 +19,8 @@ import { typecheckProject } from "../../../../../../../🔨️modules/🏃️pro
 import { emitTypeScriptDeclarations } from "../../📦️artifacts/🟦️typescript/🧬️declarations/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
+import {viteStorageLayoutV1} from "../../🌐️vite/💾️storage/🟦️.ts";
+import {repositoryCacheBudgetV1} from "../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import { join, relative } from "node:path";
 
 /** 🧪️ Proves browser compiler policy and state ownership against real Vite and TypeScript. */
@@ -29,7 +31,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const policy = semioViteBuild(undefined, row.mode), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", false, row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
     assert.equal(extension.build.minify, row.minify); assert.equal(extension.build.sourcemap, row.sourcemap);
     assert.equal(policy.rollupOptions.treeshake, row.mode === "release"); assert.equal(extension.build.rollupOptions.treeshake, row.mode === "release");
-    assert.equal(coordinator.output, `dist/${row.mode}/repo-coordinator/next`); assert.equal(coordinator.optimization.minimize, row.mode === "release"); assert.equal(coordinator.workers, 2);
+    assert.equal(coordinator.output, `.cache/b/p/m/next/${row.mode}/out`); assert.equal(coordinator.optimization.minimize, row.mode === "release"); assert.equal(coordinator.workers, 2);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(policy[key], row[key]);
   }
   for (const mode of fixture.invalidModes) assert.throws(() => semioViteBuild(undefined, mode));
@@ -82,7 +84,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   const nextTrace = { version: 1, files: [...oracleTrace.fileList].map((name: string) => relative(nextCompiled, join(workspace, name))) };
   await writeFile(join(nextCompiled, "app.js.nft.json"), JSON.stringify(nextTrace)); await writeFile(join(nextCompiled, "required-server-files.json"), JSON.stringify({ config: { typescript: {} } }));
   for (const row of fixture.modes) {
-    const publication = await nextPublicationFiles(workspace, nextSource, nextCompiled, join(workspace, "dist", row.mode, "repo-coordinator", "next"), row.mode, temporary, invocation.control.signal);
+    const publication = await nextPublicationFiles(workspace, nextSource, nextCompiled, join(workspace,".cache/b/p/m/next",row.mode,"out"), row.mode, temporary, invocation.control.signal);
     for (const name of fixture.nextPublication.expected) assert.ok(publication.has(name), name);
     assert.equal(JSON.parse(readFileSync(publication.get("standalone/payload.json")!, "utf8")).answer, 42);
   }
@@ -118,7 +120,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   const config = join(app, "🟦️.ts"), policyPath = join(workspace, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
   const wasmPluginPath = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts");
   await writeFile(config, `import { semioViteBuild } from ${JSON.stringify(policyPath)}; import { canonicalWasmBuildVitePlugin } from ${JSON.stringify(wasmPluginPath)}; export default ({ mode }) => ({ plugins: [canonicalWasmBuildVitePlugin(${JSON.stringify(workspace)}, mode)], publicDir: false, logLevel: "silent", cacheDir: process.env.SEMIO_VITE_CACHE_DIRECTORY, build: semioViteBuild(undefined, mode) });`);
-  const options = { invocation, root: app, workspace, config, owner: fixture.owner, temporaryRoot: temporary };
+  const options = { invocation, root: app, workspace, config, owner: fixture.owner };
   const sizes = new Map<string, number>();
   try {
     assert.equal(require("jsonschema").validate(fixture.bunWorker, bunWorkerSchema).valid, true);
@@ -142,8 +144,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       assert.equal(oracle.distDir, coordinator.output); assert.equal(oracle.experimental.cpus, 2); assert.equal(oracle.experimental.serverMinification, coordinator.optimize);
     }
     for (const row of fixture.modes) {
-      const destination = join(temporary, row.mode), started = Date.now();
-      await buildViteArtifact({ ...options, output: destination, mode: row.mode });
+      const started = Date.now(),destination = await buildViteArtifact({ ...options, mode: row.mode });
       const assets = readdirSync(join(destination, "assets")), js = assets.find(name => name.endsWith(".js"))!;
       assert.ok(js); assert.equal(assets.some(name => name.endsWith(".js.map")), row.sourcemap);
       const emitted = readFileSync(join(destination, "assets", js), "utf8");
@@ -157,12 +158,12 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
       await bundleJavaScript({ workspace, source: join(app, "entry.js"), output: target, mode: row.mode, platform: "browser", external: ["@semio-tech/fixture-wasm"], signal: invocation.control.signal, invocation, environment: { ...process.env, GOMAXPROCS: "1" } });
       assert.equal(existsSync(target + ".map"), row.sourcemap);
     }
-    await Promise.all([0, 1].map(() => buildViteArtifact({ ...options, output: join(temporary, "prototype"), mode: "prototype" })));
-    assert.ok(existsSync(join(temporary, "prototype", ".semio-artifact.json")));
+    await Promise.all([0, 1].map(() => buildViteArtifact({ ...options, mode: "prototype" })));
+    assert.ok(existsSync(join(viteStorageLayoutV1(join(repositoryCacheBudgetV1(workspace).partitions.products.directory,"m"),"prototype",fixture.owner).output,".semio-artifact.json")));
     const serving = [new AbortController(), new AbortController()], addresses: string[] = [], listeners: Promise<void>[] = [];
     try {
       await Promise.all(serving.map((controller, index) => new Promise<void>((accept, reject) => {
-        const running = serveVite({ invocation, root: app, config, mode: "prototype", temporaryRoot: temporary, host: "127.0.0.1", port: 0, signal: controller.signal, ready: url => { addresses[index] = url; accept(); } });
+        const running = serveVite({ invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: controller.signal, ready: url => { addresses[index] = url; accept(); } });
         running.catch(reject); listeners.push(running);
       })));
       assert.notEqual(addresses[0], addresses[1]);
@@ -180,7 +181,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const warmService = new AbortController();
     let warmed!: Promise<void>;
     await new Promise<void>((accept, reject) => {
-      warmed = serveVite({ invocation, root: app, config, mode: "prototype", temporaryRoot: temporary, host: "127.0.0.1", port: 0, signal: warmService.signal, ready: async url => { const response = await fetch(url); assert.equal(response.status, 200); await response.text(); accept(); } });
+      warmed = serveVite({ invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: warmService.signal, ready: async url => { const response = await fetch(url); assert.equal(response.status, 200); await response.text(); accept(); } });
       warmed.catch(reject);
     });
     warmService.abort(); await warmed;

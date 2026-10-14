@@ -8,10 +8,10 @@
 //! (`🧪️w3-t-puzzle-oracle-selfcheck.py` in ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`).
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
+use crate::apply_puzzle3d_mutation;
 use protocol::OpBinary;
 
-const CORPUS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
+static CORPUS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json")).expect("committed test data reads"));
 
 /// 🗂️ One decoded corpus case.
 struct TimeTravelCase {
@@ -30,7 +30,7 @@ struct TimeTravelCase {
 /// `float_roundtrip` lands some 17-digit decimals one ulp off (`1.9999999999999993` → `…91`), which made an exact
 /// cross-language state compare fail on the harness, not on the leaves.
 fn cases() -> Vec<TimeTravelCase> {
-    let corpus = semio_framework_pack_json::parse(CORPUS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
+    let corpus = semio_framework_pack_json::parse(CORPUS.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus parses");
     let snapshot = |value: &semio_framework_pack_json::Value| -> Puzzle3dSnapshot { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus snapshot decodes") };
     let mutation = |value: &semio_framework_pack_json::Value| -> Puzzle3dMutation { semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(value), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("a corpus payload decodes") };
     let level = |value: &semio_framework_pack_json::Value| match value.as_str() {
@@ -78,7 +78,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
     for case in cases {
         let id = case.id.as_str();
-        let mut store = crate::host::owned::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = semio_s_artifact_puzzle_3d_host::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a recorded gesture applies");
         }
@@ -89,7 +89,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             operations.iter().map(|operation| operation.mutation_id.clone()).collect()
         };
         let head = store.snapshot_ref().clone();
-        let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+        let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let mut preview = store.state_before(&ids[case.at], &drafts).expect("the preview base folds").as_ref().clone();
         apply_puzzle3d_mutation(&mut preview, &case.replacement).expect("the draft applies to its base");
         assert_eq!(preview, case.preview, "{id}: the preview is the state before the edited gesture plus the draft, nothing downstream");
@@ -116,6 +116,52 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             assert!(operations[case.at].supersession.is_some(), "{id}: the edited gesture is superseded, never rewritten");
             assert!(operations.iter().enumerate().all(|(index, operation)| operation.transaction == Some(&gesture_transaction(index))), "{id}: time travel edits the mutation, never the tool transaction");
         }
-        crate::host::owned::close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+        semio_s_artifact_puzzle_3d_host::close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }
+}
+
+fn empty() -> Puzzle3dSnapshot {
+    Puzzle3dSnapshot::default()
+}
+
+/// 🧱️ A scene of one object and one target volume for the selection laws.
+fn selection_scene(origin: [f64; 3]) -> Puzzle3dSnapshot {
+    use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume};
+    let mut scene = empty();
+    scene.objects.push(Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin, orientation: None, scale: Some(semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(2.0)), mesh_url: None, vortices: Vec::new(), hidden: false, locked: false });
+    scene.target_volumes.push(Puzzle3dTargetVolume { id: "v1".into(), origin, orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, hidden: false, locked: false });
+    scene
+}
+
+/// ⏪️ Time travel edits a selection leaf's inputs, never the gesture: a drag superseded with a new offset
+/// previews as the state before it plus the draft, and its Report replay re-applies every
+/// downstream transform onto the edited pose — exactly the fresh fold of the edited log.
+#[semio_framework_async_macros::async_test]
+async fn a_drag_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    let mut store = semio_s_artifact_puzzle_3d_host::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA, "selection-time-travel", selection_scene([0.0; 3]), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let log = [drag_selection(vec!["o1".into()], [1.0, 0.0, 0.0]), rotate_selection(vec!["o1".into()], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2), drag_selection(vec!["o1".into(), "v1".into()], [0.0, 2.0, 0.0])];
+    for mutation in &log {
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection gesture applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let edited = drag_selection(vec!["o1".into()], [5.0, 0.0, 0.0]);
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
+    assert_eq!(preview.objects[0].origin, [0.0; 3], "the preview base is the state right before the edited drag");
+    apply_puzzle3d_mutation(&mut preview, &edited).expect("the draft applies to its base");
+    assert_eq!((preview.objects[0].origin, preview.objects[0].orientation), ([5.0, 0.0, 0.0], None), "the preview shows the draft and nothing downstream");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
+    let mut fresh = selection_scene([0.0; 3]);
+    for mutation in [edited, log[1].clone(), log[2].clone()] {
+        apply_puzzle3d_mutation(&mut fresh, &mutation).expect("the edited log folds");
+    }
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    assert_eq!(fresh.objects[0].origin, [5.0, 2.0, 0.0], "the downstream drag lands on the edited pose");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    semio_s_artifact_puzzle_3d_host::close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }

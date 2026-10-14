@@ -26,7 +26,7 @@ fn shared_mesh_selection_cases_emit_typed_absolute_inputs() {
 #[test]
 fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
 
-    for (id, descriptor) in [("brep", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")), ("list", include_str!("../../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🧩️component/🔣️.json"))] {
+    for (id, descriptor) in [("brep", &*std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🧩️component/🔣️.json")).expect("flow extension descriptor")), ("list", &*std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../../🌊️flow/🧩️extensions/📃️list/🧩️component/🔣️.json")).expect("flow extension descriptor"))] {
         let descriptor: serde_json::Value = serde_json::from_str(descriptor).unwrap();
         let manifest = descriptor["manifest"]["topicContributions"][0]["payload"]["manifestJson"].as_str().unwrap();
         semio_framework_os_flow::install_flow_extension_manifest(id, manifest).unwrap();
@@ -87,6 +87,6 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
 
 #[test]
 fn selected_brep_face_engagements_publish_localized_registered_actions(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let selection=crate::editor::generation3d::selection::ComponentSelection{granularity:"face".into(),selected:serde_json::from_value(law["analytic"].as_array().unwrap().iter().find(|row|row["name"]=="draft").unwrap()["ids"].clone()).unwrap(),hovered:None};
- for(is_de,language)in[(false,"en"),(true,"de")]{let engagement=crate::editor::generation3d::selection::engagement(&selection,is_de);let projected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&engagement)).unwrap();for row in law["analyticEngagement"].as_array().unwrap(){let id=format!("procedural.brep-{}",row["operation"].as_str().unwrap());let action=projected["possibleEngagements"].as_array().unwrap().iter().find(|action|action["id"]==id).unwrap();assert_eq!(action["label"],row[language]);for(key,value)in row["args"].as_object().unwrap(){assert_eq!(action["action"]["args"][key],*value);}}}
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let selection=semio_s_artifact_procedural_3d_editor_selection::ComponentSelection{granularity:"face".into(),selected:serde_json::from_value(law["analytic"].as_array().unwrap().iter().find(|row|row["name"]=="draft").unwrap()["ids"].clone()).unwrap(),hovered:None};
+ for(is_de,language)in[(false,"en"),(true,"de")]{let engagement=semio_s_artifact_procedural_3d_editor_selection::engagement(&selection,is_de);let projected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&engagement)).unwrap();for row in law["analyticEngagement"].as_array().unwrap(){let id=format!("procedural.brep-{}",row["operation"].as_str().unwrap());let action=projected["possibleEngagements"].as_array().unwrap().iter().find(|action|action["id"]==id).unwrap();assert_eq!(action["label"],row[language]);for(key,value)in row["args"].as_object().unwrap(){assert_eq!(action["action"]["args"][key],*value);}}}
 }

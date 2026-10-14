@@ -14,8 +14,8 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "paint2d-editing-check": "bun repo run @semio-tech/framework-renderer-react:paint2d-editing-check",
-    "test": "bun repo run @semio-tech/framework-renderer-react:test"
+    "paint2d-editing-check": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-renderer-react:paint2d-editing-check",
+    "test": "bun --cwd \"../../../../../../../../../..\" repo run @semio-tech/framework-renderer-react:test"
   },
   "dependencies": {
     "@react-three/fiber": "^9.5.0",

@@ -21,5 +21,6 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-framework-pack = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }

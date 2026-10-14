@@ -4,6 +4,10 @@
 //! Selection/hover broadcast automatically via the framework's typed `PresenceInteraction` (ticket
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_generation2d_app`'s
 //! `.interaction(...)` declaration.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 use protocol::Mutation;
 use semio_framework_artifact_flow_flow::CameraJson;
@@ -271,3 +275,6 @@ impl protocol::OpBinary for Generation2dPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

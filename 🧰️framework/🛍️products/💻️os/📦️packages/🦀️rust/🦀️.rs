@@ -325,3 +325,5 @@ mod channel_return_content_tests;
 #[cfg(test)]
 #[path = "../../🔨️modules/🌿️vcs/🧪️tests/🧪️branch-provenance/🦀️.rs"]
 mod vcs_branch_provenance_tests;
+
+pub use semio_framework_mutation_diff::{sparse_record_diff,sparse_whole_diff};

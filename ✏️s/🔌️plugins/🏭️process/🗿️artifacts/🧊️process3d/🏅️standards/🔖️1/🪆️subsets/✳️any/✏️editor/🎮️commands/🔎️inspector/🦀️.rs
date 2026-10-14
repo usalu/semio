@@ -1,13 +1,13 @@
 //! 🔎️ Process 3d play app commands — the generic inspector field-patch dispatcher, addressed by a
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::change_stock_label::ChangeStockLabel;
-use crate::standards::v1::subsets::any::schema::mutations::move_stock::MoveStock;
-use crate::standards::v1::subsets::any::schema::mutations::rename_machine::RenameMachine;
-use crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Pose, Process3dSnapshot, WorkshopMachine};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_mut_stock::change_stock_label::ChangeStockLabel;
+use semio_s_artifact_process_process3d_mut_stock::move_stock::MoveStock;
+use semio_s_artifact_process_process3d_mut_machines::rename_machine::RenameMachine;
+use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities::ReplaceMachineCapabilities;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -120,7 +120,7 @@ pub mod patch_inspector {
         payload: &PatchInspector,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let value = payload.number.map(DslValue::float).or_else(|| payload.text.clone().map(DslValue::String));
         match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {

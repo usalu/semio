@@ -8,8 +8,8 @@
 //! This panel resolves that id against the document and renders its real fields; an empty selection (or
 //! one that resolves to nothing, e.g. a just-deleted step) still falls back to the empty state.
 
-use crate::editor::process3d::terminology::{process3d_measure_label, Process3dLabels};
-use crate::{Capability, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, Stock, WorkingSolid, WorkshopMachine};
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_label, editor::process3d::terminology::Process3dLabels};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -78,7 +78,7 @@ fn push_working_solid_fields(fields: &mut Vec<(String, String)>, prefix: &str, s
         }
         WorkingSolid::Reference { reference_id } => {
             push_field(fields, format!("{prefix}.kind"), labels.kind_field.as_str(), labels.stock_kind_reference.as_str());
-            push_field(fields, format!("{prefix}.reference"), labels.label_field.as_str(), crate::reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.label));
+            push_field(fields, format!("{prefix}.reference"), labels.label_field.as_str(), semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.label));
         }
     }
 }
@@ -97,7 +97,7 @@ fn push_pose_fields(fields: &mut Vec<(String, String)>, prefix: &str, pose: &Pos
 fn empty_state(labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let fields = vec![("process3d-play-inspector.empty".to_string(), labels.no_selection.as_str().to_string())];
     PanelTreeBuilder::new("process3d-play-inspector")?
-        .window_section(windows, PROCESS_3D_PLAY_INSPECTOR_SECTION, Some(crate::editor::process3d::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, &fields, field_row)?
+        .window_section(windows, PROCESS_3D_PLAY_INSPECTOR_SECTION, Some(semio_s_artifact_process_process3d_kit::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, &fields, field_row)?
         .build()
 }
 
@@ -109,7 +109,7 @@ fn render_stock(stock: &Stock, labels: &Process3dLabels, windows: &TreeWindows<'
     push_working_solid_fields(&mut fields, "process3d-play-inspector.stock.solid", &stock.solid, labels);
     push_pose_fields(&mut fields, "process3d-play-inspector.stock.pose", &stock.pose, labels);
     PanelTreeBuilder::new("process3d-play-inspector")?
-        .window_section(windows, "process3d-play-inspector.stock", Some(crate::editor::process3d::ui_label(labels.stock.as_str())?), true, &fields, field_row)?
+        .window_section(windows, "process3d-play-inspector.stock", Some(semio_s_artifact_process_process3d_kit::ui_label(labels.stock.as_str())?), true, &fields, field_row)?
         .build()
 }
 
@@ -140,7 +140,7 @@ fn render_step(step: &ProcessStep, labels: &Process3dLabels, windows: &TreeWindo
         }
     }
     PanelTreeBuilder::new("process3d-play-inspector")?
-        .window_section(windows, "process3d-play-inspector.step", Some(crate::editor::process3d::ui_label(labels.step_control.as_str())?), true, &fields, field_row)?
+        .window_section(windows, "process3d-play-inspector.step", Some(semio_s_artifact_process_process3d_kit::ui_label(labels.step_control.as_str())?), true, &fields, field_row)?
         .build()
 }
 
@@ -152,11 +152,11 @@ fn render_machine(machine: &WorkshopMachine, labels: &Process3dLabels, windows: 
     push_field(&mut summary, "process3d-play-inspector.machine.label", labels.label_field.as_str(), &machine.label);
     push_field(&mut summary, "process3d-play-inspector.machine.icon", labels.icon_field.as_str(), &machine.icon_id);
     let mut builder = PanelTreeBuilder::new("process3d-play-inspector")?
-        .window_section(windows, "process3d-play-inspector.machine", Some(crate::editor::process3d::ui_label(labels.machine_field.as_str())?), true, &summary, field_row)?;
+        .window_section(windows, "process3d-play-inspector.machine", Some(semio_s_artifact_process_process3d_kit::ui_label(labels.machine_field.as_str())?), true, &summary, field_row)?;
     for capability in &machine.capabilities {
         let section_id = format!("process3d-play-inspector.capability.{}", capability.id);
         let fields = capability_parameter_fields(capability);
-        builder = builder.window_section(windows, &section_id, Some(crate::editor::process3d::ui_label(&capability.label)?), false, &fields, field_row)?;
+        builder = builder.window_section(windows, &section_id, Some(semio_s_artifact_process_process3d_kit::ui_label(&capability.label)?), false, &fields, field_row)?;
     }
     builder.build()
 }
@@ -194,7 +194,4 @@ pub fn render(snapshot: &Process3dSnapshot, selected_ids: &[String], labels: &Pr
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

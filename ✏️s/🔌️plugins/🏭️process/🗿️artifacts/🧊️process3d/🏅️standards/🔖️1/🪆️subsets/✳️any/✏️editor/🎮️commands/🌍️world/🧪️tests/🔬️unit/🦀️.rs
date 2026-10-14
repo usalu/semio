@@ -2,30 +2,30 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn face_drag_negative_distance_yields_cut() {
-    let step = process3d_step_from_face_drag(&crate::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
+    let step = process3d_step_from_face_drag(&semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
     assert!(matches!(step.measure, ProcessMeasure::Cut { .. }));
     assert_eq!(step.label, "Push Cut");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn face_drag_positive_distance_yields_attach() {
-    let step = process3d_step_from_face_drag(&crate::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
+    let step = process3d_step_from_face_drag(&semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
     assert!(matches!(step.measure, ProcessMeasure::Attach { .. }));
     assert_eq!(step.label, "Pull Attach");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn face_drag_zero_distance_is_noop() {
-    assert!(process3d_step_from_face_drag(&crate::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.0, None, &Process3dLabels::NATIVE_EN).is_none());
+    assert!(process3d_step_from_face_drag(&semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot(), [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], 0.0, None, &Process3dLabels::NATIVE_EN).is_none());
 }
 
 /// 🛠️ One face drag is ONE world-tool transaction: its `create-step` leaf, stamped with a minted ref of
 /// `<appId>#worldFaceDragEnd`; two gestures are two transactions.
 #[semio_framework_async_macros::async_test]
 async fn a_face_drag_is_one_world_tool_transaction() {
-    let document = crate::empty_process3d_snapshot();
+    let document = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let step = process3d_step_from_face_drag(&document, [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
-    let mutations = crate::schema::insert_step_mutations(&document, step, None);
+    let mutations = semio_s_artifact_process_process3d_mutations::insert_step_mutations(&document, step, None);
     let (reference, committed) = process3d_world_commit("worldFaceDragEnd", "seed-one", WorldToolRequest { mutations: mutations.clone() }).expect("the world tool accepts the gesture").expect("the gesture commits");
     assert!(reference.id.starts_with("tx-"), "{reference:?}");
     assert_eq!(reference.tool, "s.process.process3d@1/*#editor#worldFaceDragEnd");
@@ -45,7 +45,7 @@ async fn a_gesture_that_places_nothing_leaves_zero_trace() {
 #[semio_framework_async_macros::async_test]
 async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
     use semio_framework_plugin::{AppOperationContext, HistoryView};
-    let snapshot = crate::empty_process3d_snapshot();
+    let snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let history = HistoryView::empty();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-world".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: "world-seed".into() };
     let doc = ArtifactView::with_operation(&snapshot, &history, operation);

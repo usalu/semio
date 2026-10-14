@@ -1,0 +1,27 @@
+import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
+import {readFile,mkdir,writeFile} from "node:fs/promises";
+import {dirname,isAbsolute,join,resolve} from "node:path";
+import {pathToFileURL} from "node:url";
+import fixture from "../surface-runtime/🔣️.json";
+
+const [tool,path,digest]=process.argv.slice(2),root=process.env.SEMIO_WORKSPACE_ROOT,ticket=resolve(import.meta.dir,".."),output=join(ticket,"🗑️generated");
+if(process.argv.length!==5||!fixture.tools.includes(tool!)||!path||!isAbsolute(path)||!/^[a-f0-9]{64}$/u.test(digest??""))throw Error("Expected nx|bazel, original absolute production-selected pin and SHA-256");
+if(!root||!isAbsolute(root))throw Error("Original absolute workspace required");
+assert.equal(process.env.SEMIO_TEST_ARTIFACT_DIR,output,"Original ticket artifact directory required");
+assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,path,"Original production-selected pin handoff required");
+assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,digest,"Original production-selected digest handoff required");
+assert.equal(process.env.SEMIO_BUILD_REUSE_GRAPH,"true","Original production-selected reuse required");
+if(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION!==undefined)throw Error("Standalone runtime must issue its own original matching-backend envelope");
+assert.equal(fixture.maximumElapsedMilliseconds,120000);assert.deepEqual(fixture.publicOptions,["--exclude-dependencies","--skip-cache"]);
+const library=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),args=["--tool="+tool,"run",fixture.library.project+":"+fixture.target,...fixture.publicOptions],environment={...process.env,SEMIO_BUILD_TOOL:tool,SEMIO_SCRIPT_CAPABILITIES:undefined},sha=(bytes:string)=>createHash("sha256").update(bytes).digest("hex");
+const routing=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")),{createBuildBootstrapCapabilitiesV1}=await import(join(library,"🏗️build/📜️script.ts")),{readBuildGraphV1,neutralBuildTargetV1}=await import(join(library,"🏗️build/🕸️graph/🟦️.ts")),{buildInvocationGraphSelectionV1}=await import(join(library,"🏗️build/🕸️graph/🚪️admission/🟦️.ts")),{runOwnedCommand}=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"));
+await routing.withScriptProcessEnvelope(routing.createScriptProcessEnvelope({version:1,owner:"repository:build",maximumElapsedMilliseconds:fixture.maximumElapsedMilliseconds},await createBuildBootstrapCapabilitiesV1(root,args,environment),Date.now()),async original=>{
+ routing.checkScriptInvocation(original);const source=await readFile(path,"utf8");assert.equal(sha(source),digest,"Original production-selected bytes changed");const graph=readBuildGraphV1(JSON.parse(source)),selection=buildInvocationGraphSelectionV1(args.slice(1));assert.deepEqual(graph.admission?.selection,selection,"Exact production-selected task admission required");
+ const project=JSON.parse(await readFile(join(root,fixture.library.manifest),"utf8")),authored=project.targets[fixture.target],expected=neutralBuildTargetV1(authored,fixture.library.project+":"+fixture.target),actual=graph.projects[fixture.library.project]?.targets[fixture.target];assert.equal(project.name,fixture.library.project);assert.equal(authored.executor,"repo:script");assert.equal(authored.options.command,"bun ./📜️script.ts test build-surfaces");assert.equal(authored.options.cwd,fixture.library.root);assert.equal(authored.cache,false);assert.equal(authored.dependsOn,undefined);assert(actual,"Actual production-selected target required");
+ const oracle=await import(pathToFileURL(await Bun.resolve("string-argv",dirname(join(root,fixture.library.manifest)))).href),execution=actual.execution;assert.equal(execution.kind,"command");assert.equal(execution.cwd,".");assert.equal(execution.ownerArguments,true);assert.deepEqual(Object.keys(execution).sort(),["kind","cwd","command","ownerArguments"].sort());assert.deepEqual(oracle.parseArgsStringToArgv(execution.command),fixture.ownerCommandArguments.map(argument=>argument.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",fixture.library.root)),"Actual owner-bound target differs from authored execution");assert.equal(expected.configurations,undefined);assert.deepEqual(actual.configurations,fixture.configurations);assert.equal(actual.cache,false);
+ const receipt={scope:"production-selected-public-runtime",tool,path,digest,selection,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length,authoredTargetSha256:sha(JSON.stringify(authored)),originalMaximumElapsedMilliseconds:original.policy.maximumElapsedMilliseconds,canonicalQualification:false,status:"running"};await mkdir(output,{recursive:true});await writeFile(join(output,"final-runtime-"+tool+".json"),JSON.stringify(receipt,null,2)+"\n");console.log("[DEBUG] Actual production-selected runtime "+JSON.stringify(receipt));
+ try{await runOwnedCommand(process.execPath,["repo",...args],root,"final-runtime:public:"+tool,routing.scriptInvocationBudget(original,0),{signal:original.control.signal,env:routing.scriptInvocationEnvironment(original,{...environment,SEMIO_SCRIPT_POLICY:JSON.stringify(original.policy)})});receipt.status="complete";}
+ catch(error){receipt.status="refused";throw error;}
+ finally{await writeFile(join(output,"final-runtime-"+tool+".json"),JSON.stringify(receipt,null,2)+"\n");}
+});

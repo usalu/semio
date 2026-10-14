@@ -1,0 +1,6 @@
+{
+  "maximumSourceBytes": 16777216,
+  "maximumFileBytes": 4194304,
+  "maximumSnapshotBytes": 24117248,
+  "maximumOutputBytes": 8388608
+}

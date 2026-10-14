@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `DeleteMaterial`.
 use super::DeleteMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, Fem3dMaterialRemoval};
-use crate::standards::v1::subsets::any::schema::mutations::{material_referrers,target_referenced};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dMaterialsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dMaterialRemoval;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::material_referrers;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteMaterial, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

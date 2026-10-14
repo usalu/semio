@@ -1,7 +1,7 @@
 use super::*;
 
 fn sample_document() -> LayoutSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
+    semio_s_artifact_layout_layout_model::io::text::snapshot::parse_dsl(semio_s_artifact_layout_layout_model::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,7 +79,7 @@ async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
 
 #[semio_framework_async_macros::async_test]
 async fn bounds_hit_test_finds_a_text_frame_without_shaping() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let page = doc.pages.iter().find(|page| page.id == "page-1").expect("page");
     assert_eq!(hit_test_page_frames(&doc, page, 160.0, 230.0).as_deref(), Some("frame-text-1"));
     assert!(hit_test_page_frames(&doc, page, 1.0, 1.0).is_none());
@@ -87,10 +87,10 @@ async fn bounds_hit_test_finds_a_text_frame_without_shaping() {
 
 #[semio_framework_async_macros::async_test]
 async fn hit_test_uses_frame_rotation() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("frame");
-    let crate::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
-    *bounds = crate::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
+    let semio_s_artifact_layout_layout_model::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
+    *bounds = semio_s_artifact_layout_layout_model::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
     let page = doc.pages.first().expect("page");
     assert_eq!(hit_test_page_frames(&doc, page, 50.0, 50.0).as_deref(), Some("frame-1"), "a point on the rotated long axis hits");
     assert!(hit_test_page_frames(&doc, page, 0.0, 80.0).is_none(), "a point outside the rotated frame misses");
@@ -98,11 +98,11 @@ async fn hit_test_uses_frame_rotation() {
 
 #[semio_framework_async_macros::async_test]
 async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selection() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    doc.pages[0].frames.push(crate::Frame::Rect {
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.pages[0].frames.push(semio_s_artifact_layout_layout_model::Frame::Rect {
         id: "far".into(),
         layer_id: "layer-1".into(),
-        bounds: crate::LayoutBounds { x: 100_000.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 },
+        bounds: semio_s_artifact_layout_layout_model::LayoutBounds { x: 100_000.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 },
         locked: None,
         visible: None,
         fill: None,
@@ -118,7 +118,7 @@ async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selecti
 
 #[semio_framework_async_macros::async_test]
 async fn interactive_display_omits_the_baseline_lattice() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let page = doc.pages.first().expect("page");
     let interactive = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
     assert!(interactive.guides.iter().all(|guide| guide.kind != "baseline"));
@@ -245,13 +245,13 @@ async fn package_zip_bundles_document_and_preflight() {
     let doc = sample_document();
     let json = semio_framework_pack_json::to_json_string(&doc);
     let bytes = export_package_zip_headless_batch(&json, "[]").expect("package export succeeds");
-    assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
+    assert_eq!(doc.schema, semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA);
     assert!(bytes.starts_with(b"PK"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn svg_export_contains_path_and_wraps_a_valid_document() {
-    crate::standards::v1::subsets::any::io::ensure_stdio_semio_drawing_registered();
+    semio_s_artifact_layout_layout_io::ensure_stdio_semio_drawing_registered();
     let doc = sample_document();
     let svg = export_document_svg_headless_batch(&doc, "page-1").expect("svg export succeeds");
     assert!(svg.starts_with("<svg"));
@@ -288,10 +288,10 @@ async fn placed_drawing_shapes_its_kind_and_keeps_a_stroke_mark() {
 
 #[semio_framework_async_macros::async_test]
 async fn character_style_run_changes_glyph_size_and_color() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    doc.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.character_styles.push(semio_s_artifact_layout_layout_model::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
     let story = doc.stories.iter_mut().find(|story| story.id == "story-1").unwrap();
-    story.style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    story.style_runs.push(semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let page = doc.pages.iter().find(|page| page.id == "page-1").unwrap().clone();
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
@@ -303,8 +303,8 @@ async fn character_style_run_changes_glyph_size_and_color() {
 
 #[semio_framework_async_macros::async_test]
 async fn page_override_moves_and_hides_an_inherited_frame() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    doc.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.pages[0].overrides.push(semio_s_artifact_layout_layout_model::PageOverride { object_id: "frame-inherited".into(), bounds: Some(semio_s_artifact_layout_layout_model::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &doc, &page, "page-1", &[], None, false);
@@ -318,7 +318,7 @@ async fn page_override_moves_and_hides_an_inherited_frame() {
 
 #[semio_framework_async_macros::async_test]
 async fn hidden_layer_drops_its_frames_and_keeps_the_master() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     doc.pages[0].layers[0].visible = false;
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();
@@ -331,11 +331,11 @@ async fn hidden_layer_drops_its_frames_and_keeps_the_master() {
 
 #[semio_framework_async_macros::async_test]
 async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
-    use crate::mutations::create_layer::CreateLayer;
-    use crate::mutations::set_frame_layer::SetFrameLayer;
-    use crate::mutations::LayoutMutation;
+    use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
+    use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
+    use semio_s_artifact_layout_layout_mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
     let mut doc = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     doc.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
@@ -375,10 +375,10 @@ fn background_drawing_fits_an_offset_plan_onto_the_page() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.pages[0].width = 100.0;
     document.pages[0].height = 50.0;
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let stroke = &list.strokes[0];
@@ -426,10 +426,10 @@ fn unit_square_drawing() -> semio_s_artifact_stdio_semio_drawing::schema::snapsh
 
 #[test]
 fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &unit_square_drawing()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &unit_square_drawing()));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     assert_eq!(list.frame_strokes[0].points, vec![(146.0, 435.0), (186.0, 435.0), (186.0, 475.0), (146.0, 475.0)]);
@@ -471,10 +471,10 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let labels: Vec<_> = list.text_runs.iter().filter(|run| run.content == "Plan").collect();
@@ -527,10 +527,10 @@ fn drawing_with_red_png() -> semio_s_artifact_stdio_semio_drawing::schema::snaps
 
 #[test]
 fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &drawing_with_red_png()));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let rasters: Vec<_> = list.images.iter().filter(|image| image.proxy_data_url.as_deref().is_some_and(|url| url.starts_with("data:image/png;base64,"))).collect();
@@ -561,10 +561,10 @@ fn an_imported_arc_bulges_off_its_chord() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.pages[0].width = 200.0;
     document.pages[0].height = 100.0;
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     let stroke = &list.strokes[0];
@@ -574,24 +574,24 @@ fn an_imported_arc_bulges_off_its_chord() {
 
 #[test]
 fn a_rotated_drawing_frame_turns_the_plan_and_keeps_its_png() {
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     let frame = document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
-    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &drawing_with_red_png()));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &drawing_with_red_png()));
     let mut engine = LayoutEngine::new();
     let list = build_display_list_for_page(&mut engine, &document, &document.pages[0], "", &[], None, false);
     assert_eq!(list.frame_strokes[0].points[0], (186.0, 435.0));
     let raster = list.images.iter().find(|image| image.width == 40.0 && image.proxy_data_url.as_deref().is_some_and(|url| url.starts_with("data:image/png;base64,"))).expect("rotated raster");
     assert!((raster.rotation - std::f32::consts::FRAC_PI_2).abs() < 1.0e-4);
     assert_eq!((raster.x, raster.y, raster.width, raster.height), (146.0, 435.0, 40.0, 40.0));
-    let json = crate::editor::layout::canvas::canvas_layers(
+    let json = semio_s_artifact_layout_layout_editor_commands::canvas::canvas_layers(
         &document,
-        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
-        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
-        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(),
         false,
     );
     assert!(json.contains("\"kind\":\"image\"") && json.contains("data:image/png;base64,"), "{json}");

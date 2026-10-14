@@ -1,8 +1,8 @@
 //! 🌋️ `change-seismics` diff — replaces the whole collection: every base row leaves from its base index, every new row enters at its index.
 
-use super::ChangeSeismics;
-use crate::diff::{En1990Diff, En1990SeismicDelta, En1990SeismicInsertion, En1990SeismicRemoval};
-use crate::En1990Snapshot;
+use crate::change_seismics::ChangeSeismics;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990SeismicDelta, En1990SeismicInsertion, En1990SeismicRemoval};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeSeismics, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

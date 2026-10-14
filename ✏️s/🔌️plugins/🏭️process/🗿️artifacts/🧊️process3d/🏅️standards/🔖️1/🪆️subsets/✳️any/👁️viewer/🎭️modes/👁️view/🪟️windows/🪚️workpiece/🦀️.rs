@@ -8,8 +8,8 @@
 //! `NoConfig` — a read-only surface needs no persisted per-session view state for a first pass),
 //! documented as an intentional simplification, not a bug — mirrors `📐️cad`'s own viewer window.
 
-use crate::schema::inferences::processed_mesh;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_inferences::processed_mesh;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_pack_json as json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::mesh_from_kind;
@@ -67,7 +67,7 @@ fn default_camera_json() -> String {
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-4 gap, not introduced here) — real parity
 /// with the editor's *current* behavior, not a regression.
 fn view_preview_payload(snapshot: &Process3dSnapshot) -> (String, String) {
-    let scene = crate::process_working_scene_from_snapshot(snapshot);
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(snapshot);
     let mesh = processed_mesh(&scene, None).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());

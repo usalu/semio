@@ -1,13 +1,13 @@
 //! 🩹️ Fem3d play app command — `patch-solid`: one-field edit of a solid (`name`, `baseZ`, `height`,
 //! `layers`, `meshSize`, `materialId`, `axis`) → `ReplaceSolid`.
 
-use crate::standards::v1::subsets::any::schema::mutations::replace_solid;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::FemAxis;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_solid;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️PatchSolid
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -40,7 +40,4 @@ pub fn handle(payload: &PatchSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg:
 //#endregion 🔖️PatchSolid
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

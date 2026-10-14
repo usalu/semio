@@ -1,8 +1,7 @@
 //! ↘️ Energy model mutation — `ChangeAirLoopReturnNode`: Sets the node the air loop returns to. Node zero is the unset reading, so it is refused.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeAirLoopReturnNode {
     pub new_return_node_id: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_air_loop_return_node(id: crate::model::EntityId, new_return_node_id: u32) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeAirLoopReturnNode(ChangeAirLoopReturnNode { id, new_return_node_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_air_loop_return_node<Op: From<ChangeAirLoopReturnNode>>(id: crate::model::EntityId, new_return_node_id: u32) -> Op {
+    ChangeAirLoopReturnNode { id, new_return_node_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeAirLoopReturnNode {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeAirLoopReturnNode
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeAirLoopReturnNode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "air-loop", kind: "change-air-loop-return-node", record: "ChangedAirLoopReturnNode" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

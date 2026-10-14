@@ -7,8 +7,8 @@ use crate::editor::puzzle5d::precompute::{editor_part, puzzle3d_config, puzzle3d
 use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobRequest};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::tools::fill as fill3d;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{change_target_volume_hidden,change_target_volume_locked,connect_vortices,create_object,create_target_volume,delete_target_volume,move_target_volume,rotate_target_volume,scale_target_volume,Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill3d;
+use {semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden, semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked, semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 
 use std::sync::Arc;
 
@@ -77,10 +77,10 @@ fn editor_target_volume(volume: &crate::Puzzle5dTargetVolume) -> Result<crate::e
 }
 
 /// 📏️ A schema-side `Puzzle5dScale` as the planner's own scale union.
-fn puzzle3d_scale(scale: crate::Puzzle5dScale) -> semio_s_artifact_puzzle_3d::Puzzle3dScale {
+fn puzzle3d_scale(scale: crate::Puzzle5dScale) -> semio_s_artifact_puzzle_3d_model::Puzzle3dScale {
     match scale {
-        crate::Puzzle5dScale::Uniform(factor) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Uniform(factor),
-        crate::Puzzle5dScale::Vec3(axes) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Vec3(axes),
+        crate::Puzzle5dScale::Uniform(factor) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(factor),
+        crate::Puzzle5dScale::Vec3(axes) => semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3(axes),
     }
 }
 

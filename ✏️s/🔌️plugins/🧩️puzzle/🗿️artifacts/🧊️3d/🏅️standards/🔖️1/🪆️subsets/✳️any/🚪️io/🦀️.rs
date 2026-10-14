@@ -1,5 +1,13 @@
 //! 🚪️ IO s.puzzle3d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }
@@ -8,8 +16,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Puzzle3dAnalyzer;
-    use crate::Puzzle3dSnapshot;
+    use crate::Puzzle3dAnalyzer;
+    use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -43,7 +51,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -52,7 +60,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -65,8 +73,8 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Puzzle3dBuilder as Puzzle3dAnyBuilder;
-    use crate::standards::v1::subsets::any::io::Puzzle3dComposer as Puzzle3dAnyComposer;
+    use crate::Puzzle3dBuilder as Puzzle3dAnyBuilder;
+    use crate::Puzzle3dComposer as Puzzle3dAnyComposer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
@@ -86,7 +94,7 @@ pub mod io_registry {
     const PUZZLE3D_DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: StandardId("1"), subset: SubsetId("*") };
     const PUZZLE3D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::Puzzle3dSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PUZZLE3D_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => Puzzle3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -102,7 +110,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "Puzzle3dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -110,7 +118,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -129,7 +137,7 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path="🔣️json/🦀️.rs"] pub(crate) mod json_native;
+#[path="🔣️json/🦀️.rs"] pub mod json_native;
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -141,7 +149,7 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{Puzzle3dDiff, Puzzle3dMutation, Puzzle3dSnapshot};
+    use {semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -191,7 +199,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Puzzle3dSnapshot;
+    use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -247,3 +255,72 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Puzzle3dAnalyzer,
     composer: Puzzle3dComposer,
 );
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod export {
+    #[path = "."]
+    pub mod serializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod import {
+    #[path = "."]
+    pub mod deserializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 🌳️Modules

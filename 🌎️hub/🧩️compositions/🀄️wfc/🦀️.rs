@@ -7,6 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -46,7 +47,7 @@ fn register_inference_factories() -> Result<(), PluginAssemblyError> {
 /// from that kind's own `artifact_kind().id`.
 pub fn plugin() -> Result<Plugin<WfcApps>, PluginAssemblyError> {
     register_inference_factories()?;
-    Plugin::<WfcApps>::builder("wfc")
+    PluginBuilder::<_, WfcApps>::new("wfc")
         .label("WFC")
         .version("0.1.0")
         .package_id("semio:wfc")

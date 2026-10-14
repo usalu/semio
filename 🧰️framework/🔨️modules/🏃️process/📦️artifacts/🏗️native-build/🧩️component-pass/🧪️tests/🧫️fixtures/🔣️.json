@@ -861,14 +861,14 @@
     ""
   ],
   "finiteCallerBudget": {
-    "milliseconds": 750,
-    "safetyMilliseconds": 4000,
+    "milliseconds": 6000,
+    "safetyMilliseconds": 12000,
     "expectedError": "Original native build deadline exhausted"
   },
   "unlanedStateOrder": {
     "tokens": 1,
     "profile": "wasm-prototype",
-    "deadlineMs": 5000,
+    "deadlineMs": 15000,
     "oracle": "held",
     "expectedParticipants": [
       "job",
@@ -876,8 +876,8 @@
     ]
   },
   "originalStageAuthority": {
-    "milliseconds": 1500,
-    "safetyMilliseconds": 3500,
+    "milliseconds": 6000,
+    "safetyMilliseconds": 12000,
     "expectedError": "deadline",
     "stages": [
       "pending",
@@ -905,5 +905,319 @@
       "fresh"
     ],
     "expectedEffects": false
+  },
+  "batches": {
+    "pass": {
+      "id": "wasm-release-00",
+      "manifest": "/w/Cargo.toml",
+      "packages": [
+        {
+          "name": "comp-a",
+          "manifest": "/w/comp-a/Cargo.toml"
+        },
+        {
+          "name": "comp-b",
+          "manifest": "/w/comp-b/Cargo.toml"
+        }
+      ],
+      "target": "wasm32-wasip2",
+      "profile": "wasm-release",
+      "output": "dist/components/release"
+    },
+    "graph": {
+      "version": 1,
+      "roots": [
+        0,
+        1
+      ],
+      "units": [
+        {
+          "pkg_id": "path+file:///w/comp-a#comp-a@0.1.0",
+          "target": {
+            "name": "comp_a",
+            "kind": [
+              "cdylib"
+            ],
+            "src_path": "/w/comp-a/src/lib.rs",
+            "crate_types": [
+              "cdylib"
+            ]
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 2
+            }
+          ]
+        },
+        {
+          "pkg_id": "path+file:///w/comp-b#comp-b@0.1.0",
+          "target": {
+            "name": "comp_b",
+            "kind": [
+              "cdylib"
+            ],
+            "src_path": "/w/comp-b/../owner-b/🦀️.rs",
+            "crate_types": [
+              "cdylib"
+            ]
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [
+            "x"
+          ],
+          "dependencies": [
+            {
+              "index": 2
+            },
+            {
+              "index": 3
+            }
+          ]
+        },
+        {
+          "pkg_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ],
+            "src_path": "/w/base/src/lib.rs",
+            "crate_types": [
+              "lib"
+            ]
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [
+            "std"
+          ],
+          "dependencies": [
+            {
+              "index": 4
+            }
+          ]
+        },
+        {
+          "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#extra@1.0.0",
+          "target": {
+            "name": "extra",
+            "kind": [
+              "lib"
+            ],
+            "src_path": "/r/extra/src/lib.rs",
+            "crate_types": [
+              "lib"
+            ]
+          },
+          "platform": "wasm32-wasip2",
+          "mode": "build",
+          "features": [],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "build-script-build",
+            "kind": [
+              "custom-build"
+            ],
+            "src_path": "/w/base/build.rs",
+            "crate_types": [
+              "bin"
+            ]
+          },
+          "platform": null,
+          "mode": "run-custom-build",
+          "features": [
+            "std"
+          ],
+          "dependencies": []
+        }
+      ]
+    },
+    "keys": [
+      "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib",
+      "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib",
+      "base@base|wasm32-wasip2|wasm-release|lib",
+      "extra@extra|wasm32-wasip2|wasm-release|lib",
+      null
+    ],
+    "cases": [
+      {
+        "history": "warm",
+        "budgetBytes": 1000000,
+        "expected": [
+          {
+            "id": "wasm-release-00",
+            "packages": [
+              "comp-a",
+              "comp-b"
+            ],
+            "bytes": 620,
+            "measured": false
+          }
+        ]
+      },
+      {
+        "history": "warm",
+        "budgetBytes": 460,
+        "expected": [
+          {
+            "id": "wasm-release-00-b0",
+            "packages": [
+              "comp-a"
+            ],
+            "bytes": 450,
+            "measured": false
+          },
+          {
+            "id": "wasm-release-00-b1",
+            "packages": [
+              "comp-b"
+            ],
+            "bytes": 570,
+            "measured": false
+          }
+        ]
+      },
+      {
+        "history": "cold",
+        "budgetBytes": 20000,
+        "expected": [
+          {
+            "id": "wasm-release-00",
+            "packages": [
+              "comp-a",
+              "comp-b"
+            ],
+            "bytes": 12300,
+            "measured": false
+          }
+        ]
+      },
+      {
+        "history": "cold",
+        "budgetBytes": 7000,
+        "expected": [
+          {
+            "id": "wasm-release-00-b0",
+            "packages": [
+              "comp-a"
+            ],
+            "bytes": 6300,
+            "measured": false
+          },
+          {
+            "id": "wasm-release-00-b1",
+            "packages": [
+              "comp-b"
+            ],
+            "bytes": 7300,
+            "measured": false
+          }
+        ]
+      }
+    ],
+    "footprints": {
+      "quantile": 0.95,
+      "bounds": {
+        "library": 1000,
+        "component": 5000,
+        "procMacro": 2000,
+        "buildScript": 300
+      }
+    },
+    "histories": {
+      "warm": {
+        "base@base|wasm32-wasip2|wasm-release|lib": [
+          {
+            "v": 1,
+            "key": "base@base|wasm32-wasip2|wasm-release|lib",
+            "peakRssBytes": 1,
+            "outputBytes": 90,
+            "wallMs": 1,
+            "cpuMs": 1,
+            "remainingMs": 0,
+            "atMs": 1
+          },
+          {
+            "v": 1,
+            "key": "base@base|wasm32-wasip2|wasm-release|lib",
+            "peakRssBytes": 1,
+            "outputBytes": 100,
+            "wallMs": 1,
+            "cpuMs": 1,
+            "remainingMs": 0,
+            "atMs": 1
+          }
+        ],
+        "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib": [
+          {
+            "v": 1,
+            "key": "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib",
+            "peakRssBytes": 1,
+            "outputBytes": 50,
+            "wallMs": 1,
+            "cpuMs": 1,
+            "remainingMs": 0,
+            "atMs": 1
+          }
+        ],
+        "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib": [
+          {
+            "v": 1,
+            "key": "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib",
+            "peakRssBytes": 1,
+            "outputBytes": 70,
+            "wallMs": 1,
+            "cpuMs": 1,
+            "remainingMs": 0,
+            "atMs": 1
+          }
+        ]
+      },
+      "cold": {}
+    },
+    "kinds": [
+      {
+        "crate": "comp_a",
+        "types": [
+          "cdylib"
+        ],
+        "kind": "component"
+      },
+      {
+        "crate": "derive",
+        "types": [
+          "proc-macro"
+        ],
+        "kind": "procMacro"
+      },
+      {
+        "crate": "build_script_build",
+        "types": [
+          "bin"
+        ],
+        "kind": "buildScript"
+      },
+      {
+        "crate": "base",
+        "types": [
+          "lib"
+        ],
+        "kind": "library"
+      },
+      {
+        "crate": "base",
+        "types": [
+          "rlib"
+        ],
+        "kind": "library"
+      }
+    ]
   }
 }

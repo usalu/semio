@@ -19,7 +19,7 @@ use crate::editor::puzzle5d::{
     target_volume_scale_json, world_grip_position, Puzzle5dDocument, Puzzle5dInteractionSnapshot, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP,
     PUZZLE5D_GRANULARITY_PART, PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_TARGET_VOLUME_COLOR,
 };
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsFound;
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 use semio_framework_plugin::{
     world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
     WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,

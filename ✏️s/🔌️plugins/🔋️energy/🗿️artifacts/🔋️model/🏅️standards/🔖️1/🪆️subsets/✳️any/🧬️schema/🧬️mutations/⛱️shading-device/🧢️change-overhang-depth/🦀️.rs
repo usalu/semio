@@ -1,8 +1,7 @@
 //! 🧢️ Energy model mutation — `ChangeFenestrationOverhangDepth`: Sets how far the horizontal projection above the window head reaches out of the glazing plane, in metres — ANSI/ASHRAE 140 §5.2 cases 610/910 are exactly this field.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationOverhangDepth {
     pub new_overhang_depth_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_overhang_depth(id: crate::model::EntityId, new_overhang_depth_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationOverhangDepth(ChangeFenestrationOverhangDepth { id, new_overhang_depth_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_overhang_depth<Op: From<ChangeFenestrationOverhangDepth>>(id: crate::model::EntityId, new_overhang_depth_m: f64) -> Op {
+    ChangeFenestrationOverhangDepth { id, new_overhang_depth_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationOverhangDepth {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationOverhangDepth
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationOverhangDepth>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-overhang-depth", record: "ChangedFenestrationOverhangDepth" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

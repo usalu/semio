@@ -1,4 +1,4 @@
-use super::*;
+use crate::outline::*;
 
 #[semio_framework_async_macros::async_test]
 async fn outline_field_count_matches_section_outline_length() {

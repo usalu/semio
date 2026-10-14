@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `ScaleCamera2d`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ScaleCamera2d, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::scale_camera2d::ScaleCamera2d, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::scale_camera2d::ScaleCamera2d> {
     Ok((|| {
-    vec![super::super::scale_camera2d::scale_camera2d(base.camera2d.zoom)]
+    vec![crate::scale_camera2d::scale_camera2d(base.camera2d.zoom)]
 
     })())
 }

@@ -9,6 +9,7 @@ description = "Application-neutral Canvas drawing, geometry, labels and renderin
 [package.metadata.semio]
 role = "framework"
 id = "canvas"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

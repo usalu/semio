@@ -47,7 +47,7 @@ impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.
 impl<'a> NativeEncodeControl<'a> {
 
     /// 🫴️ Loans exact remaining authority while every foreign allocation debits this original owner.
-    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.scoped_stage(|original|crate::value::native_receiving::scoped_encoding_receiver!(original,operation,NativeEncodeAllocation,NativeEncodeProgress))}
+    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(NativeEncodeProgress)->bool,&mut NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.scoped_stage(|original|crate::scoped_encoding_receiver!(original,operation,NativeEncodeAllocation,NativeEncodeProgress))}
     /// 🔭️ Reborrows the complete caller owner and composes observers without resetting its receipt.
     pub fn scoped_observer<T,E>(&mut self,observer:&mut dyn FnMut(NativeEncodeProgress)->bool,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{observer::run(self,observer,operation)}
 
@@ -104,7 +104,7 @@ impl<'a> NativeEncodeControl<'a> {
     /// 🛂️ Starts with zero storage authority; each original retained turn must supply its grant.
     pub fn new_retained(callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{let mut control=Self::new(0,callback);control.receiving=true;control}
     /// 🎟️ Binds this original turn's allocation authority without resetting cumulative ownership.
-    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=crate::value::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
+    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=crate::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
 
     /// 🪙️ Consumes the same admission owner under an exact checked source capacity.
     pub fn admit_capacity(mut self,source_bytes:usize,multiples:usize,scaffold_bytes:usize)->Result<Self,(Self,ValueError)>{match source_bytes.checked_mul(multiples).and_then(|bytes|bytes.checked_add(scaffold_bytes)).filter(|bytes|*bytes<=isize::MAX as usize&&*bytes>=self.owned_bytes){Some(maximum)=>{self.maximum_bytes=maximum;Ok(self)},None=>Err((self,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding capacity exceeds source policy or admitted ownership")))}}
@@ -133,3 +133,5 @@ impl<'a> NativeEncodeControl<'a> {
     /// 📎️ Appends exact bytes with admission and cancellation inside materialization.
     pub fn append_bytes(&mut self,output:&mut Vec<u8>,bytes:&[u8])->Result<(),ValueError>{self.scoped_stage(|control|{control.begin_stage(bytes.len())?;for chunk in bytes.chunks(65536){let capacity=output.len().checked_add(chunk.len()).filter(|capacity|*capacity<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding output capacity overflow"))?;if capacity>output.capacity(){control.charge(capacity)?;output.try_reserve_exact(chunk.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native encoding output allocation failed"))?;}output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(())})}
 }
+
+

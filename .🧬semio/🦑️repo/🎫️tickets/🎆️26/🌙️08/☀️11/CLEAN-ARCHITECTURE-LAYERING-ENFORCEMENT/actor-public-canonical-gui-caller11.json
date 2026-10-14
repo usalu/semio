@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🏛️Actor · Canonical Architecture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.828
+    }
+  },
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/ap-gui11"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1",
+  "reason": "Current closed selectedGraph admission and canonical codec request+answer owners; genuine protocol2 gen6b published",
+  "sourceFrontier": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+      "sha256": "bd7d3175445756f2967ecd2521e7871272d2d8d10444ddbf523d80c9337ea1a5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "0dfc350b578a527d3aa9c37f9f9531f08a867efea9e04eec66400010d6f6afe3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "f79d4010cc7643c2928ff6a53328cdcd892f36c2ad006c6921d719868c41a404"
+    },
+    {
+      "path": "📋️build-owners.json",
+      "sha256": "fdcf75cb46855d74e003e777341e6c196441a5fa17cebe562e66883768e6b6db"
+    }
+  ]
+}

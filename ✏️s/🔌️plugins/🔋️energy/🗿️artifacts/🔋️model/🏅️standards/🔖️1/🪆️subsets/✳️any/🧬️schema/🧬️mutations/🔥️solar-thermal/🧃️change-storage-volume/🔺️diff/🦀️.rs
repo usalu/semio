@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeSolarThermalSystemStorageVolume` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, Rows, SolarThermalConfigPatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, SolarThermalConfigPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeSolarThermalSystemStorageVolume, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

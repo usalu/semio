@@ -2176,14 +2176,6 @@ class SnapshotRouteAdmissionScript extends BundleScript {
  }
 }
 
-/** 🫴️ Executes the six mounted original receiving laws under their actual OS kernel owner. */
-class SnapshotReceivingNativeScript extends BundleScript{
- async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Expected test-snapshot-receiving-native");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
- }
-}
-
 /** 🫴️ Checks neutral codec custody and independently reads its literal SQL owner. */
 class SnapshotCodecReceivingScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
@@ -2712,7 +2704,6 @@ const router = new ScriptRouter(import.meta.dir).register("test-command-ingress-
   .register("test-borrowed-key-index-native", BorrowedKeyIndexNativeTestScript)
   .register("test-snapshot-native-admission", SnapshotNativeAdmissionTestScript)
   .register("test-snapshot-codec-receiving", SnapshotCodecReceivingScript)
-  .register("test-snapshot-receiving-native", SnapshotReceivingNativeScript)
   .register("test-snapshot-route-admission", SnapshotRouteAdmissionScript)
   .register("test-space-history-sqlite-native",SpaceHistorySqliteNativeTestScript)
   .register("test-directory-descriptor-digest-source",DirectoryDescriptorDigestSourceScript)

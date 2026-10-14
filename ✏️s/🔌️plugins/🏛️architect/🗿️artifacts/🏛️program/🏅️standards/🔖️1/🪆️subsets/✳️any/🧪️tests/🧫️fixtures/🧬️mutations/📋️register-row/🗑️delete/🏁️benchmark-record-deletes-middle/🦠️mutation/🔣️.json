@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "benchmarkRecord",
+  "id": "benchmark-record-a"
+}

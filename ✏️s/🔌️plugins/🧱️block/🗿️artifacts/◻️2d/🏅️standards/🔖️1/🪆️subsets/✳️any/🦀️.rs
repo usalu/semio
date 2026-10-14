@@ -12,17 +12,18 @@
 //! declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
 //! fidelity table.
 
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::BLOCK2D_DIALECT;
-use crate::editor::block2d as editor;
-use crate::viewer::block2d as viewer;
+use semio_s_artifact_block_2d_io as io;
+use semio_s_artifact_block_2d_schema as schema;
+use semio_s_artifact_block_2d_model::BLOCK2D_DIALECT;
+use semio_s_artifact_block_2d_editor as editor;
+use semio_s_artifact_block_2d_viewer as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::art_2d_hexagonal_cut_concrete_forest_left::source(), crate::examples::art_2d_hexagonal_cut_concrete_forest_right::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![semio_s_artifact_block_2d_examples::art_2d_hexagonal_cut_concrete_forest_left::source(), semio_s_artifact_block_2d_examples::art_2d_hexagonal_cut_concrete_forest_right::source()]).as_slice()
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {

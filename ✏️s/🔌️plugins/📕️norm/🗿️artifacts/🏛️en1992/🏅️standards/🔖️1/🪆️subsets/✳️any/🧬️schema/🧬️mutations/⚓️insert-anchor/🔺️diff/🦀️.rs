@@ -1,6 +1,6 @@
-use crate::diff::{En1992Diff, En1992AnchorsRows};
-use super::InsertAnchor;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::{En1992Diff, En1992AnchorsRows};
+use crate::insert_anchor::InsertAnchor;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &InsertAnchor, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if base.anchors.iter().any(|existing| existing.id == payload.anchor.id) {

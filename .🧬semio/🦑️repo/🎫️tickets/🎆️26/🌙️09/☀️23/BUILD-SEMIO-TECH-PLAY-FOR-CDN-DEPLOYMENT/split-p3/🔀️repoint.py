@@ -37,6 +37,7 @@ def main():
         return "crate::" + "::".join(x for x in new if x != "component")
 
     def mapped(target):
+        target = tuple(x for x in target if x != "component")
         hit = max((m for m in mapping if tuple(target[:len(m[0])]) == m[0]), key=lambda m: len(m[0]), default=None)
         return None if hit is None else hit[1] + tuple(target[len(hit[0]):])
 

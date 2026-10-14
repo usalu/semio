@@ -6,11 +6,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifact_schema::mutations::Din18599Mutation;
-use crate::artifact_schema::mutations::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_element_u, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class, replace_elements, replace_zones, update_climate, update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
-use crate::{
-    Attachment, AutomationClass, BuildingCategory, CalculationMethod, MonthlyClimate, UseClass,
-};
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
+use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, replace_elements, replace_zones, update_climate};
+use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
+use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, BuildingCategory, CalculationMethod, MonthlyClimate, UseClass};
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -45,35 +45,35 @@ pub(crate) enum Din18599MutationDsl {
     },
     SpecifyHeatingSystem {
         #[dsl(block)]
-        new_heating: crate::HeatingSystem,
+        new_heating: semio_s_artifact_norm_din18599_model::HeatingSystem,
     },
     SpecifyDhwSystem {
         #[dsl(block)]
-        new_dhw: crate::DhwSystem,
+        new_dhw: semio_s_artifact_norm_din18599_model::DhwSystem,
     },
     UpdateVentilation {
         #[dsl(block)]
-        new_ventilation: crate::VentilationSystem,
+        new_ventilation: semio_s_artifact_norm_din18599_model::VentilationSystem,
     },
     UpdateCooling {
         #[dsl(block)]
-        new_cooling: crate::CoolingSystem,
+        new_cooling: semio_s_artifact_norm_din18599_model::CoolingSystem,
     },
     UpdateLighting {
         #[dsl(block)]
-        new_lighting: crate::LightingSystem,
+        new_lighting: semio_s_artifact_norm_din18599_model::LightingSystem,
     },
     UpdateRenewables {
         #[dsl(block)]
-        new_renewables: crate::Renewables,
+        new_renewables: semio_s_artifact_norm_din18599_model::Renewables,
     },
     ReplaceZones {
         #[dsl(block)]
-        new_zones: Vec<crate::ThermalZone>,
+        new_zones: Vec<semio_s_artifact_norm_din18599_model::ThermalZone>,
     },
     ReplaceElements {
         #[dsl(block)]
-        new_elements: Vec<crate::EnvelopeElement>,
+        new_elements: Vec<semio_s_artifact_norm_din18599_model::EnvelopeElement>,
     },
     ChangeElementU {
         element_id: String,
@@ -105,7 +105,6 @@ impl OpText for Din18599MutationDsl {
         semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
-
 
 //#endregion 🔖️HandcraftedOpCodecs
 
@@ -166,7 +165,6 @@ impl OpText for Din18599Mutation {
     }
 }
 
-
 //#endregion 🔖️OpText
 
 #[cfg(test)]
@@ -175,35 +173,35 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::Din18599Diff;
-use crate::Din18599Snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_building_category;
-use crate::standards::v1::subsets::any::schema::mutations::change_attachment;
-use crate::standards::v1::subsets::any::schema::mutations::change_use_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_method;
-use crate::standards::v1::subsets::any::schema::mutations::change_net_floor_area_m2;
-use crate::standards::v1::subsets::any::schema::mutations::change_heated_volume_m3;
-use crate::standards::v1::subsets::any::schema::mutations::change_geg_qp_factor;
-use crate::standards::v1::subsets::any::schema::mutations::change_delta_u_wb;
-use crate::standards::v1::subsets::any::schema::mutations::change_automation_class;
-use crate::standards::v1::subsets::any::schema::mutations::specify_heating_system;
-use crate::standards::v1::subsets::any::schema::mutations::specify_dhw_system;
-use crate::standards::v1::subsets::any::schema::mutations::update_ventilation;
-use crate::standards::v1::subsets::any::schema::mutations::update_cooling;
-use crate::standards::v1::subsets::any::schema::mutations::update_lighting;
-use crate::standards::v1::subsets::any::schema::mutations::update_renewables;
-use crate::standards::v1::subsets::any::schema::mutations::replace_zones;
-use crate::standards::v1::subsets::any::schema::mutations::replace_elements;
-use crate::standards::v1::subsets::any::schema::mutations::change_element_u;
-use crate::standards::v1::subsets::any::schema::mutations::update_climate;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_din18599_mutations::*;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_mut_building::change_building_category;
+use semio_s_artifact_norm_din18599_mut_building::change_attachment;
+use semio_s_artifact_norm_din18599_mut_building::change_use_class;
+use semio_s_artifact_norm_din18599_mut_building::change_method;
+use semio_s_artifact_norm_din18599_mut_building::change_net_floor_area_m2;
+use semio_s_artifact_norm_din18599_mut_building::change_heated_volume_m3;
+use semio_s_artifact_norm_din18599_mut_building::change_geg_qp_factor;
+use semio_s_artifact_norm_din18599_mut_building::change_delta_u_wb;
+use semio_s_artifact_norm_din18599_mut_building::change_automation_class;
+use semio_s_artifact_norm_din18599_mut_systems::specify_heating_system;
+use semio_s_artifact_norm_din18599_mut_systems::specify_dhw_system;
+use semio_s_artifact_norm_din18599_mut_systems::update_ventilation;
+use semio_s_artifact_norm_din18599_mut_systems::update_cooling;
+use semio_s_artifact_norm_din18599_mut_systems::update_lighting;
+use semio_s_artifact_norm_din18599_mut_systems::update_renewables;
+use semio_s_artifact_norm_din18599_mut_zoning::replace_zones;
+use semio_s_artifact_norm_din18599_mut_zoning::replace_elements;
+use semio_s_artifact_norm_din18599_mut_zoning::change_element_u;
+use semio_s_artifact_norm_din18599_mut_zoning::update_climate;
 
 pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

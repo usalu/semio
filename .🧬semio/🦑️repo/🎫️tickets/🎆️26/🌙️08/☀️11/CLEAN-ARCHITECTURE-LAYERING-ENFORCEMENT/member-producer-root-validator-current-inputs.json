@@ -1,0 +1,345 @@
+{
+  "status": "source-batch-frozen-ready-for-registered-qualification",
+  "kind": "exact-byte-roster-not-source-admission-authority",
+  "changedSourceFiles": [
+    {
+      "path": "📜️script.ts",
+      "sha256": "6a9ce007b356bf4367be598ba289e098c627cf58c4eea33f37b1660f0b231311",
+      "bytes": 1865913
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts",
+      "sha256": "5c879125a15eddd670aee010a301cf5ecf42a20ef77a03246348eb2514f53804",
+      "bytes": 279615
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts",
+      "sha256": "c33717510b2f4ff7dc82823520d849d52dd14dccbfb20451ad7faa27cc8c4f20",
+      "bytes": 19798
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🔣️.json",
+      "sha256": "5629c3769cd041dd4e65e307b136e2e2f1f621c9db67881d760b772c3178522f",
+      "bytes": 3349
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧬️schema/🔣️.json",
+      "sha256": "edc8ffe6d80c69fbe10b934cc4ac77ed8d9eea33ee75902d7509272e25dfedfb",
+      "bytes": 14679
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️tests/🟦️.ts",
+      "sha256": "abda851f8631bb19c693df4d1c2208ced436b810340cd79f291db3897db5e59f",
+      "bytes": 4338
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d67f2355d19e6e8749d7fefbcc244c73d62423b179b13dd41ca1907bfb3da40c",
+      "bytes": 9471
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🔣️.json",
+      "sha256": "7cf7374c03f14f0665ed50e1f988b4659c926726d6627ef135bd8cfbe35e9028",
+      "bytes": 701
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🟦️.ts",
+      "sha256": "a6fcba15204fc4fc902daa7432be6f335ddf8578d43724dc3edf5ab28ae95303",
+      "bytes": 3752
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "93698bb8b3e773716c58f4cce587f33f8fa02077a0dcf24f38ac978c2a9b7719",
+      "bytes": 2512
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔣️.json",
+      "sha256": "e27bf2518fae57f0a22918e83ce498445bd947bc2c379b6e11a6860e9cc06a29",
+      "bytes": 2958
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🔣️.json",
+      "sha256": "661d09c266de89289800e850910eb4a76937bc9bd9cf56ff15d54b674446fad1",
+      "bytes": 7741
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "16fdaf455918431e8d2fa9744d2c63684e3314c7217bce941bb4006de889dcae",
+      "bytes": 3968472
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "18850ec7c6522f149bb0c3094abe7869e8d4e6f7468c03cf11890d05cffde87a",
+      "bytes": 1554998
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+      "sha256": "8d66d3aad4e90acc4ffac896b50f0f126863950f5e58ba331789e1740b7d06b4",
+      "bytes": 1330785
+    }
+  ],
+  "definingSourceBodies": [
+    {
+      "role": "producer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+      "sha256": "46922b4ec47260939b73ed02c0ee7154067830d825a6242d3557df7e00fb86b3",
+      "bytes": 984
+    },
+    {
+      "role": "catalog",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "sha256": "96a5755854ee1d041505401d22b1426aac9ec472d03eccee4f00224ed100a6c8",
+      "bytes": 50738
+    },
+    {
+      "role": "opening",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "sha256": "341faf811bc518f31056b69b47250af077fd3dc86e7a9ba2bd68e00e382be6be",
+      "bytes": 72996
+    },
+    {
+      "role": "store",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sha256": "e536e38ab209d7c24bf0826d73f124e1495fb175a88735785163a7812e0b67d3",
+      "bytes": 786207
+    },
+    {
+      "role": "valueFactory",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "sha256": "d498de9d5deb2894d7714c86ca6864128a4913cede616b2dc7e6968de1882d4a",
+      "bytes": 20467
+    },
+    {
+      "role": "readRetirement",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "sha256": "348a08ab3d52128dec75730c8674cb24ed4aaa9fff40e35ef6ce75cabb8958f2",
+      "bytes": 104112
+    },
+    {
+      "role": "editRetirement",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+      "sha256": "920fb4e24ed3ed30bfe19f72feedbd7c9c6e25f76977c278eafdec334595a5db",
+      "bytes": 21819
+    },
+    {
+      "role": "messageLedger",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "sha256": "61209bd6b5ed077015573e4f5fd7f1a3e955ce0b28a98cd047e422d30cbf1d36",
+      "bytes": 30909
+    },
+    {
+      "role": "storeLaws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e183381255014f3c1d170614da2dda253103d65fb1fdd32242b603efa6e532f0",
+      "bytes": 1030125
+    },
+    {
+      "role": "catalogLaws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+      "sha256": "4184649ef890bde98dbe8517b402908205af5dda0f7e35d4f09ebeaf3d9905c5",
+      "bytes": 8055
+    },
+    {
+      "role": "extensions[0].producer",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+      "sha256": "51999a3bd2ff3ed1d474e27351eebe2a915bf48eb296e007b6be3db1e55ddee1",
+      "bytes": 7544
+    },
+    {
+      "role": "extensions[0].members",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "sha256": "eca0baf3410b8b81fd66856f87ec8dba2d85cbd726a83c5d8d207540aa387b84",
+      "bytes": 35239
+    }
+  ],
+  "removedNewlyAuthoredPaths": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️tests/🧫️fixtures/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧬️schema/🔣️.json"
+  ],
+  "probeToCurrentBodyComparisons": [
+    {
+      "id": "producer-default-body",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "producer-open-owner",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "open-catalog-source-price",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "open-progress-extent",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "open-progress-grant",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "install-ticket-admission",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "install-original-tickets",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "install-original-disposer",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "funded-producer-selection",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "cursor-terminal-witness",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "fixed-message-ledger",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "catalog-owner-refusal-retained",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "initial-source-loan-lost",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "initial-source-return-before-empty",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "create-wrapper-bypass",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "open-wrapper-bypass",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "cursor-current-refusal-owner-lost",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "envelope-owned-completion-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "edit-retirement-direct-drop",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "ledger-backing-proof-lost",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "comment-cannot-supply-missing-production-owner",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "vcs-drop-witness-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "envelope-drop-witness-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "edit-drop-witness-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "message-drop-witness-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "backbone-grant-lost",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "catalog-drop-witness-forged",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "extension-quoted-birth-lost",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "extension-owner-grant-lost",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "extension-selected-producer-type-lost",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "test-only-member-table",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "foreign-module-member-table",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "matches": true
+    },
+    {
+      "id": "wrong-module-member-table",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "matches": true
+    }
+  ],
+  "schemaCatalogRawHashComparisons": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧬️schema/🔣️.json",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🔣️.json",
+      "matches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🔣️.json",
+      "matches": true
+    }
+  ],
+  "oldHelperOccurrences": 0,
+  "rootHeaderPreserved": true,
+  "maxAbsolutePathCharacters": 144,
+  "actualRegisteredCaptured": false,
+  "nativeOrInitializerRun": false
+}

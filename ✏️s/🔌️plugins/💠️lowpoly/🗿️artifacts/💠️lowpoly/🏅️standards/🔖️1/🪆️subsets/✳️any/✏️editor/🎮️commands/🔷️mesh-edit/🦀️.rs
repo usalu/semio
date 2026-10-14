@@ -6,11 +6,11 @@
 //! 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) to build/re-sync the compute
 //! session, even though no handler here reads `ctx` directly itself.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
-use crate::editor::lowpoly::view::{mirror_axis_from_param, utility_param_f32, utility_param_u32, utility_params_value};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::map_kernel_err, editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_view::{mirror_axis_from_param, utility_param_f32, utility_param_u32, utility_params_value};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_3d::mesh::{FaceId, MirrorAxis, WeldMode};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
@@ -326,7 +326,4 @@ pub mod toggle_smooth {
 //#endregion 🔖️ToggleSmooth
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

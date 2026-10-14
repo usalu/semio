@@ -1,0 +1,50 @@
+[
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+  "package": "semio-s-artifact-energy-model-editor-commands",
+  "alias": "editor_commands",
+  "description": "Energy model editor commands: action ids, the editor command with its bridge and codecs, inspector actions"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+  "package": "semio-s-artifact-energy-model-editor-config",
+  "alias": "editor_config",
+  "description": "Energy model editor config: simulation run settings and result field, their mutations and codecs"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results",
+  "package": "semio-s-artifact-energy-model-editor-results",
+  "alias": "editor_results",
+  "description": "Energy model editor results: the run's per-surface payload decoded into a colour map and legend"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction",
+  "package": "semio-s-artifact-energy-model-editor-interaction",
+  "alias": "editor_interaction",
+  "description": "Energy model editor interaction: target ids and granularity of the energyModel interaction domain"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+  "package": "semio-s-artifact-energy-model-editor-edit",
+  "alias": "editor_edit",
+  "description": "Energy model editor edit mode: the simulation tool and the model, simulation, structure and zones windows"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+  "package": "semio-s-artifact-energy-model-editor-panels",
+  "alias": "editor_panels",
+  "description": "Energy model editor panels: the artifact tree and the inspector"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+  "package": "semio-s-artifact-energy-model-editor",
+  "alias": "editor",
+  "description": "Energy model editor: EnergyModelEditor, its reduce seam, retained commands, examples and manifest"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+  "package": "semio-s-artifact-energy-model-viewer",
+  "alias": "viewer",
+  "description": "Energy model viewer: the read-only twin with its windows"
+ }
+]

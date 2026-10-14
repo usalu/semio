@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+ "monolith": "semio_s_artifact_procedural_3d_editor_commands",
+ "package": "semio-s-artifact-procedural-3d-rotate-selection",
+ "description": "Procedural generation3d rotate-selection command",
+ "owner": "🔄️rotate-selection",
+ "moves": [
+  {
+   "from": "rotate_selection",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+}

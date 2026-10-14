@@ -1,7 +1,7 @@
 //! 🛍️ Lowpoly play app panel — the primitive catalogue (box / plane / cylinder / cone / ico sphere).
 
-use crate::editor::lowpoly::terminology::{primitive_catalog_label, LowpolyLabels};
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::terminology::primitive_catalog_label, editor::lowpoly::terminology::LowpolyLabels};
+use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -55,7 +55,4 @@ pub(crate) fn render(labels: &LowpolyLabels, windows: &TreeWindows<'_>) -> UiAss
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

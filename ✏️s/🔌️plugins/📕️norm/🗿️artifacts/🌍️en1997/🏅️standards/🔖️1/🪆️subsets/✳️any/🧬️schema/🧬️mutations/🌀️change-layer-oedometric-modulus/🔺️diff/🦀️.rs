@@ -1,6 +1,6 @@
-use super::ChangeLayerOedometricModulus;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997LayersRows, En1997LayersPatch};
+use crate::change_layer_oedometric_modulus::ChangeLayerOedometricModulus;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997LayersRows, En1997LayersPatch};
 
 pub fn diff(payload: &ChangeLayerOedometricModulus, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_oedometric_modulus.is_finite() || payload.new_oedometric_modulus <= 0.0 {

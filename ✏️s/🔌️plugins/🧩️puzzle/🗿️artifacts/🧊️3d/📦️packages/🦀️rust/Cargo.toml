@@ -17,63 +17,35 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-wasm-bindgen = { workspace = true }
-semio-framework = { workspace = true }
-semio-framework-hash = { workspace = true }
-# 🔤️ First-party base64 codec — the paged `registerBrushMesh` wire carries mesh values as base64 of
-# little-endian bytes, which is the only encoding that fits 1 024 values in one 8 192-byte command.
-semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
-semio-framework-job = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-graph-manifest = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-schema = { workspace = true }
-# ⏯️ Tool run contract: the fill run job reports `ToolRunTick` pages through `ToolRunTickWriter`.
-semio-framework-tool-run = { workspace = true }
-# 🧮️ The guest memory budget the fixed owners size their sub-pages against, and the shared heap
-# witness this artifact's growth laws weigh the tick loop with.
-semio-framework-trace = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-gltf = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-las = { workspace = true }
-semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-ply = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-stl = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
-pack = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-semio-framework-3d = { workspace = true }
-semio-framework-async = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-scene = { workspace = true }
-# 🛠️ The transform tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
-# `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
-semio-framework-tool-machine = { workspace = true }
-
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-js-sys = { workspace = true }
+semio-s-artifact-puzzle-3d-diff = { workspace = true }
+semio-s-artifact-puzzle-3d-editor = { workspace = true }
+semio-s-artifact-puzzle-3d-examples = { workspace = true }
+semio-s-artifact-puzzle-3d-inferences = { workspace = true }
+semio-s-artifact-puzzle-3d-io = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations = { workspace = true }
+semio-s-artifact-puzzle-3d-viewer = { workspace = true }
 
 [dev-dependencies]
-semio-framework-dispatch-macros = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-serde = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-puzzle-3d-editor-snapshot = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations = { workspace = true, features = ["testing"] }
 serde_json = { workspace = true }
-# ⚖️ Third-party collision oracle for the fill run job verdicts. Test-only, never a runtime dependency.
-parry3d = "0.17"
+
+[[test]]
+name = "snapshot-sqlite"
+path = "../../🧪️tests/🗃️snapshot-sqlite/🦀️.rs"

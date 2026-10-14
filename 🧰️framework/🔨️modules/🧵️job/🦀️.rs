@@ -51,6 +51,10 @@ use std::task::{Context, Poll, Waker};
 pub use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 pub use semio_framework_value::RetirementDemand;
 
+#[path="📥️snapshot/🧬️schema/🦀️.rs"]
+mod original_snapshot_intake;
+pub use original_snapshot_intake::{OriginalSnapshotIntake,OriginalSnapshotIntakeProducer};
+
 #[path="♻️retirement/🔔️wake/🦀️.rs"]
 mod worker_wake_retirement;
 pub use worker_wake_retirement::{RetainedWorkerWake,OriginalWorkerWakeIssuer,admit_original_worker_wake,original_worker_wake_admission_demands};

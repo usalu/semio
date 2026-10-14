@@ -1,7 +1,8 @@
 //! 🔒️ Guarded, undoable changes to persisted layer protection.
-use crate::{RasterLayerPatch,RasterMutation,RasterSnapshot};
-use crate::diff::{diff_patch_layer,RasterDiff};
-use crate::standards::v1::subsets::any::schema::{find_layer,layer_locked};
+use semio_s_artifact_raster_raster_model::RasterLayerPatch;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::{find_layer, layer_locked};
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
@@ -11,16 +12,16 @@ pub fn validate(payload:&ChangeLayerLocked,base:&RasterSnapshot)->Result<(),prot
     let layer=find_layer(&base.layers,&payload.layer_id).ok_or(protocol::OutcomeCode::TargetMissing)?;
     if layer_locked(layer)!=payload.expected {return Err(protocol::OutcomeCode::TargetMismatch);}Ok(())
 }
-impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerLocked {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerLocked where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_locked::ChangeLayerLocked> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-lock",kind:"change-layer-locked",record:"ChangedLayerLocked"};
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff> {
         if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Layer protection changed before this edit.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {locked:Some(self.locked),..Default::default()}))
     }
-    fn inverse(&self,base:&RasterSnapshot)-> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self,base:&RasterSnapshot)-> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let Some(layer)=find_layer(&base.layers,&self.layer_id) else {return Vec::new();};
-        vec![RasterMutation::ChangeLayerLocked(Self {layer_id:self.layer_id.clone(),expected:self.locked,locked:layer_locked(layer)})]
+        vec![Op::from(Self {layer_id:self.layer_id.clone(),expected:self.locked,locked:layer_locked(layer)})]
     
     })())
 }

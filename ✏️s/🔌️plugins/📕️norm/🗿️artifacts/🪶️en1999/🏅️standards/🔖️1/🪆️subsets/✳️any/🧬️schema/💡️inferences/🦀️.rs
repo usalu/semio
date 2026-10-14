@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1999Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -65,8 +73,8 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ Full EN 1999 compliance-report — hierarchical aluminium-structure evaluate.
-use crate::document::CheckReport;
-use crate::standards::v1::subsets::any::schema::evaluate_structure;
+use semio_s_plugin_norm_compliance::CheckReport;
+use semio_s_artifact_norm_en1999_checks::evaluate_structure;
 
 /// 🧮️ Headless per-document evaluation for EN 1999.
 pub fn evaluate(document: &En1999Snapshot) -> CheckReport {
@@ -83,5 +91,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1999Outline;
+pub use crate::outline::En1999Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

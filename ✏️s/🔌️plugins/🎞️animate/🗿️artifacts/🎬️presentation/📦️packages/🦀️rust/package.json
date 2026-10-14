@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-presentation-document-contract": "bun repo run @semio-tech/animate-presentation-rs:verify-presentation-document-contract"
+    "verify-presentation-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/animate-presentation-rs:verify-presentation-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

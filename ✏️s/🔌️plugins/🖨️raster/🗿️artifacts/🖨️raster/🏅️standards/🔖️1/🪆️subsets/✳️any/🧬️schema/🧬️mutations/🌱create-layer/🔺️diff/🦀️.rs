@@ -1,11 +1,12 @@
 //! 🔺️ `create-layer` sparse diff — a tree-aware insertion, never a whole-snapshot capture.
 
-use crate::diff::{diff_add_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
-use crate::{RasterLayerNode, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{diff_add_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::{find_layer, layer_node_id};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &crate::create_layer::mutation::CreateLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     let new_id = layer_node_id(&payload.layer);
     if find_layer(&base.layers, new_id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", new_id), [new_id.to_string()]);

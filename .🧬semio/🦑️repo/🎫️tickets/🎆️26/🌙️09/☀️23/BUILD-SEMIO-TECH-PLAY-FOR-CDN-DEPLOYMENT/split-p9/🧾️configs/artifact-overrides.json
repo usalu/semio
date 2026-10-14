@@ -1,0 +1,19 @@
+{
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d": {
+  "title": "Block 3d",
+  "prepare_items": "/// 🚪️ The door/hatch vortex-kind catalog every committed block-3d vector decodes against.\nfn vortex_kind_catalog() {\n    semio_s_artifact_block_3d_model::validate_vortex_kind_catalog(&[\n        semio_s_artifact_block_3d_model::Block3dVortexKind { id: \"door\".into(), name: \"door\".into(), label: \"Door\".into(), color: \"hsl(206 52% 48%)\".into(), default_cable_kind: \"cable.link\".into() },\n        semio_s_artifact_block_3d_model::Block3dVortexKind { id: \"hatch\".into(), name: \"hatch\".into(), label: \"Hatch\".into(), color: \"hsl(37 52% 48%)\".into(), default_cable_kind: \"cable.bus\".into() },\n    ]);\n}\n\n",
+  "prepare": "vortex_kind_catalog",
+  "root_to_map": {
+   "pilot_languages": "io"
+  },
+  "root_to_extra": [
+   "validate_vortex_kind_catalog"
+  ]
+ },
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d": {
+  "title": "Block 5d"
+ },
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d": {
+  "title": "Block 2d"
+ }
+}

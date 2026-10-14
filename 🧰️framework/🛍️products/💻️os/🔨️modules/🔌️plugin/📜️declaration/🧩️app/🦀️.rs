@@ -2,7 +2,7 @@
 use semio_framework::HISTORY_EDIT_ACTION_IDS;
 use crate::window_kits::AppActionRegistry;
 use crate::MountedOwnerPhaseV1;
-use super::transient_publication::bounded_transient_store_disposer;
+use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
 use super::window_config::WindowConfigOwnerRegistry;
 use super::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
@@ -64,16 +64,16 @@ use crate::app_views::DraftView;
 use crate::app_views::InteractionView;
 use crate::app_views::PresenceView;
 use crate::window_transient::TransientView;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::media_contract::ArtifactMediaExportJobRequest;
 use crate::tool_contract::ArtifactReservedToolJob;
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactDisposal;
-use crate::store_lifecycle::ArtifactInitializationAdmission;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
 use crate::app_emission::ArtifactMutationOutcome;
-use crate::store_lifecycle::bounded_config_store_disposer;
-use crate::store_lifecycle::bounded_document_store_disposer;
-use crate::store_lifecycle::bounded_document_store_initialization_job;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
 use crate::tool_contract::ArtifactInstanceOperationOwner;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
@@ -162,7 +162,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 📏️ Quotes the exact next [`Self::mounted_job_close_step`] turn of the owner-local mounted jobs.
@@ -170,7 +170,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
     /// 🧹️ Advances one owner-local mounted background-job close opportunity.
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
     /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
@@ -346,7 +346,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     /// 🔐️ Revalidates domain-owned publication authority in the atomic replacement branch.

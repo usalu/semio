@@ -9,7 +9,7 @@ export async function testGraphRevision(workspace: string, output: string): Prom
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
   const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
-  const commandSources = cacheInternals.relativeScriptInputs(fixture.commandSources.map((source: string) => join(workspace, source)), workspace).map((source: string) => source.slice("{workspaceRoot}/".length));
+  const commandSources = (await cacheInternals.relativeScriptInputs(fixture.commandSources.map((source: string) => join(workspace, source)), workspace)).map((source: string) => source.slice("{workspaceRoot}/".length));
   const root = mkdtempSync(join(output, "graph-revision-")), controller = new AbortController(), stop = (): void => controller.abort();
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
   let passed = false;
@@ -38,7 +38,7 @@ const schemaPath=join(library,fixture.installationSchema), originalSchema=readFi
 const taxonomy=join(library,"🔣️taxonomy.json"), before=readFileSync(taxonomy,"utf8"); writeFileSync(taxonomy,"{"); await assert.rejects(run("invalid-taxonomy")); writeFileSync(taxonomy,before); await run("taxonomy");
 assert.deepEqual(results,fixture.expected); console.log(JSON.stringify(results));
 `);
-      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, SEMIO_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, SEMIO_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       results.push(JSON.parse(result.trim()));
     }
     assert.deepEqual(results[0], results[1]);

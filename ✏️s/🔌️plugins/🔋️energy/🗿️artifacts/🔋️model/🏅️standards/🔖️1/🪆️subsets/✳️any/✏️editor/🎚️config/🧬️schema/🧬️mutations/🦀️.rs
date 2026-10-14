@@ -38,7 +38,7 @@ impl store::snapshot_clone_preparation::ConfigApplyMutation<EnergyModelConfig> f
     fn admissible(&self) -> bool {
         match self {
             Self::ChangeSimulationSettings(change) => change.config().is_valid(),
-            Self::ChangeResultField(ChangeResultField { field }) => crate::editor::model::results::ResultField::from_id(field).is_some(),
+            Self::ChangeResultField(ChangeResultField { field }) => crate::ResultField::from_id(field).is_some(),
         }
     }
 

@@ -1,5 +1,5 @@
 use protocol::{OpText, OpBinary};
-use super::*;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -127,7 +127,7 @@ async fn shared_string_mutations_apply_and_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn removing_unreferenced_shared_string_reindexes_later_references() {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(1) }] }],
         shared_strings: vec!["drop".into(), "keep".into()],
     });
@@ -135,7 +135,7 @@ async fn removing_unreferenced_shared_string_reindexes_later_references() {
     let projected = workbook(&snapshot);
     assert_eq!(projected.shared_strings, vec!["keep".to_string()]);
     assert_eq!(projected.sheets[0].cells[0].value, XlsxCellValue::SharedString(0));
-    let shared_strings = snapshot.part_text(crate::standards::v_ecma_376::subsets::base::schema::vocabulary::SHARED_STRINGS_PART).expect("shared strings XML");
+    let shared_strings = snapshot.part_text(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::SHARED_STRINGS_PART).expect("shared strings XML");
     assert!(shared_strings.contains("count=\"1\""));
     assert!(shared_strings.contains("uniqueCount=\"1\""));
 }
@@ -192,7 +192,7 @@ fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &Xls
 /// 🧮️ One worksheet with two cells, `A1` and `B1` — cell edits address EXISTING SpreadsheetML cells.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn two_cell_base() -> XlsxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 1, col: 1, value: XlsxCellValue::Number(2.0) }] }],
         shared_strings: vec![],
     })
@@ -281,7 +281,7 @@ async fn absorb_law() {
 //#region 🔖️CodecRetentionLaw
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
-    let snap = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    let snap = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet {
             name: "Sheet1".into(),
             cells: vec![
@@ -397,7 +397,7 @@ async fn kinds_match_enum_and_catalog() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn ordered_base() -> XlsxSnapshot {
     let cell = |row, col, value| XlsxCell { row, col, value };
-    crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "First".into(), cells: vec![cell(1, 0, XlsxCellValue::Number(1.0)), cell(1, 1, XlsxCellValue::Number(2.0)), cell(1, 2, XlsxCellValue::Number(3.0)), cell(2, 0, XlsxCellValue::Number(4.0)), cell(3, 0, XlsxCellValue::SharedString(2))] },
             XlsxSheet { name: "Middle".into(), cells: vec![cell(1, 0, XlsxCellValue::InlineString("kept".into()))] },

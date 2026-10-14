@@ -1,11 +1,11 @@
 use super::*;
-use crate::mutations::drag_frames::DragFrames;
-use crate::mutations::rotate_frames::RotateFrames;
-use crate::mutations::scale_frames::ScaleFrames;
+use semio_s_artifact_layout_layout_mutations_frames::drag_frames::DragFrames;
+use semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames;
+use semio_s_artifact_layout_layout_mutations_frames::scale_frames::ScaleFrames;
 use semio_framework_plugin::HistoryView;
 
 fn views() -> (LayoutSnapshot, NoConfig) {
-    (crate::standards::v1::subsets::any::io::text::snapshot::default_document(), NoConfig::default())
+    (semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document(), NoConfig::default())
 }
 
 fn translate(ids: &[&str], dx: f64, dy: f64) -> TranslateSelection {
@@ -13,7 +13,7 @@ fn translate(ids: &[&str], dx: f64, dy: f64) -> TranslateSelection {
 }
 
 fn centre(document: &LayoutSnapshot, id: &str) -> (f64, f64) {
-    crate::mutations::layout_frame_centre(document.pages[0].frames.iter().find(|frame| frame.id() == id).expect("demo frame").bounds())
+    semio_s_artifact_layout_layout_diff::layout_frame_centre(document.pages[0].frames.iter().find(|frame| frame.id() == id).expect("demo frame").bounds())
 }
 
 /// ✋️ A one-shot translate yields ONE parametric `drag-frames` leaf over the literal ids and the offset — no absolute
@@ -65,7 +65,7 @@ fn identity_and_stray_phases_leave_zero_trace() {
 fn a_locked_frame_and_a_locked_layer_stay_put() {
     let (mut document, config) = views();
     match document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").unwrap() {
-        crate::Frame::Rect { locked, .. } => *locked = Some(true),
+        semio_s_artifact_layout_layout_model::Frame::Rect { locked, .. } => *locked = Some(true),
         _ => panic!("rect"),
     }
     let history = HistoryView::empty();
@@ -82,7 +82,7 @@ fn a_locked_frame_and_a_locked_layer_stay_put() {
     }
     document.pages[0].layers[0].locked = true;
     match document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").unwrap() {
-        crate::Frame::Rect { locked, .. } => *locked = None,
+        semio_s_artifact_layout_layout_model::Frame::Rect { locked, .. } => *locked = None,
         _ => panic!("rect"),
     }
     let doc = ArtifactView::new(&document, &history);

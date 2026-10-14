@@ -3,15 +3,15 @@
 //! nothing inverts to nothing.
 
 use super::ScaleSelection;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ScaleSelection, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::set_vertex_positions::SetVertexPositions>>(payload: &ScaleSelection, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
     if payload.invariant_violation().is_some() {
         return Ok(Vec::new());
     }
-    crate::mutations::lowpoly_selection_motion_inverse(base, &payload.object_id, &payload.vertex_ids, &payload.motion())?
+    crate::set_vertex_positions::inverse::lowpoly_selection_motion_inverse(base, &payload.object_id, &payload.vertex_ids, &payload.motion())?
 
     })
 }

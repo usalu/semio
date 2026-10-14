@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `ChangeObjectKindIcon`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ChangeObjectKindIcon, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::change_object_kind_icon::ChangeObjectKindIcon, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_object_kind_icon::ChangeObjectKindIcon> {
     Ok((|| {
-    vec![super::super::change_object_kind_icon::change_object_kind_icon(base.object_kind.icon.clone())]
+    vec![crate::change_object_kind_icon::change_object_kind_icon(base.object_kind.icon.clone())]
 
     })())
 }

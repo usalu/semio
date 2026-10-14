@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📏resize-frame/📐️resizes-the-rect-frame/📸️snapshot/⬅️before/🔣️.json");
@@ -108,7 +108,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "resize-frame/resizes-the-rect-frame: committed diff JSON is not canonical");
@@ -118,7 +118,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `resize-frame` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-frame/resizes-the-rect-frame: committed diff did not carry before to after");
 }

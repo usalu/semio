@@ -1,0 +1,175 @@
+{
+ "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🦀️.rs",
+ "crate": "semio_s_artifact_draw_drawing_host",
+ "aggregator": "host",
+ "monolithManifest": ".🧬semio/🦑️repo/⚡️cache/p6/orig/host-Cargo.toml",
+ "consumers": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+  "🌎️hub/🧩️compositions/🖍️draw"
+ ],
+ "crates": {
+  "host": {
+   "ident": "semio_s_artifact_draw_drawing_host",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🦀️.rs",
+   "doc": "//! 🏠️ Drawing host: the retained store owner, its mutation authorities and the store initialization job.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "arena": {
+   "ident": "semio_s_artifact_draw_drawing_host_arena",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏟️arena/🦀️.rs",
+   "doc": "//! 🏟️ Drawing host arena: the owned-field catalog, the mutation arena pool, the snapshot census and bounds, the native clone authorities, the layer locator and the container rebuild.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "digest": {
+   "ident": "semio_s_artifact_draw_drawing_host_digest",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🔏️digest/🦀️.rs",
+   "doc": "//! 🔏️ Drawing host digest: the semantic digest authorities of fills, strokes, path segments, layers and mutations, the mutation target owner and the duplicate reference rewrite.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  }
+ },
+ "rules": [
+  [
+   "",
+   "host",
+   ""
+  ]
+ ],
+ "files": [
+  [
+   "🧰️owned/📐️footprint/🦀️\\.rs$",
+   "arena",
+   "native_text_footprint"
+  ],
+  [
+   "🧰️owned/♻️retirement/🦀️\\.rs$",
+   "arena",
+   "native_retirement"
+  ],
+  [
+   "🧰️owned/🏗️initialization/📚️catalog/🦀️\\.rs$",
+   "arena",
+   "initialization_catalog_close"
+  ]
+ ],
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🏟️arena/🦀️.rs",
+   "items": [
+    "DrawingRebuiltLayerOwners",
+    "DRAWING_OWNED_FIELD_BYTES",
+    "DrawingSnapshotRetirementFactory",
+    "DrawingMutationRetirementFactory",
+    "decode_drawing_snapshot_pack",
+    "decode_drawing_mutation_pack",
+    "DrawingDecodedFieldRetirement",
+    "drawing_owned_field_close_capacity",
+    "drawing_owned_field_authority",
+    "DrawingSnapshotDecodeState",
+    "DrawingMutationDecodeState",
+    "DrawingRejectedConflictAuthority",
+    "DrawingEnvelopeOwnedFieldCatalog",
+    "drawing_envelope_decode_owner_bundle",
+    "DRAWING_MAXIMUM_NESTED_ITEMS",
+    "DRAWING_MAXIMUM_NESTED_BYTES",
+    "DRAWING_MAXIMUM_LAYER_DEPTH",
+    "DRAWING_MUTATION_RETAINED_PAGE_BYTES",
+    "DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY",
+    "DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY",
+    "DRAWING_MUTATION_ARENA_POOL_CAPACITY",
+    "DRAWING_DUPLICATE_ID_BYTES",
+    "DrawingMutationArenaOwner",
+    "DrawingMutationArenaOwnerBuilder",
+    "DrawingMutationArenaPoolSlot",
+    "DrawingMutationArenaPoolState",
+    "DrawingMutationArenaPool",
+    "DrawingMutationArenaPoolBootstrap",
+    "DrawingMutationArenaBootstrapAdmission",
+    "DrawingMutationArenaProcessState",
+    "DRAWING_MUTATION_ARENA_POOL",
+    "DRAWING_MUTATION_ARENA_BOOTSTRAP_REQUESTED",
+    "DrawingMutationArenaPoolAvailability",
+    "DrawingMutationArenaBorrowError",
+    "DrawingMutationArenaBootstrapStep",
+    "DrawingMutationArenaBootstrapJob",
+    "DrawingMutationArenaProcessTransition",
+    "request_drawing_mutation_arena_pool",
+    "drawing_mutation_arena_pool_fault",
+    "borrow_drawing_mutation_arena_from",
+    "borrow_drawing_mutation_arena",
+    "DrawingTraversalFrame",
+    "DrawingSnapshotOwnerTotals",
+    "DrawingOwnerCreditSlot",
+    "DrawingFixedOwnerCensus",
+    "DrawingAssetBoundsCursor",
+    "DrawingSnapshotBoundsAuthority",
+    "DrawingNativeCloneAuthority",
+    "DrawingLayerCloneAuthority",
+    "DrawingFillCloneAuthority",
+    "DrawingStrokeCloneAuthority",
+    "DrawingNativeLayers",
+    "DrawingNativeText",
+    "DrawingNativeSegments",
+    "DrawingTextCloneAuthority",
+    "DrawingSegmentsCloneAuthority",
+    "DrawingCloneWorkTotals",
+    "DrawingLayerCloneWorkAuthority",
+    "drawing_fill_clone_work_totals",
+    "drawing_stroke_clone_work_totals",
+    "clone_drawing_string",
+    "DrawingLayerAddress",
+    "DrawingLayerLocator",
+    "initial_snapshot_clone_grant"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🔏️digest/🦀️.rs",
+   "items": [
+    "DrawingSemanticDigestTotals",
+    "DrawingSemanticDigestCredit",
+    "DrawingFillDigestAuthority",
+    "DrawingStrokeDigestAuthority",
+    "DrawingPathSegmentDigestAuthority",
+    "DrawingOptionalDigestField",
+    "DrawingLayerVariantDigestAuthority",
+    "DrawingLayerDigestAuthority",
+    "DrawingMutationDigestAuthority",
+    "drawing_mutation_target_owner",
+    "DrawingDuplicateReferenceSearch",
+    "DrawingDuplicateRewriteAuthority",
+    "DRAWING_CONTAINER_REBUILD_MOVE_CAPACITY",
+    "DrawingContainerRebuildMove",
+    "DrawingContainerRebuildAuthority",
+    "DrawingContainerRebuildRejected",
+    "DrawingMutationWorksetPlan"
+   ]
+  }
+ ],
+ "workspace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+ "aggregatorRole": "library"
+}

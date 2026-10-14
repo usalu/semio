@@ -5,8 +5,9 @@
 //! `no-op` when the stroke changes no pixel (an eraser over a clear layer).
 
 use super::ApplyPaintStroke;
-use crate::diff::diff_paint_stroke;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_paint_stroke;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -5,12 +5,13 @@ import { createHash } from "node:crypto";
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
-import {runTool} from "../../📦️dependencies/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {nativeCallerPhaseV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import manifest from "./🔣️.json" with {type:"json"};
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };
-const manifest = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { version: string; release: string; distributions: BunDistribution[] };
+
 
 /** 🧭️ Selects the authored portable Bun release without changing the installed runtime. */
 export function bunDistribution(version: string, platform: string, arch: string, musl: boolean): BunDistribution {
@@ -59,10 +60,11 @@ export async function prepareBun(workspace: string, version: string, store:Repos
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");
-      if ((await runTool(executable,["--version"],directory,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim() !== version) throw new Error("Bun executable version mismatch");
+      if ((await captureOwnedCommandV1(executable,["--version"],directory,{control:store.control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun executable version mismatch");
       return executable;
     };
     try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    if(nativeCallerPhaseV1(store.invocation,workspace).authority.network.offline)throw Error("Original offline pinned Bun parser absent");
     const staging = mkdtempSync(join(base, ".prepare-")), progress = setInterval(() => console.log(`Acquiring pinned Bun ${version}…`), 10000);
     try {
       console.log(`Acquiring pinned Bun ${version} for ${row.platform}/${row.arch}…`);
@@ -74,7 +76,7 @@ export async function prepareBun(workspace: string, version: string, store:Repos
       if (size !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Bun archive checksum mismatch");
       const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/bun${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? "bun.exe" : "bun");
       writeFileSync(staged, payload, { flag: "wx" }); chmodSync(staged, 0o755);
-      if ((await runTool(staged,["--version"],staging,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim() !== version) throw new Error("Bun release version mismatch");
+      if ((await captureOwnedCommandV1(staged,["--version"],staging,{control:store.control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun release version mismatch");
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));
       signal.throwIfAborted(); renameSync(staging, directory); return executable;
     } finally { clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }

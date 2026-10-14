@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-tool-run-presentation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Joint ToolRun progress presentation: issuer-owned body, seed, atomic tick update and publishing slot."
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-run-presentation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_tool_run_presentation"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-shared-issuance = { path = "../../../../../🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-tool-run = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-tool-run-entities = { path = "../../../../👥️entities/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

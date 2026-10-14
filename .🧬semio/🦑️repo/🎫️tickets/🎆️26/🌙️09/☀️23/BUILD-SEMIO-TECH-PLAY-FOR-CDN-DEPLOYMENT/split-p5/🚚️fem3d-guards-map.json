@@ -1,0 +1,21 @@
+{
+ "target_referenced": "crate::standards::v1::subsets::any::schema::guards",
+ "target_mismatch": "crate::standards::v1::subsets::any::schema::guards",
+ "invariant": "crate::standards::v1::subsets::any::schema::guards",
+ "node_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "element_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "section_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "solid_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "material_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "load_case_referrers": "crate::standards::v1::subsets::any::schema::guards",
+ "resolve_element": "crate::standards::v1::subsets::any::schema::guards",
+ "resolve_load": "crate::standards::v1::subsets::any::schema::guards",
+ "node_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "material_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "section_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "solid_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "load_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "resolve_combination_terms": "crate::standards::v1::subsets::any::schema::guards",
+ "combination_breach": "crate::standards::v1::subsets::any::schema::guards",
+ "analysis_breach": "crate::standards::v1::subsets::any::schema::guards"
+}

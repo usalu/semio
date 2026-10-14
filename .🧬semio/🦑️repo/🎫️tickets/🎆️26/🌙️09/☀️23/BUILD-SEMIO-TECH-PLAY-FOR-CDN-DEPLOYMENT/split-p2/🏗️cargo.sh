@@ -1,12 +1,13 @@
 #!/bin/bash
-# 🏗️ One lane-P2 cargo invocation inside a fleet slot with the private P2 target and build dirs; logs to `⚡️cache/p2/logs/<tag>.log`.
-# usage: 🏗️cargo.sh <tag> <cargo args...>   (run from any cwd; pass --manifest-path)
+# 🏗️ One lane-P2 cargo invocation through `🚦️cargo-slot.sh` (the issued repository launcher, shared store); the full log goes to
+# `split-p2/🗑️generated/logs/<tag>.log` and a one-line summary (rc, wall, error and warning counts) to stdout.
+# usage: 🏗️cargo.sh <tag> <cargo subcommand> <args...>   (pass --manifest-path)
 TAG=$1; shift
-ROOT="/Users/ueli/Documents/semio"; P2="$ROOT/.🧬semio/🦑️repo/⚡️cache/p2"; mkdir -p "$P2/logs"
-export CARGO_TARGET_DIR="$P2/target" CARGO_BUILD_BUILD_DIR="$P2/build" CARGO_TERM_COLOR=never
+HERE="$(cd "$(dirname "$0")" && pwd)"; LOGS="$HERE/🗑️generated/logs"; mkdir -p "$LOGS"
+ROOT="/Users/ueli/Documents/semio"
 cd "$ROOT" || exit 2
 s=$(date +%s)
-"$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "p2-$TAG" -- cargo "$@" > "$P2/logs/$TAG.log" 2>&1
+env -u CARGO_TARGET_DIR -u CARGO_BUILD_BUILD_DIR CARGO_TERM_COLOR=never bash "$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "p2-$TAG" -- cargo "$@" > "$LOGS/$TAG.log" 2>&1
 rc=$?
-echo "rc=$rc wall=$(( $(date +%s) - s ))s errors=$(grep -c '^error' "$P2/logs/$TAG.log") warnings=$(grep -c '^warning' "$P2/logs/$TAG.log")"
+echo "rc=$rc wall=$(( $(date +%s) - s ))s errors=$(grep -cE '(^|: )error(\[|:)' "$LOGS/$TAG.log") warnings=$(grep -cE '(^|: )warning(\[|:)' "$LOGS/$TAG.log")"
 exit $rc

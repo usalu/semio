@@ -1,5 +1,12 @@
-use super::*;
-use crate::editor::fem3d::unit_tests::context::{fem3d_app, render as render_body};
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::*;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_selection_json;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::config::Fem3dModelWindowConfig;
+use crate::context::{fem3d_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_fem3d_model_scene() {
@@ -11,9 +18,9 @@ async fn renders_fem3d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
     let mut app = fem3d_app();
-    crate::editor::fem3d::unit_tests::context::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    crate::context::dispatch(&mut app, semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand::SetActiveExample(semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
-    let node = render(&snapshot, &crate::viewport::INITIAL).expect("fixture surface admission");
+    let node = render(&snapshot, &semio_s_artifact_fem_3d_scene::viewport::INITIAL).expect("fixture surface admission");
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world scene");
     assert!(scene.meshes_json.contains("solid-sol1"), "expected a solid mesh for the example fixture: {}", scene.meshes_json);
     assert!(scene.instances_json.contains("\"id\":\"e1\""), "expected a single oriented box instance per member keyed by the member id: {}", scene.instances_json);
@@ -28,7 +35,7 @@ async fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
 /// gumball at the node with live dispatch; without a selection it stays inactive.
 #[test]
 fn transform_utility_arms_the_gumball_over_the_selection() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
     let window = Fem3dModelWindowConfig::default();
     let armed = model_scene(&doc, &window, &Fem3dInteractionSnapshot::selecting(["n20_l1"]), true);
     let record: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&armed.selection_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("selection json");

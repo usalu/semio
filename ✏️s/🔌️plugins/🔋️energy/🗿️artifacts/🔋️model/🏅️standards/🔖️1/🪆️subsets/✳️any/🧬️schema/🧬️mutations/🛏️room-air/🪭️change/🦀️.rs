@@ -1,8 +1,7 @@
 //! 🪭️ Energy model mutation — `ChangeRoomAirModel`: Swaps the room air model one zone's override names.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeRoomAirModel {
     pub new_model: crate::model::RoomAirModelType,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_room_air_model(zone_id: crate::model::EntityId, new_model: crate::model::RoomAirModelType) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeRoomAirModel(ChangeRoomAirModel { zone_id, new_model })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_room_air_model<Op: From<ChangeRoomAirModel>>(zone_id: crate::model::EntityId, new_model: crate::model::RoomAirModelType) -> Op {
+    ChangeRoomAirModel { zone_id, new_model }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeRoomAirModel {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeRoomAirModel
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeRoomAirModel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "room-air-model-assignment", kind: "change-room-air-model", record: "ChangedRoomAirModel" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,9 +1,12 @@
 use super::*;
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
 use semio_framework_plugin::app::DocumentWindowKit;
 
 fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
+    semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -77,7 +80,7 @@ async fn natural_file_route_exports_edited_pptx_xml_and_reopens_through_one_muta
     }
     assert!(text.iter().any(|value| value == "Natural Open Save"));
     let reopened = <PptxEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("PPTX natural bytes reopen");
-    assert_eq!(crate::schema::mutations::xml_address::pptx_slides(&reopened).unwrap()[0].shapes[0].text.as_deref(), Some("Natural Open Save"));
+    assert_eq!(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&reopened).unwrap()[0].shapes[0].text.as_deref(), Some("Natural Open Save"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -98,7 +101,7 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(DocumentWindowKit::text_revision("before"), "after")), &meta, &mut identity).await).unwrap();
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let expected = app.snapshot().unwrap().clone();
-    assert_eq!(crate::schema::mutations::xml_address::pptx_slides(&expected).unwrap()[0].shapes[0].text.as_deref(), Some("after"));
+    assert_eq!(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&expected).unwrap()[0].shapes[0].text.as_deref(), Some("after"));
 
     semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(DocumentWindowKit::text_revision("after"), "after")), &meta, &mut identity).await).unwrap();
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();

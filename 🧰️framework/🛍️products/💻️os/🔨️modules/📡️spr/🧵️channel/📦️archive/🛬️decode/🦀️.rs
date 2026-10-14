@@ -1,7 +1,7 @@
 //! 🛬️ Original receiving authority admits every concrete composed-carrier allocation.
 use super::archive_schema::*;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,retained_clone::RetainedCloneProgress,ValueError,ValueRefusalKind};
-use semio_framework_io_sqlite_snapshot::control::NativeSnapshotBodyWallet;
+use semio_framework_io_control::NativeSnapshotBodyWallet;
 struct Reader<'a>{bytes:&'a[u8],position:usize}
 impl<'a> Reader<'a>{
  fn varint(&mut self,control:&mut NativeDecodeControl<'_>)->Result<u64,ValueError>{let mut value=0u64;for index in 0..10{let byte=*self.bytes.get(self.position).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"truncated archive varint"))?;self.position+=1;control.step()?;if index==9&&byte>1{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"archive varint exceeds u64"))}value|=u64::from(byte&127)<<(index*7);if byte&128==0{return Ok(value)}}Err(ValueError::literal(ValueRefusalKind::InvalidValue,"archive varint exceeds ten bytes"))}
@@ -11,10 +11,10 @@ impl<'a> Reader<'a>{
  fn reference(&mut self,output:&mut DocumentArchiveArtifactRef,control:&mut NativeDecodeControl<'_>,body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{self.text(&mut output.artifact_id,control,body,4)?;self.text(&mut output.artifact_kind,control,body,4)?;self.text(&mut output.standard,control,body,4)?;self.text(&mut output.subset,control,body,4)}
 }
 /// 📦️ Parses the original archive into one retained partial frame under the caller's physical grant.
-pub fn decode_document_archive_bytes_controlled(bytes:&[u8],owner:&mut semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocumentArchivePack,ValueError>{decode(bytes,owner,false)}
+pub fn decode_document_archive_bytes_controlled(bytes:&[u8],owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocumentArchivePack,ValueError>{decode(bytes,owner,false)}
 /// 📨️ Validates the composed head's empty history before publishing any retained archive fields.
-pub fn decode_document_archive_head_controlled(bytes:&[u8],owner:&mut semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocumentArchivePack,ValueError>{decode(bytes,owner,true)}
-fn decode(bytes:&[u8],owner:&mut semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner<'_, '_>,head:bool)->Result<DocumentArchivePack,ValueError>{owner.receive::<DocumentArchivePack,DocumentArchivePack>(|partial,control,body|control.scoped_stage(|control|{
+pub fn decode_document_archive_head_controlled(bytes:&[u8],owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocumentArchivePack,ValueError>{decode(bytes,owner,true)}
+fn decode(bytes:&[u8],owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_, '_>,head:bool)->Result<DocumentArchivePack,ValueError>{owner.receive::<DocumentArchivePack,DocumentArchivePack>(|partial,control,body|control.scoped_stage(|control|{
  control.begin_stage(bytes.len())?;if bytes.len()>DOCUMENT_ARCHIVE_MAXIMUM_BYTES||bytes.first()!=Some(&DOCUMENT_ARCHIVE_VERSION){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsupported archive version or byte extent"))}control.step()?;
  let header=size_of::<Option<DocumentArchivePack>>();body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:header,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})?;*partial=Some(DocumentArchivePack::default());body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:header,..Default::default()})?;let output=partial.as_mut().unwrap();let mut reader=Reader{bytes,position:1};reader.bytes(&mut output.parent_pack,control,body,2)?;reader.bytes(&mut output.parent_spr,control,body,2)?;
  if head&&!output.parent_spr.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"composed head archive holds parent history"))}

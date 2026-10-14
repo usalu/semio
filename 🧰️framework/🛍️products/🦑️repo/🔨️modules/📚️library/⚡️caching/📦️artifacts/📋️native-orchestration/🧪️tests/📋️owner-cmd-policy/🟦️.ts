@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
+import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import * as toml from "@iarna/toml";
 import { getWorkspaceRoot, repositoryCargoTestPolicyV1 } from "../../../../../🟦️.ts";
@@ -118,8 +119,8 @@ test("dashboard-selected owner tests allocate their output without manual enviro
 
 test("native caller capability corpus agrees with independent strict Ajv", async () => {
   const schema = (await import("../../📥️invocation/🧬️schema/🔣️.json")).default, corpus = (await import("../../📥️invocation/🧪️tests/🧫️fixtures/🔣️.json")).default;
-  const admits = new Ajv({ strict: true }).compile(schema);
-  for (const row of corpus.cases) { expect(admits(row.value), row.id).toBe(row.accepted); expect(validateJsonSchemaSubset(schema, row.value).length === 0, row.id).toBe(row.accepted); }
+  const admits = new Ajv({ strict: true }).addSchema(cargoExecutionSchema).compile(schema);
+  for (const row of corpus.cases) { expect(admits(row.value), row.id).toBe(row.accepted); expect(validateJsonSchemaSubset(schema, row.value,schema,[cargoExecutionSchema]).length === 0, row.id).toBe(row.accepted); }
 });
 
 test("actual native receiving command refuses a different original caller command before child acquisition", () => {

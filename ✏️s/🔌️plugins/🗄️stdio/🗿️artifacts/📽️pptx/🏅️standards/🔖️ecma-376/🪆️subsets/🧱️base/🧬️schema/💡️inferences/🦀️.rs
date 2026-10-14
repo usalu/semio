@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -51,10 +51,6 @@ pub fn pptx_artifact_inference_descriptor() -> semio_framework_schema_registry::
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
@@ -62,5 +58,3 @@ mod tests;
 pub use super::outline::PptxOutline;
 //#endregion 🔁️Re-exports
 
-#[path="🎞️presentation/🦀️.rs"]
-pub mod presentation;

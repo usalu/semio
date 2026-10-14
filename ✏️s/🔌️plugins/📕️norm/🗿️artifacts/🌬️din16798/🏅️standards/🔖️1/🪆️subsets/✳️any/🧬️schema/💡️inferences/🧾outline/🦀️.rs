@@ -1,6 +1,6 @@
 //! 🧾 Din16798 outline inference over the hierarchical subject.
 
-use crate::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex", "theta_rm_c", "outdoor_co2_ppm", "zones", "vent_systems",

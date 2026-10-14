@@ -1,12 +1,19 @@
 //! 🕸️ Generation2d command — `node-graph-edit`: the one verb both node-graph hosts dispatch for graph edits.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::{host_connect_ports, host_disconnect, host_insert_port, host_remove_widget, with_host};
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{change_slider_value,move_nodes};
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfigMutation;
+use semio_s_artifact_procedural_2d_mutations::host_connect_ports;
+use semio_s_artifact_procedural_2d_mutations::host_disconnect;
+use semio_s_artifact_procedural_2d_mutations::host_insert_port;
+use semio_s_artifact_procedural_2d_mutations::host_remove_widget;
+use semio_s_artifact_procedural_2d_model::with_host;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_mut_widgets::change_slider_value;
+use semio_s_artifact_procedural_2d_mut_widgets::move_nodes;
 
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 use semio_framework::kernel::UiDirtyScope;
@@ -33,7 +40,7 @@ pub fn rows(payload: &NodeGraphEdit) -> Result<Vec<NodeGraphEditRow>, Fault> {
 fn cut(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, synapse_id: &str) -> Result<Vec<Generation2dMutation>, String> {
     match host_disconnect(host, synapse_id) {
         Ok(leaves) => Ok(leaves),
-        Err(_) if host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) => Ok(vec![crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string())]),
+        Err(_) if host_snapshot.synapses.iter().any(|synapse| synapse.id == synapse_id) => Ok(vec![semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse(synapse_id.to_string())]),
         Err(error) => Err(error),
     }
 }
@@ -124,7 +131,7 @@ pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
 /// minted from the admission's authoring seed, the host clock and `<appId>#<verb>`, for the press `gesture`. A view
 /// without command authority publishes the leaves plainly; nothing yielded is the empty emit (zero trace).
 pub(crate) fn generation2d_node_drag_emit(doc: &ArtifactView<'_, Generation2dSnapshot>, verb: &str, gesture: &str, leaves: Vec<Generation2dMutation>) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
-    node_drag_emit(crate::editor::generation2d::GENERATION2D_EDITOR_APP_ID, verb, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into()
+    node_drag_emit(semio_s_artifact_procedural_2d_model::GENERATION2D_EDITOR_APP_ID, verb, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into()
 }
 
 /// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a widget that is no slider or the
@@ -144,7 +151,7 @@ pub(crate) fn generation2d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
         .iter()
         .filter(|record| record.moves())
         .filter_map(|record| {
-            let ids: Vec<String> = record.node_ids.iter().filter(|id| host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == id.as_str())).cloned().collect();
+            let ids: Vec<String> = record.node_ids.iter().filter(|id| host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget) == id.as_str())).cloned().collect();
             (!ids.is_empty()).then(|| move_nodes(ids, record.dx, record.dy))
         })
         .collect()
@@ -152,15 +159,15 @@ pub(crate) fn generation2d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
 
 /// 🐢️ What ONE slider tick invalidates: the graph that draws the knob, the preview that re-evaluates,
 /// and the two panels that read the moved value back.
-pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
+pub fn slider_gesture_ui_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: vec![
-            crate::editor::generation2d::modes::edit::windows::flow::GENERATION2D_PLAY_BODY_MAIN.to_string(),
-            crate::editor::generation2d::modes::edit::windows::preview::GENERATION2D_PLAY_BODY_PREVIEW.to_string(),
+            semio_s_artifact_procedural_2d_mode_edit::windows::flow::GENERATION2D_PLAY_BODY_MAIN.to_string(),
+            semio_s_artifact_procedural_2d_mode_edit::windows::preview::GENERATION2D_PLAY_BODY_PREVIEW.to_string(),
         ],
         panel_bodies: vec![
-            crate::editor::generation2d::panels::inspection::GENERATION2D_PLAY_BODY_INSPECTION.to_string(),
-            crate::editor::generation2d::panels::document::GENERATION2D_PLAY_BODY_ARTIFACT.to_string(),
+            semio_s_artifact_procedural_2d_editor_panels::inspection::GENERATION2D_PLAY_BODY_INSPECTION.to_string(),
+            semio_s_artifact_procedural_2d_editor_panels::document::GENERATION2D_PLAY_BODY_ARTIFACT.to_string(),
         ],
         utilities: false,
         tools: false,
@@ -177,7 +184,4 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation2dSnapsh
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

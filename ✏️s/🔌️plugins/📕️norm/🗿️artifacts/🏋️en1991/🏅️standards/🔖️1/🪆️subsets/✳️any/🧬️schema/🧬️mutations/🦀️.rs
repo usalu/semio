@@ -1,92 +1,101 @@
 //! 🧬️ En1991 artifact — document mutation dispatch for design-load subject.
 
-use crate::{En1991Diff, En1991Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
+pub use crate::edit_rules::EDIT_RULES;
 
 //#region 🔖️Mutations
-use super::change_annex;
-use super::change_snow_zone;
-use super::change_altitude;
-use super::change_en_sk;
-use super::change_north_german_lowland_snow;
-use super::change_wind_zone;
-use super::change_en_vb;
-use super::change_terrain_category;
-use super::change_mixed_terrain_upwind;
-use super::change_mixed_terrain_distance;
-use super::change_orography_factor;
-use super::change_coast_or_island;
-use super::change_air_density;
-use super::change_height;
-use super::change_width;
-use super::change_depth;
-use super::change_assumed_delta_t;
-use super::change_construction_activity;
-use super::change_assumed_construction_qk;
-use super::change_structure_kind;
-use super::change_bridge_lane;
-use super::change_bridge_span;
-use super::change_bridge_lane_width;
-use super::change_assumed_bridge_tandem;
-use super::change_assumed_bridge_udl;
-use super::change_assumed_bridge_lm2;
-use super::change_assumed_bridge_footway;
-use super::change_storey_count;
-use super::change_t_max;
-use super::change_t_min;
-use super::change_initial_temperature;
-use super::change_thermal_element_type;
-use super::change_thermal_bridge_type;
-use super::change_linear_temperature_gradient;
-use super::change_fire_mode;
-use super::change_fire_curve;
-use super::change_fire_duration;
-use super::change_assumed_gas_temperature;
-use super::change_assumed_h_net;
-use super::change_fire_compartment_area;
-use super::change_fire_compartment_height;
-use super::change_fire_opening_factor;
-use super::change_fire_thermal_inertia;
-use super::change_fire_occupancy;
-use super::change_fire_load_density_qf;
-use super::change_assumed_qf_d;
-use super::change_assumed_bridge_lm3;
-use super::change_assumed_bridge_lm4;
-use super::change_bridge_load_group;
-use super::change_crane_claimed;
-use super::change_crane_class;
-use super::change_hoist_class;
-use super::change_hoisting_speed;
-use super::change_assumed_crane_wheel;
-use super::change_assumed_crane_horizontal;
-use super::change_silo_claimed;
-use super::change_silo_kind;
-use super::change_silo_bulk_density;
-use super::change_silo_height;
-use super::change_silo_hydraulic_radius;
-use super::change_silo_mu;
-use super::change_silo_k;
-use super::change_assumed_silo_pressure;
-use super::change_assumed_silo_patch;
-use super::change_assumed_silo_wall_friction;
-use super::change_floor_assumed_qk;
-use super::change_self_weight_assumed_gk;
-use super::change_roof_assumed_sk;
-use super::change_wind_face_assumed_wp;
-use super::change_accidental_assumed_force;
-use super::insert_floors;
-use super::remove_floors;
-use super::insert_self_weight_elements;
-use super::remove_self_weight_elements;
-use super::insert_roofs;
-use super::remove_roofs;
-use super::insert_wind_faces;
-use super::remove_wind_faces;
-use super::insert_accidental_cases;
-use super::remove_accidental_cases;
+use semio_s_artifact_norm_en1991_mut_general::change_annex;
+use semio_s_artifact_norm_en1991_mut_snow::change_snow_zone;
+use semio_s_artifact_norm_en1991_mut_snow::change_altitude;
+use semio_s_artifact_norm_en1991_mut_snow::change_en_sk;
+use semio_s_artifact_norm_en1991_mut_snow::change_north_german_lowland_snow;
+use semio_s_artifact_norm_en1991_mut_wind::change_wind_zone;
+use semio_s_artifact_norm_en1991_mut_wind::change_en_vb;
+use semio_s_artifact_norm_en1991_mut_wind::change_terrain_category;
+use semio_s_artifact_norm_en1991_mut_wind::change_mixed_terrain_upwind;
+use semio_s_artifact_norm_en1991_mut_wind::change_mixed_terrain_distance;
+use semio_s_artifact_norm_en1991_mut_wind::change_orography_factor;
+use semio_s_artifact_norm_en1991_mut_wind::change_coast_or_island;
+use semio_s_artifact_norm_en1991_mut_wind::change_air_density;
+use semio_s_artifact_norm_en1991_mut_general::change_height;
+use semio_s_artifact_norm_en1991_mut_general::change_width;
+use semio_s_artifact_norm_en1991_mut_general::change_depth;
+use semio_s_artifact_norm_en1991_mut_thermal::change_assumed_delta_t;
+use semio_s_artifact_norm_en1991_mut_gravity::change_construction_activity;
+use semio_s_artifact_norm_en1991_mut_gravity::change_assumed_construction_qk;
+use semio_s_artifact_norm_en1991_mut_general::change_structure_kind;
+use semio_s_artifact_norm_en1991_mut_traffic::change_bridge_lane;
+use semio_s_artifact_norm_en1991_mut_traffic::change_bridge_span;
+use semio_s_artifact_norm_en1991_mut_traffic::change_bridge_lane_width;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_tandem;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_udl;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_lm2;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_footway;
+use semio_s_artifact_norm_en1991_mut_general::change_storey_count;
+use semio_s_artifact_norm_en1991_mut_thermal::change_t_max;
+use semio_s_artifact_norm_en1991_mut_thermal::change_t_min;
+use semio_s_artifact_norm_en1991_mut_thermal::change_initial_temperature;
+use semio_s_artifact_norm_en1991_mut_thermal::change_thermal_element_type;
+use semio_s_artifact_norm_en1991_mut_thermal::change_thermal_bridge_type;
+use semio_s_artifact_norm_en1991_mut_thermal::change_linear_temperature_gradient;
+use semio_s_artifact_norm_en1991_mut_fire::change_fire_mode;
+use semio_s_artifact_norm_en1991_mut_fire::change_fire_curve;
+use semio_s_artifact_norm_en1991_mut_fire::change_fire_duration;
+use semio_s_artifact_norm_en1991_mut_fire::change_assumed_gas_temperature;
+use semio_s_artifact_norm_en1991_mut_fire::change_assumed_h_net;
+use semio_s_artifact_norm_en1991_mut_compartment::change_fire_compartment_area;
+use semio_s_artifact_norm_en1991_mut_compartment::change_fire_compartment_height;
+use semio_s_artifact_norm_en1991_mut_compartment::change_fire_opening_factor;
+use semio_s_artifact_norm_en1991_mut_compartment::change_fire_thermal_inertia;
+use semio_s_artifact_norm_en1991_mut_fire::change_fire_occupancy;
+use semio_s_artifact_norm_en1991_mut_fire::change_fire_load_density_qf;
+use semio_s_artifact_norm_en1991_mut_fire::change_assumed_qf_d;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_lm3;
+use semio_s_artifact_norm_en1991_mut_traffic::change_assumed_bridge_lm4;
+use semio_s_artifact_norm_en1991_mut_traffic::change_bridge_load_group;
+use semio_s_artifact_norm_en1991_mut_cranes::change_crane_claimed;
+use semio_s_artifact_norm_en1991_mut_cranes::change_crane_class;
+use semio_s_artifact_norm_en1991_mut_cranes::change_hoist_class;
+use semio_s_artifact_norm_en1991_mut_cranes::change_hoisting_speed;
+use semio_s_artifact_norm_en1991_mut_cranes::change_assumed_crane_wheel;
+use semio_s_artifact_norm_en1991_mut_cranes::change_assumed_crane_horizontal;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_claimed;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_kind;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_bulk_density;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_height;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_hydraulic_radius;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_mu;
+use semio_s_artifact_norm_en1991_mut_silos::change_silo_k;
+use semio_s_artifact_norm_en1991_mut_silos::change_assumed_silo_pressure;
+use semio_s_artifact_norm_en1991_mut_silos::change_assumed_silo_patch;
+use semio_s_artifact_norm_en1991_mut_silos::change_assumed_silo_wall_friction;
+use semio_s_artifact_norm_en1991_mut_gravity::change_floor_assumed_qk;
+use semio_s_artifact_norm_en1991_mut_gravity::change_self_weight_assumed_gk;
+use semio_s_artifact_norm_en1991_mut_snow::change_roof_assumed_sk;
+use semio_s_artifact_norm_en1991_mut_wind_faces::change_wind_face_assumed_wp;
+use semio_s_artifact_norm_en1991_mut_general::change_accidental_assumed_force;
+use semio_s_artifact_norm_en1991_mut_gravity::insert_floors;
+use semio_s_artifact_norm_en1991_mut_gravity::remove_floors;
+use semio_s_artifact_norm_en1991_mut_gravity::insert_self_weight_elements;
+use semio_s_artifact_norm_en1991_mut_gravity::remove_self_weight_elements;
+use semio_s_artifact_norm_en1991_mut_snow::insert_roofs;
+use semio_s_artifact_norm_en1991_mut_snow::remove_roofs;
+use semio_s_artifact_norm_en1991_mut_wind_faces::insert_wind_faces;
+use semio_s_artifact_norm_en1991_mut_wind_faces::remove_wind_faces;
+use semio_s_artifact_norm_en1991_mut_general::insert_accidental_cases;
+use semio_s_artifact_norm_en1991_mut_general::remove_accidental_cases;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -259,16 +268,33 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::En1991Mutation;
+    use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+
+/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+pub fn apply_en1991_mutation(base: &En1991Snapshot, mutation: &En1991Mutation) -> Result<(En1991Snapshot, Vec<String>), String> {
+    let raised = <En1991Mutation as protocol::Mutation<En1991Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+pub fn inverse_en1991_mutation(mutation: &En1991Mutation, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1991Mutation as protocol::Mutation<En1991Snapshot>>::inverse(mutation, base)?
+
+    })
+}
+}
+pub use crate::mutation_bridge::*;

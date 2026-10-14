@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "bytes": 150984,
+      "sha256": "a485cc0ed143f4bb8b2605aa178ba32933ca22530d2f8326a51c96fa15f58cf5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️toml-failure.json",
+      "bytes": 1029,
+      "sha256": "d5e54d93cb068c160c8ff8ddd5d97e03827fb3c0149a8fc7a12f2d4bee4a0818"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+      "bytes": 37407,
+      "sha256": "8ee1280ab0753d999685c43fe4876a6c47b0bb1563b01e727dda2ac68af50684"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 5625,
+      "sha256": "68a65435e7eb91e65bc329c16451ca802b107bedfafd15713566f55a9a67f8a6"
+    }
+  ],
+  "parserProbe": "🗑️generated/toml-current/parser-probe.json",
+  "actualFlowOffendingPathKnown": false,
+  "ownRegisteredTestsCollected": 0
+}

@@ -1,7 +1,7 @@
 //! 📦️ `add-target-volume` command.
 
-use {crate::editor::puzzle3d::snapshot::value_as_vec3, crate::editor::puzzle3d::session::Puzzle3dActionCtx, crate::editor::puzzle3d::snapshot::PUZZLE3D_ID_COUNTER};
-use crate::standards::v1::subsets::any::schema::mutations::{create_target_volume, Puzzle3dMutation};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::value_as_vec3, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_ID_COUNTER};
+use {semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
 use semio_framework_pack_json::Value;
 use std::sync::atomic::Ordering;
 
@@ -11,9 +11,9 @@ pub fn add_target_volume_mutation(origin: [f64; 3], grid_spacing: f64, voxel_dim
     let grid_spacing = grid_spacing.max(0.1);
     let snapped = [(origin[0] / grid_spacing).round() * grid_spacing, (origin[1] / grid_spacing).round() * grid_spacing, (origin[2] / grid_spacing).round() * grid_spacing];
     let [w, d, h] = voxel_dims;
-    let scale = crate::standards::v1::subsets::any::schema::Puzzle3dScale::Vec3([f64::from(w) * grid_spacing, f64::from(d) * grid_spacing, f64::from(h) * grid_spacing]);
+    let scale = semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3([f64::from(w) * grid_spacing, f64::from(d) * grid_spacing, f64::from(h) * grid_spacing]);
     let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-    create_target_volume(crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false }, None)
+    create_target_volume(semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false }, None)
 }
 
 /// 📦️ Places one grid-snapped target volume at `args.origin`. A dispatch that carries no usable `origin` answers with a

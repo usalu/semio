@@ -1,9 +1,9 @@
 //! Inverse for `change-orography-factor`.
-use super::ChangeOrographyFactor;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeOrographyFactor, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_orography_factor::ChangeOrographyFactor;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeOrographyFactor, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_orography_factor::ChangeOrographyFactor> {
     Ok((|| {
-    vec![En1991Mutation::ChangeOrographyFactor(ChangeOrographyFactor { new_orography_factor: base.orography_factor })]
+    vec![Op::from(ChangeOrographyFactor { new_orography_factor: base.orography_factor })]
 
     })())
 }

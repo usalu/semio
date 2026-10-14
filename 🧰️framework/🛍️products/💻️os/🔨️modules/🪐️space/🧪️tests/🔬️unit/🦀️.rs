@@ -730,7 +730,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
     let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
     atelier.users.push(demo_user("u2", SpaceRole::Author));
     atelier.users.push(demo_user("u1", SpaceRole::Author));
-    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let space_history = space_store.envelope().vcs.clone();
     let loaded = space_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_space_atelier_invariant(loaded.clone());
@@ -740,7 +740,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
 
     let mut collection = empty_collection_snapshot("Demo");
     collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
-    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let collection_history = collection_store.envelope().vcs.clone();
     let loaded = collection_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_collection_integrity(loaded.clone());
@@ -767,7 +767,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // op here is an in-memory fixture operation, never real I/O.
     test_identity!(identity);
     let mut nested_space_store =
-        crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+        crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
     crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
     let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");

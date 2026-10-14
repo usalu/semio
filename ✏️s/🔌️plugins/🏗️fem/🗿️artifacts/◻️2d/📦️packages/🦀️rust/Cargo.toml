@@ -4,7 +4,7 @@ name = "semio-s-artifact-fem-2d"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "FEM 2d artifact: definition, declaration, editor and registration over the fem 2d crates"
+description = "FEM 2d artifact: definition, declaration and registration over the fem 2d crates"
 
 [package.metadata.semio]
 role = "artifact"
@@ -16,49 +16,18 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
-pack = { workspace = true }
-semio-framework = { workspace = true }
-semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-async = { workspace = true }
-semio-framework-diagnostic = { workspace = true }
-semio-framework-dsl-record = { workspace = true }
-semio-framework-dsl-record-derive = { workspace = true }
-semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
-semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
-semio-framework-tool-machine = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
-semio-framework-ui-locale = { workspace = true }
-semio-framework-ui-scene = { workspace = true }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
-semio-s-artifact-fem-2d-analysis = { workspace = true }
-semio-s-artifact-fem-2d-boundary = { workspace = true }
-semio-s-artifact-fem-2d-engine = { workspace = true }
+semio-s-artifact-fem-2d-editor = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
-semio-s-artifact-fem-2d-load = { workspace = true }
-semio-s-artifact-fem-2d-material = { workspace = true }
-semio-s-artifact-fem-2d-mesh = { workspace = true }
-semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
-semio-s-artifact-fem-2d-mutations = { workspace = true }
 semio-s-artifact-fem-2d-viewer = { workspace = true }
-semio-s-fem-analyses = { workspace = true }
-semio-s-fem-analyses-assembly = { workspace = true }
-semio-s-fem-analyses-model = { workspace = true }
-semio-s-fem-app-surface = { workspace = true }
-semio-s-fem-elements2d = { workspace = true }
-semio-s-fem-mesh = { workspace = true }
-semio-s-fem-model = { workspace = true }
-semio-s-fem-sparse-pcg = { workspace = true }
-semio-s-fem-static = { workspace = true }
-serde = { workspace = true }
 
 [dev-dependencies]
+pack = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
+semio-framework-value = { workspace = true }
 serde_json = { workspace = true }

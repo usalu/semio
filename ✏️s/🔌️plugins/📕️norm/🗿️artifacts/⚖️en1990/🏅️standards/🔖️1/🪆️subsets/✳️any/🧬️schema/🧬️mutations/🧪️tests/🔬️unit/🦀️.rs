@@ -1,5 +1,5 @@
-use super::*;
-use crate::document::AnnexChoice;
+use crate::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use protocol::Mutation;
 
 fn every_mutation() -> Vec<En1990Mutation> {
@@ -31,10 +31,10 @@ fn every_mutation() -> Vec<En1990Mutation> {
         En1990Mutation::RemovePermanent(remove_permanent::RemovePermanent { index: 0 }),
         En1990Mutation::InsertEffect(insert_effect::InsertEffect { index: Some(0), item: base.effects[0].clone() }),
         En1990Mutation::InsertMember(insert_member::InsertMember { index: Some(0), item: base.members[0].clone() }),
-        En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: Some(0), item: crate::SeismicAction { id: "A-ek".into(), a_ek: 0.0, importance_class: crate::ImportanceClass::II } }),
-        En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: Some(0), item: crate::AccidentalAction { id: "A-d".into(), ad: 0.0 } }),
-        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: Some(0), item: crate::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0} }),
-        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: Some(0), item: crate::PermanentAction { id: "G-x".into(), kind: "g_sup".into(), gk: 0.0 } }),
+        En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: Some(0), item: semio_s_artifact_norm_en1990_model::SeismicAction { id: "A-ek".into(), a_ek: 0.0, importance_class: semio_s_artifact_norm_en1990_model::ImportanceClass::II } }),
+        En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: Some(0), item: semio_s_artifact_norm_en1990_model::AccidentalAction { id: "A-d".into(), ad: 0.0 } }),
+        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: Some(0), item: semio_s_artifact_norm_en1990_model::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0} }),
+        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: Some(0), item: semio_s_artifact_norm_en1990_model::PermanentAction { id: "G-x".into(), kind: "g_sup".into(), gk: 0.0 } }),
     ]
 }
 

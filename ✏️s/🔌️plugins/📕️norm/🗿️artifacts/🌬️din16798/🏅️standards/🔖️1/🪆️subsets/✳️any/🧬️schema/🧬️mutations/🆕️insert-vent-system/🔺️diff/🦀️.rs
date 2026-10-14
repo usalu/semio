@@ -1,9 +1,9 @@
 //! 🆕️ `insert-vent-system` diff — inserts the row at its position; a position past the list's end inserts it last as a
 //! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertVentSystem;
-use crate::diff::{Din16798Diff, Din16798VentSystemDelta};
-use crate::Din16798Snapshot;
+use crate::insert_vent_system::InsertVentSystem;
+use semio_s_artifact_norm_din16798_diff::{Din16798Diff, Din16798VentSystemDelta};
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 pub fn diff(payload: &InsertVentSystem, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     if base.vent_systems.iter().any(|existing| existing.id == payload.vent.id) {

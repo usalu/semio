@@ -3,6 +3,7 @@ use super::*;
 use crate::ValueRefusalKind;
 
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",deserialize_controlled_with="read_original",deny_unknown_fields)]
 #[serde(deny_unknown_fields)]
 struct Original { value:i64 }

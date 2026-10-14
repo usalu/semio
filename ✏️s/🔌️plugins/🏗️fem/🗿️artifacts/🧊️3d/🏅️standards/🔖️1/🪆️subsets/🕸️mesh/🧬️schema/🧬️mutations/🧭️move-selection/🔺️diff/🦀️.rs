@@ -6,8 +6,12 @@
 //! (Warning) when the transform moves none of them; and `mutation.partial` (Warning), addressed at the ones that do
 //! not exist or cannot follow the transform, when some are skipped.
 use super::MoveSelection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta, Fem3dNodesModification, Fem3dSolidsDelta, Fem3dSolidsModification};
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &MoveSelection, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
@@ -21,7 +25,7 @@ pub fn diff(payload: &MoveSelection, base: &Fem3dSnapshot) -> protocol::Mutation
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named node(s) and solid(s) exist.", targets.len()), targets);
     }
     let patched_nodes: Vec<Fem3dNodesModification> = nodes.iter().filter_map(|node| payload.moved_node(node)).map(|item| Fem3dNodesModification { id: item.id.clone(), patch: item }).collect();
-    let followed: Vec<(&str, Option<crate::FemSolid>)> = solids.iter().map(|solid| (solid.id.as_str(), payload.map_solid(solid))).collect();
+    let followed: Vec<(&str, Option<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid>)> = solids.iter().map(|solid| (solid.id.as_str(), payload.map_solid(solid))).collect();
     let patched_solids: Vec<Fem3dSolidsModification> = solids.iter().filter_map(|solid| payload.moved_solid(solid)).map(|item| Fem3dSolidsModification { id: item.id.clone(), patch: item }).collect();
     if patched_nodes.is_empty() && patched_solids.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The transform moves none of the {} named node(s) and solid(s).", targets.len()));

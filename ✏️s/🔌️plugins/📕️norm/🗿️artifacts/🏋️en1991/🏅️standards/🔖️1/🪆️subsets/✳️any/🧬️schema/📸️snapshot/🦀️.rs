@@ -1,6 +1,13 @@
 //! 🧬️ En1991 snapshot schema — complete design-load-assumption subject.
 
-use crate::{FloorArea, RoofArea, SelfWeightElement, WindFace};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -13,7 +20,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1991")]
 pub struct En1991Snapshot {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: semio_s_plugin_norm_compliance::AnnexChoice,
     #[state(artifact)]
     pub snow_zone: String,
     #[dsl(unit = "m")]
@@ -189,14 +196,11 @@ pub struct En1991Snapshot {
     #[state(artifact)]
     pub accidental_cases: Vec<crate::AccidentalCase>,
 }
-//#region 🔖️HandcraftedArtifactCodecs
-
-//#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1991Snapshot {
     fn default() -> Self {
         Self {
-            annex: crate::document::AnnexChoice::De,
+            annex: semio_s_plugin_norm_compliance::AnnexChoice::De,
             snow_zone: "2".into(),
             altitude: 150.0,
             en_sk: 850.0,
@@ -305,16 +309,181 @@ accidental_cases: vec![],
 }
 //#endregion 🔖️Snapshot
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+pub mod part_1_2 {
+    /// 🔥️ Fire exposure curve family (EN 1991-1-2 §3.2 nominal / Annex A parametric).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[value(rename_all = "camelCase")]
+    pub enum FireCurve {
+        Standard,
+        External,
+        Hydrocarbon,
+        Parametric,
+    }
+}
 
+/// 🏢 Floor / use area with occupancy category and assumed imposed loads (Pa, N).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FloorArea {
+    pub id: String,
+    pub category: String,
+    #[dsl(unit = "m2")]
+    pub area: f64,
+    #[dsl(unit = "Pa")]
+    pub assumed_qk: f64,
+    #[dsl(unit = "N")]
+    pub assumed_qk_concentrated: f64,
+    #[dsl(unit = "Pa")]
+    pub assumed_partitions: f64,
+}
 
+/// 🧱 Structural layer / element self-weight with assumed permanent load (Pa).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SelfWeightElement {
+    pub id: String,
+    pub material: String,
+    #[dsl(unit = "m")]
+    pub thickness: f64,
+    #[dsl(unit = "Pa")]
+    pub assumed_gk: f64,
+}
 
+/// 🏠 Roof zone with shape coefficients and assumed snow load (Pa).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct RoofArea {
+    pub id: String,
+    pub roof_type: String,
+    pub pitch_deg: f64,
+    pub c_e: f64,
+    pub c_t: f64,
+    pub has_parapet: bool,
+    #[dsl(unit = "m")]
+    pub parapet_height: f64,
+    #[dsl(unit = "m")]
+    pub drift_obstruction_height: f64,
+    pub multi_span: bool,
+    #[dsl(unit = "Pa")]
+    pub assumed_sk: f64,
+}
 
+/// 🌬️ Façade / roof wind zone with pressure coefficients and assumed wind pressure (Pa).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct WindFace {
+    pub id: String,
+    pub zone: String,
+    #[dsl(unit = "m")]
+    pub z: f64,
+    pub c_pe10: f64,
+    pub c_pe1: f64,
+    pub c_pi: f64,
+    pub c_s: f64,
+    pub c_d: f64,
+    #[dsl(unit = "m2")]
+    pub loaded_area: f64,
+    #[dsl(unit = "Pa")]
+    pub assumed_wp: f64,
+}
 
+/// 🔥 Fire design mode — `None` | nominal curves | Annex A parametric (EN 1991-1-2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum FireMode {
+    None,
+    Nominal,
+    Parametric,
+}
 
+/// 🏗️ Structure kind — building vs bridge (EN 1991-2 traffic only on bridge).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum StructureKind {
+    Building,
+    Bridge,
+}
 
+/// 🚗 Vehicle impact inputs (EN 1991-1-7 Annex C) — only present on impact rows.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct AccidentalImpact {
+    #[dsl(unit = "kg")]
+    pub vehicle_mass: f64,
+    #[dsl(unit = "m/s")]
+    pub vehicle_speed: f64,
+    #[dsl(unit = "N")]
+    pub assumed_force: f64,
+}
 
+/// 💥 Explosion inputs (EN 1991-1-7 Annex D) — only present on explosion rows.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct AccidentalExplosion {
+    #[dsl(unit = "kg")]
+    pub explosion_mass: f64,
+    #[dsl(unit = "m")]
+    pub standoff: f64,
+    #[dsl(unit = "Pa")]
+    pub assumed_pressure: f64,
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 💥 Accidental design situation — discriminated impact vs explosion (exactly one variant block).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct AccidentalCase {
+    pub id: String,
+    /// 🚗 Impact variant block (empty when explosion).
+    pub impact: Vec<AccidentalImpact>,
+    /// 💥 Explosion variant block (empty when impact).
+    pub explosion: Vec<AccidentalExplosion>,
+}
+
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1991", "EN 1991", EN1991_DOCUMENT_SCHEMA)
+}
+
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1991_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1991", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+pub const EN1991_DOCUMENT_SCHEMA: &str = "semio.norm.en1991/v1";

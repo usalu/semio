@@ -1,0 +1,358 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/codec/schema.json",
+  "title": "Actor Component Codec Lane",
+  "$defs": {
+    "Hex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    },
+    "DocumentPair": {
+      "title": "Codec Document Pair",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packHex",
+        "sprHex"
+      ],
+      "properties": {
+        "packHex": {
+          "$ref": "#/$defs/Hex"
+        },
+        "sprHex": {
+          "$ref": "#/$defs/Hex"
+        }
+      }
+    },
+    "ActorCodecAnswerProjection": {
+      "title": "Closed Codec Answer Projection",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "okHex"
+          ],
+          "properties": {
+            "okHex": {
+              "$ref": "#/$defs/Hex"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "okPair"
+          ],
+          "properties": {
+            "okPair": {
+              "$ref": "#/$defs/DocumentPair"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "okMirror"
+          ],
+          "properties": {
+            "okMirror": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "faultHex"
+          ],
+          "properties": {
+            "faultHex": {
+              "$ref": "#/$defs/Hex"
+            }
+          }
+        }
+      ]
+    },
+    "ActorCodecOutcomeProjection": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ActorCodecAnswerProjection"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "refusal"
+          ],
+          "properties": {
+            "refusal": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "ActorCodecRequest": {
+      "title": "One Codec Interface Call",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "artifactKind"
+          ],
+          "properties": {
+            "operation": {
+              "const": "pack-schema-hash"
+            },
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "artifactKind",
+            "documentId"
+          ],
+          "properties": {
+            "operation": {
+              "const": "genesis"
+            },
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "artifactKind",
+            "pair"
+          ],
+          "properties": {
+            "operation": {
+              "const": "print-mirror"
+            },
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pair": {
+              "$ref": "#/$defs/DocumentPair"
+            }
+          }
+        }
+      ],
+      "description": "Runtime admission uses exact own data fields for the selected operation and returns the original request owner. artifactKind and genesis documentId are nonempty strings. Runtime print-mirror pair has exactly own data pack/spr genuine intrinsic Uint8Array views across realms. Missing/nonstring/accessor operation refuses as actor-codec.request; unknown string operation preserves actor-codec.operation:<operation>. No getters, guest exports, activation capture or transport run for refused requests."
+    },
+    "ActorCodecOperationAnswerProjection": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "answer"
+          ],
+          "properties": {
+            "operation": {
+              "const": "pack-schema-hash"
+            },
+            "answer": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "okHex"
+                  ],
+                  "properties": {
+                    "okHex": {
+                      "$ref": "#/$defs/Hex"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "faultHex"
+                  ],
+                  "properties": {
+                    "faultHex": {
+                      "$ref": "#/$defs/Hex"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "answer"
+          ],
+          "properties": {
+            "operation": {
+              "const": "genesis"
+            },
+            "answer": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "okPair"
+                  ],
+                  "properties": {
+                    "okPair": {
+                      "$ref": "#/$defs/DocumentPair"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "faultHex"
+                  ],
+                  "properties": {
+                    "faultHex": {
+                      "$ref": "#/$defs/Hex"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation",
+            "answer"
+          ],
+          "properties": {
+            "operation": {
+              "const": "print-mirror"
+            },
+            "answer": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "okMirror"
+                  ],
+                  "properties": {
+                    "okMirror": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "faultHex"
+                  ],
+                  "properties": {
+                    "faultHex": {
+                      "$ref": "#/$defs/Hex"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeOwnerRules": {
+      "const": {
+        "answerKeys": "exactly-one-own-data-arm",
+        "genesisKeys": [
+          "pack",
+          "spr"
+        ],
+        "mirrorKeys": [
+          "0",
+          "1",
+          "length"
+        ],
+        "bytes": "intrinsic-Uint8Array-view-cross-realm",
+        "ownership": "original-answer-success-members-fault",
+        "coercion": "refused",
+        "generatedScope": "complete-self-contained-defining-factory"
+      }
+    },
+    "RuntimeRequestOwnerRules": {
+      "const": {
+        "requestKeys": {
+          "pack-schema-hash": [
+            "operation",
+            "artifactKind"
+          ],
+          "genesis": [
+            "operation",
+            "artifactKind",
+            "documentId"
+          ],
+          "print-mirror": [
+            "operation",
+            "artifactKind",
+            "pair"
+          ]
+        },
+        "pairKeys": [
+          "pack",
+          "spr"
+        ],
+        "strings": "nonempty-without-coercion",
+        "bytes": "intrinsic-Uint8Array-view-cross-realm",
+        "ownership": "original-request-pair-pack-spr",
+        "accessors": "refused-without-invocation",
+        "before": [
+          "guest-export",
+          "shard-capture",
+          "request-sequence",
+          "transport"
+        ],
+        "generatedScope": "complete-self-contained-defining-factory"
+      }
+    }
+  }
+}

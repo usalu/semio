@@ -1,5 +1,17 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::retire_flow_eval_session;
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::ToolRunJobPort;
+use semio_framework_plugin::ToolRunView;
+use semio_framework_plugin::ViewModel;
+use semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID;
+use semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID;
+use semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID;
+use semio_framework_tool_run::TOOL_RUN_START_ACTION_ID;
+use semio_framework_tool_run::ToolRunIdentity;
+use semio_framework_tool_run::ToolRunState;
+use std::collections::BTreeMap;
+use semio_s_artifact_procedural_2d_preview_eval::*;
+use crate::app_fixture::retire_flow_eval_session;
 use semio_framework_artifact_flow_flow::neural::{Atom, ColdRetire, Dictionary, Value as NeuralValue};
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceKind};
 use std::collections::BTreeSet;
@@ -81,9 +93,9 @@ fn every_target_row_names_the_session_its_window_kind_evaluates() {
     for row in fixture()["targets"]["rows"].as_array().unwrap() {
         let kind = text(&row["kind"]);
         let expected = (!row["target"].is_null()).then(|| target_of(&row["target"]));
-        assert_eq!(crate::editor::generation2d::generation2d_preview_target(kind), expected, "{kind}");
+        assert_eq!(semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_target(kind), expected, "{kind}");
         let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "w".into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        assert_eq!(crate::editor::generation2d::generation2d_preview_windows(Some(&view)).iter().map(|(_, _, target)| *target).collect::<Vec<_>>(), expected.into_iter().collect::<Vec<_>>(), "{kind}: roster");
+        assert_eq!(semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_windows(Some(&view)).iter().map(|(_, _, target)| *target).collect::<Vec<_>>(), expected.into_iter().collect::<Vec<_>>(), "{kind}: roster");
     }
     assert!(attached_preview_windows(None, &[("generation2d-preview", PreviewEvalTarget::Document)]).is_empty(), "no roster before the first surface");
 }

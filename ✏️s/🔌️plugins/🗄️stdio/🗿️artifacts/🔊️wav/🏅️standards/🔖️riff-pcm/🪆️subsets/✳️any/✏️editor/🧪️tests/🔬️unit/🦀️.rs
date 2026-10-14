@@ -149,8 +149,8 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert!(matches!(mutation, WavMutation::PatchData(_)));
     assert!(<WavMutation as protocol::OpBinary>::encode_op(mutation).expect("patch encodes").len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 
-    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None);
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
+    let envelope = store::os_store::document_materialize::create_document_envelope(STDIO_WAV_DOCUMENT_SCHEMA, "wav-large-sample-publication", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("WAV store opens");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<WavSnapshot, WavMutation>().expect("funded WAV owners")).map_err(|(error, _)| error).expect("WAV owners install");
     let factory = <WavEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("WAV retained factory");
     let generation = store.generation_now();

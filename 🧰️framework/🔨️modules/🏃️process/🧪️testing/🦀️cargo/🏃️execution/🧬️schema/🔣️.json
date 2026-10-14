@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/testing/cargo/execution/component.json",
+  "$ref": "#/$defs/CargoExecutionRequestV1",
+  "$defs": {
+    "CargoExecutionTextV1": { "type": "string", "minLength": 1, "pattern": "^[^\u0000]+$" },
+    "CargoExecutionArgumentsV1": { "type": "array", "items": { "type": "string", "pattern": "^[^\u0000]*$" } },
+    "CargoExecutionTargetV1": { "oneOf": [
+      { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "lib" } } },
+      { "type": "object", "additionalProperties": false, "required": ["kind", "name"], "properties": { "kind": { "enum": ["test", "bin"] }, "name": { "$ref": "#/$defs/CargoExecutionTextV1" } } }
+    ] },
+    "CargoExecutionGroupV1": { "type": "object", "additionalProperties": false, "required": ["package", "target", "laws"], "properties": {
+      "package": { "$ref": "#/$defs/CargoExecutionTextV1" }, "target": { "$ref": "#/$defs/CargoExecutionTargetV1" }, "laws": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/CargoExecutionTextV1" } }
+    } },
+    "CargoExecutionRequestV1": { "oneOf": [
+      { "type": "object", "additionalProperties": false, "required": ["version", "kind", "manifest", "cwd", "packages", "arguments"], "properties": {
+        "version": { "const": 1 }, "kind": { "const": "tests" }, "manifest": { "$ref": "#/$defs/CargoExecutionTextV1" }, "cwd": { "$ref": "#/$defs/CargoExecutionTextV1" }, "packages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/CargoExecutionTextV1" } }, "arguments": { "$ref": "#/$defs/CargoExecutionArgumentsV1" }
+      } },
+      { "type": "object", "additionalProperties": false, "required": ["version", "kind", "manifest", "cwd", "groups"], "properties": {
+        "version": { "const": 1 }, "kind": { "const": "exact-laws" }, "manifest": { "$ref": "#/$defs/CargoExecutionTextV1" }, "cwd": { "$ref": "#/$defs/CargoExecutionTextV1" }, "groups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CargoExecutionGroupV1" } }
+      } }
+    ] },
+    "CargoExecutionCommandV1": { "type": "object", "additionalProperties": false, "required": ["program", "cwd", "arguments", "tail"], "properties": {
+      "program": { "$ref": "#/$defs/CargoExecutionTextV1" }, "cwd": { "$ref": "#/$defs/CargoExecutionTextV1" }, "arguments": { "$ref": "#/$defs/CargoExecutionArgumentsV1", "description": "An argument beginning with {workspaceRoot}/ expands that explicit prefix to the canonical workspace root with forward path separators. Other arguments remain literal." }, "tail": { "enum": ["none", "test-arguments"] }
+    } },
+    "CargoExecutionDeclarationV1": { "type": "object", "additionalProperties": false, "required": ["version", "operations"], "properties": {
+      "version": { "const": 1 }, "operations": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["command", "request", "continuation"], "properties": { "command": { "$ref": "#/$defs/CargoExecutionCommandV1" }, "request": { "$ref": "#/$defs/CargoExecutionRequestV1" }, "continuation": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/CargoExecutionCommandV1" }] } } } }
+    } },
+    "CargoExecutionContinuationV1": { "type": "object", "additionalProperties": false, "required": ["program", "cwd", "arguments"], "properties": { "program": { "$ref": "#/$defs/CargoExecutionTextV1" }, "cwd": { "$ref": "#/$defs/CargoExecutionTextV1" }, "arguments": { "$ref": "#/$defs/CargoExecutionArgumentsV1" } } },
+    "CargoExecutionIdentityV1": { "type": "object", "additionalProperties": false, "required": ["path", "device", "inode"], "properties": { "path": { "$ref": "#/$defs/CargoExecutionTextV1" }, "device": { "type": "string" }, "inode": { "type": "string" } } },
+    "CargoExecutionSourceV1": { "type": "object", "additionalProperties": false, "required": ["file", "ancestors", "sha256", "bytes"], "properties": {
+      "file": { "$ref": "#/$defs/CargoExecutionIdentityV1" }, "ancestors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CargoExecutionIdentityV1" } }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "bytes": { "type": "integer", "minimum": 0 }
+    } },
+    "CargoExecutionBackendV1": { "type": "object", "additionalProperties": false, "required": ["version", "program", "arguments", "cwd", "sources", "request", "continuation"], "properties": {
+      "version": { "const": 1 }, "program": { "$ref": "#/$defs/CargoExecutionTextV1" }, "arguments": { "$ref": "#/$defs/CargoExecutionArgumentsV1" }, "cwd": { "$ref": "#/$defs/CargoExecutionTextV1" }, "sources": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/CargoExecutionSourceV1" } }, "request": { "$ref": "#/$defs/CargoExecutionRequestV1" }, "continuation": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/CargoExecutionContinuationV1" }] }
+    } }
+  }
+}

@@ -1,0 +1,466 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+ "crate": "semio_s_artifact_block_3d",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-block-3d-model",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "Block 3d model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-block-3d-diff",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "Block 3d diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-block-3d-mutations",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-block-3d-schema",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "Block 3d artifact schema and descriptor"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-block-3d-inferences",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "Block 3d inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-block-3d-io",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "Block 3d io: composition, builder, analyzer and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-block-3d-examples",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "examples",
+   "description": "Block 3d example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-block-3d-editor",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::block3d",
+   "description": "Block 3d editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-block-3d-viewer",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::block3d",
+   "description": "Block 3d viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-block-3d",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+   "prefix": "",
+   "description": "Block 3d artifact",
+   "role": "artifact"
+  },
+  "mut-object-kind": {
+   "package": "semio-s-artifact-block-3d-mut-object-kind",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗿️object-kind",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d object kind mutation leaves"
+  },
+  "mut-representations": {
+   "package": "semio-s-artifact-block-3d-mut-representations",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️representations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d representations mutation leaves"
+  },
+  "mut-vortex-kinds": {
+   "package": "semio-s-artifact-block-3d-mut-vortex-kinds",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex-kinds",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d vortex kinds mutation leaves"
+  },
+  "mut-vortices": {
+   "package": "semio-s-artifact-block-3d-mut-vortices",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️vortices",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d vortices mutation leaves"
+  },
+  "mut-meta": {
+   "package": "semio-s-artifact-block-3d-mut-meta",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 3d meta mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✳️any/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✏️rename\\-object\\-kind/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-object\\-kind\\-label/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔀️change\\-object\\-kind\\-variant/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📃️change\\-object\\-kind/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖼️change\\-object\\-kind\\-icon/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐change\\-object\\-kind\\-unit/",
+   "mut-object-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱create\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🗑️delete\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✒️rename\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌐change\\-representation\\-mesh\\-url/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏔️change\\-representation\\-lod/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📜change\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔖add\\-representation\\-tag/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚫remove\\-representation\\-tag/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧩add\\-representation\\-attribute/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖remove\\-representation\\-attribute/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌱create\\-vortex\\-kind/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❌delete\\-vortex\\-kind/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖋️rename\\-vortex\\-kind/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎫change\\-vortex\\-kind\\-label/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎨change\\-vortex\\-kind\\-color/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔌change\\-vortex\\-kind\\-default\\-cable/",
+   "mut-vortex-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌀create\\-vortex/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🕳️delete\\-vortex/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📍move\\-vortex/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📏resize\\-vortex/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧷change\\-vortex\\-vortex\\-kind/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪧change\\-vortex\\-label/",
+   "mut-vortices"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕add\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✂️remove\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩add\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚷remove\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/👤add\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🙅remove\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎥move\\-camera3d/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔍scale\\-camera3d/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💬change\\-meta\\-description/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "🧊️3d/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗿️object-kind/🦀️.rs",
+   "text": "//! 🗿️ Block 3d object kind mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️representations/🦀️.rs",
+   "text": "//! 🎭️ Block 3d representations mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex-kinds/🦀️.rs",
+   "text": "//! 🌀️ Block 3d vortex kinds mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️vortices/🦀️.rs",
+   "text": "//! 🌪️ Block 3d vortices mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/🦀️.rs",
+   "text": "//! 📋️ Block 3d meta mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ Block 3d example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ Block 3d's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_mutation_vectors`.\n\n/// 🚪️ The door/hatch vortex-kind catalog every committed block-3d vector decodes against.\nfn vortex_kind_catalog() {\n    semio_s_artifact_block_3d_model::validate_vortex_kind_catalog(&[\n        semio_s_artifact_block_3d_model::Block3dVortexKind { id: \"door\".into(), name: \"door\".into(), label: \"Door\".into(), color: \"hsl(206 52% 48%)\".into(), default_cable_kind: \"cable.link\".into() },\n        semio_s_artifact_block_3d_model::Block3dVortexKind { id: \"hatch\".into(), name: \"hatch\".into(), label: \"Hatch\".into(), color: \"hsl(37 52% 48%)\".into(), default_cable_kind: \"cable.bus\".into() },\n    ]);\n}\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_mutation_vectors::assert_committed_vectors::<semio_s_artifact_block_3d_model::Block3dSnapshot, semio_s_artifact_block_3d_mutations::Block3dMutation>(&root, vortex_kind_catalog).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub(?:\\([^)]*\\))?\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "[ \\t]*#\\[cfg\\(test\\)\\]\\s*#\\[path = \\\"[^\\\"]*🧬️mutations/[^/\\\"]+/🧪️tests/[^\\\"]+\\\"\\]\\s*mod \\w+;\\n",
+     ""
+    ]
+   ]
+  }
+ ],
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [],
+ "move_mods": [],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-block-3d-model"
+    ]
+   }
+  ]
+ },
+ "generated": {},
+ "root_to_map": {
+  "pilot_languages": "io"
+ },
+ "root_to_extra": [
+  "validate_vortex_kind_catalog"
+ ],
+ "generic_leaves": {
+  "enum": "Block3dMutation",
+  "snapshot": "Block3dSnapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::Block3dDiff",
+  "mutations_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "✏️rename-object-kind",
+   "🏷️change-object-kind-label",
+   "🔀️change-object-kind-variant",
+   "📃️change-object-kind",
+   "🖼️change-object-kind-icon",
+   "📐change-object-kind-unit",
+   "🧱create-representation",
+   "🗑️delete-representation",
+   "✒️rename-representation",
+   "🌐change-representation-mesh-url",
+   "🏔️change-representation-lod",
+   "📜change-representation",
+   "🔖add-representation-tag",
+   "🚫remove-representation-tag",
+   "🧩add-representation-attribute",
+   "➖remove-representation-attribute",
+   "🌱create-vortex-kind",
+   "❌delete-vortex-kind",
+   "🖋️rename-vortex-kind",
+   "🎫change-vortex-kind-label",
+   "🎨change-vortex-kind-color",
+   "🔌change-vortex-kind-default-cable",
+   "🌀create-vortex",
+   "🕳️delete-vortex",
+   "📍move-vortex",
+   "📏resize-vortex",
+   "🧷change-vortex-vortex-kind",
+   "🪧change-vortex-label",
+   "➕add-compatibility-rule",
+   "✂️remove-compatibility-rule",
+   "🔩add-attribute",
+   "🚷remove-attribute",
+   "👤add-author",
+   "🙅remove-author",
+   "🎥move-camera3d",
+   "🔍scale-camera3d",
+   "💬change-meta-description"
+  ]
+ }
+}

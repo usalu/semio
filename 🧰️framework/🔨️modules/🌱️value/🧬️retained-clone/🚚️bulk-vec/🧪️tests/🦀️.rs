@@ -1,6 +1,6 @@
 //! 🚚️ Bitwise vector clones move whole pages per turn: equal to the `Clone` oracle, O(bytes/page) turns, exact capacity accounting and leak-free cancellation at every turn.
 use super::*;
-use crate::value::observe_retirement_allocations as observe;
+use crate::observe_retirement_allocations as observe;
 use std::{fmt::Debug, ops::Deref};
 
 const CLOSE_COPY_BYTES: usize = RETAINED_CLONE_BULK_PAGE_BYTES;
@@ -270,10 +270,12 @@ fn bulk_vector_clone_cancels_at_every_turn_and_releases_everything() {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, crate::RetainedClone, crate::RetireOwned)]
+#[value(crate="crate")]
 #[retained_clone(bitwise)]
 struct Texel { red: u32, green: u32, blue: u32, alpha: u32, reserved: u32 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, crate::RetainedClone, crate::RetireOwned)]
+#[value(crate="crate")]
 struct PlainTexel { red: u32, green: u32 }
 
 #[test]

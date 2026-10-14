@@ -568,17 +568,17 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::{apply_en1995_mutation, inverse_en1995_mutation};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::schema::mutations::En1995Mutation;
+    use semio_s_artifact_norm_en1995_mutations::mutation_bridge::{apply_en1995_mutation, inverse_en1995_mutation};
+    use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
 
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::text::mutations::{decode_en1995_mutation_json};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::schema::snapshot::{En1995Snapshot};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::binary::snapshot::{encode_en1995_pack};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::binary::snapshot::{decode_en1995_pack};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::text::snapshot::{encode_en1995_dsl};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::text::snapshot::{decode_en1995_dsl};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::text::snapshot::{decode_en1995_snapshot_json};
-    use semio_s_artifact_norm_en1995::standards::v1::subsets::any::io::text::snapshot::{encode_en1995_snapshot_json};
+    use semio_s_artifact_norm_en1995_io::text::mutations::decode_en1995_mutation_json;
+    use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+    use semio_s_artifact_norm_en1995_io::binary::snapshot::encode_en1995_pack;
+    use semio_s_artifact_norm_en1995_io::binary::snapshot::decode_en1995_pack;
+    use semio_s_artifact_norm_en1995_io::text::snapshot::encode_en1995_dsl;
+    use semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl;
+    use semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_snapshot_json;
+    use semio_s_artifact_norm_en1995_io::text::snapshot::encode_en1995_snapshot_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode

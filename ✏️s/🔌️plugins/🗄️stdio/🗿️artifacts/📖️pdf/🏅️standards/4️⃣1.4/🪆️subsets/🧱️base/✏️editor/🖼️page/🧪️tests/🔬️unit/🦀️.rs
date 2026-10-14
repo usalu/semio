@@ -1,7 +1,7 @@
 //! \u{1f9ea}️ Own PDF 1.4 page drafts, mutation inverses and address admission.
 use super::*;
 use protocol::{MutationDiff, OpBinary};
-const CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../\u{1f3c5}️standards/4️⃣1.4/\u{1fa86}️subsets/\u{1f9f1}️base/✏️editor/\u{1f9eb}️fixtures/\u{1f4c4}️resolved-page-domain/\u{1f523}️.json"));
+const CORPUS: &str = include_str!("../../../🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json");
 fn fixture() -> crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot {
     use crate::standards::v1_4::subsets::base::schema::snapshot::{PdfSnapshot, PageDoc};
     let fixture: serde_json::Value = serde_json::from_str(CORPUS).unwrap();

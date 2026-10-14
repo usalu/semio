@@ -1,37 +1,45 @@
 //! 🧬️ Din16798 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 
-use crate::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 //#region 🔖️Rows
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ZoneDocument`.
-    pub Din16798ZonePatch of crate::ZoneDocument { set { name: String, usage_type: String, floor_area_m2: f64, occupants: u32, comfort_category: String, pollution_class: String, comfort_model: String, t_op_winter_c: f64, t_op_summer_c: f64, air_speed_m_s: f64, clothing_clo: f64, metabolic_rate_met: f64, rh_percent: f64, outdoor_air_supplied_m3_h: f64, co2_ppm: f64, illuminance_lx: f64, noise_db: f64, turbulence_intensity_percent: f64, vent_method: String, vent_system_id: String } }
+    pub Din16798ZonePatch of semio_s_artifact_norm_din16798_model::ZoneDocument { set { name: String, usage_type: String, floor_area_m2: f64, occupants: u32, comfort_category: String, pollution_class: String, comfort_model: String, t_op_winter_c: f64, t_op_summer_c: f64, air_speed_m_s: f64, clothing_clo: f64, metabolic_rate_met: f64, rh_percent: f64, outdoor_air_supplied_m3_h: f64, co2_ppm: f64, illuminance_lx: f64, noise_db: f64, turbulence_intensity_percent: f64, vent_method: String, vent_system_id: String } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ZoneDocument` list.
-    pub Din16798ZoneDelta { removal: Din16798ZoneRemoval, insertion: Din16798ZoneInsertion, relocation: Din16798ZoneRelocation, modification: Din16798ZoneModification, row: crate::ZoneDocument, patch: Din16798ZonePatch, key: id }
+    pub Din16798ZoneDelta { removal: Din16798ZoneRemoval, insertion: Din16798ZoneInsertion, relocation: Din16798ZoneRelocation, modification: Din16798ZoneModification, row: semio_s_artifact_norm_din16798_model::ZoneDocument, patch: Din16798ZonePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `VentSystemDocument`.
-    pub Din16798VentSystemPatch of crate::VentSystemDocument { set { name: String, system_type: String, sfp_w_m3_s: f64, sfp_required_class: u8, heat_recovery_eta: f64, oda_class: String, filter_sup_class: String, years_since_inspection: u32, humidification_required_kg_h: f64, humidification_provided_kg_h: f64, fan_q_v_m3_s: f64, fan_t_run_h: f64, duct_class: String, duct_test_pressure_pa: f64, duct_leakage_m3_s_m2: f64, design_airflow_m3_h: f64 } }
+    pub Din16798VentSystemPatch of semio_s_artifact_norm_din16798_model::VentSystemDocument { set { name: String, system_type: String, sfp_w_m3_s: f64, sfp_required_class: u8, heat_recovery_eta: f64, oda_class: String, filter_sup_class: String, years_since_inspection: u32, humidification_required_kg_h: f64, humidification_provided_kg_h: f64, fan_q_v_m3_s: f64, fan_t_run_h: f64, duct_class: String, duct_test_pressure_pa: f64, duct_leakage_m3_s_m2: f64, design_airflow_m3_h: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `VentSystemDocument` list.
-    pub Din16798VentSystemDelta { removal: Din16798VentSystemRemoval, insertion: Din16798VentSystemInsertion, relocation: Din16798VentSystemRelocation, modification: Din16798VentSystemModification, row: crate::VentSystemDocument, patch: Din16798VentSystemPatch, key: id }
+    pub Din16798VentSystemDelta { removal: Din16798VentSystemRemoval, insertion: Din16798VentSystemInsertion, relocation: Din16798VentSystemRelocation, modification: Din16798VentSystemModification, row: semio_s_artifact_norm_din16798_model::VentSystemDocument, patch: Din16798VentSystemPatch, key: id }
 }
 //#endregion 🔖️Rows
 
@@ -44,7 +52,7 @@ protocol::list_delta! {
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Diff {
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub theta_rm_c: Option<f64>,
     #[state(artifact)]
@@ -161,3 +169,8 @@ impl DiffAlgebra<Din16798Snapshot> for Din16798Diff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

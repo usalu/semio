@@ -1,3 +1,4 @@
+import {withBuildGraphOptionalPublicationV1,registerBuildGraphOptionalHandleV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -32,6 +33,7 @@ const sourceAnalysisImages = new Map();
 const SOURCE_ANALYSIS_BYTES = 16 * 1024 * 1024;
 let sourceAnalysisBytes = 0;
 let loadSealed = false;
+let authorityDigest;
 
 /** 📊️ Exposes owned project computation counts without influencing source admission. */
 export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}
@@ -58,9 +60,15 @@ function projectObservationHoldsV1(row,parent){
  checks?.set(key,{fact,holds});return holds;
 }
 
-/** 📦️ Admits one physical project's exact input observations through its own computation. */
+/** 🪪️ Seals module-load authority and names it by the meaning of its facts, so project records inherit implementation identity by digest instead of by rows. */
+export function inferenceAuthorityDigestV1(){
+ loadSealed=true;
+ return authorityDigest??=createHash("sha256").update(JSON.stringify([...loadObservations.values()].map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])).sort())).digest("hex");
+}
+
+/** 📦️ Admits one physical project's own input observations through its own computation, bound to the sealed authority digest. */
 export async function observeProjectInferenceV1({cachePath,key,owner},compute){
- const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,key])).digest("hex"),previous=projectImages.get(cachePath);
+ const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,inferenceAuthorityDigestV1(),key])).digest("hex"),previous=projectImages.get(cachePath);
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
  if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
   inherit(previous.observations);
@@ -90,11 +98,28 @@ export function memoizedObservedComputationV1(cache,key,compute) {
  finally{retainObservationsV1(parent,nested.values());retainSourceFactsV1(nested.values());}
 }
 
+/** 🌊️ Retains complete observations while an original caller yields asynchronous inference. */
+export async function memoizedObservedAsyncComputationV1(cache,key,compute,checkpoint) {
+ if(typeof checkpoint!=="function")throw Error("Original asynchronous inference checkpoint required");
+ const parent=scopes.getStore(),previous=cache.get(key);
+ if(previous){let holds=true;for(const row of previous.observations){await checkpoint();if(!projectObservationHoldsV1(row,parent)){holds=false;break;}}if(holds){retainObservationsV1(parent,previous.observations);retainSourceFactsV1(previous.observations);return previous.value;}}
+ const nested=new Map();
+ try{const value=await scopes.run(nested,compute);if(value!==null)cache.set(key,{value,observations:[...nested.values()]});return value;}
+ finally{retainObservationsV1(parent,nested.values());retainSourceFactsV1(nested.values());}
+}
+
 /** ⚖️ Refuses mixed source images while allowing identical bytes with different file stamps. */
 function observationIdentityV1(row){return row.kind+"\0"+row.path+(row.kind==="analysis"?"\0"+row.fact?.provider:"");}
 
 /** 🧠️ Distinguishes semantic results independently of their original source byte hints. */
 function observationMeaningV1(row){return JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.fact);}
+
+/** 🧨️ Names the first contradictory source read and whether it contradicts sealed module-load authority, which no re-inference in this process can repair. */
+function conflictingInferenceErrorV1(rows){
+ const seen=new Map(),authority=new Set([...loadObservations.values()].map(row=>JSON.stringify([observationIdentityV1(row),observationMeaningV1(row)])));
+ for(const row of rows){const key=observationIdentityV1(row),meaning=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==meaning){const loaded=authority.has(JSON.stringify([key,seen.get(key)]))||authority.has(JSON.stringify([key,meaning]));return Object.assign(Error(loaded?"Build graph implementation authority changed during inference; restart the owned build invocation: "+row.kind+":"+row.path:"Conflicting inference observations: "+row.kind+":"+row.path),{code:loaded?"BUILD_AUTHORITY_CHANGED":"BUILD_SOURCE_CONFLICT",path:row.path});}seen.set(key,meaning);}
+ return Object.assign(Error("Conflicting inference observations"),{code:"BUILD_SOURCE_CONFLICT"});
+}
 
 /** ⚖️ Refuses conflicting results from the same source consumer. */
 function consistentObservationsV1(rows){const seen=new Map();for(const row of rows){const key=observationIdentityV1(row),fact=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==fact)return false;seen.set(key,fact);}return true;}
@@ -213,10 +238,10 @@ const facts = {
   resolve: (key) => { const [from, request] = JSON.parse(key); try { return createRequire(from).resolve(request); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
 };
 
-/** ✍️ Records one fact in the active inference scope, or — until the first inference begins — in the module-load set; reads outside both are not inference inputs. */
+/** ✍️ Records one fact in the active inference scope, or — while modules evaluate before the first inference and outside every capture — in the module-load authority; captured reads outside a scope belong to their capture only. */
 function record(kind, path, fact) {
-  const target = scopes.getStore() ?? (loadSealed ? undefined : loadObservations);
-  if(!target&&!sourceCaptures.getStore())return;
+  const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
+  if(!target&&!capture)return;
   const row={kind,path,fact:fact===undefined?facts[kind](path):fact};
   retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
 }
@@ -404,6 +429,43 @@ function current(observations) {
  * @param {() => Promise<T> | T} compute
  * @returns {Promise<T>}
  */
+/** 🧳️ Keeps packed descriptors inside the original graph writer lifetime. */
+function observedRecordStoreV1(path){
+ let records=recordStores.get(path);if(!records){records=openRecordStore(path,{publication:(plan,write)=>withBuildGraphOptionalPublicationV1(join(path,"0-0-0000000000000000.pack"),plan,write)});recordStores.set(path,records);const original=records;registerBuildGraphOptionalHandleV1(()=>{try{original.close();}finally{if(recordStores.get(path)===original)recordStores.delete(path);}});}return records;
+}
+
+/**
+ * 🪨️ Runs one inference pass in rounds until a single round observed one mutually consistent source snapshot; only that round's facts reach
+ * the caller's scope and capture. Projects whose images still hold are reused, so a round re-infers only the projects a concurrent edit
+ * touched. A failing round is repeated while any fact it consumed has changed since, or was stamped within {@link RACY_MS} (a half-written
+ * file); otherwise its failure is genuine and rethrown with its facts retained.
+ * @template T
+ * @param {() => Promise<T> | T} compute
+ * @param {{ readonly signal?: AbortSignal; readonly limit?: number; readonly onRound?: (round: { round: number; conflict?: string; failure?: unknown }) => void | Promise<void> }} [options]
+ * @returns {Promise<T>}
+ */
+export async function settleObservedComputationV1(compute,{signal,limit=64,onRound}={}){
+ const parent=scopes.getStore(),capture=sourceCaptures.getStore(),accept=(rows,captured)=>{retainObservationsV1(parent,rows);retainObservationsV1(capture,captured);};
+ for(let round=0;;round++){
+  signal?.throwIfAborted();
+  const nested=new Map(),captured=new Map(),started=Date.now();let value,failure;
+  try{value=await sourceCaptures.run(captured,()=>inferenceValidationScopes.run(nested,()=>scopes.run(nested,compute)));}catch(error){failure=error;}
+  signal?.throwIfAborted();
+  const rows=[...nested.values()],consistent=consistentObservationsV1(rows);
+  if(consistent&&failure===undefined){accept(rows,captured.values());return value;}
+  if(consistent&&await observationsHold(rows,64,new Set(),new Set(),signal)){
+   signal?.throwIfAborted();
+   const youngest=Math.max(0,...rows.map(({kind,fact})=>{const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source?Math.max(source.mtimeMs??0,source.ctimeMs??0):0;}));
+   if(youngest<started-RACY_MS){accept(rows,captured.values());throw failure;}
+   await new Promise((resolve,reject)=>{const timer=setTimeout(resolve,Math.max(0,youngest+RACY_MS-Date.now()));signal?.addEventListener("abort",()=>{clearTimeout(timer);reject(signal.reason);},{once:true});});
+  }
+  signal?.throwIfAborted();
+  await onRound?.({round,...(consistent?{}:{conflict:conflictingInferenceErrorV1(rows).path}),...(failure===undefined?{}:{failure})});
+  signal?.throwIfAborted();
+  if(round+1>=limit){accept(rows,captured.values());throw failure??conflictingInferenceErrorV1(rows);}
+ }
+}
+
 export async function observeInference({ cachePath, key }, compute) {
   return observeInferenceComputationV1({cachePath,key},compute,false);
 }
@@ -412,7 +474,7 @@ export async function observeInference({ cachePath, key }, compute) {
 async function observeInferenceComputationV1({cachePath,key},compute,nestedProject) {
   loadSealed = true;
   const parent=scopes.getStore();
-  const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, key])).digest("hex"), hints = new Map();
+  const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   try {
     const text = fs.readFileSync(cachePath, "utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));
     if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && current(header.observations)) {
@@ -425,24 +487,23 @@ async function observeInferenceComputationV1({cachePath,key},compute,nestedProje
     for (const { kind, path, fact } of Array.isArray(header.observations) ? header.observations : []) if (kind === "file" && typeof fact?.sha256 === "string") hints.set(path, fact);
   } catch {}
   const observations = new Map(), started = Date.now();
-  let records = recordStores.get(cachePath);
-  if (!records) recordStores.set(cachePath, records = openRecordStore(`${cachePath}.records`));
+  const records=observedRecordStoreV1(`${cachePath}.records`);
   const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
   records.flush();
   if (records.stats.records > 2 * records.stats.accessed) records.retainAccessed();
-  const rows = [...loadObservations.values(), ...observations.values()];retainSourceFactsV1(rows);
+  const rows = [...authority, ...observations.values()];retainSourceFactsV1(rows);
   retainObservationsV1(parent,rows);
-  if(!consistentObservationsV1(rows))throw Error("Conflicting inference observations");
+  const consistent=consistentObservationsV1(rows);
+  if(!consistent&&!nestedProject)throw conflictingInferenceErrorV1(rows);
   originalInferencePublications.delete(cachePath);
-  if (jsonImage(result) !== undefined) originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:[...loadObservations.values()],observations:rows});
+  if (jsonImage(result) !== undefined) originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:authority,observations:rows});
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
   usedInference.set(cachePath, null);
-  if (!racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {
+  if (consistent && !racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
-    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, resultSha256:createHash("sha256").update(image).digest("hex"), authorityObservations: [...loadObservations.values()], observations: rows });
-    fs.writeFileSync(temporary, `${header}\n${image}`);
-    fs.renameSync(temporary, cachePath);
-    usedInference.set(cachePath, createHash("sha256").update(header).digest("hex"));
+    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, resultSha256:createHash("sha256").update(image).digest("hex"), authorityObservations: authority, observations: rows });
+    const bytes=Buffer.byteLength(header)+1+Buffer.byteLength(image);let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
+    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, `${header}\n${image}`,{flag:"wx"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,createHash("sha256").update(header).digest("hex"));
   }
   return result;
 }
@@ -461,11 +522,11 @@ async function observeInferenceComputationV1({cachePath,key},compute,nestedProje
 export async function observeDependencies({ receiptPath, recordDirectory }, compute) {
   const observations = new Map(), started = Date.now(),publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),hints=new Map();
   if(recordDirectory)try{const previous=JSON.parse(fs.readFileSync(publicationPath,"utf8"));if(previous.version===1&&previous.revision===OBSERVATION_REVISION&&Array.isArray(previous.observations)&&Number.isSafeInteger(previous.startedAt))for(const row of previous.observations)if(row.kind==="file"&&/^[a-f0-9]{64}$/u.test(row.fact?.sha256??"")&&row.fact.mtimeMs<previous.startedAt-RACY_MS&&row.fact.ctimeMs<previous.startedAt-RACY_MS)hints.set(row.path,row.fact);}catch{}
-  let records=recordDirectory&&recordStores.get(recordDirectory);if(recordDirectory&&!records)recordStores.set(recordDirectory,records=openRecordStore(recordDirectory));
+  const records=recordDirectory?observedRecordStoreV1(recordDirectory):undefined;
   const run=()=>scopes.run(observations,compute),result=await(records?recordScopes.run({records,hints},run):run());
   records?.flush();if(records&&records.stats.records>2*records.stats.accessed)records.retainAccessed();
   const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
-  if(!consistentObservationsV1(rows))throw Error("Conflicting inference observations");
+  if(!consistentObservationsV1(rows))throw conflictingInferenceErrorV1(rows);
   const racy = rows.some(({ kind, fact }) => {const source=kind==="file"?fact:kind==="analysis"?fact.source:undefined;return source&&(source.mtimeMs>=started-RACY_MS||source.ctimeMs>=started-RACY_MS);});
   fs.mkdirSync(dirname(receiptPath), { recursive: true });
   const originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));

@@ -1,6 +1,8 @@
 //! 🟚 Computed evaluation owned by one exact Generation3d generate-preview window.
 
-use crate::editor::generation3d::modes::edit::windows::preview::transient::{Generation3dPreviewWindowTransient, Generation3dPreviewWindowTransientMutation, Generation3dPreviewWindowTransientOwner};
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransient;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransientMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::transient::Generation3dPreviewWindowTransientOwner;
 
 pub struct Generation3dGeneratePreviewWindowTransientOwner;
 

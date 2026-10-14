@@ -9,14 +9,14 @@ mod tests {
     //#region 🔖️AppTypes
     // One `use` per registered app kind — aliased where the app's own type is plainly named
     // `Document` (every norm sub-app) to avoid a name collision in this one aggregating module.
-    use semio_s_artifact_block_2d::Block2dSnapshot as Block2dDefinition;
-    use semio_s_artifact_block_3d::Block3dSnapshot as Block3dDefinition;
-    use semio_s_artifact_block_5d::Block5dSnapshot as Block5dDefinition;
+    use semio_s_artifact_block_2d_model::Block2dSnapshot as Block2dDefinition;
+    use semio_s_artifact_block_3d_model::Block3dSnapshot as Block3dDefinition;
+    use semio_s_artifact_block_5d_model::Block5dSnapshot as Block5dDefinition;
     use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
     use semio_s_artifact_dag_dag::DagSnapshot;
-    use semio_s_artifact_draw_drawing::DrawingSnapshot;
-    use semio_s_artifact_fem_2d::Fem2dSnapshot as Fem2dDocument;
-    use semio_s_artifact_fem_3d::Fem3dSnapshot as Fem3dDocument;
+    use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as Fem2dDocument;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot as Fem3dDocument;
     use semio_framework_artifact_flow_flow::FlowHostSnapshot;
     use semio_s_artifact_norm_din16798::Din16798Snapshot as Din16798Document;
     use semio_s_artifact_norm_din18599::Din18599Snapshot as Din18599Document;
@@ -39,8 +39,8 @@ mod tests {
     use semio_s_artifact_gis_gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
     use semio_s_artifact_space_home::SHomeSnapshot as SHomeDocument;
     use semio_s_artifact_imperative_procedure::ProcedureSnapshot as ImperativeDocument;
-    use semio_s_artifact_layout_layout::LayoutSnapshot as LayoutDocument;
-    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
+    use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot as LayoutDocument;
+    use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
     use semio_s_artifact_mathematical_equation::EquationSnapshot;
     use semio_s_artifact_norm_iso16757::Iso16757Snapshot as Iso16757Document;
     use semio_s_artifact_norm_vdi3805::Vdi3805Snapshot as Vdi3805Document;
@@ -51,13 +51,13 @@ mod tests {
     use semio_framework_artifact_playbook_playbook::PlaybookSpec as FormSpec;
     use semio_framework_artifact_playbook_playbook::PlaybookSpec;
     use semio_s_artifact_animate_presentation::PresentationSnapshot as PresentationDeck;
-    use semio_s_artifact_procedural_generation2d::Generation2dSnapshot as Generation2dDocument;
+    use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot as Generation2dDocument;
     use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot as Generation3dDocument;
-    use semio_s_artifact_process_process3d::Process3dSnapshot as Process3dDocument;
+    use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot as Process3dDocument;
     use semio_s_artifact_puzzle_2d::Puzzle2dSnapshot;
-    use semio_s_artifact_puzzle_3d::Puzzle3dSnapshot;
+    use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
     use semio_s_artifact_puzzle_5d::Puzzle5dSnapshot;
-    use semio_s_artifact_raster_raster::RasterSnapshot;
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
     use semio_s_artifact_reasoning_wires::WiresSnapshot as MindmapWiresDocument;
     use semio_s_artifact_remodel_remodeling::RemodelingSnapshot;
     use semio_framework_artifact_workflow_workflow::WorkflowSnapshot;

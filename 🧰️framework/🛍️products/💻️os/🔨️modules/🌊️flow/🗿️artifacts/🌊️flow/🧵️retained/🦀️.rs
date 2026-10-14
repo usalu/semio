@@ -6,7 +6,7 @@ use semio_framework_value::{ValueError,retirement::{RetireOwned,RetirementCursor
 //#region 📑️SelectedCopy
 #[path = "📑️copy/🦀️.rs"]
 pub mod copy;
-pub use copy::{FlowHostSnapshotIntake,FlowSnapshotCopyIntakeSource,FlowCopyAllocations, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
+pub use copy::{FlowSnapshotIntakeProducer,FlowSnapshotCopyIntakeSource,FlowCopyAllocations, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
 
 #[path = "🧬️fields/🦀️.rs"]
 mod fields;

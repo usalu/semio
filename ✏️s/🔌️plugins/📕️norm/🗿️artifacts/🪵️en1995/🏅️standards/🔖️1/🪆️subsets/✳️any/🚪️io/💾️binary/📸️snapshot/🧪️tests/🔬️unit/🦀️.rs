@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::binary::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
@@ -24,8 +24,8 @@ fn regen_example_pack_assets() {
         let folder = root.join(name);
         let nested = folder.join(name);
         std::fs::create_dir_all(&nested).unwrap();
-        let bytes = crate::standards::v1::subsets::any::io::binary::snapshot::encode_en1995_pack(&snap);
-        let dsl = crate::standards::v1::subsets::any::io::text::snapshot::encode_en1995_dsl(&snap);
+        let bytes = crate::binary::snapshot::encode_en1995_pack(&snap);
+        let dsl = crate::text::snapshot::encode_en1995_dsl(&snap);
         for pack_path in [folder.join("🎒️.pack.semio"), nested.join("🎒️.pack.semio")] {
             std::fs::write(&pack_path, &bytes).unwrap();
             eprintln!("wrote {} ({} bytes)", pack_path.display(), bytes.len());

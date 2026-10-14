@@ -67,7 +67,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
 
     async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
         let text = asset.text.ok_or_else(|| "cad demo requires dsl text".to_string())?;
-        semio_s_artifact_cad_cad_io::text::snapshot::parse_dsl(text).map_err(|e| e.to_string())
+        semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).map_err(|e| e.to_string())
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
@@ -98,7 +98,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-        std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| semio_s_artifact_cad_cad_io::text::snapshot::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
+        std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
     }
 
     async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

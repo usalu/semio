@@ -1,9 +1,9 @@
 //! 🌞️ Lowpoly play app — the world-3d sun window-chrome group, delegating to the framework's shared
 //! `world3d_sun_measures` builder. Shared verbatim by both windows.
 
-use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig};
-use crate::editor::lowpoly::lowpoly_window_action;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_config::{lowpoly_sun_config, LowpolyConfig};
+use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_framework_plugin::{world3d_sun_measures, WindowMeasure};
 
 /// 🎛️ The live chrome measure for this option.

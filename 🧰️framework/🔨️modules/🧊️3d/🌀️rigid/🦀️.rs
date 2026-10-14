@@ -9,7 +9,7 @@
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
@@ -80,7 +80,7 @@ impl std::ops::Neg for Vector3 {
 //#region 🔖️Point3
 // 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Point3 {
     pub x: f32,
     pub y: f32,
@@ -127,7 +127,7 @@ impl std::ops::Add<Vector3> for Point3 {
 //#region 🔖️Quaternion
 // 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Quaternion {
     pub i: f32,
     pub j: f32,
@@ -147,7 +147,7 @@ const ROTATION_EPS: f32 = 1e-8;
 /// normalizes, so the invariant holds for every value that escapes this module.
 // 🧬️ `value_derive::{ToValue, FromValue}` additive; `transparent` forwards to `Quaternion`'s own (just-added) impl.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value", transparent)]
+#[value(crate = "::semio_framework_value", transparent)]
 pub struct UnitQuaternion(Quaternion);
 
 impl UnitQuaternion {
@@ -223,7 +223,7 @@ impl UnitQuaternion {
 /// 🧷️ A rigid transform: rotate then translate, `nalgebra::Isometry3`-shaped.
 // 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Vector3` above.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Isometry3 {
     pub translation: Vector3,
     pub rotation: UnitQuaternion,

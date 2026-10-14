@@ -1,9 +1,9 @@
 //! Inverse for `change-mixed-terrain-distance`.
-use super::ChangeMixedTerrainDistance;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeMixedTerrainDistance, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_mixed_terrain_distance::ChangeMixedTerrainDistance;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeMixedTerrainDistance, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_mixed_terrain_distance::ChangeMixedTerrainDistance> {
     Ok((|| {
-    vec![En1991Mutation::ChangeMixedTerrainDistance(ChangeMixedTerrainDistance { new_mixed_terrain_distance: base.mixed_terrain_distance })]
+    vec![Op::from(ChangeMixedTerrainDistance { new_mixed_terrain_distance: base.mixed_terrain_distance })]
 
     })())
 }

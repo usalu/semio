@@ -3,7 +3,7 @@
 mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::*;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 fn laws() -> serde_json::Value {
@@ -62,7 +62,7 @@ fn sqlite_snapshot_block5d_actual_bare_capability_is_present() {
 }
 #[test]
 fn sqlite_snapshot_block5d_actual_declared_codec_has_owned_sqlite_capability() {
-    let d = crate::standards::v1::subsets::any::io::io();
+    let d = semio_s_artifact_block_5d_io::io();
     assert!(d.native.codec.snapshot_sqlite.is_some());
 }
 #[test]
@@ -130,8 +130,8 @@ fn sqlite_snapshot_block5d_independent_sqlite_reads_the_real_fifteen_table_contr
 fn sqlite_snapshot_block5d_actual_declared_json_preserves_every_owned_word() {
     for word in words() {
         let s = full(word);
-        let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text(&s);
-        let p = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text(&bytes).unwrap();
+        let bytes = semio_s_artifact_block_5d_io_write::serializers::artifacts::json::v_rfc8259::any::json_text(&s);
+        let p = semio_s_artifact_block_5d_io_read::deserializers::artifacts::json::v_rfc8259::any::from_json_text(&bytes).unwrap();
         assert_words(&p, word);
         assert_eq!(p.print_dsl(), s.print_dsl());
     }
@@ -154,16 +154,16 @@ fn sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_rec
     use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
     for word in words() {
         let expected = full(word);
-        let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
+        let database = crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
         assert_eq!(database.tables.len(), 15);
         assert_eq!(database.tables.iter().map(|v| v.rows.len()).sum::<usize>(), 16);
-        let actual = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap();
+        let actual = crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap();
         assert_words(&actual, word);
         assert_eq!(actual.print_dsl(), expected.print_dsl());
         let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let bytes = independent_edit(&bytes, "UPDATE block5_meta SET description='independent edited metadata';UPDATE block5_grip SET grip_kind='independent unresolved semantic kind'");
         let edited = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let actual = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&edited, sqlite_control)).unwrap();
+        let actual = crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&edited, sqlite_control)).unwrap();
         assert_words(&actual, word);
         assert_eq!(actual.meta.description, "independent edited metadata");
         assert_eq!(actual.grips[0].grip_kind, "independent unresolved semantic kind");
@@ -175,7 +175,7 @@ fn sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_rec
 fn sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_refuse() {
     use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::*};
     let expected = full(0);
-    let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
+    let database = crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     for edit in [
         "UPDATE block5_grip SET ordinal=2",
@@ -188,7 +188,7 @@ fn sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_ref
         "INSERT INTO block5_meta VALUES(99,1,'duplicate singleton')",
     ] {
         let malformed = import_sqlite_database(&independent_edit(&bytes, edit), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&malformed, sqlite_control)).is_err(), "{edit}");
+        assert!(crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block5dSnapshot::from_sqlite_database(&malformed, sqlite_control)).is_err(), "{edit}");
     }
 }
 #[test]
@@ -197,12 +197,12 @@ fn sqlite_snapshot_block5d_exact_row_admission_and_four_real_copy_phase_cancella
     let mut expected = full(0);
     expected.part_kind.description = "😀".repeat(32768);
     let limits = SqliteDatabaseLimits { max_rows: 16, ..SqliteDatabaseLimits::default() };
-    let database = original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
+    let database = crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let short = SqliteDatabaseLimits { max_rows: 15, ..limits };
-    assert!(original_owners::with_sqlite_recipient(short,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).is_err());
+    assert!(crate::sqlite_snapshot_tests::original_owners::with_sqlite_recipient(short,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).is_err());
     let native = store::io_schema::IoPayload::Text(expected.print_dsl());
-    assert!(original_owners::with_decoding(|native_owner|Block5dSnapshot::decode_sqlite_snapshot_native(&native, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
-    assert!(original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
+    assert!(crate::sqlite_snapshot_tests::original_owners::with_decoding(|native_owner|Block5dSnapshot::decode_sqlite_snapshot_native(&native, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
+    assert!(crate::sqlite_snapshot_tests::original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
         let mut saw = false;
         let mut callback = |e: SqliteSnapshotProgress| {
@@ -217,8 +217,8 @@ fn sqlite_snapshot_block5d_exact_row_admission_and_four_real_copy_phase_cancella
         let refused = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => expected.to_sqlite_database(&mut control).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => Block5dSnapshot::from_sqlite_database(&database, &mut control).is_err(),
-            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|Block5dSnapshot::decode_sqlite_snapshot_native(&native, &mut control, native_owner)).is_err(),
-            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut control, native_owner)).is_err(),
+            SqliteSnapshotPhase::DecodeNative => crate::sqlite_snapshot_tests::original_owners::with_decoding(|native_owner|Block5dSnapshot::decode_sqlite_snapshot_native(&native, &mut control, native_owner)).is_err(),
+            SqliteSnapshotPhase::EncodeNative => crate::sqlite_snapshot_tests::original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut control, native_owner)).is_err(),
             _ => unreachable!(),
         };
         drop(control);
@@ -228,7 +228,7 @@ fn sqlite_snapshot_block5d_exact_row_admission_and_four_real_copy_phase_cancella
 #[test]
 fn sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table() {
     use store::sqlite_snapshot::*;
-    let codec = crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.unwrap();
+    let codec = semio_s_artifact_block_5d_io::io().native.codec.snapshot_sqlite.unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.block.block5d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
         let expected = full(word);
@@ -237,11 +237,11 @@ fn sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_doma
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = original_owners::with_decoding(|native_owner|(codec.export)(BLOCK_5D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let database = crate::sqlite_snapshot_tests::original_owners::with_decoding(|native_owner|(codec.export)(BLOCK_5D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             assert_eq!(database.tables.len(), 15);
             assert_eq!(database.table("block5_document").unwrap().single_row().unwrap().text(1).unwrap(), "");
             assert_eq!(database.table("block5_grip").unwrap().single_row().unwrap().text(4).unwrap(), expected.grips[0].grip_kind);
-            let native = original_owners::with_encoding(|native_owner|(codec.import)(BLOCK_5D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+            let native = crate::sqlite_snapshot_tests::original_owners::with_encoding(|native_owner|(codec.import)(BLOCK_5D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             let actual = match native {
                 store::io_schema::IoPayload::Binary(v) => Block5dSnapshot::decode_pack(&v).unwrap(),
                 store::io_schema::IoPayload::Text(v) => Block5dSnapshot::parse_dsl(&v).unwrap(),
@@ -253,10 +253,10 @@ fn sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_doma
 }
 
 mod populated_public_owner {
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use crate::sqlite_snapshot_tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
-pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::block5d::Block5dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::block5d::Block5dViewer>>),}
+pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact_block_5d_editor::Block5dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_block_5d_viewer::Block5dViewer>>),}
 }
 struct PublicOwned(Option<Block5dSnapshot>);impl PublicOwned{fn new(value:Block5dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block5dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block5dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Block5dSnapshot,b:&Block5dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}

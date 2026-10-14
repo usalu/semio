@@ -32,6 +32,41 @@
       ],
       "accepted": false
     }
+  ],
+  "authoredCacheDirectories": [
+    {
+      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts",
+      "accepted": true
+    },
+    {
+      "directory": ".🧬semio/🦑️repo/⚡️cache/nx",
+      "accepted": false
+    },
+    {
+      "directory": ".nx/cache",
+      "accepted": false
+    },
+    {
+      "directory": "/tmp/cache",
+      "accepted": false
+    },
+    {
+      "directory": "../cache",
+      "accepted": false
+    },
+    {
+      "directory": null,
+      "accepted": false
+    }
+  ],
+  "rawCacheAdmission": [
+    {
+      "environment": "missing",
+      "refused": true
+    },
+    {
+      "environment": "foreign",
+      "refused": true
+    }
   ]
 }
-

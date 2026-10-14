@@ -67,7 +67,7 @@ impl ArtifactApp for SingleDocumentApp {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> crate::app::ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -251,8 +251,8 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
     let live_id = app.store.envelope().id.clone();
-    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
-    let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
+    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut source = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_operation_wire(store::ArtifactOperationWire::canonical());
     store::install_unscheduled_catalog(&mut source, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, TestMutation>()).expect("source owners");
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {

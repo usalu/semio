@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-retirement-queue"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-retirement-queue"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path="../../../📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path="../../../../📋️list/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

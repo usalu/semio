@@ -31,6 +31,9 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.semio-s-artifact-process-process3d]
 path = "../../🗿️artifacts/🧊️process3d/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-process-process3d-model]
+path = "../../🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]

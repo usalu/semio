@@ -1,7 +1,7 @@
 //! 📄️ DOCX subset document window backed by the canonical base controls.
 
-use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main as canonical;
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main as canonical;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, WindowKit};
 use semio_framework_plugin::{BuiltNode, TreeWindows, WindowKindDefinition};
 #[cfg(test)] use semio_framework_plugin::{UiValue};

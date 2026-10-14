@@ -1,8 +1,7 @@
 //! 🌐 Block3d mutation — `ChangeRepresentationMeshUrl`: a representation's `meshUrl`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🌐 `change-representation-mesh-url` payload.
@@ -19,19 +18,19 @@ pub struct ChangeRepresentationMeshUrl {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_representation_mesh_url(id: String, new_mesh_url: Option<String>) -> Block3dMutation {
-    Block3dMutation::ChangeRepresentationMeshUrl(ChangeRepresentationMeshUrl { id, new_mesh_url })
+pub fn change_representation_mesh_url<Op: From<crate::change_representation_mesh_url::ChangeRepresentationMeshUrl>>(id: String, new_mesh_url: Option<String>) -> Op {
+    Op::from(ChangeRepresentationMeshUrl { id, new_mesh_url })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresentationMeshUrl {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeRepresentationMeshUrl where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_representation_mesh_url::ChangeRepresentationMeshUrl> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-mesh-url", record: "ChangedRepresentationMeshUrl" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_representation_mesh_url::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_representation_mesh_url::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeRepresen
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

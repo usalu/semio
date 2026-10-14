@@ -15,7 +15,7 @@ use crate::snapshot::DrawingSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
-fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
+pub fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
     match layer {
         DrawingLayerNode::Shape(body) => &body.base.id,
         DrawingLayerNode::Path(body) => &body.base.id,

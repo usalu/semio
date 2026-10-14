@@ -1,5 +1,5 @@
 //! ♻️ Native refusal prose retires through its original borrowed or owned text authority.
-use super::ValueError;
+use crate::ValueError;
 use crate::retirement::{RetireOwned,RetirementCursor};
 use std::borrow::Cow;
 impl RetireOwned for ValueError {

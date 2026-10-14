@@ -16,6 +16,7 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value.workspace = true
 semio-framework-3d-brep-vector.workspace = true
 semio-framework-3d-brep-surface.workspace = true
 semio-framework-3d-brep-curve.workspace = true
@@ -24,7 +25,6 @@ semio-framework-3d-brep-queries.workspace = true
 semio-framework-3d-brep-representation.workspace = true
 semio-framework-3d-brep-tessellation.workspace = true
 semio-framework-3d-brep-validation.workspace = true
-semio-framework-replication.workspace = true
 semio-framework-value-derive.workspace = true
 
 [dev-dependencies]

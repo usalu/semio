@@ -1,8 +1,9 @@
+import {repositoryTestArtifactEnvironmentV1} from "../../💾️storage/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { repoToolCacheEnv, runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -141,7 +142,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
     command: "",
     args: ["--plan", planPath, "--out", outPath],
     cwd: repoRoot,
-    env: { ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot) },
+    env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, CARGO_TARGET_DIR: cargoTargetDirectory(repoRoot) }),
     hostDir: dir,
     problems,
     preparation: {
@@ -158,7 +159,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
  * @see https://go.dev/ref/mod#workspaces
  */
 export function repositoryGoWorkspace(repoRoot: string): { go: string; uses: string[] } {
-  const probe = runProbe("go", ["work", "edit", "-json", join(repoRoot, "go.work")], { cwd: repoRoot, env: repoToolCacheEnv(repoRoot, { ...process.env }), budgetMs: testLevelBudgetMs("quick") });
+  const probe = runProbe("go", ["work", "edit", "-json", join(repoRoot, "go.work")], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("quick") });
   if (probe.status !== 0) throw new Error(`go work edit -json failed: ${probe.stderr}`);
   const workspace = JSON.parse(probe.stdout) as { Go: string; Use?: { DiskPath: string }[] };
   return { go: workspace.Go, uses: (workspace.Use ?? []).map((use) => join(repoRoot, use.DiskPath)) };
@@ -181,7 +182,7 @@ export function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, 
   if (existsSync(join(repoRoot, "go.work.sum"))) writeFileSync(join(dir, "go.work.sum"), readFileSync(join(repoRoot, "go.work.sum")));
   writeFileSync(join(dir, "adapter.go"), readFileSync(adapterAbs, "utf8").replace(/^package\s+\w+/m, "package main"));
   writeFileSync(join(dir, "main.go"), ["// 🤖️ Generated native entrypoint.", "package main", "", 'import host "semio.tech/repo/test"', "", "func main() {", "\thost.RunMain(Adapter())", "}", ""].join("\n"));
-  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repoToolCacheEnv(repoRoot, { ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
+  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
 }
 
 /** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the repository's own
@@ -199,7 +200,7 @@ export function oracleHostPython(repoRoot: string): string {
  * @see https://docs.python.org/3/library/sysconfig.html#installation-paths
  */
 export function pythonSiteDirectories(repoRoot: string, interpreter: string): string[] | null {
-  const probe = runProbe(interpreter, ["-c", "import json, sysconfig; paths = sysconfig.get_paths(); print(json.dumps(list(dict.fromkeys([paths['purelib'], paths['platlib']]))))"], { cwd: repoRoot, budgetMs: testLevelBudgetMs("quick") });
+  const probe = runProbe(interpreter, ["-c", "import json, sysconfig; paths = sysconfig.get_paths(); print(json.dumps(list(dict.fromkeys([paths['purelib'], paths['platlib']]))))"], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("quick") });
   if ((probe.status ?? 1) !== 0) return null;
   const sites = JSON.parse(probe.stdout.trim()) as unknown;
   return Array.isArray(sites) && sites.length > 0 && sites.every((site) => typeof site === "string") ? (sites as string[]) : null;
@@ -240,7 +241,7 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   const problems: string[] = [];
   const shown = relative(repoRoot, dir).split(sep).join("/");
   if (!existsSync(interpreter)) {
-    const created = runProbe(base, ["-m", "venv", dir], { cwd: repoRoot, budgetMs: testLevelBudgetMs("long") });
+    const created = runProbe(base, ["-m", "venv", dir], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("long") });
     if ((created.status ?? 1) !== 0 || !existsSync(interpreter)) {
       problems.push(`python oracle host: cannot create the cache-local environment at ${shown} with \`${base} -m venv\` — ${created.stderr.trim() || `exit ${created.status}`}`);
       return { interpreter: base, problems };
@@ -257,12 +258,12 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
   // be silently satisfied by whatever the machine happened to have, which is the same as not
   // declaring one.
   const present = (entry: { spec: string; module: string; package: string; version?: string }): boolean => {
-    const probe = runProbe(interpreter, ["-c", `import ${entry.module}, importlib.metadata as meta; print(meta.version(${JSON.stringify(entry.package)}))`], { cwd: repoRoot, budgetMs: testLevelBudgetMs("quick") });
+    const probe = runProbe(interpreter, ["-c", `import ${entry.module}, importlib.metadata as meta; print(meta.version(${JSON.stringify(entry.package)}))`], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("quick") });
     return (probe.status ?? 1) === 0 && (entry.version === undefined || probe.stdout.trim() === entry.version);
   };
   for (const entry of specs) {
     if (present(entry)) continue;
-    const installed = runProbe(interpreter, ["-m", "pip", "install", "--disable-pip-version-check", "--ignore-installed", entry.spec], { cwd: repoRoot, budgetMs: testLevelBudgetMs("exhaustive") });
+    const installed = runProbe(interpreter, ["-m", "pip", "install", "--disable-pip-version-check", "--ignore-installed", entry.spec], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("exhaustive") });
     if ((installed.status ?? 1) !== 0) {
       problems.push(`python oracle host: ${entry.spec} is neither importable nor installable into ${shown} — ${installed.stderr.trim().split("\n").slice(-3).join(" ") || `pip exited ${installed.status}`}`);
       continue;
@@ -320,7 +321,7 @@ export function materializeTypescriptHost(repoRoot: string, discovered: Discover
     command: "bun",
     args: [join(repoRoot, REPO_TEST_DOMAIN_REL, "🖥️host", "🟦️.ts"), "--plan", planPath, "--out", outPath, "--adapter", join(repoRoot, discovered.adapters.typescript!)],
     cwd: repoRoot,
-    env: process.env,
+    env: repositoryTestArtifactEnvironmentV1(repoRoot),
     hostDir: null,
     problems,
   };
@@ -374,7 +375,7 @@ export function materializeDotnetHost(repoRoot: string, discovered: DiscoveredCa
     command: "dotnet",
     args: ["run", "--project", join(dir, "host.csproj"), "--", "--plan", planPath, "--out", outPath],
     cwd: dir,
-    env: { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: "1", DOTNET_NOLOGO: "1" },
+    env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: "1", DOTNET_NOLOGO: "1" }),
     hostDir: dir,
     problems: [],
   };

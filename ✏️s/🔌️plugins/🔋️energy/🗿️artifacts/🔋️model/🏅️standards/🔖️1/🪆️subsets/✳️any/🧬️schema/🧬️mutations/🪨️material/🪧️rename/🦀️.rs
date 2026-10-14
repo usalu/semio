@@ -1,8 +1,7 @@
 //! 🪧️ Energy model mutation — `RenameMaterial`: Sets one material's identity field; a name a sibling already holds is refused.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RenameMaterial {
     pub new_name: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_material(id: crate::model::EntityId, new_name: String) -> EnergyModelMutation {
-    EnergyModelMutation::RenameMaterial(RenameMaterial { id, new_name })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn rename_material<Op: From<RenameMaterial>>(id: crate::model::EntityId, new_name: String) -> Op {
+    RenameMaterial { id, new_name }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RenameMaterial {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RenameMaterial
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RenameMaterial>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "material", kind: "rename-material", record: "RenamedMaterial" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

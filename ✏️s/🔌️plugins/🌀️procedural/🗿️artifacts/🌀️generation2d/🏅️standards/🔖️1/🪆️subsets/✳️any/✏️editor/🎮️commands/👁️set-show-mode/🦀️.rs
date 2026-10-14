@@ -1,8 +1,9 @@
 //! 👁️ 👁️ Generation2d play app commands command — `set-show-mode`.
 
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfigMutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,11 +15,8 @@ pub struct SetShowMode {
 }
 
 pub fn handle(payload: &SetShowMode, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    Ok(Emit::config(vec![Generation2dConfigMutation::SetShowMode(crate::editor::generation2d::config::SetShowModeSetting { value: payload.value.clone() })]))
+    Ok(Emit::config(vec![Generation2dConfigMutation::SetShowMode(semio_s_artifact_procedural_2d_editor_config::SetShowModeSetting { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

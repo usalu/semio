@@ -17,7 +17,7 @@ async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side()
         IoEntry { owned_serializer: None, from: FOREIGN, into: NATIVE, fidelity: IoFidelity::Lossy, direction: Side::Import, sniff: None, run: passthrough },
     ];
     io_register(&ENTRIES).expect("the entries register");
-    let plugin = crate::plugin_program::Plugin::<crate::plugin_app::NoPluginApp>::builder("describe-io").label("Describe Io").version("0.1.0").package_id("semio:describe-io").try_build().expect("the plugin assembles");
+    let plugin = crate::builder::PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("describe-io").label("Describe Io").version("0.1.0").package_id("semio:describe-io").try_build().expect("the plugin assembles");
     let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
     let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
@@ -46,7 +46,7 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
         payload: None,
     };
     let plugin =
-        crate::plugin_program::Plugin::<crate::plugin_app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").package_id("semio:describe-routed-inference").routed_inference(metadata).try_build().expect("routed plugin assembles");
+        crate::builder::PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new(metadata.owner).label("Describe Routed Inference").version("0.1.0").package_id("semio:describe-routed-inference").routed_inference(metadata).try_build().expect("routed plugin assembles");
     let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
     let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");
@@ -61,7 +61,7 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
 #[semio_framework_async_macros::async_test]
 async fn native_descriptor_topic_payload_matches_canonical_emission() {
     let fixture = semio_framework_pack_json::parse(include_str!("../../../🖨️describe/🧪️tests/🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical descriptor vectors");
-    let plugin = crate::plugin_program::Plugin::<crate::plugin_app::NoPluginApp>::builder("canonical-native").label("Canonical Native").version("1.0.0").package_id("semio:canonical-native").try_build().expect("native plugin");
+    let plugin = crate::builder::PluginBuilder::<_, crate::plugin_app::NoPluginApp>::new("canonical-native").label("Canonical Native").version("1.0.0").package_id("semio:canonical-native").try_build().expect("native plugin");
     let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
     let initial = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("native descriptor");

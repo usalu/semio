@@ -1,0 +1,1 @@
+{"moves": [{"from": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️.rs", "from_module": "crate::editor::lowpoly::commands::paint", "to": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "to_module": "crate::editor::lowpoly", "items": ["lowpoly_paint_step"]}]}

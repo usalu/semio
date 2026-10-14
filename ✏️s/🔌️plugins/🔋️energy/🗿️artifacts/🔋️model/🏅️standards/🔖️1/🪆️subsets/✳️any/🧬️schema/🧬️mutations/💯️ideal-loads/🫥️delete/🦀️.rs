@@ -1,8 +1,7 @@
 //! 🫥️ Energy model mutation — `DeleteIdealLoadsSystem`: Drops the ideal-loads air system off its zone. Refused when no system carries the id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteIdealLoadsSystem {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_ideal_loads_system(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteIdealLoadsSystem(DeleteIdealLoadsSystem { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_ideal_loads_system<Op: From<DeleteIdealLoadsSystem>>(id: crate::model::EntityId) -> Op {
+    DeleteIdealLoadsSystem { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteIdealLoadsSystem {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteIdealLoadsSystem
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteIdealLoadsSystem> + From<crate::CreateIdealLoadsSystem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "ideal-loads-system", kind: "delete-ideal-loads-system", record: "DeletedIdealLoadsSystem" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

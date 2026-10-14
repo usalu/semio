@@ -20,14 +20,17 @@ if (segments[0] === "generation2d-window-camera-ownership") {
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(editorRoot, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), oracle], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "generation2d_window_camera_ownership", "--", "--nocapture"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-editor", "--test", "editor-routes", "editor_window_camera_ownership", "--", "--nocapture"], this.repoRoot);
       }
       return;
     }
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation2d", { ...{
+/** 🧩️ Every package of the generation2d family, read from the workspace members. */
+const familyRoot = resolve(import.meta.dir, "../..");
+const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation2d", { packages: familyPackages, ...{
   twins: [{ name: "generation2d-snapshot-fixture-asset", run: generation2dSnapshotFixtureAssetSelfTests }, { name: "generation2d-gesture-leaves", run: generation2dGestureLeafTwinSelfTests }],
 }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, commands: { verify: OwnedVerifyScript } });
 

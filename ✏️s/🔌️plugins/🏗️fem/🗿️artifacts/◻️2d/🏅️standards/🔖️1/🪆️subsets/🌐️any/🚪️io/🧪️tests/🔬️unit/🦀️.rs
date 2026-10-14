@@ -65,7 +65,7 @@ async fn io_declaration_registers_every_declared_hop() {
 #[test]
 fn example_fixture_parses_and_solves() {
     use pack::snapshot::ArtifactDsl;
-    let doc: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
+    let doc: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
     assert_eq!(doc.nodes.len(), 12);
     assert_eq!(doc.elements.len(), 9);
     assert_eq!(doc.regions.len(), 1);

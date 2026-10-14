@@ -1,12 +1,12 @@
 //! ↩️ `replace-elements` inverse.
 
-use crate::mutations::replace_elements::ReplaceElements;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::replace_elements::ReplaceElements;
 
-pub fn inverse(_payload: &ReplaceElements, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ReplaceElements, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::replace_elements::ReplaceElements> {
     Ok((|| {
-    vec![Din18599Mutation::ReplaceElements(ReplaceElements { new_elements: base.elements.clone() })]
+    vec![Op::from(ReplaceElements { new_elements: base.elements.clone() })]
 
     })())
 }

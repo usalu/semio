@@ -33,7 +33,3 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveRelationship {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

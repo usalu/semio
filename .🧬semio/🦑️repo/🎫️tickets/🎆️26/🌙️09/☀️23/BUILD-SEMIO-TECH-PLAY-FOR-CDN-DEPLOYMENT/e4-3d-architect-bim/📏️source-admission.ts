@@ -15,5 +15,5 @@ for (const arg of args.filter(a => a !== "--test")) {
     const lines = files.reduce((s, f) => s + f.activeLines, 0), bytes = files.reduce((s, f) => s + f.bytes, 0);
     const ok = files.length <= 32 && lines <= 4000 && bytes <= 262144;
     console.log(`| ${name}${test ? " (test)" : ""} | ${files.length} | ${lines} | ${bytes} | ${ok ? "admitted" : "REFUSED"} |`);
-  } catch (error) { console.log(`| ${name} | – | – | – | ERROR ${(error as Error).message.slice(0, 120)} |`); }
+  } catch (error) { console.log(`| ${name} | – | – | – | ERROR ${(error as Error).message.slice(0, 400)} |`); }
 }

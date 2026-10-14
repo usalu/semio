@@ -1,10 +1,17 @@
 //! 🗂️ 🗂️ FEM 3D app commands command — `remove-selection`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_combination,delete_element,delete_load_case,delete_material,delete_node,delete_section,delete_solid,delete_support};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
+use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
+use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material;
+use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_solid;
+use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,7 +30,7 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, 
     for id in &payload.ids {
         if snapshot.nodes.iter().any(|n| &n.id == id) {
             operations.push(Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: id.clone() }));
-        } else if snapshot.elements.iter().any(|e| crate::element_id(e) == id) {
+        } else if snapshot.elements.iter().any(|e| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id(e) == id) {
             operations.push(Fem3dMutation::DeleteElement(delete_element::DeleteElement { id: id.clone() }));
         } else if snapshot.materials.iter().any(|m| &m.id == id) {
             operations.push(Fem3dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: id.clone() }));
@@ -46,6 +53,3 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, 
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

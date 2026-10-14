@@ -4,13 +4,14 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the draw editor and viewer.
     pub enum DrawApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::drawing::DrawingPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::drawing::DrawingViewer>>),
+        Editor(VcsArtifactApp<EditorApp<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_draw_drawing_viewer::DrawingViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -26,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
 /// activates one instance whenever a `"2d.drawing"` artifact
-/// (`crate::artifacts::drawing::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
+/// (`semio_s_artifact_draw_drawing_model::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment; the canvas gesture FSM's own `loop`s are microstep- and
 /// mailbox-bounded within one turn, not a self-tick/`pending_effects` poll — the SDK default
 /// holds), and it asks the broker for document write access because `DrawingPlayApp` persists edits
@@ -34,14 +35,14 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (`LoadDocument`/`SetActiveUtility`/`ReplayShellCommand`) are per-turn UI/document effects with
 /// no evidence of long-running computation, large held buffers, or high-frequency timers.
 pub fn plugin() -> Result<Plugin<DrawApps>, PluginAssemblyError> {
-    Plugin::<DrawApps>::builder("draw")
+    PluginBuilder::<_, DrawApps>::new("draw")
         .label("Draw")
         .version("0.1.0")
         .package_id("semio:draw")
-        .declare_artifact(crate::artifacts::drawing::artifact())
-        .editor_mutation_roster::<crate::editor::drawing::DrawingPlayApp>()
-        .viewer_mutation_roster::<crate::viewer::drawing::DrawingViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::drawing::artifact_kind().id })
+        .declare_artifact(semio_s_artifact_draw_drawing::artifact())
+        .editor_mutation_roster::<semio_s_artifact_draw_drawing_editor::DrawingPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_draw_drawing_viewer::DrawingViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_draw_drawing_model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist draw edits to the open document".into(), optional: false })
         .try_build()

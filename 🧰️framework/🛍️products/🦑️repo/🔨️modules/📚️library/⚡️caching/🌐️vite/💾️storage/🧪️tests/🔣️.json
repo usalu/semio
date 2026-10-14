@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "owner": "fixture:bounded-vite",
+  "root": "vite",
+  "invalidModes": [
+    "debug",
+    "development",
+    "production",
+    ""
+  ],
+  "writerShards": 16,
+  "payload": "finite-vite-artifact",
+  "reader": {
+    "file": "index.html",
+    "before": "<p>first retained artifact</p>",
+    "after": "<p>published after reader</p>",
+    "owner": "fixture:bounded-vite:reader"
+  },
+  "compilerMetadata": {
+    "writerShards": 64,
+    "identities": 4096
+  }
+}

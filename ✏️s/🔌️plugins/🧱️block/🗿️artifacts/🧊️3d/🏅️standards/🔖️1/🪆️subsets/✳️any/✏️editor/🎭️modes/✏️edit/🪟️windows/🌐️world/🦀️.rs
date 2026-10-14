@@ -1,13 +1,13 @@
 //! 🌐️ Block 3D play app — the world window: the object kind's 3D representation viewport (block3d's
 //! only window kind).
 
-use crate::Block3dSnapshot;
-use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
-use crate::editor::block3d::modes::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
-use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
-use crate::editor::block3d::terminology::Block3dLabels;
-use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
-use crate::editor::block3d::BLOCK3D_PLAY_SURFACE_ID;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_editor_config::{block3d_window_view, Block3dConfig};
+use crate::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
+use crate::edit::windows::world::transient::Block3dBrushPreview;
+use semio_s_artifact_block_3d_editor_terminology::Block3dLabels;
+use crate::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
+use crate::BLOCK3D_PLAY_SURFACE_ID;
 use semio_framework_plugin::world3d_fit_json;
 use semio_framework_plugin::World3dScene;
 use semio_framework_plugin::BuiltNode;
@@ -73,7 +73,7 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
     // 🎯️ Frame the document once per document IDENTITY (`block3d_world_fit_revision`): the authored
     // `camera3d` alone leaves a representation mesh that reaches away from the rim ring outside the
     // frustum — the curated concrete-forest example showed vortex markers and no geometry at all.
-    scene.fit_json = Some(world3d_fit_json(crate::block3d_world_fit_revision(definition), crate::BLOCK3D_FIT_PADDING, None));
+    scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(definition), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired to `BLOCK3D_INTERACTION_VORTEX`
     // here — this shared scene builder's granularity vocabulary for a plain whole-object pick vs.
     // this app's own vortex/grip picking is not yet verified; left unbound (OS `world` domain
@@ -88,3 +88,21 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "🫧️transient/🦀️.rs"]
+pub mod transient;
+#[path = "."]
+pub mod options {
+    #[path = "☑️options/↔️arrangement/🦀️.rs"]
+    pub mod arrangement;
+    #[path = "☑️options/🖌️brush/🦀️.rs"]
+    pub mod brush;
+    #[path = "☑️options/🔀️quick-representation/🦀️.rs"]
+    pub mod quick_representation;
+    #[path = "☑️options/🧱️representations/🦀️.rs"]
+    pub mod representations;
+    #[path = "☑️options/📏️spacing/🦀️.rs"]
+    pub mod spacing;
+}
+//#endregion 🪢️Mounts

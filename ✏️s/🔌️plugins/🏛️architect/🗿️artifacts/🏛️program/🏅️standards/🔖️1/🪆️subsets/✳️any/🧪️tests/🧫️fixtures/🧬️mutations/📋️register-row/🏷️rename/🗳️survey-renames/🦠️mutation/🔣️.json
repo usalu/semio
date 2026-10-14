@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "survey",
+  "id": "survey-a",
+  "newName": "Renamed Survey A"
+}

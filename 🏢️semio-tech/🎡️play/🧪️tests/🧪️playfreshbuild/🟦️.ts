@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 
 /** 🧪️ Proves the fresh release contract against the language-neutral fixture, independent argument parser and a third-party JSONC parser: one build invocation, no nested build invocation, every component produced by the release build driver in a cold generation. */
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: () => Readonly<Record<string, string>>; playViteCacheDirectory: (fallback: string, environment: Readonly<Record<string, string | undefined>>) => string; playFreshBuildArgs: (resources: { cpus: number; memoryBytes: number }) => readonly string[]; playFreshParallel: (resources: { cpus: number; memoryBytes: number }) => number; PLAY_FRESH_BUILD_TARGET: string }): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: () => Readonly<Record<string, string>>; playFreshBuildArgs: (resources: { cpus: number; memoryBytes: number }) => readonly string[]; playFreshParallel: (resources: { cpus: number; memoryBytes: number }) => number; PLAY_FRESH_BUILD_TARGET: string }): Promise<void> {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const require = createRequire(import.meta.url), parse = require("yargs-parser"), jsonc = require("jsonc-parser");
   const repository = new URL("../../../../", import.meta.url), read = (path: string): string => readFileSync(new URL(path, repository), "utf8");
@@ -115,12 +115,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
       }
     });
-    it("isolates Vite storage inside an explicitly selected invocation cache", () => {
-      const cache = resolve("cache"), release = dependencies.playViteCacheDirectory("shared-vite", { SEMIO_BUILD_CACHE_DIRECTORY: cache, SEMIO_BUILD_MODE: "release" });
-      expect(release.startsWith(join(cache, fixture.viteStorage))).toBe(true);
-      expect(dependencies.playViteCacheDirectory("shared-vite", { SEMIO_BUILD_CACHE_DIRECTORY: cache, SEMIO_BUILD_MODE: "prototype" })).not.toBe(release);
-      expect(dependencies.playViteCacheDirectory("shared-vite", { SEMIO_BUILD_MODE: "prototype" }).startsWith(resolve("shared-vite"))).toBe(true);
-      expect(() => dependencies.playViteCacheDirectory("shared-vite", { SEMIO_BUILD_MODE: "ship" })).toThrow();
+    it("takes its Vite cache from the bounded product store the Vite owner issues, never from a caller-chosen directory", async () => {
+      const ts = require("typescript"), text = read(fixture.vite.config), source = ts.createSourceFile("config.ts", text, ts.ScriptTarget.Latest, true), calls: any[] = [];
+      const visit = (node: any): void => { if (ts.isCallExpression(node) && node.expression.getText(source) === fixture.vite.owner) calls.push(node); ts.forEachChild(node, visit); };
+      visit(source);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].arguments.map((argument: any) => argument.getText(source))[0]).toBe(fixture.vite.workspaceArgument);
+      expect(calls[0].arguments).toHaveLength(2);
+      const { viteCacheDirectory } = await import(new URL(fixture.vite.module, repository).href), { repositoryCacheBudgetV1 } = await import(new URL(fixture.vite.budgetModule, repository).href);
+      const root = resolve(new URL(".", repository).pathname), issued = join(repositoryCacheBudgetV1(root).partitions.products.directory, ...fixture.vite.issued);
+      for (const mode of fixture.vite.modes) expect(viteCacheDirectory(root, { SEMIO_BUILD_MODE: mode, SEMIO_VITE_CACHE_DIRECTORY: issued })).toBe(issued);
+      expect(() => viteCacheDirectory(root, { SEMIO_BUILD_MODE: "release" })).toThrow(fixture.vite.unissued);
+      expect(() => viteCacheDirectory(root, { SEMIO_BUILD_MODE: "release", SEMIO_VITE_CACHE_DIRECTORY: resolve("shared-vite") })).toThrow();
+      expect(() => viteCacheDirectory(root, { SEMIO_BUILD_MODE: "ship", SEMIO_VITE_CACHE_DIRECTORY: issued })).toThrow();
     });
   });
 }

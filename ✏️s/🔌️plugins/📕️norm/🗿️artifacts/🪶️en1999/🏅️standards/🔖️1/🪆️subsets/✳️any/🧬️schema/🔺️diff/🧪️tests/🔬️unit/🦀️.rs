@@ -1,13 +1,13 @@
 //! 🧪️ Keyed-diff algebra of En1999: nested-key coalescing, list-setter rows and the negative diff.
 
-use super::En1999Diff;
-use crate::mutations::add_member::AddMember;
-use crate::mutations::change_member_buckling_length::ChangeMemberBucklingLength;
-use crate::mutations::change_members::ChangeMembers;
-use crate::mutations::change_plate_thickness::ChangePlateThickness;
-use crate::mutations::remove_member::RemoveMember;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::En1999Diff;
+use semio_s_artifact_norm_en1999_mut_members::add_member::AddMember;
+use semio_s_artifact_norm_en1999_mut_members::change_member_buckling_length::ChangeMemberBucklingLength;
+use semio_s_artifact_norm_en1999_mut_inputs::change_members::ChangeMembers;
+use semio_s_artifact_norm_en1999_mut_members::change_plate_thickness::ChangePlateThickness;
+use semio_s_artifact_norm_en1999_mut_members::remove_member::RemoveMember;
+use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn diff_of(mutation: &En1999Mutation, base: &En1999Snapshot) -> En1999Diff {

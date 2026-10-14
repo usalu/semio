@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "safetyRequirement",
+  "id": "safety-requirement-a",
+  "newName": "Renamed Safety Requirement A"
+}

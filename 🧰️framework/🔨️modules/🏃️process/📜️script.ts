@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "./🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "./🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🏃️ Runs neutral process ownership and execution contracts. */
 import { resolve } from "node:path";
@@ -13,7 +14,7 @@ import {parseCommandArgumentsV1,resolveCommandConfigurationV1} from "./🧭️ro
 /** 🎛️ Runs a configured neutral command with exact context and artifact custody. */
 class CommandScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  const plan=resolveCommandConfigurationV1(parseCommandArgumentsV1(segments),process.env);
+  const plan=resolveCommandConfigurationV1(parseCommandArgumentsV1(segments),process.env,this.invocation);
   const result=await executeCommandV1(plan.request,plan.policy,{invocation:this.invocation,environment:plan.environment,onProgress:event=>{process.stderr.write(`[DEBUG] General command ${event.phase} elapsedMs=${event.elapsedMs}\n`);}});process.stdout.write(result.stdout);process.stderr.write(result.stderr);process.exitCode=result.reason==="exit"?result.status??1:1;console.error(`[DEBUG] General command receipt=${result.receiptPath} reason=${result.reason} status=${result.status}`);
  }
 }
@@ -24,8 +25,8 @@ class TestScript extends BundleScript {
     if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("Process contract tests require explicit SEMIO_TEST_ARTIFACT_DIR");
     const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR);
     mkdirSync(output, { recursive: true });
+    if(segments[0]==="resource-leases"){await (await import("./🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts")).testResourceLeases(output,scriptCompilerAdmissionControlV1(this.invocation,"test:resource-leases",0));return;}
     const functionSuites: Readonly<Record<string, readonly [string, string]>> = {
-      "resource-leases": ["🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts", "testResourceLeases"],
       "cargo-build-lease": ["📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts", "proveCargoBuildLeasesV1"],
       "native-artifact-publication": ["📦️artifacts/🏗️native-build/🧪️tests/📦️publication/🟦️.ts", "testCargoArtifactPublication"],
     };
@@ -40,7 +41,7 @@ class TestScript extends BundleScript {
       return;
     }
     const suites: Readonly<Record<string, { source: string; budgetMs: number; testNamePattern?: string }>> = {
-      "exact-cargo-storage": {source:"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.fundamental,testNamePattern:"exact Cargo refuses missing|actual exact Cargo bounded|exact Cargo preparation"},
+      "exact-cargo-storage": {source:"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.fundamental,testNamePattern:"exact Cargo refuses missing|actual exact Cargo bounded|exact Cargo preparation|Cargo execution|Declared command tails"},
       "compiler-state": { source: "🏗️build/🟦️typescript/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       capture: { source: "📥️capture/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       command: { source: "🧭️routing/🎛️command/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
@@ -72,8 +73,9 @@ class TestScript extends BundleScript {
     const suite = suites[segments[0]!];
     if (!suite) throw Error(`Unknown process contract suite: ${segments[0]}`);
     const sources = [resolve(this.root, suite.source), ...(["cargo-driver","cargo-profile"].includes(segments[0]!)?[resolve(this.root,"🧪️testing/🦀️cargo/🧪️tests/🎚️mode/🟦️.ts")]:[]), ...(segments[0] === "go-build-mode" ? [resolve(this.root,"../📁️filesystem/🛡️durability/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "capture" ? [resolve(this.root, "📥️capture/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "exact-cargo-laws" ? [resolve(this.root, "🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "native-artifacts" ? ["🧾️receipt", "🎰️jobserver", "🎟️admission", "📈️telemetry", "🗃️stage-cache", "🧩️component-pass"].map((facet) => resolve(this.root, `📦️artifacts/🏗️native-build/${facet}/🧪️tests/🟦️.ts`)) : []), ...(segments[0] === "owned-execution" ? [resolve(this.root, "🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts"),resolve(this.root, "🎛️owned-execution/🧪️tests/📬️output/🟦️.ts")] : [])];
-    if(segments[0]==="exact-cargo-storage")sources.push(resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"));
-    if (["routing", "command", "capture", "compiler-state", "cargo-driver", "cargo-profile","exact-cargo-storage"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", ...(segments[0] === "compiler-state" ? ["--noUncheckedIndexedAccess"] : []), "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...(segments[0]==="exact-cargo-storage"?[resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"),sources.at(-1)!]:sources)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
+    if(segments[0]==="exact-cargo-storage")sources.push(resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"));
+    if(segments[0]==="compiler-capacity")sources.push(resolve(this.root,"🔒️leases/📦️bounded/🧪️tests/🟦️.ts"));
+    if (["routing", "command", "capture", "compiler-state", "cargo-driver", "cargo-profile","exact-cargo-storage"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", ...(segments[0] === "compiler-state" ? ["--noUncheckedIndexedAccess"] : []), "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...(segments[0]==="exact-cargo-storage"?[resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"),sources.at(-2)!,sources.at(-1)!]:sources)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", ...sources, ...(suite.testNamePattern ? ["--test-name-pattern", suite.testNamePattern] : [])], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, signal: this.invocation.control.signal });
   }
 }

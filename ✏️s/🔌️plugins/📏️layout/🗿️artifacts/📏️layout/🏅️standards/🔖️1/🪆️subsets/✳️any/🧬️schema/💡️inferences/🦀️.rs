@@ -4,10 +4,10 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::LayoutSnapshot;
+use crate::snapshot::LayoutSnapshot;
 use schema::ArtifactSchema;
 
-use super::topology::compute_layout_topology;
+use crate::inferences::topology::compute_layout_topology;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a layout snapshot. One field per named inference under
@@ -72,5 +72,10 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::topology::LayoutTopology;
+pub use crate::inferences::topology::LayoutTopology;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧭topology/🦀️.rs"]
+pub mod topology;
+//#endregion 🪢️TaxonomyMounts

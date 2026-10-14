@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY;
+use crate::{DRAWING_GESTURE_RAW_BYTES, DRAWING_GESTURE_RETAINED_BYTES, DrawingCommand, DrawingGestureOperationJob, DrawingGestureOperationOwner, DrawingInstanceOperationOwner, DrawingPlayApp, DrawingRetainedCommandDecoder};
+use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_framework_job::{InteractiveJob as _, InteractiveJobCloseStep};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
@@ -171,10 +173,10 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
 
 #[test]
 fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
-    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(crate::commands::canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
-    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(crate::commands::canvas_pointer_up::CanvasPointerUp { alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
+    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(semio_s_artifact_draw_drawing_editor_tool::canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
+    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(semio_s_artifact_draw_drawing_editor_tool::canvas_pointer_up::CanvasPointerUp { alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
     assert!(decode_retained("canvasPointerMove", &pointer_move));
-    assert!(decode_retained("canvasEscape", &wire(&DrawingCommand::CanvasEscape(crate::commands::canvas_escape::CanvasEscape {}))));
+    assert!(decode_retained("canvasEscape", &wire(&DrawingCommand::CanvasEscape(semio_s_artifact_draw_drawing_editor_tool::canvas_escape::CanvasEscape {}))));
     assert!(!decode_retained("canvasPointerMove", &pointer_up), "a variant swap rejects");
     assert!(!decode_retained("canvasPointerMove", &pointer_move[..pointer_move.len() - 1]), "truncation rejects");
     assert!(!decode_retained("canvasPointerMove", &vec![0; DRAWING_GESTURE_RAW_BYTES + 1]), "an oversized owner rejects");

@@ -1,5 +1,5 @@
 //! 📥️ Encoded PNG and JPEG import enters the retained image-admission route.
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation,Effect,RequestId};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;

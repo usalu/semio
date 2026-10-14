@@ -63,7 +63,7 @@ def main():
             if not hit:
                 continue
             crate = hit[0]
-            if crate == own:
+            if crate == own or crate == fc.EXTERNAL:
                 continue
             test = mod.test_gated or file in tests or any(a <= m.start() < b for a, b in spans)
             edges[(own, crate)]["test" if test else "lib"].append((os.path.relpath(file, cut.artifact), "::".join(hit[2])))
@@ -79,7 +79,7 @@ def main():
             for segs, alias in fc.leaves([], body):
                 path = [s for s in segs if s not in ("*", "self")] if segs[-1] in ("*", "self") else segs
                 hit = cut.target(file, m.start(), path) if len(path) > 1 or path[0] != "crate" else None
-                if not hit or hit[0] == own:
+                if not hit or hit[0] == own or hit[0] == fc.EXTERNAL:
                     continue
                 test = mod.test_gated or file in tests or any(a <= m.start() < b for a, b in spans)
                 edges[(own, hit[0])]["test" if test else "lib"].append((os.path.relpath(file, cut.artifact), "::".join(hit[2])))

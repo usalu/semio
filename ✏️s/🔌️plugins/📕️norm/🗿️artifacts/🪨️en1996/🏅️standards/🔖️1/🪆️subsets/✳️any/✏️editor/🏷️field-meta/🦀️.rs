@@ -1,6 +1,6 @@
 //! 🏷️ EN 1996 NormFieldMeta lookup — SI display units + en/de labels (wildcards for lists).
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }

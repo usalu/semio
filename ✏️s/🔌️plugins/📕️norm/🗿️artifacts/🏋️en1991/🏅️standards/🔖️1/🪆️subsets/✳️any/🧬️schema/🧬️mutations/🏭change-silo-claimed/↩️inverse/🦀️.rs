@@ -1,9 +1,9 @@
 //! Inverse for `change-silo-claimed`.
-use super::ChangeSiloClaimed;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeSiloClaimed, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_silo_claimed::ChangeSiloClaimed;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeSiloClaimed, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_silo_claimed::ChangeSiloClaimed> {
     Ok((|| {
-    vec![En1991Mutation::ChangeSiloClaimed(ChangeSiloClaimed { new_silo_claimed: base.silo_claimed })]
+    vec![Op::from(ChangeSiloClaimed { new_silo_claimed: base.silo_claimed })]
 
     })())
 }

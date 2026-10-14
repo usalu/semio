@@ -2,7 +2,43 @@
 //! deltas (`removed`/`inserted`/`moved`/`modified`, see `protocol::list_delta`): a mutation names exactly the rows it creates, deletes, moves or patches. The `steps` flow
 //! handle and the `tool_solids` handles are derived from the step rows by `apply`, never carried.
 
-use crate::{Capability, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, Stock, StepOrigin, Workshop, WorkshopMachine};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::Process3dSnapshot, snapshot::Stock, snapshot::StepOrigin, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -183,7 +219,7 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         }
         if let Some(delta) = &self.step_payloads {
             next.step_payloads = delta.commit_onto(&next.step_payloads, capability).map_err(|error| error.under(["stepPayloads"]))?;
-            let derived = crate::process_working_scene_to_snapshot(&crate::process_working_scene_from_snapshot(&next), next.workshop.clone());
+            let derived = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&next), next.workshop.clone());
             next.steps = derived.steps;
             next.tool_solids = derived.tool_solids;
         }
@@ -245,3 +281,6 @@ impl protocol::DiffAlgebra<Process3dSnapshot> for Process3dDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🔺️ The diff facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

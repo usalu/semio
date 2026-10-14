@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-fire-compartment-height`.
-use super::ChangeFireCompartmentHeight;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_fire_compartment_height::ChangeFireCompartmentHeight;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeFireCompartmentHeight, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.fire_compartment_height == payload.new_fire_compartment_height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

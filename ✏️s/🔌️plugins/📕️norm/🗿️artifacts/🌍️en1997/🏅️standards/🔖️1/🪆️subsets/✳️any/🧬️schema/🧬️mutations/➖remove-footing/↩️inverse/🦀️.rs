@@ -1,10 +1,10 @@
-use super::RemoveFooting;
-use crate::mutations::{insert_footing::InsertFooting, En1997Mutation};
-use crate::En1997Snapshot;
-pub fn inverse(payload: &RemoveFooting, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+use crate::remove_footing::RemoveFooting;
+use crate::insert_footing::InsertFooting;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+pub fn inverse<Op>(payload: &RemoveFooting, base: &En1997Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_footing::InsertFooting> {
     Ok((|| {
     let footing = base.footings.get(payload.index).cloned().unwrap_or_else(|| base.footings[0].clone());
-    vec![En1997Mutation::InsertFooting(InsertFooting { index: payload.index, footing })]
+    vec![Op::from(InsertFooting { index: payload.index, footing })]
 
     })())
 }

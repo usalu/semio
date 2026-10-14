@@ -10,6 +10,7 @@ build = false
 [package.metadata.semio]
 role = "framework"
 id = "schema-state"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

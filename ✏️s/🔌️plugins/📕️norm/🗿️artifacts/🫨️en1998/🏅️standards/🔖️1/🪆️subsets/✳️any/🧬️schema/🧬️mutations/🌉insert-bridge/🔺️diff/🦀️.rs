@@ -1,8 +1,8 @@
 //! 🌉 `insert-bridge` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertBridge;
-use crate::diff::{En1998Diff, En1998BridgeDelta};
-use crate::En1998Snapshot;
+use crate::insert_bridge::InsertBridge;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998BridgeDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertBridge, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.bridges.iter().any(|existing| existing.id == payload.bridge.id) {

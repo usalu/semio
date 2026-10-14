@@ -1,5 +1,5 @@
-use crate::En1995Snapshot;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+use crate::evaluate;
 
 #[test]
 fn compliant_report_complies() {

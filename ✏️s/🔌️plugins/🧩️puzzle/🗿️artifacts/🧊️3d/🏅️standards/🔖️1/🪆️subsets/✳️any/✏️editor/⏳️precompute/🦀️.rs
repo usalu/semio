@@ -8,31 +8,34 @@
 //! system, never an engine — this interactive brush session is the app's own state machine over
 //! that schema, not artifact behaviour.
 
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
 //#region 🔖️Reexports
-pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_snapshot;
+pub use semio_s_artifact_puzzle_3d_precompute_brush::apply_brush_placement_to_snapshot;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Constants
 /// 🥽️ Collision mesh identities one session holds.
-pub(crate) const COLLISION_MESH_MAX_MESHES: usize = 64;
+pub const COLLISION_MESH_MAX_MESHES: usize = 64;
 /// 🥽️ Values (positions or indices) one collision mesh may carry.
-pub(crate) const COLLISION_MESH_MAX_VALUES: usize = 196_608;
+pub const COLLISION_MESH_MAX_VALUES: usize = 196_608;
 /// 🥽️ Bytes of one collision mesh identity.
-pub(crate) const COLLISION_MESH_MAX_URL_BYTES: usize = 4 * 1024;
+pub const COLLISION_MESH_MAX_URL_BYTES: usize = 4 * 1024;
 //#endregion 🔖️Constants
 
-use crate::editor::puzzle3d::precompute::brush::{
-    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
-};
-use crate::editor::puzzle3d::precompute::fill::PlacedCollisionEntry;
-use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext,
-    CollisionStepResult,
-};
-use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
-use crate::standards::v1::subsets::any::schema::{BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPreviewState, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, EngineSceneSnapshot};
-use crate::standards::v1::subsets::any::schema::Puzzle3dError;
+use semio_s_artifact_puzzle_3d_precompute_brush::{brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld};
+use semio_s_artifact_puzzle_3d_precompute_fill::PlacedCollisionEntry;
+use semio_s_artifact_puzzle_3d_precompute_geometry::{pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext, CollisionStepResult};
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use semio_s_artifact_puzzle_3d_model::{BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPreviewState, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig};
+#[cfg(test)] use semio_s_artifact_puzzle_3d_model::{BrushPlacePayload, EngineSceneSnapshot};
+use semio_s_artifact_puzzle_3d_model::Puzzle3dError;
 use semio_framework_job::default_now_us;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -40,7 +43,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 /// 🥽️ The source buffers of one installed collision mesh, kept so the session census can bound them.
 #[derive(Clone, Debug)]
-pub(crate) struct CollisionMeshSource {
+pub struct CollisionMeshSource {
     url: String,
     positions: Vec<f32>,
     indices: Vec<u32>,
@@ -181,7 +184,7 @@ pub fn derive_brush_mesh(url: &str, positions: &[f32], indices: &[u32]) -> Optio
 
 /// 📖 Geometry this process already derived for one mesh id, or `None` once the LRU evicted it — a
 /// miss is a cache miss, never a correctness change: the client is asked for the bytes again.
-pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
+pub fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
     let store = brush_mesh_store().try_lock().ok()?;
     let geometry = store.engines.read(store.handles.get(url)?).ok()?;
     decode_brush_mesh_geometry(&geometry)
@@ -194,7 +197,7 @@ pub(crate) fn shared_brush_mesh(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 /// commands each. The collision engine still keys its own `meshes` map by url (two ids stay two
 /// identities, `encode_brush_mesh_request`'s note), so only the TRANSFER is content-addressed: the
 /// second id adopts the first id's derived page and the wire carries nothing but the announcement.
-pub(crate) fn adopt_brush_mesh_by_digest(url: &str, digest: &str) -> Option<(Vec<f32>, Vec<u32>)> {
+pub fn adopt_brush_mesh_by_digest(url: &str, digest: &str) -> Option<(Vec<f32>, Vec<u32>)> {
     let mut store = brush_mesh_store().try_lock().ok()?;
     let handle = store.digests.get(digest)?.clone();
     let geometry = store.engines.read(&handle).ok()?;
@@ -420,15 +423,15 @@ const BRUSH_INDEX_CELL_SIZE: f32 = 8.0;
 ///
 /// [`Self::plan`] names the members the compatibility tables and candidate weights are derived from: any of
 /// them invalidates every candidate, so that case stays the whole-scene rebuild.
-pub(crate) struct Puzzle3dSceneInvalidation {
-    pub(crate) stale: std::collections::HashSet<String>,
-    pub(crate) pending: Vec<String>,
-    pub(crate) topology: bool,
-    pub(crate) plan: bool,
+pub struct Puzzle3dSceneInvalidation {
+    pub stale: std::collections::HashSet<String>,
+    pub pending: Vec<String>,
+    pub topology: bool,
+    pub plan: bool,
 }
 
 impl Puzzle3dSceneInvalidation {
-    pub(crate) fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
+    pub fn between(previous: &SceneConfig, next: &SceneConfig) -> Self {
         let plan = previous.kind_catalogs != next.kind_catalogs
             || previous.kind_compatibility != next.kind_compatibility
             || previous.contact_tolerance != next.contact_tolerance
@@ -490,10 +493,8 @@ struct BrushIndexSync {
     removal: Option<CollisionIndexRemoval>,
 }
 
-
-
-pub(crate) struct Puzzle3dCollision {
-    pub(crate) scene: Option<Arc<SceneConfig>>,
+pub struct Puzzle3dCollision {
+    pub scene: Option<Arc<SceneConfig>>,
     /// 🧊️ The last scene this engine was synced FROM, so a resync with an identical config (every
     /// action re-syncs the session, see the app's `sync_precompute_session`) can skip `rebuild_queue`
     /// instead of wiping `brush_cache`/`queue` and restarting suggestion precompute from
@@ -511,8 +512,8 @@ pub(crate) struct Puzzle3dCollision {
     /// pages the bytes again. An entry retires the instant that identity's geometry installs, so the
     /// set is empty in every steady state and a refusal can never become a standing request.
     mesh_reupload_requests: Vec<String>,
-    pub(crate) brush_cache: HashMap<String, BrushCollisionFreeResult>,
-    pub(crate) brush_queue: VecDeque<String>,
+    pub brush_cache: HashMap<String, BrushCollisionFreeResult>,
+    pub brush_queue: VecDeque<String>,
     brush_prepare_object_cursor: usize,
     brush_prepare_vortex_cursor: usize,
     brush_queue_preparing: bool,
@@ -529,7 +530,7 @@ pub(crate) struct Puzzle3dCollision {
 }
 
 impl Puzzle3dCollision {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             scene: None,
             scene_synced: None,
@@ -557,7 +558,7 @@ impl Puzzle3dCollision {
     #[cfg(test)]
     /// 📊️ How many resolved brush candidates the engine still holds — the observable that says whether a
     /// scene sync invalidated per object or per document.
-    pub(crate) fn brush_candidate_cache_len(&self) -> usize {
+    pub fn brush_candidate_cache_len(&self) -> usize {
         self.brush_cache.len()
     }
 
@@ -697,7 +698,7 @@ impl Puzzle3dCollision {
         self.re_enqueue_brush_targets();
     }
 
-    pub(crate) fn update_kind_weights(&mut self, object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64>) {
+    pub fn update_kind_weights(&mut self, object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64>) {
         if let Some(scene) = &mut self.scene {
             let scene = Arc::make_mut(scene);
             scene.weights.object_weights = object_weights;
@@ -708,14 +709,14 @@ impl Puzzle3dCollision {
     }
 
     #[cfg(test)]
-    pub(crate) fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
+    pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
         self.set_scene_config(semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?);
         Ok(())
     }
 
     /// 🧊️ The typed sync every caller actually takes: the app already holds a decoded `SceneConfig`,
     /// so routing it through a JSON string and back is three whole-document round trips of pure loss.
-    pub(crate) fn set_scene_config(&mut self, scene: SceneConfig) {
+    pub fn set_scene_config(&mut self, scene: SceneConfig) {
         if self.scene_synced.as_deref() == Some(&scene) {
             return;
         }
@@ -750,7 +751,7 @@ impl Puzzle3dCollision {
     /// 🥽️ Real geometry for one mesh identity, derived once per process through the content-addressed
     /// decode kernel — the id-only wire path a second document (or a later command on the same one)
     /// takes instead of re-uploading buffers.
-    pub(crate) fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
+    pub fn adopt_shared_mesh(&mut self, url: &str, digest: Option<&str>) -> bool {
         if self.mesh_is_fallback.get(url) == Some(&false) && digest.is_none_or(|digest| self.mesh_sources.get(url).is_some_and(|mesh| brush_mesh_digest(&mesh.positions, &mesh.indices) == digest)) {
             self.retire_mesh_reupload(url);
             return true;
@@ -793,7 +794,7 @@ impl Puzzle3dCollision {
     /// measured on the live `:6013` shell (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B32) as 23 of 33
     /// typed-operation completions carrying the viewport scope in a 75 s window with four user actions,
     /// every one of them re-rendering all three world bodies and 23 answering `unchanged`.
-    pub(crate) fn request_mesh_reupload(&mut self, url: &str) -> bool {
+    pub fn request_mesh_reupload(&mut self, url: &str) -> bool {
         if url.len() > COLLISION_MESH_MAX_URL_BYTES || self.mesh_reupload_requests.iter().any(|pending| pending == url) {
             return false;
         }
@@ -807,7 +808,7 @@ impl Puzzle3dCollision {
 
     /// 🚚️ The open re-upload requests, in a stable order so an unchanged set hashes to an unchanged
     /// world-body lane — see [`Puzzle3dCollision::request_mesh_reupload`].
-    pub(crate) fn mesh_reupload_requests(&self) -> &[String] {
+    pub fn mesh_reupload_requests(&self) -> &[String] {
         &self.mesh_reupload_requests
     }
 
@@ -818,7 +819,7 @@ impl Puzzle3dCollision {
         if !self.mesh_sources.contains_key(&url) && self.mesh_sources.len() >= COLLISION_MESH_MAX_MESHES {
             return false;
         }
-        let Some(body) = crate::editor::puzzle3d::precompute::geometry::collision_body_from_buffers(positions, indices) else {
+        let Some(body) = semio_s_artifact_puzzle_3d_precompute_geometry::collision_body_from_buffers(positions, indices) else {
             return false;
         };
         if self.mesh_is_fallback.get(&url) == Some(&false) {
@@ -841,32 +842,32 @@ impl Puzzle3dCollision {
         self.rebuild_queue();
     }
 
-    pub(crate) fn register_mesh_fallback(&mut self, url: String, positions: &[f32], indices: &[u32]) {
+    pub fn register_mesh_fallback(&mut self, url: String, positions: &[f32], indices: &[u32]) {
         self.install_collision_mesh(url, positions, indices, true);
     }
 
     /// 🥽️ Uploaded geometry for one mesh identity: derived into the process-wide content-addressed
     /// store first, so every other open document and every later command reaches it by id alone.
-    pub(crate) fn register_mesh(&mut self, url: String, positions: &[f32], indices: &[u32]) {
+    pub fn register_mesh(&mut self, url: String, positions: &[f32], indices: &[u32]) {
         match derive_brush_mesh(&url, positions, indices) {
             Some((positions, indices)) => self.install_collision_mesh(url, &positions, &indices, false),
             None => self.install_collision_mesh(url, positions, indices, false),
         }
     }
 
-    pub(crate) fn has_mesh(&self, url: &str) -> bool {
+    pub fn has_mesh(&self, url: &str) -> bool {
         self.meshes.contains_key(url)
     }
 
     /// 🧊️ Drops a cached brush-candidate entry and re-queues that vortex at the front so a just-opened
     /// suggestion popup is not stuck on a stale empty / pending result.
-    pub(crate) fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
+    pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
         self.brush_cache.remove(vortex_full_id);
         self.brush_queue.retain(|id| id != vortex_full_id);
         self.brush_queue.push_front(vortex_full_id.to_string());
     }
 
-    pub(crate) fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
+    pub fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
         if !self.brush_queue.iter().any(|id| id == vortex_full_id) {
             self.brush_queue.push_back(vortex_full_id.to_string());
         }
@@ -874,7 +875,7 @@ impl Puzzle3dCollision {
 
     /// 🧊️ Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
     /// the suggestion popup so the UI does not wait on the background queue).
-    pub(crate) fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+    pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US) else {
             return;
         };
@@ -1016,7 +1017,7 @@ impl Puzzle3dCollision {
     }
 
     #[cfg(test)]
-    pub(crate) fn compute_brush_cache_entry(&mut self, target_full_id: &str) -> BrushCollisionFreeResult {
+    pub fn compute_brush_cache_entry(&mut self, target_full_id: &str) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 };
         };
@@ -1043,7 +1044,7 @@ impl Puzzle3dCollision {
         self.brush_collision_free(target_full_id, &compatible, scene.contact_tolerance)
     }
 
-    pub(crate) fn brush_preview(&self, target_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
+    pub fn brush_preview(&self, target_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
         let scene = self.scene.as_ref()?;
         let result = self.brush_cache.get(target_full_id)?;
         if result.unknown_pending && result.free.is_empty() {
@@ -1071,7 +1072,7 @@ impl Puzzle3dCollision {
         brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.scene_snapshot)
     }
 
-    pub(crate) fn precompute_step(&mut self, budget: u32) -> bool {
+    pub fn precompute_step(&mut self, budget: u32) -> bool {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US) else {
             return self.brush_lane_active();
         };
@@ -1130,7 +1131,7 @@ impl Puzzle3dCollision {
     }
 
     #[cfg(test)]
-    pub(crate) fn work_pending_for_test(&self) -> usize {
+    pub fn work_pending_for_test(&self) -> usize {
         self.brush_queue.len()
     }
 
@@ -1138,7 +1139,7 @@ impl Puzzle3dCollision {
     /// reconciled broad-phase owners. The lane is cursorized, so a queue length is no longer a progress
     /// measure: preparing one brush target moves it from the preparation cursor INTO the queue.
     #[cfg(test)]
-    pub(crate) fn precompute_progress_for_test(&self) -> usize {
+    pub fn precompute_progress_for_test(&self) -> usize {
         self.brush_cache.len() + self.brush_index.entry_len()
     }
 
@@ -1186,7 +1187,7 @@ impl Puzzle3dCollision {
 /// 🧵️ One document instance's collision engine: the scene it was last synced from, the registered mesh
 /// geometry, the suggestion cache and the persistent broad phase. This is everything the app's session
 /// slot carries across a dispatch or a worker hop.
-pub(crate) struct Puzzle3dCollisionSession {
+pub struct Puzzle3dCollisionSession {
     scene: Option<Arc<SceneConfig>>,
     scene_synced: Option<Arc<SceneConfig>>,
     meshes: Arc<HashMap<String, CollisionBody>>,
@@ -1208,7 +1209,7 @@ pub(crate) struct Puzzle3dCollisionSession {
 impl Puzzle3dCollisionSession {
     /// 🧮️ Resident bytes this slot keeps alive, so the app's session registry can bound the whole
     /// process against a census instead of trusting a slot count.
-    pub(crate) fn bytes(&self) -> usize {
+    pub fn bytes(&self) -> usize {
         let meshes = self.mesh_sources.values().map(|mesh| mesh.url.len().saturating_add(mesh.positions.len().saturating_mul(4)).saturating_add(mesh.indices.len().saturating_mul(4))).fold(0_usize, usize::saturating_add);
         self.scene_synced
             .as_ref()
@@ -1234,7 +1235,7 @@ impl Default for Puzzle3dPrecomputeSession {
 impl Puzzle3dPrecomputeSession {
     #[cfg(test)]
     /// 📊️ See [`Puzzle3dCollision::brush_candidate_cache_len`].
-    pub(crate) fn brush_candidate_cache_len(&self) -> usize {
+    pub fn brush_candidate_cache_len(&self) -> usize {
         self.engine.brush_candidate_cache_len()
     }
 
@@ -1248,7 +1249,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     /// 🧊️ Typed sync — see [`Puzzle3dCollision::set_scene_config`].
-    pub(crate) fn set_scene_config(&mut self, scene: SceneConfig) {
+    pub fn set_scene_config(&mut self, scene: SceneConfig) {
         self.engine.set_scene_config(scene);
     }
 
@@ -1283,12 +1284,12 @@ impl Puzzle3dPrecomputeSession {
 
     /// 🧵️ Hands the brush lane out to the app's session slot, leaving this engine empty — the check-in
     /// half of the per-instance session.
-    pub(crate) fn take_collision_session(&mut self) -> Puzzle3dCollisionSession {
+    pub fn take_collision_session(&mut self) -> Puzzle3dCollisionSession {
         self.engine.take_session()
     }
 
     /// 🧵️ Adopts a brush lane a previous call (possibly on another worker) left in the session slot.
-    pub(crate) fn install_collision_session(&mut self, session: Puzzle3dCollisionSession) {
+    pub fn install_collision_session(&mut self, session: Puzzle3dCollisionSession) {
         self.engine.install_session(session);
     }
 

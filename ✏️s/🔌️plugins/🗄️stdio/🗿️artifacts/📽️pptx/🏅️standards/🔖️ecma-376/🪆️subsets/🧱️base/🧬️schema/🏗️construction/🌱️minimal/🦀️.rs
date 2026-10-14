@@ -1,6 +1,6 @@
 //! 🏗️ Pure PresentationML construction and package relationships.
 use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*};
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage,OpcRelationship,OpcTargetMode,REL_TYPE_OFFICE_DOCUMENT};
 //#region 🔖️TextXml

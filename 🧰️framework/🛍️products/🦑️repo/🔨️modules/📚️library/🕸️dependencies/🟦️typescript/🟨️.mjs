@@ -72,6 +72,12 @@ export function sourceRuntimeImportsV1(path) {
   return /\.(?:json|d\.[cm]?ts)$/.test(path) ? [] : observedSourceAnalysisV1(sourceImportProviderV1(), path);
 }
 
+/** 📦️ Parses current admitted bytes without performing another physical Source read. */
+export function sourceRuntimeImportsFromBytesV1(path, bytes) {
+  if (typeof path !== "string" || !(bytes instanceof Uint8Array)) throw new Error("Source path and admitted bytes required");
+  return /\.(?:json|d\.[cm]?ts)$/.test(path) ? [] : parseRuntimeImports(path, Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+}
+
 /** 🌊️ Reads each source asynchronously before admitting its registered import image. */
 async function runtimeImportsAsyncV1(path) {
   return /\.(?:json|d\.[cm]?ts)$/.test(path) ? [] : observedSourceAnalysisAsyncV1(sourceImportProviderV1(), path);

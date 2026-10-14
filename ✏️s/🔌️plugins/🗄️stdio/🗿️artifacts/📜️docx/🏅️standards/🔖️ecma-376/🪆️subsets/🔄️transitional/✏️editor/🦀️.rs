@@ -5,8 +5,11 @@
 
 use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use crate::schema::mutations::{edit_rules, DocxXmlAddress};
-use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxXmlAddress;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -52,12 +55,12 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DocxTransition
 /// 🧮️ Maps one strictly addressed, revision-checked paragraph draft to a reversible mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_set_page_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, Fault> {
-    crate::editor::docx::standards::v_ecma_376::subsets::base::preparation::prepare_set_run_text(snapshot, address, text)
+    semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::preparation::prepare_set_run_text(snapshot, address, text)
         .map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
 }
 
 fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<Option<DocxMutation>, Fault> {
-    crate::editor::docx::standards::v_ecma_376::subsets::base::build_set_run_formatting_mutation(snapshot, address, bold, italic, underline)
+    semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::build_set_run_formatting_mutation(snapshot, address, bold, italic, underline)
 }
 
 fn docx_action_fault(code: &'static str, message: impl Into<String>) -> Fault {
@@ -98,7 +101,7 @@ fn required_docx_xml_address(args: Option<&semio_framework_value::DslValue>) -> 
     Ok(DocxXmlAddress { part_path: text("partPath")?, node_path, expected_name: text("expectedName")?, revision: text("revision")? })
 }
 
-crate::editor::docx::standards::v_ecma_376::subsets::base::canonical_docx_set_page_work!(
+semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::canonical_docx_set_page_work!(
     DocxTransitionalSetPageWork,
     docx_transitional_set_page_work,
     DocxTransitionalEditor,
@@ -142,11 +145,11 @@ impl ArtifactEditor for DocxTransitionalEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
@@ -175,17 +178,17 @@ impl ArtifactEditor for DocxTransitionalEditor {
             }
             "set-run-formatting" => Ok(DocxTransitionalEditorCommand::SetRunFormatting {
                 address: required_docx_xml_address(args)?,
-                bold: crate::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "bold")?,
-                italic: crate::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "italic")?,
-                underline: crate::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "underline")?,
+                bold: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "bold")?,
+                italic: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "italic")?,
+                underline: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::required_docx_bool_argument(args, "underline")?,
             }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.unhandled-action"), format!("unknown docx editor action '{other}'"))),
         })
     }
 
     fn initial_snapshot() -> DocxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument {
-            body: vec![crate::schema::snapshot::DocxBlock::Paragraph(crate::schema::snapshot::DocxParagraph::default())],
+        semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
+            body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
         })
     }
@@ -262,7 +265,7 @@ semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
         Ok(Emit { artifact_mutations: mutation.into_iter().collect(), ..Default::default() })
     },
     work: docx_transitional_set_page_work,
-    preparation_route: crate::editor::docx::standards::v_ecma_376::subsets::base::preparation::route,
+    preparation_route: semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::preparation::route,
 }
 
 //#endregion 🔖️Editor

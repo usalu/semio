@@ -17,8 +17,8 @@
 //! encoding is deterministic) hold exactly as before — only the path from `Self` to JSON changed.
 
 #[cfg(test)]
-use crate::schema::PixelRun;
-use crate::schema::mutations::{LowpolyMutation};
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
+use crate::LowpolyMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -29,9 +29,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 📝️ Physical JSON operation lines with compact byte fields.
 impl protocol::OpText for LowpolyMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        super::lowpoly_json_decode(line).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
+        semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(line).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
-    fn print_op(&self) -> String { super::lowpoly_json_encode(self) }
+    fn print_op(&self) -> String { semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(self) }
 }
 
 

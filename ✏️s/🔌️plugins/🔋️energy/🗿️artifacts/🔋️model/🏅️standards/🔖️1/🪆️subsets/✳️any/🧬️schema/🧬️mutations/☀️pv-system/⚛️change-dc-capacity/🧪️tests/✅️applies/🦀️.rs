@@ -5,15 +5,10 @@
 //! (`SEMIO_ENERGY_WRITE_FIXTURES=1 cargo test -p semio-s-plugin-energy`), and the eight law
 //! assertions below read the committed bytes back, never the scenario.
 
-use crate::mutations::fixtures::{self, snapshot, zone, Case};
+use crate::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/☀️pv-system/⚛️change-dc-capacity/✅️applies/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/☀️pv-system/⚛️change-dc-capacity/✅️applies/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/☀️pv-system/⚛️change-dc-capacity/✅️applies/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/☀️pv-system/⚛️change-dc-capacity/✅️applies/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/☀️pv-system/⚛️change-dc-capacity/✅️applies/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -29,7 +24,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "change-pv-system-dc-capacity", directory: "⚛️change-pv-system-dc/✅️applies", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case::load("change-pv-system-dc-capacity", "☀️pv-system/⚛️change-dc-capacity/✅️applies", scenario)
 }
 
 #[semio_framework_async_macros::async_test]

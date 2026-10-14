@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips_the_reference_fixture() {
-    store::os_store::test_support::assert_dsl_round_trip(&crate::reference_fixture());
+    store::os_store::test_support::assert_dsl_round_trip(&semio_s_artifact_norm_vdi3805_model::reference_fixture());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -11,13 +11,12 @@ async fn bundled_example_fixture_parses_and_round_trips() {
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn regenerate_example_dsl_assets_when_env_set() {
     if std::env::var_os("SEMIO_VDI_REGEN").is_none() {
         return;
     }
-    use crate::standards::v1::subsets::any::io::text::snapshot::encode_vdi3805_dsl;
+    use crate::text::snapshot::encode_vdi3805_dsl;
     use crate::{conforming_valve_dataset, nonconforming_valve_dataset};
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let assets = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");

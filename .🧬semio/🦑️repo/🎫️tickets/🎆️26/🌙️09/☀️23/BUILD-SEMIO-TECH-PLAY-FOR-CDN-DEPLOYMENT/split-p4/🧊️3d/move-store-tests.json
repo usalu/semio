@@ -1,0 +1,8 @@
+[
+ {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs", "fns": ["command_envelope_round_trip_holds_for_an_applied_operation"], "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️envelope/🦀️.rs",
+  "header": "//! ✉️ The CW7 command-envelope law over a real puzzle3d store: an applied edit round-trips through its mutation envelopes.\n\nuse semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;\nuse semio_s_artifact_puzzle_3d_model::Puzzle3dObject;"},
+ {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs", "fns": ["command_envelope_round_trip_holds_for_an_applied_operation"], "drop": true},
+ {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs", "fns": ["puzzle3d_document_vcs_replays_granular_operations"], "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️replay/🦀️.rs",
+  "header": "//! 🔁️ A puzzle3d store replays granular operations into its projection.\n\nuse semio_s_artifact_puzzle_3d_host::{close_puzzle3d_store, puzzle3d_store};"},
+ {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs", "fns": ["a_drag_edited_in_history_replays_its_downstream"], "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️selection-time-travel/🦀️.rs", "header": ""}
+]

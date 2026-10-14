@@ -1,15 +1,15 @@
 //! Inverse for `introduce-product-index`.
 
-use crate::mutations::retire_product_index;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
-use super::mutation::IntroduceProductIndex;
+use crate::retire_product_index;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use crate::introduce_product_index::mutation::IntroduceProductIndex;
 
-pub fn inverse(payload: &IntroduceProductIndex, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &IntroduceProductIndex, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::retire_product_index::mutation::RetireProductIndex> {
     Ok((|| {
     if base.catalogue.product_indexes.iter().any(|item| item.id == payload.product_index.id) {
         return Vec::new();
     }
-    vec![Iso16757Mutation::RetireProductIndex(retire_product_index::mutation::RetireProductIndex { id: payload.product_index.id.clone() })]
+    vec![Op::from(retire_product_index::mutation::RetireProductIndex { id: payload.product_index.id.clone() })]
 
     })())
 }

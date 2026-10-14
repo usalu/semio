@@ -1,8 +1,7 @@
 //! 🌶️ Energy model mutation — `ChangeFaultSeverity`: Sets severity on one fault, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFaultSeverity {
     pub new_severity: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fault_severity(id: crate::model::EntityId, new_severity: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFaultSeverity(ChangeFaultSeverity { id, new_severity })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fault_severity<Op: From<ChangeFaultSeverity>>(id: crate::model::EntityId, new_severity: f64) -> Op {
+    ChangeFaultSeverity { id, new_severity }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFaultSeverity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFaultSeverity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFaultSeverity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fault", kind: "change-fault-severity", record: "ChangedFaultSeverity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

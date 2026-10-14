@@ -1,7 +1,7 @@
 //! Diff for `remove-column`.
-use super::RemoveColumn;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994ColumnsRows};
+use crate::remove_column::RemoveColumn;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows};
 
 pub fn diff(payload: &RemoveColumn, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.index >= base.columns.len() {

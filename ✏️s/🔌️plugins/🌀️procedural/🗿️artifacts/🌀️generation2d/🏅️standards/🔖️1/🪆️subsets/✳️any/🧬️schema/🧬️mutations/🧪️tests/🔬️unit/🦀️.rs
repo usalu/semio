@@ -1,11 +1,15 @@
-use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_framework_artifact_playbook_playbook::FormGeneration;
+use semio_s_artifact_procedural_2d_mutations::*;
+use semio_s_artifact_procedural_2d_model::empty_generation2d_snapshot;
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, WidgetLayout};
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law_cold, assert_mutation_inverse_law, assert_mutation_inverse_law_cold};
-use crate::central_apply::{apply_generation2d_mutation};
+use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
 
 /// 🧊️ Every owned projection this suite materialises is CLOSED, never dropped — `fixture.layout`
 /// is an `OrderedMap` root and `generation` carries its own retirement ladder.

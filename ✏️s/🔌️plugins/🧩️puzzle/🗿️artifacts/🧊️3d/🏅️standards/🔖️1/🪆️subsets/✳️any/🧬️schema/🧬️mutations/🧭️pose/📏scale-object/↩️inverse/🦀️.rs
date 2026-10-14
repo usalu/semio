@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ScaleObject` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
 use super::mutation::ScaleObject;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ScaleObject>>(payload: &super::mutation::ScaleObject, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -8,7 +8,7 @@ pub fn inverse<Op: From<ScaleObject>>(payload: &super::mutation::ScaleObject, ba
     let Some(item) = base.objects.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::scale_object::mutation::scale_object(item.id.clone(), item.scale)]
+    vec![crate::scale_object::mutation::scale_object(item.id.clone(), item.scale)]
 
     })())
 }

@@ -2,7 +2,7 @@
 //! 3d model viewport left, the structure tree, the zone table and the energy results stacked in a
 //! right-hand column. Same windows, no edit affordances and no picking domain.
 
-use crate::viewer::model::modes::view::windows::{model as model_window, simulation, structure, zones};
+use crate::modes::view::windows::{model as model_window, simulation, structure, zones};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -15,7 +15,7 @@ use semio_framework_plugin::WindowLayoutWindowNode;
 pub const ENERGY_MODEL_VIEW_MODE_ID: &str = "view";
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::model::create_energy_model_viewer`.
 pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ENERGY_MODEL_VIEW_MODE_ID.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }

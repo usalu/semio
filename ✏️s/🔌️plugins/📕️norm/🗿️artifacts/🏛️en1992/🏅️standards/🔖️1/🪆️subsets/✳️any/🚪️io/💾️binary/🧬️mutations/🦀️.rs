@@ -1,6 +1,6 @@
 //! 💾️ EN 1992 mutation binary wire.
 
-use crate::artifact_schema::mutations::En1992Mutation;
+use semio_s_artifact_norm_en1992_mutations::En1992Mutation;
 use protocol::OpBinary;
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = "";

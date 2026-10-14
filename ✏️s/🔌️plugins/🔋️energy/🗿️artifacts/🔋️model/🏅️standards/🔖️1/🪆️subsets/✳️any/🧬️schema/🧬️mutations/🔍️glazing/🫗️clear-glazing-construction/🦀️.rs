@@ -1,8 +1,7 @@
 //! 🫗️ Energy model mutation — `ClearFenestrationGlazingConstruction`: Empties the fenestration's optional glazing slot, handing the optics back to `uValueWM2k`/`shgc`/`vlt`. Refused when the slot is already empty, so an undo chain can never invent a clear that had no partner.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ClearFenestrationGlazingConstruction {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn clear_fenestration_glazing_construction(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::ClearFenestrationGlazingConstruction(ClearFenestrationGlazingConstruction { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn clear_fenestration_glazing_construction<Op: From<ClearFenestrationGlazingConstruction>>(id: crate::model::EntityId) -> Op {
+    ClearFenestrationGlazingConstruction { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ClearFenestrationGlazingConstruction {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ClearFenestrationGlazingConstruction
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ClearFenestrationGlazingConstruction> + From<crate::BindFenestrationGlazingConstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "clear", entity: "fenestration", kind: "clear-fenestration-glazing-construction", record: "ClearedFenestrationGlazingConstruction" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

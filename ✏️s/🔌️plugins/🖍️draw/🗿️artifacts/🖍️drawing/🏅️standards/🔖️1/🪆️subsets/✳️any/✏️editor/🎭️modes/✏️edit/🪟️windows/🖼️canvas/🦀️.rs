@@ -1,6 +1,6 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
-use crate::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
+use crate::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
 use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
 use semio_s_artifact_draw_drawing_model::{DrawingArtboard, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
@@ -106,8 +106,8 @@ pub fn render(prepared: Option<&semio_s_artifact_draw_drawing_scene::paint::scen
             if !matches!(semio_s_artifact_draw_drawing_model::find_drawing_layer(document,&node.id),Some(semio_s_artifact_draw_drawing_model::DrawingLayerNode::Path(_))) || semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document,&node.id) {continue;}
             let [a,b,c,d,e,f]=node.transform;
             let world=|point:[f64;2]|[a*point[0]+c*point[1]+e,b*point[0]+d*point[1]+f];
-            let selected=point_selection.iter().filter_map(|id|crate::interaction::points::parse_point_id(id)).filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
-            let geometry=if selected.is_empty() {None} else {match semio_s_artifact_draw_drawing_model::find_drawing_layer(document,&node.id) {Some(semio_s_artifact_draw_drawing_model::DrawingLayerNode::Path(path))=>crate::interaction::points::geometry_id(&path.segments),_=>None}};
+            let selected=point_selection.iter().filter_map(|id|semio_s_artifact_draw_drawing_editor_interaction::points::parse_point_id(id)).filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
+            let geometry=if selected.is_empty() {None} else {match semio_s_artifact_draw_drawing_model::find_drawing_layer(document,&node.id) {Some(semio_s_artifact_draw_drawing_model::DrawingLayerNode::Path(path))=>semio_s_artifact_draw_drawing_editor_interaction::points::geometry_id(&path.segments),_=>None}};
             let selected_point=|index,point|selected.iter().any(|reference|reference.index==index && reference.point==point && Some(reference.geometry)==geometry.as_deref());
             let mut anchors=Vec::new();let mut controls=Vec::new();let mut stems=Vec::new();
             let mut selected_anchors=Vec::new();let mut selected_controls=Vec::new();

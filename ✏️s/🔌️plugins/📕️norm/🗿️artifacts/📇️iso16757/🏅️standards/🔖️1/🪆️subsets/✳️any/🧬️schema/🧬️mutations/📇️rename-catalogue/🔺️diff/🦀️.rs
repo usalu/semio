@@ -1,8 +1,8 @@
 //! 🔺️ `rename-catalogue` — sparse diff construction.
 
-use super::mutation::RenameCatalogue;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff};
+use crate::rename_catalogue::mutation::RenameCatalogue;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
 
 //#region 🔖️Diff
 

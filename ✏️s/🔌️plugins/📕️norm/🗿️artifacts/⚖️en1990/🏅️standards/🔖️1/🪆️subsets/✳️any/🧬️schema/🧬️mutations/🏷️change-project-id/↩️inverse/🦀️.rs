@@ -1,13 +1,13 @@
 //! ↩️ `change-project-id` inverse.
 
-use super::ChangeProjectId;
-use crate::En1990Mutation;
-use crate::En1990Snapshot;
+use crate::change_project_id::ChangeProjectId;
 
-pub fn inverse(mutation: &ChangeProjectId, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+
+pub fn inverse<Op>(mutation: &ChangeProjectId, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_project_id::ChangeProjectId> {
     Ok((|| {
     let _ = mutation;
-    vec![En1990Mutation::ChangeProjectId(ChangeProjectId { new_project_id: base.project_id.clone() })]
+    vec![Op::from(ChangeProjectId { new_project_id: base.project_id.clone() })]
 
     })())
 }

@@ -7,8 +7,8 @@
 
 use super::*;
 use crate::blend::BlendJob;
-use crate::staged::{ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::transform::FaceCopier;
+use semio_framework_3d_brep_construction::staged::{ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::transform::FaceCopier;
 use semio_framework_3d_brep_representation::topology::Face;
 
 // #region 🔖️Rebuild

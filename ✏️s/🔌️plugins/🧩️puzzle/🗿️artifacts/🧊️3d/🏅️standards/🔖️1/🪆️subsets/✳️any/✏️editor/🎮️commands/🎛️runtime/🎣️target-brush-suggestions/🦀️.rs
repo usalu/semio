@@ -1,8 +1,8 @@
 //! 🖌️ `target-brush-suggestions` command.
 
-use crate::editor::puzzle3d::modes::edit::windows::main::utilities::brush;
-use crate::editor::puzzle3d::snapshot::puzzle3d_brush_target_vortex;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_brush_target_vortex;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🎣️ Points the brush suggestions run at the vortex the armed brush is over (`fullId`, else the brush's own

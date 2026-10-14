@@ -2,16 +2,16 @@
 //! was a no-op and there's nothing to undo).
 
 use super::CreateObject;
-use crate::mutations::delete_object;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use crate::delete_object;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateObject, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::delete_object::DeleteObject>>(payload: &CreateObject, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     if base.objects.iter().any(|object| object.id == payload.object.id) {
         return Vec::new();
     }
-    vec![LowpolyMutation::DeleteObject(delete_object::DeleteObject { id: payload.object.id.clone() })]
+    vec![Op::from(delete_object::DeleteObject { id: payload.object.id.clone() })]
 
     })())
 }

@@ -1,8 +1,7 @@
 //! 🧲️ Energy model mutation — `ChangeFenestrationSurface`: Rehosts the fenestration on another existing surface — the surface whose orientation, tilt and zone the window then inherits.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationSurface {
     pub new_surface_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_surface(id: crate::model::EntityId, new_surface_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationSurface(ChangeFenestrationSurface { id, new_surface_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_surface<Op: From<ChangeFenestrationSurface>>(id: crate::model::EntityId, new_surface_id: crate::model::EntityId) -> Op {
+    ChangeFenestrationSurface { id, new_surface_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationSurface {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationSurface
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationSurface>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-surface", record: "ChangedFenestrationSurface" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

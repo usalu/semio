@@ -1,6 +1,6 @@
 //! 📦️ FEM 3D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::Fem3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -33,7 +33,8 @@ mod semio_protocol_conformance;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

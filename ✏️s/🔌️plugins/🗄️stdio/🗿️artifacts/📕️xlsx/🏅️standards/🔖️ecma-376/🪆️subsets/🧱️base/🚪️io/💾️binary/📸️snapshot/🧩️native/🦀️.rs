@@ -1,5 +1,5 @@
 //! 📕️ Complete XLSX schema, OPC entities and ordered typed XML native fields.
-use crate::schema::snapshot::{XlsxSnapshot, XlsxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxXmlPart};
 use semio_framework_os_kernel::{
     io_schema::IoPayload,
     sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase},

@@ -1,8 +1,10 @@
 //! 🔒 `set-frame-flags` — sets a frame's locked and visible flags.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +21,12 @@ pub struct SetFrameFlags {
     pub visible: Option<bool>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetFrameFlags {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetFrameFlags where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_frame_flags::SetFrameFlags> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "frame-flags", kind: "set-frame-flags", record: "SetFrameFlags" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_set_frame_flags(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_set_frame_flags(self, base)?
     
@@ -63,11 +65,11 @@ pub fn diff_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> p
     })
 }
 
-pub fn inverse_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_frame_flags<Op: From<crate::set_frame_flags::SetFrameFlags>>(payload: &SetFrameFlags, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
-    vec![LayoutMutation::SetFrameFlags(SetFrameFlags {
+    vec![Op::from(SetFrameFlags {
         page_id: payload.page_id.clone(),
         frame_id: payload.frame_id.clone(),
         locked: payload.locked.map(|_| frame.locked()),
@@ -80,3 +82,9 @@ pub fn inverse_set_frame_flags(payload: &SetFrameFlags, base: &LayoutSnapshot) -
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔒️locks-frame-1/🦀️.rs"]
+mod tests_locks_frame_1;
+//#endregion 🪢️TaxonomyMounts

@@ -1,8 +1,8 @@
 //! 🚫️ `remove-zone-window` diff — removes the window at the index from the zone's list.
 
-use super::RemoveZoneWindow;
-use crate::diff::{Din4108Diff, Din4108WindowDelta, Din4108ZoneDelta, Din4108ZonePatch};
-use crate::Din4108Snapshot;
+use crate::remove_zone_window::RemoveZoneWindow;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108WindowDelta, Din4108ZoneDelta, Din4108ZonePatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &RemoveZoneWindow, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(zone) = base.zones.iter().find(|zone| zone.id == payload.zone_id) else {

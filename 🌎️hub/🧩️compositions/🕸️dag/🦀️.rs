@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -28,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 /// live peer) — untouched by this pass.
 pub fn plugin() -> Result<Plugin<DagApps>, PluginAssemblyError> {
-    Plugin::<DagApps>::builder("dag")
+    PluginBuilder::<_, DagApps>::new("dag")
         .label("DAG")
         .version("0.1.0")
         .package_id("semio:dag")

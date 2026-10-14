@@ -3,7 +3,7 @@
 
 use crate::diff::EnergyLinkSlotDelta;
 use crate::diff::EnergyModelDiff;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &super::DisconnectReferencedModel, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

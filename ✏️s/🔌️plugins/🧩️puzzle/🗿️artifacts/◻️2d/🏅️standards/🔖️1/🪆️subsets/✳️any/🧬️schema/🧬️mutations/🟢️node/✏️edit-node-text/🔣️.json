@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text",
+  "semanticKind": "edit-node-text",
+  "displayName": "Edit Node Text",
+  "emoji": "✏️",
+  "aggregateVariant": "EditNodeText",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "edit-node-text",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

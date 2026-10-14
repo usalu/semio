@@ -90,7 +90,7 @@ const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target
  * `node_modules`. The profile belongs in the key: a `dev` and a `release` serve of the same variant run
  * side by side, and sharing one `deps/` directory means whichever re-optimizes last rewrites the modules
  * the other has already handed to a browser. */
-const playgroundCacheDir = viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url);
+const playgroundCacheDir = viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) });
 
 /** 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];

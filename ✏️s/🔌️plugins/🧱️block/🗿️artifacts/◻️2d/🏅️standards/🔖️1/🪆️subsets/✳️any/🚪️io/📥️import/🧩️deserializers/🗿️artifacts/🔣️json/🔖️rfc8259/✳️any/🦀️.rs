@@ -1,7 +1,7 @@
 //! 🚪️ block2d ← json — foreign `Deserializer<Block2dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -12,7 +12,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 🔣️ Parses rfc8259 text into this subset's snapshot — also used by the `🎒️zip` container leaf.
 /// 📸️ Present schema strings, including the empty string, are retained exactly.
 pub fn from_json_text(text: &str) -> Result<Block2dSnapshot, IoError> {
-    crate::standards::v1::subsets::any::io::json::from_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→block2d: {error}"))))
+    semio_s_artifact_block_2d_io_write::json_native::from_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→block2d: {error}"))))
 }
 
 /// 🧩️ `s.stdio.json@rfc8259/*` → `s.block.block2d@1/*`.

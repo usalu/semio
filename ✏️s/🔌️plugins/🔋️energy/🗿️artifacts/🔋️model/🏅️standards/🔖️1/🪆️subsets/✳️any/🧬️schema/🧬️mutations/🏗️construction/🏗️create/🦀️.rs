@@ -1,8 +1,7 @@
 //! 🏗️ Energy model mutation — `CreateConstruction`: Adds one layered construction, outside-to-inside layer order. Every layer must already name a material the document defines, so a construction is never born dangling.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -19,19 +18,22 @@ pub struct CreateConstruction {
     pub layer_material_ids: Vec<crate::model::EntityId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_construction(index: u32, id: crate::model::EntityId, name: String, layer_material_ids: Vec<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateConstruction(CreateConstruction { index, id, name, layer_material_ids })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_construction<Op: From<CreateConstruction>>(index: u32, id: crate::model::EntityId, name: String, layer_material_ids: Vec<crate::model::EntityId>) -> Op {
+    CreateConstruction { index, id, name, layer_material_ids }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateConstruction {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateConstruction
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateConstruction> + From<crate::DeleteConstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "construction", kind: "create-construction", record: "CreatedConstruction" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

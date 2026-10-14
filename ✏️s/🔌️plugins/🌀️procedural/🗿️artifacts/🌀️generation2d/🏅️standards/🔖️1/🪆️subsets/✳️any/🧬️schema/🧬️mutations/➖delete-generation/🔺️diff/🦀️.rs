@@ -1,7 +1,9 @@
 //! 🔺️ Sparse diff for `DeleteGeneration`, built directly from `(payload, base)`.
 use super::DeleteGeneration;
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dGenerationsDelta, Generation2dSelectionChange};
-use crate::{Generation2dDiff, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dGenerationsDelta;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dSelectionChange;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteGeneration, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

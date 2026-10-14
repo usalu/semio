@@ -34,7 +34,7 @@ semio-framework-ui-contract.workspace = true
 semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-xlsx-base-model = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
@@ -56,3 +56,4 @@ semio-framework-async-macros = { path = "../../../../../../../🧰️framework/�
 calamine = { version = "0.36.1", default-features = false }
 csv = "1"
 zip = { version = "6", default-features = false, features = ["deflate"] }
+semio-s-artifact-stdio-xlsx-base = { workspace = true }

@@ -4,7 +4,7 @@
 //! window" for a viewer packet — a read-only Flow window and a Generations/Form pair are a
 //! follow-up, not a purity or completeness requirement.
 
-use crate::viewer::generation3d::modes::view::windows::preview;
+use crate::view::windows::preview;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::ToolRef;

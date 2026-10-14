@@ -9,7 +9,7 @@ pub type InertiaTensor = [[f64; 3]; 3];
 
 /// 🧭 Eigenvalues (ascending) and the unit eigenvector of each, right-handed (`axes[2] = axes[0] x axes[1]`).
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct SymmetricEigen3 {
     pub values: [f64; 3],
     pub axes: [[f64; 3]; 3],

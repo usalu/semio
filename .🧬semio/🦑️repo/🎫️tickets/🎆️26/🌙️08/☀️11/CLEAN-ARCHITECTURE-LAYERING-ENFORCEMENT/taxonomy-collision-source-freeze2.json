@@ -1,0 +1,42 @@
+{
+  "kind": "current-byte-observation-not-Source-authority",
+  "rows": [
+    {
+      "path": ".gitignore",
+      "bytes": 11605,
+      "sha256": "11166ab084616a0b59687559ef53e2942e9ef66d52459718b758ab87adcd1295"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+      "bytes": 1445,
+      "sha256": "9525c6cd898de234329b4936d56fdde354d66a2c897da7a3bd62e9f6d33ca3cd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/tsconfig.json",
+      "bytes": 904,
+      "sha256": "1e657c3f6a1da73c686d197d4d44a5ddabbbc46eb92268f6c5ec98d2dfd0931b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🟦️.ts",
+      "bytes": 18258,
+      "sha256": "54f3fe250bde5cf1e60dcab8bcb21dc513f8bba14a93849a125c2c648e8c7901"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🔣️.json",
+      "bytes": 1518,
+      "sha256": "aecb49db31557b252b2b2866333c8dbd326f5feb58f80ee40441fb6da04e8dbb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🟦️.ts",
+      "bytes": 3723,
+      "sha256": "e6f153068e626909eca0fed66fac22be239f8b0745045cbec8a66dea04589e35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "bytes": 175317,
+      "sha256": "adf8be8473aab089dcf550a2e7fba9c742dfc5641b591d825c0655d825756efe"
+    }
+  ],
+  "aggregate": "10a88cb8776c0e78e71df4a3b7c63409de323b566fb0b608f3191ac68351fd97",
+  "retainedHistoricalRoster": "nx-ignore-source-inputs.json"
+}

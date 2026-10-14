@@ -2,7 +2,7 @@
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
 use semio_framework::Fault;
-use semio_framework_value::retirement::shared::sealed::SealedShared;
+use semio_framework_value::shared_issuance::SealedShared;
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_tool_machine::GestureState;
 use semio_framework_tool_machine::GestureTool;

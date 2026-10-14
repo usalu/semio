@@ -1,0 +1,494 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+ "crate": "semio_s_artifact_block_5d",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-block-5d-model",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "Block 5d model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-block-5d-diff",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "Block 5d diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-block-5d-mutations",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-block-5d-schema",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "Block 5d artifact schema and descriptor"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-block-5d-inferences",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "Block 5d inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-block-5d-io",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "Block 5d io: composition, builder, analyzer and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-block-5d-examples",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "examples",
+   "description": "Block 5d example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-block-5d-editor",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::block5d",
+   "description": "Block 5d editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-block-5d-viewer",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::block5d",
+   "description": "Block 5d viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-block-5d",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+   "prefix": "",
+   "description": "Block 5d artifact",
+   "role": "artifact"
+  },
+  "mut-part-kind": {
+   "package": "semio-s-artifact-block-5d-mut-part-kind",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️part-kind",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d part kind mutation leaves"
+  },
+  "mut-representations": {
+   "package": "semio-s-artifact-block-5d-mut-representations",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️representations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d representations mutation leaves"
+  },
+  "mut-grip-kinds": {
+   "package": "semio-s-artifact-block-5d-mut-grip-kinds",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️grip-kinds",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d grip kinds mutation leaves"
+  },
+  "mut-grips": {
+   "package": "semio-s-artifact-block-5d-mut-grips",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤏️grips",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d grips mutation leaves"
+  },
+  "mut-meta": {
+   "package": "semio-s-artifact-block-5d-mut-meta",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d meta mutation leaves"
+  },
+  "mut-cameras": {
+   "package": "semio-s-artifact-block-5d-mut-cameras",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️cameras",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "Block 5d cameras mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✳️any/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✏️rename\\-part\\-kind/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-part\\-kind\\-label/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔀️change\\-part\\-kind\\-variant/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📃️change\\-part\\-kind\\-description/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖼️change\\-part\\-kind\\-icon/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐change\\-part\\-kind\\-unit/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖌️update\\-part2d/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧊update\\-part3d/",
+   "mut-part-kind"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱create\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🗑️delete\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✒️rename\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌐change\\-representation\\-mesh\\-url/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏔️change\\-representation\\-lod/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📜change\\-representation/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔖add\\-representation\\-tag/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚫remove\\-representation\\-tag/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧩add\\-representation\\-attribute/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖remove\\-representation\\-attribute/",
+   "mut-representations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌱create\\-grip\\-kind/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❌delete\\-grip\\-kind/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🖋️rename\\-grip\\-kind/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎫change\\-grip\\-kind\\-label/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎨change\\-grip\\-kind\\-color/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪢change\\-grip\\-kind\\-default\\-rope\\-kind/",
+   "mut-grip-kinds"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌿create\\-grip/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🕳️delete\\-grip/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📍move\\-grip2d/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧭move\\-grip3d/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📏resize\\-grip3d/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧷change\\-grip\\-grip\\-kind/",
+   "mut-grips"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕add\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/✂️remove\\-compatibility\\-rule/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩add\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚷remove\\-attribute/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/👤add\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🙅remove\\-author/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💬change\\-meta\\-description/",
+   "mut-meta"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎥move\\-camera2d/",
+   "mut-cameras"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔍scale\\-camera2d/",
+   "mut-cameras"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎬move\\-camera3d/",
+   "mut-cameras"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔎scale\\-camera3d/",
+   "mut-cameras"
+  ],
+  [
+   "🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "🖐️5d/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️part-kind/🦀️.rs",
+   "text": "//! 🧩️ Block 5d part kind mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️representations/🦀️.rs",
+   "text": "//! 🎭️ Block 5d representations mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️grip-kinds/🦀️.rs",
+   "text": "//! 🪝️ Block 5d grip kinds mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤏️grips/🦀️.rs",
+   "text": "//! 🤏️ Block 5d grips mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/🦀️.rs",
+   "text": "//! 📋️ Block 5d meta mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️cameras/🦀️.rs",
+   "text": "//! 🎥️ Block 5d cameras mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ Block 5d example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ Block 5d's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_mutation_vectors::assert_committed_vectors::<semio_s_artifact_block_5d_model::Block5dSnapshot, semio_s_artifact_block_5d_mutations::Block5dMutation>(&root, || {}).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub(?:\\([^)]*\\))?\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+   "optional": true,
+   "sub": [
+    [
+     "[ \\t]*#\\[cfg\\(test\\)\\]\\s*#\\[path = \\\"[^\\\"]*🧬️mutations/[^/\\\"]+/🧪️tests/[^\\\"]+\\\"\\]\\s*mod \\w+;\\n",
+     ""
+    ]
+   ]
+  }
+ ],
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [],
+ "move_mods": [],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-block-5d-model"
+    ]
+   }
+  ]
+ },
+ "generated": {},
+ "root_to_map": {
+  "pilot_languages": "io"
+ },
+ "root_to_extra": [],
+ "generic_leaves": {
+  "enum": "Block5dMutation",
+  "snapshot": "Block5dSnapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::Block5dDiff",
+  "mutations_dir": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "✏️rename-part-kind",
+   "🏷️change-part-kind-label",
+   "🔀️change-part-kind-variant",
+   "📃️change-part-kind-description",
+   "🖼️change-part-kind-icon",
+   "📐change-part-kind-unit",
+   "🖌️update-part2d",
+   "🧊update-part3d",
+   "🧱create-representation",
+   "🗑️delete-representation",
+   "✒️rename-representation",
+   "🌐change-representation-mesh-url",
+   "🏔️change-representation-lod",
+   "📜change-representation",
+   "🔖add-representation-tag",
+   "🚫remove-representation-tag",
+   "🧩add-representation-attribute",
+   "➖remove-representation-attribute",
+   "🌱create-grip-kind",
+   "❌delete-grip-kind",
+   "🖋️rename-grip-kind",
+   "🎫change-grip-kind-label",
+   "🎨change-grip-kind-color",
+   "🪢change-grip-kind-default-rope-kind",
+   "🌿create-grip",
+   "🕳️delete-grip",
+   "📍move-grip2d",
+   "🧭move-grip3d",
+   "📏resize-grip3d",
+   "🧷change-grip-grip-kind",
+   "➕add-compatibility-rule",
+   "✂️remove-compatibility-rule",
+   "🔩add-attribute",
+   "🚷remove-attribute",
+   "👤add-author",
+   "🙅remove-author",
+   "💬change-meta-description",
+   "🎥move-camera2d",
+   "🔍scale-camera2d",
+   "🎬move-camera3d",
+   "🔎scale-camera3d"
+  ]
+ }
+}

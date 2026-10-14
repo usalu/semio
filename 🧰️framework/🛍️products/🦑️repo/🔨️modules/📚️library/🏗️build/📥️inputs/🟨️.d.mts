@@ -11,4 +11,4 @@ export function sourceOutputOverlaps(output:string,inputs:unknown[],root:string)
 /** 🗂️ Shares equivalent arrays within one project input declaration. */
 export function internProjectInputGroups(groups:Record<string,unknown[]>):Record<string,unknown[]>;
 /** 🧾️ Infers owned source groups from admitted first-party project declarations. */
-export function inferProjectInputs(json:Record<string,unknown>,root:string,workspaceRoot:string,facts:Record<string,unknown>,scripts:unknown,context:Record<string,unknown>):Record<string,unknown[]>;
+export function inferProjectInputs(json:Record<string,unknown>,root:string,workspaceRoot:string,facts:Record<string,unknown>,scripts:unknown,context:Record<string,unknown>):Promise<Record<string,unknown[]>>;

@@ -1,6 +1,6 @@
 //! 🔄️ `rotate-selection` command.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🔄️ One gumball rotate `{ids?, ax, ay, az, angle}` as ONE transform-tool transaction yielding `rotate-selection`.

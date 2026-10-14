@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::din4108::unit_tests::context;
+use crate::modes::edit::windows::inputs::*;
+use crate::unit_tests::context;
 use crate::field_meta::din4108_field_meta;
 
 #[semio_framework_async_macros::async_test]

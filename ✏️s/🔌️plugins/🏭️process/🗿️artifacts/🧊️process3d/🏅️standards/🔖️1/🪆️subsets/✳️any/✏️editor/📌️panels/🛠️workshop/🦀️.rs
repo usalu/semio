@@ -3,12 +3,12 @@
 //! or a machine already installed from it, renders no duplicate row here (it stays visible above, in
 //! the installed-machines section, where remove lives).
 
-use crate::editor::process3d::iconed_tree_item_with_action;
-use crate::editor::process3d::installed_catalogs;
-use crate::editor::process3d::process3d_action;
-use crate::editor::process3d::terminology::Process3dLabels;
-use crate::editor::process3d::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
-use crate::{MachineCatalog, Process3dSnapshot, WorkshopMachine};
+use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
+use semio_s_artifact_process_process3d_kit::installed_catalogs;
+use semio_s_artifact_process_process3d_kit::process3d_action;
+use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
+use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_model::{snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::tree_item;
@@ -53,11 +53,11 @@ fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
 /// the verb; selection is the tree's — the row declares the `object` granularity and picks through the tree's single
 /// `interactionSelect` binding.
 fn machine_row(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let args = crate::editor::process3d::ui_value_map([("id", crate::editor::process3d::ui_value_text(&machine.id)?)])?;
-    let target = row_target(crate::editor::process3d::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
+    let args = semio_s_artifact_process_process3d_kit::ui_value_map([("id", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
+    let target = row_target(semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
     let mut row_actions = semio_framework_plugin::UiFixedList::default();
     row_actions.try_push(row_action("trash", labels.remove_machine.as_str(), "removeWorkshopMachine", RowActionPlacement::Menu)?).map_err(|_| workshop_error("row-actions"))?;
-    let mut item = tree_item(format!("machine:{}", machine.id), crate::editor::process3d::ui_label(&machine.label)?)?;
+    let mut item = tree_item(format!("machine:{}", machine.id), semio_s_artifact_process_process3d_kit::ui_label(&machine.label)?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(ui_text(&machine.icon_id)?);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
@@ -78,7 +78,7 @@ fn machine_row(machine: &WorkshopMachine, labels: &Process3dLabels) -> UiAssembl
 /// costs one viewport of rows on first paint (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
 pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &Process3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let mut builder = PanelTreeBuilder::new("process3d-play-workshop")?
-        .window_section(windows, PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(crate::editor::process3d::ui_label(labels.machines.as_str())?), true, &snapshot.workshop.machines, |machine| {
+        .window_section(windows, PROCESS_3D_PLAY_WORKSHOP_MACHINES, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.machines.as_str())?), true, &snapshot.workshop.machines, |machine| {
             machine_row(machine, labels)
         })?
         .interaction_domain(PROCESS_3D_PLAY_APP_ID, PROCESS3D_INTERACTION_DOMAIN)?;
@@ -90,9 +90,9 @@ pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &P
             continue;
         }
         let section_id = format!("process3d-play-workshop.catalog.{catalog_id}");
-        builder = builder.window_section(windows, &section_id, Some(crate::editor::process3d::ui_label(catalog.label())?), false, &installable, |machine| {
+        builder = builder.window_section(windows, &section_id, Some(semio_s_artifact_process_process3d_kit::ui_label(catalog.label())?), false, &installable, |machine| {
             let id = format!("process3d-workshop.catalog.{catalog_id}.{}", machine.id);
-            let args = crate::editor::process3d::ui_value_map([("catalogId", crate::editor::process3d::ui_value_text(catalog_id)?), ("machineId", crate::editor::process3d::ui_value_text(&machine.id)?)])?;
+            let args = semio_s_artifact_process_process3d_kit::ui_value_map([("catalogId", semio_s_artifact_process_process3d_kit::ui_value_text(catalog_id)?), ("machineId", semio_s_artifact_process_process3d_kit::ui_value_text(&machine.id)?)])?;
             iconed_tree_item_with_action(id, &machine.label, &machine.icon_id, process3d_action("addWorkshopMachine", Some(args)))
         })?;
     }
@@ -101,7 +101,4 @@ pub fn render(snapshot: &Process3dSnapshot, contributions_json: &str, labels: &P
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

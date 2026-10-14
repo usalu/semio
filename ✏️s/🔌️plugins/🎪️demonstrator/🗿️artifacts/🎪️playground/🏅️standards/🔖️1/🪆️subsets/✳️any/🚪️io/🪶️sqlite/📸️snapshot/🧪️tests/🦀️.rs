@@ -16,7 +16,7 @@ fn sqlite_snapshot_playground_actual_bare_owner_has_capability() {
 async fn sqlite_snapshot_playground_actual_declaration_registers_both_io_directions() {
     use store::io::io_mechanism::{io_route, io_run};
     use {semio_framework_artifact_reference::ArtifactDialect,store::io_schema::IoPayload,store::io_schema::SQLITE_SNAPSHOT};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("demonstrator")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("demonstrator")
         .label("Playground SQLite Declaration")
         .version("0.0.1")
         .package_id("semio:demonstrator")
@@ -188,7 +188,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
         sqlite_snapshot::*,
         os_store::serialization::ArtifactSqliteSnapshotHost,
     };
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("demonstrator")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("demonstrator")
         .label("Playground Typed SQLite Declaration")
         .version("0.0.1")
         .package_id("semio:demonstrator")

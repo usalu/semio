@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block3dMutation` to its binary command form.
@@ -27,9 +27,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{Block3dMutation};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_block3d_mutation};
+#[cfg(test)] use crate::binary::mutations::*;
+use semio_s_artifact_block_3d_mutations::Block3dMutation;
+#[cfg(test)] use semio_s_artifact_block_3d_mutations::inverse_block3d_mutation;
 
 impl protocol::OpBinary for Block3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

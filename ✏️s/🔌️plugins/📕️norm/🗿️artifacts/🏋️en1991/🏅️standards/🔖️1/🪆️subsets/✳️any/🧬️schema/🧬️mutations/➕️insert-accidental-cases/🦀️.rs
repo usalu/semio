@@ -1,6 +1,6 @@
 //! ➕ `insert-accidental-cases`.
 
-use crate::{En1991Mutation, En1991Snapshot};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,10 +11,10 @@ use crate::{En1991Mutation, En1991Snapshot};
 #[value(rename_all = "camelCase")]
 pub struct InsertAccidentalCases {
     pub index: usize,
-    pub item: crate::AccidentalCase,
+    pub item: semio_s_artifact_norm_en1991_model::AccidentalCase,
 }
 
-impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertAccidentalCases {
+impl<Op> protocol::MutationKind<En1991Snapshot, Op> for InsertAccidentalCases where Op: protocol::Mutation<En1991Snapshot, Diff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::remove_accidental_cases::RemoveAccidentalCases> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert",
         entity: "accidental-cases",
@@ -22,12 +22,12 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertAccidental
         record: "InsertedAccidentalCases",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+        crate::insert_accidental_cases::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::insert_accidental_cases::inverse::inverse(self, base)?
     
     })
 }
@@ -36,3 +36,10 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for InsertAccidental
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

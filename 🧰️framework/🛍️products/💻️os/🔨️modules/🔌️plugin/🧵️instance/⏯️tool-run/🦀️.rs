@@ -307,7 +307,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// renders carries the `toolRunTrace` lane answered for the cursor that window's renderer echoed.
     /// Panel bodies, override renders and bodies without a scene surface carry nothing.
     pub(crate) fn inject_tool_run_trace_lane(&mut self, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {
-        let Some(tree) = self.pending_render_tree.as_mut() else { return Err(crate::sdk_fault::plugin_sdk_fault("trace injection requires its stationary render source")); };
+        let Some(tree) = self.pending_render_tree.as_mut() else { return Err(semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault("trace injection requires its stationary render source")); };
         let Some(window_id) = view_state.window_id.as_deref() else { return Ok(()) };
         self.tool_runs.retain_trace_windows(|live| view_state.window_instances.iter().any(|window| window.id == live));
         let Some(surface) = tool_run_scene_surface(&mut tree.root) else {

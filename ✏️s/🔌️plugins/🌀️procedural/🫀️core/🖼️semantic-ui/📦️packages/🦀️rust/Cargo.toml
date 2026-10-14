@@ -20,3 +20,4 @@ semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-locale = { workspace = true }
+

@@ -1,8 +1,8 @@
 //! 🔺️ `change-automation-class` sparse diff.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::change_automation_class::ChangeAutomationClass;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use crate::change_automation_class::ChangeAutomationClass;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 pub fn diff(payload: &ChangeAutomationClass, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

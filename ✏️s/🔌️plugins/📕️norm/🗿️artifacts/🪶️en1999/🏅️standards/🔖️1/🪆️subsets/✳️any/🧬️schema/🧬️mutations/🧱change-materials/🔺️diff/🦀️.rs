@@ -1,8 +1,8 @@
 //! 🔺️ `change-materials` diff.
 
-use crate::mutations::change_materials::ChangeMaterials;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999MaterialsRows};
+use crate::change_materials::ChangeMaterials;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999MaterialsRows};
 
 pub fn diff(payload: &ChangeMaterials, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.materials == &payload.materials {

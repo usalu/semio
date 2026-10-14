@@ -16,7 +16,7 @@ pub type Vec3 = [f64; 3];
 
 /// 📦️ Axis-aligned bounds.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,
@@ -24,7 +24,7 @@ pub struct Aabb {
 
 /// 📏️ Parametric domain `[min, max]`.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ParamDomain {
     pub min: f64,
     pub max: f64,
@@ -32,7 +32,7 @@ pub struct ParamDomain {
 
 /// 🧩️ Triangle index range for one B-Rep face.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct FaceGroup {
     pub start: u32,
     pub count: u32,
@@ -41,7 +41,7 @@ pub struct FaceGroup {
 
 /// 🧵️ Line-segment index range for one B-Rep edge.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct EdgeGroup {
     pub start: u32,
     pub count: u32,
@@ -50,7 +50,7 @@ pub struct EdgeGroup {
 
 /// 📍️ Original topology vertex range in the preview point buffer.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct VertexGroup {
     pub start: u32,
     pub count: u32,
@@ -59,7 +59,7 @@ pub struct VertexGroup {
 
 /// 🏄️ Analytic surface family behind a tessellated face.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum SurfaceKind {
     Plane,
@@ -72,7 +72,7 @@ pub enum SurfaceKind {
 
 /// ➰️ Analytic curve family behind a tessellated edge.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum CurveKind {
     Line,
@@ -83,7 +83,7 @@ pub enum CurveKind {
 
 /// 🖼️ Per-face metadata alongside a tessellated face group.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct FaceInfo {
     pub entity_id: String,
     pub surface_kind: SurfaceKind,
@@ -93,7 +93,7 @@ pub struct FaceInfo {
 
 /// 🖇️ Per-edge metadata alongside a tessellated edge group.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct EdgeInfo {
     pub entity_id: String,
     pub curve_kind: CurveKind,
@@ -102,7 +102,7 @@ pub struct EdgeInfo {
 
 /// 🖼️ Tessellated mesh payload for preview upload.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshTransfer {
     pub position: Vec<f32>,
     pub normal: Vec<f32>,
@@ -131,7 +131,7 @@ semio_framework_value::artifact_retire_struct!(MeshTransfer { position, normal, 
 
 /// 📍️ Point classification relative to a solid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum PointClassification {
     Inside,
@@ -141,7 +141,7 @@ pub enum PointClassification {
 
 /// 🎯️ Fidelity of a `BrepKernel` operation's result relative to true analytic B-Rep.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum OpQuality {
     ExactAnalytic,

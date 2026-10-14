@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::raster_example_document;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_raster_document;
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document;
+use semio_s_artifact_raster_raster_examples::raster_example_document;
+use semio_s_artifact_raster_raster_examples::default_raster_document;
+use crate::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
 use super::*;
-use crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot;
+use semio_s_artifact_raster_raster_mutations::binary::unit_tests::retirement::retire_raster_snapshot;
 
 /// 📄️ The boot document is the committed Semio-logo carrier read through the artifact's own text
 /// codec — not the empty scaffold, and not a Rust restatement of the `.dsl.semio` bytes.
@@ -24,7 +24,7 @@ async fn default_document_boots_on_the_semio_demo_carrier() {
 /// 📚️ `raster_example_document` resolves exactly the ids this subset registers, and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn only_a_registered_example_id_resolves_to_a_document() {
-    let registered = raster_example_document(crate::examples::art_raster_demo::ID).expect("the demo example id resolves");
+    let registered = raster_example_document(semio_s_artifact_raster_raster_examples::art_raster_demo::ID).expect("the demo example id resolves");
     let expected = default_raster_document();
     assert_eq!(registered, expected);
     assert!(raster_example_document("not-a-real-example").is_none());
@@ -46,7 +46,7 @@ async fn only_a_registered_example_id_resolves_to_a_document() {
 /// through a decoder, so this law needs no codec and cannot be satisfied by a re-encode.
 #[semio_framework_async_macros::async_test]
 async fn the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declares() {
-    let asset = crate::examples::art_raster_demo::emblem_image_asset();
+    let asset = semio_s_artifact_raster_raster_examples::art_raster_demo::emblem_image_asset();
     assert_eq!(asset.mime, "image/png");
     assert!(asset.data.len() > 8 * 1024, "the curated demo ships real media, not a placeholder swatch: {} bytes", asset.data.len());
     assert!(asset.data.len() >= 24, "a PNG carries its IHDR in the first 24 bytes");
@@ -65,8 +65,8 @@ async fn the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declare
 
 #[test]
 fn repeated_layer_creation_has_distinct_persistable_identities() {
-    use crate::standards::v1::subsets::any::schema::{layer_node_id};
-    use crate::standards::v1::subsets::any::schema::create_pixel_layer;
+    use crate::layer_node_id;
+    use crate::create_pixel_layer;
     let layers:Vec<_>=(0..1024).map(|_|create_pixel_layer("Pixels",1,1)).collect();
     let ids:std::collections::BTreeSet<_>=layers.iter().map(layer_node_id).collect();
     assert_eq!(ids.len(),layers.len());

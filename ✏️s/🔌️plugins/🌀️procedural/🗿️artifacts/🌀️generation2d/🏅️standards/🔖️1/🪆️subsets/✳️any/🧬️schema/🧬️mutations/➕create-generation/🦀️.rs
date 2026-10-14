@@ -1,7 +1,6 @@
 //! 🦠️ `➕create-generation` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,19 +16,22 @@ pub struct CreateGeneration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_generation(generation: FormGeneration) -> Generation2dMutation {
-    Generation2dMutation::CreateGeneration(CreateGeneration { generation, index: None })
+pub fn create_generation<Op: From<CreateGeneration>>(generation: FormGeneration) -> Op {
+    Op::from(CreateGeneration { generation, index: None })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for CreateGeneration {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for CreateGeneration
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::delete_generation::DeleteGeneration>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "generation", kind: "create-generation", record: "CreatedGeneration" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::create_generation::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::create_generation::inverse::inverse(self, base)?
     
     })
 }

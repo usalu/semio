@@ -6,12 +6,14 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`), authored from the independent Python oracle
 //! (`🧪️tests/🧊️mutate-procedural-3d-1/🐍️.py`), never from this implementation.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dDiffRead};
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation2d_mutation, Generation2dMutation};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiffRead;
+use semio_s_artifact_procedural_2d_mutations::inverse_generation2d_mutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
-use crate::Generation2dSnapshot;
-use crate::central_apply::{apply_generation2d_mutation};
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_mutations::central_apply::apply_generation2d_mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/➡️after/🔣️.json");

@@ -1,8 +1,7 @@
 //! ⏹️ Energy model mutation — `ChangeRunEndDay`: Sets the day of month the simulation run period ends on; the period must stay a calendar interval of its year.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeRunEndDay {
     pub new_end_day: u8,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_run_end_day(new_end_day: u8) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeRunEndDay(ChangeRunEndDay { new_end_day })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_run_end_day<Op: From<ChangeRunEndDay>>(new_end_day: u8) -> Op {
+    ChangeRunEndDay { new_end_day }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeRunEndDay {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeRunEndDay
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeRunEndDay>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run", kind: "change-run-end-day", record: "ChangedRunEndDay" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

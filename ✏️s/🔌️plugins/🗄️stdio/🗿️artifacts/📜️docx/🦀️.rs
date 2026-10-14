@@ -9,20 +9,14 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxComposer;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use schema::diff::DocxDiff;
-pub use schema::mutations::DocxMutation;
-pub use schema::snapshot::DocxSnapshot;
-pub use schema::DocxArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_DOCX_DOCUMENT_SCHEMA: &str = "stdio.docx";
-
-/// 🧬️ Artifact schema descriptor id.
-pub const DOCX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.docx";
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -38,7 +32,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 }
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::bare_artifact_codec::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA);
+    let mut codec = store::bare_artifact_codec::<DocxSnapshot, DocxMutation>(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA);
     codec.extension = "docx";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -81,16 +75,17 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::docx_artifact_schema_descriptor())
+        .schema(semio_s_artifact_stdio_docx_base_descriptor::standards::v_ecma_376::subsets::base::schema::descriptor::docx_artifact_schema_descriptor())
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.docx", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
-        .inferences([standards::v_ecma_376::subsets::base::schema::inferences::docx_artifact_inference_descriptor()])
-        .composers(engine::io_registry::entries())
+        .inferences([semio_s_artifact_stdio_docx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::docx_artifact_inference_descriptor()])
+        .composers(semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::io_registry::entries())
+        .composers(io_registry::subset_entries())
         .subset_validators(docx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
-        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
+        .document_codec_bare::<DocxSnapshot, DocxMutation>(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.docx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
         .try_build()
 }
 
@@ -103,8 +98,8 @@ fn docx_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValid
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v_ecma_376::subsets::strict::io::DocxStrictValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v_ecma_376::subsets::transitional::io::DocxTransitionalValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_docx_transitional::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalValidator>(),
             ]
         })
         .as_slice()
@@ -123,28 +118,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.docx",
                     extension: Some("docx"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.docx.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.docx.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.diff"),
@@ -155,8 +150,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -165,8 +160,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.docx.spr"),
                 },
             ]
@@ -182,12 +177,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.docx".into(),
         label: semio_framework_ui_locale::LocalizedLabel::native("Docx", "Docx"),
-        source_format: STDIO_DOCX_DOCUMENT_SCHEMA.into(),
+        source_format: semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_DOCX_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec![],
@@ -197,15 +192,26 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictComposer;
+    use semio_s_artifact_stdio_docx_transitional::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalComposer;
+    use semio_framework_plugin::composer_entry_of;
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
+    static SUBSETS: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    /// 🧩️ The composers of the subsets that extend the owning subset; they register here, above it.
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn subset_entries() -> &'static [ComposerEntry] {
+        SUBSETS.get_or_init(|| vec![composer_entry_of::<DocxStrictComposer>(), composer_entry_of::<DocxTransitionalComposer>()]).as_slice()
+    }
+
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_ecma_376::entries().iter().collect()).as_slice()
+        ENTRIES.get_or_init(|| v_ecma_376::entries().iter().chain(subset_entries().iter()).collect()).as_slice()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -217,401 +223,14 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         register_composer_entries(v_ecma_376::entries()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(subset_entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "."]
-pub mod standards {
-    #[path = "."]
-    pub mod v_ecma_376 {
-        // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // `DocxEngine` (zero construction sites) deleted outright; `register()`/
-        // `register_artifact_inferences()`/`register_pilot_languages()` were already orphaned
-        // (superseded by `docx::declaration()`) and deleted outright too; `build_minimal_docx`/
-        // `sync_main_part`/`encode_docx` + the `*_to_xml` mapping moved to `subsets::base::io::
-        // export::serializers`; `decode_docx`/`sniff_docx_bytes` + the `*_from_xml` mapping
-        // moved to `subsets::base::io::import::deserializers`; `DocxError` + shared OPC/XML
-        // constants moved to `subsets::base::io`; `io_registry` moved to `subsets::base::io`;
-        // `empty_docx_snapshot`/`demo_docx_snapshot` + tests moved to `subsets::base::schema`.
-        // docx is NOT one of stdio's 10 protected imperative plugin-root `engine::register()`
-        // calls, so no `engine` shim remains — external callers (`✒️writer`) were repointed.
-        #[path = "."]
-        pub mod subsets {
-            #[path = "."]
-            pub mod base {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-        }
-    }
-}
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod schema {
-    pub use super::standards::v_ecma_376::subsets::base::schema::*;
-}
 
-pub mod engine {
-    pub use super::standards::v_ecma_376::subsets::base::io::export::serializers::*;
-    pub use super::standards::v_ecma_376::subsets::base::io::import::deserializers::*;
-    pub use super::standards::v_ecma_376::subsets::base::io::io_registry;
-    // 🎯 export::serializers and import::deserializers each define their own
-    // artifacts submodule (per-dialect zip/xml helpers) -- disambiguate the resulting
-    // glob collision by explicitly preferring serializers, the export side.
-    pub use super::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts;
-}
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
 
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod docx {
-        #[path = "."]
-        pub mod standards {
-            #[path = "."]
-            pub mod v_ecma_376 {
-                #[path = "."]
-                pub mod subsets {
-                    #[path = "."]
-                    pub mod base {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod strict {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod transitional {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod docx {
-        #[path = "."]
-        pub mod standards {
-            #[path = "."]
-            pub mod v_ecma_376 {
-                #[path = "."]
-                pub mod subsets {
-                    #[path = "."]
-                    pub mod base {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod strict {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod transitional {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-pub use crate::standards::v_ecma_376::subsets::transitional::io::{DocxTransitionalBuilderConstruction, DocxTransitionalAnalyzerAnalysis, DocxTransitionalBuilderFacets, DocxTransitionalBuilder, DocxTransitionalAnalyzer, DocxTransitionalComposer};
-
-pub use crate::standards::v_ecma_376::subsets::base::io::{DocxBuilderConstruction, DocxParts, DocxAnalyzerAnalysis, DocxBuilderFacets, DocxBuilder, DocxAnalyzer, DocxComposer};
-
-pub use crate::standards::v_ecma_376::subsets::strict::io::{DocxStrictBuilderConstruction, DocxStrictAnalyzerAnalysis, DocxStrictBuilderFacets, DocxStrictBuilder, DocxStrictAnalyzer, DocxStrictComposer};

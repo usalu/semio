@@ -4,6 +4,7 @@ import {terminateOwnedProcessTree} from "../🪓️termination/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🧭️routing/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policySchema from "./📋️policy/🧬️schema/🔣️.json";
+import {isDeepStrictEqual} from "node:util";
 
 export type OwnedProcessCaptureResult = { status: number | null; signal: string | null; stdout: string; stderr: string } & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };
 export type OwnedProcessCaptureOptions = {
@@ -24,8 +25,10 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     if (invocation?.control?.signal instanceof AbortSignal && invocation.control.signal.aborted && error === invocation.control.signal.reason) return { status: null, signal: null, reason: "cancelled", stdout: "", stderr: "" };
     throw error;
   }
+  const originalPolicy=invocation.policy,originalCapabilities=invocation.capabilities,control=invocation.control,{signal:originalSignal,remainingMilliseconds,publish:publication,yieldContinuation}=control,original=structuredClone({policy:originalPolicy,capabilities:originalCapabilities}),execution=structuredClone({args,cwd:options.cwd,env:options.env,budgetMs:options.budgetMs,maxOutputBytes:options.maxOutputBytes,stdoutPath:options.stdoutPath,stderrPath:options.stderrPath});
+  const retain=():void=>{if(options.invocation!==invocation||invocation.policy!==originalPolicy||invocation.capabilities!==originalCapabilities||invocation.control!==control||control.signal!==originalSignal||control.remainingMilliseconds!==remainingMilliseconds||control.publish!==publication||control.yieldContinuation!==yieldContinuation||!isDeepStrictEqual(original,{policy:invocation.policy,capabilities:invocation.capabilities})||!isDeepStrictEqual(execution,{args,cwd:options.cwd,env:options.env,budgetMs:options.budgetMs,maxOutputBytes:options.maxOutputBytes,stdoutPath:options.stdoutPath,stderrPath:options.stderrPath}))throw Error("Original capture invocation changed");};
   const remaining = (): number | null => {
-    const parent = invocation.control.remainingMilliseconds(), phase = options.budgetMs === 0 ? null : options.budgetMs - (performance.now() - started);
+    const parent = remainingMilliseconds.call(control), phase = execution.budgetMs === 0 ? null : execution.budgetMs - (performance.now() - started);
     return parent === null ? phase : phase === null ? parent : Math.min(parent, phase);
   };
   const publish = async (stage: ScriptProgress["stage"]): Promise<void> => {
@@ -34,22 +37,22 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     let timer: ReturnType<typeof setTimeout> | undefined, abort: (() => void) | undefined;
     const interrupted = new Promise<never>((_, reject) => {
       abort = () => reject(new CaptureInterrupted("cancelled"));
-      invocation.control.signal.addEventListener("abort", abort, { once: true });
-      if (invocation.control.signal.aborted) abort();
+      originalSignal.addEventListener("abort", abort, { once: true });
+      if (originalSignal.aborted) abort();
       if (budget !== null) timer = setTimeout(() => reject(new CaptureInterrupted("timeout")), budget);
     });
-    try { await Promise.race([advanceScriptInvocation(invocation, command, stage), interrupted]); }
-    finally { clearTimeout(timer); if (abort) invocation.control.signal.removeEventListener("abort", abort); }
+    try { retain();await Promise.race([advanceScriptInvocation(invocation, command, stage), interrupted]);retain(); }
+    finally { clearTimeout(timer); if (abort) originalSignal.removeEventListener("abort", abort); }
   };
   try { await publish("running"); }
   catch (error) { if (error instanceof CaptureInterrupted) return { status: null, signal: null, reason: error.reason, stdout: "", stderr: "" }; throw error; }
   const admittedBudget = remaining();
   if (admittedBudget !== null && admittedBudget <= 0) return { status: null, signal: null, reason: "timeout", stdout: "", stderr: "" };
-  const stdout = openSync(options.stdoutPath, "wx", 0o600);
+  const stdout = openSync(execution.stdoutPath, "wx", 0o600);
   let stderr: number;
-  try { stderr = openSync(options.stderrPath, "wx", 0o600); }
+  try { stderr = openSync(execution.stderrPath, "wx", 0o600); }
   catch (error) { closeSync(stdout); throw error; }
-  if (invocation.control.signal.aborted) {
+  if (originalSignal.aborted) {
     closeSync(stdout); closeSync(stderr);
     return { status: null, signal: null, reason: "cancelled", stdout: "", stderr: "" };
   }
@@ -57,20 +60,20 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     let reason: OwnedProcessCaptureResult["reason"] = "exit";
     let count = 0;
     let finished = false;
-    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
+    const child = spawn(command, execution.args, { cwd: execution.cwd, env: execution.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
     const terminate = (cause: NonNullable<OwnedProcessCaptureResult["reason"]>): void => {
       if (reason !== "exit") return;
       reason = cause;
       if (child.pid) terminateOwnedProcessTree(child.pid);
     };
     const originalAbort = () => terminate("cancelled");
-    invocation.control.signal.addEventListener("abort", originalAbort, { once: true });
-    if (invocation.control.signal.aborted) originalAbort();
+    originalSignal.addEventListener("abort", originalAbort, { once: true });
+    if (originalSignal.aborted) originalAbort();
     const append = (descriptor: number, bytes: Buffer): void => {
-      const remaining = Math.max(0, options.maxOutputBytes - count);
+      const remaining = Math.max(0, execution.maxOutputBytes - count);
       if (remaining) writeSync(descriptor, bytes.subarray(0, remaining));
       count += bytes.length;
-      if (count > options.maxOutputBytes) terminate("output-limit");
+      if (count > execution.maxOutputBytes) terminate("output-limit");
     };
     child.stdout?.on("data", (bytes) => append(stdout, bytes));
     child.stderr?.on("data", (bytes) => append(stderr, bytes));
@@ -89,15 +92,15 @@ export async function captureOwnedProcess(command: string, args: string[], optio
       finished = true;
       clearTimeout(timer);
       clearInterval(progress);
-      invocation.control.signal.removeEventListener("abort", originalAbort);
+      originalSignal.removeEventListener("abort", originalAbort);
       closeSync(stdout);
       closeSync(stderr);
-      const evidence = { status, signal, reason, stdout: readFileSync(options.stdoutPath, "utf8"), stderr: readFileSync(options.stderrPath, "utf8") };
+      const evidence = { status, signal, reason, stdout: readFileSync(execution.stdoutPath, "utf8"), stderr: readFileSync(execution.stderrPath, "utf8") };
       Promise.resolve(publication).then(() => publicationFailure && !(publicationFailure instanceof CaptureInterrupted) ? rejectResult(publicationFailure) : resolveResult(evidence), rejectResult);
     });
   });
   if (result.reason === "exit" || result.reason === "spawn-error") await publish("complete");
-  return result;
+  retain();return result;
 }
 
 /** 🛑️ Reports interruption from the same original signal or decreasing deadline. */

@@ -1,8 +1,8 @@
 //! 🔺️ `change-element-u` sparse diff.
 
-use crate::mutations::change_element_u::ChangeElementU;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599ElementsRows, Din18599ElementsPatch};
+use crate::change_element_u::ChangeElementU;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599ElementsRows, Din18599ElementsPatch};
 
 pub fn diff(payload: &ChangeElementU, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

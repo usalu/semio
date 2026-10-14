@@ -1,0 +1,387 @@
+{
+  "kind": "current-joint-capture-byte-input-not-Source-authority",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 11605,
+      "sha256": "11166ab084616a0b59687559ef53e2942e9ef66d52459718b758ab87adcd1295"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1044,
+      "sha256": "518f0c7f9baecbfc62999a5cb6b5f9b8e026ba64673e9035f6608df50461037e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1277,
+      "sha256": "a2ab7c35998b3609267e7d7171b5793855e8dfb4e24cd90adde24cd87cc4f8bb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 647,
+      "sha256": "154b162c92a8d9b729706c257db41350c57633c4b9fcb29b9f654002903f7373"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1026,
+      "sha256": "46b3d18950250dacca5d72a26f68b379d50b54c406db151fb607563ebac9f3ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1288,
+      "sha256": "393df6e1574120edc6aa3f5d7f566039f9b697111d4e7d1c4fe00db8337b26d5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 706,
+      "sha256": "1a9ec2e446f1785688191c7e55daa1c75391a36e8bd21be681ed30ca8fbf6d74"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2566,
+      "sha256": "05794c019549f54623fd2a22c05e7001bdcd1ee3557fb90678f6eec8b9f0a77e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1289,
+      "sha256": "3b1024544ebfa0c953b591aca5b0d9de78e29dc4bf677206aa9adfc258f8d10d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 710,
+      "sha256": "aaeff3e969536bb36af1a95d93a041d506b00961143fb836cf5258baa0d8081b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 4663,
+      "sha256": "845f8d0ae6a172f0fd03dbda80cbd0add6ec890a89a22d39a7da8eb3c655404f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 8984,
+      "sha256": "18bb6b74561fe8c0911fa1e2ef4a403b7938e50ed01f8f5efd98aa4813e9f3ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 4274,
+      "sha256": "ea8e30c813775f311159f72ccda0d864e7a180c17e054bb2a574eb464442d813"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📋️project.json",
+      "bytes": 13361,
+      "sha256": "466c72c619a749b2856c067be9dc7f760ad2cc505c3d3c768495c07b7f89fc2c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+      "bytes": 11091,
+      "sha256": "b1d7a1b2cb349227ec65ae40fe82f7146c634a89020a25e6e270435d32e9005a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts",
+      "bytes": 7735,
+      "sha256": "89e2f612fdb91c721251d0bf3d1697f0a0384eda4db4ea9eaea2c3c4bbb5f8eb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json",
+      "bytes": 2222,
+      "sha256": "8f63dacfaa2fd410f566e578c49d81c40c4d8609e339feca8fb3e1f0e27b185b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts",
+      "bytes": 516,
+      "sha256": "c0928ced5c0303377f0690b8dd29c5e81ac8966f1d0058fd4af162426680d993"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
+      "bytes": 26463,
+      "sha256": "7c47f6200912f4887b29c964bba7509ff7268cca61408a28a519728c55bc878b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts",
+      "bytes": 7613,
+      "sha256": "672eb83e1565fb48d1f08344375ba5ff0ad4fa2a38f4755a53b3734a6cc53af2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+      "bytes": 11226,
+      "sha256": "db4f687c701a1303598a447dbde298cca41d298906ec81c7269c8d50331aac01"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧫️fixtures/🔣️.json",
+      "bytes": 4474,
+      "sha256": "4134e454cd4a2d6de51cce372f036cdaa8167e45d2acab0f441cbf5465a0a178"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json",
+      "bytes": 5020,
+      "sha256": "62a23334db82ddce703c572e2b1b4c64db3834ede50d4ce8c545de6c7c5f9746"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts",
+      "bytes": 7781,
+      "sha256": "60e7905c40c8e6048330d33b486fb1f98fe9fd91325c3849168963ed019e77ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🎟️custody/🟦️.ts",
+      "bytes": 1728,
+      "sha256": "8b04b8d8879afa45607e9b8f8ffc823c669878f39edd0f1a111e58797f2f93b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🟦️.ts",
+      "bytes": 8303,
+      "sha256": "e5e4eb9a8b08df0ce5d5407f3d109369fac8ea9b44399a1001eaac999da11251"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🟦️.ts",
+      "bytes": 10531,
+      "sha256": "5808beb17404e93812f39fc42c306067680a4c638774679e385c3b78838cad86"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2165,
+      "sha256": "eb26bd93fa53a14897efe9ba49b016defd5d8c6692e637f78d9d5eb8e5e49acc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1217,
+      "sha256": "d412e25dc5e59330b8b7da35785229d7ef26a4abae3adc9fd56d589524606881"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 656,
+      "sha256": "fe7b44edf32d46313d31aeac7831466e7b23095aa5e6deaae1f2d6695ec827a0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1007,
+      "sha256": "a78c0a24720c7cc6133415805ebca90e60c77f00686808fbd759dfa0b012a3d9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1290,
+      "sha256": "ffe5997678107021022dd22aa748e6291cde2e03648b50d3b49936cb660e9a3b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 715,
+      "sha256": "7a8dfd2ad0db5267fb105c57e214c6dc63bde4781176c03c1dea05ac41e6f7a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 638,
+      "sha256": "21c3443abeed2db948164c9adac7e25ef71213ef79f09bd26e3c00adb6e8fcca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 1289,
+      "sha256": "271a64713cc51f2be21e5eec062155832a2bf8e40c37489b9175b278ed14eb49"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "bytes": 714,
+      "sha256": "f7a15b443308af41e100dff95861d7c04ab2e1d5a18bf4773d8071528e6adb3a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/tsconfig.json",
+      "bytes": 904,
+      "sha256": "1e657c3f6a1da73c686d197d4d44a5ddabbbc46eb92268f6c5ec98d2dfd0931b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+      "bytes": 1331288,
+      "sha256": "854da0b9274f9fea03de532e819243470cb0eaec2d3e695b31cf121ce4e48aae"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+      "bytes": 1445,
+      "sha256": "9525c6cd898de234329b4936d56fdde354d66a2c897da7a3bd62e9f6d33ca3cd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "bytes": 35139,
+      "sha256": "fc8792ad9b6bd32f0a075acc282b0cad83b401e5ae3d1a29a639c6928f63eaf8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "bytes": 29055,
+      "sha256": "e63d4c190640acb7b193b84e51840149b718822215bf16efe95a01fa89aa56f9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "bytes": 5978,
+      "sha256": "5d3a3451ade468c4c292a1e153094287344c72003753e211007242ae1f8a840c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
+      "bytes": 4323,
+      "sha256": "95bc744d663169b7ba890d6a13c32e2df53d48bd11408bd53cee640bae74c0a8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+      "bytes": 11686,
+      "sha256": "4bfbf08426a70a4b4172a8aa8052478afff0ca7536c489bc186d1128f56178bc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts",
+      "bytes": 14767,
+      "sha256": "53f3a3cdc62823142834885a87a483bc5970bf095b7913ace6a90f8d97cbe9b5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "bytes": 10099,
+      "sha256": "e7f1e6099b2cf6461c1eb96a94ad24cc47d29a66b4e9402bf76afd39a5ce9438"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔗️import-edges/📁️paths/🟦️.ts",
+      "bytes": 3938,
+      "sha256": "bd46cc1201df31af26880ee3ed170e9b3637fb8109435d8f3cd8cc6f4632298c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+      "bytes": 19654,
+      "sha256": "45ab0836276e5a03209ca6f4a915f9225968604c5e5626504a6b4827bf830831"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+      "bytes": 6496,
+      "sha256": "9317b2c6b2292dd2c25705b6659708b824454ba335e26d1507e0652d77d3219e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts",
+      "bytes": 958,
+      "sha256": "ec4d91529e26a00791e41947437648b51cadcc393607d9dad9d45ca9e1d7f50f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🟦️.ts",
+      "bytes": 14295,
+      "sha256": "6ee2ef94ea9d531c4fed170d2a8dfaa02d0d5b9f3f6c815f305f52c84b7ea9fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+      "bytes": 18826,
+      "sha256": "6400099966c3a901914b108495f79a14329dd4af0fd9b5c8178e44c4ebc07417"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 9128,
+      "sha256": "7a516ba8751bf3b622cdc4dd6c7132dc02752e5399f78402b1402fd2d91952bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts",
+      "bytes": 7903,
+      "sha256": "cdce2fdfbc4851fc56e70ed4d9a66d1dd9d654c12f2f0c5db056749e48232e99"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+      "bytes": 47344,
+      "sha256": "88b3e4794b8f0d67adec5fa687e7aa9b2cbdf860ccbbb61475e62f60ee405295"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+      "bytes": 43815,
+      "sha256": "78b3abc1739e77ccef129dc2481cef028a80a1bc6a6cbc9d41955ee766d5ee35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 7774,
+      "sha256": "5bcdb2993838b793dab95edea6315421169c13de9693b4f332d5aa3c2221cf80"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.d.mts",
+      "bytes": 1833,
+      "sha256": "461e95b9badd1b66e4f27c6295c2c803693925eb49bb396508b809cc94788e49"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs",
+      "bytes": 6228,
+      "sha256": "e561e089d72933617ee16b7a4848ff689a26806371fb4f2c47e125b9bb6e8a94"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧪️tests/🟦️.ts",
+      "bytes": 3412,
+      "sha256": "fd1527b8c63bd53b89738430b367a1c94e82d0729e332b9dd137c99a965738ad"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 4444,
+      "sha256": "0beeb96017cc10caf5a54de334558d9230c30fa72e4cad9f32bfc63bd508b4e4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧬️schema/🔣️.json",
+      "bytes": 2541,
+      "sha256": "376715898961b26b5d66bb1940cf6b3f50597196216f6bf003b0ee428ed97447"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+      "bytes": 6744,
+      "sha256": "9ce037bd0fc901bcb479b38c574142e5d26735b62e7206ad75bd32873ca65654"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🔣️.json",
+      "bytes": 1518,
+      "sha256": "aecb49db31557b252b2b2866333c8dbd326f5feb58f80ee40441fb6da04e8dbb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🟦️.ts",
+      "bytes": 3723,
+      "sha256": "e6f153068e626909eca0fed66fac22be239f8b0745045cbec8a66dea04589e35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "bytes": 173264,
+      "sha256": "4d96920cc4482f2f0a05dc42b2a168ffeb765584848cf5fcb3bacdb98e7bddc4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "bytes": 175317,
+      "sha256": "adf8be8473aab089dcf550a2e7fba9c742dfc5641b591d825c0655d825756efe"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "bytes": 1556329,
+      "sha256": "d8d0db8156eca00e845e079f266041a1f2966adf32ff4e8632ed6cfdb91fe0fa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+      "bytes": 30342,
+      "sha256": "9fac409c032696aa0ae4024c9dd7a13743bbd804435b00b34afdc8c71418ecc0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts",
+      "bytes": 10111,
+      "sha256": "8c265e8861734ba84cbdf41ca01552da4229ef7dbf01f386ad2db30f1f728446"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "bytes": 3779870,
+      "sha256": "a4be5b4ceb1e4a6f66254fae5aa95c4eae49ee3ad3c5d09d625d245436e8451a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "bytes": 22519,
+      "sha256": "525e20d7fd96fc4385fe8bcfdb554a69c013865e373abd01fc3a8d2ce832e0ae"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "bytes": 34865,
+      "sha256": "affac9f7931b6d3787dcc600ecce146ef88d90fe2c2c28ddba64d5eb54f3d3bb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 19415,
+      "sha256": "bdd5819155dbca3da6607678bc446f386e21cbc47cd2d9f2b974f972d2ca6439"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts",
+      "bytes": 16205,
+      "sha256": "ab4837ae53ae60620cdf0a92e422e99bfccd26216c8527e139342e00043ee10b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🛡️protection/🟦️.ts",
+      "bytes": 18258,
+      "sha256": "54f3fe250bde5cf1e60dcab8bcb21dc513f8bba14a93849a125c2c648e8c7901"
+    }
+  ],
+  "aggregate": "7f1acd5eef6b8174d9d89288f92dbd791b3ef045973d9d05e79caadf77da2e3e",
+  "receipt": "🗑️generated/cargo-joint-current4/freeze.json"
+}

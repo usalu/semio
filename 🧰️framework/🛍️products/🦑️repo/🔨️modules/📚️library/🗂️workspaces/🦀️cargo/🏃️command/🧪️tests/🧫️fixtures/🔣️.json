@@ -10,7 +10,8 @@
     "storage": {
       "version": 1,
       "directory": "/owned",
-      "program": "/original/📜️script.ts"
+      "program": "/original/📜️script.ts",
+      "leaseDirectory": "/leases"
     },
     "provenance": {
       "version": 1,
@@ -58,7 +59,8 @@
       {
         "version": 1,
         "directory": "relative",
-        "program": "/original/📜️script.ts"
+        "program": "/original/📜️script.ts",
+        "leaseDirectory": "/leases"
       }
     ],
     [

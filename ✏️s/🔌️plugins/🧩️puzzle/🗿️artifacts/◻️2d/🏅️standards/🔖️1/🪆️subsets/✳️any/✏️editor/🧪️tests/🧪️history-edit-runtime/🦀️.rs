@@ -52,7 +52,7 @@ fn seeded_app(board: &Value) -> Puzzle2dApp {
 
 /// 🪟️ The overview window, focused — the view every history verb and the history body are read under.
 fn focused_view() -> ViewModel {
-    ViewModel { focused_window_id: Some(overview::WINDOW_KIND_ID.into()), ..window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID) }
+    ViewModel { focused_window_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) }
 }
 
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.

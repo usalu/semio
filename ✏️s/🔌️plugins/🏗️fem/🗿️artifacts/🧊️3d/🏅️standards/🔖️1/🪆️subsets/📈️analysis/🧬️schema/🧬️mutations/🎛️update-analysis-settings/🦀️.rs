@@ -1,7 +1,7 @@
 //! 🎛️ Fem3d mutation — `UpdateAnalysisSettings` payload + `MutationKind` impl.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{Fem3dSnapshot, FemAnalysisSettings};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,13 +19,16 @@ pub struct UpdateAnalysisSettings {
     pub settings: FemAnalysisSettings,
 }
 
-impl MutationKind<Fem3dSnapshot, Fem3dMutation> for UpdateAnalysisSettings {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for UpdateAnalysisSettings
+where
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<update_analysis_settings::UpdateAnalysisSettings>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "analysis-settings", kind: "update-analysis-settings", record: "UpdatedAnalysisSettings" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

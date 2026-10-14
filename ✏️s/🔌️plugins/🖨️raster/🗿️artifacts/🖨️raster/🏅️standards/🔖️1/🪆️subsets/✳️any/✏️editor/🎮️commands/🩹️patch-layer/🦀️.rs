@@ -1,11 +1,12 @@
 //! 🖼️ 🖼️ Raster play app commands command — `patch-layer`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::mutations::move_layer as spatial_move_layer;
-use crate::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, rename_layer, resize_layer};
-use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
-use crate::{RasterLayerMask, RasterLayerNode, RasterSnapshot, RasterTransform};
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations_layers::move_layer as spatial_move_layer;
+use semio_s_artifact_raster_raster_mutations_layers::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, rename_layer, resize_layer};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{find_layer, layer_opacity, layer_transform, layer_visible};
+use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterLayerNode, RasterTransform};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,7 +16,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: &RasterLayerNode) -> Option<RasterMutation> {
     match field {
         "name" => Some(RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: layer_id.into(), new_name: value.as_str().unwrap_or("").into() })),
-        "locked"=>Some(RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:layer_id.into(),expected:crate::standards::v1::subsets::any::schema::layer_locked(prior),locked:value.as_bool()?})),
+        "locked"=>Some(RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::ChangeLayerLocked {layer_id:layer_id.into(),expected:crate::standards::v1::subsets::any::schema::layer_locked(prior),locked:value.as_bool()?})),
         "visible" => Some(RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: layer_id.into(), new_visible: value.as_bool().unwrap_or_else(|| !layer_visible(prior)) })),
         "opacity" => Some(RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: layer_id.into(), new_opacity: value.as_f64().unwrap_or(layer_opacity(prior) as f64) as f32 })),
         "blendMode" => Some(RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: layer_id.into(), new_blend_mode: value.as_str().unwrap_or("normal").into() })),
@@ -31,7 +32,7 @@ fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: 
             let expected=layer_transform(prior).clone();let mut controls=semio_framework_pixels::compositing::frames::decompose(expected.as_affine()).ok()?;
             match field {"transformScaleX"=>controls.scale_x=value.as_f64()?,"transformScaleY"=>controls.scale_y=value.as_f64()?,"transformRotation"=>controls.rotation=value.as_f64()?,_=>controls.shear_x=value.as_f64()?}
             let transform=RasterTransform::from_affine(semio_framework_pixels::compositing::frames::compose(controls).ok()?);
-            Some(RasterMutation::ChangeLayerTransform(crate::mutations::change_layer_transform::ChangeLayerTransform {layer_id:layer_id.into(),expected,transform}))
+            Some(RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::ChangeLayerTransform {layer_id:layer_id.into(),expected,transform}))
         }
         "width" => {
             let (width, height) = pixel_extent(prior);
@@ -68,11 +69,11 @@ fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: 
                 "maskHeight" => mask.as_mut()?.height = Some(value.as_f64()? as u32),
                 _ => return None,
             }
-            Some(RasterMutation::ChangeLayerMask(crate::mutations::change_layer_mask::ChangeLayerMask { layer_id: layer_id.into(), expected: expected.clone(), mask }))
+            Some(RasterMutation::ChangeLayerMask(semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::ChangeLayerMask { layer_id: layer_id.into(), expected: expected.clone(), mask }))
         }
         "brightness" | "contrast" => {
             let RasterLayerNode::Adjustment {params,..}=prior else {return None;};
-            Some(RasterMutation::ChangeLayerAdjustmentParameter(crate::mutations::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:layer_id.into(),parameter:field.into(),expected:params.get(field).and_then(crate::RasterAdjustmentNumber::from_parameter),value:if value.is_null(){None}else{Some(crate::RasterAdjustmentNumber::decimal(value.as_f64()?))}}))
+            Some(RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:layer_id.into(),parameter:field.into(),expected:params.get(field).and_then(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::from_parameter),value:if value.is_null(){None}else{Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(value.as_f64()?))}}))
         }
         "adjustmentKind" => Some(RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: layer_id.into(), new_adjustment_kind: value.as_str().unwrap_or("brightnessContrast").into() })),
         _ => None,
@@ -90,7 +91,7 @@ fn pixel_extent(layer: &RasterLayerNode) -> (u32, u32) {
 
 /// 🩹️ Builds the `RasterMutation`s for a `patchLayer`/`patchLayers` field write across ids — shared by
 /// both payloads below (the only two consumers).
-pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[String], field: &str, value: &Value) -> Result<Vec<RasterMutation>, Fault> {
+pub fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids: &[String], field: &str, value: &Value) -> Result<Vec<RasterMutation>, Fault> {
     let valid = match field {
         "name" | "blendMode" | "adjustmentKind" => value.as_str().is_some(),
         "visible" | "locked" | "maskPresent" | "maskEnabled" | "maskInvert" | "maskLinked" => value.as_bool().is_some(),
@@ -104,15 +105,15 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
     if !valid { return Err(Fault::from("raster-layer-property-invalid")); }
     layer_ids.iter().map(|id| {
         let layer = find_layer(&document.layers, id).ok_or_else(|| Fault::from("raster-layer-not-found"))?;
-        let protection=crate::standards::v1::subsets::any::schema::layer_protection(&document.layers,id).unwrap();
+        let protection=semio_s_artifact_raster_raster_model::layer_protection(&document.layers,id).unwrap();
         if field=="locked" {if !protection.can_change_lock{return Err(Fault::from("raster-layer-locked"));}}
-        else if field!="visible" {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,id,matches!(field,"transformX"|"transformY"|"transformScaleX"|"transformScaleY"|"transformRotation"|"transformShearX"|"width"|"height")).map_err(Fault::from)?;}
+        else if field!="visible" {semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,id,matches!(field,"transformX"|"transformY"|"transformScaleX"|"transformScaleY"|"transformRotation"|"transformShearX"|"width"|"height")).map_err(Fault::from)?;}
         if matches!(field, "width" | "height") && !matches!(layer, RasterLayerNode::Pixel { .. }) { return Err(Fault::from("raster-layer-dimensions-require-pixels")); }
         let mutation = raster_mutation_for_field(id, field, value, layer).ok_or_else(|| Fault::from("raster-layer-property-unsupported"))?;
-        if let RasterMutation::ChangeLayerAdjustmentParameter(payload)=&mutation {crate::mutations::change_layer_adjustment_parameter::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
-        if let RasterMutation::ChangeLayerTransform(payload)=&mutation {crate::mutations::change_layer_transform::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
+        if let RasterMutation::ChangeLayerAdjustmentParameter(payload)=&mutation {semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
+        if let RasterMutation::ChangeLayerTransform(payload)=&mutation {semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::validate(payload,document).map_err(|code| Fault::from(code.as_str()))?;}
         if let RasterMutation::ChangeLayerMask(payload) = &mutation {
-            crate::mutations::change_layer_mask::validate(payload, document).map_err(|code| Fault::from(code.as_str()))?;
+            semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::validate(payload, document).map_err(|code| Fault::from(code.as_str()))?;
         }
         Ok(mutation)
     }).collect()
@@ -120,7 +121,7 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
 
 /// 🩹️ Parses a `patchLayer`/`patchLayers` wire `value` as JSON text (falling back to a plain JSON string
 /// when it isn't valid JSON) — mirrors `draw_ui::patch_value_json`.
-pub(super) fn patch_value_json(field: &str, value: &str) -> Value {
+pub fn patch_value_json(field: &str, value: &str) -> Value {
     if matches!(field, "name" | "blendMode" | "adjustmentKind") { Value::String(value.to_string()) } else { semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::String(value.to_string())) }
 }
 //#endregion 🔖️Shared

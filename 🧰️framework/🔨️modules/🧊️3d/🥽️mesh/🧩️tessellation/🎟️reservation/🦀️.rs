@@ -1,9 +1,9 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshBufferReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(MeshBufferReceipt);
+semio_framework_value::artifact_retire_leaf!(MeshBufferReceipt);
 
 fn refusal(kind:ValueRefusalKind,reason:&'static str)->ValueError{ValueError::literal(kind,reason)}
 fn extent(count:usize,factor:usize)->Result<usize,ValueError>{count.checked_mul(factor).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"original mesh buffer extent overflow"))}

@@ -4,6 +4,7 @@ use crate::native_decoding::NativeDecodeControl;
 mod container_original;
 
 #[derive(Debug, PartialEq, crate::FromValue, serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate", rename_all="camelCase", deny_unknown_fields)]
 #[serde(rename_all="camelCase", deny_unknown_fields)]
 struct Entry { label:String, samples:Vec<i64>, optional:Option<bool> }
@@ -29,25 +30,31 @@ fn controlled_value_custom_owner_refuses_without_constructor() {
 }
 
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind",content="payload",rename_all="camelCase",deny_unknown_fields)]
 #[serde(tag="kind",content="payload",rename_all="camelCase",deny_unknown_fields)]
 enum Adjacent { Empty, Label(String), Record{required:i64,optional:Option<String>} }
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",tag="kind",rename_all="camelCase",deny_unknown_fields)]
 #[serde(tag="kind",rename_all="camelCase",deny_unknown_fields)]
 enum Internal { Empty, Record{required:i64,optional:Option<String>} }
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",rename_all="camelCase")]
 #[serde(rename_all="camelCase")]
 enum External { Empty, Label(String), Record{required:i64,optional:Option<String>} }
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",transparent)]
 #[serde(transparent)]
 struct Transparent { label:String }
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct Flattened { known:i64, #[value(flatten)] #[serde(flatten)] extra:std::collections::BTreeMap<String,String> }
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct Defaults { #[value(default)] #[serde(default)] count:i64, optional:Option<String> }
 
@@ -57,11 +64,14 @@ fn plain_json_bridge(value:DslValue)->Result<serde_json::Value,ValueError>{Ok(se
 fn plain_optional_json_bridge(value:DslValue)->Result<Option<serde_json::Value>,ValueError>{if matches!(value,DslValue::Null){Ok(None)}else{plain_json_bridge(value).map(Some)}}
 #[derive(crate::FromValue,serde::Deserialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct CustomBareDefault { #[value(default,deserialize_with="plain_json_bridge",retire_with="std::mem::drop")] #[serde(default)] payload:serde_json::Value }
 #[derive(crate::FromValue,serde::Deserialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct CustomOptionDefault { #[value(deserialize_with="plain_optional_json_bridge",retire_with="std::mem::drop")] payload:Option<serde_json::Value> }
 #[derive(crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",default)]
 #[serde(default)]
 #[derive(Default)]
@@ -72,6 +82,7 @@ fn plain_text_bridge(value:DslValue)->Result<CustomText,ValueError>{String::from
 fn controlled_text_bridge(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<CustomText,ValueError>{String::from_value_controlled(value,control).map(CustomText)}
 fn controlled_text_default(control:&mut NativeDecodeControl<'_>)->Result<CustomText,ValueError>{String::default_value_controlled(control).map(CustomText)}
 #[derive(crate::FromValue)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct CustomControlledDefault { #[value(default,deserialize_with="plain_text_bridge",deserialize_controlled_with="controlled_text_bridge",default_controlled="controlled_text_default",retire_with="std::mem::drop")] payload:CustomText }
 #[derive(serde::Deserialize)]
@@ -148,10 +159,12 @@ fn controlled_value_hash_set_retires_duplicates_and_partial_members_once(){
 
 static SECRET_DROPS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 #[derive(crate::FromValue)]
+#[value(crate="crate")]
 #[value(crate="crate",retire_with="std::mem::drop")]
 struct SecretOwner { secret:String }
 impl Drop for SecretOwner{fn drop(&mut self){for byte in unsafe{self.secret.as_bytes_mut()}{unsafe{std::ptr::write_volatile(byte,0)};}SECRET_DROPS.fetch_add(1,std::sync::atomic::Ordering::SeqCst);}}
 #[derive(crate::FromValue)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct SecretParent { owner:SecretOwner, later:u32 }
 #[derive(serde::Deserialize)]
@@ -223,6 +236,7 @@ impl FromValue for Retained{
 }
 #[derive(crate::FromValue)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct Partial { first:Retained, later:i64 }
 #[test]
 fn controlled_value_partial_children_use_owner_retirement(){
@@ -232,6 +246,7 @@ fn controlled_value_partial_children_use_owner_retirement(){
 }
 
 #[derive(crate::FromValue)]
+#[value(crate="crate")]
 #[value(crate="crate",retire_with="retire_recursive")]
 struct Recursive { children:Vec<Recursive> }
 fn retire_recursive(value:Recursive){let mut pending=vec![value];while let Some(value)=pending.pop(){pending.extend(value.children);}}
@@ -243,6 +258,7 @@ fn controlled_value_recursive_derive_has_own_depth_bound(){
 }
 
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",rename_all="camelCase")]
 #[serde(rename_all="camelCase")]
 struct Attributes {
@@ -257,6 +273,7 @@ fn controlled_custom(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Resu
 fn ordinary_default()->String{"owned-default".into()}
 fn controlled_default(control:&mut NativeDecodeControl<'_>)->Result<String,ValueError>{control.copy_text("owned-default")}
 #[derive(crate::FromValue)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct UncontrolledCustom { #[value(deserialize_with="ordinary_custom")] converted:String }
 #[test]
@@ -322,6 +339,7 @@ mod custom_module {
 }
 #[derive(Debug,PartialEq,crate::ToValue,crate::FromValue)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct WithModule { #[value(with="custom_module",deserialize_controlled_with="custom_module::from_value_controlled",retire_with="std::mem::drop")] label:String }
 #[test]
 fn controlled_value_custom_module_matches_ordinary_representation(){
@@ -329,10 +347,12 @@ fn controlled_value_custom_module_matches_ordinary_representation(){
 }
 
 #[derive(Debug,PartialEq,Default,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate",default_controlled="mode_default")]
 enum Mode { #[default] Off, On }
 fn mode_default(control:&mut NativeDecodeControl<'_>)->Result<Mode,ValueError>{bool::default_value_controlled(control)?;Ok(Mode::Off)}
 #[derive(Debug,PartialEq,crate::FromValue,serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct ModeParent { #[value(default)] #[serde(default)] mode:Mode }
 #[test]
@@ -340,26 +360,7 @@ fn controlled_value_declared_container_default_preserves_serde_semantics(){
     let input=serde_json::json!({});assert_eq!(decode::<ModeParent>(&input).unwrap(),serde_json::from_value::<ModeParent>(input).unwrap());
 }
 
-struct ObservedAllocator;
-thread_local! { static RETIREMENT_ALLOCATION_EVENTS: std::cell::Cell<Option<(usize, usize)>> = const { std::cell::Cell::new(None) }; }
-fn retirement_allocation_event(requested: usize, released: usize) { let _ = RETIREMENT_ALLOCATION_EVENTS.try_with(|events| { if let Some((allocated, freed)) = events.get() { events.set(Some((allocated + requested, freed + released))); } }); }
-pub(crate) fn observe_retirement_allocations<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
-    RETIREMENT_ALLOCATION_EVENTS.with(|events| { assert!(events.replace(Some((0, 0))).is_none()); });
-    let result = operation();
-    let events = RETIREMENT_ALLOCATION_EVENTS.with(|events| events.replace(None).unwrap());
-    (result, events)
-}
-static OBSERVE_ALLOCATIONS:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
-static LARGEST_ALLOCATION:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {
-    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed){LARGEST_ALLOCATION.fetch_max(layout.size(),std::sync::atomic::Ordering::Relaxed);}let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed){LARGEST_ALLOCATION.fetch_max(layout.size(),std::sync::atomic::Ordering::Relaxed);}let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed){LARGEST_ALLOCATION.fetch_max(size,std::sync::atomic::Ordering::Relaxed);}let grown=unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)};if !grown.is_null(){retirement_allocation_event(size,layout.size());}grown}
-    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){retirement_allocation_event(0,layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
-}
-#[global_allocator]
-static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
-
+use crate::allocation_testing::{observe_retirement_allocations,OBSERVE_ALLOCATIONS,LARGEST_ALLOCATION};
 #[test]
 fn controlled_value_actual_allocator_observes_refusal_before_payload_materialization(){
     let text=DslValue::String("x".repeat(100000));let nulls=DslValue::Array(vec![DslValue::Null;20000]);
@@ -389,6 +390,7 @@ fn controlled_value_binary32_nan_bridge_has_explicit_binary64_words(){
 
 #[derive(Debug, PartialEq, crate::FromValue, serde::Deserialize)]
 #[value(crate="crate")]
+#[value(crate="crate")]
 struct ScalarOwnerDefaults {
     #[value(default="ScalarOwnerDefaults::one", default_controlled="ScalarOwnerDefaults::controlled_one")]
     #[serde(default="ScalarOwnerDefaults::one")]
@@ -415,6 +417,7 @@ fn controlled_value_scalar_owner_defaults_are_not_recursive_types() {
 }
 
 #[derive(Debug, PartialEq, crate::FromValue, serde::Deserialize)]
+#[value(crate="crate")]
 #[value(crate="crate")]
 struct CapacityOwner { items: [u32; CapacityOwner::SIZE] }
 impl CapacityOwner { const SIZE: usize = 2; }

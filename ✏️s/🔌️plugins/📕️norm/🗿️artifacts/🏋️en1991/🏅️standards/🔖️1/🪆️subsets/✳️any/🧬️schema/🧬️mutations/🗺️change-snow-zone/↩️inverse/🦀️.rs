@@ -1,9 +1,9 @@
 //! Inverse for `change-snow-zone`.
-use super::ChangeSnowZone;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeSnowZone, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_snow_zone::ChangeSnowZone;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeSnowZone, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_snow_zone::ChangeSnowZone> {
     Ok((|| {
-    vec![En1991Mutation::ChangeSnowZone(ChangeSnowZone { new_snow_zone: base.snow_zone.clone() })]
+    vec![Op::from(ChangeSnowZone { new_snow_zone: base.snow_zone.clone() })]
 
     })())
 }

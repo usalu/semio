@@ -116,7 +116,7 @@ function emitRustManifest(doc: ManifestDocument): string {
     emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds"), fnName) +
     emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds"), fnName) +
     emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"), fnName);
-  let out = `// Generated from ${doc.id}.manifest.json\n\n#![allow(dead_code)]\n\nuse semio_framework_graph::manifest::Manifest;\n\n`;
+  let out = `// Generated from ${doc.id}.manifest.json\n\n#![allow(dead_code)]\n\nuse semio_framework_graph_manifest::Manifest;\n\n`;
   out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
   out += `pub fn ${fnName}() -> Manifest {\n    semio_framework_pack_json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest json")\n}\n`;
@@ -193,7 +193,7 @@ export function renderGraphArtifacts(root: string, outDir: string, catalog: Grap
     const registryRs =
       `// Generated manifest registry\n\n` +
       rustModules.map((m) => `#[path = "${relative(dirname(outputs.shared.rustRegistry), m.path).replaceAll("\\", "/")}"]\npub mod ${m.modName};`).join("\n\n") +
-      `\n\nuse semio_framework_graph::manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
+      `\n\nuse semio_framework_graph_manifest::Manifest;\n\npub const MANIFEST_IDS: &[&str] = &[${docs.map((d) => rustStr(d.id)).join(", ")}];\n\n` +
       `pub fn manifest_by_id(id: &str) -> Option<Manifest> {\n    match id {\n` +
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +
       `\n        _ => None,\n    }\n}\n`;

@@ -12,7 +12,7 @@ const protocol=schema.definitions.ImageProtocol.const;
 
 function requireImageEnvelopeV1(options:Readonly<{filesystemBytes:number;maximumPhysicalBytes:number}>):void{if(validateJsonSchemaSubset(schema.definitions.ImageRequest,{filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes},schema).length||options.filesystemBytes%protocol.unitBytes!==0||options.maximumPhysicalBytes<options.filesystemBytes+protocol.unitBytes)throw Error("Invalid fixed image allocation envelope");}
 
-import {nativeImageRootV1,requireNativeStoragePathV1,type NativeImageStorageV1} from "../🌐️platform/📋️contract/🟦️.ts";
+import {readNativeImageMaintenanceRequestV1,nativeImageRootV1,requireNativeStoragePathV1,type NativeImageStorageV1} from "../🌐️platform/📋️contract/🟦️.ts";
 
 /** 🏷️ Decodes the system tool's plist primitives without a runtime XML library. */
 export function nativeImageInformationV1(xml:string):Record<string,unknown>{
@@ -27,7 +27,12 @@ export function nativeImageInformationV1(xml:string):Record<string,unknown>{
  if(!take().startsWith("<plist "))throw Error("System image plist required");const result=value();if(take()!=="</plist>"||peek()||!result||typeof result!=="object"||Array.isArray(result))throw Error("Invalid system image plist");return result as Record<string,unknown>;
 }
 
-/** 🏪️ Reopens one persistent fixed image under shared invocation custody after exclusive provisioning. */
+/** 📄️ Captures complete bounded system image metadata before strict structural admission. */
+async function readNativeImageInformationV1(directory:string,control:ResourceLeaseControl):Promise<Record<string,unknown>>{
+ return nativeImageInformationV1(await captureOwnedCommandV1("hdiutil",["info","-plist"],directory,{control,output:{maximumBytes:protocol.informationMaximumBytes,maximumLines:protocol.informationMaximumLines}}));
+}
+
+/** 🏪️ Reopens one persistent fixed image under shared custody; its lease directory fixes the sole queue catalog. */
 export async function openNativeImageStorageV1(options:Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>):Promise<NativeImageStorageV1>{
  const {control}=options;checkResourceLeaseControl(control);if(process.platform!=="darwin")throw Error("A qualified fixed-volume backend is required on this platform");
  requireImageEnvelopeV1(options);
@@ -50,12 +55,12 @@ export async function openNativeImageStorageV1(options:Readonly<{directory:strin
  try{
   const authored=JSON.parse(readFileSync(receipt,"utf8")),physical=lstatSync(image),mountedDevice=statSync(root).dev,filesystem=statfsSync(root),filesystemBytes=filesystem.blocks*filesystem.bsize;
   if(validateJsonSchemaSubset(schema.definitions.ImageReceipt,authored,schema).length||authored.version!==1||authored.filesystemBytes!==options.filesystemBytes||authored.maximumPhysicalBytes>options.maximumPhysicalBytes||!physical.isFile()||physical.isSymbolicLink()||physical.nlink!==1||physical.dev!==authored.dev||physical.ino!==authored.ino||physical.size!==authored.size)throw Error("Original fixed image identity changed");
-  const information=nativeImageInformationV1(await capture("hdiutil",["info","-plist"])),images=information.images as Record<string,unknown>[]|undefined;
+  const information=await readNativeImageInformationV1(directory,control),images=information.images as Record<string,unknown>[]|undefined;
   if(!Array.isArray(images)||!images.some(row=>row["image-path"]===image&&Array.isArray(row["system-entities"])&&(row["system-entities"] as Record<string,unknown>[]).some(entity=>entity["mount-point"]===root))||mountedDevice===physical.dev||filesystemBytes>options.filesystemBytes)throw Error("Actual mounted image ownership required");
   const identity=JSON.stringify([physical.dev,physical.ino,physical.size,mountedDevice]);let closed=false;
   const recheck=async()=>{checkResourceLeaseControl(control);if(closed)throw Error("Original image invocation released");const actual=lstatSync(image),fs=statfsSync(root);if(actual.dev!==authored.dev||actual.ino!==authored.ino||actual.size!==authored.size||actual.nlink!==1||actual.blocks*512>authored.maximumPhysicalBytes||statSync(root).dev!==mountedDevice||fs.blocks*fs.bsize!==filesystemBytes)throw Error("Shared fixed image identity changed");};
   const port:NativeStoragePortV1={observe:async(policy,original)=>{if(original!==control)throw Error("Original fixed image control identity required");await recheck();return policy.root===root&&policy.capacityBytes>=authored.maximumPhysicalBytes?{identity,root,maximumPhysicalBytes:authored.maximumPhysicalBytes}:null;},recheck:async(backing,original)=>{if(original!==control||backing.identity!==identity||backing.root!==root)throw Error("Original fixed image backing required");await recheck();},retire:async()=>{throw Error("Original allocation writer/reader physical retirement custody required");}};
-  await recheck();return{root,image,maximumPhysicalBytes:authored.maximumPhysicalBytes,filesystemBytes,port,recheck,close:async()=>{if(closed)return;closed=true;shared.release();},withExclusiveMaintenance:async body=>{await recheck();closed=true;shared.release();const exclusive=await acquire("exclusive");try{closed=false;await recheck();return await body(port);}finally{closed=true;exclusive.release();}}};
+  await recheck();return{root,image,maximumPhysicalBytes:authored.maximumPhysicalBytes,filesystemBytes,port,recheck,close:async()=>{if(closed)return;closed=true;shared.release();},withExclusiveMaintenance:async(request,body)=>{const admitted=readNativeImageMaintenanceRequestV1(request);await recheck();closed=true;shared.release();let exclusive;try{exclusive=admitted.wait?await acquire("exclusive"):await acquireResourceLease({directory:options.leaseDirectory,resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0,...(options.maximumLeaseDatabaseBytes===undefined?{}:{maximumDatabaseBytes:options.maximumLeaseDatabaseBytes})});}catch(error){checkResourceLeaseControl(control);if(!admitted.wait&&error instanceof Error&&error.message==="Resource lease timed out: "+resource)return{acquired:false};throw error;}try{closed=false;await recheck();return{acquired:true,value:await body(port)};}finally{closed=true;exclusive.release();}}};
  }catch(error){shared.release();throw error;}
 }
 
@@ -67,7 +72,7 @@ export async function retireNativeImageStorageV1(options:Readonly<{directory:str
   const authored=JSON.parse(readFileSync(receipt,"utf8")),physical=lstatSync(image);if(validateJsonSchemaSubset(schema.definitions.ImageReceipt,authored,schema).length||physical.dev!==authored.dev||physical.ino!==authored.ino||physical.size!==authored.size||physical.isSymbolicLink())throw Error("Original fixed image retirement identity changed");
   let state=nativeStorageStateV1();const journal=join(root,"storage-events.jsonl");if(existsSync(journal)){const text=readFileSync(journal,"utf8");if(text&&!text.endsWith("\n"))throw Error("Original storage retirement journal incomplete");for(const line of text.split("\n").filter(Boolean))state=nativeStorageEventV1(state,JSON.parse(line),authored.maximumPhysicalBytes);}
   if(nativeStorageUsedBytesV1(state)!==0)throw Error("Original fixed image allocations still held");
-  if(statSync(root).dev!==physical.dev){const information=nativeImageInformationV1(await captureOwnedCommandV1("hdiutil",["info","-plist"],directory,{control})),images=information.images as Record<string,unknown>[];if(!images.some(row=>row["image-path"]===image&&(row["system-entities"] as Record<string,unknown>[]).some(entity=>entity["mount-point"]===root)))throw Error("Actual owned image retirement mount required");await captureOwnedCommandV1("hdiutil",["detach",root],directory,{control});}
+  if(statSync(root).dev!==physical.dev){const information=await readNativeImageInformationV1(directory,control),images=information.images as Record<string,unknown>[];if(!images.some(row=>row["image-path"]===image&&(row["system-entities"] as Record<string,unknown>[]).some(entity=>entity["mount-point"]===root)))throw Error("Actual owned image retirement mount required");await captureOwnedCommandV1("hdiutil",["detach",root],directory,{control});}
   checkResourceLeaseControl(control);if(statSync(root).dev!==physical.dev)throw Error("Original image remains mounted");rmSync(directory,{recursive:true});console.log("[DEBUG] Shared fixed image retired after original allocations and users settled");
  }finally{exclusive.release();}
 }
@@ -94,7 +99,7 @@ export async function provisionNativeImageStorageV1(options:Readonly<{directory:
   };
   const port:NativeStoragePortV1={observe:async(policy:NativeStoragePolicyV1,original:ResourceLeaseControl)=>{if(original!==control)throw Error("Original fixed image control identity required");await recheck();return policy.root===root&&policy.capacityBytes>=maximumPhysicalBytes?{identity,root,maximumPhysicalBytes}:null;},recheck:async(backing:NativeStorageBackingV1,original:ResourceLeaseControl)=>{if(original!==control||backing.identity!==identity||backing.root!==root)throw Error("Original fixed image backing required");await recheck();},retire:async()=>{throw Error("Allocation physical retirement needs its original owned writer and reader custody");}};
   await recheck();console.log("[DEBUG] Fixed UDRW image "+JSON.stringify({image,root,fileBytes:initial.size,allocatedBytes:initial.blocks*512,maximumPhysicalBytes,filesystemBytes,device:mountedDevice}));
-  return{root,image,maximumPhysicalBytes,filesystemBytes,port,recheck,withExclusiveMaintenance:async body=>{await recheck();return await body(port);},close:async()=>{if(closed)return;await recheck();await capture("hdiutil",["detach",root]);mounted=false;if(statSync(root).dev===mountedDevice)throw Error("Fixed image remains mounted");closed=true;rmSync(directory,{recursive:true});console.log("[DEBUG] Original fixed image detached and owned backing retired");}};
+  return{root,image,maximumPhysicalBytes,filesystemBytes,port,recheck,withExclusiveMaintenance:async(request,body)=>{readNativeImageMaintenanceRequestV1(request);await recheck();return{acquired:true,value:await body(port)};},close:async()=>{if(closed)return;await recheck();await capture("hdiutil",["detach",root]);mounted=false;if(statSync(root).dev===mountedDevice)throw Error("Fixed image remains mounted");closed=true;rmSync(directory,{recursive:true});console.log("[DEBUG] Original fixed image detached and owned backing retired");}};
  }catch(error){if(mounted)try{await capture("hdiutil",["detach",root]);mounted=false;}catch{}if(!mounted)rmSync(directory,{recursive:true});throw error;}
 }
 

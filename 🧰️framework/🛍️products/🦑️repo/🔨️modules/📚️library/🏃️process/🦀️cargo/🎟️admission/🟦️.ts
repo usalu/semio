@@ -1,14 +1,16 @@
-import {copyFileSync,rmSync} from "node:fs";
-import {randomBytes} from "node:crypto";
-import {captureOwnedCommandV1} from "./../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {resolve,relative} from "node:path";
+import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
+import {cargoRepositoryPackageSelections,cargoWorkspaceForManifest,prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {repositoryCargoTestPolicyV1} from "../🔣️policy/🟦️.ts";
+import {packageTestBudgetMs} from "../⏱️budget/🟦️.ts";
+import {TEST_LEVELS,testLevelBudgetMs,type TestLevel} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
 import {readBuildMode} from "./../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {runOwnedCommand} from "./../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {cargoArtifactArgumentsV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import {acquireCargoBuildLeaseV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
-import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
-import {join,resolve} from "node:path";
+import {OwnedCommandFailure} from "./../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1} from "../🚪️launcher/🟦️.ts";
+import {join} from "node:path";
 import {runCargoTestsV1,runCargoLintV1,type CargoTestPolicyV1,type CargoTestRequestV1} from "./../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "./../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import type {ScriptInvocation} from "./../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -26,16 +28,26 @@ export function runRepositoryCargoTestsV1(request:CargoTestRequestV1,policy:Carg
 /** 🛠️ Composes original Clippy authority with the same bounded backing and selected Source admission. */
 export function runRepositoryCargoLintV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,workspace:string,invocation:ScriptInvocation):Promise<void>{return execute(request,policy,workspace,invocation,true);}
 
-/** 🦀️ Executes one exact compiler command only inside the issued repository backing. */
+/** 🦀️ Executes one exact compiler command through the canonical issued launcher in the shared compiler store, failing on a nonzero Cargo status.
+ * @see ../🚪️launcher/🟦️.ts */
 export async function runRepositoryCargoCommandV1(invocation:ScriptInvocation,workspace:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,maximumMilliseconds:number,emit=true):Promise<void>{
- const mode=readBuildMode(environment.SEMIO_BUILD_MODE),control=scriptCompilerAdmissionControlV1(invocation,"cargo:command",maximumMilliseconds),network=repositoryCargoNetworkV1(invocation,workspace);
- await withRepositoryCompilerStoreV1(workspace,mode,control,environment,async store=>{
-  const delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter);if(head.some(arg=>arg==="--target-dir"||arg.startsWith("--target-dir=")))throw Error("Compiler target storage belongs to original repository admission");
-  const manifestIndex=head.indexOf("--manifest-path"),joined=head.find(arg=>arg.startsWith("--manifest-path=")),manifest=manifestIndex>=0?head[manifestIndex+1]:joined?.slice(16)??join(cwd,"Cargo.toml");if(!manifest)throw Error("Original compiler manifest selection required");
-  return withRepositoryCargoInputsV1({workspace,manifest:resolve(cwd,manifest),args,network,control,storage:store.storage,environment:store.environment},async originalEnvironment=>{
-  const generated=originalEnvironment.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...originalEnvironment,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})};
-  const compilerArgs=cargoArtifactArgumentsV1(args,{mode,compilerConfiguration:join(workspace,".cargo/config.toml"),buildDirectory:store.buildDirectory}),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd));await store.storage.recheck();
-  const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:store.buildDirectory,targetDirectory:store.environment.CARGO_TARGET_DIR!,args:compilerArgs,signal:control.signal,control});try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw Error("Finite original compiler command deadline required");if(emit)await runOwnedCommand("cargo",compilerArgs,cwd,"cargo:command",Math.floor(remaining),{env:compilerEnvironment,signal:control.signal});else await captureOwnedCommandV1("cargo",compilerArgs,cwd,{control,env:compilerEnvironment,output:{maximumBytes:16777216,maximumLines:65536}});if(generated)copyFileSync(generated,originalEnvironment.SEMIO_TYPEGEN_OUT!);}finally{lease.release();if(generated)rmSync(generated,{force:true});}
- });
- });
+ const mode=readBuildMode(environment.SEMIO_BUILD_MODE),status=await launchRepositoryCargoV1(invocation,workspace,readRepositoryCargoLaunchV1(["--store=shared","--configuration="+mode,"--",...args],{...environment,SEMIO_BUILD_MODE:mode}),cwd,environment,{maximumMilliseconds,output:emit?"stream":"capture"});
+ if(status!==0)throw new OwnedCommandFailure("cargo:command",{version:1,status,signal:null});
 }
+
+/** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
+export async function runRepositoryCargoTests(packages:string[],cwd:string,invocation:ScriptInvocation,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+  invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");}
+  const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
+  const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
+  const scopes=new Map<string,string[]>();
+  for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
+  for(const manifests of scopes.values()){
+    const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
+    await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,scriptInvocationEnvironment(invocation,env),scriptCompilerAdmissionControlV1(invocation,"cargo:preparation",testLevelBudgetMs()));
+    invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo preparation deadline exhausted");}
+    const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
+    await runRepositoryCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets},repository,invocation);
+  }
+}
+

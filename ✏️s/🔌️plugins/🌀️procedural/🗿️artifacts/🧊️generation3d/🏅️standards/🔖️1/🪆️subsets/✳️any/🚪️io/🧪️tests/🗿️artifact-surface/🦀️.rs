@@ -26,7 +26,7 @@ use crate::{assert_oracle_agrees_on_unit_cube, project, retire_document, unit_cu
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_io::export_stdio_kinds;
 use semio_s_artifact_procedural_3d_io::import_stdio_kinds;
-use semio_s_artifact_procedural_3d_mesh_bridge;
+use semio_s_artifact_procedural_3d_mesh_bridge as mesh_bridge;
 
 //#region 🧫️Fixture
 const SURFACE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json");
@@ -63,7 +63,7 @@ fn gltf_scene_import_preserves_hierarchy_and_instances_as_editable_transforms() 
             let mut from = host.synapses.iter().find(|wire| &wire.to == preview).unwrap().from.as_str();
             for ancestor in row["paths"][instance].as_array().unwrap().iter().rev() {
                 let node = ancestor.as_u64().unwrap() as usize;
-                let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == from).unwrap();
+                let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == from).unwrap();
                 let Widget::Neuron { neuron_kind, params, preview, .. } = widget else { panic!("scene placement is a neuron") };
                 assert_eq!(neuron_kind, "brep.mesh.transform"); assert!(!preview);
                 let matrix = params.get("matrix").unwrap().as_dictionary().unwrap();
@@ -738,7 +738,7 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
 #[test]
 fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
     use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_procedural_3d_io_import;
+    use semio_s_artifact_procedural_3d_io_import as import;
     use semio_s_artifact_procedural_3d_io::io_registry;
     let contract = fixture()["registryText"].clone();
     assert_eq!(contract["source"], "imported-unit-cube");
@@ -898,7 +898,8 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     assert_eq!(envelope.data.as_bytes(), bytes.as_slice());
     assert_eq!(envelope.mime_type, "model/gltf+json");
     {
-        use semio_s_artifact_procedural_generation3d::{editor::generation3d::commands::export_document as editor, viewer::generation3d::commands::export_document as viewer};
+        use semio_s_artifact_procedural_3d_export_document as editor;
+        use semio_s_artifact_procedural_3d_viewer_commands::export_document as viewer;
         let snapshot = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
         let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: semio_framework_plugin::app::HistoryCommandFilter::default() };
         let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);

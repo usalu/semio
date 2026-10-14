@@ -1,8 +1,7 @@
 //! 🕔️ Energy model mutation — `ReplaceDailyScheduleHourlyValues`: Swaps a daily profile's whole twenty-four-value body. The hours are one shape, not twenty-four independent scalars, so they move together.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ReplaceDailyScheduleHourlyValues {
     pub new_hourly_values: Vec<f64>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_daily_schedule_hourly_values(id: crate::schedule::ScheduleId, new_hourly_values: Vec<f64>) -> EnergyModelMutation {
-    EnergyModelMutation::ReplaceDailyScheduleHourlyValues(ReplaceDailyScheduleHourlyValues { id, new_hourly_values })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn replace_daily_schedule_hourly_values<Op: From<ReplaceDailyScheduleHourlyValues>>(id: crate::schedule::ScheduleId, new_hourly_values: Vec<f64>) -> Op {
+    ReplaceDailyScheduleHourlyValues { id, new_hourly_values }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceDailyScheduleHourlyValues {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceDailyScheduleHourlyValues
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceDailyScheduleHourlyValues>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "daily-schedule", kind: "replace-daily-schedule-hourly-values", record: "ReplacedDailyScheduleHourlyValues" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

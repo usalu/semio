@@ -1,3 +1,4 @@
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { createRequire } from "node:module";
 import { dirname, relative, resolve } from "node:path";
 import { coordinatorBuildPolicy } from "../../🏗️builder/🎚️mode/🟦️.ts";
@@ -16,10 +17,12 @@ import { readBuildMode } from "../../../../../../../🔨️modules/🏃️proces
 
 const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), policy = coordinatorBuildPolicy(mode, compilerCapacityWorkerCountV1());
 const require = createRequire(import.meta.url), nextRoot = dirname(require.resolve("next/package.json"));
-const rebuild = createNextRebuildAdmissionV1({ directory: resolve(import.meta.dirname, "../../../../../../../..", ".cache/framework/leases"), environment: process.env, run: work => receiveScriptProcessInvocation(process.env, invocation => work(scriptCompilerAdmissionControlV1(invocation, "next:development-rebuild", 0))) });
+const rebuild = createNextRebuildAdmissionV1({ directory: resolve(import.meta.dirname, "../../../../../../../..", ".cache/b/l/m/data"), environment: process.env, run: work => receiveScriptProcessInvocation(process.env, invocation => work(scriptCompilerAdmissionControlV1(invocation, "next:development-rebuild", 0))) });
 const rebuildPlugin = nextRebuildPluginV1(rebuild);
+if(!process.env.SEMIO_NEXT_BUILD_DIRECTORY||!process.env.SEMIO_NEXT_TYPESCRIPT_PROJECT)throw Error("Next configuration requires original bounded compiler paths");
+const products=resolve(import.meta.dirname,"../../../../../../../..",".cache/b/p/m");for(const path of [process.env.SEMIO_NEXT_BUILD_DIRECTORY,process.env.SEMIO_NEXT_TYPESCRIPT_PROJECT])requireNativeStoragePathV1(products,resolve(import.meta.dirname,path));
 const nextConfig = {
-  distDir: process.env.SEMIO_NEXT_BUILD_DIRECTORY ?? relative(import.meta.dirname, resolve(import.meta.dirname, "../../../../../../../..", policy.output)).replaceAll("\\", "/"),
+  distDir: process.env.SEMIO_NEXT_BUILD_DIRECTORY,
   productionBrowserSourceMaps: policy.sourceMap,
   experimental: { cpus: policy.workers, serverMinification: policy.optimize, staticGenerationMaxConcurrency: policy.workers },
   webpack(config, { dev }) {
@@ -28,7 +31,7 @@ const nextConfig = {
     if (dev) config.plugins.push(rebuildPlugin);
     return config;
   },
-  output: process.env.SEMIO_NEXT_BUILD_DIRECTORY ? undefined : "standalone",
+  output: undefined,
   serverExternalPackages: ["pg", "pg-boss"],
   // 🚧️ Next type-checks the whole transitive source graph, and `@/lib` reaches
   // `@semio-tech/framework`, whose generated `🧰️framework/🔨️modules/🎭️actor/🤖️generated/🟦️actor.ts`

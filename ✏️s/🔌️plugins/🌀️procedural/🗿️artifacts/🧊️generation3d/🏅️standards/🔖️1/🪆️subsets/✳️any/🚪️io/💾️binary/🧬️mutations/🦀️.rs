@@ -7,16 +7,16 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::change_schema::ChangeSchema;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::connect_synapse::ConnectSynapse;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::create_generation::CreateGeneration;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::create_widget::CreateWidget;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::delete_widget::DeleteWidget;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::delete_widget_position::DeleteWidgetPosition;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::disconnect_synapse::DisconnectSynapse;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::move_widget::MoveWidget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_generations::create_generation::CreateGeneration;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::delete_widget::DeleteWidget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::delete_widget_position::DeleteWidgetPosition;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse::DisconnectSynapse;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::move_widget::MoveWidget;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
-#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::update_camera::UpdateCamera;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_document::update_camera::UpdateCamera;
 #[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use protocol::OpBinary;
 

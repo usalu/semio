@@ -1,7 +1,14 @@
 //! 🪟️ Exact-instance Puzzle 3D window configuration and transient interaction owners.
 
-use crate::editor::puzzle3d::config::{Puzzle3dCamera, Puzzle3dConfig, Puzzle3dRuntime, Puzzle3dSelectableKinds, Puzzle3dSuggestionMenu};
-use crate::editor::puzzle3d::modes::edit::windows::main;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_editor_config::{Puzzle3dCamera, Puzzle3dConfig, Puzzle3dRuntime, Puzzle3dSelectableKinds, Puzzle3dSuggestionMenu};
 use semio_framework_plugin::WorldSunConfig;
 
 /// 🎚️ ONE exact Puzzle 3D window instance's persisted-local options. `WindowConfigOwner::State`
@@ -574,7 +581,7 @@ fn puzzle3d_window_transient_transfer(mutation: Puzzle3dWindowTransientMutation)
 
 pub struct Puzzle3dWindowConfigOwner;
 impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
-    const WINDOW_KIND_ID: &'static str = main::WINDOW_KIND_ID;
+    const WINDOW_KIND_ID: &'static str = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     const SCHEMA: &'static str = "puzzle.3dwindowconfig";
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = Puzzle3dWindowConfig;
@@ -589,7 +596,7 @@ impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
 
 pub struct Puzzle3dWindowTransientOwner;
 impl semio_framework_plugin::WindowTransientOwner for Puzzle3dWindowTransientOwner {
-    const WINDOW_KIND_ID: &'static str = main::WINDOW_KIND_ID;
+    const WINDOW_KIND_ID: &'static str = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     type State = Puzzle3dWindowTransient;
     type Mutation = Puzzle3dWindowTransientMutation;
     fn build_owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Self::State, Self::Mutation> {
@@ -653,7 +660,7 @@ pub fn runtime(shared: &Puzzle3dConfig, window: &Puzzle3dWindowConfig, transient
         engagement_input: transient.engagement_input.clone(),
         brush_candidate_index: transient.brush_candidate_index,
         active_tool_id: view.and_then(|value| value.active_tool_id.clone()),
-        window_ids: view.map_or_else(|| vec![main::WINDOW_KIND_ID.into()], |value| value.window_instances.iter().map(|window| window.id.clone()).collect()),
+        window_ids: view.map_or_else(|| vec![semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into()], |value| value.window_instances.iter().map(|window| window.id.clone()).collect()),
     }
 }
 

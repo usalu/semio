@@ -1,0 +1,45 @@
+{
+  "scope": "post-await callback liveness repair; no installer material change or registered acceptance",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "8967fce3d3fa035e78d21e6f419b9e60c9a986a31ecca75a7676ef23dbceba19",
+      "bytes": 21434
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+      "sha256": "9f9d8b6e0085b569745374607b34a01ccb9c8d56370c4ae3ec9604216915b0a0",
+      "bytes": 5588
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+      "sha256": "c01a5797ff364f090689cb3c9177edb0a334cf547ef91f8776304d7e6a4eac01",
+      "bytes": 2473
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/📥️install.json",
+      "sha256": "22c6109d87a5e3e89577a11ba21004b5d15545233cf11dddd1d5f72f6ff73923",
+      "bytes": 4735
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts",
+      "sha256": "eee65d4f72417d7f013c6af6cac94040a4b74642fd543fec41088da7e1013dba",
+      "bytes": 9241
+    }
+  ],
+  "languageNeutralSequence": [
+    "body-entered",
+    "recheck-paused",
+    "body-returned",
+    "custody-released",
+    "recheck-resumed"
+  ],
+  "expectedRefusal": "Original Bun installation callback released",
+  "registeredTestsCollectedByThisOwner": 0,
+  "installersLaunchedByThisOwner": 0,
+  "probeReferences": [
+    "🗑️generated/dependency-install-current/custody-delayed-red.json",
+    "🗑️generated/dependency-install-current/custody-delayed-green.json",
+    "🗑️generated/dependency-install-current/custody-semantic-probe.json"
+  ]
+}

@@ -1,10 +1,14 @@
 use super::*;
 use crate::editor::fem2d::commands::{canvas_pointer_move, canvas_pointer_up};
-use crate::editor::fem2d::interaction::{canvas_gesture, fem2d_layer_to_canvas, FEM2D_INTERACTION_DOMAIN, FEM2D_POINTER_CHANNEL};
-use crate::editor::fem2d::modes::edit::windows::model as model_window;
-use crate::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_layer_to_canvas;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_POINTER_CHANNEL;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_framework_os_kernel::Viewport2d;
-use model_window::{find_node_2d, screen_2d};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
 use pack::snapshot::ArtifactDsl;
@@ -13,7 +17,7 @@ const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 fn addressed(kind: &str) -> ViewModel {

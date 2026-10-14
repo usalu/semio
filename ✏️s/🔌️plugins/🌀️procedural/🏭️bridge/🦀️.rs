@@ -18,14 +18,14 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("Generation2dTransientMutation", descriptors::<semio_s_artifact_procedural_generation2d::editor::generation2d::transient::Generation2dTransient, semio_s_artifact_procedural_generation2d::editor::generation2d::transient::Generation2dTransientMutation>),
-    ("Generation2dMutation", descriptors::<semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot, semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::schema::mutations::Generation2dMutation>),
-    ("Generation3dConfigMutation", descriptors::<semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig, semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfigMutation>),
-    ("Generation3dTransientMutation", descriptors::<semio_s_artifact_procedural_generation3d::editor::generation3d::transient::Generation3dTransient, semio_s_artifact_procedural_generation3d::editor::generation3d::transient::Generation3dTransientMutation>),
+    ("Generation2dTransientMutation", descriptors::<semio_s_artifact_procedural_2d_editor_transient::Generation2dTransient, semio_s_artifact_procedural_2d_editor_transient::Generation2dTransientMutation>),
+    ("Generation2dMutation", descriptors::<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot, semio_s_artifact_procedural_2d_mutations::Generation2dMutation>),
+    ("Generation3dConfigMutation", descriptors::<semio_s_artifact_procedural_3d_editor_config::Generation3dConfig, semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation>),
+    ("Generation3dTransientMutation", descriptors::<semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient, semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation>),
     ("Generation3dMutation", descriptors::<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>),
-    ("Generation3dViewConfigMutation", descriptors::<semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig, semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfigMutation>),
-    ("Generation3dViewPresenceMutation", descriptors::<semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::Generation3dViewPresence, semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::Generation3dViewPresenceMutation>),
-    ("Generation3dViewTransientMutation", descriptors::<semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::Generation3dViewTransient, semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::Generation3dViewTransientMutation>),
+    ("Generation3dViewConfigMutation", descriptors::<semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig, semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation>),
+    ("Generation3dViewPresenceMutation", descriptors::<semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence, semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation>),
+    ("Generation3dViewTransientMutation", descriptors::<semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient, semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeObjectMesh` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
 use super::mutation::ChangeObjectMesh;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ChangeObjectMesh>>(payload: &super::mutation::ChangeObjectMesh, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
@@ -8,7 +8,7 @@ pub fn inverse<Op: From<ChangeObjectMesh>>(payload: &super::mutation::ChangeObje
     let Some(item) = base.objects.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::change_object_mesh::mutation::change_object_mesh(item.id.clone(), item.mesh_url.clone())]
+    vec![crate::change_object_mesh::mutation::change_object_mesh(item.id.clone(), item.mesh_url.clone())]
 
     })())
 }

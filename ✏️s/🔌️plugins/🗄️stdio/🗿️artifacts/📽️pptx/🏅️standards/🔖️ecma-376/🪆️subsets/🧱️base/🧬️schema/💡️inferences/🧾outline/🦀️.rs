@@ -1,6 +1,6 @@
 //! 🧾 Counts the slide, shape and word structure of authoritative OPC and retained XML.
 
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 /// 🧾 PresentationML document outline.
@@ -10,7 +10,7 @@ pub struct PptxOutline {pub slide_count:u32,pub shape_count:u32,pub word_count:u
 
 impl PptxOutline {
  pub fn compute(snapshot:&PptxSnapshot)->Result<Self,ValueError>{
-  let slides=crate::schema::mutations::xml_address::pptx_slides(snapshot).map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
+  let slides=semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot).map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
   let limit=||ValueError::new(ValueRefusalKind::WorkLimit,"PPTX outline count exceeds unsigned32");
   let slide_count=u32::try_from(slides.len()).map_err(|_|limit())?;
   let mut shape_count=0u32;let mut word_count=0u32;
@@ -23,7 +23,3 @@ impl PptxOutline {
   Ok(Self{slide_count,shape_count,word_count})
  }
 }
-
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;

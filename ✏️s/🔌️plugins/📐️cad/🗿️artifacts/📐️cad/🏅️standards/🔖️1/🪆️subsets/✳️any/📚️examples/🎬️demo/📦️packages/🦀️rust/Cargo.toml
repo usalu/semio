@@ -24,10 +24,10 @@ semio-framework-ui-locale = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-value = { workspace = true }
 semio-s-artifact-cad-cad-inferences = { workspace = true }
-semio-s-artifact-cad-cad-io = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-cad-cad-mut-nodes = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }

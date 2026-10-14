@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `CreateGeneration`, reconstructed from BASE.
 use super::CreateGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateGeneration, _base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::delete_generation::DeleteGeneration>>(payload: &CreateGeneration, _base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![crate::standards::v1::subsets::any::schema::mutations::delete_generation::delete_generation(payload.generation.id.clone())]
+    vec![crate::delete_generation::delete_generation(payload.generation.id.clone())]
 
     })())
 }

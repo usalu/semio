@@ -1,12 +1,26 @@
-use super::*;
-use crate::editor::fem3d::modes::edit::windows::model;
-use crate::editor::fem3d::unit_tests::context::{close, dispatch, dispatch_rows, fem3d_demo_app, history_verb, render, view, Fem3dApp};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::gumball::*;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_gumball_tick;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballTool;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results as results_window;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use crate::context::{close, dispatch, dispatch_rows, fem3d_demo_app, history_verb, render, view, Fem3dApp};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel};
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {
@@ -53,7 +67,7 @@ fn an_id_less_payload_moves_the_live_selection() {
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let live = crate::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec!["n20_l1".into()], None).expect("route");
+    let live = semio_s_artifact_fem_3d_editor::editor::fem3d::fem3d_route(&Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: Vec::new(), dx: 0.0, dy: 0.0, dz: 1.0, phase: None, reason: None }), &view, &cfg, || vec!["n20_l1".into()], None).expect("route");
     let [Fem3dMutation::MoveSelection(leaf)] = live.artifact_mutations.as_slice() else { panic!("the live selection moved") };
     assert_eq!(leaf.node_ids, vec!["n20_l1".to_string()]);
 }
@@ -136,7 +150,7 @@ async fn gumball_flags_are_model_window_config() {
 /// streamed gesture is ONE edit, an aborted one leaves zero trace, a gesture that never moved publishes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json"))).expect("the protocol fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
     let cases = fixture["cases"].as_array().expect("cases");
     let mut consumed = 0;
     for case in cases.iter().filter(|case| case.get("guest").is_some()) {

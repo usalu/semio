@@ -1,0 +1,11 @@
+# Native Caller Source Fixtures
+
+The coherent graph suite exposed two existing synthetic native-owner fixtures that named `app/Cargo.toml` without creating that Source. Both recipes explicitly carry a `nativeOwnerCommand` and Cargo owner manifest, matching actual native inference. The new Repository Cargo execution issuer captures that real package declaration before checking for optional Cargo execution metadata. Generic commands without `nativeOwnerCommand` do not enter that issuer. No production conditional was changed.
+
+The two tests now materialize a regular minimal package TOML file under an owned ticket-generated directory. The original repository remains the invocation authority; declared manifest and working-directory paths point to the actual generated fixture within that authority. Independent `@iarna/toml` agrees with Bun TOML, and a fixed SHA-256 verifies exact unchanged manifest bytes before and after issuance. The portable test also verifies a genuinely missing manifest still refuses.
+
+All prior literal arguments, inherited policy/deadline, tool choice, transport, child process, network, build mode, artifact directory and GUI handoff assertions remain. This is command issuance and Source admission evidence, not a Cargo build or backend task execution claim.
+
+The existing language-neutral graph fixture contains `nativeCallerSource`; the existing graph tests retain their original names. The retained genuine SDK gate gained `--native-caller-gate`. Actual result: **2 tests passed, 91 assertions, 591 ms, exit 0**, in `🗑️generated/native-caller-source-green.txt`. The earlier coherent-suite missing-file failures remain in Core's retained gate log. No Source capture bypass, fabricated capture, extra grant or production code change was used.
+
+Core later split the GUI loop into three named `test.each` cases: DSL Receiving Source, DSL Receiving Native and Jack Composition. Read-only review confirms each retains its original 30,000 ms envelope and every authority/resource/deadline/argument assertion, with a separate generated real manifest and a 35,000 ms Bun runner timeout. No control budget was increased. The earlier 2-test result above predates this wrapper split; the new coherent gate is Core-owned and its result is separate.

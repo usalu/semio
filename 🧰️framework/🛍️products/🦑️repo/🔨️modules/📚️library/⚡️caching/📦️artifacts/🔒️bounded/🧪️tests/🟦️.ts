@@ -2,13 +2,19 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {mkdtempSync,mkdirSync,readdirSync,symlinkSync,readFileSync,writeFileSync,rmSync} from "node:fs";
-import {join} from "node:path";
+import {join,dirname} from "node:path";
+import {createRequire} from "node:module";
+import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import fixture from "./🔣️.json" with {type:"json"};
 import fixtureSchema from "./🧬️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateBoundedNxPathsV1,withBoundedNxArtifactWriteV1} from "../🟦️.ts";
 import {repositoryStrictStorageV1} from "../../../💾️storage/🔒️enforcement/🟦️.ts";
-import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+import {boundedNxNamespaceV1,readAuthoredNxCacheDirectoryV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+import cacheConfigurationSchema from "../../../💾️storage/🔒️enforcement/🔌️nx/🧬️schema/📋️configuration.json" with {type:"json"};
+import storagePolicy from "../../../💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import repositoryPolicy from "../../../🔣️policy.json" with {type:"json"};
 import repositorySchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
 import {ordinaryNativeStoragePortV1,type NativeStoragePortV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -54,3 +60,17 @@ test("publication and failed restore remain conservatively charged until owned p
  }finally{rmSync(parent,{recursive:true});}
 });
 
+
+
+ test("authored Nx default agrees with finite storage policy and refuses ordinary directory aliases",()=>{
+ const validate=new Ajv({strict:true}).compile(cacheConfigurationSchema),workspace=process.cwd();expect(new Ajv({strict:true}).compile(fixtureSchema)(fixture)).toBe(true);
+ for(const row of fixture.authoredCacheDirectories){expect(validate(row.directory)).toBe(row.accepted);if(row.accepted)expect(readAuthoredNxCacheDirectoryV1(workspace,row.directory)).toBe(join(workspace,storagePolicy.partitions.rust.directory,"m/nx/artifacts"));else expect(()=>readAuthoredNxCacheDirectoryV1(workspace,row.directory)).toThrow("Authored bounded Nx cache directory");}
+ expect(readAuthoredNxCacheDirectoryV1(workspace,JSON.parse(readFileSync(join(workspace,"nx.json"),"utf8")).cacheDirectory)).toBe(join(workspace,storagePolicy.partitions.rust.directory,"m/nx/artifacts"));console.log("[DEBUG] Actual authored Nx default agrees with canonical finite storage; five ordinary or absent aliases refuse");
+ });
+
+
+ test("actual frozen Nx refuses authored cache initialization without original bounded namespace",async()=>{
+ const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original immutable SDK required");const parent=mkdtempSync(join(artifacts!,"nx-cfg-")),root=join(parent,"workspace"),sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json"));mkdirSync(root);writeFileSync(join(root,"nx.json"),JSON.stringify({cacheDirectory:cacheConfigurationSchema.const}));
+ const source=`try{require(${JSON.stringify(sdk.resolve("nx/src/utils/cache-directory"))});console.log(JSON.stringify({refused:false}));}catch(error){console.log(JSON.stringify({refused:String(error).includes('Original bounded Nx namespace required')}));}`;
+ try{await receiveScriptProcessInvocation(process.env,async original=>{for(const row of fixture.rawCacheAdmission){const output=await captureOwnedCommandV1("node",["-e",source],root,{control:scriptCompilerAdmissionControlV1(original,"nx:authored-default:node",20000),env:{...scriptInvocationEnvironment(original,process.env),NODE_PATH:join(dirname(dirname(sdk.resolve("nx/package.json")))),NX_WORKSPACE_ROOT:root,NX_WORKSPACE_ROOT_PATH:root,NX_CACHE_DIRECTORY:row.environment==="foreign"?join(parent,"foreign"):undefined,SEMIO_NX_FIXED_STORAGE:undefined,NX_WORKSPACE_DATA_DIRECTORY:join(root,"data")}});expect(JSON.parse(output.trim().split("\n").reverse().find(line=>line.startsWith("{"))!).refused).toBe(row.refused);}});console.log("[DEBUG] Actual frozen Nx refused canonical cache default for missing and foreign original namespace before native cache creation");}finally{rmSync(parent,{recursive:true});}
+ });

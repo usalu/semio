@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_procedural_2d_mode_edit::windows::preview::*;
+use crate::app_fixture::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_preview_canvas_scene() {

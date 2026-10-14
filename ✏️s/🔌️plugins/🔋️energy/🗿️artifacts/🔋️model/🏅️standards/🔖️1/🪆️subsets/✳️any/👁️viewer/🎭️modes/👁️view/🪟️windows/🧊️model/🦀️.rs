@@ -54,7 +54,7 @@ pub fn set_camera_action() -> ActionDefinition {
     action
 }
 
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::model::create_energy_model_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
@@ -68,7 +68,7 @@ pub fn definition() -> WindowKindDefinition {
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,
-        artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
+        artifact_snapshot_schema: Some(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

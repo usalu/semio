@@ -1,0 +1,354 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repository-cargo-launch:v1",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "command",
+        "options",
+        "delimiter",
+        "stores",
+        "configurations",
+        "maximumArguments",
+        "maximumArgumentLength",
+        "parallelism",
+        "subcommands",
+        "capacityLeaseDirectory",
+        "isolatedDirectory",
+        "isolatedNoncePattern",
+        "jobserverDirectoryPrefix",
+        "pass",
+        "swapSampleMilliseconds",
+        "progressMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "command": {
+          "const": "cargo"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "store",
+            "configuration",
+            "parallelism"
+          ],
+          "properties": {
+            "store": {
+              "const": "--store"
+            },
+            "configuration": {
+              "const": "--configuration"
+            },
+            "parallelism": {
+              "const": "--parallelism"
+            }
+          }
+        },
+        "delimiter": {
+          "const": "--"
+        },
+        "stores": {
+          "const": [
+            "shared",
+            "isolated"
+          ]
+        },
+        "configurations": {
+          "const": [
+            "prototype",
+            "release"
+          ]
+        },
+        "maximumArguments": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 512
+        },
+        "maximumArgumentLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "parallelism": {
+          "const": "available"
+        },
+        "subcommands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compile",
+            "resolve",
+            "lock"
+          ],
+          "properties": {
+            "compile": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*$"
+              }
+            },
+            "resolve": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*$"
+              }
+            },
+            "lock": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*$"
+              }
+            }
+          }
+        },
+        "capacityLeaseDirectory": {
+          "const": ".cache/framework/leases"
+        },
+        "isolatedDirectory": {
+          "const": "isolated"
+        },
+        "isolatedNoncePattern": {
+          "const": "^[a-f0-9]{12}$"
+        },
+        "jobserverDirectoryPrefix": {
+          "const": "jobserver-"
+        },
+        "pass": {
+          "const": "repo-cargo"
+        },
+        "swapSampleMilliseconds": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        },
+        "progressMilliseconds": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "store",
+        "configuration",
+        "parallelism",
+        "kind",
+        "cargo"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "store": {
+          "enum": [
+            "shared",
+            "isolated"
+          ]
+        },
+        "configuration": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "kind": {
+          "enum": [
+            "compile",
+            "resolve",
+            "lock"
+          ]
+        },
+        "cargo": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "ArgumentCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "argv",
+        "environment",
+        "request"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RequestExpectation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LifecycleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "outcome",
+        "removedAfterOwner",
+        "removedBySweep"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "enum": [
+            "return",
+            "throw",
+            "abort",
+            "killed",
+            "live"
+          ]
+        },
+        "removedAfterOwner": {
+          "type": "boolean"
+        },
+        "removedBySweep": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "arguments",
+        "lifecycle"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/ArgumentCase"
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/LifecycleCase"
+          }
+        }
+      }
+    },
+    "RequestExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "store",
+        "configuration",
+        "parallelism",
+        "kind",
+        "cargo"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "store": {
+          "enum": [
+            "shared",
+            "isolated"
+          ]
+        },
+        "configuration": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            {
+              "const": "available"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "compile",
+            "resolve",
+            "lock"
+          ]
+        },
+        "cargo": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    }
+  }
+}

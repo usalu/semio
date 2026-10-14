@@ -1,20 +1,106 @@
 {
   "$id": "framework/value/retained-clone/std-collections/schema.json",
   "type": "object",
-  "required": ["schema", "cases"],
+  "required": [
+    "schema",
+    "cases",
+    "copySelection",
+    "completionSelection"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema": { "const": "framework.value.retained-clone.std-collections.v1" },
+    "schema": {
+      "const": "framework.value.retained-clone.std-collections.v1"
+    },
     "cases": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "kind", "value"],
+        "required": [
+          "name",
+          "kind",
+          "value"
+        ],
         "additionalProperties": false,
         "properties": {
-          "name": { "type": "string" },
-          "kind": { "enum": ["hash-map", "btree-map", "hash-set", "btree-set"] },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "hash-map",
+              "btree-map",
+              "hash-set",
+              "btree-set"
+            ]
+          },
           "value": {}
+        }
+      }
+    },
+    "copySelection": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "requestedBytes",
+          "admittedBytes",
+          "expectedPrefix",
+          "expectedCopiedBytes"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "requestedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "admittedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedPrefix": {
+            "type": "string"
+          },
+          "expectedCopiedBytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "completionSelection": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stage",
+          "minimumDepth",
+          "copiedItems",
+          "copiedBytes"
+        ],
+        "properties": {
+          "stage": {
+            "enum": [
+              "childReady",
+              "childTerminal"
+            ]
+          },
+          "minimumDepth": {
+            "const": 1
+          },
+          "copiedItems": {
+            "const": 1
+          },
+          "copiedBytes": {
+            "const": 0
+          }
         }
       }
     }

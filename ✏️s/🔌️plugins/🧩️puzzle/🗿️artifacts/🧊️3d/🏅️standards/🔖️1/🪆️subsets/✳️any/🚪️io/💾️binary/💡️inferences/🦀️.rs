@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::FillRunCheckpoint;
+use semio_s_artifact_puzzle_3d_model::FillRunCheckpoint;
 impl FillRunCheckpoint {
     pub const BYTES: usize = 68;
 

@@ -1,5 +1,12 @@
 //! 🚪️ IO s.layout (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
+
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.svg"]
 }
@@ -15,7 +22,7 @@ pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::LayoutAnalyzer;
-    use crate::LayoutSnapshot;
+    use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
@@ -51,7 +58,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -61,7 +68,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dxf::v_r12::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::import::deserializers::artifacts::dxf::v_r12::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -72,7 +79,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -83,7 +90,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::import::deserializers::artifacts::svg::v1_1::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -97,53 +104,8 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region ⚠️Errors
-/// 🚧️ All fallible layout-engine operations funnel through this — document parsing, scene/hit-test
-/// resolution, and export (SVG/PDF/PNG/zip package). Relocated from the deleted `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the app engine's scene/export functions
-/// (`✏️editor/⚙️engine`) reach it by qualified path — an app depending on its artifact is normal
-/// direction, not a layering violation.
-#[derive(Debug)]
-pub enum LayoutError {
-    Json(semio_framework_value::ValueError),
-    UnexpectedSchema(String),
-    PageNotFound(String),
-    Io(std::io::Error),
-    Svg(String),
-}
 
-impl std::fmt::Display for LayoutError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Json(error) => write!(formatter, "json: {error}"),
-            Self::UnexpectedSchema(schema) => write!(formatter, "unexpected schema {schema}"),
-            Self::PageNotFound(page) => write!(formatter, "page {page} not found"),
-            Self::Io(error) => write!(formatter, "io: {error}"),
-            Self::Svg(message) => write!(formatter, "svg: {message}"),
-        }
-    }
-}
 
-impl std::error::Error for LayoutError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Json(error) => Some(error),
-            Self::Io(error) => Some(error),
-            Self::UnexpectedSchema(_) | Self::PageNotFound(_) | Self::Svg(_) => None,
-        }
-    }
-}
-
-impl From<semio_framework_value::ValueError> for LayoutError {
-    fn from(error: semio_framework_value::ValueError) -> Self {
-        Self::Json(error)
-    }
-}
-
-impl From<std::io::Error> for LayoutError {
-    fn from(error: std::io::Error) -> Self {
-        Self::Io(error)
-    }
-}
 //#endregion ⚠️Errors
 
 //#region 🔖️MediaImportExport
@@ -158,7 +120,8 @@ impl From<std::io::Error> for LayoutError {
 /// `rect_path_segments` and `compose_svg_from_drawing` are `pub` (were `pub(crate)`, widened because
 /// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
 /// region's own header on the "more than one consumer" rule).
-use crate::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_model::{Frame, GridSettings, Layer, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value::DslValue as Value;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -274,12 +237,12 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
 /// its layers are merged in first (behind every page layer), so an
 /// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
 /// only ever informing page-boundary framing at import time.
-pub(crate) fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
+pub fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
     const PAGE_GAP: f64 = 24.0;
     let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
 
-    if let Some(background) = crate::background_drawing_content(doc) {
+    if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_content(doc) {
         for mut layer in background.layers {
             layer.id = format!("background-{}", layer.id);
             layers.push(layer);
@@ -381,7 +344,7 @@ pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
 /// trace) and keeps the whole drawing as the document's background, so an author lays pages out on
 /// top of the real plan.
 pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot, source: &str, name: &str) -> Result<Value, String> {
-    let background_child = crate::background_drawing_child_handle(source, drawing_snapshot);
+    let background_child = semio_s_artifact_layout_layout_model::background_drawing_child_handle(source, drawing_snapshot);
     let mut rects: Vec<(f64, f64, f64, f64)> = drawing_snapshot
         .layers
         .iter()
@@ -491,7 +454,7 @@ pub mod io_registry {
     const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
     const LAYOUT_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::LayoutSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == LAYOUT_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => LayoutAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -507,7 +470,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.clone(),
                 IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
             };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "LayoutComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -516,7 +479,7 @@ pub mod io_registry {
     fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -524,7 +487,7 @@ pub mod io_registry {
     fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -532,7 +495,7 @@ pub mod io_registry {
     fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -540,7 +503,7 @@ pub mod io_registry {
     fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -548,7 +511,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -582,7 +545,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{LayoutDiff, LayoutMutation, LayoutSnapshot};
+    use semio_s_artifact_layout_layout_diff::LayoutDiff;
+    use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+    use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
@@ -596,7 +561,7 @@ pub mod derived_construction {
         type Mutation = LayoutMutation;
         type Diff = LayoutDiff;
         fn empty() -> Self {
-            Self { snapshot: crate::standards::v1::subsets::any::io::text::snapshot::default_document(), diagnostics: Vec::new() }
+            Self { snapshot: semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document(), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
@@ -632,7 +597,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::LayoutSnapshot;
+    use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -688,3 +653,96 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: LayoutAnalyzer,
     composer: LayoutComposer,
 );
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod export {
+    #[path = "."]
+    pub mod serializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod v_ac1018 {
+                    #[path = "📤️export/🧵️serializers/🗿️artifacts/🏗️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod dxf {
+                #[path = "."]
+                pub mod v_r12 {
+                    #[path = "📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod v1_2 {
+                    #[path = "📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod svg {
+                #[path = "."]
+                pub mod v1_1 {
+                    #[path = "📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod import {
+    #[path = "."]
+    pub mod deserializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod v_ac1018 {
+                    #[path = "📥️import/🧩️deserializers/🗿️artifacts/🏗️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod dxf {
+                #[path = "."]
+                pub mod v_r12 {
+                    #[path = "📥️import/🧩️deserializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+            #[path = "."]
+            pub mod svg {
+                #[path = "."]
+                pub mod v1_1 {
+                    #[path = "📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                    pub mod any;
+                }
+            }
+        }
+    }
+}
+//#endregion 🪢️TaxonomyMounts

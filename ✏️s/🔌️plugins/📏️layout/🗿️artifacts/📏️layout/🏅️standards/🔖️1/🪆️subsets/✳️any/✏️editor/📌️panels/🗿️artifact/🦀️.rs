@@ -13,10 +13,11 @@
 //! Page rows (`setActivePage`) and link rows (a multi-target select over every referencing frame)
 //! keep their own app actions.
 
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
-use crate::editor::layout::terminology::LayoutLabels;
-use crate::editor::layout::{layout_action, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_APP_ID};
-use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig;
+use semio_s_artifact_layout_layout_editor_panels::terminology::LayoutLabels;
+use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_APP_ID};
+use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::InteractionTarget;
@@ -190,13 +191,13 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
     // tree's presence from the "elements" `InteractionState` post-render and would overwrite
     // whatever this function stamped anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     PanelTreeBuilder::new(LAYOUT_DOCUMENT_ROOT)?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[0], Some(crate::editor::layout::ui_label(labels.artifact.as_str())?), true, std::slice::from_ref(doc), |document| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[0], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.artifact.as_str())?), true, std::slice::from_ref(doc), |document| {
             layout_tree_item("layout-document.document.root", Label::data(document.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[1], Some(crate::editor::layout::ui_label(labels.spreads.as_str())?), false, &doc.spreads, |spread| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[1], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.spreads.as_str())?), false, &doc.spreads, |spread| {
             layout_tree_item(spread_row_id(&spread.id), Label::data(spread.name.clone()), Some(spread.page_ids.join(", ")), Some("layout".into()), None, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[2], Some(crate::editor::layout::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &doc.pages, |page| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[2], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &doc.pages, |page| {
             let action = ui_value_map([("pageId", ui_value_text(&page.id)?)])?;
             layout_tree_item(
                 page_row_id(&page.id),
@@ -216,16 +217,16 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
         .window_section_or_placeholder(
             windows,
             LAYOUT_DOCUMENT_SECTIONS[3],
-            Some(crate::editor::layout::ui_label(labels.frames.as_str())?),
+            Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.frames.as_str())?),
             true,
             &frames,
             |(page, frame)| layout_tree_item(frame.id(), Label::data(frame.id()), Some(format!("{} · {}", page.name, frame.kind_str())), Some(frame_icon(frame.kind_str()).into()), None, Some(LAYOUT_GRANULARITY_ELEMENT)),
-            crate::editor::layout::ui_label(labels.drop_here.as_str())?,
+            semio_s_artifact_layout_layout_editor_commands::ui_label(labels.drop_here.as_str())?,
         )?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[4], Some(crate::editor::layout::ui_label(labels.parent_pages.as_str())?), false, &doc.parent_pages, |parent| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[4], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.parent_pages.as_str())?), false, &doc.parent_pages, |parent| {
             layout_tree_item(parent_page_row_id(&parent.id), Label::data(parent.name.clone()), Some(format!("{}×{}", parent.width as i64, parent.height as i64)), Some("copy".into()), None, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[5], Some(crate::editor::layout::ui_label(labels.layers.as_str())?), false, &layers, |(page, layer)| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[5], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.layers.as_str())?), false, &layers, |(page, layer)| {
             layout_tree_item(
                 layer_row_id(&page.id, &layer.id),
                 Label::data(format!("{} · {}", page.name, layer.name)),
@@ -235,10 +236,10 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
                 None,
             )
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[6], Some(crate::editor::layout::ui_label(labels.stories.as_str())?), false, &doc.stories, |story| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[6], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.stories.as_str())?), false, &doc.stories, |story| {
             layout_tree_item(story_row_id(&story.id), Label::data(story.id.clone()), Some(format!("{} {}", story.content.chars().count(), labels.chars.as_str())), Some("file-text".into()), None, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[7], Some(crate::editor::layout::ui_label(labels.links.as_str())?), false, &doc.links, |link| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[7], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.links.as_str())?), false, &doc.links, |link| {
             let mut referencing_ids: UiFixedList<String> = UiFixedList::default();
             for frame in doc.pages.iter().flat_map(|page| page.frames.iter()) {
                 if let Frame::Image { link_id, .. } = frame {
@@ -251,7 +252,7 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
             let title = if link.artifact_kind.is_empty() { link.path.clone() } else { format!("{} {}", link.artifact_kind, link.artifact_ref) };
             layout_tree_item(link_row_id(&link.id), Label::data(title), Some(link.state.clone().unwrap_or_else(|| "ok".into())), Some("link".into()), action, None)
         })?
-        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[8], Some(crate::editor::layout::ui_label(labels.styles.as_str())?), false, &styles, |style| {
+        .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[8], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.styles.as_str())?), false, &styles, |style| {
             layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(style.description.clone()), Some("type".into()), None, None)
         })?
         .interaction_domain(LAYOUT_PLAY_APP_ID, LAYOUT_INTERACTION_ELEMENTS)?

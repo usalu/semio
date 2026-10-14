@@ -7,6 +7,17 @@
 
 use std::collections::BTreeMap;
 
+//#region 🪟️WindowKinds
+/// 👁️ The overview window kind of the edit mode: the whole board at automatic level of detail.
+pub const PUZZLE2D_OVERVIEW_WINDOW_KIND_ID: &str = "2d-overview";
+
+/// 🔍️ The detail window kind of the edit mode: a zoomed board at the fixed detail tier.
+pub const PUZZLE2D_DETAIL_WINDOW_KIND_ID: &str = "2d-detail";
+
+/// 🎯️ The selection window kind of the edit mode: the board framed on the current selection.
+pub const PUZZLE2D_SELECTION_WINDOW_KIND_ID: &str = "2d-selection";
+//#endregion 🪟️WindowKinds
+
 //#region 🔖️Defaults
 /// 📶️ Defines the artifact-local board suggestion offset without a styling dependency.
 pub const PUZZLE2D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
@@ -55,11 +66,10 @@ fn default_suggestion_offset() -> f64 {
 
 /// 📶️ Overview/selection default to automatic LOD; detail defaults to a fixed "detail" tier, matching the pre-migration triptych.
 fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
-    use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
     BTreeMap::from([
-        (overview::WINDOW_KIND_ID.to_string(), crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
-        (detail::WINDOW_KIND_ID.to_string(), "detail".to_string()),
-        (selection::WINDOW_KIND_ID.to_string(), crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
+        (crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string(), crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
+        (crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.to_string(), "detail".to_string()),
+        (crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID.to_string(), crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
     ])
 }
 
@@ -69,7 +79,7 @@ fn default_camera_zoom() -> f64 {
 
 /// 🪣️ The fill count a fresh board offers — see `modes::edit::tools::fill`.
 fn default_fill_count() -> u32 {
-    crate::editor::puzzle2d::modes::edit::tools::fill::PUZZLE2D_DEFAULT_FILL_COUNT
+    crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_FILL_COUNT
 }
 
 //#endregion 🔖️Defaults
@@ -484,3 +494,9 @@ impl protocol::OpText for Puzzle2dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+pub const PUZZLE2D_LOD_MODE_AUTOMATIC: &str = "automatic";
+
+/// 🎯️ The count a fresh 2d document offers: a batch large enough to be worth watching, small enough
+/// that a first run finishes while the operator is still looking at it.
+pub const PUZZLE2D_DEFAULT_FILL_COUNT: u32 = 100;

@@ -14,8 +14,10 @@
 //! and no config lane — a traversal is not an edit and must never enter undo.
 //!
 //! @see ../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep};

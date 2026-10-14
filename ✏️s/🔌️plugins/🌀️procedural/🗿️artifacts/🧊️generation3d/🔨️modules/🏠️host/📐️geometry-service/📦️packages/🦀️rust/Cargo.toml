@@ -34,3 +34,4 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+

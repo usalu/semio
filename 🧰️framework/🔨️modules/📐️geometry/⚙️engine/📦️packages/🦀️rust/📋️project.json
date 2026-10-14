@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/geometry-primitives-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

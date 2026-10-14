@@ -1,8 +1,9 @@
 //! 🏛️ Explicit concrete entities, ordered reinforcement and exact binary64 state.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1992Snapshot;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
-use crate::{ConcreteGrade,ReinforcementGrade,PrestressSteel,RcMember,BarLayer,Stirrups,PunchingSpec,PrestressSpec,FireSpec,LoadCaseActions,Anchor,MemberKind,SupportCondition,ExposureClass,DuctilityClass,FireRating,TightnessClass,document::AnnexChoice};
+use semio_s_artifact_norm_en1992_model::{ConcreteGrade, ReinforcementGrade, PrestressSteel, RcMember, BarLayer, Stirrups, PunchingSpec, PrestressSpec, FireSpec, LoadCaseActions, Anchor, MemberKind, SupportCondition, ExposureClass, DuctilityClass, FireRating, TightnessClass};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -100,6 +101,3 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

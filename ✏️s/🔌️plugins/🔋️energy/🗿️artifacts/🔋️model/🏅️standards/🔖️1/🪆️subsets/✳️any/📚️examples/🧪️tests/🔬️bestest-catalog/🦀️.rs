@@ -116,7 +116,7 @@ const FREE_FLOAT_TOLERANCE_K: f64 = 2.5;
 /// 📁️ The committed fixture tree, resolved from the crate manifest rather than the process
 /// working directory so it holds under `cargo test` from anywhere.
 fn subset_root() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..")
 }
 
 fn fixture_path(case: &str) -> std::path::PathBuf {
@@ -129,8 +129,8 @@ fn example_asset_path(directory: &str) -> std::path::PathBuf {
 
 fn example_dsl(case: &str) -> String {
     let built = model(case).unwrap_or_else(|| panic!("case {case} must build"));
-    let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &built, None);
-    <crate::EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot)
+    let snapshot = crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &built, None);
+    <crate::snapshot::EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&snapshot)
 }
 
 /// 🧫️ THE generator. Deliberately inert unless `SEMIO_ENERGY_BESTEST_REGENERATE` is set, so a

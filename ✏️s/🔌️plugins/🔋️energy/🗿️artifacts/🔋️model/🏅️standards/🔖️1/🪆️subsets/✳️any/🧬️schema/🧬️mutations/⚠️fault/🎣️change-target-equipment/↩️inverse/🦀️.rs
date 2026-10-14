@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeFaultTargetEquipment` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeFaultTargetEquipment, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeFaultTargetEquipment, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ChangeFaultTargetEquipment>,
+{
     Ok((|| {
     match base.model.faults.iter().find(|item| item.id == payload.id) {
         Some(item) if item.target_equipment_id != payload.new_target_equipment_id && base.model.ideal_loads.iter().any(|row| row.id == payload.new_target_equipment_id) => {

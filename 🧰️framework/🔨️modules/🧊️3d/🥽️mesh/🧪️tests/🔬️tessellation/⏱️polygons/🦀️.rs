@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn original_mesh_tessellation_normal_polygons_keep_original_assets(){
     use crate::test_support::observe_tessellation_system as observe;
-    use protocol::value::{retained_clone::RetainedCloneGrant,retirement::controlled::{ControlledRetirement,ErasedControlledRetirement},DslValue};
+    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::{ControlledRetirement,ErasedControlledRetirement},DslValue};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();let assets=&law["surfaceAssetCustody"];
     for polygon in law["polygons"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(polygon["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(polygon["faces"].clone()).unwrap();let mut mesh=HalfedgeMesh::from_faces(&positions,&faces).unwrap();for face in&mut mesh.faces{face.smooth=polygon["smooth"].as_bool().unwrap();face.flipped=polygon["flipped"].as_bool().unwrap();}let mut materials=HistoryFoldIndex::new();materials.insert(assets["materialKey"].as_str().unwrap().to_owned(),DslValue::from(assets["material"].clone()));let mut textures=HistoryFoldIndex::new();textures.insert(assets["textureKey"].as_str().unwrap().to_owned(),MeshTexture {mime:assets["texture"]["mime"].as_str().unwrap().to_owned(),bytes:serde_json::from_value(assets["texture"]["bytes"].clone()).unwrap()});mesh.set_surface_assets(materials,textures).unwrap();MeshTessellationJob::new(mesh)});

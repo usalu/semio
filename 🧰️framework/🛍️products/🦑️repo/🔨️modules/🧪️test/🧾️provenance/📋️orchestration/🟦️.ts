@@ -24,7 +24,7 @@ export class FixtureScript extends Script {
           }
         }
         console.log(`[fixture verify] ${fixtures.length} fixture(s), ${bad} file problem(s)`);
-        if (bad > 0) process.exit(1);
+        if (bad > 0) {process.exitCode=1;return;}
         return;
       }
       case "audit": {
@@ -55,7 +55,7 @@ export class FixtureScript extends Script {
           );
         const bad = rows.filter((row) => row.problems.length > 0).length;
         console.log(`[fixture audit] ${rows.length} fixture(s), ${bad} with contract problems`);
-        if (bad > 0) process.exit(1);
+        if (bad > 0) {process.exitCode=1;return;}
         return;
       }
       case "reproduce": {
@@ -94,7 +94,7 @@ export class FixtureScript extends Script {
           }
         }
         console.log(`[fixture reproduce] ${fixtures.filter((entry) => entry.class === "third-party-generated").length} generated fixture(s), ${failed} problem(s)`);
-        if (failed > 0) process.exit(1);
+        if (failed > 0) {process.exitCode=1;return;}
         return;
       }
       case "generate": {
@@ -124,7 +124,7 @@ export class FixtureScript extends Script {
       }
       default:
         console.error(`[fixture] unknown subcommand ${JSON.stringify(subcommand)} — expected generate | reproduce | verify | audit`);
-        process.exit(1);
+        {process.exitCode=1;return;}
     }
   }
 }

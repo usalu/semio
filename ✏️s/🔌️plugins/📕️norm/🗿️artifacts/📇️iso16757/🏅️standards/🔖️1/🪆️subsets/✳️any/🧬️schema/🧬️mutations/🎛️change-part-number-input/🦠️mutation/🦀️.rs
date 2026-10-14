@@ -1,6 +1,6 @@
 //! 🔢️ `change-part-number-input` — upserts one scripted part-number input value, addressed by key.
 
-use crate::{CatalogueValue, Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::{CatalogueValue, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,15 +14,15 @@ pub struct ChangePartNumberInput {
     pub new_value: CatalogueValue,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangePartNumberInput {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangePartNumberInput where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_part_number_input::mutation::ChangePartNumberInput> + From<crate::remove_part_number_input::mutation::RemovePartNumberInput> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "part-number-input", kind: "change-part-number-input", record: "ChangedPartNumberInput" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::change_part_number_input::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_part_number_input::inverse::inverse(self, base)?
     
     })
 }

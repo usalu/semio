@@ -1,8 +1,8 @@
 //! 🔺️ `change-heated-volume-m3` sparse diff.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::change_heated_volume_m3::ChangeHeatedVolumeM3;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use crate::change_heated_volume_m3::ChangeHeatedVolumeM3;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 pub fn diff(payload: &ChangeHeatedVolumeM3, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if !payload.new_heated_volume_m3.is_finite() || payload.new_heated_volume_m3 <= 0.0 {

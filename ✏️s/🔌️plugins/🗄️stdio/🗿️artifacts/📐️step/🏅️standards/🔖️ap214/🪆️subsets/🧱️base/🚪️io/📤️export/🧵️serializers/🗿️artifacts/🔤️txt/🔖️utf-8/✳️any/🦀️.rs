@@ -1,5 +1,5 @@
 //! 📤️ Serialize `stdio.step` to stdio.txt.
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

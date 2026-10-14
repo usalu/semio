@@ -3,9 +3,8 @@
 //! generic slot this triad was repurposed from — see `sharedFileRequests` in this ticket's wave2
 //! report for the glue.rs rename that would align the directory/module with the verb.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,19 +20,22 @@ pub struct ConnectSynapse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_synapse(index: usize, synapse: SynapseSpec) -> Generation2dMutation {
-    Generation2dMutation::ConnectSynapse(ConnectSynapse { index, synapse })
+pub fn connect_synapse<Op: From<ConnectSynapse>>(index: usize, synapse: SynapseSpec) -> Op {
+    Op::from(ConnectSynapse { index, synapse })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ConnectSynapse {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ConnectSynapse
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::disconnect_synapse::DisconnectSynapse>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::connect_synapse::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::connect_synapse::inverse::inverse(self, base)?
     
     })
 }

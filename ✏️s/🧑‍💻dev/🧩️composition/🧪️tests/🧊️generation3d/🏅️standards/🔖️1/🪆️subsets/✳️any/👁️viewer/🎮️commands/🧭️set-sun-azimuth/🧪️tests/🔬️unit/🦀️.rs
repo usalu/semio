@@ -1,6 +1,6 @@
 use super::*;
 use crate::viewer_domain::viewer_laws::context::{app, dispatch};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewCommand;
+use semio_s_artifact_procedural_3d_viewer::Generation3dViewCommand;
 use crate::viewer_domain::viewer_laws::context;
 
 /// 👁️ Dispatches through the REAL interactive-job pipeline — an action that is not `Migrated`, or

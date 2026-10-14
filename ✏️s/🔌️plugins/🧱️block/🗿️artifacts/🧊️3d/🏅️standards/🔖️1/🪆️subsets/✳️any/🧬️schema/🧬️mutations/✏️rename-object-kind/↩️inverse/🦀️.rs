@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `RenameObjectKind`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::RenameObjectKind, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::rename_object_kind::RenameObjectKind, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::rename_object_kind::RenameObjectKind> {
     Ok((|| {
-    vec![super::super::rename_object_kind::rename_object_kind(base.object_kind.name.clone())]
+    vec![crate::rename_object_kind::rename_object_kind(base.object_kind.name.clone())]
 
     })())
 }

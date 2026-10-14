@@ -1,0 +1,75 @@
+{
+  "name": "@semio-tech/framework-io-control-rs",
+  "targets": {
+    "test-source": {
+      "executor": "repo:script",
+      "metadata": {"semio":{"execution":{"version":1,"kind":"source"}}},
+      "options": {
+        "command": "bun ./📜️script.ts test-source",
+        "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "test-native": {
+      "executor": "repo:script",
+      "metadata": {"semio":{"execution":{"version":1,"kind":"native","scope":"test"}}},
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    },
+    "test-snapshot-receiving-native": {
+      "executor": "repo:script",
+      "metadata": {"semio":{"execution":{"version":1,"kind":"native","scope":"test"}}},
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-receiving-native",
+        "cwd": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust"
+      },
+      "cache": false,
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "defaultConfiguration": "prototype"
+    }
+  },
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

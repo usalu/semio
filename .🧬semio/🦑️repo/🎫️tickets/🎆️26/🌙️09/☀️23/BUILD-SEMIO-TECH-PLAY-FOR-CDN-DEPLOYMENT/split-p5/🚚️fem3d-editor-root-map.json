@@ -1,0 +1,9 @@
+{
+ "FEM3D_APP_ID": "crate::editor::fem3d::terminology",
+ "FEM3D_PLAY_CONTROLLER_ID": "crate::editor::fem3d::terminology",
+ "ui_label": "crate::editor::fem3d::terminology",
+ "fem3d_action": "crate::editor::fem3d::terminology",
+ "fem3d_measure_action": "crate::editor::fem3d::terminology",
+ "results_window_instance_id": "crate::editor::fem3d::modes::edit::windows::results",
+ "reset_document_effect": "semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io"
+}

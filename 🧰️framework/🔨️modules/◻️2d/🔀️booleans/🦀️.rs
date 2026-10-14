@@ -1,6 +1,6 @@
 //! 🔀️ Filled planar arrangements with spatial queries, bounded grants and private outputs.
-use crate::engine::{DrawingError,PathSegment,Vec2};
-use crate::retirement::WorkRetirementProgress;
+use semio_framework_2d_engine::{DrawingError,PathSegment,Vec2};
+use semio_framework_2d_retire::WorkRetirementProgress;
 pub type BooleanRetirementProgress=WorkRetirementProgress;
 use std::cmp::Ordering;
 use semio_framework_value::numeric_scratch::NumericIndex;
@@ -223,7 +223,7 @@ impl BooleanJob {
  }
  pub fn cancel(&mut self) {self.cancelled=true;}
 }
-crate::physical_work_retirement!(BooleanRetirement,BooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean physical retirement refused"));
+semio_framework_2d_retire::physical_work_retirement!(BooleanRetirement,BooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean physical retirement refused"));
 fn path_operand(segments:&[PathSegment])->Result<BooleanOperand,DrawingError> {
  if segments.len()>65536 {return Err(DrawingError::InvalidInput("Boolean source segment budget exceeded".into()));}let mut contours=Vec::new();let mut points=Vec::new();
  for segment in segments {match segment {PathSegment::Move {to}=>{if !points.is_empty() {return Err(DrawingError::InvalidInput("Boolean input requires closed contours".into()));}points.push(*to);},PathSegment::Line {to}=>{if points.is_empty() {return Err(DrawingError::InvalidInput("Boolean line requires a contour origin".into()));}points.push(*to);},PathSegment::Close=>{if !points.is_empty() {contours.push(std::mem::take(&mut points));}},_=>return Err(DrawingError::InvalidInput("Boolean curves require explicit path preparation".into()))}}

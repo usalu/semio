@@ -1,0 +1,4 @@
+[
+ {"owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/✂️splice", "package": "semio-s-artifact-energy-model-diff-splice", "alias": "diff_splice", "description": "Energy model diff splice: the positional splice script of one ordered list"},
+ {"owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch", "package": "semio-s-artifact-energy-model-diff-patch", "alias": "diff_patch", "description": "Energy model diff patch: the sparse typed patch vocabulary the diff is spelled in"}
+]

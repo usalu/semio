@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "auditEvent",
+  "id": "audit-event-a"
+}

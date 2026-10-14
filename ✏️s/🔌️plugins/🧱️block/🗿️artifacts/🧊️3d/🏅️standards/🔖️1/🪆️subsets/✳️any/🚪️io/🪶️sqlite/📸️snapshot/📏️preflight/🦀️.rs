@@ -1,8 +1,8 @@
 //! 📏️ Complete semantic cells and exact canonical wire borrow the actual retained owner.
-use super::*;
+use crate::snapshot::*;
 use semio_framework_value::ValueRefusalKind;
 #[path="🫳️borrowed/🦀️.rs"]mod borrowed;
-pub(super)fn check(value:&Block3dSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+pub(crate)fn check(value:&Block3dSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  forecast(value,control,SqliteSnapshotPhase::EncodeNative)?;let limits=control.limits();
  let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};
  let prefix=store::semio_format::declared_envelope_prefix_len(<Block3dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),component,1)?;
@@ -12,8 +12,8 @@ pub(super)fn check(value:&Block3dSnapshot,encoding:SnapshotEncoding,control:&mut
   let mut native_allocation=|request:semio_framework_value::native_encoding::NativeEncodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
   let result=(||{
    let body=match encoding{
-    SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(value,&borrowed::spec(),usize::MAX,&mut native)?,
-    SnapshotEncoding::Binary=>{let mut options=store::os_pack::record::EncodeOptions::default();options.limits.max_file_len=u64::MAX;store::os_pack::record::measure_document_borrowed(value,&borrowed::spec(),&options,&mut native)?},
+    SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(value,&crate::snapshot::preflight::borrowed::spec(),usize::MAX,&mut native)?,
+    SnapshotEncoding::Binary=>{let mut options=store::os_pack::record::EncodeOptions::default();options.limits.max_file_len=u64::MAX;store::os_pack::record::measure_document_borrowed(value,&crate::snapshot::preflight::borrowed::spec(),&options,&mut native)?},
    };
    if body>maximum{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"exact canonical native wire exceeds caller file limit"))}Ok(())
   })();(result,native.owned_bytes())

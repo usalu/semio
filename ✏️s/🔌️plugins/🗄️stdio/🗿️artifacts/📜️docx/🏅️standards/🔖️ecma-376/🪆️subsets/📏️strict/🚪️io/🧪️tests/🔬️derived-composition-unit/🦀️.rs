@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
-    use crate::schema::snapshot::DocxXmlPart;
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::CODE_REL_BASE;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::CODE_REL_BASE;
     use semio_framework_plugin::io::AnalyzeSource;
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 

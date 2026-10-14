@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/sourcing-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/sourcing-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

@@ -1,13 +1,12 @@
 //! ↩️ Inverse for `DeleteVortexKind`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteVortexKind, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::delete_vortex_kind::DeleteVortexKind, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::create_vortex_kind::CreateVortexKind> {
     Ok((|| {
-    match crate::vortex_kinds_of(base).iter().enumerate().find(|(_, item)| item.id == payload.id) {
-        Some((position, existing)) => vec![super::super::create_vortex_kind::create_vortex_kind_at(existing.clone(), position as u32)],
+    match semio_s_artifact_block_3d_model::vortex_kinds_of(base).iter().enumerate().find(|(_, item)| item.id == payload.id) {
+        Some((position, existing)) => vec![crate::create_vortex_kind::create_vortex_kind_at(existing.clone(), position as u32)],
         None => Vec::new(),
     }
 

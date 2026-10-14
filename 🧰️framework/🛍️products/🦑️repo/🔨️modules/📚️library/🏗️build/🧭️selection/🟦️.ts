@@ -16,13 +16,14 @@ export function buildOptionV1(args:readonly string[],name:string,short?:string):
 }
 
 /** 🧵️ Matches project selectors using literal text and portable wildcards. */
-export function buildPatternV1(pattern:string,value:string):boolean { return new RegExp("^"+pattern.split("*").map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join(".*")+"$").test(value); }
+export function buildPatternV1(pattern:string,value:string):boolean { if(/[?\[\]{}()\\]/u.test(pattern))throw Error("Unsupported build selector pattern: "+pattern);return new RegExp("^"+pattern.split("*").map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join(".*")+"$").test(value); }
 
 /** 🎯️ Selects projects by identity, root or declared tag. */
 export function selectBuildProjectsV1(graph:BuildGraphV1,patterns:readonly string[]=[],exclude:readonly string[]=[]):string[] {
-  const match=(name:string,pattern:string)=>pattern.startsWith("tag:")?(graph.projects[name]!.tags as string[]??[]).some(tag=>buildPatternV1(pattern.slice(4),tag)):buildPatternV1(pattern,name)||buildPatternV1(pattern,graph.projects[name]!.root);
-  const positive=patterns.filter(pattern=>!pattern.startsWith("!")),negative=[...exclude,...patterns.filter(pattern=>pattern.startsWith("!")).map(pattern=>pattern.slice(1))];
-  return Object.keys(graph.projects).filter(name=>(!positive.length||positive.some(pattern=>match(name,pattern)))&&!negative.some(pattern=>match(name,pattern))).sort();
+  const match=(name:string,pattern:string)=>pattern.startsWith("tag:")?(graph.projects[name]!.tags as string[]??[]).some(tag=>buildPatternV1(pattern.slice(4),tag)):pattern.startsWith("name:")?buildPatternV1(pattern.slice(5),name):pattern.startsWith("directory:")?buildPatternV1(pattern.slice(10),graph.projects[name]!.root):buildPatternV1(pattern,name)||buildPatternV1(pattern,graph.projects[name]!.root);
+  const names=Object.keys(graph.projects),selected=new Set<string>(),ordered=patterns.length?patterns:["*"];if(ordered[0]!.startsWith("!"))for(const name of names)selected.add(name);
+  for(const value of ordered){const negative=value.startsWith("!"),pattern=negative?value.slice(1):value;buildPatternV1(pattern,"");for(const name of names)if(match(name,pattern)){if(negative)selected.delete(name);else selected.add(name);}}
+  for(const pattern of exclude){buildPatternV1(pattern,"");for(const name of selected)if(match(name,pattern))selected.delete(name);}return [...selected].sort();
 }
 
 /** 🐚️ Quotes literal command arguments for the platform shell. */
@@ -63,6 +64,7 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
       if(!head.includes("--all"))projects=projects.filter(project=>affected.has(project));
     }
     const targetOptions=(buildOptionV1(head,"targets","t")??buildOptionV1(head,"target")??"").split(",").filter(Boolean);
+    for(const pattern of targetOptions)buildPatternV1(pattern,"");
     if(!targetOptions.length)throw Error(`Expected repo ${operation} --targets=<targets>`);
     for(const project of projects)for(const target of Object.keys(graph.projects[project]!.targets).sort())if(targetOptions.some(pattern=>buildPatternV1(pattern,target))){const mode=configuration??(process.env.SEMIO_BUILD_MODE&&graph.projects[project]!.targets[target]!.configurations?.[process.env.SEMIO_BUILD_MODE]?process.env.SEMIO_BUILD_MODE:undefined);tasks.push(project+":"+target+(mode?":"+mode:""));}
   }else throw Error(`Unknown repository build command: ${operation??""}`);
@@ -105,5 +107,6 @@ export function validateBuildTaskArgumentsV1(args:readonly string[]):void {
     else throw Error(`Unsupported build option: ${argument}`);
   }
   const output=buildOptionV1(args,"output")??buildOptionV1(args,"output-style");
+  for(const name of ["projects","p","targets","target","t","exclude"])for(const pattern of (buildOptionV1(args,name)??"").split(",").filter(Boolean))buildPatternV1(pattern,"");
   if(output&&!["stream","stream-without-prefixes","static"].includes(output))throw Error(`Unsupported build output style: ${output}`);
 }

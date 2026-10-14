@@ -1,0 +1,23 @@
+{
+  "outcomes": [
+    {"accepted": true, "value": {"acquired": false, "receiver": "released"}},
+    {"accepted": true, "value": {"acquired": true, "receiver": "released", "value": {"original": 1}}},
+    {"accepted": true, "value": {"acquired": true, "receiver": "retained", "value": null}},
+    {"accepted": false, "value": {"acquired": false}},
+    {"accepted": false, "value": {"acquired": true, "value": 1}},
+    {"accepted": false, "value": {"acquired": false, "receiver": "retained"}},
+    {"accepted": false, "value": {"acquired": false, "receiver": "released", "value": null}},
+    {"accepted": false, "value": {"acquired": true, "receiver": "released"}},
+    {"accepted": false, "value": {"acquired": true, "receiver": "released", "value": 1, "authority": {}}},
+    {"accepted": false, "value": {"acquired": true, "receiver": "unknown", "value": 1}}
+  ],
+  "callbacks": [
+    {"receiver": "released", "interrupt": "none", "accepted": true},
+    {"receiver": "retained", "interrupt": "none", "accepted": true},
+    {"receiver": "released", "interrupt": "body", "accepted": false},
+    {"receiver": "retained", "interrupt": "body", "accepted": false},
+    {"receiver": "released", "interrupt": "postcheck", "accepted": false},
+    {"receiver": "retained", "interrupt": "postcheck", "accepted": false},
+    {"receiver": "released", "interrupt": "failure", "accepted": false}
+  ]
+}

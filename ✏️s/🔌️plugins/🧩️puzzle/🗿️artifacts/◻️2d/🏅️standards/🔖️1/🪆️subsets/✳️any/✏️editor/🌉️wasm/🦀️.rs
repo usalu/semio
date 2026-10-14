@@ -289,7 +289,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = drainEventsJson)]
     pub fn drain_events_json_wasm(&mut self) -> String {
-        crate::editor::puzzle2d::drain_board_events_json(&mut self.state.borrow_mut().host)
+        crate::editor::puzzle2d::snapshot::drain_board_events_json(&mut self.state.borrow_mut().host)
     }
 
     #[wasm_bindgen(js_name = cameraJson)]

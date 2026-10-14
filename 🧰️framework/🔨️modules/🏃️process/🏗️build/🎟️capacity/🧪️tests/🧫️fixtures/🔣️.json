@@ -20,7 +20,7 @@
       "value": {
         "requestedParallelism": 2
       },
-      "accepted": false
+      "accepted": true
     },
     {
       "value": {
@@ -31,6 +31,12 @@
     {
       "value": {
         "requestedParallelism": null
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "requestedParallelism": 1.5
       },
       "accepted": false
     }
@@ -51,5 +57,13 @@
     "holdMilliseconds": 30000,
     "originalAborted": false,
     "childAlive": false
+  },
+  "multiCore": {
+    "holderShortfall": 1,
+    "waiterParallelism": 2,
+    "order": [
+      "wide",
+      "narrow"
+    ]
   }
 }

@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeRefrigerationSystemDefrostSchedule` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeRefrigerationSystemDefrostSchedule, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeRefrigerationSystemDefrostSchedule, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ChangeRefrigerationSystemDefrostSchedule>,
+{
     Ok((|| {
     match base.model.refrigeration_systems.iter().find(|item| item.id == payload.id) {
         Some(item)

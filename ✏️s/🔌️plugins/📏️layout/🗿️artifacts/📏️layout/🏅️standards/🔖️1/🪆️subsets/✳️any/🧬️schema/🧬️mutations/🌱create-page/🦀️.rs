@@ -1,8 +1,11 @@
 //! 🌱️ `create-page` — brings a new {@link Page} into existence in the id-keyed `pages` collection.
 
-use crate::mutations::{delete_page, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPageInsertion};
-use crate::{LayoutDiff, LayoutSnapshot, Page};
+use crate::delete_page;
+use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutPageInsertion;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::Page;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +22,12 @@ pub struct CreatePage {
     pub index: Option<usize>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreatePage {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreatePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_page::DeletePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "page", kind: "create-page", record: "CreatedPage" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_create_page(self, base)?
     
@@ -52,10 +55,16 @@ pub fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol
 //#endregion 🌱️CreatePage
 
 //#region 🌱️CreatePage
-pub fn inverse_create_page(payload: &CreatePage, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_page<Op: From<crate::delete_page::DeletePage>>(payload: &CreatePage, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::DeletePage(delete_page::DeletePage { id: payload.page.id.clone() })]
+    vec![Op::from(delete_page::DeletePage { id: payload.page.id.clone() })]
 
     })())
 }
 //#endregion 🌱️CreatePage
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/➕️appends-page-3/🦀️.rs"]
+mod tests_appends_page_3;
+//#endregion 🪢️TaxonomyMounts

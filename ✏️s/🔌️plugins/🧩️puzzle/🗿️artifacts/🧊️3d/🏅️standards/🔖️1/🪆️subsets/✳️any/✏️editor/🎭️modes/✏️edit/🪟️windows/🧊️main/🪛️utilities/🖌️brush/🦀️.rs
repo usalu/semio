@@ -4,13 +4,12 @@
 //! run, its progress panel and its trace, and the viewport paints every tested candidate with its verdict.
 //! Accepting a candidate stays the separate one-shot `acceptSuggestion` placement.
 
-use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
-use crate::editor::puzzle3d::modes::edit::windows::main;
-use crate::editor::puzzle3d::precompute::brush::{BrushSuggestionsLink, BrushSuggestionsRequest, BrushSuggestionsRunJob};
-use crate::editor::puzzle3d::precompute::shared_brush_mesh;
-use crate::editor::puzzle3d::terminology::{puzzle3d_brush_suggestions_run_counters, puzzle3d_brush_suggestions_run_reasons, puzzle3d_brush_suggestions_run_stages, puzzle3d_brush_suggestions_run_unit, Puzzle3dLabels};
-use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::editor::puzzle3d::snapshot::puzzle3d_distribution_group, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document, crate::editor::puzzle3d::session::scene_config, crate::editor::puzzle3d::session::Puzzle3dInstanceOperationOwner, crate::editor::puzzle3d::session::Puzzle3dEditor, crate::editor::puzzle3d::snapshot::Puzzle3dScene};
+use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_3d_precompute_brush::{BrushSuggestionsLink, BrushSuggestionsRequest, BrushSuggestionsRunJob};
+use semio_s_artifact_puzzle_3d_precompute::shared_brush_mesh;
+use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_brush_suggestions_run_counters, puzzle3d_brush_suggestions_run_reasons, puzzle3d_brush_suggestions_run_stages, puzzle3d_brush_suggestions_run_unit, Puzzle3dLabels};
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_distribution_group, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene};
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Fault;
@@ -105,7 +104,7 @@ pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp
     let runtime = Puzzle3dRuntime { contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
     let envelope = Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(request.snapshot.typed()), runtime, active_utility: UTILITY_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::from("puzzle3d-brush-suggestions-scene"))?;
-    let job = BrushSuggestionsRunJob::<Puzzle3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, Arc::new(scene), main::mesh_lane(&envelope.scene_snapshot), shared_brush_mesh, puzzle3d_fallback_mesh_buffers()).ok_or_else(|| Fault::from("puzzle3d-brush-suggestions-fallback-mesh"))?;
+    let job = BrushSuggestionsRunJob::<Puzzle3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, Arc::new(scene), semio_s_artifact_puzzle_3d_editor_session::mesh_lane(&envelope.scene_snapshot), shared_brush_mesh, puzzle3d_fallback_mesh_buffers()).ok_or_else(|| Fault::from("puzzle3d-brush-suggestions-fallback-mesh"))?;
     Ok(Some(Box::new(job)))
 }
 

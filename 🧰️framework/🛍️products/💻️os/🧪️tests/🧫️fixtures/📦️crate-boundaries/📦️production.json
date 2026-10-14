@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "package": "semio-framework-value",
+      "manifest": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs"
+    }
+  ]
+}

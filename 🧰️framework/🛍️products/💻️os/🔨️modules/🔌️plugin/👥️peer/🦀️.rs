@@ -12,10 +12,10 @@ use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{Retai
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use std::mem::ManuallyDrop;
 use crate::app_contract::ArtifactApp;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::bounded_ownership::plugin_retirement_fault;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault;
 use crate::child_view::child_content_arc_bytes;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(test)]
 use crate::app_views::NoConfigMutation;
 #[cfg(test)]

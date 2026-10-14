@@ -108,6 +108,14 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-media-turn-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-media-turn-native": {

@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-block-5d-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Block 5d viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-block-5d-io = { workspace = true }
+semio-s-artifact-block-5d-model = { workspace = true }
+semio-s-artifact-block-5d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

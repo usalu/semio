@@ -1,12 +1,12 @@
 //! ↩️ `change-members` inverse.
 
-use crate::mutations::change_members::ChangeMembers;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_members::ChangeMembers;
 
-pub fn inverse(_payload: &ChangeMembers, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeMembers, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_members::ChangeMembers> {
     Ok((|| {
-    vec![En1999Mutation::ChangeMembers(ChangeMembers { members: base.members.clone() })]
+    vec![Op::from(ChangeMembers { members: base.members.clone() })]
 
     })())
 }

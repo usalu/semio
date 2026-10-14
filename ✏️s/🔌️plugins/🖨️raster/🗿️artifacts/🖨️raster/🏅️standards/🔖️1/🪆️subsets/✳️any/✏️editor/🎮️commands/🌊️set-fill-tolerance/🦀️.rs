@@ -1,6 +1,7 @@
 //! 🌊️ Sets the session colour tolerance every bucket click floods with (0..255).
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, SetFillToleranceEdit};
-use crate::{RasterMutation, RasterSnapshot};
+use crate::config::{RasterConfig, RasterConfigMutation, SetFillToleranceEdit};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -12,7 +13,7 @@ pub struct SetFillTolerance {
 
 pub fn handle(payload: &SetFillTolerance, _doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     if payload.value > 255 {
-        return Err(crate::editor::raster::commands::paint_stroke::raster_fault("raster.fill.tolerance-invalid"));
+        return Err(crate::commands::paint_stroke::raster_fault("raster.fill.tolerance-invalid"));
     }
     Ok(Emit::config(vec![RasterConfigMutation::SetFillTolerance(SetFillToleranceEdit { value: payload.value })]))
 }

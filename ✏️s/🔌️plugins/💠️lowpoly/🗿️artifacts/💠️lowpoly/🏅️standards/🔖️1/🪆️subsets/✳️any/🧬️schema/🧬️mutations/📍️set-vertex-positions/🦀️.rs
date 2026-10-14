@@ -2,8 +2,8 @@
 //! undo of every selection motion (`move-selection`, `rotate-selection`, `scale-selection`) and the concrete kind of a kernel
 //! mesh edit that only repositions vertices; `channels` carries the absolute content of the Normal attribute channels the same edit rewrote. The normals are recomputed and the mesh handle re-derived by the central applier.
 
-use crate::diff::LowpolyVertexPosition;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyVertexPosition;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
@@ -13,7 +13,7 @@ use crate::{LowpolyMutation, LowpolySnapshot};
 pub struct SetVertexPositions {
     pub object_id: String,
     pub positions: Vec<LowpolyVertexPosition>,
-    pub channels: Vec<crate::LowpolyMeshAttribute>,
+    pub channels: Vec<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute>,
 }
 
 impl SetVertexPositions {
@@ -21,19 +21,22 @@ impl SetVertexPositions {
     pub fn invariant_violation(&self) -> Option<String> {
         let ids: Vec<u32> = self.positions.iter().map(|row| row.vertex).collect();
         let mut names = std::collections::BTreeSet::new();
-        crate::mutations::lowpoly_selection_vertex_violation(&ids)
+        semio_s_artifact_lowpoly_lowpoly_model_diff::lowpoly_selection_vertex_violation(&ids)
             .or_else(|| self.positions.iter().any(|row| row.position.iter().any(|value| !value.is_finite())).then(|| "Every position must be finite.".into()))
-            .or_else(|| self.channels.iter().find(|channel| channel.semantic != crate::LowpolyMeshAttributeSemantic::Normal || !names.insert(channel.name.as_str())).map(|channel| format!("Channel \"{}\" must be a Normal channel named once.", channel.name)))
+            .or_else(|| self.channels.iter().find(|channel| channel.semantic != semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeSemantic::Normal || !names.insert(channel.name.as_str())).map(|channel| format!("Channel \"{}\" must be a Normal channel named once.", channel.name)))
     }
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for SetVertexPositions {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for SetVertexPositions
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::set_vertex_positions::SetVertexPositions>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vertex-positions", kind: "set-vertex-positions", record: "SetVertexPositionsDone" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,6 +50,4 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for SetVertexPosit
 //#endregion 🔖️Payload
 
 //#region 🧪️Laws
-#[cfg(test)]
-pub use crate::mutations::laws;
 //#endregion 🧪️Laws

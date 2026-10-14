@@ -1,12 +1,14 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
-use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
+use crate::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
 use ::semio_framework_schema::ArtifactSchema;
+use semio_framework_artifact_flow_flow::Widget;
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
-use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation2dArtifact
@@ -105,7 +107,7 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`).
 pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
-    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
+    match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, grant) {
         Ok((host, _)) => Ok(host),
         Err((error, host)) => {
             host.retire_cold();
@@ -121,120 +123,7 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
     Ok(result)
 }
 
-//#region 🔖️HostGestures
-/// 🔌️ Connects two ports through the host and returns the concrete leaves the host names: a `disconnect-synapse` for every wire
-/// the host displaces from the target port, then one `connect-synapse` of the minted wire at the end of the list.
-pub fn host_connect_ports(host: &mut FlowHost, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    use crate::standards::v1::subsets::any::schema::mutations::{connect_synapse, disconnect_synapse};
-    let displaced: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.to == to_id && synapse.to_port == to_port).map(|synapse| synapse.id.clone()).collect();
-    let id = host.connect_ports(from_id, from_port, to_id, to_port).map_err(|error| error.to_string())?;
-    let minted = host.host_snapshot.synapses.iter().position(|synapse| synapse.id == id).ok_or_else(|| format!("the host minted no wire {id}"))?;
-    let mut leaves: Vec<_> = displaced.into_iter().map(disconnect_synapse).collect();
-    leaves.push(connect_synapse(minted, host.host_snapshot.synapses[minted].clone()));
-    Ok(leaves)
-}
 
-/// ✂️ Cuts one wire through the host: the single `disconnect-synapse` leaf.
-pub fn host_disconnect(host: &mut FlowHost, synapse_id: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    host.disconnect(synapse_id).map_err(|error| error.to_string())?;
-    Ok(vec![crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse(synapse_id.to_string())])
-}
-
-/// 🗑️ Removes a widget through the host: a `disconnect-synapse` per wire it carried, its `clear-widget-layout` when it was placed,
-/// then its `delete-widget`.
-pub fn host_remove_widget(host: &mut FlowHost, widget_id: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    use crate::standards::v1::subsets::any::schema::mutations::{clear_widget_layout, delete_widget, disconnect_synapse};
-    let wires: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).map(|synapse| synapse.id.clone()).collect();
-    let placed = host.host_snapshot.layout.contains_key(widget_id);
-    host.remove_widget(widget_id).map_err(|error| error.to_string())?;
-    let mut leaves: Vec<_> = wires.into_iter().map(disconnect_synapse).collect();
-    if placed {
-        leaves.push(clear_widget_layout(widget_id.to_string()));
-    }
-    leaves.push(delete_widget(widget_id.to_string()));
-    Ok(leaves)
-}
-
-/// ➕️ Adds a widget through the host: the `create-widget` of what the host built from `descriptor_json` at the end of the list,
-/// then the `move-widget` of the position the gesture named.
-pub fn host_add_widget(host: &mut FlowHost, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    use crate::standards::v1::subsets::any::schema::mutations::{create_widget, move_widget};
-    let id = host.add_widget(descriptor_json, world_x, world_y).map_err(|error| error.to_string())?;
-    let at = host.host_snapshot.widgets.iter().position(|widget| crate::widget_id(widget) == id).ok_or_else(|| format!("the host built no widget {id}"))?;
-    let widget = host.host_snapshot.widgets[at].clone();
-    Ok(vec![create_widget(at, widget), move_widget(id, semio_framework_artifact_flow_flow::WidgetLayout { x: world_x, y: world_y })])
-}
-
-/// 🔢️ Inserts a port through the host: the `replace-widget` of the widget the host rebuilt, and a `replace-synapse` for each of its wires the
-/// rebuild re-addressed.
-pub fn host_insert_port(host: &mut FlowHost, widget_id: &str, input: bool, index: usize) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    use crate::standards::v1::subsets::any::schema::mutations::{replace_synapse, replace_widget};
-    let wires: Vec<_> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).cloned().collect();
-    if input {
-        host.add_input_port(widget_id, index).map_err(|error| error.to_string())?;
-    } else {
-        host.add_output_port(widget_id, index).map_err(|error| error.to_string())?;
-    }
-    let at = host.host_snapshot.widgets.iter().position(|widget| crate::widget_id(widget) == widget_id).ok_or_else(|| format!("the host lost widget {widget_id}"))?;
-    let widget = host.host_snapshot.widgets[at].clone();
-    let mut leaves = vec![replace_widget(widget)];
-    for before in wires {
-        if let Some(after) = host.host_snapshot.synapses.iter().find(|synapse| synapse.id == before.id).filter(|after| **after != before) {
-            leaves.push(replace_synapse(after.clone()));
-        }
-    }
-    Ok(leaves)
-}
-
-/// 🗺️ Reorganizes the graph through the host: one `move-widget` per widget whose placement the layout pass changed.
-pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>, String> {
-    use crate::standards::v1::subsets::any::schema::mutations::move_widget;
-    let before: Vec<(String, semio_framework_artifact_flow_flow::WidgetLayout)> = host.host_snapshot.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
-    let options: semio_framework_os_infinite::board::schema::layout::DagLayoutOptions = semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut progress = |_| true;
-    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
-    host.reorganize(&options, &mut control).map_err(|error| error.to_string())?;
-    Ok(host
-        .host_snapshot
-        .layout
-        .iter()
-        .filter(|(id, layout)| before.iter().find(|(held, _)| held == *id).map(|(_, previous)| previous) != Some(*layout))
-        .map(|(id, layout)| move_widget(id.clone(), layout.clone()))
-        .collect())
-}
-//#endregion 🔖️HostGestures
-
-pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
-}
-
-pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
-    let nodes: Vec<NodeGraphNodeRecord> = host_snapshot
-        .nodes
-        .iter()
-        .map(|node| NodeGraphNodeRecord {
-            id: node.id.clone(),
-            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
-            x: node.x,
-            y: node.y,
-            width: node.width,
-            height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: port.id.clone(), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| NodeGraphPortRecord { id: port.id.clone(), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            ..Default::default()
-        })
-        .collect();
-    let edges: Vec<NodeGraphEdgeRecord> = host_snapshot
-        .edges
-        .iter()
-        .map(|edge| {
-            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
-            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
-        })
-        .collect();
-    (nodes, edges)
-}
 
 
 
@@ -261,6 +150,101 @@ pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {
 }
 //#endregion 🔖️DocumentHelpers
 
+pub const GENERATION_2D_SCHEMA: &str = "generation.2d";
+
+/// 🪪️ This artifact's canonical `s.procedural.generation2d@1/*` dialect — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling editor module (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1).
+/// `artifact_kind` matches `definition()`'s own `s.generation2d.schema.artifact` capability descriptor
+/// (`s.procedural.generation2d`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const GENERATION2D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId::ANY };
+
+//#region 🔖️Helpers
+/// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
+pub fn widget_id(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
+    }
+}
+//#endregion 🔖️Helpers
+
+//#region 🔖️FaultNotices
+/// 🪆️ The refusal code of a loaded parent whose composed children cannot be projected.
+pub const GENERATION2D_CHILD_PROJECTION: &str = "generation2d.child.projection";
+
+/// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
+pub fn generation2d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 1]> = std::sync::LazyLock::new(|| [(GENERATION2D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden."))]);
+    &*NOTICES
+}
+//#endregion 🔖️FaultNotices
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::generation2d::create_generation2d_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "2d.generation".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Generation", "2D-Generierung"),
+        source_format: "generation.2d".into(),
+        component_kind: "generation2d".into(),
+        dimension: "2d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
+        schema: "generation.2d".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        // 🖊️ "stdio.dwg" stays out of exports (generation3d owns that EXPORT claim, D3) but stays in
+        // imports below — see `🚪️io/🦀️.rs`'s `🚪️IoRegistry` region for the ownership rule.
+        export_stdio_kinds: vec!["stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+
+//#region 🔖️Constants
+/// 🏷️ Plain string tag (NOT a trait const — `ArtifactEditor::DIALECT`+`ROLE` derive the real surface
+/// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
+pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
+
+/// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
+pub const GENERATION2D_EDITOR_APP_ID: &str = "s.procedural.generation2d@1/*#editor";
+
+/// 🕹️ The framework interaction domain every generation2d window is bound to: the node graph and
+/// both canvas previews read and write the same `graph` hover/selection.
+pub const GENERATION2D_INTERACTION_DOMAIN: &str = "graph";
+
+/// 🐁️ The channel a pointer hovers on.
+pub const GENERATION2D_INTERACTION_CHANNEL: &str = "pointer";
+
+/// 🎯️ Prefixes the node-graph canvas stamps onto pick targets — the twin of the flow plugin main
+/// window's `NodeGraphInteractionDomain` prefixes.
+pub const GENERATION2D_GRAPH_NODE_TARGET_PREFIX: &str = "generation2d-play-document.widget.";
+pub const GENERATION2D_GRAPH_EDGE_TARGET_PREFIX: &str = "generation2d-play-document.synapse.";
+pub const GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX: &str = "generation2d-play-document.handle.";
+
+//#region 🔖️Addressing
+/// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
+pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
+    host_snapshot.widgets.iter().position(|widget| widget_id(widget) == id)
+}
+
+/// 🌡️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
+pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
+    host_snapshot.synapses.iter().position(|synapse| synapse.id == id)
+}
+//#endregion 🔖️Addressing
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -272,3 +256,28 @@ mod tests;
 pub use semio_framework_artifact_flow_flow::CameraJson;
 pub use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 //#endregion 🔁️Re-exports
+
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod inferences {
+    #[path = "💡️inferences/🦀️.rs"]
+    mod component;
+    pub use component::*;
+    #[path = "."]
+    pub mod topology {
+        #[path = "💡️inferences/🧭topology/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+#[path = "."]
+pub mod diff {
+    #[path = "🔺️diff/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}

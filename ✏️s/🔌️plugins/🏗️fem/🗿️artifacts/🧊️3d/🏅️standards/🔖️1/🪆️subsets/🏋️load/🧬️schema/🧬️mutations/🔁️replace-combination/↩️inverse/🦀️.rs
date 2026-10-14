@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `ReplaceCombination` — recovers the pre-mutation combination from `base`.
 use super::ReplaceCombination;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<replace_combination::ReplaceCombination>>(payload: &ReplaceCombination, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.combinations.iter().find(|item| item.id == payload.id).map(|item| vec![Fem3dMutation::ReplaceCombination(ReplaceCombination { id: payload.id.clone(), new_combination: item.clone() })]).unwrap_or_default()
+    base.combinations.iter().find(|item| item.id == payload.id).map(|item| vec![Op::from(ReplaceCombination { id: payload.id.clone(), new_combination: item.clone() })]).unwrap_or_default()
 
     })())
 }

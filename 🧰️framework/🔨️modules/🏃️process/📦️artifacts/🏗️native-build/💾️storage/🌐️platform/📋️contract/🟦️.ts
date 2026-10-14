@@ -3,7 +3,15 @@ import {join,resolve,relative,isAbsolute,sep} from "node:path";
 import {requireMaterializedPathV1} from "../../../../../🔒️leases/🟦️.ts";
 import type {NativeStoragePortV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const protocol=schema.definitions.ImageProtocol.const;
+
+/** 🚦️ Chooses required quiescence or an immediate optional-maintenance attempt. */
+export type NativeImageMaintenanceRequestV1=Readonly<{version:1;wait:boolean}>;
+/** 📎️ Distinguishes retained readers from an actual exclusive maintenance result. */
+export type NativeImageMaintenanceResultV1<T>=Readonly<{acquired:false}|{acquired:true;value:T}>;
+/** 🛂️ Refuses undeclared image maintenance authority before releasing a reader. */
+export function readNativeImageMaintenanceRequestV1(value:unknown):NativeImageMaintenanceRequestV1{if(validateJsonSchemaSubset(schema.definitions.ImageMaintenanceRequest,value,schema).length)throw Error("Closed original image maintenance request required");return Object.freeze({version:1,wait:(value as NativeImageMaintenanceRequestV1).wait});}
 
 /** 💾️ Retains one enforcing native fixed-volume identity and original usage custody. */
 export interface NativeImageStorageV1{
@@ -14,7 +22,7 @@ export interface NativeImageStorageV1{
  readonly port:NativeStoragePortV1;
  recheck():Promise<void>;
  close():Promise<void>;
- withExclusiveMaintenance<T>(body:(port:NativeStoragePortV1)=>Promise<T>):Promise<T>;
+ withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1)=>Promise<T>):Promise<NativeImageMaintenanceResultV1<T>>;
 }
 
 /** 🧭️ Resolves the compact canonical mount namespace without a path alias. */

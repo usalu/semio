@@ -31,6 +31,6 @@
   "bundleKind": "repo",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/flow-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/flow-js:test"
   }
 }

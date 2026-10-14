@@ -1,12 +1,12 @@
 //! ↩️ `insert-element` inverse — removes the inserted element at its landing position, computed from BASE state; a missing target yields no step.
 
-use super::InsertElement;
-use crate::mutations::remove_element::RemoveElement;
-use crate::{Din4108Mutation, Din4108Snapshot};
+use crate::insert_element::InsertElement;
+use crate::remove_element::RemoveElement;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
-pub fn inverse(payload: &InsertElement, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &InsertElement, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_element::RemoveElement> {
     Ok((|| {
-    vec![Din4108Mutation::RemoveElement(RemoveElement { index: payload.index.unwrap_or(usize::MAX).min(base.elements.len()) })]
+    vec![Op::from(RemoveElement { index: payload.index.unwrap_or(usize::MAX).min(base.elements.len()) })]
 
     })())
 }

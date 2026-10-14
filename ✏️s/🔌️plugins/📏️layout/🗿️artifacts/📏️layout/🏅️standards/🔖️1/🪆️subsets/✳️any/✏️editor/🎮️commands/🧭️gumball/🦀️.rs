@@ -2,11 +2,12 @@
 //! Transform utility's tool machine: a one-shot (no `phase`) or one `stream`/`commit`/`abort` step of a gesture the canvas
 //! overlay streams, yielding the parametric `drag-frames`/`rotate-frames`/`scale-frames` leaf in ONE tool transaction.
 
-use crate::editor::layout::canvas::active_page;
-use crate::editor::layout::modes::edit::windows::blueprint::config::current;
-use crate::editor::layout::modes::edit::windows::blueprint::transform::{layout_transform_dispatch, layout_unique_targets, LayoutFrameMotion, LayoutFrameRecord, LayoutTransformDispatch, LayoutTransformPhase, LayoutTransformToolState};
-use crate::mutations::{layout_frame_selection_pivot, LayoutMutation};
-use crate::LayoutSnapshot;
+use crate::canvas::active_page;
+use crate::modes::edit::windows::blueprint::config::current;
+use crate::modes::edit::windows::blueprint::transform::{layout_transform_dispatch, layout_unique_targets, LayoutFrameMotion, LayoutFrameRecord, LayoutTransformDispatch, LayoutTransformPhase, LayoutTransformToolState};
+use semio_s_artifact_layout_layout_diff::layout_frame_selection_pivot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

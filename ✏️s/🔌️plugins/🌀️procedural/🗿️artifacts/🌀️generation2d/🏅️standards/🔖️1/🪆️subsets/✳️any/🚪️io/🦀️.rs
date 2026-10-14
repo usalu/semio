@@ -1,5 +1,8 @@
 //! 🚪️ IO s.generation2d (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }
@@ -10,8 +13,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Generation2dAnalyzer;
-    use crate::Generation2dSnapshot;
+    use crate::Generation2dAnalyzer;
+    use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -45,7 +48,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -54,7 +57,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -70,8 +73,8 @@ pub use derived_composition::*;
 /// 🚪️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// the composer/export-entry registry lives with the rest of `🚪️io`, not behind an engine facade.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Generation2dBuilder as Generation2dAnyBuilder;
-    use crate::standards::v1::subsets::any::io::Generation2dComposer as Generation2dAnyComposer;
+    use crate::Generation2dBuilder as Generation2dAnyBuilder;
+    use crate::Generation2dComposer as Generation2dAnyComposer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
@@ -91,7 +94,7 @@ pub mod io_registry {
     const GENERATION2D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
     const GENERATION2D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::Generation2dSnapshot, ComposeError> {
+    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == GENERATION2D_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => Generation2dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -107,7 +110,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "Generation2dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -116,7 +119,7 @@ pub mod io_registry {
     fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -124,7 +127,7 @@ pub mod io_registry {
     fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -132,7 +135,7 @@ pub mod io_registry {
     fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -140,7 +143,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -152,7 +155,7 @@ pub mod io_registry {
     fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources).await?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -296,10 +299,10 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 /// 🖍️ The document's evaluated drawing: its flow program run through the preview evaluator and
 /// every drawing it delivers into an output widget (`output_drawing_handles`) flattened by the flow
 /// drawing kernel — the picture the editor's `drawing:out` port publishes.
-pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
-    let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
+pub fn generation2d_drawing(snapshot: &semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
+    let eval_json = semio_s_artifact_procedural_2d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let handles = text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
+    let handles = semio_s_artifact_procedural_2d_io_text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }
 
@@ -311,17 +314,13 @@ pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<se
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{Generation2dDiff, Generation2dMutation, Generation2dSnapshot};
+    use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+    use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+    use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -371,7 +370,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Generation2dSnapshot;
+    use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -427,3 +426,118 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Generation2dAnalyzer,
     composer: Generation2dComposer,
 );
+
+#[path = "."]
+pub mod import {
+    #[path = "."]
+    pub mod deserializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod export {
+    #[path = "."]
+    pub mod serializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod svg {
+                #[path = "."]
+                pub mod v1_1 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod pdf {
+                #[path = "."]
+                pub mod v1_4 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod v1_2 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod dxf {
+                #[path = "."]
+                pub mod v_r12 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}

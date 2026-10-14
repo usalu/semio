@@ -263,7 +263,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         const preparation={cwd:options.cwd,env,budgetMs:compilerAdmissionBudgetV1(phaseControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,invocation:options.invocation};
         if(next==="build")await port.prepare?.(command,args,preparation);
         const execute=async()=>{
-        if(next==="build"){const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:command,prefix:[],args,environment:env,maximumOutputBytes:16777216},phaseControl,options.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,phaseControl,options.sourcePort??actualCargoSourceAdmissionPortV1(env,options.cwd));await storage.recheck();}
+        if(next==="build"){const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:command,prefix:[],args,environment:env,maximumOutputBytes:16777216},phaseControl,options.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,phaseControl,options.sourcePort??actualCargoSourceAdmissionPortV1(env,options.cwd,storage));await storage.recheck();}
         await advanceScriptInvocation(options.invocation, "exact-cargo:" + stage + ":" + group.package, "running");
         await options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
         checkpoint();

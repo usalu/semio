@@ -1,6 +1,6 @@
-use crate::diff::En1992Diff;
-use crate::mutations::change_cement_type::ChangeCementType;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+use crate::change_cement_type::ChangeCementType;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &ChangeCementType, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     if base.cement_type == payload.new_cement_type {

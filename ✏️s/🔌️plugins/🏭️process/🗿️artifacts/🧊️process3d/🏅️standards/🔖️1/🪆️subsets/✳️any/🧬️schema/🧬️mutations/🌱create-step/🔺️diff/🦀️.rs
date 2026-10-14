@@ -2,9 +2,9 @@
 //! `payload.index` (clamped to the timeline length); `apply` re-derives the `steps`/`tool_solids` handles. Fatal `duplicate-id` on an
 //! existing step id.
 
-use crate::diff::Process3dStepsDelta;
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dStepsDelta;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateStep, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

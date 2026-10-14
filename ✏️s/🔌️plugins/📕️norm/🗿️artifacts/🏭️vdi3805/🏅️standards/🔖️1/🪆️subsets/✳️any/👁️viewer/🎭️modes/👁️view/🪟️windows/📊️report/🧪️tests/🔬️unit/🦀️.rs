@@ -1,4 +1,4 @@
-use super::*;
+use crate::modes::view::windows::report::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_shared_table_window_kind() {

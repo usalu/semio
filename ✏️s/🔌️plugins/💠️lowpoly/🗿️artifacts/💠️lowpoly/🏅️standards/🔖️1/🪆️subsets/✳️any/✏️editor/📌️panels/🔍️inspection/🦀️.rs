@@ -1,10 +1,10 @@
 //! 🔍️ Lowpoly play app panel — the active object's inspector (name, smooth shading, selection summary,
 //! transform utility, staged utility-param sliders).
 
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyView};
-use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
-use crate::LOWPOLY_DOCUMENT_SCHEMA;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{active_object, utility_params_value, LowpolyView};
+use semio_s_artifact_lowpoly_lowpoly_kit::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;

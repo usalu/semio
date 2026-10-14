@@ -1,30 +1,38 @@
 //! 🧬️ EN 1999 mutations — hierarchical aluminium-structure vocabulary.
 
-use crate::diff::En1999Diff;
-use crate::En1999Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1999_diff::En1999Diff;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
 
-use super::change_annex;
-use super::change_materials;
-use super::change_sections;
-use super::change_members;
-use super::change_connections;
-use super::change_fire_scenarios;
-use super::change_fatigue_details;
-use super::change_cold_formed;
-use super::change_shells;
-use super::add_member;
-use super::remove_member;
-use super::change_member_n_ed;
-use super::change_member_m_y_ed;
-use super::change_member_buckling_length;
-use super::change_material_designation;
-use super::change_plate_thickness;
-use super::change_weld_throat;
-use super::change_bolt_count;
+use semio_s_artifact_norm_en1999_mut_inputs::change_annex;
+use semio_s_artifact_norm_en1999_mut_inputs::change_materials;
+use semio_s_artifact_norm_en1999_mut_inputs::change_sections;
+use semio_s_artifact_norm_en1999_mut_inputs::change_members;
+use semio_s_artifact_norm_en1999_mut_inputs::change_connections;
+use semio_s_artifact_norm_en1999_mut_inputs::change_fire_scenarios;
+use semio_s_artifact_norm_en1999_mut_inputs::change_fatigue_details;
+use semio_s_artifact_norm_en1999_mut_inputs::change_cold_formed;
+use semio_s_artifact_norm_en1999_mut_inputs::change_shells;
+use semio_s_artifact_norm_en1999_mut_members::add_member;
+use semio_s_artifact_norm_en1999_mut_members::remove_member;
+use semio_s_artifact_norm_en1999_mut_members::change_member_n_ed;
+use semio_s_artifact_norm_en1999_mut_members::change_member_m_y_ed;
+use semio_s_artifact_norm_en1999_mut_members::change_member_buckling_length;
+use semio_s_artifact_norm_en1999_mut_members::change_material_designation;
+use semio_s_artifact_norm_en1999_mut_members::change_plate_thickness;
+use semio_s_artifact_norm_en1999_mut_members::change_weld_throat;
+use semio_s_artifact_norm_en1999_mut_members::change_bolt_count;
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -76,24 +84,35 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
-
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::En1999Mutation;
+    use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
+        let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_en1999_mutation(mutation: &En1999Mutation, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+        <En1999Mutation as protocol::Mutation<En1999Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use crate::mutation_bridge::*;

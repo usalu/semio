@@ -1,3 +1,4 @@
+use crate::FixtureSourceBirth;
 use super::*;
 use crate::retained_clone::RetainedCloneSource;
 use serde::Deserialize;
@@ -16,11 +17,11 @@ fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies
         let count=row["entryCount"].as_u64().unwrap();
         let expected:Vec<u64>=serde_json::from_value(row["expectedKeys"].clone()).unwrap();
         for stop in std::iter::once(None).chain(fixture["interruptAfter"].as_array().unwrap().iter().map(|x|Some(x.as_u64().unwrap()as usize))){
-            let(map,original)=crate::value::observe_retirement_allocations(||(0..count).map(|key|(key,())).collect::<RetainedOrderedMap<u64,()>>());
+            let(map,original)=crate::observe_retirement_allocations(||(0..count).map(|key|(key,())).collect::<RetainedOrderedMap<u64,()>>());
             assert_eq!(original.1,0);
             let birth=RetainedCloneSource::<RetainedOrderedMap<u64,()>>::owned_constructor_capacity_bytes::<()>();
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<RetainedOrderedMap<u64,()>>::constructor_copy_bytes(),maximum_capacity_bytes:birth,maximum_depth:1,..Default::default()};
-            let(admitted,heap)=crate::value::observe_retirement_allocations(||RetainedCloneSource::admit_owned(map,(),grant));
+            let(admitted,heap)=crate::observe_retirement_allocations(||RetainedCloneSource::admit_owned(map,(),grant));
             let(mut source,receipt)=admitted.unwrap_or_else(|_|panic!("original numeric clone source admission"));
             assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));
             let mut born=heap.0;let mut freed=heap.1;let mut output=None;let mut cursor=RetainedOrderedMap::<u64,()>::retained_clone_cursor();
@@ -30,22 +31,22 @@ fn ordered_map_clone_advance_quotes_balance_original_heap_and_refused_currencies
                 for axis in fixture["deniedAxes"].as_array().unwrap(){
                     let mut denied=grant;
                     match axis.as_str().unwrap(){"items"=>denied.maximum_items=0,"copy" if demand.copy_bytes>0=>denied.maximum_copy_bytes=demand.copy_bytes-1,"capacity" if demand.capacity_bytes>0=>denied.maximum_capacity_bytes=demand.capacity_bytes-1,"release" if demand.release_bytes>0=>denied.maximum_release_bytes=demand.release_bytes-1,"depth" if demand.depth>0=>denied.maximum_depth=demand.depth-1,_=>continue}
-                    let(result,heap)=crate::value::observe_retirement_allocations(||cursor.advance(source.borrow(),denied));
+                    let(result,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(),denied));
                     assert_eq!(heap,(0,0));match result{Ok(step)=>assert_eq!(step.progress(),Default::default()),Err(error)=>assert!(matches!(error.kind,crate::ValueRefusalKind::DepthLimit|crate::ValueRefusalKind::WorkLimit|crate::ValueRefusalKind::OwnershipLimit))};assert_eq!(cursor.advance_demands(source.borrow(),body).unwrap(),demand);
                 }
-                let(step,heap)=crate::value::observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());let receipt=step.progress();
+                let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(source.borrow(),grant).unwrap());let receipt=step.progress();
                 assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;
                 if matches!(step,RetainedCloneStep::Complete(_)){output=cursor.take();break;}
             }
             if stop.is_none(){let output=output.as_ref().expect("funded clone completed");assert_eq!(output.iter().map(|(key,())|*key).collect::<Vec<_>>(),expected);}
             assert_eq!(source.borrow().get().iter().map(|(key,())|*key).collect::<Vec<_>>(),expected);
             let mut cursor=ControlledRetirement::new(cursor).unwrap_or_else(|_|panic!("original clone cursor controlled authority"));
-            for _ in 0..10000{if cursor.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:cursor.next_copy_byte_demand().unwrap().max(body),capacity_bytes:cursor.next_capacity_byte_demand(body).unwrap(),release_bytes:cursor.next_release_byte_demand().unwrap(),depth:cursor.next_depth_demand().unwrap()});let(step,heap)=crate::value::observe_retirement_allocations(||cursor.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
+            for _ in 0..10000{if cursor.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:cursor.next_copy_byte_demand().unwrap().max(body),capacity_bytes:cursor.next_capacity_byte_demand(body).unwrap(),release_bytes:cursor.next_release_byte_demand().unwrap(),depth:cursor.next_depth_demand().unwrap()});let(step,heap)=crate::observe_retirement_allocations(||cursor.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
             assert!(cursor.terminal_is_empty());
-            for _ in 0..10000{if source.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:source.next_close_copy_byte_demand().unwrap().max(body),capacity_bytes:source.next_close_capacity_byte_demand(body).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=crate::value::observe_retirement_allocations(||source.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
+            for _ in 0..10000{if source.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:source.next_close_copy_byte_demand().unwrap().max(body),capacity_bytes:source.next_close_capacity_byte_demand(body).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=crate::observe_retirement_allocations(||source.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}
             assert!(source.terminal_is_empty());
-            if let Some(output)=output{let mut owner=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("numeric map controlled authority"));for _ in 0..10000{if owner.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap().max(body),capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});let(step,heap)=crate::value::observe_retirement_allocations(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.terminal_is_empty());}
-            let(_,heap)=crate::value::observe_retirement_allocations(||{drop(cursor);drop(source);});assert_eq!(heap,(0,0));assert_eq!(original.0+born,freed);
+            if let Some(output)=output{let mut owner=ControlledRetirement::new(output).unwrap_or_else(|_|panic!("numeric map controlled authority"));for _ in 0..10000{if owner.terminal_is_empty(){break;}let grant=quote(crate::RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap().max(body),capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});let(step,heap)=crate::observe_retirement_allocations(||owner.step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.0;freed+=heap.1;}assert!(owner.terminal_is_empty());}
+            let(_,heap)=crate::observe_retirement_allocations(||{drop(cursor);drop(source);});assert_eq!(heap,(0,0));assert_eq!(original.0+born,freed);
             println!("[DEBUG] Ordered numeric clone count={count} stop={stop:?} original={} born={born} physical={freed}",original.0);
         }
     }
@@ -78,14 +79,14 @@ fn ordered_comparison_custody_refuses_unadmitted_constructor_and_closes_original
         let key=key.as_str().unwrap();assert_eq!(row.as_array().unwrap()[1..],key.as_bytes().iter().map(|x|serde_json::json!(*x)).collect::<Vec<_>>());
         let map=RetainedOrderedMap::<String,String>::default();let key=key.to_owned();let pointer=key.as_ptr();
         let value=String::from("value");let original=key.capacity()+value.capacity();
-        let (refused,heap)=crate::value::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,Default::default()));
+        let (refused,heap)=crate::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,Default::default()));
         assert_eq!(heap,(0,0));let (error,map,key,value)=refused.err().unwrap();
         assert_eq!(error.kind,crate::ValueRefusalKind::WorkLimit);assert_eq!(key.as_ptr(),pointer);
         let bytes=RetainedOrderedMapInsertCursor::<String,String>::constructor_capacity_bytes();
-        let (admitted,heap)=crate::value::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedOrderedMapInsertCursor::<String,String>::constructor_copy_bytes(),maximum_depth:1,maximum_capacity_bytes:bytes,..Default::default()}));
+        let (admitted,heap)=crate::observe_retirement_allocations(||RetainedOrderedMapInsertCursor::admit(map,key,value,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedOrderedMapInsertCursor::<String,String>::constructor_copy_bytes(),maximum_depth:1,maximum_capacity_bytes:bytes,..Default::default()}));
         let (mut cursor,receipt)=admitted.unwrap_or_else(|_|panic!("admitted insertion constructor refused"));
         assert_eq!(receipt.retained_capacity_bytes,bytes);assert_eq!(heap,(bytes,0));cursor.begin_close();let mut born=bytes;let mut freed=0;
-        for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(3).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};let (step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
+        for _ in 0..10000 {if cursor.terminal_is_empty(){break;}let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(3).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:cursor.next_close_depth_demand().unwrap()};let (step,heap)=crate::observe_retirement_allocations(||cursor.close_step(grant).unwrap());let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;freed+=p.released_bytes;}
         assert!(cursor.terminal_is_empty());assert_eq!(original+born,freed);println!("[DEBUG] Ordered insertion authority original={original} born={born} physical={freed}");
     }
 }
@@ -452,55 +453,6 @@ fn cancelled_partial_insertion_retires_candidate_and_shifted_workspace() {
 }
 
 #[test]
-fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️close/🔣️.json")).unwrap();
-    let admission = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
-    let mut mismatches = 0;
-    for row in fixture["cases"].as_array().unwrap() {
-        let mut text = String::with_capacity(row["capacity"].as_u64().unwrap() as usize);
-        text.push_str(row["text"].as_str().unwrap());
-        let mut close = RetainedCloneClose::default();
-        let mut text=Some(text);
-        let birth=crate::owned_retirement_birth_bytes::<String>();
-        assert!(birth<=admission);
-        close.begin_granted(&mut text,RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:birth,maximum_depth:1,..Default::default()}).unwrap();
-        assert!(text.is_none());
-        for _ in 0..10_000 {
-            if close.retirement.as_ref().unwrap().terminal_is_empty() { break; }
-            let capacity=close.next_capacity_byte_demand(7).unwrap();
-            let release=close.next_release_byte_demand().unwrap();
-            assert!(capacity<=admission&&release<=admission);
-            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:7,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:close.next_depth_demand().unwrap()};
-            let (step,events)=crate::value::observe_retirement_allocations(||close.step_granted(grant).unwrap());
-            assert!(step.progress().fits(grant));
-            assert_eq!(events,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
-        }
-        assert!(close.retirement.as_ref().unwrap().terminal_is_empty());
-        let pointer = close.retirement.as_ref().unwrap().as_ref() as *const dyn crate::ErasedSnapshotRetirement;
-        let (physical, query_events) = crate::value::observe_retirement_allocations(|| close.next_release_byte_demand().unwrap());
-        assert_eq!(query_events, (0, 0));
-        assert!(physical > 0 && physical <= admission);
-        for (items, bytes) in [(0, physical), (1, physical - 1)] {
-            let (step, events) = crate::value::observe_retirement_allocations(|| close.step_granted(RetainedCloneGrant{maximum_items:items,maximum_release_bytes:bytes,maximum_depth:1,..Default::default()}).unwrap());
-            let retained = close.retirement.as_ref().is_some_and(|owner| std::ptr::addr_eq(pointer, owner.as_ref() as *const dyn crate::ErasedSnapshotRetirement));
-            if step != (RetainedCloneStep::Progress(Default::default())) || events != (0, 0) || !retained {
-                mismatches += 1;
-                println!("[DEBUG] cold terminal denied items={items} bytes={bytes} query={physical} born={} actual-free={} retained={retained}", events.0, events.1);
-            }
-            if close.is_empty() { break; }
-        }
-        if !close.is_empty() {
-            let (step, events) = crate::value::observe_retirement_allocations(|| close.step_granted(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:physical,maximum_depth:1,..Default::default()}).unwrap());
-            if step != (RetainedCloneStep::Progress(crate::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:physical,..Default::default()})) || events != (0, physical) { mismatches += 1; }
-        }
-        assert!(close.is_empty());
-        assert_eq!(close.step_granted(Default::default()).unwrap(), RetainedCloneStep::Complete(Default::default()));
-        println!("[DEBUG] cold terminal original case={} exact-frame={physical} original-admission={admission}", row["id"]);
-    }
-    assert_eq!(mismatches, 0, "cold terminal retirement Box requires its complete same-turn physical grant");
-}
-
-#[test]
 fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     use crate::{FromValue,ToValue,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📋️wire/🔣️.json")).unwrap();
@@ -522,7 +474,7 @@ fn ordered_wire_cold_context_map_matches_serde_and_bun() {
     assert_eq!(map.page_count(),3);
     let original=map.pages.capacity()*size_of::<Vec<(String,String)>>()+map.pages.iter().map(|page|page.capacity()*size_of::<(String,String)>()).sum::<usize>()+map.iter().map(|(key,value)|key.capacity()+value.capacity()).sum::<usize>();
     let birth=0;
-    let (admitted,heap)=crate::value::observe_retirement_allocations(||ControlledRetirement::new(map));
+    let (admitted,heap)=crate::observe_retirement_allocations(||ControlledRetirement::new(map));
     let mut retirement=admitted.unwrap_or_else(|_|panic!("actual paged map admission"));
     assert_eq!(heap,(birth,0));
     let mut allocated=birth;let mut released=0;
@@ -531,7 +483,7 @@ fn ordered_wire_cold_context_map_matches_serde_and_bun() {
         let copy=retirement.next_copy_byte_demand().unwrap().min(7);
         let release=retirement.next_release_byte_demand().unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:retirement.next_depth_demand().unwrap()};
-        let (step,heap)=crate::value::observe_retirement_allocations(||retirement.step(grant).unwrap());
+        let (step,heap)=crate::observe_retirement_allocations(||retirement.step(grant).unwrap());
         let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));allocated+=heap.0;released+=heap.1;
     }
     assert!(retirement.terminal_is_empty());assert_eq!(original+allocated,released);

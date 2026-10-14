@@ -3,9 +3,7 @@
 //!
 //! Shared Block records use the plugin-owned retirement implementations.
 
-use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
-
-
+use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
 
 //#region 🩻️Block2dRows
 semio_framework_value::artifact_retire_struct!(Block2dPresentation { shape, radius, width, height, color, icon_kind });

@@ -22,12 +22,13 @@ semio-framework-mesh-engine = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

@@ -20,8 +20,9 @@
 //! @see ../../🔣️oracle.json — the mutation catalog `KINDS` is measured against.
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
-use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
 #[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
@@ -196,9 +197,9 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
 /// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(base.xml_parts.iter().filter_map(|part| {
+    semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(base.xml_parts.iter().filter_map(|part| {
         let document = parse_part(part)?;
-        crate::standards::v_ecma_376::subsets::base::schema::mutations::retarget_attribute_values_diff(document.root.as_ref()?, &from, to).map(|edit| (part.path.clone(), edit))
+        semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::retarget_attribute_values_diff(document.root.as_ref()?, &from, to).map(|edit| (part.path.clone(), edit))
     }).collect())
 }
 
@@ -207,7 +208,7 @@ fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> Do
 fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxDiff {
     let Some(path) = main_part_path(base) else { return DocxDiff::default() };
     let Some(document) = base.xml_part(&path).and_then(parse_part) else { return DocxDiff::default() };
-    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff(&document, "conformance", value).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path, edit)])).unwrap_or_default()
+    semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff(&document, "conformance", value).map(|edit| semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path, edit)])).unwrap_or_default()
 }
 //#endregion 🔖️DiffBuilders
 

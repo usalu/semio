@@ -27,12 +27,20 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-fem-2d = { workspace = true }
-semio-s-artifact-fem-3d = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
+semio-s-artifact-fem-2d = { workspace = true }
+semio-s-artifact-fem-2d-editor = { workspace = true }
+semio-s-artifact-fem-2d-editor-session = { workspace = true }
+semio-s-artifact-fem-2d-io = { workspace = true }
+semio-s-artifact-fem-2d-viewer = { workspace = true }
+semio-s-artifact-fem-3d = { workspace = true }
+semio-s-artifact-fem-3d-editor = { workspace = true }
+semio-s-artifact-fem-3d-editor-session = { workspace = true }
+semio-s-artifact-fem-3d-io = { workspace = true }
+semio-s-artifact-fem-3d-viewer = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

@@ -4,31 +4,31 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcPartPatch, OpcPartsDelta};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxXmlPartDiff, DocxXmlPartModification, DocxXmlPartRemoval, DocxXmlPartsDelta};
-#[cfg(test)] use crate::schema::diff::{DocxPathSegment};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartModification;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartRemoval;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::{DocxPathSegment};
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::docx_part_is_xml;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
 #[cfg(test)]
-use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableCell;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
@@ -355,7 +355,7 @@ pub(crate) fn addressed_inverse(mutation: &DocxMutation, base: &DocxSnapshot) ->
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn insert_block_plan(base: &DocxSnapshot, path: &DocxBlockPath, block: &DocxBlock) -> Result<PreparedDocxXmlMutation, ValueError> {
     let (container, slot) = docx_block_slot(base, path, true)?;
-    child_insert_plan(base, &container, slot, crate::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block))
+    child_insert_plan(base, &container, slot, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block))
 }
 
 /// ➖️ Removes the block `path` names; the inverse re-inserts that exact XML child at its original slot.
@@ -376,7 +376,7 @@ pub(crate) fn set_block_plan(base: &DocxSnapshot, path: &DocxBlockPath, block: &
     let mut node_path = container.node_path.clone();
     node_path.push(slot);
     let address = docx_xml_address(base, &container.part_path, node_path)?;
-    replacement_plan(base, &address, crate::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block))
+    replacement_plan(base, &address, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::block_to_xml(block))
 }
 
 /// 🎨️ The styles root and the position of style `id` among its children.
@@ -394,7 +394,7 @@ pub(crate) fn insert_style_plan(base: &DocxSnapshot, style: &DocxStyle) -> Resul
     if at.is_some() {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("DOCX style {:?} already exists", style.id)));
     }
-    child_insert_plan(base, &root, ids.len(), crate::standards::v_ecma_376::subsets::base::schema::construction::style_to_xml(style))
+    child_insert_plan(base, &root, ids.len(), semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::style_to_xml(style))
 }
 
 /// ➖️ Removes style `id`; the inverse re-inserts that exact XML child at its original position.
@@ -681,25 +681,6 @@ pub(crate) fn xml_part_positions(base: &DocxSnapshot, path: &str) -> Option<(usi
 
 //#region OpCodecs
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
 /// mirrors `📰️xml/…/🧬️mutations/🦀️.rs`'s own `enc_node_path_bin`/`enc_xml_snapshot_bin`
@@ -708,22 +689,7 @@ pub(crate) fn xml_part_positions(base: &DocxSnapshot, path: &str) -> Option<(usi
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
 
-
-
-
-
-
-
-
-
-
-
-
-
 //#endregion 🔖️OpBinaryCodec
-
-
-
 
 //#endregion OpCodecs
 
@@ -736,7 +702,7 @@ pub(crate) fn xml_part_positions(base: &DocxSnapshot, path: &str) -> Option<(usi
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> DocxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
+    let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
         body: vec![
             DocxBlock::paragraph("first"),
             DocxBlock::Table(DocxTable {
@@ -803,7 +769,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -9,15 +9,15 @@
 //! history; the yielded leaf is (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::process3d::axis_angle_from_up_to;
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::editor::process3d::set_active_utility_effect;
-use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
-use crate::schema::inferences::capability_for_measure_kind;
-use crate::editor::process3d::commands::step::insert_step_emit;
-use crate::schema::next_step_id;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
+use semio_s_artifact_process_process3d_kit::axis_angle_from_up_to;
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_modes::windows::workpiece::set_active_utility_effect;
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_labels, editor::process3d::terminology::Process3dLabels};
+use semio_s_artifact_process_process3d_inferences::capability_for_measure_kind;
+use crate::step::insert_step_emit;
+use semio_s_artifact_process_process3d_model::next_step_id;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::MeasureKind, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkingSolid};
 use machine::Command;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_tool_machine::{drive_chart_gesture, GestureChart, GesturePhase, ToolRefusal, ToolYield};
@@ -169,7 +169,7 @@ pub mod world_pointer_down {
         payload: &WorldPointerDown,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let utility = ctx.active_utility()?;
@@ -183,7 +183,7 @@ pub mod world_pointer_down {
         };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
+        let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: semio_s_artifact_process_process3d_inferences::measure_for_capability(&capability, Some(payload.position)) };
         world_emit("worldPointerDown", doc, cfg, step, vec![set_active_utility_effect("select")])
     }
 }
@@ -208,7 +208,7 @@ pub mod world_face_drag_end {
         payload: &WorldFaceDragEnd,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         if ctx.active_utility()? != "select" {

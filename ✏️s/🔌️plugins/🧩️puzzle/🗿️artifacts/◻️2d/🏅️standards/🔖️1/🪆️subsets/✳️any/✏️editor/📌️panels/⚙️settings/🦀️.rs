@@ -6,7 +6,7 @@
 //! window instance while the commands themselves never need one.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{ui_label, Puzzle2dScene, PUZZLE2D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle2d::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::ActionFactory;

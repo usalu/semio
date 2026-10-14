@@ -43,32 +43,32 @@ fn assert_norm_value_tree_arguments(definition: AppDefinition) {
 
 #[test]
 fn din4108_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_din4108::editor::din4108::create_din4108_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_din4108_editor::create_din4108_app());
 }
 
 #[test]
 fn din16798_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_din16798::editor::din16798::create_din16798_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_din16798_editor::create_din16798_app());
 }
 
 #[test]
 fn din18599_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_din18599::editor::din18599::create_din18599_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_din18599_editor::create_din18599_app());
 }
 
 #[test]
 fn en1990_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1990::editor::en1990::create_en1990_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1990_editor::create_en1990_app());
 }
 
 #[test]
 fn en1991_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1991::editor::en1991::create_en1991_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1991_editor::create_en1991_app());
 }
 
 #[test]
 fn en1992_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1992::editor::en1992::create_en1992_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1992_editor::create_en1992_app());
 }
 
 #[test]
@@ -78,40 +78,40 @@ fn en1993_declares_its_value_tree_arguments() {
 
 #[test]
 fn en1994_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1994::editor::en1994::create_en1994_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1994_editor::create_en1994_app());
 }
 
 #[test]
 fn en1995_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1995::editor::en1995::create_en1995_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1995_editor::create_en1995_app());
 }
 
 #[test]
 fn en1996_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1996::editor::en1996::create_en1996_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1996_editor::create_en1996_app());
 }
 
 #[test]
 fn en1997_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1997::editor::en1997::create_en1997_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1997_editor::create_en1997_app());
 }
 
 #[test]
 fn en1998_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1998::editor::en1998::create_en1998_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1998_editor::create_en1998_app());
 }
 
 #[test]
 fn en1999_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1999::editor::en1999::create_en1999_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1999_editor::create_en1999_app());
 }
 
 #[test]
 fn iso16757_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_iso16757::editor::iso16757::create_iso16757_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_iso16757_editor::create_iso16757_app());
 }
 
 #[test]
 fn vdi3805_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_vdi3805::editor::vdi3805::create_vdi3805_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_vdi3805_editor::create_vdi3805_app());
 }

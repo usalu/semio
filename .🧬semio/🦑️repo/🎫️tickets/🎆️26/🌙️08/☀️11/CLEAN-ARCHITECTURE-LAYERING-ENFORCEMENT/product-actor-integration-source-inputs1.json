@@ -1,0 +1,91 @@
+{
+  "scope": "source SHA reads during active genuine GUI capture, not graph authority or test acceptance",
+  "recordedAt": "2026-10-14T19:39:13.074Z",
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a39948b21195a58975cabde4e1a3c48d43a1d1cd4eeb505333705e366e7e4675"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts",
+      "sha256": "0a96cc3f0a2697540fbe30429f8902ee135026cb6b3d0fe43088401063e460ec"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts",
+      "sha256": "4204fe290716f161888f7c2d3a0ee448ae6c92cf1724ade3f4c585a7ee65f80c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts",
+      "sha256": "bfdf37c00fccec602d689a4ce91d2735f7d2862501a27df449a206a752e85346"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🏃️dispatch/🟦️.ts",
+      "sha256": "ae571b081f1a7ba9488253257d5dfde3c4133efd4fb3fd3f167571be253fc5ac"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts",
+      "sha256": "9db537b3027389962e08751125239e8ab9ff2187005f92ea0efc4aef5ba656d5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts",
+      "sha256": "b34418bd305a52f9e11242243e4dfc87c4e495cf78b5df0bf1a86dc996138351"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts",
+      "sha256": "0d6f75c59e1211368ec0604f63323590a1ef192098f25c95f28ca3a5c682377e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "0dfc350b578a527d3aa9c37f9f9531f08a867efea9e04eec66400010d6f6afe3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+      "sha256": "5e58aa102b88677ebc213e6269b2725e55f4fececd5fd36f6b7fe5fb3a870732"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9d9568d536d447113d2f97cc08c72af665fc585334de2726f4628b2279c7151a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "sha256": "3b680f0bf91150a174ef79e110fe7d1a66c7bbc490c567dcab5d7813ac443273"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "f79d4010cc7643c2928ff6a53328cdcd892f36c2ad006c6921d719868c41a404"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "sha256": "b7d03bf86210bbab13946243708f731be7c500db5c85eaa1ee199ed2822b73b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "sha256": "b722aa94a0916ce96a128e9bd8612c1eaec094e3b0205b04e0c856a054b3356f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "sha256": "9c081b717d092abceda4a3e9591b99681d3cc51767c7d1cc5817fe234293b71a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "sha256": "50a7c912fab7997e914ce9efe48dd66eb33ce7b526487c8fe29b18f535f2c2fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "sha256": "089754964577a3cccd5f8cabbaa91c729d0c50d8934e2536219705e2af202d71"
+    }
+  ],
+  "mountedTests": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🏃️dispatch/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts"
+  ],
+  "phaseBudgetsMilliseconds": [
+    30000,
+    30000
+  ]
+}

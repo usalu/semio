@@ -2,9 +2,9 @@
 //! whole subtree cascade — `remove_layer_from_tree` deletes the node it finds, children included).
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️DeleteLayer
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -15,15 +15,15 @@ pub mod mutation {
         pub layer_id: String,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for DeleteLayer {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for DeleteLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::create_layer::mutation::CreateLayer> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::delete_layer::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::delete_layer::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -38,3 +38,13 @@ pub mod mutation {
 }
 
 pub use mutation::DeleteLayer;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️deletes/🦀️.rs"]
+mod tests_deletes_the_frame_group_and_its_nested_children;
+//#endregion 🪢️TaxonomyMounts

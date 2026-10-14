@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteNode`.
 use super::DeleteNode;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadNodesDelta};
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadNodesDelta};
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff

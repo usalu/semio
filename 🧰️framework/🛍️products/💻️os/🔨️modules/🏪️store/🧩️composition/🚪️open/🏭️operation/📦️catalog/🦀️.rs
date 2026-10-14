@@ -4,10 +4,10 @@
 fn member_catalog_constructor_birth_and_retirement_match_original_system_allocations() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for bounded in [false, true] {
-        let (birth, allocated, released) = crate::test_allocation::observe_backing(|| if bounded { bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap() } else { <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners_birth_demand().unwrap() });
+        let (birth, allocated, released) = crate::test_allocation::observe_backing(|| if bounded { bounded_artifact_store_owners_birth_demand::<DemoSnapshot, DemoMutation>().unwrap() } else { crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners_birth_demand().unwrap() });
         assert_eq!((allocated, released), (0, 0));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth, maximum_copy_bytes: 0, maximum_release_bytes: 0 };
-        let ((owners, progress), allocated, released) = crate::test_allocation::observe_backing(|| if bounded { bounded_artifact_store_owners::<DemoSnapshot, DemoMutation>(grant).unwrap_or_else(|_| panic!("funded bounded original sources")) } else { <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(grant).unwrap_or_else(|_| panic!("funded original sources")) });
+        let ((owners, progress), allocated, released) = crate::test_allocation::observe_backing(|| if bounded { bounded_artifact_store_owners::<DemoSnapshot, DemoMutation>(grant).unwrap_or_else(|_| panic!("funded bounded original sources")) } else { crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(grant).unwrap_or_else(|_| panic!("funded original sources")) });
         let mut owners = owners;
         assert_eq!((allocated, released), (birth.capacity_bytes, 0));
         assert_eq!(progress.retained_capacity_bytes, allocated);
@@ -62,13 +62,13 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
         MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), 1000, expected, None, pages, ActorId("actor 雪".into())).admit(1).unwrap_or_else(|_| panic!("admitted original request"))
     });
     let outstanding = request_born.checked_sub(request_freed).expect("original request keeps exact live allocations");
-    type Open = InitialMemberStoreOpen<RetainedTestMembers, DemoSnapshot, DemoMutation>;
-    let (birth, allocated, released) = crate::test_allocation::observe_backing(|| Open::begin_birth_demand(&request).unwrap());
+    type Open = InitialMemberStoreOpen<RetainedTestMembers, DemoSnapshot, DemoMutation,crate::os_store::tests::DemoMemberStoreProducer<DemoMutation>>;
+    let (birth, allocated, released) = crate::test_allocation::observe_backing(|| Open::begin_birth_demand(&request,&crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).unwrap());
     assert_eq!((allocated, released), (0, 0));
     let mut caller=OriginalMemberCaller::new();let mut admission=MemberOpenSourceAdmission::new(request);let policy=caller.policy;
     let((ready,receipt),allocated,released)=crate::test_allocation::observe_backing(||caller.run(policy,|parent,cx|admission.admit_source(parent,cx).unwrap()));assert!(!ready);assert_eq!((allocated,released),(0,0));assert_eq!(receipt,RetainedCloneProgress{copied_items:1,..Default::default()});
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth, maximum_copy_bytes: 0, maximum_release_bytes: 0 };
-    let(((open,raw),receipt),allocated,released)=crate::test_allocation::observe_backing(||caller.run(grant,|_parent,cx|{let(open,raw)=Open::begin(&mut admission,cx,grant).unwrap();crate::os_store::member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(raw))).unwrap();(open,raw)}));assert_eq!(raw,receipt);assert!(admission.terminal_is_empty());
+    let(((open,raw),receipt),allocated,released)=crate::test_allocation::observe_backing(||caller.run(grant,|_parent,cx|{let(open,raw)=Open::begin(&mut admission,cx,grant,crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).unwrap();crate::os_store::member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(raw))).unwrap();(open,raw)}));assert_eq!(raw,receipt);assert!(admission.terminal_is_empty());
     let mut open = open;
     assert_eq!((allocated, released), (birth.capacity_bytes, 0));
     let initial_born=outstanding+allocated;

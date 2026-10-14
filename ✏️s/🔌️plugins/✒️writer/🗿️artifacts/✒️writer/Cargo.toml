@@ -27,11 +27,11 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   edition = "2021"
   rust-version = "1.95"
 
+[workspace.dependencies.semio-framework-graph-manifest]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-artifact-reference]
 path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-framework-graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
@@ -42,6 +42,9 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract
 [workspace.dependencies.semio-s-artifact-stdio-docx]
 path = "../../../🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-model]
+path = "../../../🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-json]
 path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
 

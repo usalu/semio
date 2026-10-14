@@ -1,8 +1,7 @@
 //! 🔖 Block3d mutation — `AddRepresentationTag`: a member of a representation's `tags` set.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🔖 `add-representation-tag` payload.
@@ -20,24 +19,24 @@ pub struct AddRepresentationTag {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_representation_tag(id: String, tag: String) -> Block3dMutation {
-    Block3dMutation::AddRepresentationTag(AddRepresentationTag { id, tag, index: None })
+pub fn add_representation_tag<Op: From<crate::add_representation_tag::AddRepresentationTag>>(id: String, tag: String) -> Op {
+    Op::from(AddRepresentationTag { id, tag, index: None })
 }
 
 /// 📍️ Builder — like [`add_representation_tag`] but inserts the row at `index`.
-pub fn add_representation_tag_at(id: String, tag: String, index: u32) -> Block3dMutation {
-    Block3dMutation::AddRepresentationTag(AddRepresentationTag { id, tag, index: Some(index) })
+pub fn add_representation_tag_at<Op: From<crate::add_representation_tag::AddRepresentationTag>>(id: String, tag: String, index: u32) -> Op {
+    Op::from(AddRepresentationTag { id, tag, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddRepresentationTag {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for AddRepresentationTag where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::remove_representation_tag::RemoveRepresentationTag> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-tag", kind: "add-representation-tag", record: "AddedRepresentationTag" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::add_representation_tag::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_representation_tag::inverse::inverse(self, base)?
     
     })
 }
@@ -49,3 +48,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddRepresentat
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

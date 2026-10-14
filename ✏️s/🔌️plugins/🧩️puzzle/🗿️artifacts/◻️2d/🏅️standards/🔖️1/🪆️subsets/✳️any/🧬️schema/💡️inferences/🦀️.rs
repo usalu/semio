@@ -66,13 +66,13 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️FastenedLayout
-use crate::{Puzzle2dNode, Puzzle2dNodeAnchor};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor};
 /// 🔗️ Rehomed from the deleted `⚙️engine/📐️layout` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): compose-parity fastened layout, pure derived
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛️flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
-use semio_s_artifact_puzzle_3d::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
+use {semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_HORIZONTAL_SCALE, semio_s_artifact_puzzle_3d_inferences::flatten::DIAGRAM_RADIUS};
 use std::collections::{HashMap, HashSet, VecDeque};
 fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0

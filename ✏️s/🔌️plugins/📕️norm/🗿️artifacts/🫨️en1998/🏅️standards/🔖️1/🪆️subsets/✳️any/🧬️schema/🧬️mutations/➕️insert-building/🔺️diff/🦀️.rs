@@ -1,8 +1,8 @@
 //! ➕️ `insert-building` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertBuilding;
-use crate::diff::{En1998Diff, En1998BuildingDelta};
-use crate::En1998Snapshot;
+use crate::insert_building::InsertBuilding;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998BuildingDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertBuilding, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.buildings.iter().any(|existing| existing.id == payload.building.id) {

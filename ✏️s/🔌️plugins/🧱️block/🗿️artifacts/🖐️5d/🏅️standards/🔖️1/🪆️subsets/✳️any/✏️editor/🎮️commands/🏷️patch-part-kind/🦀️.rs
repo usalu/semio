@@ -1,8 +1,8 @@
 //! 🏷️ 🏷️ Block 5D play app command command — `patch-part-kind`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
-use crate::Block5dSnapshot;
-use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
+use semio_s_artifact_block_5d_mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use crate::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -14,7 +14,7 @@ pub struct PatchPartKind {
 }
 
 pub fn handle(payload: &PatchPartKind, _doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
-    use crate::standards::v1::subsets::any::schema::mutations as m;
+    use semio_s_artifact_block_5d_mutations as m;
     let optional = |value: &str| if value.is_empty() { None } else { Some(value.to_string()) };
     let mutation = match payload.field.as_str() {
         "name" => m::rename_part_kind(payload.value.clone()),

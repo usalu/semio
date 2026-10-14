@@ -1,6 +1,6 @@
 //! 🗑️ `retire-property-definition` — removes an id-keyed catalogue property definition.
 
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,17 +13,17 @@ pub struct RetirePropertyDefinition {
     pub id: String,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RetirePropertyDefinition {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for RetirePropertyDefinition where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::introduce_property_definition::mutation::IntroducePropertyDefinition> {
     const SEMANTICS: protocol::SemanticDescriptor =
 
         protocol::SemanticDescriptor { verb: "remove", entity: "propertyDefinition", kind: "retire-property-definition", record: "RetiredPropertyDefinition" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::retire_property_definition::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::retire_property_definition::inverse::inverse(self, base)?
     
     })
 }

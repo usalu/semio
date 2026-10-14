@@ -36,5 +36,5 @@ fn mask_panel_keeps_disabled_masks_and_authors_semantic_controls() {
         }
         assert!(!nodes.iter().any(|node| node["key"] == mask_row_id("plain")));
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }

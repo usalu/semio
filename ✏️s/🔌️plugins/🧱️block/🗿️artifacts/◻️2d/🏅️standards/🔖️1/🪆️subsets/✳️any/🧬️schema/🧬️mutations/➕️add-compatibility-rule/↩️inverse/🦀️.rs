@@ -1,15 +1,14 @@
 //! ↩️ Inverse for `AddCompatibilityRule`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AddCompatibilityRule, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::add_compatibility_rule::AddCompatibilityRule, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_compatibility_rule::RemoveCompatibilityRule> {
     Ok((|| {
     if base.compatibility.iter().any(|item| item.id == payload.rule.id) {
         return Vec::new();
     }
-    vec![super::super::remove_compatibility_rule::remove_compatibility_rule(payload.rule.id.clone())]
+    vec![crate::remove_compatibility_rule::remove_compatibility_rule(payload.rule.id.clone())]
 
     })())
 }

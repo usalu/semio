@@ -15,35 +15,44 @@
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::{Vdi3805Diff, Vdi3805Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
 
 //#region 🔖️Mutations
-use super::add_geometry_connection;
-use super::change_correction_as_of;
-use super::change_edition_profile;
-use super::change_strict_mode;
-use super::add_curve;
-use super::add_geometry;
-use super::add_product;
-use super::remove_curve;
-use super::remove_geometry;
-use super::remove_product;
-use super::remove_edition_profile;
-use super::remove_geometry_connection;
-use super::rename_product;
-use super::change_curve_points;
-use super::change_geometry_parameters;
-use super::change_product_configuration;
-use super::resize_geometry;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection;
+use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of;
+use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile;
+use semio_s_artifact_norm_vdi3805_mut_file::change_strict_mode;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_curve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry;
+use semio_s_artifact_norm_vdi3805_mut_products::add_product;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_curve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry;
+use semio_s_artifact_norm_vdi3805_mut_products::remove_product;
+use semio_s_artifact_norm_vdi3805_mut_file::remove_edition_profile;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_geometry_connection;
+use semio_s_artifact_norm_vdi3805_mut_products::rename_product;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_curve_points;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_geometry_parameters;
+use semio_s_artifact_norm_vdi3805_mut_products::change_product_configuration;
+use semio_s_artifact_norm_vdi3805_mut_geometry::resize_geometry;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
 //#region 🔖️Leaves
-use super::change_manufacturer_file;
-use super::change_limits;
+use semio_s_artifact_norm_vdi3805_mut_file::change_manufacturer_file;
+use semio_s_artifact_norm_vdi3805_mut_file::change_limits;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -100,7 +109,6 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -122,13 +130,27 @@ mod tests;
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::Vdi3805Mutation;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
+        let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+        <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use crate::mutation_bridge::*;

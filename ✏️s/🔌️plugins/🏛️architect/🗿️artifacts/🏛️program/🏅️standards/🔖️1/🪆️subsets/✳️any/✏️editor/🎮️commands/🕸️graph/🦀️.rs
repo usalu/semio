@@ -4,6 +4,7 @@ pub mod node_graph_edit {
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::registers::RegisterKey;
     use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
@@ -61,7 +62,7 @@ pub mod node_graph_edit {
                     }
                     for id in node_ids {
                         if deleted.insert(id.clone()) {
-                            emitted.push(ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id: EntityId(id) }));
+                            emitted.push(ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::ProgramElement, id: EntityId(id) }));
                         }
                     }
                 }

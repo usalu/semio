@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `ChangeNodeKindDescription`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeNodeKindDescription, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &crate::change_node_kind_description::ChangeNodeKindDescription, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if payload.new_description == base.node_kind.description {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Node kind description is unchanged.");
     }

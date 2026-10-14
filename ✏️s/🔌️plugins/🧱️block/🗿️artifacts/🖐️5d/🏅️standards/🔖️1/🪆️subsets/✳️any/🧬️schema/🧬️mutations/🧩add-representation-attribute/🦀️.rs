@@ -1,9 +1,8 @@
 //! 🧩 Block5d mutation — `AddRepresentationAttribute`: a member of a representation's nested `attributes`.
 
-use crate::BlockAttribute;
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_plugin_block::BlockAttribute;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🧩 `add-representation-attribute` payload.
@@ -22,24 +21,24 @@ pub struct AddRepresentationAttribute {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_representation_attribute(id: String, attribute: BlockAttribute) -> Block5dMutation {
-    Block5dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: None })
+pub fn add_representation_attribute<Op: From<crate::add_representation_attribute::AddRepresentationAttribute>>(id: String, attribute: BlockAttribute) -> Op {
+    Op::from(AddRepresentationAttribute { id, attribute, index: None })
 }
 
 /// 📍️ Builder — like [`add_representation_attribute`] but inserts the row at `index`.
-pub fn add_representation_attribute_at(id: String, attribute: BlockAttribute, index: u32) -> Block5dMutation {
-    Block5dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: Some(index) })
+pub fn add_representation_attribute_at<Op: From<crate::add_representation_attribute::AddRepresentationAttribute>>(id: String, attribute: BlockAttribute, index: u32) -> Op {
+    Op::from(AddRepresentationAttribute { id, attribute, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddRepresentationAttribute {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for AddRepresentationAttribute where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::remove_representation_attribute::RemoveRepresentationAttribute> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "representation-attribute", kind: "add-representation-attribute", record: "AddedRepresentationAttribute" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::add_representation_attribute::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_representation_attribute::inverse::inverse(self, base)?
     
     })
 }
@@ -51,3 +50,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddRepresentat
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

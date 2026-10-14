@@ -1,8 +1,8 @@
 //! 🔺️ `change-part-number-input` — sparse diff construction.
 
-use super::mutation::ChangePartNumberInput;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757PartNumberInputsRows, Iso16757PartNumberInputsEntry};
+use crate::change_part_number_input::mutation::ChangePartNumberInput;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757PartNumberInputsRows, Iso16757PartNumberInputsEntry};
 
 //#region 🔖️Diff
 

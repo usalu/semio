@@ -64,6 +64,8 @@ def package_of(file, owners):
 
 
 def workspace_root(manifest):
+    if re.search(r"^\[workspace\]", open(manifest, encoding="utf-8").read(), re.M):
+        return manifest
     data = toml_load(manifest)
     ws = data.get("package", {}).get("workspace")
     if ws:
@@ -108,6 +110,13 @@ def main():
     for manifest, need in sorted(by_manifest.items()):
         text = edits.get(manifest) or open(manifest, encoding="utf-8").read()
         own = toml_load(manifest).get("package", {}).get("name")
+        if workspace_root(manifest) == manifest:
+            for name in sorted(need["normal"] | need["dev"]):
+                if name in reg and not re.search(r"^" + re.escape(name) + r"\s*=", text, re.M):
+                    table = "dependencies" if name in need["normal"] else "dev-dependencies"
+                    text = re.sub(r"^\[" + table + r"\]\n", f"[{table}]\n{name} = {{ path = \"{os.path.relpath(reg[name], os.path.dirname(manifest))}\" }}\n", text, count=1, flags=re.M)
+            edits[manifest] = text
+            continue
         for name in sorted(need["normal"]):
             if name != own:
                 text = add_dep(text, "dependencies", name)

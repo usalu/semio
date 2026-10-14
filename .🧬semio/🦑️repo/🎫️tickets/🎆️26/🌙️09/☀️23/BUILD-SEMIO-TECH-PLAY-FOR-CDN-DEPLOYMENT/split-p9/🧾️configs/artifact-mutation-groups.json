@@ -1,0 +1,140 @@
+{
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d": {
+  "🗿️object-kind": [
+   "rename_object_kind",
+   "change_object_kind_label",
+   "change_object_kind_variant",
+   "change_object_kind_description",
+   "change_object_kind_icon",
+   "change_object_kind_unit"
+  ],
+  "🎭️representations": [
+   "create_representation",
+   "delete_representation",
+   "rename_representation",
+   "change_representation_mesh_url",
+   "change_representation_lod",
+   "change_representation_description",
+   "add_representation_tag",
+   "remove_representation_tag",
+   "add_representation_attribute",
+   "remove_representation_attribute"
+  ],
+  "🌀️vortex-kinds": [
+   "create_vortex_kind",
+   "delete_vortex_kind",
+   "rename_vortex_kind",
+   "change_vortex_kind_label",
+   "change_vortex_kind_color",
+   "change_vortex_kind_default_cable_kind"
+  ],
+  "🌪️vortices": [
+   "create_vortex",
+   "delete_vortex",
+   "move_vortex",
+   "resize_vortex",
+   "change_vortex_vortex_kind",
+   "change_vortex_label"
+  ],
+  "📋️meta": [
+   "add_compatibility_rule",
+   "remove_compatibility_rule",
+   "add_attribute",
+   "remove_attribute",
+   "add_author",
+   "remove_author",
+   "move_camera3d",
+   "scale_camera3d",
+   "change_meta_description"
+  ]
+ },
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d": {
+  "🧩️part-kind": [
+   "rename_part_kind",
+   "change_part_kind_label",
+   "change_part_kind_variant",
+   "change_part_kind_description",
+   "change_part_kind_icon",
+   "change_part_kind_unit",
+   "update_part_2d",
+   "update_part_3d"
+  ],
+  "🎭️representations": [
+   "create_representation",
+   "delete_representation",
+   "rename_representation",
+   "change_representation_mesh_url",
+   "change_representation_lod",
+   "change_representation_description",
+   "add_representation_tag",
+   "remove_representation_tag",
+   "add_representation_attribute",
+   "remove_representation_attribute"
+  ],
+  "🪝️grip-kinds": [
+   "create_grip_kind",
+   "delete_grip_kind",
+   "rename_grip_kind",
+   "change_grip_kind_label",
+   "change_grip_kind_color",
+   "change_grip_kind_default_rope_kind"
+  ],
+  "🤏️grips": [
+   "create_grip",
+   "delete_grip",
+   "move_grip_2d",
+   "move_grip_3d",
+   "resize_grip_3d",
+   "change_grip_grip_kind"
+  ],
+  "📋️meta": [
+   "add_compatibility_rule",
+   "remove_compatibility_rule",
+   "add_attribute",
+   "remove_attribute",
+   "add_author",
+   "remove_author",
+   "change_meta_description"
+  ],
+  "🎥️cameras": [
+   "move_camera2d",
+   "scale_camera2d",
+   "move_camera3d",
+   "scale_camera3d"
+  ]
+ },
+ "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d": {
+  "🔷️node-kind": [
+   "rename_node_kind",
+   "change_node_kind_label",
+   "change_node_kind_variant",
+   "change_node_kind_description",
+   "change_node_kind_icon",
+   "change_node_kind_unit",
+   "update_presentation"
+  ],
+  "🔌️handles": [
+   "create_handle_kind",
+   "delete_handle_kind",
+   "rename_handle_kind",
+   "change_handle_kind_label",
+   "change_handle_kind_color",
+   "change_handle_kind_default_wire_kind",
+   "create_handle",
+   "delete_handle",
+   "move_handle",
+   "change_handle_handle_kind"
+  ],
+  "📋️meta": [
+   "add_compatibility_rule",
+   "remove_compatibility_rule",
+   "add_attribute",
+   "remove_attribute",
+   "add_author",
+   "remove_author",
+   "move_camera2d",
+   "scale_camera2d",
+   "change_meta_description"
+  ]
+ }
+}

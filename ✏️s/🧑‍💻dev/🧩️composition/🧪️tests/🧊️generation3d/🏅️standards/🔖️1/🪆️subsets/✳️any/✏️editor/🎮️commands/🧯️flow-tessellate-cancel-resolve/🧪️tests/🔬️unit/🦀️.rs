@@ -19,7 +19,7 @@ fn the_cancel_acknowledgement_arms_nothing() {
     assert!(session.note_pending_tessellate(hash, "brep:solid-1".into()));
     session.note_window_extensions_in_flight("procedural-preview-test", 1);
     session.cancel_preview_evaluation("procedural-preview-test");
-    let payload = FlowTessellateCancelResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), output_json: r#"{"ok":true,"retired":1}"#.into(), ok: true };
+    let payload = FlowTessellateCancelResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), output_json: r#"{"ok":true,"retired":1}"#.into(), ok: true };
     let emit = handle(&payload, &doc, &cfg, &mut session).expect("flowTessellateCancelResolve");
     assert!(emit.effects.is_empty(), "the acknowledgement emits no self-redispatch");
     assert!(emit.extension_invocations.is_empty(), "the acknowledgement emits no further extension work");

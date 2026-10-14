@@ -8,7 +8,9 @@
 
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view::windows::main;
-use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;

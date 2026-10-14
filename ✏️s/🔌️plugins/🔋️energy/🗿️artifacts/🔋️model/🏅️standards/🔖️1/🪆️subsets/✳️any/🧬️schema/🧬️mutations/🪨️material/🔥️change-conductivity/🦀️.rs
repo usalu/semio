@@ -1,8 +1,7 @@
 //! 🔥️ Energy model mutation — `ChangeMaterialConductivity`: Sets conductivity (W/m·K) on one material, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeMaterialConductivity {
     pub new_conductivity_w_m_k: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_material_conductivity(id: crate::model::EntityId, new_conductivity_w_m_k: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeMaterialConductivity(ChangeMaterialConductivity { id, new_conductivity_w_m_k })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_material_conductivity<Op: From<ChangeMaterialConductivity>>(id: crate::model::EntityId, new_conductivity_w_m_k: f64) -> Op {
+    ChangeMaterialConductivity { id, new_conductivity_w_m_k }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeMaterialConductivity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeMaterialConductivity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeMaterialConductivity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material", kind: "change-material-conductivity", record: "ChangedMaterialConductivity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

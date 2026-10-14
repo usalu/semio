@@ -84,6 +84,10 @@ def analyse(spec):
             previous = assign[it.i]
         elif it.kind in ("macro", "?"):
             assign[it.i] = previous
+    if spec.get("rest") == "parent":
+        for it in items:
+            if it.i not in assign and it.kind != "use":
+                assign[it.i] = None
     unassigned = [it for it in items if it.i not in assign and it.kind not in ("use",)]
     edges = collections.defaultdict(set)
     for it in items:
@@ -171,7 +175,7 @@ def render(entries):
         for r in region[common:]:
             body.append(f"//#region {r}")
         current = region
-        body.append(text.strip("\n"))
+        body.append(re.sub(r"^(?:[ \t]*//![^\n]*\n)+\s*", "", text).strip("\n"))
     for r in reversed(current):
         body.append(f"//#endregion {r}")
     return "\n".join(body)
@@ -244,6 +248,7 @@ def apply(spec):
                 leaves.add(alias.group(1))
             elif last and not leaf.endswith("::"):
                 leaves.add(last[-1])
+        it.always = body.endswith("*") or not body.startswith(("crate", "super", "self"))
         it.idents = leaves - {"self", "crate", "super"} or set(re.findall(r"[A-Za-z_][A-Za-z0-9_]*", body))
     writes = {}
     for child in spec["children"]:
@@ -258,7 +263,7 @@ def apply(spec):
                         idents |= items[j].idents
         lines = [child["doc"], ""]
         for it in uses:
-            if it.idents & idents and "#[cfg(test)]" not in header_uses[it.i]:
+            if (it.idents & idents or getattr(it, "always", False)) and "#[cfg(test)]" not in header_uses[it.i]:
                 lines.append(header_uses[it.i])
         for other, wanted in sorted(needs[name].items(), key=lambda kv: str(kv[0])):
             prefix = module if other is None else f"{module}::{other}"
@@ -273,7 +278,7 @@ def apply(spec):
     lines = [doc.group(1).rstrip("\n")] if doc else []
     lines.append("")
     for it in uses:
-        if it.idents & idents or "#[cfg(test)]" in header_uses[it.i]:
+        if it.idents & idents or getattr(it, "always", False) or "#[cfg(test)]" in header_uses[it.i]:
             lines.append(header_uses[it.i])
     for other, wanted in sorted(needs[None].items(), key=lambda kv: str(kv[0])):
         lines.append(f"use {module}::{other}::{{{', '.join(sorted(wanted))}}};")

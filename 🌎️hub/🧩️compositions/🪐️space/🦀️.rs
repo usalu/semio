@@ -11,6 +11,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 use semio_framework_os::OS_SPACE_SCHEMA;
 pub use semio_s_space_core::*;
 
@@ -226,7 +227,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 // executor-bridge call site in this crate; the `space` artifact/editor/viewer calls below are
 // already sync (no bridge needed).
 pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError> {
-    Plugin::<SpaceApps>::builder("space")
+    PluginBuilder::<_, SpaceApps>::new("space")
         .label("S Studio")
         .version("0.1.0")
         .package_id("semio:space")

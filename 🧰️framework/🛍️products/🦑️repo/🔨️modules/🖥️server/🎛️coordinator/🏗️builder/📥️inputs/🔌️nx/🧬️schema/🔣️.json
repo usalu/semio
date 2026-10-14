@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "project",
+    "target",
+    "packageRoot",
+    "command",
+    "output",
+    "enabled"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "project": {
+      "const": "@semio-tech/repo-coordinator"
+    },
+    "target": {
+      "const": "build"
+    },
+    "packageRoot": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
+    },
+    "command": {
+      "const": "bun ../../🏗️builder/🏃️execution/📜️script.ts build"
+    },
+    "output": {
+      "const": "{workspaceRoot}/.cache/b/p/m/next/{options.env.SEMIO_BUILD_MODE}/out"
+    },
+    "enabled": {
+      "type": "boolean"
+    }
+  }
+}

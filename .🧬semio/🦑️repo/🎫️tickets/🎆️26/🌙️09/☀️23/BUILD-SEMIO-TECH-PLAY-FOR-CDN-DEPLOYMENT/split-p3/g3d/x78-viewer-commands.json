@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-viewer-commands",
+ "description": "Procedural generation3d viewer commands",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands",
+ "moves": [
+  {
+   "from": "viewer::generation3d::commands",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith",
+ "doc": "🎮️ Generation3d viewer commands: camera, sun, show and level-of-detail settings, the preview evaluation chain hops and document export."
+}

@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-2d-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d model: artifact schema, snapshot, diff, inferences, document helpers and artifact identity"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }
+

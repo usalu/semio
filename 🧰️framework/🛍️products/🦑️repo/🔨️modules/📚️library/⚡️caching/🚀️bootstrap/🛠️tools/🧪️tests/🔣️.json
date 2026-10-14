@@ -1,0 +1,24 @@
+{
+  "provisionAdmission": {
+    "resource": "nx-tooling-provision",
+    "activationResource": "nx-tooling-activation",
+    "activationWaitMilliseconds": 150,
+    "request": {"version":1,"minimumAvailableBytes":1610612736},
+    "cases": [
+      {"availableBytes":1610612735,"expected":false},
+      {"availableBytes":1610612736,"expected":true},
+      {"availableBytes":2147483648,"expected":true}
+    ],
+    "invalidRequests": [
+      {"version":1,"minimumAvailableBytes":0},
+      {"version":1,"minimumAvailableBytes":2147483649},
+      {"version":1,"minimumAvailableBytes":1610612736,"ignoreLiveReaders":true}
+    ]
+  },
+  "arguments": ["two words", "", "literal$()", "single'quote"],
+  "maximumElapsedMilliseconds": 5000,
+  "publications": 2,
+  "continuations": 2,
+  "refusedBudgets": [0, 0.5],
+  "commandLabels": ["nx:install", "nx:authorizers"]
+}

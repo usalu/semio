@@ -1,8 +1,7 @@
 //! 🧮️ Energy model mutation — `ChangeSpaceFloorArea`: Sets one space's floor area in square metres — the denominator every per-area gain in that space is expanded against.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSpaceFloorArea {
     pub new_floor_area_m2: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_space_floor_area(id: crate::model::EntityId, new_floor_area_m2: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSpaceFloorArea(ChangeSpaceFloorArea { id, new_floor_area_m2 })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_space_floor_area<Op: From<ChangeSpaceFloorArea>>(id: crate::model::EntityId, new_floor_area_m2: f64) -> Op {
+    ChangeSpaceFloorArea { id, new_floor_area_m2 }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSpaceFloorArea {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSpaceFloorArea
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSpaceFloorArea>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "space", kind: "change-space-floor-area", record: "ChangedSpaceFloorArea" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

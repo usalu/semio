@@ -1,12 +1,37 @@
-use super::*;
+//! 
+
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_precompute_fill::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::VORTEX_MARKER_MESH_KIND;
+use semio_s_artifact_puzzle_3d_precompute_brush::{brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView, BrushFillVortexTarget, BrushSceneView, TargetVortexWorld};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{pose_isometry, precompute_work, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec, Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_next_object_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject};
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry, KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps};
+use semio_s_plugin_puzzle_jobs::JobTurn;
+use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, StepContext};
+use semio_framework_tool_run::{
+    ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
+    TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP,
+};
+use std::collections::HashMap;
+use std::sync::Arc;
+
 
 fn faulted(turn: JobTurn) -> bool {
     matches!(turn, JobTurn::Fault(_))
 }
 
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, precompute_work_clock, precompute_work_done, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, precompute_work_clock, precompute_work_done, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
-use crate::standards::v1::subsets::any::schema::{BrushKindWeights, EngineSceneSnapshot, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
+use semio_s_artifact_puzzle_3d_model::{BrushKindWeights, EngineSceneSnapshot, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 
 /// 🧮️ Primitive work one fill builder step may cost ([`precompute_work_done`]): one transition of the cursorized planner —
@@ -38,7 +63,7 @@ fn test_context<'a>(builder: &FillBuilder, cancel: semio_framework_job::CancelTo
     fn now() -> Option<u64> {
         Some(0)
     }
-    StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10, crate::puzzle_job::testing::unbounded_grant()), cancel, now, sequence, crate::puzzle_job::testing::test_progress())
+    StepContext::new(builder.operation.operation, builder.operation.generation, StepBudget::new(100, 10, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), cancel, now, sequence, semio_s_plugin_puzzle_jobs::testing::test_progress())
 }
 
 #[test]
@@ -169,7 +194,7 @@ fn stale_generation_stops_preparation_before_installing_any_entry() {
     let mut builder = empty_builder();
     let before = (builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len());
     let mut sequence = 0;
-    let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), || Some(0), &mut sequence, crate::puzzle_job::testing::test_progress());
+    let mut context = StepContext::new(builder.operation.operation, Generation(builder.operation.generation.0 + 1), StepBudget::new(1, 1, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), || Some(0), &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
     assert!(faulted(builder.advance(&mut context)));
     assert_eq!((builder.base.objects.len(), builder.placed.len(), builder.placed_lookup.len()), before);
 }
@@ -315,7 +340,7 @@ fn stale_generation_faults_without_progress() {
     }
     let mut builder = empty_builder();
     let mut sequence = 0;
-    let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), now, &mut sequence, crate::puzzle_job::testing::test_progress());
+    let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), now, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
     let JobTurn::Fault(fault) = builder.advance(&mut context) else { panic!("a stale generation must fault") };
     assert_eq!(fault.as_slice(), b"stale-fill-operation".as_slice());
     assert!(faulted(JobTurn::Fault(fault)));
@@ -679,8 +704,8 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
 }
 
 //#region ⏯️FillRunJob
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 
 const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
@@ -698,19 +723,19 @@ fn never() -> Option<u64> {
 /// app's scaled box fallback; answers the roots, the sorted mesh lane and each mesh's raw positions.
 fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<String>, Vec<f32>) {
     let text = match document {
-        "nakagin" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
-        "concrete-forest" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        "nakagin" => std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads"),
+        "concrete-forest" => std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio")).expect("committed example reads"),
         other => panic!("unknown example document {other}"),
     };
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
-    let envelope = crate::editor::puzzle3d::snapshot::scene_from_snapshot(&snapshot, Default::default(), "fill");
-    let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(crate::editor::puzzle3d::session::scene_config_value(&envelope)).expect("scene config decodes");
+    let snapshot = semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&text).expect("example parses");
+    let envelope = semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot(&snapshot, Default::default(), "fill");
+    let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(semio_s_artifact_puzzle_3d_editor_session::scene_config_value(&envelope)).expect("scene config decodes");
     scene.seed = seed;
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_framework_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
     let body = collision_body_from_buffers(&positions, &fallback.indices).expect("fallback body");
-    let mut lane = crate::editor::puzzle3d::snapshot::collect_mesh_urls(&envelope.scene_snapshot);
-    lane.push(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
+    let mut lane = semio_s_artifact_puzzle_3d_editor_snapshot::collect_mesh_urls(&envelope.scene_snapshot);
+    lane.push(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
     lane.sort();
     lane.dedup();
     let meshes = lane.iter().map(|url| (url.clone(), body.clone())).collect();
@@ -749,7 +774,7 @@ fn settle_fill_run_outcome(turn: JobTurn) -> FillRunTurn {
 
 fn fill_run_turn(job: &mut FillRunJob, fuel: u64, sequence: &mut u64) -> FillRunTurn {
     let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, sequence, crate::puzzle_job::testing::test_progress());
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
     settle_fill_run_outcome(job.turn(&mut context))
 }
 
@@ -874,8 +899,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let candidates = mirror.trace.len() as u64 - marked;
         assert!(mirror.trace.len() as u64 >= marked && candidates <= 1, "only the last tested candidate stays resident next to every marked vortex: {candidates} candidates, {marked} marked");
         for (index, pair) in mirror.ops.chunks(2).enumerate() {
-            let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::io::binary::mutations::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
-            let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::io::binary::mutations::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
+            let Ok(Puzzle3dMutation::CreateObject(create)) = semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
+            let Ok(Puzzle3dMutation::ConnectVortices(connect)) = semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
             assert_eq!(mirror.entities[index], fill_run_entity(&create.object.id));
             assert_eq!(connect.attracted.split(':').next(), Some(create.object.id.as_str()), "the attraction docks the created object");
             assert_eq!(create.object.id, job.builder().appended_objects[index].id);
@@ -891,13 +916,12 @@ fn parry_hull(pose: &Pose3d, positions: &[f32]) -> parry3d::shape::ConvexPolyhed
     let points: Vec<parry3d::math::Point<f32>> = positions
         .chunks(3)
         .map(|vertex| {
-            let world = pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]));
+            let world = pose.transform_point(&semio_s_artifact_puzzle_3d_precompute_geometry::Point3d::new(vertex[0], vertex[1], vertex[2]));
             parry3d::math::Point::new(world.x(), world.y(), world.z())
         })
         .collect();
     parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
 }
-
 
 /// 🧥️ The mesh identity every second body of an own-mesh document variant carries instead of its kind's.
 const FILL_RUN_OWN_MESH_URL: &str = "/own-mesh/body.glb";
@@ -911,7 +935,7 @@ fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparatio
         object.mesh_url = Some(FILL_RUN_OWN_MESH_URL.into());
     }
     let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_framework_plugin::mesh_from_kind(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let mut meshes = (*roots.meshes).clone();
     meshes.insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
     lane.push(FILL_RUN_OWN_MESH_URL.into());
@@ -947,7 +971,7 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
     let placed = &job.builder().placed;
     let base = placed.len() - job.builder().sequence.len();
     assert_eq!(base, scene.scene_snapshot.objects.len(), "every document body is a collision body");
-    let box_positions = &positions[crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND];
+    let box_positions = &positions[semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND];
     let rendered = |url: Option<&str>| url.map(str::trim).filter(|url| !url.is_empty()).and_then(|url| positions.get(url)).unwrap_or(box_positions);
     let bodies: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene
         .scene_snapshot
@@ -1112,15 +1136,15 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let number = |key: &str| law[key].as_u64().unwrap_or_else(|| panic!("interactive law {key}"));
     let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
-    let mut overlay = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).expect("typed fixture admits"));
+    let mut overlay = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&semio_s_artifact_puzzle_3d_model::io::text::snapshot::parse_dsl(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio")).expect("committed example reads")).expect("example parses"))).expect("typed fixture admits"));
     let mut job = fill_run_job(roots, lane, seed, number("requested") as usize);
     let operation = job.operation();
     let (mut sequence, mut verdict) = (0, None);
     let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
     loop {
         let start = precompute_work_done();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, crate::puzzle_job::testing::test_progress());
-        let outcome = semio_framework_job::drive_step(&mut job, &mut context, "puzzle3d-fill-run", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("a fill run step").map(crate::puzzle_job::testing::owned_turn);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
+        let outcome = semio_framework_job::drive_step(&mut job, &mut context, "puzzle3d-fill-run", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("a fill run step").map(semio_s_plugin_puzzle_jobs::testing::owned_turn);
         let work = precompute_work_done() - start;
         turns += 1;
         if work > worst {
@@ -1346,7 +1370,7 @@ fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     assert!(tick.append_ops.is_empty(), "nothing is placed");
     assert_eq!(tick.steps.iter().map(|step| (step.kind, step.reason, step.args.clone())).collect::<Vec<_>>(), vec![(ToolRunStepKind::Danger, FillRunReason::ArtifactCapacity.code(), vec![ToolRunStepArg::Unsigned(DOCUMENT_OBJECT_SLOTS as u64)])]);
     let operation = job.operation();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, crate::puzzle_job::testing::test_progress());
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
     let JobTurn::Fault(fault) = job.turn(&mut context) else { panic!("the step after the danger step faults the run") };
     assert_eq!(fault.as_slice(), format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes());
     assert!(faulted(JobTurn::Fault(fault)));
@@ -1381,7 +1405,7 @@ fn drive_revalidation(job: &mut FillRevalidateJob, operation: Operation) -> Vec<
     let mut ticks = Vec::new();
     let mut sequence = 0;
     for _ in 0..1_000_000 {
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, crate::puzzle_job::testing::test_progress());
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, semio_s_plugin_puzzle_jobs::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, semio_s_plugin_puzzle_jobs::testing::test_progress());
         match settle_fill_run_outcome(job.turn(&mut context)) {
             FillRunTurn::Tick(tick) => ticks.push(tick),
             FillRunTurn::Complete => return ticks,
@@ -1639,7 +1663,6 @@ fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_ste
     assert_eq!((last.kind, last.reason, last.args.clone()), (ToolRunStepKind::Warning, FillRunReason::NoFreePlacement.code(), vec![ToolRunStepArg::Unsigned(0)]));
     assert_eq!(mirror.progress.as_ref().map(|progress| progress.state), Some(ToolRunState::Complete));
 }
-
 
 /// 🏁️ How a run ended as its ledger saw it: `None` when the last step is `success:requested-reached` over a met request, else
 /// the declared stall reason its `warning` step names. A run that ended without a step, with an undeclared reason, or with

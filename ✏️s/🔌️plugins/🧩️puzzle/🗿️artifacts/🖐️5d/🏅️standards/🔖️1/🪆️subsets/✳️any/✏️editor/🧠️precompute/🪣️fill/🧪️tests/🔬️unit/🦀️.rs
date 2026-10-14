@@ -5,7 +5,7 @@ use crate::editor::puzzle5d::puzzle5d_grip_full_id;
 use crate::puzzle_job::JobTurn;
 use semio_framework_job::InteractiveJob;
 use semio_framework_tool_run::{ToolRunTick, ToolRunTraceOp, ToolRunTraceSubject, ToolRunVerdict};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
 use std::collections::HashMap;
 use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
@@ -15,8 +15,8 @@ use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::StepBudget;
 use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunStep, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::Puzzle3dPlayApp;
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::FillRunReason;
+use semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp;
+use semio_s_artifact_puzzle_3d_model::FillRunReason;
 use std::time::{Duration, Instant};
 
 const FILL_RUN_FIXTURE: &str = include_str!("../🧫️fixtures/🎞️fill-run.json");
@@ -62,7 +62,7 @@ const PUZZLE5D_FILL_LAW_BOX_SCALE: f32 = 4.0;
 /// The store is a process-global `Mutex` every accessor reaches with `try_lock().ok()?`, so a contended
 /// lock reads as "not resident" — hence the bounded retry rather than one call.
 fn seed_planner_meshes(document: &Puzzle5dDocument) {
-    use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::derive_brush_mesh;
+    use semio_s_artifact_puzzle_3d_precompute::derive_brush_mesh;
     let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle5d::PUZZLE5D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * PUZZLE5D_FILL_LAW_BOX_SCALE).collect();
     let mut urls = crate::editor::puzzle5d::collect_mesh_urls(document);

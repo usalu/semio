@@ -1,5 +1,16 @@
-use super::*;
-use crate::{ProcessStep, StepOrigin};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+use semio_s_artifact_process_process3d_inferences::*;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MeasureKind, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
+use framework_schema::ArtifactSchema;
+use protocol::Inference;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use semio_s_artifact_process_process3d_model::{snapshot::ProcessStep, snapshot::StepOrigin};
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
@@ -110,11 +121,11 @@ async fn box_primitive_spans_from_local_origin_corner() {
 /// and the dowel itself) is a boolean the kernel answers, and each subtractive step reduces the volume.
 #[semio_framework_async_macros::async_test]
 async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
-    let text = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json");
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json").leak();
     let fixture: serde_json::Value = serde_json::from_str(text).expect("neutral timber scene");
     let exact: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("lossless neutral timber scene");
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let scene = crate::process_working_scene_from_snapshot(&snapshot);
+    let snapshot = semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(&snapshot);
     let expected = ProcessWorkingScene::from_value(exact["scene"].clone()).expect("neutral typed working scene");
     assert_eq!(scene, expected, "the complete authored demo retains every neutral stock, pose, origin and measure");
     for row in fixture["poseScalarBits"].as_array().unwrap() {
@@ -141,7 +152,7 @@ async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
 #[test]
 fn semantic_memo_hashes_literal_words_without_transport() {
     use semio_framework_value::{DslValue, Number};
-    let text = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔣️semantic-memo.json");
+    let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔣️semantic-memo.json")).expect("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔣️semantic-memo.json").leak();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let DslValue::Array(literals) = semio_framework_pack_json::from_json_str::<DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() else { panic!("neutral array"); };
     assert_eq!(literals.len(), independent.as_array().unwrap().len());
@@ -154,8 +165,8 @@ fn semantic_memo_hashes_literal_words_without_transport() {
         assert_eq!(text("word"), oracle["word"].as_str().unwrap());
         assert!(independent_keys.insert(serde_json::to_string(oracle).unwrap()));
         let value = DslValue::Number(match text("kind") { "uint" => Number::UInt(text("word").parse().unwrap()), "int" => Number::Int(text("word").parse().unwrap()), "float" => Number::Float(f64::from_bits(u64::from_str_radix(text("word"), 16).unwrap())), _ => panic!("neutral number kind") });
-        let hash = super::hash_value(&value);
-        assert_eq!(hash, super::hash_value(&value));
+        let hash = semio_s_artifact_process_process3d_inferences::hash_value(&value);
+        assert_eq!(hash, semio_s_artifact_process_process3d_inferences::hash_value(&value));
         assert!(hashes.insert(hash), "distinct literal {}", text("word"));
     }
     assert_eq!(hashes.len(), independent_keys.len());

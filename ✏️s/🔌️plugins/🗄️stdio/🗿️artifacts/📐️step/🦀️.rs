@@ -12,8 +12,9 @@ extern crate semio_framework_value_derive as value_derive;
 
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use crate::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
-use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 
 
 
@@ -60,9 +61,9 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(standards::v_ap214::subsets::base::schema::step_artifact_schema_descriptor())
+        .schema(semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::schema::step_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([standards::v_ap214::subsets::base::schema::inferences::step_artifact_inference_descriptor()])
+        .inferences([semio_s_artifact_stdio_step_inferences::standards::v_ap214::subsets::base::schema::inferences::step_artifact_inference_descriptor()])
         .composers(io_registry::composers())
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
@@ -85,12 +86,12 @@ fn step_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValid
     ENTRIES
         .get_or_init(|| {
             vec![
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
-                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc1::standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc3::standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
             ]
         })
         .as_slice()
@@ -110,28 +111,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.step",
                     extension: Some("step"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_ap214::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ap214::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.step"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.step.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_ap214::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ap214::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.step.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.step.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_ap214::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ap214::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.step.diff"),
@@ -142,8 +143,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.step.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -152,8 +153,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.step.spr"),
                 },
             ]
@@ -184,13 +185,13 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_ap214::subsets::base::io::StepComposer as StepRawAnyComposer;
-    use crate::standards::v_ap214::subsets::cc1::io::StepCc1Composer;
-    use crate::standards::v_ap214::subsets::cc2::io::StepCc2Composer;
-    use crate::standards::v_ap214::subsets::cc3::io::StepCc3Composer;
-    use crate::standards::v_ap214::subsets::cc4::io::StepCc4Composer;
-    use crate::standards::v_ap214::subsets::cc5::io::StepCc5Composer;
-    use crate::standards::v_ap214::subsets::cc6::io::StepCc6Composer;
+    use semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::io::StepComposer as StepRawAnyComposer;
+    use semio_s_artifact_stdio_step_cc1::standards::v_ap214::subsets::cc1::io::StepCc1Composer;
+    use semio_s_artifact_stdio_step_cc2::standards::v_ap214::subsets::cc2::io::StepCc2Composer;
+    use semio_s_artifact_stdio_step_cc3::standards::v_ap214::subsets::cc3::io::StepCc3Composer;
+    use semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4Composer;
+    use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5Composer;
+    use semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::io::StepCc6Composer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -233,664 +234,11 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "."]
-pub mod standards {
-    #[path = "."]
-    pub mod v_ap214 {
-        #[path = "."]
-        pub mod subsets {
-            #[path = "."]
-            pub mod base {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod bounds {
-                            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod cc1 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod cc2 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod cc3 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod cc4 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod cc5 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod cc6 {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-        }
-    }
-}
 
 
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
 
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod step_any {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc1 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc2 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc3 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc4 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc5 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc6 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-}
 
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod step_any {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc1 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc2 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc3 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc4 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc5 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-    #[path = "."]
-    pub mod step_cc6 {
-        #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-}
 
 #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🦀️.rs"]
 pub mod geometry;

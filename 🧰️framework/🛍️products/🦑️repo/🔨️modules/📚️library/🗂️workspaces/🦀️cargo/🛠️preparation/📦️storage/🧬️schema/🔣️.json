@@ -6,7 +6,8 @@
   "required": [
     "version",
     "directory",
-    "program"
+    "program",
+    "leaseDirectory"
   ],
   "properties": {
     "version": {
@@ -15,13 +16,19 @@
     "directory": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 135,
+      "maxLength": 180,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
     },
     "program": {
       "type": "string",
       "minLength": 1,
       "maxLength": 256,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "leaseDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 135,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
     }
   }

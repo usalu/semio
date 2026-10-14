@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
+import {createHash} from "node:crypto";
+import { dirname, isAbsolute, join } from "node:path";
 import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
 import { cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import { resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
+import { readBuildGraphV1,resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME } from "../🪪️identity/🟦️.ts";
 
@@ -110,18 +112,15 @@ export function assertStdioArtifactCargoMetadata(repoRoot: string, contract: { p
   console.log(`[stdio-package-contract] Cargo metadata packages=${contract.packages.length}`);
 }
 
+/** 🔏️ Reads only the exact immutable neutral graph issued by the outer owned build invocation. */
+export function readStdioArtifactBuildGraphPin(environment:Readonly<Record<string,string|undefined>>=process.env):BuildGraphV1{
+ const pin={path:environment.SEMIO_BUILD_GRAPH_PATH,digest:environment.SEMIO_BUILD_GRAPH_DIGEST};assert.equal(validateJsonSchemaSubset(pinSchema,pin).length,0,"Original immutable build graph path and digest required");assert(pin.path&&isAbsolute(pin.path),"Original absolute immutable build graph pin required");const source=readFileSync(pin.path,"utf8");assert.equal(createHash("sha256").update(source).digest("hex"),pin.digest,"Original Stdio build graph source changed");return readBuildGraphV1(JSON.parse(source));
+}
+
 /** 🔬️ Compares the admitted artifact dependency projection with the current portable build graph. */
 export async function assertStdioArtifactBuildGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap): Promise<void> {
   assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-  const scratch = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "stdio-build-graph-"));
-  const graphPath = join(scratch, "graph.json");
-  let graph: BuildGraphV1;
-  try {
-    await runCaptured(process.execPath, ["repo", "graph", `--file=${graphPath}`], repoRoot, 180_000);
-    graph = JSON.parse(readFileSync(graphPath, "utf8")) as BuildGraphV1;
-  } finally {
-    rmSync(scratch, { recursive: true, force: true });
-  }
+  const graph=readStdioArtifactBuildGraphPin();
   assert.equal(graph.version, 1, "Portable build graph version required");
   assert(graph.projects && typeof graph.projects === "object", "Portable build projects required");
   assert(Array.isArray(graph.dependencies), "Portable build dependency array required");

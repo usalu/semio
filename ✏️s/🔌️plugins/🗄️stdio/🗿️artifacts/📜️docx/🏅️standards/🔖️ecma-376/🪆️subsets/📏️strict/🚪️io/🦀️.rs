@@ -4,9 +4,9 @@
 //! `ComposerEntry` via the standard-level aggregator), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxAnyComposer;
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
-    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxAnyComposer;
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
@@ -96,11 +96,15 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
-    #[cfg(test)] use crate::schema::snapshot::{DocxXmlPart};
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{check_strict_conformance};
-    #[cfg(test)] use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{STRICT_REL_BASE};
-    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+    #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxXmlPart};
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
+    #[cfg(test)] use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::{STRICT_REL_BASE};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -109,7 +113,7 @@ use semio_framework_diagnostic::Severity;
     #[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     #[cfg(test)] use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
-    use crate::standards::v_ecma_376::subsets::strict::schema::construction::build_minimal_strict_docx;
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::construction::build_minimal_strict_docx;
 
 
     //#region 🔖️Builder
@@ -123,7 +127,7 @@ use semio_framework_diagnostic::Severity;
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
-            document.body.push(crate::schema::snapshot::DocxBlock::Paragraph(paragraph));
+            document.body.push(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(paragraph));
             self.snapshot = build_minimal_strict_docx(document);
             self
         }
@@ -194,8 +198,10 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::io::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    #[cfg(test)] use crate::{schema::snapshot::DocxXmlPart, DocxSnapshot};
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxAnalyzer as DocxAnyAnalyzer;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxParts;
+    #[cfg(test)] use crate::{standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart};
+ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;
 #[cfg(test)] use semio_framework_diagnostic::FaultScope;
@@ -207,7 +213,7 @@ use semio_framework_diagnostic::Severity;
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
 
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::*;
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::*;
 
 
     //#region 🔖️Analyzer

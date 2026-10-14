@@ -36,7 +36,7 @@ fn cancellation_covers_every_path_stage_and_owned_results_survive(){
 #[test]
 fn exact_caps_and_progress_fields_match_the_neutral_contract(){
  let source=input(&rows()[0]);let(expected,p)=finish(source.clone(),1);let b=p.boolean.unwrap();let mut exact=source;exact.max_edges=p.source_segments.max(p.points);exact.max_parameters=b.parameters;exact.max_atomic_edges=b.atomic_edges;exact.max_segments=b.segments;exact.max_work=p.work;assert_eq!(finish(exact,7).0,expected);
- let value=json!({"phase":p.phase.as_str(),"operands":p.operands,"sourceSegments":p.source_segments,"points":p.points,"work":p.work,"flatten":p.flatten.map(|p|json!({"phase":match p.phase{crate::flatten::PathFlattenPhase::Preparing=>"preparing",crate::flatten::PathFlattenPhase::Subdividing=>"subdividing",crate::flatten::PathFlattenPhase::Complete=>"complete"},"completed":p.completed,"total":p.total,"points":p.points,"work":p.work,"done":p.done})),"boolean":b.work,"done":p.done});assert_eq!(value.as_object().unwrap().len(),8);
+ let value=json!({"phase":p.phase.as_str(),"operands":p.operands,"sourceSegments":p.source_segments,"points":p.points,"work":p.work,"flatten":p.flatten.map(|p|json!({"phase":match p.phase{semio_framework_2d_path_flatten::PathFlattenPhase::Preparing=>"preparing",semio_framework_2d_path_flatten::PathFlattenPhase::Subdividing=>"subdividing",semio_framework_2d_path_flatten::PathFlattenPhase::Complete=>"complete"},"completed":p.completed,"total":p.total,"points":p.points,"work":p.work,"done":p.done})),"boolean":b.work,"done":p.done});assert_eq!(value.as_object().unwrap().len(),8);
 }
 
 #[test]

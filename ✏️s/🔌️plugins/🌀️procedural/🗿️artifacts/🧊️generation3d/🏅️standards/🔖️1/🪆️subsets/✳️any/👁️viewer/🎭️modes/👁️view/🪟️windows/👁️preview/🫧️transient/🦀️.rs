@@ -13,7 +13,9 @@
 //! WHAT is written — the same relation `🧬️generate`'s preview owner has to `✏️edit`'s on the
 //! sibling surface.
 
-use crate::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation, SetPreviewEval};
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::SetPreviewEval;
 
 /// 🪟️ The viewer preview window's retained evaluation publication.
 pub struct Generation3dViewPreviewWindowTransientOwner;

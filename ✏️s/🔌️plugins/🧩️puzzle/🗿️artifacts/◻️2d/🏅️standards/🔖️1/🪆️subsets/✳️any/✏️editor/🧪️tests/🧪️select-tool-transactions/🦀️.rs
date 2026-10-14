@@ -57,7 +57,7 @@ pub(super) fn release(host: &mut BoardHost, x: f64, y: f64) {
 }
 
 pub(super) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
-    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(rows) })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
+    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(rows) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
 fn node_at(app: &Puzzle2dApp, id: &str) -> (f64, f64) {
@@ -268,7 +268,7 @@ fn the_rotate_and_scale_verbs_each_commit_one_parametric_transaction() {
 fn the_hud_move_and_an_inspector_delta_yield_the_drag_leaf() {
     let mut app = board_app();
     select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, "left").expect("select left");
-    let hud = dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "move 5 -5" })), Some(overview::WINDOW_KIND_ID)).expect("HUD move");
+    let hud = dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "move 5 -5" })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("HUD move");
     let inspector = dispatch(&mut app, "patchInspectorNodes", Some(&json!({ "ids": ["left"], "field": "y", "delta": 7.0 })), None).expect("inspector delta");
     for (what, result) in [("HUD move", &hud), ("inspector delta", &inspector)] {
         let rows = edit_rows(result);
@@ -294,11 +294,11 @@ fn a_mixed_lock_selection_commits_and_moves_only_the_unlocked_target() {
 
 //#region 🌊️StreamedGestures
 fn stream(app: &mut Puzzle2dApp, dx: f64) -> InvocationResult {
-    dispatch(app, "translateSelection", Some(&json!({ "dx": dx, "dy": 0.0, "phase": "stream" })), Some(overview::WINDOW_KIND_ID)).expect("stream tick")
+    dispatch(app, "translateSelection", Some(&json!({ "dx": dx, "dy": 0.0, "phase": "stream" })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("stream tick")
 }
 
 fn phase(app: &mut Puzzle2dApp, args: Value) -> InvocationResult {
-    dispatch(app, "translateSelection", Some(&args), Some(overview::WINDOW_KIND_ID)).expect("gesture phase")
+    dispatch(app, "translateSelection", Some(&args), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("gesture phase")
 }
 
 /// 👁️ Where the overview window PAINTS a node — its board snapshot lane, which previews the window's open gesture.
@@ -359,7 +359,7 @@ fn a_forwarded_host_event_mid_gesture_leaves_zero_trace() {
         stream(&mut app, 10.0);
         stream(&mut app, 15.0);
         assert_eq!(painted_x(&mut app, "left"), -175.0, "{kind}: the gesture is open");
-        let result = dispatch(&mut app, "hostEvent", Some(&json!({ "windowId": overview::WINDOW_KIND_ID, "kind": kind })), Some(overview::WINDOW_KIND_ID)).expect("the forwarded host event");
+        let result = dispatch(&mut app, "hostEvent", Some(&json!({ "windowId": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "kind": kind })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("the forwarded host event");
         assert_zero_trace(&mut app, &result, &before, kind);
         let late = phase(&mut app, json!({ "phase": "commit" }));
         assert_zero_trace(&mut app, &late, &before, &format!("a commit after {kind}"));
@@ -391,8 +391,8 @@ fn leaving_the_select_utility_retires_an_open_gesture() {
     let before = fixture_of(&app);
     stream(&mut app, 40.0);
     assert_eq!(painted_x(&mut app, "left"), -160.0, "the gesture is open");
-    let brush = semio_framework_plugin::ViewModel { active_utility_id: Some(brush_utility::UTILITY_ID.into()), ..window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID) };
-    dispatch_in_view(&mut app, "focusSelection", None, Some(overview::WINDOW_KIND_ID), brush).expect("a verb under the brush");
+    let brush = semio_framework_plugin::ViewModel { active_utility_id: Some(brush_utility::UTILITY_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) };
+    dispatch_in_view(&mut app, "focusSelection", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID), brush).expect("a verb under the brush");
     let late = phase(&mut app, json!({ "phase": "commit" }));
     assert_zero_trace(&mut app, &late, &before, "a retired gesture");
     close_app(&mut app);
@@ -406,7 +406,7 @@ fn a_document_moved_under_an_open_gesture_aborts_it() {
     select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, "left").expect("select left");
     stream(&mut app, 40.0);
     assert_eq!(painted_x(&mut app, "left"), -160.0, "the gesture is open");
-    let other = dispatch(&mut app, "patchInspectorNodes", Some(&json!({ "ids": ["mid"], "field": "y", "value": 5.0 })), Some(detail::WINDOW_KIND_ID)).expect("an edit from another window");
+    let other = dispatch(&mut app, "patchInspectorNodes", Some(&json!({ "ids": ["mid"], "field": "y", "value": 5.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID)).expect("an edit from another window");
     assert_eq!(committed_edits(&other), 1, "the other window's edit lands");
     let late = phase(&mut app, json!({ "phase": "commit" }));
     assert_eq!(committed_edits(&late), 0, "the gesture opened on the old base publishes nothing");
@@ -431,10 +431,10 @@ fn threading_snapshot() -> Puzzle2dPlaySnapshot {
 #[test]
 fn a_selection_with_repeated_ids_drags_each_target_once() {
     let snapshot = threading_snapshot();
-    let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(overview::WINDOW_KIND_ID.to_string()));
+    let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
-    let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
-    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
+    let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(["left".into()].into_iter().collect(), 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
@@ -456,8 +456,8 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     ])
     .to_string();
     let command = Puzzle2dCommand::from_action("applyBoardEvents", Some(json!({ "eventsJson": events })), None);
-    let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
-    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
+    let view = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
     let emit = emit_for("seed-7");
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");

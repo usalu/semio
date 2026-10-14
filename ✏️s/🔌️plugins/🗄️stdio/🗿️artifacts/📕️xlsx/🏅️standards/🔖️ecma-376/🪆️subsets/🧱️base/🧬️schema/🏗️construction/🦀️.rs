@@ -1,8 +1,8 @@
 //! 🏗️ Typed SpreadsheetML document and package construction.
 
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook, XlsxXmlPart};
-use crate::schema::vocabulary::*;
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook, XlsxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::*;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 

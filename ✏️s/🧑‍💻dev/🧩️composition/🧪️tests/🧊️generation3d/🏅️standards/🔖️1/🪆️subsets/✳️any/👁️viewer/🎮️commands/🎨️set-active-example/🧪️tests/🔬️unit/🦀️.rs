@@ -7,10 +7,10 @@ use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
 use crate::viewer_domain::viewer_laws::context;
 use crate::viewer_domain::viewer_laws::context::{app, dispatch_with_view, run_actions, view_shell_view};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewCommand;
+use semio_s_artifact_procedural_3d_viewer::Generation3dViewCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::ArtifactViewer;
 
@@ -41,7 +41,7 @@ fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
     let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    let topology = <semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg).expect("the valid example fixture admits interaction topology");
+    let topology = <semio_s_artifact_procedural_3d_viewer::Generation3dViewer as ArtifactViewer>::interaction_topology(&doc, &cfg).expect("the valid example fixture admits interaction topology");
     let ids = topology.domains.get("graph").expect("graph domain").ordered.iter().filter(|node| node.granularity == "node" && node.parent.is_none()).map(|node| node.id.clone()).collect();
     snapshot.retire_cold();
     ids

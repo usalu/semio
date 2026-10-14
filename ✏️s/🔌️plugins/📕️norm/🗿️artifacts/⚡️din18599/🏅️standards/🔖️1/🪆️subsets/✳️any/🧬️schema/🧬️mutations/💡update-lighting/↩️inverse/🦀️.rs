@@ -1,12 +1,12 @@
 //! ↩️ `update-lighting` inverse.
 
-use crate::mutations::update_lighting::UpdateLighting;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::update_lighting::UpdateLighting;
 
-pub fn inverse(_payload: &UpdateLighting, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &UpdateLighting, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_lighting::UpdateLighting> {
     Ok((|| {
-    vec![Din18599Mutation::UpdateLighting(UpdateLighting { new_lighting: base.lighting.clone() })]
+    vec![Op::from(UpdateLighting { new_lighting: base.lighting.clone() })]
 
     })())
 }

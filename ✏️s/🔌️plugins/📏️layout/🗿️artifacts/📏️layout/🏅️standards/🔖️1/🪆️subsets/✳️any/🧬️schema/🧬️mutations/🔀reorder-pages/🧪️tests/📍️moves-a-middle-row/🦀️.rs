@@ -2,8 +2,8 @@
 //!
 //! 📍️ The addressed row sits in the MIDDLE of its ordered collection, so the concrete inverse must put it back at its original index, and the inverse steps' diffs must sum to the negative of the forward diff.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-pages/📍️moves-a-middle-row/📸️snapshot/⬅️before/🔣️.json");

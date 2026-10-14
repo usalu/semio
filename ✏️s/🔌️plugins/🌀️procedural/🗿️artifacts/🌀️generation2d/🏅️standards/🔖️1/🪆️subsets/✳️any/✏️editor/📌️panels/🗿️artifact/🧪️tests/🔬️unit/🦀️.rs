@@ -1,5 +1,7 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body, render_with_view, snapshot_read};
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_s_artifact_procedural_2d_editor_panels::document::*;
+use crate::app_fixture::{app, close, render as render_body, render_with_view, snapshot_read};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 #[semio_framework_async_macros::async_test]

@@ -18,4 +18,5 @@ semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️module
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-draw-drawing = { path = "../🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-model = { path = "../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-mutations = { path = "../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

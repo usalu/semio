@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `ScaleCamera3d`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ScaleCamera3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::scale_camera3d::ScaleCamera3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if !payload.new_zoom.is_finite() || payload.new_zoom <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera zoom {} is not a finite positive number.", payload.new_zoom), ["camera3d"]);
     }

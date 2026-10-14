@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::model::modes::edit::windows::model::config::mutations::*;
-use crate::editor::model::modes::edit::windows::model::config::{EnergyModelCameraPose, EnergyModelWindowConfig};
+use crate::windows::model::config::mutations::*;
+use crate::windows::model::config::{EnergyModelCameraPose, EnergyModelWindowConfig};
 
 impl protocol::OpText for EnergyModelWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -19,8 +19,8 @@ impl protocol::OpText for EnergyModelWindowConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::editor::model::modes::edit::windows::model::config::mutations::*;
-use crate::editor::model::modes::edit::windows::model::config::{EnergyModelCameraPose, EnergyModelWindowConfig};
+use crate::windows::model::config::mutations::*;
+use crate::windows::model::config::{EnergyModelCameraPose, EnergyModelWindowConfig};
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `EnergyModelWindowConfig`.

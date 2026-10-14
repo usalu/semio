@@ -27,8 +27,67 @@
 //! the fresh leaves was reassigned a unique one within this facet, as part of this ticket's
 //! directory + glue trueing pass. See this facet's migration report for the emoji table.
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🌱create-step/🧪️tests/🪚️accepts/🦀️.rs"]
+mod tests_accepts_a_rip_cut_step_and_changes_nothing;
+#[cfg(test)]
+#[path = "🗑️delete-step/🧪️tests/🚫️accepts/🦀️.rs"]
+mod tests_accepts_a_step_id_and_changes_nothing;
+#[cfg(test)]
+#[path = "🏷️rename-step/🧪️tests/🔤️accepts/🦀️.rs"]
+mod tests_accepts_a_new_label_and_changes_nothing;
+#[cfg(test)]
+#[path = "🔘change-step-enabled/🧪️tests/⏸️accepts/🦀️.rs"]
+mod tests_accepts_a_disable_flag_and_changes_nothing;
+#[cfg(test)]
+#[path = "🧷change-step-origin/🧪️tests/🏭️accepts/🦀️.rs"]
+mod tests_accepts_a_machine_provenance_and_changes_nothing;
+#[cfg(test)]
+#[path = "📐replace-step-measure/🧪️tests/🕳️accepts/🦀️.rs"]
+mod tests_accepts_a_bore_measure_and_changes_nothing;
+#[cfg(test)]
+#[path = "🔀reorder-steps/🧪️tests/🔀️accepts/🦀️.rs"]
+mod tests_accepts_a_target_index_and_changes_nothing;
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+                            pub mod mutations;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+                            pub mod mutations;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_process_process3d_model::snapshot::ProcessStep;
+
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️MutationLeaves
@@ -36,21 +95,21 @@ use semio_framework_value_derive::{FromValue, ToValue};
 // directly in the plugin's `🦀️.rs` (this facet's fan-out ticket, SEMANTIC-MUTATIONS-OVERHAUL
 // wave-C, owns `🦀️.rs` for this plugin); `use super::<kind>;` below brings each sibling into
 // this file's scope so the enum body can reference `<kind>::<Type>`.
-use super::change_machine_icon;
-use super::change_step_enabled;
-use super::change_step_origin;
-use super::change_stock_label;
-use super::create_machine;
-use super::create_step;
-use super::delete_machine;
-use super::delete_step;
-use super::move_stock;
-use super::rename_machine;
-use super::rename_step;
-use super::reorder_steps;
-use super::replace_machine_capabilities;
-use super::replace_step_measure;
-use super::replace_stock_solid;
+use semio_s_artifact_process_process3d_mut_machines::change_machine_icon;
+use semio_s_artifact_process_process3d_mut_steps::change_step_enabled;
+use semio_s_artifact_process_process3d_mut_steps::change_step_origin;
+use semio_s_artifact_process_process3d_mut_stock::change_stock_label;
+use semio_s_artifact_process_process3d_mut_machines::create_machine;
+use semio_s_artifact_process_process3d_mut_steps::create_step;
+use semio_s_artifact_process_process3d_mut_machines::delete_machine;
+use semio_s_artifact_process_process3d_mut_steps::delete_step;
+use semio_s_artifact_process_process3d_mut_stock::move_stock;
+use semio_s_artifact_process_process3d_mut_machines::rename_machine;
+use semio_s_artifact_process_process3d_mut_steps::rename_step;
+use semio_s_artifact_process_process3d_mut_steps::reorder_steps;
+use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities;
+use semio_s_artifact_process_process3d_mut_steps::replace_step_measure;
+use semio_s_artifact_process_process3d_mut_stock::replace_stock_solid;
 //#endregion 🔖️MutationLeaves
 
 //#region 🔖️Mutations
@@ -118,3 +177,28 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
 mod kinds_conformance;
 //#endregion 🧪️KindsConformance
+
+//#region 🔖️DocumentHelpers
+/// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command
+/// needs: inserting a step at the viewer's replay cursor and removing a step by id. Shared by the
+/// `🎮️commands/🪜️step` and `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an
+/// immutable `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
+///
+/// ⏱️ The cursor is VIEW state (`Process3dConfig.resolved_up_to`), never a document field: a step drawn while the
+/// viewer replays the timeline lands at the cursor (clamped to the timeline), and the caller moves its own cursor
+/// with [`process3d_cursor_after_insert`] / [`process3d_cursor_after_remove`] on the config lane.
+pub fn insert_step_mutations(snapshot: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, step: ProcessStep, cursor: Option<usize>) -> Vec<crate::Process3dMutation> {
+    use crate::Process3dMutation;
+    use semio_s_artifact_process_process3d_mut_steps::create_step;
+    let index = cursor.map_or(snapshot.step_payloads.len(), |cursor| cursor.min(snapshot.step_payloads.len()));
+    vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })]
+}
+pub fn remove_step_mutations(snapshot: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, id: &str) -> Option<Vec<crate::Process3dMutation>> {
+    use crate::Process3dMutation;
+    use semio_s_artifact_process_process3d_mut_steps::delete_step;
+    snapshot.step_payloads.iter().any(|step| step.id == id).then(|| vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })])
+}
+//#endregion 🔖️DocumentHelpers
+
+/// 🧬️ The mutation facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

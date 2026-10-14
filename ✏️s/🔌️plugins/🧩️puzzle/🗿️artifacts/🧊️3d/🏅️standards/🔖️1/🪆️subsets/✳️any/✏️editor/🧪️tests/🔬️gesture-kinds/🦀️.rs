@@ -4,7 +4,7 @@
 //! inverse rows last-to-first, and requires the base back.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_object_hidden, change_object_locked, create_object, delete_object, disconnect_vortices};
+use {semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::change_object_hidden, semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::change_object_locked, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::delete_object, semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::disconnect_vortices};
 
 fn vortex(id: &str) -> Puzzle3dVortex {
     Puzzle3dVortex { id: id.into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }
@@ -68,7 +68,7 @@ fn a_delete_gesture_on_a_vortex_removes_only_that_vortex_of_a_surviving_object()
     let before = base();
     let vortices: HashSet<String> = [puzzle3d_vortex_full_id("c", "v0")].into_iter().collect();
     let operations = delete_selection::delete_selection_mutations(&before, &[], &vortices, &[], &[], &[]);
-    assert_eq!(operations, vec![crate::standards::v1::subsets::any::schema::mutations::remove_object_vortex("c".into(), "v0".into())]);
+    assert_eq!(operations, vec![semio_s_artifact_puzzle_3d_mutations_vortex::remove_object_vortex::mutation::remove_object_vortex("c".into(), "v0".into())]);
     let (after, restored) = replay(&before, &operations);
     assert!(after.objects[2].vortices.is_empty());
     assert_eq!(after.attractions.len(), 1, "the vortex's attraction is severed with it");
@@ -125,7 +125,7 @@ fn a_paste_gesture_is_one_create_object_per_clone_with_a_fresh_id() {
 #[test]
 fn a_duplicate_clone_is_a_create_object_and_a_painted_volume_is_a_create_target_volume() {
     let before = base();
-    let clone = create_object(crate::standards::v1::subsets::any::schema::Puzzle3dObject { id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
+    let clone = create_object(semio_s_artifact_puzzle_3d_model::Puzzle3dObject { id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
     let volume = add_target_volume::add_target_volume_mutation([1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
     let (after, restored) = replay(&before, &[clone, volume]);
     assert_eq!(after.objects.len(), 4);

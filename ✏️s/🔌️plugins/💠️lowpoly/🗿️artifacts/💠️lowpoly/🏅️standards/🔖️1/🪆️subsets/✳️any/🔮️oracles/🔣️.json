@@ -911,5 +911,49 @@
         }
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-model",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "📸️ The subject half decodes the committed snapshot fixtures through the snapshot type the model crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-mutations",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The subject half replays committed mutations through the dispatch enum the mutations crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-io",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+      "rationale": "🔀️ The subject half round-trips the stdio serializers and deserializers the io crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-config",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+      "rationale": "🎚️ The subject half drives the editor configuration lane the config crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-view",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/📦️packages/🦀️rust",
+      "rationale": "🧭️ The subject half reads the view session the view crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+      "rationale": "🎮️ The subject half invokes the command emitters the commands crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-lowpoly-lowpoly-editor",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+      "rationale": "✏️ The subject half drives the play app the editor crate owns."
+    }
   ]
 }

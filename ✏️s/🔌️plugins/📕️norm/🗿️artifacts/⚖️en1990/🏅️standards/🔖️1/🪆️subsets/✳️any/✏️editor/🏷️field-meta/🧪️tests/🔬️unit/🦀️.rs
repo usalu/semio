@@ -1,5 +1,5 @@
-use super::*;
-use crate::En1990Snapshot;
+
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 #[test]
 fn every_editable_leaf_has_en_de_field_meta() {

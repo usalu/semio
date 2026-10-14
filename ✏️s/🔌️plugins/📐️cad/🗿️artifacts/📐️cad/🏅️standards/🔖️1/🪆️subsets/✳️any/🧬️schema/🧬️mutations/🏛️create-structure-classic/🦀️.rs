@@ -19,11 +19,11 @@ pub struct CreateStructureClassicModel {
 
 impl<Op> MutationKind<CadSnapshot, Op> for CreateStructureClassicModel
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::create_structure_classic_model::CreateStructureClassicModel> + From<crate::delete_structure_classic_model::DeleteStructureClassicModel>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::create_structure_classic_model::CreateStructureClassicModel> + From<crate::delete_structure_classic_model::DeleteStructureClassicModel>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "structure-classic-model", kind: "create-structure-classic-model", record: "CreatedStructureClassicModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

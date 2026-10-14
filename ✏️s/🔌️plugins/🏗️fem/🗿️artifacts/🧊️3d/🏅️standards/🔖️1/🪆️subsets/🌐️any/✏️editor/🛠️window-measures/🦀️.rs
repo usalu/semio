@@ -1,7 +1,7 @@
 //! 🎛️ Per-window chrome measures of the fem3d model window: the Transform utility's handle options.
 
-use crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig;
-use crate::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ Window chrome measures for the model window, read from its captured gumball config.

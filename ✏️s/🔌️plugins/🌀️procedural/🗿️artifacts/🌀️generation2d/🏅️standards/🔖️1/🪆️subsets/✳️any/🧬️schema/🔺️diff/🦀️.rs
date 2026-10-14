@@ -122,11 +122,11 @@ pub struct Generation2dStringList {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
+pub use crate::Generation2dArtifact;
 //#endregion 🔁️Re-exports
 
 use crate::widget_id;
-use crate::Generation2dSnapshot;
+use crate::snapshot::Generation2dSnapshot;
 use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 

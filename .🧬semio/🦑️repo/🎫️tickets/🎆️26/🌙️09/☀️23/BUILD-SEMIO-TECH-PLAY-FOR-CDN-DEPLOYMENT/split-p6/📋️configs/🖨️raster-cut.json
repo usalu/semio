@@ -1,0 +1,456 @@
+{
+ "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+ "crate": "semio_s_artifact_raster_raster",
+ "aggregator": "agg",
+ "monolithManifest": ".🧬semio/🦑️repo/⚡️cache/p6/orig/raster-Cargo.toml",
+ "consumers": [
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🖨️raster/🏭️bridge"
+ ],
+ "crates": {
+  "agg": {
+   "ident": "semio_s_artifact_raster_raster",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "model": {
+   "ident": "semio_s_artifact_raster_raster_model",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "diff": {
+   "ident": "semio_s_artifact_raster_raster_diff",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "mutations": {
+   "ident": "semio_s_artifact_raster_raster_mutations",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "pixels": {
+   "ident": "semio_s_artifact_raster_raster_mutations_pixels",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️pixels/🦀️.rs",
+   "doc": "//! 🖌️ Raster pixel mutations: paint strokes, fills, filters, image transforms, pixel regions, masks and layer assets.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "layers": {
+   "ident": "semio_s_artifact_raster_raster_mutations_layers",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️layers/🦀️.rs",
+   "doc": "//! 🗂️ Raster layer mutations: create, delete, reorder, move, rename, resize and restyle layers.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "io": {
+   "ident": "semio_s_artifact_raster_raster_io",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "editor": {
+   "ident": "semio_s_artifact_raster_raster_editor",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "viewer": {
+   "ident": "semio_s_artifact_raster_raster_viewer",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "host": {
+   "ident": "semio_s_artifact_raster_raster_host",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "doc": "",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  },
+  "examples": {
+   "ident": "semio_s_artifact_raster_raster_examples",
+   "root": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "doc": "//! 📚️ Raster examples: the example documents the subset advertises.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as schema;"
+   ]
+  }
+ },
+ "rules": [
+  [
+   "",
+   "agg",
+   ""
+  ],
+  [
+   "standards",
+   "agg",
+   "standards"
+  ],
+  [
+   "examples",
+   "examples",
+   ""
+  ],
+  [
+   "examples::app_raster_demo_session",
+   "editor",
+   "demo_session"
+  ],
+  [
+   "standards::v1::subsets::any::schema",
+   "model",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::diff",
+   "diff",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations",
+   "mutations",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io",
+   "io",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io::text::snapshot",
+   "model",
+   "io::text::snapshot"
+  ],
+  [
+   "standards::v1::subsets::any::io::binary::snapshot",
+   "model",
+   "io::binary::snapshot"
+  ],
+  [
+   "standards::v1::subsets::any::io::sqlite::snapshot",
+   "model",
+   "io::sqlite::snapshot"
+  ],
+  [
+   "standards::v1::subsets::any::io::text::diff",
+   "diff",
+   "io::text"
+  ],
+  [
+   "standards::v1::subsets::any::io::binary::diff",
+   "diff",
+   "io::binary"
+  ],
+  [
+   "standards::v1::subsets::any::io::text::mutations",
+   "mutations",
+   "text"
+  ],
+  [
+   "standards::v1::subsets::any::io::binary::mutations",
+   "mutations",
+   "binary"
+  ],
+  [
+   "editor",
+   "editor",
+   ""
+  ],
+  [
+   "editor::raster",
+   "editor",
+   ""
+  ],
+  [
+   "viewer",
+   "viewer",
+   ""
+  ],
+  [
+   "viewer::raster",
+   "viewer",
+   ""
+  ],
+  [
+   "host",
+   "host",
+   ""
+  ],
+  [
+   "host::owned",
+   "host",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::paint_stroke",
+   "pixels",
+   "paint_stroke"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::fill_region",
+   "pixels",
+   "fill_region"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::fill_selection",
+   "pixels",
+   "fill_selection"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::apply_filter",
+   "pixels",
+   "apply_filter"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::transform_image",
+   "pixels",
+   "transform_image"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::write_pixel_region",
+   "pixels",
+   "write_pixel_region"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_pixels",
+   "pixels",
+   "change_layer_pixels"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_mask",
+   "pixels",
+   "change_layer_mask"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::add_layer_asset",
+   "pixels",
+   "add_layer_asset"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::remove_layer_asset",
+   "pixels",
+   "remove_layer_asset"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::create_layer",
+   "layers",
+   "create_layer"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::delete_layer",
+   "layers",
+   "delete_layer"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::reorder_layers",
+   "layers",
+   "reorder_layers"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::move_layer",
+   "layers",
+   "move_layer"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::rename_layer",
+   "layers",
+   "rename_layer"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::resize_layer",
+   "layers",
+   "resize_layer"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_visible",
+   "layers",
+   "change_layer_visible"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_locked",
+   "layers",
+   "change_layer_locked"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_opacity",
+   "layers",
+   "change_layer_opacity"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_blend_mode",
+   "layers",
+   "change_layer_blend_mode"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_transform",
+   "layers",
+   "change_layer_transform"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_adjustment_kind",
+   "layers",
+   "change_layer_adjustment_kind"
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations::change_layer_adjustment_parameter",
+   "layers",
+   "change_layer_adjustment_parameter"
+  ]
+ ],
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "items": [
+    "artifact_kind",
+    "mint_raster_asset_child",
+    "raster_asset"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "items": [
+    "(?!definition$|declaration$|pilot_languages$|artifact_kind$|mint_raster_asset_child$|raster_asset$).*"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "items": [
+    "default_raster_document",
+    "raster_example_document"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-stroke/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "items": [
+    "Canvas",
+    "Reshape",
+    "Refusal",
+    "asset_image",
+    "blank",
+    "canvas",
+    "Painted",
+    "painted",
+    "reshaped",
+    "filed",
+    "released",
+    "rect_samples",
+    "inverse_pixel_region",
+    "painted_diff"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+   "items": [
+    "RasterImageDsl",
+    "RasterImageColorspaceDsl",
+    "RasterImageFrameDsl",
+    "RasterImageMetadataDsl",
+    "impl:for RasterImageDsl",
+    "impl:From<RasterImageDsl>"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "items": [
+    "retire_raster_value_cold",
+    "close_raster_owner_cold",
+    "RASTER_OWNED_FIELD_BYTES"
+   ]
+  }
+ ]
+}

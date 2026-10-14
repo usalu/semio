@@ -1,8 +1,7 @@
 //! 🔢️ Energy model mutation — `ChangeModelVersion`: Sets the model document's own version string.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeModelVersion {
     pub new_version: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_model_version(new_version: String) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeModelVersion(ChangeModelVersion { new_version })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_model_version<Op: From<ChangeModelVersion>>(new_version: String) -> Op {
+    ChangeModelVersion { new_version }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeModelVersion {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeModelVersion
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeModelVersion>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "model", kind: "change-model-version", record: "ChangedModelVersion" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

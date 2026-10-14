@@ -1,8 +1,8 @@
 //! 🔺️ `update-cooling` sparse diff.
 
-use crate::mutations::update_cooling::UpdateCooling;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599CoolingPatch, Din18599CoolingPatchPlantValue};
+use crate::update_cooling::UpdateCooling;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599CoolingPatch, Din18599CoolingPatchPlantValue};
 
 pub fn diff(payload: &UpdateCooling, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

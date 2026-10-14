@@ -1,6 +1,6 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `combine-boolean`.
 
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, find_drawing_layer, find_drawing_layer_location, layer_base, layer_base_mut};
@@ -32,7 +32,7 @@ pub fn plan(document:&DrawingSnapshot,ids:&[String],operation:&str,admission:&se
             current=find_drawing_layer_location(document,&id).and_then(|location|location.parent_id);
         }
     }
-    let identity=super::add_layer::prepare_identity(document,"boolean",admission,control)?;
+    let identity=semio_s_artifact_draw_drawing_editor_tool::prepare_identity(document,"boolean",admission,control)?;
     let id=identity.key().to_string_owner();
     let mut layer=create_drawing_boolean_layer(identity,"Boolean",operation,ids.iter().map(|id|id.as_str().into()).collect());
     layer_base_mut(&mut layer).attributes=layer_base(selected[0]).attributes.clone();
@@ -45,7 +45,7 @@ pub fn handle(payload:&CombineBoolean,doc:&ArtifactView<'_,DrawingSnapshot>,_cfg
     let admission=doc.operation()?;
     let (mutations,id)=session.with_identity_control(|control|plan(doc.snapshot,&ids,&payload.operation,admission,control))?;
     let mut emit=Emit::mutations(mutations);
-    emit.effects.push(crate::commands::canvas_pointer_down::interaction_select_effect(&[id],"replace"));
+    emit.effects.push(semio_s_artifact_draw_drawing_editor_tool::interaction_select_effect(&[id],"replace"));
     Ok(emit)
 }
 

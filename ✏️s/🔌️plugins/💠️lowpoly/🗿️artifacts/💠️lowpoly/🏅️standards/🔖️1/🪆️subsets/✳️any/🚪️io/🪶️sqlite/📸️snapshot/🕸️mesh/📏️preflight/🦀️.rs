@@ -1,5 +1,5 @@
 //! 📏️ Borrowed fields forecast both native grammars without constructing record or payload owners.
-use crate::LowpolyMeshState;
+use crate::managed_mesh::LowpolyMeshState;
 use store::sqlite_snapshot::artifact::NativeEncodingBound;
 use semio_framework_value::{DslValue as Value,ValueError};
 

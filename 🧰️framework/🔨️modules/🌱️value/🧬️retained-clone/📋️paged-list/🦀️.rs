@@ -1,7 +1,7 @@
 //! 📋️ Retained cloning and retirement for the first-party fixed-page value list.
 
 use super::{close_retained_binding, RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress};
-use crate::value::list::PagedList;
+use semio_framework_value_paged_list::PagedList;
 use crate::{
     retirement::{RetireOwned, RetirementCursor, RetirementStep},
 };
@@ -9,86 +9,6 @@ use std::{
     mem::{ManuallyDrop, size_of},
     ops::{Deref, DerefMut},
 };
-
-pub struct PagedListRetirement<T: RetireOwned, const N: usize> {
-    owner: ManuallyDrop<PagedList<T, N>>,
-    released: bool,
-}
-
-impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T, N> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        let maximum_bytes = if self.owner.is_empty() { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };
-        if self.released {
-            return RetirementStep::Complete;
-        }
-        let width = size_of::<T>();
-        if width != 0 && !std::mem::needs_drop::<T>() && !self.owner.is_empty() {
-            let count = (maximum_bytes / width).min(self.owner.len());
-            if count != 0 {
-                for _ in 0..count {
-                    self.owner.pop();
-                }
-                return RetirementStep::ProcessedBytes(count * width);
-            }
-        }
-        if let Some(value) = self.owner.pop() {
-            return RetirementStep::Child(value.retirement());
-        }
-        if self.owner.terminal_is_empty() {
-            unsafe { ManuallyDrop::drop(&mut self.owner) };
-            self.released = true;
-            return RetirementStep::Complete;
-        }
-        let Ok(required) = self.owner.next_release_allocation_bytes() else { return RetirementStep::BudgetExhausted; };
-        if required > maximum_bytes {
-            return RetirementStep::BudgetExhausted;
-        }
-        match self.owner.release_empty_page(maximum_bytes) {
-            Ok(progress) if progress.progressed => RetirementStep::Bytes(progress.released_allocation_bytes),
-            _ => RetirementStep::BudgetExhausted,
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.released
-    }
-
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !self.released && !self.owner.is_empty() && !std::mem::needs_drop::<T>() { size_of::<T>() } else { 0 })}
-    fn next_selected_work_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,crate::ValueError> {
-        let atom=self.next_work_byte_demand()?;
-        Ok(if maximum_body_bytes<atom&&self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0) {0}else {atom})
-    }
-
-    fn allows_admitted_narrow_work(&self)->bool { !self.released&&!self.owner.is_empty()&&!std::mem::needs_drop::<T>()&&self.owner.get(self.owner.len()-1).is_some_and(|value|value.retirement_birth_bytes().is_some_and(|bytes|bytes!=0)) }
-
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        if self.released || !self.owner.is_empty() || self.owner.terminal_is_empty() {
-            Some(0)
-        } else {
-            self.owner.next_release_allocation_bytes().ok()
-        }
-    }
-    fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> {
-        if self.released || self.owner.is_empty() || (!std::mem::needs_drop::<T>() && size_of::<T>() != 0 && maximum_bytes >= size_of::<T>()) { Some(0) }
-        else { self.owner.get(self.owner.len() - 1)?.retirement_birth_bytes() }
-    }
-    fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
-}
-
-impl<T: RetireOwned, const N: usize> Drop for PagedListRetirement<T, N> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.released, "paged list retired before terminal-empty");
-    }
-}
-
-impl<T: RetireOwned, const N: usize> RetireOwned for PagedList<T, N> {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(PagedListRetirement { owner: ManuallyDrop::new(self), released: false })
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<PagedListRetirement<T, N>>()) }
-    fn controlled_retirement_supported() -> bool { true }
-}
 
 #[doc(hidden)]
 pub struct PagedListCursorState<T: RetainedClone, const N: usize> {

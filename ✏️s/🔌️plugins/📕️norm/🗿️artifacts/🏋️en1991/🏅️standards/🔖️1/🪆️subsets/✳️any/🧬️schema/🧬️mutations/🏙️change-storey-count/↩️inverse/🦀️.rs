@@ -1,9 +1,9 @@
 //! Inverse for `change-storey-count`.
-use super::ChangeStoreyCount;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeStoreyCount, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_storey_count::ChangeStoreyCount;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeStoreyCount, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_storey_count::ChangeStoreyCount> {
     Ok((|| {
-    vec![En1991Mutation::ChangeStoreyCount(ChangeStoreyCount { new_storey_count: base.storey_count })]
+    vec![Op::from(ChangeStoreyCount { new_storey_count: base.storey_count })]
 
     })())
 }

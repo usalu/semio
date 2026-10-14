@@ -1,7 +1,8 @@
 //! 🧬️ 🧬️ Generation3d play app commands command — `remove-generation`.
 
-use crate::editor::generation3d::commands::generation::generation_command_result;
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use crate::generation::generation_command_result;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

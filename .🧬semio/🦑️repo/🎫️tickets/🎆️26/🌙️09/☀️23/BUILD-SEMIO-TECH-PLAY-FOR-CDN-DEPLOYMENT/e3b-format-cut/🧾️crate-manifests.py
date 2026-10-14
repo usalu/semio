@@ -39,9 +39,9 @@ def sections(text):
 def dep_rows(lines):
     rows = {}
     for line in lines:
-        m = re.match(r'^([A-Za-z0-9_\-]+)\s*=\s*(.*)$', line)
+        m = re.match(r'^([A-Za-z0-9_\-]+)(\.workspace)?\s*=\s*(.*)$', line)
         if m:
-            rows[m.group(1)] = m.group(2).strip()
+            rows[m.group(1)] = "{ workspace = true }" if m.group(2) else m.group(3).strip()
     return rows
 
 
@@ -174,7 +174,10 @@ def main():
     inline = re.search(r"(?m)^" + re.escape(packages[aggregator]) + r"\s*=\s*\{[^\n]*\}\n", ws_text)
     table = re.search(r"(?m)^\[workspace\.dependencies\." + re.escape(packages[aggregator]) + r"\]\s*\n(?:[^\[\n][^\n]*\n)*", ws_text)
     if not inline and not table:
-        raise SystemExit(f"{workspace_root} declares no {packages[aggregator]} workspace dependency")
+        tables = list(re.finditer(r"(?m)^\[workspace\.dependencies\.[^\]]+\]\s*\n(?:[^\[\n][^\n]*\n)*", ws_text))
+        if not tables:
+            raise SystemExit(f"{workspace_root} declares no workspace dependency table")
+        table = tables[-1]
     insert = ""
     for name, spec in config["crates"].items():
         if re.search(r"(?m)^(?:" + re.escape(spec["package"]) + r"\s*=|\[workspace\.dependencies\." + re.escape(spec["package"]) + r"\])", ws_text):

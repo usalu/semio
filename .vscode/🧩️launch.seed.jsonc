@@ -2,6 +2,1444 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "node-terminal",
+      "name": "⚖️nx-native-snapshot prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-native-snapshot prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-semantics prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-semantics prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-types prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-types prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️io-codec-contract prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" io-codec-contract prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️crate-frontier-io-codec prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" crate-frontier-io-codec prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️crate-frontier-io-codec-tests prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" crate-frontier-io-codec-tests prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌊️ IO codec test-contract prototype",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-codec-rs:test-contract --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌊️ IO codec test-native prototype",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-codec-rs:test-native --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-native-snapshot release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-native-snapshot release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-semantics release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-semantics release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-types release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-types release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️io-codec-contract release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" io-codec-contract release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️crate-frontier-io-codec release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" crate-frontier-io-codec release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️crate-frontier-io-codec-tests release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" crate-frontier-io-codec-tests release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌊️ IO codec test-contract release",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-codec-rs:test-contract --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌊️ IO codec test-native release",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-codec-rs:test-native --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️task-closure-types prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" task-closure-types prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️task-closure-types release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" task-closure-types release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️task-closure prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" task-closure prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ task-closure prototype",
+      "request": "launch",
+      "command": "bun repo run repo-task-closure:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️task-closure release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" task-closure release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ task-closure release",
+      "request": "launch",
+      "command": "bun repo run repo-task-closure:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-source-accounting prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-source-accounting prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575185
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-source-accounting release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-source-accounting release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575185
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️build-file-membership prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" build-file-membership prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575186
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️build-file-membership release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" build-file-membership release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575186
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ cargo-launcher capacity prototype",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts cargo-launcher prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05751865
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ cargo-launcher capacity release",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts cargo-launcher release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05751865
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ cargo-launcher types prototype",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts cargo-launcher-types prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05751865
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ cargo-launcher types release",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts cargo-launcher-types release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05751865
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ graph-maintenance prototype",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts graph-maintenance prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ graph-maintenance-types prototype",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts graph-maintenance-types prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ graph-maintenance prototype",
+      "request": "launch",
+      "command": "bun repo run repo-graph-maintenance:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ graph-maintenance release",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts graph-maintenance release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🧪️ graph-maintenance-types release",
+      "request": "launch",
+      "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts graph-maintenance-types release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ graph-maintenance release",
+      "request": "launch",
+      "command": "bun repo run repo-graph-maintenance:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575187
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ build-file-membership prototype",
+      "request": "launch",
+      "command": "bun repo run repo-build-file-membership:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575186
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ build-file-membership release",
+      "request": "launch",
+      "command": "bun repo run repo-build-file-membership:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575186
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️configured-source prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" configured-source prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ configured-source prototype",
+      "request": "launch",
+      "command": "bun repo run repo-configured-source:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-inputs prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-inputs prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ next-inputs prototype",
+      "request": "launch",
+      "command": "bun repo run repo-next-inputs:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-nx-inputs prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-nx-inputs prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ next-nx-inputs prototype",
+      "request": "launch",
+      "command": "bun repo run repo-next-inputs:test-nx --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057519
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️configured-source release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" configured-source release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ configured-source release",
+      "request": "launch",
+      "command": "bun repo run repo-configured-source:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-inputs release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-inputs release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ next-inputs release",
+      "request": "launch",
+      "command": "bun repo run repo-next-inputs:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-nx-inputs release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-nx-inputs release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🔗️ next-nx-inputs release",
+      "request": "launch",
+      "command": "bun repo run repo-next-inputs:test-nx --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575190999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🏗️ Next Compiler Source prototype",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test-execution --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057518
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🏗️ Next Compiler Source release",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test-execution --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575180999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️artifact-reader prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" artifact-reader prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "👓️ Artifact Reader prototype",
+      "request": "launch",
+      "command": "bun repo run repo-artifact-reader:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057517
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️artifact-reader release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" artifact-reader release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575170999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "👓️ Artifact Reader release",
+      "request": "launch",
+      "command": "bun repo run repo-artifact-reader:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575170999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-native-inventory prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-native-inventory prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057516
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-native-inventory release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-native-inventory release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575160999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️cargo-ingress prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" cargo-ingress prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057515
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🚪️ Cargo Ingress prototype",
+      "request": "launch",
+      "command": "bun repo run repo:test-cargo-ingress --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057515
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦀️ Repo Cargo prototype",
+      "request": "launch",
+      "command": "bun repo cargo --store=${input:repoCargoStore} --configuration=prototype -- ${input:repoCargoArguments}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057515
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦀️ Repo Cargo Launcher prototype",
+      "request": "launch",
+      "command": "bun repo run repo:test-cargo-launcher --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057515
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📦️ Next Nx Cache prototype",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test-nx-cache --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057515
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️cargo-ingress release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" cargo-ingress release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575150999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🚪️ Cargo Ingress release",
+      "request": "launch",
+      "command": "bun repo run repo:test-cargo-ingress --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575150999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦀️ Repo Cargo release",
+      "request": "launch",
+      "command": "bun repo cargo --store=${input:repoCargoStore} --configuration=release -- ${input:repoCargoArguments}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575150999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦀️ Repo Cargo Launcher release",
+      "request": "launch",
+      "command": "bun repo run repo:test-cargo-launcher --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575150999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📦️ Next Nx Cache release",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test-nx-cache --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575150999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-nx-cache prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-nx-cache prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057512
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-nx-cache release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-nx-cache release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575120999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-profile prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-profile prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057513
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️rust-unit-profile release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" rust-unit-profile release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575130999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📦️ Nx Output Custody prototype",
+      "request": "launch",
+      "command": "bun repo run repo-nx-output-custody:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057514
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📦️ Nx Output Custody release",
+      "request": "launch",
+      "command": "bun repo run repo-nx-output-custody:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575140999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️runtime-verification-storage-runtime prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" runtime-verification-storage-runtime prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575108
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "💾️ Runtime Verification Runtime prototype",
+      "request": "launch",
+      "command": "bun repo run repo:test-runtime-verification-storage-runtime --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057511
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️runtime-verification-storage-runtime release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" runtime-verification-storage-runtime release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575109
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "💾️ Runtime Verification Runtime release",
+      "request": "launch",
+      "command": "bun repo run repo:test-runtime-verification-storage-runtime --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575110999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-product-cache prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-product-cache prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575106
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-product-cache release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-product-cache release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575107
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-product-outputs prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-product-outputs prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575104
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️nx-product-outputs release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" nx-product-outputs release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575104999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️runtime-verification-storage prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" runtime-verification-storage prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05751
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "💾️ Runtime Verification Storage prototype",
+      "request": "launch",
+      "command": "bun repo run repo:test-runtime-verification-storage --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575102
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️runtime-verification-storage release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" runtime-verification-storage release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575101
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "💾️ Runtime Verification Storage release",
+      "request": "launch",
+      "command": "bun repo run repo:test-runtime-verification-storage --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575103
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-runtime prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-runtime prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057508
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-runtime release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-runtime release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575081
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-dev-runtime prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-dev-runtime prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057509
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-dev-runtime release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-dev-runtime release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575091
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️actor-codec-integration prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" actor-codec-integration prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575078
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️actor-codec-integration release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" actor-codec-integration release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575079
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-build prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-build prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575076
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-build release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-build release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575077
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌐️ Next Storage prototype",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575074
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌐️ Next Storage release",
+      "request": "launch",
+      "command": "bun repo run repo-next-storage:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575074999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️ecma-state-integration prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" ecma-state-integration prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575072
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️ecma-state-integration release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" ecma-state-integration release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575073
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-storage prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-storage prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057507
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️next-storage release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" next-storage release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575071
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌐️ Vite Storage prototype",
+      "request": "launch",
+      "command": "bun repo run repo-vite-storage:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575066
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️vite-distribution prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" vite-distribution prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575068
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🌐️ Vite Storage release",
+      "request": "launch",
+      "command": "bun repo run repo-vite-storage:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575067
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️vite-distribution release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" vite-distribution release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575069
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️authorizers prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" authorizers prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575064
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️authorizers release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" authorizers release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575064999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️vite-storage prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" vite-storage prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575062
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️vite-storage release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" vite-storage release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575063
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📊️ Build Reports prototype",
+      "request": "launch",
+      "command": "bun repo run repo-build-reports:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575058
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📊️ Build Reports release",
+      "request": "launch",
+      "command": "bun repo run repo-build-reports:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575058999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📖️ Storybook Storage prototype",
+      "request": "launch",
+      "command": "bun repo run repo-storybook-storage:test --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057506
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "📖️ Storybook Storage release",
+      "request": "launch",
+      "command": "bun repo run repo-storybook-storage:test --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575061
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️storybook-storage prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" storybook-storage prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575056
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️storybook-storage release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" storybook-storage release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575057
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️graph-reports prototype",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" graph-reports prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575054
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⚖️graph-reports release",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" graph-reports release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575054999999
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🪶️ SQLite Model · Source prototype",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-sqlite-model-rs:test-source --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-sqlite-model.source.prototype\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-sqlite-model-rs:test-source\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-sqlite-model-rs:test-source\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/sqlite-model\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.1947405
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🪶️ SQLite Model · Source release",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-sqlite-model-rs:test-source --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-sqlite-model.source.release\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-sqlite-model-rs:test-source\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-sqlite-model-rs:test-source\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/sqlite-model\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.1947406
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "📝️ Flow Form Producer Source 🧪️",
+      "command": "bun repo run semio-framework-os-flow:test-form-source",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "📝️ Flow Form Producer Native 🧪️",
+      "command": "bun repo run semio-framework-os-flow:test-form-producer",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "📖️ Playbook Flow Form Factory Native 🧪️",
+      "command": "bun repo run semio-framework-artifact-playbook-playbook:test-flow-forms",
+      "cwd": "${workspaceFolder}"
+    },
+
+    {
+      "type": "node-terminal",
+      "name": "⏱️ IO Control · Source prototype",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-control-rs:test-source --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-control.test-source.prototype\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-source\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-source\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/io-control\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.1947401
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⏱️ IO Control · Source release",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-control-rs:test-source --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-control.test-source.release\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-source\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-source\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/io-control\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.19474019999998
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⏱️ IO Control · Native prototype",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-control-rs:test-native --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-control.test-native.prototype\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-native\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-native\",\"--configuration=prototype\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/io-control\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.19474029999998
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "⏱️ IO Control · Native release",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-io-control-rs:test-native --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.io-control.test-native.release\",\"maximumElapsedMilliseconds\":660000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-native\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-native\",\"--configuration=release\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.cache/b/o/m/io-control\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}}}",
+        "SEMIO_TEST_LEVEL": "long"
+      },
+      "presentation": {
+        "group": "🪶️ Snapshot SQLite",
+        "order": 206.1947404
+      }
+    },
+    {
+      "name": "⚖️test-artifact-budget prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" test-artifact-budget prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.057505
+      }
+    },
+    {
+      "name": "⚖️test-artifact-budget release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" test-artifact-budget release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575051
+      }
+    },
+    {
+      "name": "⚖️test-artifact-scope prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" test-artifact-scope prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575052
+      }
+    },
+    {
+      "name": "⚖️test-artifact-scope release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/headroom/📜️script.ts\" test-artifact-scope release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0575053
+      }
+    },
+    {
       "name": "⚖️cache-scope prototype",
       "type": "node-terminal",
       "request": "launch",
@@ -292,6 +1730,72 @@
       "presentation": {
         "group": "🧹clean🛡️gates",
         "order": 900.0574911
+      }
+    },
+    {
+      "name": "⚖️rustup-protocol prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-protocol --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574912
+      }
+    },
+    {
+      "name": "⚖️rustup-protocol release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-protocol --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574912999999
+      }
+    },
+    {
+      "name": "⚖️rustup-generation prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-generation --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574914
+      }
+    },
+    {
+      "name": "⚖️rustup-generation release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-generation --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574915
+      }
+    },
+    {
+      "name": "⚖️rustup-toolchain prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-toolchain --configuration=prototype --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574916
+      }
+    },
+    {
+      "name": "⚖️rustup-toolchain release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run repo:test-rustup-toolchain --configuration=release --skip-cache --exclude-dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.0574917
       }
     },
     {
@@ -2487,6 +3991,7 @@
       "command": "bun repo run @semio-tech/framework-process:test-compiler-capacity",
       "cwd": "${workspaceFolder}",
       "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"process:compiler-capacity:caller\",\"maximumElapsedMilliseconds\":300000}",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests"
       },
       "presentation": {
@@ -19650,6 +21155,20 @@
       }
     },
     {
+      "name": "📥️deps javascript lock root",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo dependencies lock --scope .",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -43.85
+      },
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock:root\",\"maximumElapsedMilliseconds\":600000}"
+      }
+    },
+    {
       "name": "📥️deps javascript lock",
       "type": "node-terminal",
       "request": "launch",
@@ -23699,7 +25218,7 @@
       "name": "⚖️gate🏢️semio-tech🎡️playprefinal-task-graph",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/semio-tech-play:build --graph=\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🗑️generated/play-prefinal-current-task-graph.json\"",
+      "command": "bun repo run @semio-tech/semio-tech-play:build --graph=play-prefinal-current-task-graph.json",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_MODE": "ship"
@@ -25132,6 +26651,17 @@
       "presentation": {
         "group": "4_build",
         "order": 206.175
+      }
+    },
+    {
+      "name": "🧪️test📚️library🗂️collection-catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/repo-lib:test-collection-catalog",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1751
       }
     },
     {
@@ -36199,6 +37729,28 @@
       }
     },
     {
+      "name": "🏭️generate🏛️architect🏛️program🗂️register-catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/architect-program-rs:generate-register-catalog --skip-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.0160811
+      }
+    },
+    {
+      "name": "⚖️gate🏛️architect🏛️program🗂️register-catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/architect-program-rs:check-register-catalog --skip-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "9_gates",
+        "order": 900.0160812
+      }
+    },
+    {
       "name": "⚖️test-owned-error✍️editor🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -45664,6 +47216,9 @@
       "presentation": {
         "group": "🧹clean🛡️gates",
         "order": 900.057071
+      },
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:workspace-ownership:caller\",\"maximumElapsedMilliseconds\":600000}"
       }
     },
     {
@@ -70576,12 +72131,12 @@
     },
     {
       "type": "node-terminal",
-      "name": "🧾️ Core · Original Receiving Native",
+      "name": "⏱️ IO Control · Original Receiving Native",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-os-kernel:test-snapshot-receiving-native --skip-cache --exclude-dependencies",
+      "command": "bun repo run @semio-tech/framework-io-control-rs:test-snapshot-receiving-native --skip-cache --exclude-dependencies",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-os-kernel:test-snapshot-receiving-native\",\"--skip-cache\",\"--exclude-dependencies\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-native-job\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}},\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-os-kernel:test-snapshot-receiving-native\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"prototype\"}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-snapshot-receiving-native\",\"--skip-cache\",\"--exclude-dependencies\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-native-job\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":660000},\"network\":{\"offline\":true}},\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-io-control-rs:test-snapshot-receiving-native\",\"--skip-cache\",\"--exclude-dependencies\"],\"buildMode\":\"prototype\"}",
         "SEMIO_TEST_LEVEL": "long",
         "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"framework.original-receiving.native\",\"maximumElapsedMilliseconds\":660000}",
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-native-job",
@@ -71045,7 +72600,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:original-context:caller\",\"maximumElapsedMilliseconds\":600000}",
-        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":true}}}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":true}},\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"]]}",
         "SEMIO_BUILD_MODE": "prototype",
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
         "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
@@ -71065,7 +72620,6 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"plugin-host:original-actor-boundary:caller\",\"maximumElapsedMilliseconds\":600000}",
-        "SEMIO_SCRIPT_CAPABILITIES": "{}",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/plugin-host-actor-boundary"
       },
       "presentation": {
@@ -71262,6 +72816,22 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.8409
+      }
+    },
+    {
+      "name": "🎟️Layout Media Adoption Source 🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/layout-layout-rs:test-media-adoption-source --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"layout:media-adoption:source\",\"maximumElapsedMilliseconds\":135000}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/catalog-current/layout-media-adoption-source"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84095
       }
     },
     {
@@ -71910,6 +73480,114 @@
         "group": "4_gate",
         "order": 21.6
       }
+    },
+    {
+      "type": "node-terminal",
+      "name": "Repo Cache Exact Cargo Storage (Prototype)",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-process:test-exact-cargo-storage --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"process:exact-cargo-storage:caller\",\"maximumElapsedMilliseconds\":300000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=prototype\"]]}",
+        "SEMIO_BUILD_MODE": "prototype",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/exact-storage/prototype"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84096
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "Repo Cache Repository Exact Cargo (Prototype)",
+      "request": "launch",
+      "command": "bun repo run repo:test-repository-exact-cargo --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:exact-cargo:caller\",\"maximumElapsedMilliseconds\":600000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"],\"selection\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=prototype\"]]}",
+        "SEMIO_BUILD_MODE": "prototype",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/repository-exact/prototype"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84097
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦑️ Repo • ⚡️ Cache • 🦀️ Rust Unit Artifacts • Prototype",
+      "request": "launch",
+      "command": "bun repo run repo:test-rust-units --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:rust-source:caller\",\"maximumElapsedMilliseconds\":300000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=prototype\"],\"selection\":[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=prototype\"]]}",
+        "SEMIO_BUILD_MODE": "prototype",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/rust-units/prototype"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84098
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "Repo Cache Exact Cargo Storage (Release)",
+      "request": "launch",
+      "command": "bun repo run @semio-tech/framework-process:test-exact-cargo-storage --configuration=release",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"process:exact-cargo-storage:caller\",\"maximumElapsedMilliseconds\":300000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=release\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=release\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-process:test-exact-cargo-storage\",\"--configuration=release\"]]}",
+        "SEMIO_BUILD_MODE": "release",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/exact-storage/release"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84099
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "Repo Cache Repository Exact Cargo (Release)",
+      "request": "launch",
+      "command": "bun repo run repo:test-repository-exact-cargo --configuration=release",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:exact-cargo:caller\",\"maximumElapsedMilliseconds\":600000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=release\"],\"selection\":[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=release\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"repo:test-repository-exact-cargo\",\"--configuration=release\"]]}",
+        "SEMIO_BUILD_MODE": "release",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/repository-exact/release"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.841
+      }
+    },
+    {
+      "type": "node-terminal",
+      "name": "🦑️ Repo • ⚡️ Cache • 🦀️ Rust Unit Artifacts • Release",
+      "request": "launch",
+      "command": "bun repo run repo:test-rust-units --configuration=release",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:rust-source:caller\",\"maximumElapsedMilliseconds\":300000}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\".\",\"arguments\":[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=release\"],\"selection\":[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=release\"],\"buildMode\":\"release\",\"native\":{\"artifactDirectory\":\".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":false}},\"launches\":[[\"repo\",\"run\",\"repo:test-rust-units\",\"--configuration=release\"]]}",
+        "SEMIO_BUILD_MODE": "release",
+        "CARGO_NET_OFFLINE": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/rust-units/release"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.84101
+      }
     }
   ],
   "compounds": [
@@ -72237,6 +73915,19 @@
     }
   ],
   "inputs": [
+    {
+      "id": "repoCargoStore",
+      "type": "pickString",
+      "description": "Issued Cargo target store: the shared fixed store or a private per-invocation store",
+      "options": ["shared", "isolated"],
+      "default": "shared"
+    },
+    {
+      "id": "repoCargoArguments",
+      "type": "promptString",
+      "description": "Cargo subcommand and arguments (check|build|test|bench|run|doc|clippy|rustc|rustdoc|metadata|tree|fetch|generate-lockfile|update …)",
+      "default": "check -p semio-framework-diagnostic --manifest-path 🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml"
+    },
     {
       "id": "buildBunResponseRelease",
       "type": "promptString",

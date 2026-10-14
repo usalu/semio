@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🏛️Actor · Canonical Architecture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.828
+    }
+  },
+  "sourceSha256": "1addcc73d947a856bb371854fec6e5ffb4cba65d5228a78d85e1ad85370fef58",
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/ap-gui9"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

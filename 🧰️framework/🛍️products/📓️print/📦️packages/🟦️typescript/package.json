@@ -60,6 +60,6 @@
     "@semio-tech/process": "workspace:*"
   },
   "scripts": {
-    "generate-font-metrics": "bun repo run @semio-tech/print:generate-font-metrics"
+    "generate-font-metrics": "bun --cwd \"../../../../..\" repo run @semio-tech/print:generate-font-metrics"
   }
 }

@@ -2,8 +2,9 @@
 //! constructor); Fatal `duplicate-id` guards against overwriting an existing object.
 
 use super::CreateObject;
-use crate::diff::diff_objects_add;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_objects_add;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

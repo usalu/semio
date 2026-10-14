@@ -8,8 +8,8 @@
 
 use crate::editor::fem2d::interaction::{fem2d_entity_kind, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
-use crate::editor::fem2d::transient::FemGumballGesture;
+use crate::editor::fem2d::interaction::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballGesture;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;

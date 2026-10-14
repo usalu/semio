@@ -30,8 +30,8 @@
       ],
       "mutations": [
         "disconnect-adjacency",
-        "delete-program-element",
-        "delete-program-element"
+        "delete-register-row",
+        "delete-register-row"
       ]
     },
     {
@@ -126,7 +126,7 @@
       "mutations": [
         "connect-adjacency",
         "disconnect-adjacency",
-        "delete-program-element"
+        "delete-register-row"
       ]
     }
   ]

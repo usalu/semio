@@ -16,7 +16,7 @@ pub struct RasterPixelSelection {
     #[state(config)]
     pub height:u32,
     #[state(config)]
-    pub spans:Vec<crate::mutations::paint_stroke::RasterSelectionSpan>,
+    pub spans:Vec<semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan>,
 }
 
 impl RasterPixelSelection {
@@ -26,8 +26,8 @@ impl RasterPixelSelection {
         selection_spans(&self.spans,count)?;
         Ok(count)
     }
-    pub fn validate_current(&self,document:&crate::RasterSnapshot,expected_image_key:Option<&str>)->Result<(),Fault>{
-        use crate::RasterLayerNode;
+    pub fn validate_current(&self,document:&semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot,expected_image_key:Option<&str>)->Result<(),Fault>{
+        use semio_s_artifact_raster_raster_model::RasterLayerNode;
         self.validate()?;
         let layer=visible_layer(&document.layers,&self.layer_id).ok_or_else(||fault("Selection layer is missing or hidden"))?;
         let (image_key,width,height)=match (self.target.as_str(),layer){
@@ -38,7 +38,7 @@ impl RasterPixelSelection {
         };
         if image_key.as_deref()!=expected_image_key{return Err(fault("Selection image changed"));}
         let (width,height)=if let Some(key)=image_key{
-            let image=document.assets.get(key).and_then(|asset|asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(||fault("Selection image is unavailable"))?;
+            let image=document.assets.get(key).and_then(|asset|asset.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).ok_or_else(||fault("Selection image is unavailable"))?;
             (image.width,image.height)
         }else{(width,height)};
         if (self.width,self.height)!=(width,height){return Err(fault("Selection dimensions changed"));}
@@ -52,7 +52,7 @@ impl RasterPixelSelection {
 
 fn fault(message:impl Into<String>)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("raster.pixel-selection"),message.into())}
 
-pub fn selection_spans(spans:&[crate::mutations::paint_stroke::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
+pub fn selection_spans(spans:&[semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan],count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
     let mut result=Vec::with_capacity(spans.len());
     let mut previous=0;
     for span in spans {
@@ -65,12 +65,12 @@ pub fn selection_spans(spans:&[crate::mutations::paint_stroke::RasterSelectionSp
     Ok(result)
 }
 
-fn visible_layer<'a>(layers:&'a [crate::RasterLayerNode],id:&str)->Option<&'a crate::RasterLayerNode>{
-    use crate::standards::v1::subsets::any::schema::{layer_node_id,layer_visible};
+fn visible_layer<'a>(layers:&'a [semio_s_artifact_raster_raster_model::RasterLayerNode],id:&str)->Option<&'a semio_s_artifact_raster_raster_model::RasterLayerNode>{
+    use semio_s_artifact_raster_raster_model::{layer_node_id, layer_visible};
     for layer in layers{
         if !layer_visible(layer){continue;}
         if layer_node_id(layer)==id{return Some(layer);}
-        if let crate::RasterLayerNode::Group{children,..}=layer{if let Some(found)=visible_layer(children,id){return Some(found);}}
+        if let semio_s_artifact_raster_raster_model::RasterLayerNode::Group{children,..}=layer{if let Some(found)=visible_layer(children,id){return Some(found);}}
     }
     None
 }

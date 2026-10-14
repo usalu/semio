@@ -8,6 +8,7 @@
 
 use crate::editor::architect::chrome::{element_label, entity_to_json};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
 use crate::standards::v1::subsets::any::schema::registers::{Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus};
 use crate::standards::v1::subsets::any::schema::mutations as leaves;
 use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
@@ -519,43 +520,35 @@ pub fn default_from_json<T: semio_framework_value::FromValue>(register: &str, la
 
 pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, label: &str) -> Option<(ProgramMutation, EntityId)> {
     macro_rules! create {
-        ($variant:ident, $module:ident, $field:ident, $item:expr) => {{
-            let item = $item;
-            let id = item.header.id.clone();
-            (ProgramMutation::$variant(leaves::$module::$variant { $field: item, index: None }), id)
+        ($item:expr) => {{
+            let row = RegisterRow::from($item);
+            let id = row.header().id.clone();
+            (ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row, index: None }), id)
         }};
     }
     Some(match register {
-        "stakeholders" => create!(CreateStakeholder, create_stakeholder, stakeholder, default_stakeholder(label)),
-        "users" => create!(CreateUserProfile, create_user_profile, user_profile, default_user(label)),
+        "stakeholders" => create!(default_stakeholder(label)),
+        "users" => create!(default_user(label)),
         "activities" => {
             let item: crate::standards::v1::subsets::any::schema::registers::Activity = default_from_json(
                 "activities",
                 label,
                 semio_framework_value::DslValue::object([("code".to_string(), semio_framework_value::DslValue::String("ACT".to_string())), ("category".to_string(), semio_framework_value::DslValue::String("general".to_string())), ("activityType".to_string(), semio_framework_value::DslValue::String("general".to_string()))]),
             )?;
-            create!(CreateActivity, create_activity, activity, item)
+            create!(item)
         }
-        "functions" => create!(CreateFunction, create_function, function, default_function(label)),
-        "elements" => create!(CreateProgramElement, create_program_element, program_element, default_element(label)),
-        "risks" => create!(CreateRisk, create_risk, risk, default_risk(label)),
-        "requirements" => create!(CreateRequirement, create_requirement, requirement, default_requirement(label)),
-        "assumptions" => create!(
-            CreateAssumption,
-            create_assumption,
-            assumption,
-            default_from_json::<crate::standards::v1::subsets::any::schema::registers::Assumption>(
+        "functions" => create!(default_function(label)),
+        "elements" => create!(default_element(label)),
+        "risks" => create!(default_risk(label)),
+        "requirements" => create!(default_requirement(label)),
+        "assumptions" => create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::Assumption>(
                 "assumptions",
                 label,
                 semio_framework_value::DslValue::object([("statement".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))])), ("validationStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string()))]),
             )?
         ),
         "constraints" => {
-            create!(
-                CreateConstraintRecord,
-                create_constraint_record,
-                constraint_record,
-                default_from_json::<crate::standards::v1::subsets::any::schema::registers::ConstraintRecord>(
+            create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::ConstraintRecord>(
                     "constraints",
                     label,
                     semio_framework_value::DslValue::object([
@@ -568,11 +561,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             )
         }
         "compliance_records" => {
-            create!(
-                CreateComplianceRecord,
-                create_compliance_record,
-                compliance_record,
-                default_from_json::<crate::standards::v1::subsets::any::schema::registers::ComplianceRecord>(
+            create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::ComplianceRecord>(
                     "compliance",
                     label,
                     semio_framework_value::DslValue::object([
@@ -584,11 +573,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 )?
             )
         }
-        "approvals" => create!(
-            CreateApprovalRecord,
-            create_approval_record,
-            approval_record,
-            default_from_json::<crate::standards::v1::subsets::any::schema::registers::ApprovalRecord>(
+        "approvals" => create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::ApprovalRecord>(
                 "approvals",
                 label,
                 semio_framework_value::DslValue::object([
@@ -599,32 +584,20 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             )?
         ),
         "meetings" => {
-            create!(
-                CreateMeetingRecord,
-                create_meeting_record,
-                meeting_record,
-                default_from_json::<crate::standards::v1::subsets::any::schema::registers::MeetingRecord>(
+            create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::MeetingRecord>(
                     "meetings",
                     label,
                     semio_framework_value::DslValue::object([("meetingType".to_string(), semio_framework_value::DslValue::String("workshop".to_string())), ("quorumMet".to_string(), semio_framework_value::DslValue::Bool(false)), ("meetingStatus".to_string(), semio_framework_value::DslValue::String("draft".to_string()))]),
                 )?
             )
         }
-        "analyses" => create!(
-            CreateAnalysisRecord,
-            create_analysis_record,
-            analysis_record,
-            default_from_json::<AnalysisRecord>(
+        "analyses" => create!(default_from_json::<AnalysisRecord>(
                 "analysis",
                 label,
                 semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("gap".to_string())), ("title".to_string(), semio_framework_value::DslValue::String(label.to_string())), ("outputSummary".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))]))]),
             )?
         ),
-        "reports" => create!(
-            CreateReportRecord,
-            create_report_record,
-            report_record,
-            default_from_json::<ReportRecord>(
+        "reports" => create!(default_from_json::<ReportRecord>(
                 "report",
                 label,
                 semio_framework_value::DslValue::object([
@@ -635,12 +608,8 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 ]),
             )?
         ),
-        "issues" => create!(CreateIssue, create_issue, issue, default_issue(label)),
-        "templates" => create!(
-            CreateTemplateRecord,
-            create_template_record,
-            template_record,
-            default_from_json::<crate::standards::v1::subsets::any::schema::registers::TemplateRecord>(
+        "issues" => create!(default_issue(label)),
+        "templates" => create!(default_from_json::<crate::standards::v1::subsets::any::schema::registers::TemplateRecord>(
                 "template",
                 label,
                 semio_framework_value::DslValue::object([
@@ -662,139 +631,52 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
     })
 }
 
-pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
-    macro_rules! delete {
-        ($variant:ident, $module:ident) => {
-            ProgramMutation::$variant(leaves::$module::$variant { id: entity_id })
-        };
+/// 🗂️ The register-catalog key an editor register id names: the editor's ids are the diff fields, except `documents` (`artifacts`).
+pub fn register_key(register: &str) -> Option<RegisterKey> {
+    match register {
+        "documents" => Some(RegisterKey::Document),
+        field => RegisterKey::from_diff_field(field),
     }
+}
+
+pub fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramMutation> {
     Some(match register {
-        "stakeholders" => delete!(DeleteStakeholder, delete_stakeholder),
-        "users" => delete!(DeleteUserProfile, delete_user_profile),
-        "activities" => delete!(DeleteActivity, delete_activity),
-        "functions" => delete!(DeleteFunction, delete_function),
-        "elements" => delete!(DeleteProgramElement, delete_program_element),
-        "quantities" => delete!(DeleteQuantityRequirement, delete_quantity_requirement),
-        "relationships" => delete!(DeleteRelationship, delete_relationship),
         "adjacencies" => ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: entity_id }),
-        "processes" => delete!(DeleteProcess, delete_process),
-        "flows" => delete!(DeleteFlowRequirement, delete_flow_requirement),
-        "access_rules" => delete!(DeleteAccessRule, delete_access_rule),
-        "operations" => delete!(DeleteOperationalRequirement, delete_operational_requirement),
-        "equipment" => delete!(DeleteEquipment, delete_equipment),
-        "resources" => delete!(DeleteResource, delete_resource),
-        "storage" => delete!(DeleteStorageRequirement, delete_storage_requirement),
-        "environmental" => delete!(DeleteEnvironmentalRequirement, delete_environmental_requirement),
-        "human_factors" => delete!(DeleteHumanFactorRequirement, delete_human_factor_requirement),
-        "accessibility" => delete!(DeleteAccessibilityRequirement, delete_accessibility_requirement),
-        "privacy" => delete!(DeletePrivacyRequirement, delete_privacy_requirement),
-        "safety" => delete!(DeleteSafetyRequirement, delete_safety_requirement),
-        "security" => delete!(DeleteSecurityRequirement, delete_security_requirement),
-        "regulatory" => delete!(DeleteRegulatoryRequirement, delete_regulatory_requirement),
-        "site_context" => delete!(DeleteSiteContext, delete_site_context),
-        "organizational" => delete!(DeleteOrganizationalRequirement, delete_organizational_requirement),
-        "services" => delete!(DeleteServiceRequirement, delete_service_requirement),
-        "infrastructure" => delete!(DeleteInfrastructureRequirement, delete_infrastructure_requirement),
-        "information" => delete!(DeleteInformationRequirement, delete_information_requirement),
-        "communication" => delete!(DeleteCommunicationRequirement, delete_communication_requirement),
-        "wayfinding" => delete!(DeleteWayfindingRequirement, delete_wayfinding_requirement),
-        "schedules" => delete!(DeleteScheduleRequirement, delete_schedule_requirement),
-        "flexibility" => delete!(DeleteFlexibilityRequirement, delete_flexibility_requirement),
-        "growth" => delete!(DeleteGrowthPlan, delete_growth_plan),
-        "sustainability" => delete!(DeleteSustainabilityRequirement, delete_sustainability_requirement),
-        "resilience" => delete!(DeleteResilienceRequirement, delete_resilience_requirement),
-        "costs" => delete!(DeleteCostRequirement, delete_cost_requirement),
-        "delivery" => delete!(DeleteDeliveryConstraint, delete_delivery_constraint),
-        "risks" => delete!(DeleteRisk, delete_risk),
-        "conflicts" => delete!(DeleteConflict, delete_conflict),
-        "requirements" => delete!(DeleteRequirement, delete_requirement),
-        "priorities" => delete!(DeletePriorityRecord, delete_priority_record),
-        "scenarios" => delete!(DeleteScenario, delete_scenario),
-        "options" => delete!(DeleteOptionEvaluation, delete_option_evaluation),
-        "decisions" => delete!(DeleteDecision, delete_decision),
-        "validations" => delete!(DeleteValidationRecord, delete_validation_record),
-        "performance" => delete!(DeletePerformanceCriterion, delete_performance_criterion),
-        "quality" => delete!(DeleteQualityRecord, delete_quality_record),
-        "documents" => delete!(DeleteDocument, delete_document),
-        "assumptions" => delete!(DeleteAssumption, delete_assumption),
-        "constraints" => delete!(DeleteConstraintRecord, delete_constraint_record),
-        "compliance_records" => delete!(DeleteComplianceRecord, delete_compliance_record),
-        "approvals" => delete!(DeleteApprovalRecord, delete_approval_record),
-        "meetings" => delete!(DeleteMeetingRecord, delete_meeting_record),
-        "changes" => delete!(DeleteChangeRecord, delete_change_record),
-        "collaboration" => delete!(DeleteCollaborationRecord, delete_collaboration_record),
-        "analyses" => delete!(DeleteAnalysisRecord, delete_analysis_record),
-        "reports" => delete!(DeleteReportRecord, delete_report_record),
-        "search_filters" => delete!(DeleteSearchFilter, delete_search_filter),
-        "status_records" => delete!(DeleteStatusRecord, delete_status_record),
-        "workshops" => delete!(DeleteWorkshop, delete_workshop),
-        "surveys" => delete!(DeleteSurvey, delete_survey),
-        "issues" => delete!(DeleteIssue, delete_issue),
-        "audit_events" => delete!(DeleteAuditEvent, delete_audit_event),
-        "templates" => delete!(DeleteTemplateRecord, delete_template_record),
-        "knowledge" => delete!(DeleteKnowledgeRecord, delete_knowledge_record),
-        "benchmarks" => delete!(DeleteBenchmarkRecord, delete_benchmark_record),
         "traces" => ProgramMutation::DisconnectTrace(leaves::disconnect_trace::DisconnectTrace { id: entity_id }),
-        _ => return None,
+        register => ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: register_key(register)?, id: entity_id }),
     })
 }
 
-fn merge_json_patch<T: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue>(existing: &T, patch: &Value) -> Option<T> {
-    let semio_framework_value::DslValue::Object(mut base) = semio_framework_value::ToValue::to_value(existing) else { return None };
-    let semio_framework_value::DslValue::Object(patch_fields) = patch else { return None };
+fn merged(base: Value, patch: &Value) -> Option<Value> {
+    let (Value::Object(mut base), Value::Object(patch_fields)) = (base, patch) else { return None };
     for (key, entry) in patch_fields {
         match base.iter_mut().find(|(existing_key, _)| existing_key == key) {
             Some((_, existing_value)) => *existing_value = entry.clone(),
             None => base.push((key.clone(), entry.clone())),
         }
     }
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::Object(base)).ok()
+    Some(Value::Object(base))
+}
+
+fn merge_json_patch<T: semio_framework_value::ToValue + semio_framework_value::FromValue>(existing: &T, patch: &Value) -> Option<T> {
+    semio_framework_value::FromValue::from_value(merged(semio_framework_value::ToValue::to_value(existing), patch)?).ok()
+}
+
+/// 🩹 Merges `patch` into the typed row a tagged [`RegisterRow`] carries, keeping its register tag.
+fn merge_row_patch(existing: &RegisterRow, patch: &Value) -> Option<RegisterRow> {
+    let Value::Object(tagged) = semio_framework_value::ToValue::to_value(existing) else { return None };
+    let tagged = tagged.into_iter().map(|(key, value)| Some((key.clone(), if key == "row" { merged(value, patch)? } else { value }))).collect::<Option<Vec<_>>>()?;
+    semio_framework_value::FromValue::from_value(Value::Object(tagged)).ok()
 }
 
 pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, entity_id: &EntityId, patch: &Value) -> Option<ProgramMutation> {
-    Some(match register {
-        "stakeholders" => {
-            let existing = program.stakeholders.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceStakeholder(leaves::replace_stakeholder::ReplaceStakeholder { stakeholder: merged })
-        }
-        "elements" => {
-            let existing = program.elements.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceProgramElement(leaves::replace_program_element::ReplaceProgramElement { program_element: merged })
-        }
-        "adjacencies" => {
-            let existing = program.adjacencies.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merged, index: None })
-        }
-        "requirements" => {
-            let existing = program.requirements.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceRequirement(leaves::replace_requirement::ReplaceRequirement { requirement: merged })
-        }
-        "risks" => {
-            let existing = program.risks.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceRisk(leaves::replace_risk::ReplaceRisk { risk: merged })
-        }
-        "issues" => {
-            let existing = program.issues.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceIssue(leaves::replace_issue::ReplaceIssue { issue: merged })
-        }
-        "functions" => {
-            let existing = program.functions.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceFunction(leaves::replace_function::ReplaceFunction { function: merged })
-        }
-        "users" => {
-            let existing = program.users.iter().find(|row| row.header.id == *entity_id)?;
-            let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ReplaceUserProfile(leaves::replace_user_profile::ReplaceUserProfile { user_profile: merged })
-        }
-        _ => return None,
-    })
+    if register == "adjacencies" {
+        let existing = program.adjacencies.iter().find(|row| row.header.id == *entity_id)?;
+        return Some(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merge_json_patch(existing, patch)?, index: None }));
+    }
+    let key = register_key(register)?;
+    let existing = key.row_at(program, key.position(program, entity_id)?)?;
+    Some(ProgramMutation::ReplaceRegisterRow(leaves::replace_register_row::ReplaceRegisterRow { row: merge_row_patch(&existing, patch)? }))
 }
 pub fn analysis_record_from(program: &ProgramSnapshot, kind: AnalysisKind, result: &AnalysisResult) -> AnalysisRecord {
     AnalysisRecord {

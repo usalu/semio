@@ -20,8 +20,12 @@ name = "cad_model_document_contract"
 path = "../../🧪️tests/🪪️document/🦀️.rs"
 
 [[test]]
-name = "cad_model_diff"
-path = "../../🔺️diff/🧪️tests/🔬️unit/🦀️.rs"
+name = "cad_io_sqlite_snapshot"
+path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "cad_binary_snapshot"
+path = "../../../🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
 
 [[test]]
 name = "retirement_law"
@@ -32,10 +36,12 @@ semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-3d-brep-tessellation = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-mesh-engine = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
@@ -51,10 +57,17 @@ semio-s-artifact-stdio-semio-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-trace = { workspace = true }
-semio-s-artifact-cad-cad-mut-nodes = { workspace = true }
+semio-s-artifact-cad-cad = { workspace = true }
+semio-s-artifact-cad-cad-editor = { workspace = true }
+semio-s-artifact-cad-cad-host = { workspace = true }
+semio-s-artifact-cad-cad-model-diff = { workspace = true }
+semio-s-artifact-cad-cad-mut-slots = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
 semio-s-artifact-cad-cad-testing = { workspace = true }
+semio-s-artifact-cad-cad-viewer = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
 serde_json = { workspace = true }

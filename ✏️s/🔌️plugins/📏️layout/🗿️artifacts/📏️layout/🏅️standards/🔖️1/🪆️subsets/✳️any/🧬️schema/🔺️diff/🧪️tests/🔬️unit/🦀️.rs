@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
-use crate::standards::v1::subsets::any::schema::diff::{PageFramesDelta, PagePatch};
+use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document;
+use crate::{PageFramesDelta, PagePatch};
 use crate::{FramePatch};
 use protocol::{DiffAlgebra, Mutation};
 
@@ -25,9 +25,9 @@ fn move_frame(frame_id: &str, x: f64) -> LayoutDiff {
 #[semio_framework_async_macros::async_test]
 async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
     let base = default_document();
-    let operation = crate::mutations::LayoutMutation::ChangeDataFields(crate::mutations::change_data_fields::ChangeDataFields { new_fields: Some(crate::FormDictionary::default()) });
+    let operation = semio_s_artifact_layout_layout_mutations::LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary::default()) });
     let diff: LayoutDiff = operation.diff(&base).into_parts().0;
-    assert_eq!(apply(&diff, &base).data_fields, Some(crate::FormDictionary::default()));
+    assert_eq!(apply(&diff, &base).data_fields, Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary::default()));
 }
 
 /// 🩹 Two frame patches of one frame fold into one page patch whose application equals the sequence.
@@ -63,7 +63,7 @@ fn absorb_cancels_added_then_removed_and_folds_patches_into_adds() {
     let added = LayoutDiff { pages: Some(LayoutPagesDelta { inserted: vec![LayoutPageInsertion { index: at, row: fresh }], ..Default::default() }), ..Default::default() };
     let removed = LayoutDiff { pages: Some(LayoutPagesDelta { removed: vec![LayoutPageRemoval { id: "page-9".into(), index: at }], ..Default::default() }), ..Default::default() };
     assert_eq!(absorbed(&added, &removed).pages, None);
-    let story = crate::TextStory { id: "story-9".into(), content: "a".into(), style_runs: Vec::new() };
+    let story = semio_s_artifact_layout_layout_model::TextStory { id: "story-9".into(), content: "a".into(), style_runs: Vec::new() };
     let stories = LayoutDiff { stories: Some(LayoutStoriesDelta { inserted: vec![LayoutStoryInsertion { index: base.stories.len(), row: story }], ..Default::default() }), ..Default::default() };
     let edited = LayoutDiff { stories: Some(LayoutStoriesDelta { modified: vec![LayoutStoriesModification { id: "story-9".into(), patch: TextStoryPatch { content: Some("b".into()), style_runs: None } }], ..Default::default() }), ..Default::default() };
     let sum = absorbed(&stories, &edited);

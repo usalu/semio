@@ -1575,15 +1575,15 @@ async fn undo_redo_add_widget() {
     let operations = host.recorded.last().cloned().expect("add_widget recorded its edit");
     assert_eq!(operations.len(), 2, "add_widget emits its add-widget and change-layout leaves at the gesture site");
 
-    let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
-    let mut store = FlowStore::new(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
+    let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
+    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses every
     // `Apply` without one — `edit history insertion requires its exact mutation retirement factory`.
     // The refusal then drops the replayed projection on the error path, so the FIRST thing this law
     // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
     // never the validation that caused it. The flow host installs the same catalog on its own history
     // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
+    crate::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity).await).expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);
@@ -2796,20 +2796,10 @@ fn compiled_wire_literal_includes_operator_kinds() {
 }
 
 #[test]
-fn flow_host_snapshot_to_form_spec_maps_input_widgets() {
-    use self::forms_bridge::flow_host_snapshot_to_form_spec;
-    let fixture = FlowHostSnapshot::default();
-    let spec = flow_host_snapshot_to_form_spec(&fixture);
-    let kinds: Vec<&str> = spec.steps[0].blocks.iter().map(|question| question.kind.as_str()).collect();
-    assert!(kinds.contains(&"slider"));
-}
-
-#[test]
 fn apply_generation_values_to_host_snapshot_patches_slider_value() {
-    use self::forms_bridge::{apply_generation_values_to_host_snapshot, flow_host_snapshot_to_form_spec};
+    use self::forms_bridge::apply_generation_values_to_host_snapshot;
     let fixture = FlowHostSnapshot::default();
-    let spec = flow_host_snapshot_to_form_spec(&fixture);
-    let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
+    let slider_id = fixture.widgets.iter().find_map(|widget|match widget {Widget::InputSlider{id,..}=>Some(id.clone()),_=>None}).expect("original slider source");
     let snapshot_json = semio_framework_pack_json::to_json_string(&fixture);
     let mut values = semio_framework_pack_json::Object::new();
     values.insert(slider_id.clone(), semio_framework_pack_json::Value::Number(8.0.into()));

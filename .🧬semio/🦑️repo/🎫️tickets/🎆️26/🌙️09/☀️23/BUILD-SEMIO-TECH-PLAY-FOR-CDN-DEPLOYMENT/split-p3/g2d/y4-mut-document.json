@@ -1,0 +1,29 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "monolith": "semio_s_artifact_procedural_2d_mutations",
+ "package": "semio-s-artifact-procedural-2d-mut-document",
+ "description": "Procedural generation2d document mutation leaves: pan the graph camera and restamp the schema",
+ "owner": "📄️document",
+ "moves": [
+  {
+   "from": "update_camera",
+   "to": "update_camera"
+  },
+  {
+   "from": "change_schema",
+   "to": "change_schema"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "doc": "📄️ Generation2d document mutation leaves: pan the graph camera and restamp the schema. Every leaf is generic over the dispatch enum."
+}

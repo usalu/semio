@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
-use crate::standards::v1::subsets::any::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+use semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::*;
+use semio_s_artifact_puzzle_3d_model::{BrushHostRules, BrushKindWeights, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
 fn catalog_host_engine() -> Puzzle3dCollision {
     let mut engine = Puzzle3dCollision::new();
@@ -472,7 +472,7 @@ fn a_document_scale_mesh_uploads_in_pages_and_registers() {
         let page = u32::try_from(index).expect("page");
         assert!(positions_b64.len() <= PUZZLE3D_MESH_PAGE_BASE64_CHARS && indices_b64.len() <= PUZZLE3D_MESH_PAGE_BASE64_CHARS, "page {page} payload stays inside one page's base64 budget");
         let wire = brush_mesh_page_wire_bytes(url, &digest, page, page_count, positions_b64, indices_b64);
-        assert!(wire <= crate::retained_command::PUZZLE_COMMAND_RAW_BYTES, "page {page} costs {wire} raw wire bytes; the shared retained command admits {}", crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
+        assert!(wire <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_RAW_BYTES, "page {page} costs {wire} raw wire bytes; the shared retained command admits {}", semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_RAW_BYTES);
         match admit_brush_mesh_page(url, &digest, page, page_count, positions_b64, indices_b64).expect("page admitted") {
             Puzzle3dMeshUploadStep::Staged { next_page, page_count: staged_count } => {
                 assert_eq!((next_page, staged_count), (page + 1, page_count), "an open run advances exactly one page");
@@ -708,7 +708,7 @@ fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
 fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
     let _store = brush_mesh_store_laws_guard();
     let scene_snapshot = brush_mesh_upload_fixture();
-    assert_eq!(fixture_count(&scene_snapshot["commandRawBytes"]), crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
+    assert_eq!(fixture_count(&scene_snapshot["commandRawBytes"]), semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_RAW_BYTES);
     assert_eq!(fixture_count(&scene_snapshot["pageValues"]), PUZZLE3D_MESH_PAGE_VALUES);
     assert_eq!(fixture_count(&scene_snapshot["pageBase64Chars"]), PUZZLE3D_MESH_PAGE_BASE64_CHARS);
     assert_eq!(fixture_count(&scene_snapshot["uploadSlots"]), PUZZLE3D_MESH_UPLOAD_SLOTS);

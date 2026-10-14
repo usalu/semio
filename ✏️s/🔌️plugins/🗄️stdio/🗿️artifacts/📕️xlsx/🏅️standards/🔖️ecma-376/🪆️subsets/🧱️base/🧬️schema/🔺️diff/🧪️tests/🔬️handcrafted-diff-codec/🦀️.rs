@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `XlsxDiff` grammar — exercises every

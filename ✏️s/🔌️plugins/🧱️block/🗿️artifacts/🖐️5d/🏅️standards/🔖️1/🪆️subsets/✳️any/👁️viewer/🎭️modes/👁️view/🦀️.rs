@@ -4,7 +4,7 @@
 //! window" for a viewer packet — a read-only Board window is a documented follow-up, not a purity
 //! or completeness requirement.
 
-use crate::viewer::block5d::modes::view::windows::world;
+use crate::modes::view::windows::world;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -32,3 +32,11 @@ pub fn layout() -> WindowLayout {
     }
 }
 //#endregion 🔖️Definition
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🌐️world/🦀️.rs"]
+    pub mod world;
+}
+//#endregion 🪢️Mounts

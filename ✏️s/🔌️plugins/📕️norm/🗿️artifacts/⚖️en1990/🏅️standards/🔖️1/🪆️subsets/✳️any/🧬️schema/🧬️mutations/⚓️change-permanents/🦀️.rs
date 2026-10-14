@@ -1,6 +1,6 @@
 //! `change-permanents` mutation for EN 1990.
 
-use crate::{En1990Mutation, En1990Snapshot};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,10 +10,10 @@ use crate::{En1990Mutation, En1990Snapshot};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ChangePermanents {
-    pub new_permanents: Vec<crate::PermanentAction>,
+    pub new_permanents: Vec<semio_s_artifact_norm_en1990_model::PermanentAction>,
 }
 
-impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanents {
+impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangePermanents where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::remove_permanent::RemovePermanent> + From<crate::insert_permanent::InsertPermanent> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "permanents",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanents
         record: "ChangedPermanents",
     };
 
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> {
+        crate::change_permanents::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_permanents::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanents
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

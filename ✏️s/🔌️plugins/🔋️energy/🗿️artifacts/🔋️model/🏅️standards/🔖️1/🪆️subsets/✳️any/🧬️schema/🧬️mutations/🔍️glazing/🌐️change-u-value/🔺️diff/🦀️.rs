@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeFenestrationUValue` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, FenestrationPatch, ModelPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeFenestrationUValue, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

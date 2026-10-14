@@ -1,8 +1,10 @@
 //! 📏 `resize-frame` — changes a frame's `bounds.width`/`bounds.height` extent.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,12 +22,12 @@ pub struct ResizeFrame {
     pub new_height: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ResizeFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ResizeFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::resize_frame::ResizeFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "frame", kind: "resize-frame", record: "ResizedFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_resize_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_resize_frame(self, base)?
     
@@ -65,7 +67,7 @@ pub fn diff_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> protoc
 //#endregion 📏ResizeFrame
 
 //#region 📏ResizeFrame
-pub fn inverse_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_resize_frame<Op: From<crate::resize_frame::ResizeFrame>>(payload: &ResizeFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -74,8 +76,14 @@ pub fn inverse_resize_frame(payload: &ResizeFrame, base: &LayoutSnapshot) -> Res
         return Vec::new();
     };
     let bounds = frame.bounds();
-    vec![LayoutMutation::ResizeFrame(ResizeFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_width: bounds.width, new_height: bounds.height })]
+    vec![Op::from(ResizeFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_width: bounds.width, new_height: bounds.height })]
 
     })())
 }
 //#endregion 📏ResizeFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📐️resizes-the-rect-frame/🦀️.rs"]
+mod tests_resizes_the_rect_frame;
+//#endregion 🪢️TaxonomyMounts

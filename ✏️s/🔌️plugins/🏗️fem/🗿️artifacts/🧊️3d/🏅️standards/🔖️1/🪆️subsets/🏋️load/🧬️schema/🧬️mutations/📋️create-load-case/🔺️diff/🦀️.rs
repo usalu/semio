@@ -1,8 +1,10 @@
 //! 🔺️ Sparse diff builder for `CreateLoadCase`.
 use super::CreateLoadCase;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCaseInsertion, Fem3dLoadCasesDelta};
-use crate::standards::v1::subsets::any::schema::mutations::resolve_load;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCaseInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

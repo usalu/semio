@@ -28,7 +28,7 @@ export type AdmitRequestV1 = Readonly<{ v: 1; op: "admit"; pass: string; pid: nu
 export type DoneReportV1 = Readonly<{ v: 1; op: "done"; exit: number; peakRssBytes: number; userMs: number; sysMs: number; startMs: number; endMs: number; rmetaMs: number | null }>;
 
 /** 📒️ One recorded observation of a unit key (`ObservationV1`), the scheduling knowledge `units.jsonl` keeps. */
-export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number }>;
+export type UnitObservationV1 = Readonly<{ v: 1; key: string; peakRssBytes: number; outputBytes: number; wallMs: number; cpuMs: number; remainingMs: number; atMs: number }>;
 
 /** 🔗️ One dependency of a unit by the artifact identities it may name and what it consumes: metadata only (pipelined) or the complete library. */
 export type UnitEdgeV1 = Readonly<{ artifacts: readonly string[]; edge: "rmeta" | "full" }>;
@@ -291,9 +291,16 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
   };
 }
 
-/** 🪜️ Recorded observations of a finished build: every successful unit's peak, wall, CPU and remaining critical path. */
-export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: ReadonlyMap<string, number>, atMs: number): UnitObservationV1[] {
-  return units.filter((unit) => unit.exit === 0).map((unit) => ({ v: 1, key: unit.key, peakRssBytes: unit.peakRssBytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }));
+/** 🪜️ Recorded observations of a finished build: every successful unit's peak, measured output footprint (`outputBytes` by unit artifact), wall, CPU and
+ * remaining critical path. */
+export function unitObservationsV1(units: readonly UnitRecordV1[], remainingMs: ReadonlyMap<string, number>, outputBytes: ReadonlyMap<string, number>, atMs: number): UnitObservationV1[] {
+  return units.filter((unit) => unit.exit === 0).map((unit) => { const bytes = outputBytes.get(unit.artifact); if (bytes === undefined) throw Error(`Unit output footprint was never measured: ${unit.key}`); return { v: 1 as const, key: unit.key, peakRssBytes: unit.peakRssBytes, outputBytes: bytes, wallMs: Math.max(0, unit.endMs - unit.startMs), cpuMs: unit.userMs + unit.sysMs, remainingMs: Math.max(0, Math.round(remainingMs.get(unit.artifact) ?? 0)), atMs }; });
+}
+
+/** 📏️ The bytes every output of one unit occupies: the files of its output directory named by its artifact stem (`<stem>.*` or `lib<stem>.*`). */
+export function unitOutputBytesV1(artifact: string, entries: readonly string[], size: (name: string) => number): number {
+  const stem = basename(artifact);
+  return entries.filter((name) => name.startsWith(stem + ".") || name.startsWith("lib" + stem + ".")).reduce((sum, name) => sum + size(name), 0);
 }
 
 /** 🛠️ Compiles the scheduler crate (host, release) and returns its executables by name, examples included on request. */
@@ -301,7 +308,7 @@ export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDi
   requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();for(const path of [options.targetDirectory,options.buildDirectory,...["CARGO_HOME","TMPDIR","TMP","TEMP"].map(name=>{const path=options.environment[name];if(!path)throw Error("Bounded scheduler environment required: "+name);return path;})])requireNativeStoragePathV1(options.storage.backing.root,path);
   const budget = compilerAdmissionBudgetV1(options.control), signal = options.control.signal;
   const manifest = fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml", import.meta.url));
-  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:16777216},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd));await options.storage.recheck();
+  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:16777216},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
   const child = spawn("cargo", ["build", "--locked", "--release", "--manifest-path", manifest, "--bins", ...(options.examples ? ["--examples"] : []), "--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
   const deadline = budget === 0 ? undefined : setTimeout(cancel, budget);

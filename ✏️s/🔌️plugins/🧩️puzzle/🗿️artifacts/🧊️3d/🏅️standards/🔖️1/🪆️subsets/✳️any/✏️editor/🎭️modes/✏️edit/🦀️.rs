@@ -3,7 +3,15 @@
 //! one `🪟️windows/🧊️main` window kind) plus the mode-level Fill tool. The per-window chrome options
 //! every instance shares live in `☑️options/*`.
 
-use crate::editor::puzzle3d::modes::edit::windows::main;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::windows::main;
 use semio_framework_plugin::create_window_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -23,7 +31,7 @@ pub fn definition() -> ModeDefinition {
         id: PUZZLE3D_PLAY_MODE_EDIT.into(),
         label: LocalizedLabel::native("Edit", "Bearbeiten"),
         icon_id: "pencil".into(),
-        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID))],
         layout_id: None,
         commands: Vec::new(),
     }
@@ -40,13 +48,13 @@ pub fn layout() -> WindowLayout {
                     kind: "stack".into(),
                     size: Some(100.0 / 3.0),
                     active_window_kind_id: None,
-                    children: vec![create_window_layout(main::WINDOW_KIND_ID, Some("Top".into()), Some(main::WINDOW_INSTANCE_TOP.into()), Some(main::TEMPLATE_TOP.into()))],
+                    children: vec![create_window_layout(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, Some("Top".into()), Some(main::WINDOW_INSTANCE_TOP.into()), Some(main::TEMPLATE_TOP.into()))],
                 }),
                 WindowLayoutChild::Stack(WindowLayoutStackNode {
                     kind: "stack".into(),
                     size: Some(200.0 / 3.0),
                     active_window_kind_id: None,
-                    children: vec![create_window_layout(main::WINDOW_KIND_ID, Some("Perspective".into()), Some(main::WINDOW_INSTANCE_PERSPECTIVE.into()), Some(main::TEMPLATE_PERSPECTIVE.into()))],
+                    children: vec![create_window_layout(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, Some("Perspective".into()), Some(main::WINDOW_INSTANCE_PERSPECTIVE.into()), Some(main::TEMPLATE_PERSPECTIVE.into()))],
                 }),
             ],
         }),
@@ -54,8 +62,44 @@ pub fn layout() -> WindowLayout {
 }
 //#endregion 🔖️Definition
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod options {
+    #[path = "☑️options/🌐️grid/🦀️.rs"]
+    pub mod grid;
+    #[path = "☑️options/🔭️lod/🦀️.rs"]
+    pub mod lod;
+    #[path = "☑️options/🎥️projection/🦀️.rs"]
+    pub mod projection;
+    #[path = "☑️options/🎯️select/🦀️.rs"]
+    pub mod select;
+    #[path = "☑️options/☀️sun/🦀️.rs"]
+    pub mod sun;
+    #[path = "☑️options/🌀️vortex/🦀️.rs"]
+    pub mod vortex;
+}
+#[path = "."]
+pub mod tools {
+    #[path = "🛠️tools/🪣️fill/🦀️.rs"]
+    pub mod fill;
+}
+#[path = "."]
+pub mod windows {
+    #[path = "."]
+    pub mod main {
+        #[path = "🪟️windows/🧊️main/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod utilities {
+            #[path = "🪟️windows/🧊️main/🪛️utilities/🖌️brush/🦀️.rs"]
+            pub mod brush;
+            #[path = "🪟️windows/🧊️main/🪛️utilities/🧊️volume-brush/🦀️.rs"]
+            pub mod volume_brush;
+            #[path = "🪟️windows/🧊️main/🪛️utilities/🚚️world-relocate/🦀️.rs"]
+            pub mod world_relocate;
+        }
+    }
+}
+//#endregion 🌳️Modules

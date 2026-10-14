@@ -1,5 +1,8 @@
 //! 🧵️ Retains cancellable path simplification until one semantic geometry mutation is ready.
-use super::*;
+use crate::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_PATH_PUBLICATION_CONTRACTS, DRAWING_PATH_TOOL_IDS, DrawingCommand, DrawingPlayApp, DrawingWindowCommandWork};
+use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_POINT_DOMAIN;
+use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
+#[cfg(test)] use semio_s_artifact_draw_drawing_editor_commands::edit_path;
 use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
 use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};

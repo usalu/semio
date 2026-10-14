@@ -4,10 +4,18 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::mutations::LayoutMutation;
-use crate::viewer::layout::modes::view;
-use crate::viewer::layout::modes::view::windows::preview;
-use crate::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use crate::modes::view;
+use crate::modes::view::windows::preview;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::{LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
 use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -52,7 +60,7 @@ impl ArtifactViewer for LayoutViewer {
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+        semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `LayoutViewCommand::Noop` variant never carries a config
@@ -91,3 +99,21 @@ pub fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️TaxonomyMounts

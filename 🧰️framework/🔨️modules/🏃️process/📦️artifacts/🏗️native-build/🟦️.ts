@@ -1,3 +1,4 @@
+import {publishedCargoArtifactDirectoryV1} from "./📤️published/🟦️.ts";
 import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { checkResourceLeaseControl, requireMaterializedPathV1 } from "../../🔒️leases/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -229,7 +230,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   policy = admitArtifactPolicy(policy);
   args = cargoArtifactArgumentsV1(args,policy);
   if(options.observationOutput&&options.output)throw Error("Compiler observations and source deliverables require separate output ownership");
-  options = { ...options, ...(options.observationOutput?{}:{output: options.output ?? join(storage.backing.root,"published",createHash("sha256").update(resolve(manifest)).digest("hex").slice(0,20),policy.mode)}) };
+  options = { ...options, ...(options.observationOutput?{}:{output: options.output ?? publishedCargoArtifactDirectoryV1(storage.backing.root,resolve(manifest),policy.mode)}) };
   if (!isAbsolute(manifest)) throw Error("Cargo artifact manifest must be absolute");
   const control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs);
   requireCargoCompilerPathEnvelopeV1(manifest,args,policy);
@@ -242,7 +243,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   try {
     options = { ...options, control };
     const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:16777216},control,options.planningPort??actualCargoCompilerPlanningPortV1());
-    await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd));await storage.recheck();
+    await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));await storage.recheck();
     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
     lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
     requireNativeStoragePathV1(storage.backing.root,lease.targetDirectory);await storage.recheck();

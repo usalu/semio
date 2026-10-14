@@ -10,7 +10,7 @@ pub(crate) mod context {
     
     impl BoardHostTestEvents for BoardHost {
         fn drain_events_json(&mut self) -> String {
-            crate::editor::puzzle2d::drain_board_events_json(self)
+            crate::editor::puzzle2d::snapshot::drain_board_events_json(self)
         }
     }
     

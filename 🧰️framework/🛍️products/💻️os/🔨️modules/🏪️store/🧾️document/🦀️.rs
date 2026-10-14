@@ -2,7 +2,7 @@
 //! the engine build documents from.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisCodec};
+use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use crate::os_spr::{HybridLogicalTimestamp, MutationId};
 use crate::os_spr::{Edit, Mutation, OpBinary};
 use std::collections::HashSet;
@@ -23,10 +23,10 @@ use super::backbone::resolve_backbone;
 use super::backbone::local_storage_backbone_key;
 
 // config_spec_* removed — ConfigSpec is UI (framework-core); avoids kernel↔core cycle
-pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<ArtifactBackboneRef>) -> ArtifactEnvelope<P, Mutation>
-where P: Clone + ArtifactGenesisCodec,
+pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<ArtifactBackboneRef>, producer:&impl ArtifactGenesisProducer<P>) -> ArtifactEnvelope<P, Mutation>
+where P: Clone,
 {
-    create_document_envelope_from_genesis(schema, id, AdmittedArtifactGenesis::born(initial_snapshot).expect("artifact genesis birth encodes once"), backbone)
+    create_document_envelope_from_genesis(schema, id, AdmittedArtifactGenesis::born(initial_snapshot,producer).expect("artifact genesis birth encodes once"), backbone)
 }
 
 pub fn create_document_envelope_from_genesis<P, Mutation>(schema: &str, id: &str, genesis: AdmittedArtifactGenesis<P>, backbone: Option<ArtifactBackboneRef>) -> ArtifactEnvelope<P, Mutation>

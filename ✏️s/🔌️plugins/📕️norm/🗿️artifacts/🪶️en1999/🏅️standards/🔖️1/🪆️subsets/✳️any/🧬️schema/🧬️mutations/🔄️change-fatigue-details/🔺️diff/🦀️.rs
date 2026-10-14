@@ -1,8 +1,8 @@
 //! 🔺️ `change-fatigue-details` diff.
 
-use crate::mutations::change_fatigue_details::ChangeFatigueDetails;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999FatigueDetailsRows};
+use crate::change_fatigue_details::ChangeFatigueDetails;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999FatigueDetailsRows};
 
 pub fn diff(payload: &ChangeFatigueDetails, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.fatigue_details == &payload.fatigue_details {

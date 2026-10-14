@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::mutations::*;
+use crate::text::mutations::*;
 use protocol::{OpBinary, OpText};
 
 #[semio_framework_async_macros::async_test]

@@ -43,11 +43,11 @@ async fn render_lists_name_version_and_every_collection_count() {
 #[semio_framework_async_macros::async_test]
 async fn every_node_stays_under_the_tree_kit_sibling_ceiling() {
     let model = crate::model::Model::default();
-    let groups = crate::energy_structure_overview(&model);
+    let groups = crate::snapshot::energy_structure_overview(&model);
     let root_children = 3 + groups.len();
-    assert!(root_children <= crate::STRUCTURE_TREE_SIBLING_CEILING, "root has {root_children} children");
+    assert!(root_children <= crate::snapshot::STRUCTURE_TREE_SIBLING_CEILING, "root has {root_children} children");
     for group in &groups {
-        assert!(group.counts.len() <= crate::STRUCTURE_TREE_SIBLING_CEILING, "group {} has {} leaves", group.id, group.counts.len());
+        assert!(group.counts.len() <= crate::snapshot::STRUCTURE_TREE_SIBLING_CEILING, "group {} has {} leaves", group.id, group.counts.len());
     }
     let mut ids: Vec<&str> = groups.iter().flat_map(|group| group.counts.iter().map(|(id, _)| *id)).collect();
     let total = ids.len();

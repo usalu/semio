@@ -1,0 +1,23 @@
+diff --git a/dist/lib/typescript/writeAppTypeDeclarations.js b/dist/lib/typescript/writeAppTypeDeclarations.js
+--- a/dist/lib/typescript/writeAppTypeDeclarations.js
++++ b/dist/lib/typescript/writeAppTypeDeclarations.js
+@@ -18,7 +18,9 @@
+ }
+ async function writeAppTypeDeclarations({ baseDir, distDir, imageImportsEnabled, hasPagesDir, hasAppDir }) {
+     // Reference `next` types
+-    const appTypeDeclarations = _path.default.join(baseDir, 'next-env.d.ts');
++    const project = process.env.SEMIO_NEXT_TYPESCRIPT_PROJECT;
++    if (!project) throw new Error('Original bounded Next TypeScript project required');
++    const appTypeDeclarations = _path.default.join(_path.default.dirname(_path.default.resolve(baseDir, project)), 'next-env.d.ts');
+     // Defaults EOL to system default
+     let eol = _os.default.EOL;
+     let currentContent;
+@@ -49,7 +51,7 @@
+     if (hasAppDir && hasPagesDir) {
+         directives.push('/// <reference types="next/navigation-types/compat/navigation" />');
+     }
+-    const routeTypesPath = _path.default.posix.join(distDir.replaceAll(_path.default.win32.sep, _path.default.posix.sep), 'types/routes.d.ts');
++    const routeTypesPath = _path.default.relative(_path.default.dirname(appTypeDeclarations), _path.default.resolve(baseDir, distDir, 'types/routes.d.ts')).replaceAll(_path.default.win32.sep, _path.default.posix.sep);
+     directives.push(`/// <reference path="./${routeTypesPath}" />`);
+     // Push the notice in.
+     directives.push('', '// NOTE: This file should not be edited', `// see https://nextjs.org/docs/${hasAppDir ? 'app' : 'pages'}/api-reference/config/typescript for more information.`);

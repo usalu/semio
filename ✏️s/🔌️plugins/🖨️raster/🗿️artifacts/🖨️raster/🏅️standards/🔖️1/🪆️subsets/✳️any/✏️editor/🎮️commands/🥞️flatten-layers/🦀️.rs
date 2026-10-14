@@ -1,10 +1,13 @@
 //! 🥞️ Render visible artwork privately, then replace the layer tree in one undoable operation.
-use crate::editor::raster::{RasterCommand,RasterPlayApp};
-use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
-use crate::standards::v1::subsets::any::schema::{layer_node_id};
-use crate::standards::v1::subsets::any::schema::create_pixel_layer;
-use crate::{SemioImageSnapshot,RasterLayerNode,RasterMutation,RasterSnapshot};
-use crate::standards::v1::subsets::any::io::RasterStackPreparation;
+use crate::{RasterCommand, RasterPlayApp};
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_model::layer_node_id;
+use semio_s_artifact_raster_raster_model::create_pixel_layer;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_io::RasterStackPreparation;
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::{EncodedPngImage,PngEncodeJob}};
 use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};
@@ -16,11 +19,12 @@ pub struct FlattenLayers {pub name:String}
 
 fn prepare(command:&FlattenLayers,document:&RasterSnapshot)->Result<RasterStackPreparation,Fault> {
     if command.name.trim().is_empty()||command.name.chars().count()>120 {return Err(Fault::from("raster.flatten-name-invalid"));}
-    for layer in &document.layers {crate::standards::v1::subsets::any::schema::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
+    for layer in &document.layers {semio_s_artifact_raster_raster_model::require_layer_edit(&document.layers,layer_node_id(layer),true).map_err(Fault::from)?;}
     RasterStackPreparation::new(document).map_err(Fault::from)
 }
 fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapshot)->Result<Emit<RasterMutation,RasterConfigMutation>,Fault> {
-    use crate::mutations::{add_layer_asset,create_layer,delete_layer,remove_layer_asset};
+    use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_layer_asset};
+    use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer};
     let (layer,key,asset)=baked_layer(image,origin,name,"flatten");
     let previous=asset_keys_except(&document.layers,&Default::default());
     let mut mutations=Vec::new();
@@ -30,15 +34,15 @@ fn publish(image:EncodedPngImage,origin:[f64;2],name:&str,document:&RasterSnapsh
     mutations.push(RasterMutation::CreateLayer(create_layer::CreateLayer {parent_id:None,index:0,layer:Box::new(layer)}));
     Ok(Emit::mutations(mutations))
 }
-pub(crate) fn baked_layer(image:EncodedPngImage,origin:[f64;2],name:&str,prefix:&str)->(RasterLayerNode,String,SemioImageSnapshot) {
+pub fn baked_layer(image:EncodedPngImage,origin:[f64;2],name:&str,prefix:&str)->(RasterLayerNode,String,SemioImageSnapshot) {
     let mut layer=create_pixel_layer(name,image.width,image.height);
     let key=format!("{prefix}-{}-{:016x}",layer_node_id(&layer),image.content_hash);
     if let RasterLayerNode::Pixel {image_key,transform,..}=&mut layer {
         *image_key=Some(key.clone());transform.x=origin[0]+f64::from(image.width)/2.0;transform.y=origin[1]+f64::from(image.height)/2.0;
     }
-    (layer,key,crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&image.data).expect("baked PNG decodes"))
+    (layer,key,semio_s_artifact_raster_raster_io::semio_image_from_png_bytes(&image.data).expect("baked PNG decodes"))
 }
-pub(crate) fn asset_keys_except(layers:&[RasterLayerNode],excluded:&std::collections::BTreeSet<&str>)->std::collections::BTreeSet<String> {
+pub fn asset_keys_except(layers:&[RasterLayerNode],excluded:&std::collections::BTreeSet<&str>)->std::collections::BTreeSet<String> {
     let mut keys=std::collections::BTreeSet::new();
     for layer in layers {
         if excluded.contains(layer_node_id(layer)) {continue;}

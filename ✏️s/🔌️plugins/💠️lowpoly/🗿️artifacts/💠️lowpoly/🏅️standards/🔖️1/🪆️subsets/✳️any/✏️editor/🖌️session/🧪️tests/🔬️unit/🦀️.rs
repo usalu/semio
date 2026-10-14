@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 
 fn stroke_gesture(object_id: &str, u: f32) -> LowpolyPaintGesture {
     LowpolyPaintGesture {
@@ -7,7 +7,7 @@ fn stroke_gesture(object_id: &str, u: f32) -> LowpolyPaintGesture {
         authoring_seed: "seed".into(),
         base_revision: "00".into(),
         transaction: protocol::TransactionRef { id: "tx-0000000000000001".into(), tool: "s.lowpoly.lowpoly@1/*#editor#paint".into() },
-        leaf: LowpolyMutation::ApplyPaintStroke(crate::mutations::apply_paint_stroke::ApplyPaintStroke { object_id: object_id.into(), layer_index: 0, eraser: false, color: [200.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0], radius: 4.0, hardness: 1.0, opacity: 1.0, points: vec![[u, 0.5]] }),
+        leaf: LowpolyMutation::ApplyPaintStroke(semio_s_artifact_lowpoly_lowpoly_mut_paint::apply_paint_stroke::ApplyPaintStroke { object_id: object_id.into(), layer_index: 0, eraser: false, color: [200.0 / 255.0, 30.0 / 255.0, 30.0 / 255.0], radius: 4.0, hardness: 1.0, opacity: 1.0, points: vec![[u, 0.5]] }),
     }
 }
 

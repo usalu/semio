@@ -13,7 +13,7 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
-use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
 use semio_framework_3d_brep_curve::bspline::{elevate_degree, KnotVector};
 use semio_framework_3d_brep_curve::curve_ops::{interpolate_curve, ParamMethod};
@@ -166,8 +166,8 @@ impl LoftJob {
         let right_fit = fit_column(&right_positions, degree_v);
         let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
         let right_curve = body.curves3.insert(Curve3::Nurbs { knots: right_fit.knots.clone(), controls: right_fit.controls, weights: vec![1.0; n] });
-        let left_rail = crate::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
-        let right_rail = crate::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
+        let left_rail = semio_framework_3d_brep_construction::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
+        let right_rail = semio_framework_3d_brep_construction::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
 
         let u0 = harmonized[0].knots.domain().0;
         let u1 = harmonized[0].knots.domain().1;

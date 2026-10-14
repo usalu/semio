@@ -7,6 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::PluginBuilder;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
@@ -54,7 +55,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioSemioApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioSemioApps>::builder("stdio-semio").label("Stdio Semio").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-semio").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = PluginBuilder::<_, StdioSemioApps>::new("stdio-semio").label("Stdio Semio").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-semio").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_semio_catalog::declaration(semio_s_artifact_stdio_semio::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.editor::<semio_s_artifact_stdio_semio_brep::editor::SemioBrepEditor>(semio_s_artifact_stdio_semio_brep::editor::create_semio_brep_editor());
     builder = builder.editor_mutation_roster::<semio_s_artifact_stdio_semio_brep::editor::SemioBrepEditor>();

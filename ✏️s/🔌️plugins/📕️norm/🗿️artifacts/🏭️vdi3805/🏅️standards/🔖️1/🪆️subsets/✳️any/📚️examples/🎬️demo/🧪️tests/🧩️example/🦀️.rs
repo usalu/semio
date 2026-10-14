@@ -1,14 +1,14 @@
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT;
     assert!(text.len() > 8);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_decodes_to_conforming_valve_dataset() {
-    use crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_dsl;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
     use crate::{conforming_valve_dataset, reference_fixture};
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let text = semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT;
     let decoded = decode_vdi3805_dsl(text).expect("demo dsl");
     assert_eq!(decoded, conforming_valve_dataset());
     assert_eq!(decoded, reference_fixture());
@@ -16,8 +16,8 @@ async fn primary_asset_decodes_to_conforming_valve_dataset() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::Vdi3805Inference;
-    use crate::Vdi3805Snapshot;
+    use semio_s_artifact_norm_vdi3805_inferences::Vdi3805Inference;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use protocol::Inference;
     let snapshot = Vdi3805Snapshot::default();
     assert_eq!(Vdi3805Inference::infer(&snapshot).expect("valid materialized inference fixture"), Vdi3805Inference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -25,8 +25,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifact_schema::inferences::Vdi3805Inference;
-    use crate::Vdi3805Snapshot;
+    use semio_s_artifact_norm_vdi3805_inferences::Vdi3805Inference;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use protocol::Inference;
     assert_eq!(Vdi3805Inference::infer(&Vdi3805Snapshot::default()).expect("valid materialized inference fixture"), Vdi3805Inference::default());
 }

@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::schema::mutations::En1995Mutation;
-use crate::mutations::*;
+use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
+use semio_s_artifact_norm_en1995_mutations::*;
 
 /// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary.
 #[semio_framework_async_macros::async_test]
@@ -12,17 +12,17 @@ async fn every_variant_op_text_round_trips() {
 }
 
 fn every_mutation() -> Vec<En1995Mutation> {
-    let base = crate::En1995Snapshot::compliant_building_beam();
+    let base = semio_s_artifact_norm_en1995_model::En1995Snapshot::compliant_building_beam();
     vec![
-        En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-        En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
+        En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En }),
+        En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: semio_s_artifact_norm_en1995_model::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
         En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
         En1995Mutation::ChangeMemberLabelEn(change_member_label_en::ChangeMemberLabelEn { member_id: base.members[0].id.clone(), new_value: "Beam B1 (revised)".into() }),
         En1995Mutation::ChangeMemberLabelDe(change_member_label_de::ChangeMemberLabelDe { member_id: base.members[0].id.clone(), new_value: "Träger B1 (überarbeitet)".into() }),
-        En1995Mutation::ChangeMemberRole(change_member_role::ChangeMemberRole { member_id: base.members[0].id.clone(), new_value: crate::MemberRole::Column }),
+        En1995Mutation::ChangeMemberRole(change_member_role::ChangeMemberRole { member_id: base.members[0].id.clone(), new_value: semio_s_artifact_norm_en1995_model::MemberRole::Column }),
         En1995Mutation::ChangeMemberStrengthClass(change_member_strength_class::ChangeMemberStrengthClass { member_id: base.members[0].id.clone(), new_value: "GL32h".into() }),
         En1995Mutation::ChangeMemberServiceClass(change_member_service_class::ChangeMemberServiceClass { member_id: base.members[0].id.clone(), new_value: 2 }),
-        En1995Mutation::ChangeMemberSupport(change_member_support::ChangeMemberSupport { member_id: base.members[0].id.clone(), new_value: crate::SupportType::Cantilever }),
+        En1995Mutation::ChangeMemberSupport(change_member_support::ChangeMemberSupport { member_id: base.members[0].id.clone(), new_value: semio_s_artifact_norm_en1995_model::SupportType::Cantilever }),
         En1995Mutation::ChangeMemberB(change_member_b::ChangeMemberB { member_id: base.members[0].id.clone(), new_value: 0.24 }),
         En1995Mutation::ChangeMemberH(change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 }),
         En1995Mutation::ChangeMemberSpan(change_member_span::ChangeMemberSpan { member_id: base.members[0].id.clone(), new_value: 7.0 }),
@@ -44,7 +44,7 @@ fn every_mutation() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeMemberBridgeA(change_member_bridge_a::ChangeMemberBridgeA { member_id: base.members[0].id.clone(), new_value: 15.0 }),
         En1995Mutation::ChangeMemberBridgeB(change_member_bridge_b::ChangeMemberBridgeB { member_id: base.members[0].id.clone(), new_value: 4.0 }),
         En1995Mutation::ChangeMemberBridgeCrowd(change_member_bridge_crowd::ChangeMemberBridgeCrowd { member_id: base.members[0].id.clone(), new_value: 1.0 }),
-        En1995Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { member_id: base.members[0].id.clone(), index: 99, action: crate::CharacteristicAction { id: "w".into(), ..base.members[0].actions[0].clone() } }),
+        En1995Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { member_id: base.members[0].id.clone(), index: 99, action: semio_s_artifact_norm_en1995_model::CharacteristicAction { id: "w".into(), ..base.members[0].actions[0].clone() } }),
         En1995Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { member_id: base.members[0].id.clone(), index: 0 }),
         En1995Mutation::ChangeMemberActionKind(change_member_action_kind::ChangeMemberActionKind { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "imposed".into() }),
         En1995Mutation::ChangeMemberActionCategory(change_member_action_category::ChangeMemberActionCategory { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "B".into() }),
@@ -56,7 +56,7 @@ fn every_mutation() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeMemberActionNK(change_member_action_nk::ChangeMemberActionNK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 5000.0 }),
         En1995Mutation::ChangeMemberActionNTK(change_member_action_ntk::ChangeMemberActionNTK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3000.0 }),
         En1995Mutation::ChangeMemberActionFC90K(change_member_action_fc90_k::ChangeMemberActionFC90K { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 9000.0 }),
-        En1995Mutation::InsertConnection(insert_connection::InsertConnection { index: 99, connection: crate::TimberConnection { id: "conn-C9".into(), ..base.connections[0].clone() } }),
+        En1995Mutation::InsertConnection(insert_connection::InsertConnection { index: 99, connection: semio_s_artifact_norm_en1995_model::TimberConnection { id: "conn-C9".into(), ..base.connections[0].clone() } }),
         En1995Mutation::RemoveConnection(remove_connection::RemoveConnection { index: 0 }),
         En1995Mutation::ChangeConnectionLabelEn(change_connection_label_en::ChangeConnectionLabelEn { connection_id: base.connections[0].id.clone(), new_value: "Bolt group (revised)".into() }),
         En1995Mutation::ChangeConnectionLabelDe(change_connection_label_de::ChangeConnectionLabelDe { connection_id: base.connections[0].id.clone(), new_value: "Schraubverbund (überarbeitet)".into() }),
@@ -75,7 +75,7 @@ fn every_mutation() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeConnectionPlateThickness(change_connection_plate_thickness::ChangeConnectionPlateThickness { connection_id: base.connections[0].id.clone(), new_value: 0.008 }),
         En1995Mutation::ChangeConnectionShearPlanes(change_connection_shear_planes::ChangeConnectionShearPlanes { connection_id: base.connections[0].id.clone(), new_value: 2 }),
         En1995Mutation::ChangeConnectionFUK(change_connection_fuk::ChangeConnectionFUK { connection_id: base.connections[0].id.clone(), new_value: 500_000_000.0 }),
-        En1995Mutation::InsertConnectionAction(insert_connection_action::InsertConnectionAction { connection_id: base.connections[0].id.clone(), index: 99, action: crate::ConnectionAction { id: "w".into(), ..base.connections[0].actions[0].clone() } }),
+        En1995Mutation::InsertConnectionAction(insert_connection_action::InsertConnectionAction { connection_id: base.connections[0].id.clone(), index: 99, action: semio_s_artifact_norm_en1995_model::ConnectionAction { id: "w".into(), ..base.connections[0].actions[0].clone() } }),
         En1995Mutation::RemoveConnectionAction(remove_connection_action::RemoveConnectionAction { connection_id: base.connections[0].id.clone(), index: 0 }),
         En1995Mutation::ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "imposed".into() }),
         En1995Mutation::ChangeConnectionLoadDuration(change_connection_load_duration::ChangeConnectionLoadDuration { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "short".into() }),

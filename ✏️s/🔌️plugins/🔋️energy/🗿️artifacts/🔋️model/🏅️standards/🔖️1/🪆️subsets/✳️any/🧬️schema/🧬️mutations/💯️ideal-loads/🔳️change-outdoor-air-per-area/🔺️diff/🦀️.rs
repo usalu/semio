@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeIdealLoadsSystemOutdoorAirPerArea` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeIdealLoadsSystemOutdoorAirPerArea, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

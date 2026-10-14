@@ -1,7 +1,7 @@
 //! 🏠️ Example `house` — a real-world single-storey masonry house built ENTIRELY from meshed
 //! continuum solids: a raft foundation, a ground slab and an attic slab, four load-bearing walls
 //! with window and door openings, and a gable roof — every solid extruded along its own
-//! [`crate::FemAxis`] so a wall is drawn in ELEVATION (openings are holes in its footprint) and the
+//! [`crate::standards::v1::subsets::any::schema::structure::FemAxis`] so a wall is drawn in ELEVATION (openings are holes in its footprint) and the
 //! roof as its chevron SECTION swept along the ridge.
 //!
 //! 📐️ CONFORMITY, the whole point of the dimensions below: every solid is meshed independently and
@@ -18,7 +18,16 @@
 //! carries no rotations); each lies on the raft's own 0.5 m lattice, so the mesh reuses those nodes
 //! by id and the supports carry the model.
 
-use crate::{FemAnalysisSettings, FemAxis, FemCombination, FemDof, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport, Fem3dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::BTreeMap;

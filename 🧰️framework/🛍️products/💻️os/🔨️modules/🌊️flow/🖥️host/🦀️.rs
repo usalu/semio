@@ -32,7 +32,7 @@ use crate::artifact::*;
 use crate::bridge::*;
 use crate::catalogue::*;
 use crate::drawing::*;
-use crate::os_store::{document_materialize::create_document_envelope, store_schema::ArtifactCommand, document_store_owners::MemberStoreOwner, SpaceMember};
+use crate::os_store::{document_materialize::create_document_envelope, store_schema::ArtifactCommand, document_store_owners::MemberStoreProducer, SpaceMember};
 use crate::registry::*;
 #[path="🧹️retirement/🦀️.rs"]
 mod original_retirement;
@@ -371,6 +371,7 @@ pub struct FlowHost {
     /// ↩️ Undo/redo, backed by the standard `crate::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     history_store: Option<FlowStore>,
+    history_store_factory:Option<crate::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>>,
     pending_history_baseline: Option<FlowHostSnapshot>,
     /// 🚩️ Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
     /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's
@@ -443,6 +444,8 @@ impl FlowHost {
     pub fn geometry_port(&self) -> Result<&dyn crate::geometry::GeometryPort, String> {
         self.geometry_port.as_deref().ok_or_else(|| "flow.geometry-port-missing".into())
     }
+    /// 🏭️ Selects the actual baseline Store producer supplied by this host's child composition.
+    pub fn with_history_store_factory(mut self,producer:crate::os_store::OriginalStoreGenesisFactory<FlowHostSnapshot,FlowMutation>)->Self{assert!(self.history_store_factory.is_none()&&self.history_store.is_none(),"original history producer is supplied once before Store birth");self.history_store_factory=Some(producer);self}
     pub fn from_host_snapshot(host_snapshot: FlowHostSnapshot) -> Self {
         Self::from_host_snapshot_with_cache(host_snapshot, Arc::new(NeuralCache::new()))
     }
@@ -488,6 +491,7 @@ impl FlowHost {
             pan_anchor: None,
             ghost_node: None,
             history_store: None,
+            history_store_factory:None,
             pending_history_baseline: None,
             pending_change: false,
             pending_leaves: Vec::new(),
@@ -552,7 +556,8 @@ impl FlowHost {
     /// retired. Used by every load and by a refused history row, since the store can no longer represent the live content.
     fn reset_history_store(&mut self) {
         if let Some(store) = self.history_store.as_mut() {
-            let envelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.host_snapshot.clone(), None);
+            let producer=self.history_store_factory.as_ref().expect("existing history Store retains its original producer");
+            let envelope=(producer.envelope)(self.host_snapshot.clone()).expect("original child history genesis reset");
             ::semio_framework_async::poll::resolve_ready(store.reset(envelope)).expect("failed to reset flow history store");
         }
         if let Some(stale) = self.pending_history_baseline.take() {
@@ -2756,8 +2761,8 @@ impl FlowHost {
             retirement.retire_cold();
             return self.history_store.as_mut();
         }
-        let mut store = ::semio_framework_async::poll::resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", baseline, None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()))).ok()?;
-        crate::os_store::install_funded_member_store_owners(&mut store).ok()?;
+        let Some(producer)=self.history_store_factory.as_ref() else{let mut retirement=crate::retained::FlowRetirement::default();retirement.push_cold(crate::retained::FlowOwner::HostSnapshot(baseline));retirement.retire_cold();return None};
+        let store=(producer.construct)(baseline).ok()?;
         self.history_store = Some(store);
         self.history_store.as_mut()
     }
@@ -3312,7 +3317,7 @@ pub struct FlowEvalSessionState {
     tick_display_progress:RetainedCloneProgress,
     tick_evaluation_ready:u8,
     pending_host:Option<FlowHost>,
-    pending_snapshot_copy:Option<Box<dyn semio_framework_artifact_flow_flow::retained::FlowHostSnapshotIntake>>,
+    pending_snapshot_copy:Option<Box<dyn semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot>>>,
     pending_tick_snapshot:Option<FlowHostSnapshot>,
     pending_tick_snapshot_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<FlowHostSnapshot>>,
     pending_tick_snapshot_origin:Option<(u64,u64)>,
@@ -3635,7 +3640,7 @@ impl SessionRetirement {
 
 /// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
 /// 🧳️ Intake failure retains the exact typed original source or identifies its same-session custody.
-pub enum FlowSnapshotIntakeFailure<R:RetireOwned+Sync>{Original{failure:semio_framework_job::OriginalTurnFailure,source:semio_framework_artifact_flow_flow::retained::FlowSnapshotCopyIntakeSource<R>},Retained{failure:semio_framework_job::OriginalTurnFailure}}
+pub enum FlowSnapshotIntakeFailure<Original>{Original{failure:semio_framework_job::OriginalTurnFailure,source:Original},Retained{failure:semio_framework_job::OriginalTurnFailure}}
 
 pub struct FlowEvalSession {
     state: std::mem::ManuallyDrop<FlowEvalSessionState>,
@@ -3778,17 +3783,16 @@ impl FlowEvalSession {
         self.neural_cache.as_ref().expect("live Flow evaluation session owns its neural cache").clone()
     }
 
-    /// 🪙️ Quotes the original Store-read source and concrete copy frame before either is born.
-    pub fn tick_snapshot_intake_constructor_demands<R:RetireOwned+Sync>()->Result<RetirementDemand,ValueError>{
-        let mut demand=semio_framework_value::retained_clone::RetainedCloneSource::<FlowHostSnapshot,crate::os_store::snapshot_read::SnapshotRead<R>>::borrowed_constructor_demand::<crate::os_store::snapshot_read::SnapshotRead<R>>();demand.capacity_bytes=demand.capacity_bytes.checked_add(size_of::<semio_framework_artifact_flow_flow::retained::FlowHostSnapshotCopy<R>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows"))?;Ok(demand)
+    /// 🪙️ Quotes the selected original source and its concrete producer frame before either is born.
+    pub fn tick_snapshot_intake_constructor_demands<Source,P:semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,Source>>(producer:&P)->Result<RetirementDemand,ValueError>{
+        let mut demand=producer.source_demands()?;demand.capacity_bytes=demand.capacity_bytes.checked_add(size_of::<P::Intake>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows"))?;Ok(demand)
     }
-    /// 🧾️ Retains the exact original Store read before normal tick snapshot copying begins.
-    pub fn begin_tick_snapshot_intake<R:RetireOwned+Sync>(&mut self,read:crate::os_store::snapshot_read::SnapshotRead<R>,project:for<'source>fn(&'source R)->&'source FlowHostSnapshot,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),FlowSnapshotIntakeFailure<R>>{
-        use semio_framework_artifact_flow_flow::retained::{FlowHostSnapshotCopy,FlowSnapshotCopyIntakeSource};
-        if self.closing||!self.tick_snapshot_intake_terminal_is_empty()||self.state.pending_host.is_some()||self.state.retiring_host.is_some(){return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake custody is occupied").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})}
-        let birth=size_of::<FlowHostSnapshotCopy<R>>();let demand=semio_framework_value::retained_clone::RetainedCloneSource::<FlowHostSnapshot,crate::os_store::snapshot_read::SnapshotRead<R>>::borrowed_constructor_demand::<crate::os_store::snapshot_read::SnapshotRead<R>>();let grant=cx.retained_grant();let Some(capacity)=demand.capacity_bytes.checked_add(birth)else{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})};
-        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<capacity{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake awaits constructor admission").into(),source:FlowSnapshotCopyIntakeSource::Read(read)})}
-        let copy=FlowHostSnapshotCopy::from_read(read,project,revision,source_generation,cx).map_err(|(failure,source)|FlowSnapshotIntakeFailure::Original{failure,source})?;
+    /// 🧾️ Retains the exact original source through its selected concrete producer before normal copying begins.
+    pub fn begin_tick_snapshot_intake<Source,P:semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,Source>>(&mut self,read:Source,producer:&P,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),FlowSnapshotIntakeFailure<P::Rejected>>{
+        if self.closing||!self.tick_snapshot_intake_terminal_is_empty()||self.state.pending_host.is_some()||self.state.retiring_host.is_some(){return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake custody is occupied").into(),source:producer.preserve_source(read)})}
+        let birth=size_of::<P::Intake>();let demand=match producer.source_demands(){Ok(demand)=>demand,Err(error)=>return Err(FlowSnapshotIntakeFailure::Original{failure:error.into(),source:producer.preserve_source(read)})};let grant=cx.retained_grant();let Some(capacity)=demand.capacity_bytes.checked_add(birth)else{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick intake metadata overflows").into(),source:producer.preserve_source(read)})};
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<capacity{return Err(FlowSnapshotIntakeFailure::Original{failure:ValueError::literal(ValueRefusalKind::WorkLimit,"original tick snapshot intake awaits constructor admission").into(),source:producer.preserve_source(read)})}
+        let copy=producer.admit(read,revision,source_generation,cx).map_err(|(failure,source)|FlowSnapshotIntakeFailure::Original{failure,source})?;
         self.state.pending_snapshot_copy=Some(Box::new(copy));self.state.pending_tick_snapshot_origin=Some((cx.operation().0,cx.generation().0));cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:birth,..Default::default()}).map_err(|error|FlowSnapshotIntakeFailure::Retained{failure:error.into()})?;Ok(())
     }
     pub fn next_tick_snapshot_intake_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.state.pending_snapshot_copy.as_ref().map_or(Ok(Default::default()),|source|source.next_normal_demands(body))}

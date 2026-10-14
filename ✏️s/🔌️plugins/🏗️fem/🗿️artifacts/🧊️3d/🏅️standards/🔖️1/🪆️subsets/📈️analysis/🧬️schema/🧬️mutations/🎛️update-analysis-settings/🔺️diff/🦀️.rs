@@ -1,9 +1,11 @@
 //! 🔺️ Sparse diff builder for `UpdateAnalysisSettings`.
 use super::UpdateAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dAnalysisPatch, Fem3dDiff};
-use crate::standards::v1::subsets::any::schema::mutations::{analysis_breach,invariant};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dAnalysisPatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::analysis_breach;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

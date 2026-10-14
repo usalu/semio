@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput } from "../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 /** 📎️ Cfg-selected authored input; compiler dep-info must still qualify generated ownership. */
@@ -16,14 +16,15 @@ export async function readRustSourceClosureV1(entries: readonly string[], root: 
   const files = new Map<string, RustSourceInputV1>(), visited = new Set<string>(), decoder = new TextDecoder();
   const visit = async (path: string, base = dirname(path), embedded = false): Promise<void> => {
     const name = relative(root, path).replaceAll("\\", "/");
-    if (name === ".." || name.startsWith("../")) throw Error("Rust source escaped declared workspace: " + path);
-    const key = path + "\0" + base;
+    if (isAbsolute(name) || name === ".." || name.startsWith("../")) throw Error("Rust source escaped declared workspace: " + path);
+    const key = path + "\0" + base + "\0" + (embedded ? "embedded" : "source");
     if (visited.has(key)) return;
     visited.add(key);
     const bytes = await read(path);
     if (bytes === null) throw Error("Missing Rust source input: " + name);
     const selected = embedded ? "" : selectRustSourceV1(decoder.decode(bytes), cfg);
-    files.set(name, { path: name, digest: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.byteLength, activeBytes: embedded ? bytes.byteLength : Buffer.byteLength(selected), activeLines: embedded ? 0 : selected.split("\n").length, kind: embedded ? "embedded" : "source" });
+    const digest=createHash("sha256").update(bytes).digest("hex"),prior=files.get(name);if(prior&&prior.digest!==digest)throw Error("Rust source changed during closure: "+name);
+    if(!prior||!embedded)files.set(name, { path: name, digest, bytes: bytes.byteLength, activeBytes: embedded ? bytes.byteLength : Buffer.byteLength(selected), activeLines: embedded || !selected.trim() ? 0 : selected.split("\n").length, kind: embedded ? "embedded" : "source" });
     if (embedded) return;
     for (const reference of inspectRustCompileReferences(selected, owner ? (output) => owner.generated(name, output) : undefined)) {
       if (reference.kind === "path") continue;
@@ -33,6 +34,7 @@ export async function readRustSourceClosureV1(entries: readonly string[], root: 
     const tokens = rustTokens(selected), pairs = rustTokenPairs(tokens);
     const scope = async (start: number, end: number, moduleBase: string, fileScope: boolean): Promise<void> => {
       for (let index = start; index < end;) {
+        if(tokens[index]?.text==="#"&&tokens[index+1]?.text==="!"&&tokens[index+2]?.text==="["){const close=pairs.get(index+2);if(close===undefined)throw Error("Invalid inner Rust attribute");index=close+1;continue;}
         const attrs = rustAttributes(tokens, pairs, index, end), visibility = rustVisibility(tokens, pairs, attrs.next), at = visibility.next;
         if (tokens[at]?.text === "mod" && tokens[at + 1]?.kind === "identifier") {
           const name = tokens[at + 1]!.text.replace(/^r#/u, ""), boundary = at + 2;
@@ -95,6 +97,7 @@ export function rustCfgMatchesV1(source: string, cfg: readonly string[]): boolea
  * @see https://doc.rust-lang.org/reference/macros-by-example.html */
 export function selectRustSourceV1(source: string, cfg: readonly string[]): string {
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), edits: { start: number; end: number; text: string }[] = [];
+  const enclosure=new Map<number,number>(),stack:number[]=[];for(let index=0;index<tokens.length;index++){if(stack.length)enclosure.set(index,stack.at(-1)!);if(tokens[index]?.text==="{")stack.push(index);else if(tokens[index]?.text==="}")stack.pop();}
   if (tokens.some((token, index) => ["(", ")", "[", "]", "{", "}"].includes(token.text) && !pairs.has(index))) throw Error("Unbalanced Rust source delimiter");
   const attribute = (start: number, end: number): string | null => {
     const head = tokens[start]?.text;
@@ -111,6 +114,15 @@ export function selectRustSourceV1(source: string, cfg: readonly string[]): stri
   for (let index = 0; index < tokens.length; index++) {
     const transcriber = tokens[index]?.text === "macro_rules" && tokens[index + 1]?.text === "!" && tokens[index + 2]?.kind === "identifier" ? pairs.get(index + 3) : undefined;
     if (transcriber !== undefined) { index = transcriber; continue; }
+    if(tokens[index]?.text==="#"&&tokens[index+1]?.text==="!"&&tokens[index+2]?.text==="["){
+      const close=pairs.get(index+2);if(close===undefined)throw Error("Invalid inner Rust attribute");const start=index+3;
+      if(!["cfg","cfg_attr"].includes(tokens[start]?.text??"")){index=close;continue;}
+      const selected=attribute(start,close),open=enclosure.get(index);
+      if(open!==undefined&&(tokens[open-2]?.text!=="mod"||tokens[open-1]?.kind!=="identifier"))throw Error("Unsupported inner cfg-owned Rust scope");
+      if(selected===null){if(open===undefined)return "";const last=pairs.get(open)!;while(edits.length&&edits.at(-1)!.start>=tokens[open]!.end)edits.pop();edits.push({start:tokens[open]!.end,end:tokens[last]!.start,text:" "});index=last;}
+      else{const text=selected?selected.startsWith("#[")?selected.replaceAll("#[","#!["):`#![${selected}]`:"";edits.push({start:tokens[index]!.start,end:tokens[close]!.end,text});index=close;}
+      continue;
+    }
     if (tokens[index]?.text !== "#" || tokens[index + 1]?.text !== "[") continue;
     const attrs = rustAttributes(tokens, pairs, index, tokens.length);
     if (!attrs.ranges.some(([a]) => ["cfg", "cfg_attr"].includes(tokens[a]?.text ?? ""))) { index = attrs.next - 1; continue; }

@@ -1,8 +1,7 @@
 //! 🎩️ Energy model mutation — `ChangeFenestrationOverhangOffset`: Sets how far above the window head the horizontal projection sits, in metres.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationOverhangOffset {
     pub new_overhang_offset_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_overhang_offset(id: crate::model::EntityId, new_overhang_offset_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationOverhangOffset(ChangeFenestrationOverhangOffset { id, new_overhang_offset_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_overhang_offset<Op: From<ChangeFenestrationOverhangOffset>>(id: crate::model::EntityId, new_overhang_offset_m: f64) -> Op {
+    ChangeFenestrationOverhangOffset { id, new_overhang_offset_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationOverhangOffset {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationOverhangOffset
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationOverhangOffset>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-overhang-offset", record: "ChangedFenestrationOverhangOffset" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

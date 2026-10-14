@@ -818,3 +818,6 @@ mod package_tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+#[path="🧩️extensions/🌊️flow/🦀️.rs"]
+pub mod flow_forms;

@@ -7,10 +7,10 @@
 //! `bytes` argument entirely and return `Ok(Block5dSnapshot::default())` — silent, total data loss on
 //! every import.
 
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_io_write::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
+use crate::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+use crate::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

@@ -33,6 +33,13 @@
         "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🧪️tests/🦀️.rs",
         "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🧪️tests/🧫️fixtures/📐️identity.csv"
       ]
+    },
+    {
+      "name": "semio_framework_geometry_primitives",
+      "test": false,
+      "inputs": [
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs"
+      ]
     }
   ]
 }

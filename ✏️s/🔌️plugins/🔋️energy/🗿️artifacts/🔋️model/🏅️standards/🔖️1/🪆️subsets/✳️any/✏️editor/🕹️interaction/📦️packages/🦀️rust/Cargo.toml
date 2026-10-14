@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-energy-model-editor-interaction"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model editor interaction: target ids and granularity of the energyModel interaction domain"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-energy-model-examples = { workspace = true }

@@ -1,6 +1,6 @@
 //! 🏷️ VDI 3805 NormFieldMeta lookup — SI display units + en/de labels for the structured inputs editor.
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const PN: &[NormFieldChoice] = &[
     NormFieldChoice { value: "PN6", label_en: "PN 6", label_de: "PN 6" },

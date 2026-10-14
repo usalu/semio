@@ -3,8 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::viewer::generation3d::config::component::mutations::*;
-use crate::viewer::generation3d::config::component::{Generation3dViewCamera, Generation3dViewConfig};
+use crate::mutations::*;
+use crate::Generation3dViewCamera;
+use crate::Generation3dViewConfig;
 
 impl protocol::OpBinary for Generation3dViewConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

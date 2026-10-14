@@ -1,0 +1,55 @@
+{
+ "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+ "crate": "semio_s_artifact_layout_layout_editor_commands",
+ "aggregator": "commands",
+ "workspace": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+ "aggregatorRole": "library",
+ "consumers": [
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout",
+  "🌎️hub/🧩️compositions/📏️layout"
+ ],
+ "crates": {
+  "commands": {
+   "ident": "semio_s_artifact_layout_layout_editor_commands",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "doc": ""
+  },
+  "panels": {
+   "ident": "semio_s_artifact_layout_layout_editor_panels",
+   "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "doc": ""
+  }
+ },
+ "rules": [
+  [
+   "",
+   "commands",
+   ""
+  ],
+  [
+   "terminology",
+   "panels",
+   "terminology"
+  ],
+  [
+   "demo_session",
+   "panels",
+   "demo_session"
+  ],
+  [
+   "example",
+   "panels",
+   "example"
+  ],
+  [
+   "presence",
+   "panels",
+   "presence"
+  ],
+  [
+   "config",
+   "panels",
+   "config"
+  ]
+ ]
+}

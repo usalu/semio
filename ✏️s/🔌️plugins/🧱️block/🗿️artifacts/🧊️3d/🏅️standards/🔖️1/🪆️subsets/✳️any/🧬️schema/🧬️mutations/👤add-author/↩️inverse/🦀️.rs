@@ -1,15 +1,14 @@
 //! ↩️ Inverse for `AddAuthor`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::AddAuthor, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::add_author::AddAuthor, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_author::RemoveAuthor> {
     Ok((|| {
     if base.authors.iter().any(|item| item.id == payload.author.id) {
         return Vec::new();
     }
-    vec![super::super::remove_author::remove_author(payload.author.id.clone())]
+    vec![crate::remove_author::remove_author(payload.author.id.clone())]
 
     })())
 }

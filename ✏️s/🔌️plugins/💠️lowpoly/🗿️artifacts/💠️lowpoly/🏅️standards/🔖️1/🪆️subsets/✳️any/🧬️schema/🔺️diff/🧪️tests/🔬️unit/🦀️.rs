@@ -66,7 +66,7 @@ fn mesh_vertex_rows_compose_and_invert_from_the_base_positions() {
 /// ⚖️ LAW: Normal channels compose by name, the later whole channel winning.
 #[test]
 fn mesh_attribute_channels_compose_by_name() {
-    let channel = |name: &str, tag: f64| crate::LowpolyMeshAttribute { name: name.into(), domain: crate::LowpolyMeshAttributeDomain::Vertex, semantic: crate::LowpolyMeshAttributeSemantic::Normal, interpolation: crate::LowpolyMeshAttributeInterpolation::Linear, values: vec![semio_framework_value::DslValue::float(tag)], indices: None };
+    let channel = |name: &str, tag: f64| semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttribute { name: name.into(), domain: semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeDomain::Vertex, semantic: semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeSemantic::Normal, interpolation: semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeInterpolation::Linear, values: vec![semio_framework_value::DslValue::float(tag)], indices: None };
     let first = LowpolyObjectPatchEntry { mesh_attributes: vec![channel("a", 1.0), channel("b", 2.0)], ..Default::default() };
     let later = LowpolyObjectPatchEntry { mesh_attributes: vec![channel("b", 3.0)], ..Default::default() };
     let mut composed = first;
@@ -77,7 +77,7 @@ fn mesh_attribute_channels_compose_by_name() {
 /// ⚖️ LAW: a positional object delta inserts, moves and removes at middle rows, sums, and inverts row by row.
 #[test]
 fn positional_object_delta_sums_and_inverts_at_middle_rows() {
-    let object = |id: &str| LowpolyObject { id: id.into(), name: id.into(), transform: crate::LowpolyTransform::default(), smooth_shading: false, mesh: None, paint_layers: Vec::new(), mesh_content: String::new(), mesh_state: None };
+    let object = |id: &str| LowpolyObject { id: id.into(), name: id.into(), transform: semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyTransform::default(), smooth_shading: false, mesh: None, paint_layers: Vec::new(), mesh_content: String::new(), mesh_state: None };
     let mut base = LowpolySnapshot::default();
     base.objects = vec![object("a"), object("b"), object("c")];
     let order = |snapshot: &LowpolySnapshot| snapshot.objects.iter().map(|row| row.id.clone()).collect::<Vec<_>>();

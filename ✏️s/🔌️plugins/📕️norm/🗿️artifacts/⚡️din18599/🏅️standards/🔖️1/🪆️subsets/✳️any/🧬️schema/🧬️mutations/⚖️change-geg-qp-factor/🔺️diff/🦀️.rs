@@ -1,8 +1,8 @@
 //! 🔺️ `change-geg-qp-factor` sparse diff.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::change_geg_qp_factor::ChangeGegQpFactor;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use crate::change_geg_qp_factor::ChangeGegQpFactor;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 pub fn diff(payload: &ChangeGegQpFactor, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if !payload.new_geg_qp_factor.is_finite() || payload.new_geg_qp_factor <= 0.0 {

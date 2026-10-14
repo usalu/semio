@@ -4,11 +4,8 @@ use super::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRe
 use crate::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{sync::Arc,mem::ManuallyDrop};
 
-#[path="🏭️factory/🦀️.rs"]
-pub mod factory;
-pub use factory::FactorySharedRetirement;
-#[path="🔒️sealed/🦀️.rs"]
-pub mod sealed;
+
+
 
 pub struct SharedControlledRetirement<T:RetireOwned+Sync> {source:ManuallyDrop<Option<Arc<T>>>,owned:ManuallyDrop<Option<ControlledRetirement<T>>>,lease_only:bool}
 impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
@@ -90,7 +87,7 @@ impl<T:RetireOwned+Sync> RetireOwned for SharedControlledRetirement<T> {
 }
 /// 📏️ Exact original shared backing demand used by the admitted shared retirement owners.
 pub fn shared_retirement_allocation_bytes<T>()->usize {std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("shared Arc allocation layout").0.pad_to_align().size()}
-pub(crate) fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
+pub fn arc_bytes<T>()->usize {shared_retirement_allocation_bytes::<T>()}
 
 #[cfg(test)]
 #[path="🔐️unique/🧪️tests/🦀️.rs"]

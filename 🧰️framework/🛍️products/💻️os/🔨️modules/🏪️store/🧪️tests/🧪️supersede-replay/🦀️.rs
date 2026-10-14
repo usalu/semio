@@ -9,7 +9,7 @@ fn fixture_hydration_grant()->RetainedCloneGrant {RetainedCloneGrant{maximum_ite
 
 fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
     let grant=fixture_hydration_grant();
-    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||DemoSnapshot::member_store_owners(grant));
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(grant));
     let(owners,receipt)=match result{Ok(admitted)=>admitted,Err(refusal)=>panic!("declared original fixture catalog refused: {:?}",refusal.error)};
     assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));complete_test_catalog(Ok::<_,DocumentStoreOwnersAdmissionError<DemoSnapshot,DemoMutation>>((owners,receipt)))
 }
@@ -50,7 +50,7 @@ fn fixture_retirement_policy(maximum_items:usize,maximum_release_bytes:usize)->R
 
 //#region 🧰️Harness
 async fn demo_store(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, mutations: Vec<DemoMutation>) {
@@ -217,7 +217,7 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pack parses").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot().expect("reloaded"), store.snapshot().expect("live"));
     assert_eq!(reloaded.supersessions().keys().collect::<Vec<_>>(), store.supersessions().keys().collect::<Vec<_>>());
     assert_eq!(reloaded.envelope().transitions, store.envelope().transitions, "the reload re-derives every supersession target");
@@ -251,7 +251,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::AssignN(AssignN { n: Some(40) })), 1), || Ok(fixture_demo_owners()))
         .await
         .expect("a clean supersession checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(41));
     test_support::retire_parsed_document(parsed);
 }
@@ -260,7 +260,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
 /// atomically with `Rejected { Normal }`, a Warning commits and stays in the durable history.
 #[semio_framework_async_macros::async_test]
 async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     for operation in [SeverityMutation::SetN(SeveritySetN { n: 1 }), SeverityMutation::SetN(SeveritySetN { n: 2 }), SeverityMutation::SetN(SeveritySetN { n: 3 })] {
         fixture_author(&mut store, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("clean severity edit");
     }
@@ -393,7 +393,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     apply(&mut store, vec![add(4)]).await;
     let ids = operation_ids(&store);
     let entries = drafts(&[(&ids[0], Some(set(9)))]);
-    let mut probe = store.begin_report_replay(&entries, None).expect("probe").with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoMutation>::default()));
+    let mut probe = store.begin_report_replay(&entries, None).expect("probe").with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()));
     let total = probe.progress().total;
     probe.cancel();
     super::super::raw_replay_retirement::tests::close(&mut probe);
@@ -401,7 +401,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     for stop in 0..=total {
         let (generation, revision, snapshot, applied, transitions, outcomes) =
             (store.generation(), store.0.content_revision(), store.snapshot().unwrap(), store.applied_edit_ids().to_vec(), store.envelope().transitions.len(), store.mutation_outcomes().unwrap());
-        let mut replay = store.begin_report_replay(&entries, None).expect("replay").with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoMutation>::default()));
+        let mut replay = store.begin_report_replay(&entries, None).expect("replay").with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()));
         if stop > 0 {
             while replay.progress().done < stop {
                 assert!(replay.step(store.replay_edits(), &mut || true).is_ok());
@@ -513,7 +513,7 @@ async fn finished_replays_commit_atomically_and_refuse_stale_or_blocking_ones() 
 #[semio_framework_async_macros::async_test]
 async fn prefix_ring_evictions_retire_through_the_snapshot_factory() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "ring", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "ring", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), DemoInitialSnapshotRetirementFactory, DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("original catalog installation refused: {error}"));
     for n in 1..=6 {
         apply(&mut store, vec![set(n)]).await;
@@ -559,7 +559,7 @@ async fn operations_carry_semantic_kind_label_and_transaction_everywhere() {
     }
     expect(&peer);
     let files = print_document_pack(store.envelope()).await.expect("pack prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pack parses").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pack parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     expect(&reloaded);
 }
 
@@ -605,9 +605,9 @@ fn inverses(store: &ArtifactStore<DemoSnapshot, DemoMutation>) -> BTreeMap<Strin
 #[semio_framework_async_macros::async_test]
 async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state() {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() };
-    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-superseded", DemoSnapshot { n: Some(0) }, None);
+    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-superseded", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect.clone());
-    let mut store = ArtifactStore::new(envelope).await;
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     apply(&mut store, vec![set(1)]).await;
     apply(&mut store, vec![add(2)]).await;
     apply(&mut store, vec![add(3), add(4)]).await;
@@ -615,7 +615,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     fixture_author(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(10))), input(&ids[2], None)] }).await.expect("a clean supersession");
     assert_eq!(store.snapshot_ref().n, Some(16));
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reference = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    let reference = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.expect("history decodes");
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "member-superseded".into(), dialect };
     let (operation, generation) = (semio_framework_job::OperationId(3), semio_framework_job::Generation(5));
@@ -658,7 +658,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
     assert_eq!(member.0.content_revision(), store.0.content_revision(), "and the live store's");
     let text = print_document_text(store.envelope()).await.expect("text prints");
     assert!(text.ops.lines().any(|line| line.starts_with("supersede")), "the text mirror carries the supersede line");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("the text mirror parses").into_envelope()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(16));
     assert_eq!(mirrored.supersessions(), store.supersessions());
     assert_eq!(mirrored.0.content_revision(), store.0.content_revision());
@@ -672,10 +672,10 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
     assert_ne!(opened, author);
     for config in [false, true] {
         let initial = DemoSnapshot { n: Some(fixture["initial"].as_i64().unwrap() as i32) };
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "opened-actor-hydration", initial.clone(), None);
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "opened-actor-hydration", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         if config { envelope.history_shape = crate::os_spr::HistoryShape::Config; }
         else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
-        let mut source = super::super::ArtifactStore::new(envelope, ActorId(author.into())).await.unwrap();
+        let mut source = super::super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(author.into())).await.unwrap();
         source.install_document_store_owners_exact(fixture_demo_owners());
         let mut source = ArtifactStore(source, Some(close_test_store::<DemoSnapshot, DemoMutation>));
         apply(&mut source, vec![set(fixture["stored"].as_i64().unwrap() as i32)]).await;
@@ -777,11 +777,11 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
     assert_eq!(store.state_before(&ids[2], &protocol::HistoryInputDrafts::new()).expect("state before").n, Some(1));
     assert_eq!(materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("materialized").n, Some(1));
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("the pair loads").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair loads").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot_ref().n, Some(1));
     assert_eq!(outcomes_by_mutation(&reloaded.mutation_outcomes().unwrap()), outcomes);
     let text = print_document_text(store.envelope()).await.expect("text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("the text mirror loads").into_envelope()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text mirror loads").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(1));
     let refused =
         replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&garbage)), || Ok(fixture_demo_owners())).await;
@@ -790,7 +790,7 @@ async fn an_input_breaking_the_supersede_law_folds_as_a_fatal_no_op_at_every_sit
     let repaired = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&baseline.pack, &baseline.spr, &crate::os_spr::encode_envelopes(&[garbage, repair]), || Ok(fixture_demo_owners()))
         .await
         .expect("a repaired ledger checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&repaired.pack, &repaired.spr).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&repaired.pack, &repaired.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(9));
     test_support::retire_parsed_document(parsed);
 }
@@ -833,7 +833,7 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
     assert_eq!(kept + dropped(&failed), OPERATIONS);
     assert_eq!(failed.last().unwrap().op_index, Some(kept as u32), "the summary sits at the first dropped operation");
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("a bounded ledger loads").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("a bounded ledger loads").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.messages_for_edit(&bulk), failed.as_slice(), "load bounds the recomputed messages identically");
     assert_eq!(outcomes_by_mutation(&reloaded.mutation_outcomes().unwrap()), outcomes_by_mutation(&store.mutation_outcomes().unwrap()));
 }
@@ -854,7 +854,7 @@ async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
     let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(&[breaking, healing]), || Ok(fixture_demo_owners()))
         .await
         .expect("a ledger whose final history is clean checks in");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&healed.pack, &healed.spr).await.expect("checked-in pair parses");
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&healed.pack, &healed.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("checked-in pair parses");
     assert_eq!(parsed.snapshot.n, Some(8));
     test_support::retire_parsed_document(parsed);
 }
@@ -946,7 +946,7 @@ async fn a_supersession_of_a_redo_edit_keeps_revisions_order_independent() {
     assert_eq!(late.redo_edit_ids().len(), 2);
     assert_eq!(late.0.content_revision(), early.0.content_revision());
     let files = print_document_pack(late.envelope()).await.expect("pair prints");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.0.content_revision(), late.0.content_revision(), "and a fresh load agrees");
 }
 //#endregion 🧪️FoldSiteLaws
@@ -1014,11 +1014,11 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     }
     assert_eq!(peer.0.content_revision(), other.0.content_revision(), "arrival order never changes a replica's identity");
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
-    let mut reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    let mut reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(alternative_view(&reloaded), expected, ".spr keeps the trunk");
     assert_eq!(reloaded.snapshot_ref().n, Some(6));
     let text = print_document_text(store.envelope()).await.expect("text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("text parses").into_envelope()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("text parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(alternative_view(&mirrored), expected, ".ops keeps the trunk");
     assert_eq!(mirrored.snapshot_ref().n, Some(6));
     fixture_author(&mut reloaded, ArtifactCommand::SwitchAlternative { alternative_id: edited }).await.expect("a reloaded store switches to the edited alternative");
@@ -1049,7 +1049,7 @@ async fn a_viewer_head_round_trips_through_the_spr_pack() {
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let log = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.expect("spr decodes");
     assert_eq!((log.viewer_line.clone(), log.viewer_checkpoint.clone()), head, "the persisted log names the viewer head");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("pair parses").into_envelope()).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!((reloaded.envelope().active_alternative_id.clone(), reloaded.envelope().viewer_checkpoint_id.clone()), head, ".spr keeps the viewer head");
     assert_eq!((reloaded.snapshot_ref().n, reloaded.supersessions()), (Some(15), store.supersessions()), ".spr reloads the viewer's projection");
     test_support::assert_document_pack_round_trip(&store).await;
@@ -1071,7 +1071,7 @@ async fn a_config_store_holds_undo_and_redo_only() {
         let row = fixture["shapes"].as_array().expect("shape rows").iter().find(|row| row["shape"] == shape).expect("a shape row");
         row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind").to_string()).collect()
     };
-    let mut config = ArtifactStore::new(create_config_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "config", DemoSnapshot { n: Some(0) }, None).await).await;
+    let mut config = ArtifactStore::new(create_config_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "config", DemoSnapshot { n: Some(0) }, None).await, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     apply(&mut config, vec![set(1)]).await;
     apply(&mut config, vec![add(2)]).await;
     let ids = operation_ids(&config);

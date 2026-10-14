@@ -1,6 +1,6 @@
 //! 💧️ `change-rh-int`.
 
-use crate::{Din4108Mutation, Din4108Snapshot};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -12,7 +12,7 @@ pub struct ChangeRhInt {
     pub new_rh_int: f64,
 }
 
-impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
+impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for ChangeRhInt where Op: protocol::Mutation<Din4108Snapshot, Diff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::change_rh_int::ChangeRhInt> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "rh-int",
@@ -20,12 +20,12 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
         record: "ChangedRhInt",
     };
 
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+        crate::change_rh_int::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_rh_int::inverse::inverse(self, base)?
     
     })
 }
@@ -33,3 +33,10 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
         semio_framework_ui_locale::LocalizedLabel::native("Change indoor relative humidity", "Relative Raumluftfeuchte ändern")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

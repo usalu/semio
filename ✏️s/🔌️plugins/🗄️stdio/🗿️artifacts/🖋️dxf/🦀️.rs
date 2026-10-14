@@ -1,3 +1,4 @@
+use semio_framework_plugin::PluginBuilder;
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 //! 🎪 `stdio.dxf` artifact — stdio reference format.
@@ -52,7 +53,7 @@ pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactor
 pub(crate) fn register_sqlite_test_declaration() {
     static REGISTERED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
     REGISTERED.get_or_init(|| {
-        semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("DXF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();
+        semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("DXF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();
     });
 }
 
@@ -71,7 +72,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
 /// replaces the old side-effecting `crate::engine::register()`, which the plugin
-/// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
+/// root used to call unconditionally before `PluginBuilder::new(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
 /// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<DxfSnapshot, DxfMutation>(...))`.

@@ -1,10 +1,10 @@
-use super::InsertMember;
-use crate::mutations::{remove_member, En1995Mutation};
-use crate::En1995Snapshot;
-pub fn inverse(payload: &InsertMember, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+use crate::insert_member::InsertMember;
+use crate::remove_member;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+pub fn inverse<Op>(payload: &InsertMember, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_member::RemoveMember> {
     Ok((|| {
     let at = payload.index.min(base.members.len());
-    vec![En1995Mutation::RemoveMember(remove_member::RemoveMember { index: at })]
+    vec![Op::from(remove_member::RemoveMember { index: at })]
 
     })())
 }

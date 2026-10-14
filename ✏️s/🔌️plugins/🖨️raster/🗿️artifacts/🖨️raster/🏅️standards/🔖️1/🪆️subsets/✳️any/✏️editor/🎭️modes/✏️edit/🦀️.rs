@@ -1,6 +1,6 @@
 //! ✏️ Raster play app — the `edit` mode: the default two-window layout (composite + navigator).
 
-use crate::editor::raster::modes::edit::windows::{composite, navigator};
+use crate::modes::edit::windows::{composite, navigator};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -26,3 +26,13 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🖼️composite/🦀️.rs"]
+    pub mod composite;
+    #[path = "🪟️windows/🧭️navigator/🦀️.rs"]
+    pub mod navigator;
+}
+//#endregion 🪢️TaxonomyMounts

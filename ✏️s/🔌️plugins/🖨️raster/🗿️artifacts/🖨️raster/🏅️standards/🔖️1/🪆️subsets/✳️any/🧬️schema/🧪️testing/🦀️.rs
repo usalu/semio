@@ -6,7 +6,7 @@ use crate::RasterImageAsset;
 pub fn raster_image_test_snapshot() -> RasterSnapshot {
     let mut assets = RasterOwnedMap::new();
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
-    assets.insert("semio-emblem".into(), crate::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
+    assets.insert("semio-emblem".into(), semio_s_artifact_raster_raster_io::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
     params.insert("contrast".into(), semio_framework_value::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");

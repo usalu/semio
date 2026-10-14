@@ -1,8 +1,8 @@
 //! ➖️ `remove-zone` diff — removes the row with that id; an id the document does not hold is a `mutation.target-missing`.
 
-use super::RemoveZone;
-use crate::diff::{Din16798Diff, Din16798ZoneDelta};
-use crate::Din16798Snapshot;
+use crate::remove_zone::RemoveZone;
+use semio_s_artifact_norm_din16798_diff::{Din16798Diff, Din16798ZoneDelta};
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 pub fn diff(payload: &RemoveZone, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     let Some(index) = base.zones.iter().position(|row| row.id == payload.zone_id) else {

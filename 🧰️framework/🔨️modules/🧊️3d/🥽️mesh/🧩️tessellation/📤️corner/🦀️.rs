@@ -1,17 +1,17 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshCornerReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(MeshCornerReceipt);
+semio_framework_value::artifact_retire_leaf!(MeshCornerReceipt);
 
 pub(super) struct CornerData{corner:u32,vertex:u32,position:[f32;3],normal:[f32;3],uv:[f32;2],color:Option<[f32;4]>}
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
-pub(super) fn sample<'a>(attribute:Option<&'a MeshAttribute>,edge_id:u32,edge:&HalfEdge,face:usize)->Option<&'a [protocol::value::DslValue]>{
-    let attribute=attribute?;attribute.value_at(match attribute.domain{MeshAttributeDomain::Corner|MeshAttributeDomain::Edge=>edge_id as usize,MeshAttributeDomain::Face=>face,MeshAttributeDomain::Vertex=>edge.vertex as usize}).and_then(protocol::value::DslValue::as_array)
+pub(super) fn sample<'a>(attribute:Option<&'a MeshAttribute>,edge_id:u32,edge:&HalfEdge,face:usize)->Option<&'a [semio_framework_value::DslValue]>{
+    let attribute=attribute?;attribute.value_at(match attribute.domain{MeshAttributeDomain::Corner|MeshAttributeDomain::Edge=>edge_id as usize,MeshAttributeDomain::Face=>face,MeshAttributeDomain::Vertex=>edge.vertex as usize}).and_then(semio_framework_value::DslValue::as_array)
 }
 fn room<T>(buffer:&Vec<T>,count:usize)->bool{buffer.capacity().saturating_sub(buffer.len())>=count}
-fn valid_sample(value:Option<&[protocol::value::DslValue]>,count:usize)->bool{value.is_none_or(|value|value.len()==count&&value.iter().all(|number|number.as_f64().is_some_and(|number|number.is_finite()&&number.abs()<=f32::MAX as f64)))}
+fn valid_sample(value:Option<&[semio_framework_value::DslValue]>,count:usize)->bool{value.is_none_or(|value|value.len()==count&&value.iter().all(|number|number.as_f64().is_some_and(|number|number.is_finite()&&number.abs()<=f32::MAX as f64)))}
 
 impl MeshTessellationJob{
     fn prepared_corner(&self,local:usize)->Result<(u32,&HalfEdge,&MeshVertex),ValueError>{

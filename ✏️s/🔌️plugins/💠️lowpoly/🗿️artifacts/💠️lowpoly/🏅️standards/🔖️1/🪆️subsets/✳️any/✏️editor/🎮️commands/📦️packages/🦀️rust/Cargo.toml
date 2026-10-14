@@ -1,0 +1,107 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-lowpoly-lowpoly-commands"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly editor command handlers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_patch_object"
+path = "../../✏️patch-object/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_add_primitive"
+path = "../../➕️add-primitive/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_sun"
+path = "../../🌞️sun/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_camera"
+path = "../../🎥️camera/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_chrome"
+path = "../../👁️chrome/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_engagement"
+path = "../../💬️engagement/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_document"
+path = "../../📄️document/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_media"
+path = "../../📤️media/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_mesh_edit"
+path = "../../🔷️mesh-edit/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_paint"
+path = "../../🖌️paint/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_selection"
+path = "../../🗂️selection/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_object"
+path = "../../🗑️object/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_transform"
+path = "../../🧲️transform/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "lowpoly_commands_uv"
+path = "../../🧵️uv/🧪️tests/🔬️unit/🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-3d = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-config = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-io = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-kit = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-model = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-geometry = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-objects = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mut-paint = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-mutations = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-view = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-ui-locale = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-editor = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-modes = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly-panels = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "birth": "selected-producer-encodes-original-snapshot-once",
+  "reload": "selected-producer-decodes-exact-stored-pack-once",
+  "digest": "hash-exact-owned-stored-pack",
+  "refusal": "original-typed-snapshot-and-pack-admission",
+  "owner": "same-shared-snapshot-and-pack-allocations"
+}

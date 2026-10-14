@@ -1,5 +1,9 @@
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 use semio_s_artifact_cad_cad_host::new_cad_store;
-use crate::binary::mutations::*;
+use semio_s_artifact_cad_cad_mutations::standards::v1::subsets::any::io::binary::mutations::*;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use protocol::OpBinary;
 use semio_s_artifact_cad_cad_mut_slots::create_shape_model::CreateShapeModel;
 use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CAD_DOCUMENT_SCHEMA};
 use semio_s_artifact_cad_cad_testing::sample_model_child;

@@ -8,12 +8,12 @@
 //! zero trace (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5,
 //! §17.6).
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::{lowpoly_tool_emit, LowpolyScratch};
-use crate::editor::lowpoly::view::try_build_doc;
-use crate::mutations::{move_selection::MoveSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::lowpoly_tool_emit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_view::try_build_doc;
+use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{move_selection::MoveSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_3d::mesh::VertexId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -132,7 +132,4 @@ pub mod scale_selection {
 //#endregion 🔖️ScaleSelection
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

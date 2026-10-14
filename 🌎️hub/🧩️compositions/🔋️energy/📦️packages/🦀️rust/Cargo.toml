@@ -18,6 +18,9 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model = { workspace = true }
+semio-s-artifact-energy-model-editor = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-artifact-energy-model-viewer = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-epw = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

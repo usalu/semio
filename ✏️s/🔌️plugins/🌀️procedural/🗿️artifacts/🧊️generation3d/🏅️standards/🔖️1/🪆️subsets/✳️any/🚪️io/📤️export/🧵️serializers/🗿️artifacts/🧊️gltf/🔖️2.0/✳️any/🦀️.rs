@@ -55,7 +55,7 @@ pub fn serialize_prepared_meshes_bytes_controlled(meshes: &[MeshData], control: 
 
 /// 🚦️ Admits enriched output through the existing caller encoding control before publication.
 pub fn serialize_prepared_meshes_controlled(meshes: &[MeshData], control: &mut NativeEncodeControl<'_>) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
-    use semio_s_artifact_procedural_3d_mesh_bridge;
+    use semio_s_artifact_procedural_3d_mesh_bridge as mesh_bridge;
     if meshes.is_empty() || meshes.len() > 1024 { return Err(io_error("glTF export requires 1..1024 prepared surfaces")); }
     control.checkpoint().map_err(control_error)?;
     let mut parts = control.allocate_vec(meshes.len()).map_err(control_error)?;

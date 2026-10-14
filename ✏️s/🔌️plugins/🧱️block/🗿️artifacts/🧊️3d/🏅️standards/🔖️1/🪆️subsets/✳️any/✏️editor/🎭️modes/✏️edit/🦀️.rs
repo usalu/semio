@@ -1,6 +1,6 @@
 //! ✏️ Block 3D play app — the `edit` mode: the single-window world authoring layout.
 
-use crate::editor::block3d::modes::edit::windows::world;
+use crate::edit::windows::world;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -26,3 +26,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🌐️world/🦀️.rs"]
+    pub mod world;
+}
+//#endregion 🪢️Mounts

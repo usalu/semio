@@ -26,8 +26,14 @@
     "generationPrefix": "f",
     "owner": "buildReleasePipelineV1",
     "ownerModule": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
-    "ownerArguments": ["network", "control"],
-    "callers": ["📜️script.ts", "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts"],
+    "ownerArguments": [
+      "network",
+      "control"
+    ],
+    "callers": [
+      "📜️script.ts",
+      "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts"
+    ],
     "bypass": "runNativeBuildDriverV1",
     "freshLaunch": "📦️build🦑️workspace🚀️release🆕️fresh",
     "stores": {
@@ -38,7 +44,25 @@
       "jobserver": "j"
     }
   },
-  "viteStorage": "vite/semio-tech-play",
+  "vite": {
+    "config": "🏢️semio-tech/🎡️play/🏗️builder/🌐️vite/🟦️.ts",
+    "owner": "viteCacheDirectory",
+    "workspaceArgument": "repoRoot",
+    "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+    "budgetModule": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+    "issued": [
+      "m",
+      "vite",
+      "release",
+      "semio-tech-play",
+      "state"
+    ],
+    "modes": [
+      "prototype",
+      "release"
+    ],
+    "unissued": "original bounded compiler cache"
+  },
   "parallelRows": [
     {
       "cpus": 10,

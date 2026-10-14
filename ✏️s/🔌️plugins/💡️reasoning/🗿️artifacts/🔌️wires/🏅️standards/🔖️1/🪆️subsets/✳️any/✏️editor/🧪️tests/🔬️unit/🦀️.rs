@@ -77,7 +77,7 @@ pub(crate) mod context {
     pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_envelope(envelope);
@@ -117,7 +117,7 @@ pub(crate) mod context {
         let content = crate::wires_content_snapshot(&nodes, &edges);
         let snapshot = WiresSnapshot { content: crate::wires_content_handle(&content), ..crate::empty_wires_snapshot() };
         let handle = snapshot.content.clone();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("graph fixture parent pack");
         retire_envelope(envelope);

@@ -1,18 +1,14 @@
 //! 🧬️ EN 1992 mutation unit tests — hierarchical RC structure vocabulary.
 
-use crate::document::AnnexChoice;
-use crate::part_1_2::FireRating;
-use crate::{ExposureClass, En1992Snapshot};
-use crate::standards::v1::subsets::any::io::{apply_en1992_mutation};
-use super::{
-    change_action_mk, change_action_nk, change_action_vk, change_anchor_a_s,
-    change_anchor_h_ef, change_annex, change_bar_layer_count, change_bar_layer_diameter, change_cement_type,
-    change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_member_axis_distance,
-    change_member_cover, change_member_effective_depth, change_member_exposure, change_member_fire_rating,
-    change_member_height, change_member_span, change_member_stirrup_spacing, change_member_width,
-    change_reinforcement_f_yk, change_title, insert_anchor, insert_member, remove_anchor, remove_member,
-    reorder_members, En1992Mutation,
-};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1992_model::FireRating;
+use semio_s_artifact_norm_en1992_model::{ExposureClass, En1992Snapshot};
+use crate::mutation_bridge::apply_en1992_mutation;
+use semio_s_artifact_norm_en1992_mut_resistance::{change_action_mk, change_action_nk, change_action_vk, change_bar_layer_count, change_bar_layer_diameter, change_member_axis_distance, change_member_fire_rating, change_member_stirrup_spacing};
+use semio_s_artifact_norm_en1992_mut_anchors::{change_anchor_a_s, change_anchor_h_ef, insert_anchor, remove_anchor};
+use semio_s_artifact_norm_en1992_mut_project::{change_annex, change_cement_type, change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_reinforcement_f_yk, change_title};
+use semio_s_artifact_norm_en1992_mut_members::{change_member_cover, change_member_effective_depth, change_member_exposure, change_member_height, change_member_span, change_member_width, insert_member, remove_member, reorder_members};
+use crate::En1992Mutation;
 
 fn base() -> En1992Snapshot {
     En1992Snapshot::compliant_office_frame()

@@ -27,7 +27,7 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
     let schema = emit.owned_child_emits[0].metadata().unwrap().op_schema.0.clone();
     while !emit.owned_child_emits.is_empty() || emit.owned_child_emits.capacity() != 0 {
         let demand=emit.child_close_demands(262144).expect("original child retirement quote").expect("pending original child close");
-        let turn=crate::bounded_ownership::plugin_demand_grant(demand);let step=emit.close_child_one(turn).unwrap();if let Some(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=step{assert!(progress.fits(turn));}
+        let turn=semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant(demand);let step=emit.close_child_one(turn).unwrap();if let Some(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=step{assert!(progress.fits(turn));}
     }
     assert_eq!(schema, "count.set-count", "owned typed source carries its first original operation's authored schema before mounted publication");
     println!("[DEBUG] original owned child schema={schema}, source pointer retained, borrowed schema copies<=64 and whole physical births/releases<=262144 per admitted turn");
@@ -75,8 +75,8 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         drop(mutations);
         drop(inverse_group);
         let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();
-        for _ in 0..64{for _ in 0..MAINTENANCE_STAGES{let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(policy.maintenance.maximum_items),..policy.maintenance};caller.turn(grant,|cx|{let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(&mut app,same,grant)?,app.maintenance_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();}}
-        for turn in 0..100000{if app.close_terminal_is_empty(){break}let grant=policy.close;caller.turn(grant,|cx|{let demand=app.close_retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();assert!(turn<99999,"original composed fixture full closure");}
+        for _ in 0..64{for _ in 0..MAINTENANCE_STAGES{let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(policy.maintenance.maximum_items),..policy.maintenance};caller.turn(grant,|cx|{let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(&mut app,same,grant)?,app.maintenance_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();}}
+        for turn in 0..100000{if app.close_terminal_is_empty(){break}let grant=policy.close;caller.turn(grant,|cx|{let demand=app.close_retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();assert!(turn<99999,"original composed fixture full closure");}
         assert!(app.close_terminal_is_empty());caller.retire(policy.close);
     }
 }

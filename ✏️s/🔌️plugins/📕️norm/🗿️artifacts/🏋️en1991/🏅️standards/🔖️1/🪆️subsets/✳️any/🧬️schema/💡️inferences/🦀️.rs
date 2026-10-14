@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1991Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -61,12 +69,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-#[cfg(test)] use crate::document::{AnnexChoice};
-use crate::standards::v1::subsets::any::schema::{
-    assess_covers, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4,
-    raise_energy_remedy, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, raise_temp_remedy,
-};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1991_checks::{assess_covers, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4, raise_energy_remedy, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, raise_temp_remedy};
 
 fn copy(en: &str, de: &str) -> LocalizedCopy { LocalizedCopy::new(en, de) }
 fn pressure(pa: f64) -> Quantity { Quantity::new(QuantityKind::Pressure, pa) }
@@ -97,7 +102,7 @@ fn push_duplicate_ids(report: &mut CheckReport, document: &En1991Snapshot, table
             &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
             &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
         ))
-        .status(crate::document::CheckStatus::Fail);
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail);
         builder = builder.remedy(Remedy::one_of(
             subject,
             if options.is_empty() { vec![format!("{id}-unique")] } else { options },
@@ -127,7 +132,7 @@ fn push_dangling_ref(report: &mut CheckReport, document: &En1991Snapshot, check_
             &format!("'{current}' does not reference an existing target; dependent checks for this row must not Pass."),
             &format!("'{current}' verweist auf kein vorhandenes Ziel; abhängige Nachweise für diese Zeile dürfen nicht bestehen."),
         ))
-        .status(crate::document::CheckStatus::Fail)
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
         .remedy(Remedy::one_of(
             subject,
             opts,
@@ -196,10 +201,10 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     }
 
     match document.fire_mode {
-        crate::FireMode::None => {
+        semio_s_artifact_norm_en1991_model::FireMode::None => {
             report.push(CheckResult::assess("en1991.1-2.fire.none", "DIN EN 1991-1-2", ClauseId::new("EN 1991-1-2", "§3", "3.1"), SubjectRef::whole(copy("Fire", "Brand")), copy("Fire thermal actions", "Thermische Einwirkungen im Brandfall")).not_applicable(copy("Fire design mode is none.", "Brandbemessungsmodus ist none.")).annex(annex).build());
         }
-        crate::FireMode::Nominal => {
+        semio_s_artifact_norm_en1991_model::FireMode::Nominal => {
             let curve = document.fire_curve;
             let theta_g = part_1_2::nominal_gas_temp_k(curve, document.fire_duration);
             let path_g = "assumedGasTemperature";
@@ -215,7 +220,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             let remedy_q = if document.assumed_qf_d + 1e-9 < qfd { Some(raise_energy_remedy(path_q, "", "design fire load", "Bemessungsbrandlastdichte", document.assumed_qf_d, qfd)) } else { None };
             report.push(assess_covers("en1991.1-2.fire-load", "DIN EN 1991-1-2", ClauseId::new("EN 1991-1-2", "Annex E / NA", "E.1"), SubjectRef::new("", path_q, copy("Design fire load", "Bemessungsbrandlastdichte")), copy("Design fire load density q_f,d", "Bemessungsbrandlastdichte q_f,d"), Quantity::new(QuantityKind::Energy, document.assumed_qf_d), Quantity::new(QuantityKind::Energy, qfd), copy(&format!("Required q_f,d = {:.0} MJ/m²; assumed {:.0} MJ/m².", qfd / 1e6, document.assumed_qf_d / 1e6), &format!("Erforderliches q_f,d = {:.0} MJ/m²; angenommen {:.0} MJ/m².", qfd / 1e6, document.assumed_qf_d / 1e6)), annex, remedy_q));
         }
-        crate::FireMode::Parametric => {
+        semio_s_artifact_norm_en1991_model::FireMode::Parametric => {
             let o_geom = part_1_2::compartment_opening_factor(document.fire_compartment_area, document.fire_compartment_height);
             let o = if document.fire_opening_factor > 1e-9 { document.fire_opening_factor } else { o_geom };
             let path_o = "fireOpeningFactor";
@@ -231,7 +236,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             let path_g = "assumedGasTemperature";
             let remedy_g = if document.assumed_gas_temperature + 1e-9 < required_theta { Some(raise_temp_remedy(path_g, "", "gas temperature", "Gastemperatur", document.assumed_gas_temperature, required_theta)) } else { None };
             report.push(assess_covers("en1991.1-2.gas-temperature", "DIN EN 1991-1-2", ClauseId::new("EN 1991-1-2", "Annex A", "A.2"), SubjectRef::new("", path_g, copy("Fire gas temperature", "Brandgastemperatur")), copy("Parametric fire gas temperature θ_g / θ_max", "Parametrische Brandgastemperatur θ_g / θ_max"), temp(document.assumed_gas_temperature), temp(required_theta), copy(&format!("Required θ = {:.1} K (t={:.0} s, O={o:.4}, A_f={:.1} m², H={:.2} m, q_t,d={:.0} MJ/m²); assumed {:.1} K.", required_theta, document.fire_duration, document.fire_compartment_area, document.fire_compartment_height, qt_d / 1e6, document.assumed_gas_temperature), &format!("Erforderliches θ = {:.1} K (t={:.0} s, O={o:.4}, A_f={:.1} m², H={:.2} m, q_t,d={:.0} MJ/m²); angenommen {:.1} K.", required_theta, document.fire_duration, document.fire_compartment_area, document.fire_compartment_height, qt_d / 1e6, document.assumed_gas_temperature)), annex, remedy_g));
-            let alpha_c = part_1_2::alpha_c_for_curve(crate::part_1_2::FireCurve::Parametric);
+            let alpha_c = part_1_2::alpha_c_for_curve(semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric);
             let h_net = part_1_2::h_net_w_m2(required_theta, 293.15, alpha_c, 1.0, 0.8, 1.0);
             let path_h = "assumedHNet";
             let remedy_h = if document.assumed_h_net + 1e-9 < h_net { Some(raise_power_remedy(path_h, "", "net heat flux", "Nettowärmestrom", document.assumed_h_net, h_net)) } else { None };
@@ -358,9 +363,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         }
     }
 
-
-
-    if document.structure_kind != crate::StructureKind::Bridge {
+    if document.structure_kind != semio_s_artifact_norm_en1991_model::StructureKind::Bridge {
         report.push(CheckResult::assess("en1991.2.bridge.none", "DIN EN 1991-2", ClauseId::new("EN 1991-2", "§4", "4"), SubjectRef::whole(copy("Bridge", "Brücke")), copy("Bridge traffic loads", "Verkehrslasten auf Brücken")).not_applicable(copy("Structure kind is building — bridge traffic not applicable.", "Tragwerksart ist Gebäude — Brückenverkehr nicht anwendbar.")).annex(annex).build());
     } else {
         let (n_lanes, w_lane, w_rem) = part_2::notional_lanes(document.bridge_lane_width);
@@ -478,7 +481,6 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         report.push(group_check.build());
     }
 
-
     if !document.crane_claimed {
         report.push(CheckResult::assess("en1991.3.crane.none", "DIN EN 1991-3", ClauseId::new("EN 1991-3", "§2", "2"), SubjectRef::whole(copy("Crane", "Kran")), copy("Crane loads", "Kraneinwirkungen")).not_applicable(copy("Crane runway not claimed.", "Kranbahn nicht beansprucht.")).annex(annex).build());
     } else {
@@ -517,20 +519,17 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     report
 }
 
-
 pub fn evaluate(document: &En1991Snapshot) -> CheckReport {
     check_full_actions(document)
 }
 //#endregion 🔖️ComplianceReport
 
-
-//#region 🧪️ComplianceReportTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
-mod compliance_report_tests;
-//#endregion 🧪️ComplianceReportTests
-
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1991Outline;
+pub use crate::outline::En1991Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

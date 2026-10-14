@@ -2,9 +2,8 @@
 //! (`GenerationPlayState.selected_generation_id`, restored when a saved document is loaded), or none. The selected row of
 //! a view is config (`SetSelectedGeneration`), never this leaf.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SelectGeneration
@@ -18,19 +17,22 @@ pub struct SelectGeneration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn select_generation(generation_id: Option<String>) -> Generation2dMutation {
-    Generation2dMutation::SelectGeneration(SelectGeneration { generation_id })
+pub fn select_generation<Op: From<SelectGeneration>>(generation_id: Option<String>) -> Op {
+    Op::from(SelectGeneration { generation_id })
 }
 
-impl protocol::MutationKind<Generation2dSnapshot, Generation2dMutation> for SelectGeneration {
+impl<Op> protocol::MutationKind<Generation2dSnapshot, Op> for SelectGeneration
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<SelectGeneration>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "selection", kind: "select-generation", record: "SelectedGeneration" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::select_generation::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        crate::select_generation::inverse::inverse(self, base)
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

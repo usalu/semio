@@ -1,7 +1,7 @@
 //! Norm command — `insert-item`.
 
-use crate::standards::v1::subsets::any::schema::mutations::En1991Mutation;
-use crate::En1991Snapshot;
+use semio_s_artifact_norm_en1991_mutations::En1991Mutation;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,6 +18,6 @@ pub struct InsertItem {
 //#region 🔖️Handler
 pub fn handle(payload: &InsertItem, doc: &ArtifactView<'_, En1991Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1991Mutation, NoConfigMutation>, Fault> {
     let path = crate::field_meta::flatten_editor_path(&payload.path);
-    crate::app_surface::dispatch_insert_item(doc.snapshot, &path, payload.index as usize, payload.value_json.as_deref(), |document, edit| crate::mutations::EDIT_RULES.resolve(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_insert_item(doc.snapshot, &path, payload.index as usize, payload.value_json.as_deref(), |document, edit| semio_s_artifact_norm_en1991_mutations::EDIT_RULES.resolve(document, edit))
 }
 //#endregion 🔖️Handler

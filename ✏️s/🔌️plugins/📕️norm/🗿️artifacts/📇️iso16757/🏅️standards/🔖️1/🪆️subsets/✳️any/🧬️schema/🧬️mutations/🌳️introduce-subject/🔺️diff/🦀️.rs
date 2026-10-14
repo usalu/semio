@@ -1,8 +1,8 @@
 //! 🔺️ `introduce-subject` — sparse diff construction.
 
-use super::mutation::IntroduceSubject;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757SubjectsRows};
+use crate::introduce_subject::mutation::IntroduceSubject;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757SubjectsRows};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is `mutation.duplicate-id`; an explicit index past the end is

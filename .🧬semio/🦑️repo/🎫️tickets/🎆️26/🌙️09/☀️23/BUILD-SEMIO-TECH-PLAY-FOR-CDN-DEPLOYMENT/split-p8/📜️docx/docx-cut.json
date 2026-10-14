@@ -1,0 +1,54 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "docx-layers.json",
+ "crate": "semio_s_artifact_stdio_docx",
+ "aggregator": "docx",
+ "crates": {
+  "base-descriptor": {
+   "package": "semio-s-artifact-stdio-docx-base-descriptor",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+   "doc": "//! 📇️ The docx ecma-376 base schema descriptor: every schema facet leaf, for the schema registry."
+  },
+  "base-inferences": {
+   "package": "semio-s-artifact-stdio-docx-base-inferences",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The docx ecma-376 base inferences with their text and binary codecs."
+  },
+  "base-mutations": {
+   "package": "semio-s-artifact-stdio-docx-base-mutations",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The docx ecma-376 base mutation vocabulary with its text and binary codecs."
+  },
+  "base-model": {
+   "package": "semio-s-artifact-stdio-docx-base-model",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The docx ecma-376 base model: schema, snapshot and diff with their text, binary and SQLite codecs."
+  },
+  "base": {
+   "package": "semio-s-artifact-stdio-docx-base",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+   "doc": "//! 🧩️ The docx ecma-376 base subset: composer, builder and analyzer, conversions, editor, viewer and examples."
+  },
+  "strict-mutations": {
+   "package": "semio-s-artifact-stdio-docx-strict-mutations",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The docx ecma-376 strict mutation vocabulary with its text and binary codecs."
+  },
+  "strict": {
+   "package": "semio-s-artifact-stdio-docx-strict",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/📦️packages/🦀️rust",
+   "doc": "//! 🧩️ The docx ecma-376 strict subset: composer, builder and analyzer, conversions, editor, viewer and examples."
+  },
+  "transitional": {
+   "package": "semio-s-artifact-stdio-docx-transitional",
+   "dir": "🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/📦️packages/🦀️rust",
+   "doc": "//! 🧩️ The docx ecma-376 transitional subset: composer, builder and analyzer, conversions, editor, viewer and examples."
+  }
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

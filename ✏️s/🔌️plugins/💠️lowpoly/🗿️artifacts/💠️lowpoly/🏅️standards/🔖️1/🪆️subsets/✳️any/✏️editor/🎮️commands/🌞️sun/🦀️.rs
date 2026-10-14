@@ -1,10 +1,10 @@
 //! 🌞️ Lowpoly play app commands — the world-3d sun toggle/azimuth/elevation/intensity, reusing the
 //! framework's shared `WorldSunConfig`-shaped action logic. Config-only.
 
-use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation, SetSunEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation, SetSunEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{apply_world3d_sun_action, ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -89,7 +89,4 @@ pub mod set_sun_intensity {
 //#endregion 🔖️SetSunIntensity
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

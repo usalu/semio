@@ -19,12 +19,21 @@ path = "../../🦀️.rs"
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-3d-brep-operations = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-3d-brep-curve = { workspace = true }
+semio-framework-3d-brep-tolerance = { workspace = true }
+semio-framework-3d-brep-vector = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-3d-brep-surface = { workspace = true }
+semio-s-artifact-procedural-3d-brep-surface = { workspace = true }
+semio-s-artifact-procedural-3d-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+

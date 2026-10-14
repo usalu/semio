@@ -11,12 +11,20 @@
 //! full `total` beside it. A document past one viewport streams; it never truncates and it never
 //! closes a section with a `+N` row (see `semio_framework_plugin::TreeWindows`).
 
-use crate::editor::fem2d::interaction::{
-    Fem2dInteractionSnapshot, FEM2D_GRANULARITY_COMBINATION, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_LOAD_CASE, FEM2D_GRANULARITY_MATERIAL, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SECTION,
-    FEM2D_GRANULARITY_SUPPORT, FEM2D_INTERACTION_DOMAIN,
-};
-use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{ui_label, FEM2D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_NODE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_REGION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
@@ -355,7 +363,4 @@ pub fn render(doc: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, label
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

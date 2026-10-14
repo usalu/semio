@@ -1,9 +1,9 @@
 //! 🔩 `insert-member` inverse — removes the row at the position the insert landed on.
 
-use super::InsertMember;
-use crate::mutations::remove_member::RemoveMember;
-use crate::{En1990Mutation, En1990Snapshot};
+use crate::insert_member::InsertMember;
+use crate::remove_member::RemoveMember;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
-pub fn inverse(payload: &InsertMember, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
-    Ok(vec![En1990Mutation::RemoveMember(RemoveMember { index: payload.index.unwrap_or(usize::MAX).min(base.members.len()) })])
+pub fn inverse<Op>(payload: &InsertMember, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_member::RemoveMember> {
+    Ok(vec![Op::from(RemoveMember { index: payload.index.unwrap_or(usize::MAX).min(base.members.len()) })])
 }

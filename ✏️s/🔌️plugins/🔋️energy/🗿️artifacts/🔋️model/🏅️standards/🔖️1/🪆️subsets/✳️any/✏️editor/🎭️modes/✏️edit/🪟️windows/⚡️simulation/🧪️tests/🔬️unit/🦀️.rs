@@ -17,8 +17,8 @@ fn actions_are_localized_and_registered_as_interactive() {
     // 🪟️ The three verbs this window RENDERS are declared app-level (`window_shared_action_definitions`)
     // so every window kind carries them — a window-kind-local action is dispatchable from that window
     // alone. This law still owns their shape.
-    let own: Vec<_> = crate::editor::model::window_shared_action_definitions().into_iter().filter(|action| [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor::model::SET_RUN_PERIOD_ACTION_ID].contains(&action.id.as_str())).collect();
-    assert_eq!(own.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor::model::SET_RUN_PERIOD_ACTION_ID]);
+    let own: Vec<_> = crate::window_shared_action_definitions().into_iter().filter(|action| [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor_commands::SET_RUN_PERIOD_ACTION_ID].contains(&action.id.as_str())).collect();
+    assert_eq!(own.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor_commands::SET_RUN_PERIOD_ACTION_ID]);
     assert!(own.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
     assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
     for action in &own {
@@ -69,8 +69,8 @@ fn both_authored_languages_produce_different_text_and_the_framework_chords() {
 
 #[test]
 fn the_result_field_action_offers_exactly_the_published_fields_and_the_window_renders_the_current_one() {
-    use crate::editor::model::results::ResultField;
-    let declared = crate::editor::model::window_shared_action_definitions();
+    use crate::editor_config::ResultField;
+    let declared = crate::window_shared_action_definitions();
     let action = declared.iter().find(|action| action.id == SET_RESULT_FIELD_ACTION_ID).expect("the editor declares set-result-field");
     assert_eq!(action.kind, ActionKind::View, "recolouring reads the document, it never mutates it");
     let arg = action.args.iter().find(|arg| arg.id == "field").expect("the field argument");
@@ -88,4 +88,10 @@ fn the_result_field_action_offers_exactly_the_published_fields_and_the_window_re
     assert!(english.contains(SET_RESULT_FIELD_ACTION_ID), "the settings node names the verb that changes it");
     let german = text(render(None, &settings, &model, Locale::De));
     assert!(german.contains("Solare Transmission"), "and in German: {german}");
+}
+
+#[test]
+fn the_window_kind_and_body_key_equal_the_run_session_literal() {
+    assert_eq!(crate::session::ENERGY_SIMULATION_WINDOW_KIND_ID, crate::windows::simulation::WINDOW_KIND_ID);
+    assert_eq!(crate::session::ENERGY_SIMULATION_WINDOW_KIND_ID, crate::windows::simulation::BODY_KEY, "the simulation window's body key IS its kind id");
 }

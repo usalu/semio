@@ -1,8 +1,7 @@
 //! 🕖️ Energy model mutation — `DeleteWeeklySchedule`: Removes one weekly schedule. Refused while any consumer still resolves its id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteWeeklySchedule {
     pub id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_weekly_schedule(id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteWeeklySchedule(DeleteWeeklySchedule { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_weekly_schedule<Op: From<DeleteWeeklySchedule>>(id: crate::schedule::ScheduleId) -> Op {
+    DeleteWeeklySchedule { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteWeeklySchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteWeeklySchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteWeeklySchedule> + From<crate::CreateWeeklySchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "weekly-schedule", kind: "delete-weekly-schedule", record: "DeletedWeeklySchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,11 +1,12 @@
 //! 🧪️ Actual borrowed native controls retain original grants, cancellation and preallocation ports.
 use crate::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::{NativeEncodeAllocation,NativeEncodeProgress},native_decoding::NativeDecodeAllocation};
 use std::{cell::RefCell,sync::atomic::{AtomicBool,AtomicUsize,Ordering}};
+const ORIGINAL_RECEIVING_FIXTURE:&str=include_str!("🧫️fixtures/🔣️.json");
 macro_rules! original_receiving_law {
  ($test:ident,$control:ident,$allocation:ident)=>{
   #[test]
   fn $test(){
-   let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let initial=fixture["initialBytes"].as_u64().unwrap()as usize;let expected=fixture["expectedBytes"].as_u64().unwrap()as usize;let text=fixture["text"].as_str().unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
+   let fixture:serde_json::Value=serde_json::from_str(ORIGINAL_RECEIVING_FIXTURE).unwrap();let initial=fixture["initialBytes"].as_u64().unwrap()as usize;let expected=fixture["expectedBytes"].as_u64().unwrap()as usize;let text=fixture["text"].as_str().unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
    for case in fixture["cases"].as_array().unwrap(){let case=case.as_str().unwrap();let allowed=AtomicBool::new(true);let port_allowed=AtomicBool::new(true);let ledger=AtomicUsize::new(0);let requests=AtomicUsize::new(0);let events=RefCell::new(Vec::new());let mut callback=|event|{events.borrow_mut().push(event);allowed.load(Ordering::Relaxed)&&!(case=="cancelAfter"&&ledger.load(Ordering::Relaxed)==expected)};
     let mut port=|request:$allocation|{assert_eq!(request.owned_bytes,ledger.load(Ordering::Relaxed));assert_eq!(request.next_owned_bytes,request.owned_bytes+request.bytes);if !port_allowed.load(Ordering::Relaxed){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"actual original allocation port refused"))}ledger.store(request.next_owned_bytes,Ordering::Relaxed);requests.fetch_add(1,Ordering::Relaxed);Ok(())};
     let mut native=$control::new_forwarded(if case=="zeroRemaining"{initial}else{maximum},&mut callback,&mut port);native.charge(initial).unwrap();native.begin_stage(fixture["parentTotal"].as_u64().unwrap()as usize).unwrap();native.advance(fixture["parentCompleted"].as_u64().unwrap()as usize).unwrap();events.borrow_mut().clear();if case=="cancelBefore"{allowed.store(false,Ordering::Relaxed)}if case=="portRefused"{port_allowed.store(false,Ordering::Relaxed)}

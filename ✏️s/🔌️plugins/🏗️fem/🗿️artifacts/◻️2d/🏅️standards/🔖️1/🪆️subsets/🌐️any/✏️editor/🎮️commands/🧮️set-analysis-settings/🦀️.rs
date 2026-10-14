@@ -54,7 +54,4 @@ pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem2dSnapsho
 //#endregion 🔖️SetAnalysisSettings
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

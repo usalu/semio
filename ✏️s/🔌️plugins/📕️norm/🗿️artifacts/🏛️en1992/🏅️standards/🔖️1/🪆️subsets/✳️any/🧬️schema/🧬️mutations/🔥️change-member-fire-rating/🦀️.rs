@@ -1,9 +1,9 @@
 //! 🔥️ `change-member-fire-rating`.
 
-use crate::diff::En1992Diff;
-use crate::mutations::En1992Mutation;
-use crate::part_1_2::FireRating;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+
+use semio_s_artifact_norm_en1992_model::FireRating;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -16,11 +16,11 @@ pub struct ChangeMemberFireRating {
     pub new_rating: FireRating,
 }
 
-impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberFireRating {
+impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeMemberFireRating where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_member_fire_rating::ChangeMemberFireRating> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-fire-rating", kind: "change-member-fire-rating", record: "ChangedMemberFireRating" };
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_member_fire_rating::diff::diff(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_member_fire_rating::inverse::inverse(self, base)? 
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -28,3 +28,10 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeMemberFire
     }
     fn target(&self) -> Vec<String> { vec![self.member_id.clone()] }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

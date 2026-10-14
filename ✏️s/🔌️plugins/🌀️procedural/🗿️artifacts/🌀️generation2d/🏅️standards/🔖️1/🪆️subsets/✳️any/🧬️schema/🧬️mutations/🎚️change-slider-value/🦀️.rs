@@ -2,10 +2,10 @@
 //! to. A continuous control's intent IS the value (design §13.1), so a scrub commits exactly this leaf and editing it in
 //! history replays the value on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation2d_label_number,Generation2dMutation};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use crate::generation2d_label_number;
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ChangeSliderValue
@@ -20,19 +20,22 @@ pub struct ChangeSliderValue {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_slider_value(id: impl Into<String>, value: f64) -> Generation2dMutation {
-    Generation2dMutation::ChangeSliderValue(ChangeSliderValue { id: id.into(), value })
+pub fn change_slider_value<Op: From<ChangeSliderValue>>(id: impl Into<String>, value: f64) -> Op {
+    Op::from(ChangeSliderValue { id: id.into(), value })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeSliderValue {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ChangeSliderValue
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::replace_widget::ReplaceWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "slider-value", kind: "change-slider-value", record: "ChangedSliderValue" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_slider_value::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_slider_value::inverse::inverse(self, base)?
     
     })
 }

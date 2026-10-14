@@ -1,9 +1,9 @@
 //! 🏗️ Complete CAD relational ownership under the actual caller ledger.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CadReference, snapshot::CadNode, snapshot::CadModelChild};
-use semio_s_artifact_cad_cad_model::CadReferenceIndex;
-use semio_s_artifact_cad_cad_model::{references::close, references::invalid};
-use semio_s_artifact_cad_cad_model::references::frontiers as semantic_frontiers;
+use crate::{snapshot::CadSnapshot, snapshot::CadReference, snapshot::CadNode, snapshot::CadModelChild};
+use crate::CadReferenceIndex;
+use crate::{references::close, references::invalid};
+use crate::references::frontiers as semantic_frontiers;
 use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
 
@@ -49,9 +49,9 @@ impl Rows for Projection<'_,'_>{
     fn check_rows(&self,count:usize)->Result<(),ValueError>{Projection::check_rows(self,count)}
     fn checkpoint_total(&mut self,total:usize)->Result<(),ValueError>{Projection::checkpoint_total(self,total)}
 }
-struct Census<'c,'p>{control:&'c mut SqliteSnapshotControl<'p>,count:usize,bytes:usize,phase:SqliteSnapshotPhase}
+pub struct Census<'c,'p>{pub control:&'c mut SqliteSnapshotControl<'p>,pub count:usize,pub bytes:usize,pub phase:SqliteSnapshotPhase}
 impl Census<'_,'_>{
-    fn row(&mut self,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{
+    pub fn row(&mut self,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{
         let mut bytes=8usize;
         for cell in cells{let size=match cell{Cell::Null=>0,Cell::Integer(_)|Cell::Real(_)|Cell::Float32(_)=>8,Cell::Text(value)=>value.len(),Cell::PagedText(value)=>value.text_bytes(),Cell::Blob(value)=>value.len()};bytes=bytes.checked_add(size).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD semantic cell byte count overflow"))?;}
         for column in columns{let index=match column{FloatColumn::Binary64(index)|FloatColumn::Binary32(index)=>*index};let cell=cells.get(index.checked_sub(1).ok_or_else(||invalid("CAD IEEE identity column is invalid"))?).ok_or_else(||invalid("CAD IEEE field is missing"))?;let value=match cell{Cell::Null=>continue,Cell::Real(value)=>*value,_=>return Err(invalid("CAD IEEE field has an invalid storage class"))};let class=if value.is_nan(){bytes-=8;"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"};bytes=bytes.checked_add(8+class.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CAD IEEE semantic byte count overflow"))?;}
@@ -270,7 +270,7 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 }
 semio_framework_value::artifact_retire_struct!(CadNode { id, label, kind });
 semio_framework_value::artifact_retire_struct!(CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
-semio_framework_value::artifact_retire_struct!(semio_s_artifact_cad_cad_model::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
+semio_framework_value::artifact_retire_struct!(crate::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
 
 
 

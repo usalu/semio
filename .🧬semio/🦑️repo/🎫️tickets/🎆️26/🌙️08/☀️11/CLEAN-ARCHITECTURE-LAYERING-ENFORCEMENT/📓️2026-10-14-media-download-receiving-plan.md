@@ -1,0 +1,19 @@
+# Original Terminal Download Receiving Plan
+
+Media8 ended before SDK/Cargo; media9 also refused at current dependency generation absence. The described terminal output/receive/close cut is now source-authored and mounted, with a ninth original native case. This document retains the design rationale and remaining qualification closure; it is not a validation receipt.
+
+The existing terminal path calls poll, takes an owning result, copies MIME, then invokes a consuming retain-result method. Its Vcs receiver copies handle metadata, donates MIME/chunks, silently drops schema and creates a new empty chunks root in the active owner. The runtime publishes the frame after source command donation. take_media_export_chunk later drops the complete download owner when EOF is observed. These are real current source seams; none is covered by accepted historical five-law proof.
+
+The cut must use two explicit persistent recipients. The decoded command owns optional poll/result and status fields, including partial MIME metadata. The Vcs download preparation owns partial copied handle metadata and its pending output recipient. Denial retains every source slot; occupied or foreign source refuses before mutation. The actual installed snapshot SourceLoan guards each operation.
+
+The output must own every donated original result field, including schema and media type. Its actual chunks are the supplied root; active operation aliases remain retained for their independent paid return. No replacement chunks root is permitted. Handle document and status MIME copies advance under exact capacity/copy quotes, keeping native source extent/pointer and original context through partial turns. Receiving output and persistent ready bit precede receipt posting. The download registry receives the real output before publication; metadata return uses paid original controlled retirement.
+
+The closed neutral corpus must cover zero item/copy/capacity/depth, busy/occupied recipients, stale business handle, foreign actual issuer with equal numeric IDs, partial metadata, post-refused receiving, cancellation between donation and publication, and complete output/metadata/chunks/source-last return. Independent SQLite custody transactions may prove phase/slot preservation; actual native HeapWitness must prove allocation, original recipient/progress, actual alias/root conservation, and Drop0. Pure model/oracle acceptance cannot qualify real serialization work or guest frame ownership.
+
+Main public poll and retain-result callers must be updated together. Optional output is persistent; None never reports completion. Runtime retries retain the decoded command and actual result/status slots before semantic command donation. App/Editor/Viewer registered consumers remain direct typed ArtifactReservedToolJob; factory owner/tool registration and distinct business Operation stay intact.
+
+The existing real Repo GUI route and finite original policies remain the only validation entry. No source copies, direct Cargo, fresh wallet, deadline extension, Any bus route or compatibility API is planned. Serializer/image/Layout stage physical allocation remains a separate necessary producer frontier after this output receiver cut.
+
+## Qualification Closure
+
+The current nine-law target compiles the real generic production SDK and its media-turn integration. Its original entry does not by itself compile every concrete MP3/AVI/MP4/Raster/Layout package. All eight authored concrete hook modules need a separate genuine selected Cargo closure through their owning registered routes after generic source compiles. Generic law acceptance cannot stand for format serializer/Image/engine acceptance. Full workflow proof must additionally retain the initiating source through live installed registration, snapshot capture, body/frame publication, output receiving, transfer, cancellation and physical retirement.

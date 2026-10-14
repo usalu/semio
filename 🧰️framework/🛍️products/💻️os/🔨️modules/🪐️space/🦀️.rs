@@ -450,8 +450,8 @@ where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
-    let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
-    store::ArtifactStore::new(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
+    let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 
 /// 📥️ Puts one imported blob's bytes into a live `store::BlobStore`, verifying the freshly computed

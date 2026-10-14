@@ -2,36 +2,24 @@
 //!
 //! Each domain is a `🦀️.rs` in the owner tree; this entry file is pure wiring.
 
-#[path = "../../⚙️engine/🦀️.rs"]
-mod engine;
-pub use engine::*;
+pub use semio_framework_geometry_primitives::*;
 
 #[path = "../../🎲️random/🦀️.rs"]
 pub mod random;
 
-#[path = "../../➗️vector/🦀️.rs"]
-pub mod vector;
+pub use semio_framework_geometry_vector as vector;
 
-#[path = "../../🌙️bulge/🦀️.rs"]
-pub mod bulge;
+pub use semio_framework_geometry_bulge as bulge;
 
-#[path = "../../➰️loops/🦀️.rs"]
-pub mod loops;
 
-#[path = "../../🔺️triangulation/🦀️.rs"]
-pub mod triangulation;
 
-#[path = "../../🧭️placement/🦀️.rs"]
-pub mod placement;
 
-#[path = "../../🕸️mesh/🦀️.rs"]
-pub mod mesh;
+pub use semio_framework_geometry_solids::{loops, mesh, placement, triangulation};
 
 #[path = "../../🔪️section/🦀️.rs"]
 pub mod section;
 
-#[path = "../../🦴️skeleton/🦀️.rs"]
-pub mod skeleton;
+pub use semio_framework_geometry_skeleton as skeleton;
 
 #[path = "../../🏠️roof/🦀️.rs"]
 pub mod roof;

@@ -1,9 +1,9 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshAttributeReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(MeshAttributeReceipt);
+semio_framework_value::artifact_retire_leaf!(MeshAttributeReceipt);
 
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
 fn index_bytes(count:usize)->Result<usize,ValueError>{count.checked_mul(size_of::<u32>()).ok_or_else(||refusal("original mesh attribute index extent overflow"))}

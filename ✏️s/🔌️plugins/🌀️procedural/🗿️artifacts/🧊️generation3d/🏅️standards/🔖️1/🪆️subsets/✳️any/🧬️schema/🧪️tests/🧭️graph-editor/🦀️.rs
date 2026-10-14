@@ -47,7 +47,7 @@ fn retire(leaves: Vec<Generation3dMutation>) {
 /// nothing else.
 #[test]
 fn graph_editor_replay_reaches_the_host_snapshot_for_a_removal() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
     let doomed = base.host_snapshot.synapses.first().expect("the example wires something").to.clone();
     let wires = base.host_snapshot.synapses.iter().filter(|synapse| synapse.from == doomed || synapse.to == doomed).count();
@@ -62,7 +62,7 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_removal() {
 /// 🔗️ Cutting a wire and wiring it again is one `disconnect-synapse` and one `connect-synapse`.
 #[test]
 fn graph_editor_replay_reaches_the_host_snapshot_for_wiring() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
     let wire = base.host_snapshot.synapses.first().expect("the example wires something").clone();
     let (leaves, _) = recorded_replay_reaches_the_host(&base, |editor| {
@@ -77,7 +77,7 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_wiring() {
 /// places it again.
 #[test]
 fn graph_editor_replay_reaches_the_host_snapshot_for_a_creation() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
     let (leaves, replayed) = recorded_replay_reaches_the_host(&base, |editor| {
         let id = editor.add_widget_json(r#"{"kind":"inputNote"}"#, 10.0, 20.0).expect("the note is created");
@@ -92,10 +92,10 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_creation() {
 #[semio_framework_async_macros::async_test]
 async fn graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation() {
     use semio_framework_plugin::PluginApp;
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut app = crate::app_fixture::app().await;
     let mut replayed = crate::app_fixture::snapshot(&app);
-    crate::app_fixture::dispatch(&mut app, crate::editor::generation3d::Generation3dCommand::Reorganize(crate::editor::generation3d::commands::reorganize::Reorganize {})).await;
+    crate::app_fixture::dispatch(&mut app, semio_s_artifact_procedural_3d_editor::Generation3dCommand::Reorganize(semio_s_artifact_procedural_3d_editor_commands::reorganize::Reorganize {})).await;
     let expected = crate::app_fixture::snapshot(&app);
     let history = app.history_snapshot().await.expect("registered reorganisation history");
     let leaves: Vec<Generation3dMutation> = history.upserts.iter().filter(|entry| entry.applied).flat_map(|entry| &entry.op_lines).map(|line| <Generation3dMutation as protocol::OpText>::parse_op(line).expect("recorded reorganisation leaf")).collect();
@@ -113,14 +113,14 @@ async fn graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation() {
 /// onto it — is exactly the leaves the host's own splice amounts to.
 #[test]
 fn graph_editor_replay_reaches_the_host_snapshot_for_a_splice() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let base = normalised_example(PROCEDURAL_EXAMPLE_BOX_FILLET);
     let source = base.host_snapshot.widgets.iter().find_map(|widget| match widget {
         Widget::Neuron { id, preview: true, .. } => Some(id.clone()),
         _ => None,
     }).expect("the example previews an operator");
     let (leaves, _) = recorded_replay_reaches_the_host(&base, |editor| {
-        crate::editor::generation3d::transform_commands::ensure_gumball_node(editor, &source, "translate").expect("the translate operator is spliced");
+        semio_s_artifact_procedural_3d_transforms::ensure_gumball_node(editor, &source, "translate").expect("the translate operator is spliced");
     });
     let kinds = kinds(&leaves);
     assert!(kinds.starts_with(&["create-widget", "move-widget"]) && kinds.contains(&"update-widget"), "{kinds:?}");

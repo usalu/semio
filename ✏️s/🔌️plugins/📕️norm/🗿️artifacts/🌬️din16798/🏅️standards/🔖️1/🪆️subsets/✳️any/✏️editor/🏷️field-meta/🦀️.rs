@@ -1,6 +1,6 @@
 //! 🏷️ DIN EN 16798 NormFieldMeta lookup — SI display units + en/de labels for the structured inputs editor.
 
-use crate::app_surface::{NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{NormFieldChoice, NormFieldMeta};
 
 /// 🏷️ B2 hook: exact path, else leaf segment / known suffixes.
 pub fn din16798_field_meta(path: &str) -> Option<NormFieldMeta> {

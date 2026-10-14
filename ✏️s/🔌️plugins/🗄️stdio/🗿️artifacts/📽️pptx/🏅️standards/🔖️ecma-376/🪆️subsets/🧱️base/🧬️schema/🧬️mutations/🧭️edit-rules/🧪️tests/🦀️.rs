@@ -1,6 +1,6 @@
 //! 🧪️ Every details-pane pointer of the PPTX editor resolves to the concrete kinds of its gesture, and replaying them reaches the edited deck.
 
-use super::*;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules::*;
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;

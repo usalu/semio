@@ -1485,3 +1485,29 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite
         .collect();
     (nodes, edges)
 }
+
+/// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.
+pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
+    use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+    if session.preview_chain_status().working || session.preview_eval_status().in_flight > 0 || session.preview_tessellate_status().in_flight > 0 { return Err(io_error("generation3d export is waiting for the current geometry evaluation")); }
+    let sources = semio_s_artifact_procedural_3d_mesh_bridge::export_source_channels(snapshot, widget_id)?;
+    let eval = semio_framework_pack_json::parse(session.eval_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| io_error(error.to_string()))?;
+    if let Some(error) = eval.get("error").and_then(semio_framework_pack_json::Value::as_str) { return Err(io_error(error)); }
+    let mut meshes = Vec::new();
+    let mut seen = std::collections::BTreeSet::new();
+    for (source, channel) in sources {
+        for item in preview_channel_items_for_widget(&eval, &source).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
+            let key = if item.handle.is_empty() { format!("{source}@{}#{}", item.channel, item.index) } else { item.handle.clone() };
+            if !seen.insert(key) { continue; }
+            let mesh = match item.inline {
+                Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
+                Some(PreviewInlineGeometry::Vector { .. }) => continue,
+                Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(&preview),
+                None => session_preview_mesh(&item.handle, session),
+            }.ok_or_else(|| io_error(format!("generation3d export geometry '{source}@{}' is unavailable", item.channel)))?;
+            meshes.push(mesh);
+        }
+    }
+    if meshes.is_empty() { return Err(io_error("generation3d export has no connected geometry")); }
+    Ok(meshes)
+}

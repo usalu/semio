@@ -5,7 +5,15 @@
 //! framework-owned: a World3d scene stamped with this domain lets the react host dispatch
 //! `interactionSelect`/`interactionHover` without any plugin command.
 
-use crate::EnergyModelSnapshot;
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+#[cfg(test)]
+extern crate semio_s_artifact_energy_model_examples as examples;
+
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::GranularityDefinition;
 use semio_framework_plugin::HierarchyProvider;

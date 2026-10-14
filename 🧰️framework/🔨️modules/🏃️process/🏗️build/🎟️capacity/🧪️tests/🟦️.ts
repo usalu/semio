@@ -39,6 +39,16 @@ test("Bounded single-worker claims run real children concurrently and give a who
   console.log(`[DEBUG] Compiler capacity children overlap=${rows.length} bounded=${availableParallelism()} writer-before-reader; Python SQLite oracle agrees`);
  }finally{for(const claim of held)claim.release();}
 },120_000);
+test("Multi-core claims are granted whole and first come first served behind the core picker",async()=>{
+ const law=fixture.multiCore;if(availableParallelism()<law.waiterParallelism+law.holderShortfall)return;
+ const holder=await acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},requestedParallelism:availableParallelism()-law.holderShortfall}),order=[] as string[];
+ try{expect(holder.parallelism).toBe(availableParallelism()-law.holderShortfall);
+  const wide=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},requestedParallelism:law.waiterParallelism}).then(claim=>{order.push("wide");return claim;});await Bun.sleep(100);
+  const narrow=acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},requestedParallelism:1}).then(claim=>{order.push("narrow");return claim;});await Bun.sleep(100);expect(order).toEqual([]);
+  holder.release();const first=await wide,second=await narrow;try{expect(first.parallelism).toBe(law.waiterParallelism);expect(second.parallelism).toBe(1);expect(order).toEqual(law.order);}finally{first.release();second.release();}
+  console.log("[DEBUG] Multi-core capacity claim waited whole behind a holder and kept FIFO order ahead of a narrower later claim");
+ }finally{holder.release();}
+},120_000);
 test("Cancelled whole-host requests and crashed single-worker owners release gate and core claims",async()=>{
  const first=await acquireCompilerCapacityLeaseV1({directory:storage,control:control(),environment:{},requestedParallelism:1});try{expect(first.parallelism).toBe(1);const controller=new AbortController(),waiting=acquireCompilerCapacityLeaseV1({directory:storage,control:control(controller.signal),environment:{}});await Bun.sleep(50);controller.abort();await expect(waiting).rejects.toMatchObject({name:fixture.cancel});}finally{first.release();}
  const root=mkdtempSync(join(storage,"s-")),marker=join(root,"ready.json"),source=new URL("../🟦️.ts",import.meta.url).href,script=join(root,"📜️script.ts");writeFileSync(script,`import {acquireCompilerCapacityLeaseV1,phaseCompilerAdmissionControlV1} from ${JSON.stringify(source)};const claim=await acquireCompilerCapacityLeaseV1({directory:${JSON.stringify(storage)},control:phaseCompilerAdmissionControlV1(new AbortController().signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done))),environment:{},requestedParallelism:1});await Bun.write(${JSON.stringify(marker)},JSON.stringify({parallelism:claim.parallelism,pid:process.pid}));await new Promise(()=>setInterval(()=>{},10000));`);

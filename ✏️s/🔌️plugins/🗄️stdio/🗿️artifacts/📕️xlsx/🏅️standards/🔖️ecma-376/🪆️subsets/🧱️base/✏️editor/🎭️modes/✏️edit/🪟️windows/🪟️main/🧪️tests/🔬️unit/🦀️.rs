@@ -24,7 +24,10 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📊️sheet-grid/🔣️.json")).expect("third-party JSON parser reads neutral grid fixture");
     for case in fixture["cases"].as_array().unwrap() {
         let cells = case["cells"]
@@ -38,7 +41,7 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
             })
             .collect();
         let sheet_name = case["sheetName"].as_str().unwrap();
-        let document = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
+        let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet_name.into(), cells }], ..Default::default() });
         let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).expect("grid render");
         let mut nodes = Vec::new();
         descendants(&node, &mut nodes);
@@ -71,8 +74,9 @@ async fn neutral_sparse_blank_and_formula_cases_render_as_real_editable_grids() 
 
 #[semio_framework_async_macros::async_test]
 async fn german_grid_localizes_axes_without_rewriting_column_coordinates() {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
-    let document = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+    let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Leer".into(), cells: Vec::new() }], ..Default::default() });
     let node = render(&document, Locale::De, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).unwrap();
     let mut nodes = Vec::new();
     descendants(&node, &mut nodes);

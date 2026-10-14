@@ -1,8 +1,7 @@
 //! ⏫️ Energy model mutation — `ChangeBatteryMaxCharge`: Sets maximum charge power (W) on one battery, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeBatteryMaxCharge {
     pub new_max_charge_w: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_battery_max_charge(id: crate::model::EntityId, new_max_charge_w: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeBatteryMaxCharge(ChangeBatteryMaxCharge { id, new_max_charge_w })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_battery_max_charge<Op: From<ChangeBatteryMaxCharge>>(id: crate::model::EntityId, new_max_charge_w: f64) -> Op {
+    ChangeBatteryMaxCharge { id, new_max_charge_w }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeBatteryMaxCharge {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeBatteryMaxCharge
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeBatteryMaxCharge>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "battery", kind: "change-battery-max-charge", record: "ChangedBatteryMaxCharge" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

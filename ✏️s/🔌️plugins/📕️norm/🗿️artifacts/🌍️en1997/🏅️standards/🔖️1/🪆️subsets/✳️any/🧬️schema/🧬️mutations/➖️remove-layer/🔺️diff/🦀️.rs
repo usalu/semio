@@ -1,6 +1,6 @@
-use super::RemoveLayer;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997LayersRows};
+use crate::remove_layer::RemoveLayer;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997LayersRows};
 
 pub fn diff(payload: &RemoveLayer, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if payload.index >= base.layers.len() {

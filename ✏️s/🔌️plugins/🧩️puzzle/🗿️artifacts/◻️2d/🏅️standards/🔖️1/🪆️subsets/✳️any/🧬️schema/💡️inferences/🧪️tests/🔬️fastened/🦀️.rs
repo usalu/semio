@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor, crate::Puzzle2dSnapshot};
 
 #[test]
 fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
@@ -23,7 +23,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Fixed,
-                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
+                handles: vec![crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
             Puzzle2dNode {
                 id: "c".into(),
@@ -41,7 +41,7 @@ fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
                 visible: None,
                 locked: None,
                 anchor: Puzzle2dNodeAnchor::Derived,
-                handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
+                handles: vec![crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }].into(),
             },
         ].into(),
         edges: vec![Puzzle2dEdge {

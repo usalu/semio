@@ -1,5 +1,5 @@
 //! 🪶️ Borrowed aluminium sections, actions and keyed connection details before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -21,4 +21,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,s)in n::list(n::field(root,8)?)?.iter().enumerate(){let s=n::record(s)?;let parent=n::entity(out,"en1999_shell",1,index,&n::cells(s,[Text(0),Text(1),Real(2),Real(3),Real(4)])?,SHELL)?;actions(out,"en1999_shell_action",parent,s,5)?;}Ok(())
 }
 /// 🛂️ Sixteen authored tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1999Snapshot::SQLITE_SCHEMA,16,28,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1999Snapshot::SQLITE_SCHEMA,16,28,count(root)?,write)}

@@ -1,8 +1,8 @@
 //! ⛱️ `change-zone-window-shading-fc` diff — patches the window's `shading_fc` inside its zone; a missing zone or window is a `mutation.invariant`.
 
-use super::ChangeZoneWindowShadingFc;
-use crate::diff::{Din4108Diff, Din4108WindowDelta, Din4108WindowPatch, Din4108ZoneDelta, Din4108ZonePatch};
-use crate::Din4108Snapshot;
+use crate::change_zone_window_shading_fc::ChangeZoneWindowShadingFc;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108WindowDelta, Din4108WindowPatch, Din4108ZoneDelta, Din4108ZonePatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeZoneWindowShadingFc, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(zone) = base.zones.iter().find(|zone| zone.id == payload.zone_id) else {

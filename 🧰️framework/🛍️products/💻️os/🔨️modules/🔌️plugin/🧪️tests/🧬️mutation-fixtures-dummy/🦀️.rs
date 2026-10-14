@@ -1,3 +1,6 @@
+#[derive(Clone,Copy)]
+pub struct DummyMemberStoreProducer;
+
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
@@ -276,7 +279,7 @@ impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
     fn latest_wins_target(_command: &DummyCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<DummyCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<DummyCommand>>> {
         None
     }
 }
@@ -351,19 +354,19 @@ impl ArtifactApp for DummyApp {
         Some(crate::app_testing::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(crate::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -495,25 +498,26 @@ async fn assert_ingest_idempotent_does_not_double_apply() {
 // independently owned instance of the identical shape, exactly as the plugin-runtime fixture's
 // `TestMembers` is. Its only purpose is to be a roster that is NOT `NoMembers`.
 store::space_members! {
+    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum DummyMembers, DummyMembersOpen {
-        Child("s.test.dummy-child", "native", "*", "semio.testkit-child/v1") => (DummySnapshot, DummyMutation),
+        Child("s.test.dummy-child", "native", "*", "semio.testkit-child/v1") => (DummySnapshot, DummyMutation, DummyMemberStoreProducer, DummyMemberStoreProducer),
     }
 }
 
-impl store::os_store::document_store_owners::MemberStoreOwner<DummyMutation> for DummySnapshot {
+impl store::os_store::document_store_owners::MemberStoreProducer<DummySnapshot,DummyMutation> for DummyMemberStoreProducer {
     /// 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
     /// drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
     /// no child, so the un-openable operation is the honest declaration.
-    type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+    type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<DummySnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<Self, DummyMutation>()
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<DummySnapshot, DummyMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, DummyMutation>> {
-        crate::store_lifecycle::bounded_document_store_owners::<Self, DummyMutation>(grant)
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<DummySnapshot, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DummySnapshot, DummyMutation>> {
+        semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners::<DummySnapshot, DummyMutation>(grant)
     }
 }
 //#endregion 🧬️MembersRoster

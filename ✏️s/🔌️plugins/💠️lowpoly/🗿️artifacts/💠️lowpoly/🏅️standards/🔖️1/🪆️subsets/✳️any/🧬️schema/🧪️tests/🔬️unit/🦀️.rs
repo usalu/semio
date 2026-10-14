@@ -1,11 +1,17 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot, default_mesh_workspace};
-use super::*;
-use crate::empty_paint_pixels;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+use semio_s_artifact_lowpoly_lowpoly_model::{standards::v1::subsets::any::io::text::snapshot::default_snapshot, standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace};
+use semio_s_artifact_lowpoly_lowpoly_model::*;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE;
+use framework_schema::ArtifactSchema;
+use semio_framework_plugin::MeshData;
+use semio_framework_3d::mesh::HalfedgeMesh;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::empty_paint_pixels;
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_concrete_forest_left_object() {
     let projection = default_snapshot();
-    assert_eq!(projection.schema, crate::LOWPOLY_DOCUMENT_SCHEMA);
+    assert_eq!(projection.schema, semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_DOCUMENT_SCHEMA);
     assert_eq!(projection.objects.len(), 1);
     assert_eq!(projection.objects[0].id, "obj-1");
     assert_eq!(projection.objects[0].name, LOWPOLY_DEFAULT_EXAMPLE_LABEL);
@@ -28,8 +34,8 @@ async fn projection_round_trips_paint_pixels_through_base64_json() {
     projection.objects[0].paint_layers[0].pixels = empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
-    let json = crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(&projection);
-    let restored: crate::LowpolySnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
+    let json = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(&projection);
+    let restored: semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
     assert_eq!(restored, projection);
 }
 
@@ -40,8 +46,8 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
     // `LowpolyEngine` never exposed a `snapshot()`/apply-mutation API either) and constructed
     // the since-removed `LowpolyMutation::ObjectsPatch` bag variant. Rewritten against the real
     // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
-    use crate::mutations::rename_object;
-    use crate::LowpolyMutation;
+    use semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object;
+    use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
     use protocol::Mutation;
     let base = default_snapshot();
     let object_id = base.objects[0].id.clone();

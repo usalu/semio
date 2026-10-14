@@ -1,6 +1,8 @@
-use crate::document::AnnexChoice;
-use crate::mutations::change_annex::ChangeAnnex;
-use crate::{En1996Diff, En1996Mutation, En1996Snapshot};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1996_mut_project::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_mutations::En1996Mutation;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use protocol::{apply_diff, DiffAlgebra, Mutation};
 
 #[test]
@@ -16,9 +18,9 @@ fn change_annex_diff_updates_only_annex() {
 #[test]
 fn absorb_of_two_steps_equals_their_sequence() {
     let base = En1996Snapshot::compliant_clay_wall();
-    let first = Mutation::diff(&En1996Mutation::ChangeStoreys(crate::mutations::change_storeys::ChangeStoreys { new_storeys: 7 }), &base).diff().clone();
+    let first = Mutation::diff(&En1996Mutation::ChangeStoreys(semio_s_artifact_norm_en1996_mut_project::change_storeys::ChangeStoreys { new_storeys: 7 }), &base).diff().clone();
     let mid = apply_diff(&first, &base).expect("first applies");
-    let second = Mutation::diff(&En1996Mutation::ChangeWallLength(crate::mutations::change_wall_length::ChangeWallLength { index: 0, new_length_m: 9.5 }), &mid).diff().clone();
+    let second = Mutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { index: 0, new_length_m: 9.5 }), &mid).diff().clone();
     let after = apply_diff(&second, &mid).expect("second applies");
     let mut sum = first;
     protocol::MutationDiff::absorb(&mut sum, second);

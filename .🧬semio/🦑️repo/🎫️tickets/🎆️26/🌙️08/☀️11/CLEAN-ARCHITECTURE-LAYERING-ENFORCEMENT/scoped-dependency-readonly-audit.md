@@ -1,0 +1,25 @@
+# Scoped Dependency Readonly Audit
+
+Inspected current live Source on 2026-10-14. No initializer, installer, test, source edit, git mutation or worktree was performed. This audit is static evidence, not a passing test receipt.
+
+## Current Boundary
+
+No concrete regression was found in the explicit scope change. The defining CJS `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs` lines 45–50 admits an immutable closed selector. Its regular expression agrees with `🧬️schema/🔣️.json` lines 129–166; the TS wrapper exposes that same third-argument control contract at lines 14–15 and 38–41. There is no legacy overload.
+
+Membership lines 113–118 retain root admission while selecting a current one-segment owner. Lines 119–126 enumerate independent owner directories only for `all`. Root scope therefore does not read independent manifests; specific scope consumes only its selected declaration plus root admission. The actual root `package.json` lines 207–221 limits positive members to framework Source, while S `✏️s/package.json` lines 265–279 intentionally consumes its own Source and incoming framework Source. This establishes the intended dependency direction for the actual authored recipes, rather than claiming arbitrary future recipes are automatically disjoint.
+
+The same generator and package payload ownership rules remain in effect for both selectors. Package discovery uses physical Source instead of published workspaces (CJS lines 73–109). Deletions present before discovery therefore recompute the selected literal roster; additions and deletions during discovery remain fenced. Observation retention lines 144–169, manifest/topology rechecks lines 182–194 and final synchronous fences lines 238–249 retain current inode/mode/text custody. Independently edited separate installations are not visited by scoped discovery. Selected root admission still deliberately participates in current text custody.
+
+Original cancellation is checked before/after each original continuation (lines 197–215, 222–235). The defining dependency `📜️script.ts` lines 15–36 passes its existing invocation signal, validates the original invocation before/after continuation, publishes progress through that invocation and binds the issued storage before installation. No new operation authority is created by selection. Publication may already have occurred when a post-write continuation cancels; existing all publication has the same semantics, so the guarantee is refusal before first publication when cancellation is observed before that write, not general transaction rollback.
+
+## Live Call Sites
+
+An exact identifier search across live and hidden Source excluding ticket copies, generated/cache paths, dependencies and Git found only the CJS definition/export, TS wrapper, defining ownership tests, dependency SyncScript and cache test route. Dependency SyncScript line 18 supplies its selected explicit selector. Cache `⚡️caching/📜️script.ts` line 204 deliberately supplies `{kind:"all"}` for the existing whole current-publication test route. All defining ownership test invocations supply an explicit selector. No remaining two-argument controlled ownership call was found.
+
+## Meaningful Qualification Gaps
+
+1. The report describing deletion coverage is stronger than the current corpus. `🧪️tests/🧫️fixtures/🔣️.json` scopedPublication lines 592 onward has two isolation/incoming cases, selectors and cancellation/topology controls, but no preexisting selected package subsequently removed before scoped republication. `🧪️tests/🟦️.ts` lines 101–116 neither delete a package nor prove its stale native literal is removed while a separate owner remains unchanged. A portable delete-and-republish law would directly qualify the original scoped early-return problem.
+2. Dependency tests `⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts` line 90 exercise malformed route arguments and unissued stores, but do not exercise the successful original SyncScript/RefreshLockScript branch through selected publication followed by immutable staging. Canonical publisher unit coverage cannot establish that successful route behavior by itself. The root's actual registered GUI invocation is the appropriate runtime evidence for this remaining gap.
+3. Existing final-continuation manifest fencing at ownership tests line 85 is exercised only with `all`. Scoped tests cover cancellation and directory topology drift at lines 113–116, but do not independently exercise a selected owner's own manifest changed during the final original continuation, or root admission changed while selecting a specific owner. The shared code statically retains both fences; tests do not yet qualify them specifically.
+
+The new scoped tests compare accepted/rejected selectors against Ajv and native membership against fast-glob, and check unchanged unselected manifest bytes plus absence of separate-owner visits. They are meaningful independent oracle assertions. No assertion in this audit claims those tests were executed or passed.

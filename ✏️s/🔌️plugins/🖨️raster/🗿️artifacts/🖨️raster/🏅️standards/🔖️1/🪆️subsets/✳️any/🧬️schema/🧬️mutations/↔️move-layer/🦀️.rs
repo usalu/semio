@@ -2,9 +2,9 @@
 //! Distinct from `reorder-layers` (list position, never spatial).
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️MoveLayer
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -17,15 +17,15 @@ pub mod mutation {
         pub new_y: f64,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for MoveLayer {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for MoveLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::move_layer::mutation::MoveLayer> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "layer", kind: "move-layer", record: "MovedLayer" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::move_layer::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::move_layer::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -40,3 +40,13 @@ pub mod mutation {
 }
 
 pub use mutation::MoveLayer;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/📍️slides/🦀️.rs"]
+mod tests_slides_the_stamp_layer_off_the_origin;
+//#endregion 🪢️TaxonomyMounts

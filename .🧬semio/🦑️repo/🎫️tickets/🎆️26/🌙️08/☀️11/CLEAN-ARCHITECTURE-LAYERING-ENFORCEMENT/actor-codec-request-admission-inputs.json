@@ -1,0 +1,79 @@
+{
+  "scope": "Actor codec request admission, original owner and operation correlation; source frontier held",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "0dfc350b578a527d3aa9c37f9f9531f08a867efea9e04eec66400010d6f6afe3",
+      "bytes": 8257
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+      "sha256": "5e58aa102b88677ebc213e6269b2725e55f4fececd5fd36f6b7fe5fb3a870732",
+      "bytes": 9350
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "9d9568d536d447113d2f97cc08c72af665fc585334de2726f4628b2279c7151a",
+      "bytes": 12323
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "sha256": "3b680f0bf91150a174ef79e110fe7d1a66c7bbc490c567dcab5d7813ac443273",
+      "bytes": 15480
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "f79d4010cc7643c2928ff6a53328cdcd892f36c2ad006c6921d719868c41a404",
+      "bytes": 25166
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "sha256": "b7d03bf86210bbab13946243708f731be7c500db5c85eaa1ee199ed2822b73b9",
+      "bytes": 493
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "sha256": "b722aa94a0916ce96a128e9bd8612c1eaec094e3b0205b04e0c856a054b3356f",
+      "bytes": 191752
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "sha256": "9c081b717d092abceda4a3e9591b99681d3cc51767c7d1cc5817fe234293b71a",
+      "bytes": 4431
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "sha256": "50a7c912fab7997e914ce9efe48dd66eb33ce7b526487c8fe29b18f535f2c2fb",
+      "bytes": 5603
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts",
+      "sha256": "0d6f75c59e1211368ec0604f63323590a1ef192098f25c95f28ca3a5c682377e",
+      "bytes": 11889
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "sha256": "089754964577a3cccd5f8cabbaa91c729d0c50d8934e2536219705e2af202d71",
+      "bytes": 13285
+    }
+  ],
+  "portableRequestCases": 24,
+  "retainedAnswerCases": 23,
+  "newPublicRuntimeExports": [
+    "admitActorCodecRequestV1"
+  ],
+  "registeredTestsCollectedByThisOwner": 0,
+  "initializersOrFrontdoorsLaunchedByThisOwner": 0,
+  "limitations": [
+    "Proxy structural reflection traps can execute",
+    "broader Product noUnchecked profile has three unrelated fixture slots",
+    "registered suites and full worker/native acceptance unqualified"
+  ],
+  "probeReferences": [
+    "🗑️generated/actor-codec-request-current/red.json",
+    "🗑️generated/actor-codec-request-current/current-probes.json",
+    "🗑️generated/actor-codec-request-current/semantic-general.json",
+    "🗑️generated/actor-codec-request-current/semantic-general-product.json",
+    "🗑️generated/actor-codec-request-current/semantic-general-product-unchecked.json"
+  ]
+}

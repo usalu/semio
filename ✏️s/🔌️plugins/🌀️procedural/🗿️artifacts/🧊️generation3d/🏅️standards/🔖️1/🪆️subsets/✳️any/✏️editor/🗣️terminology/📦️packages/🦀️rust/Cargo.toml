@@ -22,3 +22,4 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../ðŸ§
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+

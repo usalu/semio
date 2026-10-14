@@ -1,12 +1,12 @@
 //! ↩️ `rename-catalogue` — undo restores BASE's preferred name.
 
-use super::mutation::RenameCatalogue;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use crate::rename_catalogue::mutation::RenameCatalogue;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &RenameCatalogue, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &RenameCatalogue, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::rename_catalogue::mutation::RenameCatalogue> {
     Ok((|| {
-    vec![Iso16757Mutation::RenameCatalogue(RenameCatalogue { new_name: base.catalogue.metadata.names.preferred.text.clone() })]
+    vec![Op::from(RenameCatalogue { new_name: base.catalogue.metadata.names.preferred.text.clone() })]
 
     })())
 }

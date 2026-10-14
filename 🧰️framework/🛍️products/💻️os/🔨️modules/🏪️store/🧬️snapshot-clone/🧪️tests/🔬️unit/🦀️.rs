@@ -116,7 +116,7 @@ fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work(
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️preparation-birth/🔣️.json")).unwrap();
     BIRTH_PREFLIGHT_CALLS.store(0, std::sync::atomic::Ordering::Relaxed);
-    let factory = RetainedClonePreparationFactory::new(Arc::new(BirthEdit), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<BirthMutation>::default()), Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<u64>::default()), 64).unwrap();
+    let factory = RetainedClonePreparationFactory::new(Arc::new(BirthEdit), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<BirthMutation>::default()), Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<u64>::default()), 64).unwrap();
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(7u64);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("original registry admission"));

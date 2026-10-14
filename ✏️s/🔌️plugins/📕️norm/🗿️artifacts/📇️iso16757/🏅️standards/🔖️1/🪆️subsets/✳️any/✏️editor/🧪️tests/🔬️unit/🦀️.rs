@@ -1,5 +1,5 @@
 pub(crate) mod context {
-    use super::super::*;
+    use crate::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -53,12 +53,12 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::*;
 use semio_framework_plugin::PluginApp;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
-    crate::app_surface::retained_disposition_oracle::assert_fixture(VARIANT);
+    semio_s_plugin_norm_app_surface::retained_disposition_oracle::assert_fixture(VARIANT);
     let definition = create_iso16757_app();
     let mut classified = 0usize;
     for window in definition.window_kinds.iter() {
@@ -68,13 +68,13 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
         // command-bridge law uses. Norm declares all three retained tools at app level, so reading
         // `window.actions` here saw an empty roster.
         let dispatchable = semio_framework::window_kind_actions(&definition, window);
-        for id in crate::app_surface::NORM_RETAINED_TOOL_IDS {
+        for id in semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS {
             let action = dispatchable.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must dispatch {id}", window.id));
             assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
             classified += 1;
         }
     }
-    assert_eq!(classified, definition.window_kinds.len() * crate::app_surface::NORM_RETAINED_TOOL_IDS.len());
+    assert_eq!(classified, definition.window_kinds.len() * semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS.len());
 }
 
 //#region 🔖️CommandSurface
@@ -84,10 +84,10 @@ fn every_command() -> Vec<Iso16757Command> {
     vec![
         Iso16757Command::Evaluate(evaluate::Evaluate {}),
         Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
-        Iso16757Command::SetField(super::set_field::SetField { path: "partNumberInputs.dn".into(), value_json: "50".into() }),
-        Iso16757Command::InsertItem(super::insert_item::InsertItem { path: "catalogue.productGroups".into(), index: 0, value_json: None }),
-        Iso16757Command::RemoveItem(super::remove_item::RemoveItem { path: "catalogue.productGroups".into(), index: 0 }),
-        Iso16757Command::ApplyRemedy(super::apply_remedy::ApplyRemedy { check_id: String::new(), remedy_index: 0 }),
+        Iso16757Command::SetField(crate::commands::set_field::SetField { path: "partNumberInputs.dn".into(), value_json: "50".into() }),
+        Iso16757Command::InsertItem(crate::commands::insert_item::InsertItem { path: "catalogue.productGroups".into(), index: 0, value_json: None }),
+        Iso16757Command::RemoveItem(crate::commands::remove_item::RemoveItem { path: "catalogue.productGroups".into(), index: 0 }),
+        Iso16757Command::ApplyRemedy(crate::commands::apply_remedy::ApplyRemedy { check_id: String::new(), remedy_index: 0 }),
     ]
 }
 
@@ -137,7 +137,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for body_key in [document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
-    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
+    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT)));
 }
 
 /// 🔌️ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
@@ -147,35 +147,35 @@ async fn declares_model_in_and_report_out_ports() {
     let ports = create_iso16757_app().io.ports;
     assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
     let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
-    assert_eq!(report_out.kind_id.as_deref(), Some(crate::app_surface::artifact_kind_id(VARIANT).as_str()));
+    assert_eq!(report_out.kind_id.as_deref(), Some(semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT).as_str()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
-    let mut app = context::app_with_registry().await;
-    assert!(context::render(&mut app, "norm.iso16757.play.nope").await.contains("Unknown body"));
-    context::close(&mut app);
+    let mut app = crate::unit_tests::context::app_with_registry().await;
+    assert!(crate::unit_tests::context::render(&mut app, "norm.iso16757.play.nope").await.contains("Unknown body"));
+    crate::unit_tests::context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn every_declared_body_key_renders() {
-    let mut app = context::app_with_registry().await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
     for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
-        assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
+        assert!(!crate::unit_tests::context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️Behavior
 #[semio_framework_async_macros::async_test]
 async fn evaluate_commits_a_host_backed_report() {
-    let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
-    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
+    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
+    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<Iso16757Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 
 /// 🧩️ The `NormFamily` binding lives here now (it was in the constitutional `op` crate) it
@@ -188,67 +188,67 @@ async fn norm_family_evaluate_matches_host() {
         host.evaluate();
     }
     assert!(!host.report().checks.is_empty());
-    assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
+    assert_eq!(<Iso16757Family as semio_s_plugin_norm_compliance::NormFamily>::family_id(), semio_s_plugin_norm_compliance::NormFamilyId::Iso16757);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = context::app_with_registry().await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
     let before = app.snapshot().expect("projection");
-    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
+    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     assert_eq!(before, app.snapshot().expect("projection"));
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 
 /// 🧮️ `setSelectedCheckIndex` is Results-window-config-only — it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {
-    let mut app = context::app_with_registry().await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
     let before = app.snapshot().expect("projection");
-    let result = context::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
+    let result = crate::unit_tests::context::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
     assert!(result.mutations.is_empty(), "a Results-window-config-only command must emit no document operations");
     assert_eq!(before, app.snapshot().expect("projection"), "a Results-window-config-only command must never mutate the document");
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 
 /// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
 /// operations.
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
-    let mut app = context::app_with_registry().await;
-    let result = context::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
+    let result = crate::unit_tests::context::dispatch(&mut app, Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
     assert!(result.mutations.is_empty());
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
-    let mut app = context::app_with_registry().await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
     let base = app.snapshot().expect("projection");
-    context::dispatch(&mut app, Iso16757Command::SetField(set_field::SetField { path: "selection.classId".into(), value_json: "\"class-wave3\"".to_string() })).await;
+    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::SetField(set_field::SetField { path: "selection.classId".into(), value_json: "\"class-wave3\"".to_string() })).await;
     let edited = app.snapshot().expect("projection");
     assert_ne!(edited, base, "the concrete setter moved the document");
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
-    context::settle(&mut app).await;
+    crate::unit_tests::context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), base);
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("redo");
-    context::settle(&mut app).await;
+    crate::unit_tests::context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), edited);
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 
 /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
-    let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
+    let mut app = crate::unit_tests::context::app_with_registry().await;
+    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
-    assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
+    assert_eq!(schema, semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT));
+    let report: semio_s_plugin_norm_compliance::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
     assert!(!report.checks.is_empty());
-    context::close(&mut app);
+    crate::unit_tests::context::close(&mut app);
 }
 //#endregion 🔖️Behavior
 
-semio_framework_plugin::history_edit_acceptance_law!("norm", super::Iso16757PlayApp, || semio_framework_plugin::App { definition: super::create_iso16757_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("norm", crate::Iso16757PlayApp, || semio_framework_plugin::App { definition: crate::create_iso16757_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

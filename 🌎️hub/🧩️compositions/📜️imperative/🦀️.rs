@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -29,7 +30,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// see each extension's own `bundle()`), and it asks the broker for document write access to
 /// persist edits.
 pub fn plugin() -> Result<Plugin<ImperativeApps>, PluginAssemblyError> {
-    Plugin::<ImperativeApps>::builder("imperative")
+    PluginBuilder::<_, ImperativeApps>::new("imperative")
         .label("Imperative")
         .version("0.1.0")
         .package_id("semio:imperative")

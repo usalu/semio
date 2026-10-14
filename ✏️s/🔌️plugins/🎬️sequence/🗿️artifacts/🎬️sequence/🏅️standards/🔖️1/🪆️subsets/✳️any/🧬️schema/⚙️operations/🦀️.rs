@@ -13,7 +13,7 @@ pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation
 /// read but never mutated, undone or closed. the framework's bounded default owners install
 /// the SAME catalog for the app-hosted store; every standalone store goes through here instead.
 pub async fn new_sequence_store(envelope: SequenceEnvelope, actor: protocol::ActorId) -> Result<OwnedSequenceStore, store::VcsError> {
-    let mut store = SequenceStore::new(envelope, actor).await?;
+    let mut store = SequenceStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<SequenceSnapshot, SequenceMutation>().expect("sequence document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("sequence document store refused its exact owner catalog: {error}");

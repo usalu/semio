@@ -1,11 +1,10 @@
 //! ↩️ Inverse for `RenameGeneration`, reconstructed from BASE.
 use super::RenameGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::rename_generation;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use crate::rename_generation;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameGeneration, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<RenameGeneration>>(payload: &RenameGeneration, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.generation.generations.iter().find(|entry| entry.id == payload.id) {
         Some(entry) => vec![rename_generation(payload.id.clone(), entry.name.clone())],

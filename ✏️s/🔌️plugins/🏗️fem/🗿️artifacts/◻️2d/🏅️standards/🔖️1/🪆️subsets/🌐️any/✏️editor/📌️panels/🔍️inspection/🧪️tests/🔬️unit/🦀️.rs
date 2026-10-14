@@ -1,8 +1,63 @@
-use super::*;
-use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
-use crate::editor::fem2d::terminology::fem2d_labels;
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app, render as render_body};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::inspection::*;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination::ADD_TERM_FIELD;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination::TERM_FIELD_PREFIX;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_kind;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_NODE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_REGION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_action;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_framework_ui_contract as ui;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
+use crate::context::{dispatch, fem2d_app, render as render_body};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
@@ -11,7 +66,7 @@ use semio_framework_plugin::ViewModel;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("the bundled demo fixture parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn selecting(ids: &[&str]) -> Fem2dInteractionSnapshot {

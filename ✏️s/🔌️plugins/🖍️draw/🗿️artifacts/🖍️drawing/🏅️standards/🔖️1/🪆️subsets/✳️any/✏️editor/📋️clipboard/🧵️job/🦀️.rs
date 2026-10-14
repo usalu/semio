@@ -1,12 +1,22 @@
 //! 🧵️ Reserved clipboard verbs retain the original read, progressive codecs and one atomic publication.
-use super::*;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::DrawingClipboard;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::MAX_BYTES;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::MAX_DEPTH;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::MAX_ID_BYTES;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::MAX_NODES;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::MAX_TASKS;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::SCHEMA;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::copy;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::decode;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::encode;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::invert;
 use semio_framework_plugin::{ArtifactReservedToolJobRequest,ArtifactReservedToolInput,EditorApp,Emit,Effect,EphemeralEmit,ArtifactReservedJob};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
 use semio_framework_value::{DslValue,ValueError,RetireOwned,NativeDecodeControl,native_decoding::NativeDecodeContinuation,NativeEncodeControl,NativeEncodeContinuation,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneSource,RetainedCloneStep}};
 use semio_framework_value::retirement::RetireOwned as RetireAuthority;
-type App=EditorApp<super::super::DrawingPlayApp>;
-type Clone<T>=semio_s_artifact_draw_drawing_host::owned::DrawingNativeCloneAuthority<T>;
+type App=EditorApp<crate::DrawingPlayApp>;
+type Clone<T>=semio_s_artifact_draw_drawing_host_arena::DrawingNativeCloneAuthority<T>;
 type NativeText=semio_framework_value::paged::PagedUtf8<{usize::MAX}>;
 type NativeRetired=semio_framework_value::list::PagedList<NativeText,{MAX_NODES*MAX_NODES+MAX_TASKS}>;
 struct ClipboardScene<'a>{packet:&'a DrawingClipboard,selected:&'a[String]}
@@ -18,7 +28,9 @@ impl semio_s_artifact_draw_drawing_scene::preparation::DrawingSceneSource for Cl
  fn asset(&self,key:&str)->Option<&DrawingImageAsset>{self.packet.assets.get(key)}
  fn root_visible(&self,index:usize)->bool{self.packet.roots.get(index).is_some_and(|node|self.selected.iter().any(|id|layer_base(node).id==*id))}
 }
-use semio_s_artifact_draw_drawing_host::owned::{DrawingLayerAddress, DrawingLayerLocator, DrawingLayerCloneWorkAuthority};
+use semio_s_artifact_draw_drawing_host_arena::DrawingLayerAddress;
+use semio_s_artifact_draw_drawing_host_arena::DrawingLayerLocator;
+use semio_s_artifact_draw_drawing_host_arena::DrawingLayerCloneWorkAuthority;
 #[path="📋️metadata/🦀️.rs"]
 mod metadata;
 struct TreeCursor{address:DrawingLayerAddress,children:[usize;MAX_DEPTH],base:usize,entered:bool,complete:bool,all_roots:bool}
@@ -43,7 +55,7 @@ pub const MAX_NATIVE_BYTES:usize=COPY_NATIVE_BYTES*2+MAX_BYTES*size_of::<DslValu
 /// 📖️ Borrows the sealed snapshot through its original clone source; the field path keeps sibling workspace fields borrowable.
 macro_rules! source_doc{($workspace:expr)=>{$workspace.source.as_ref().expect("Drawing clipboard seals its source before any read").borrow().get()}}
 #[derive(RetireOwned)]
-struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,completion:Option<semio_framework_plugin::ArtifactToolCompletion<App>>,args:Option<DslValue>,interaction:protocol::InteractionState,hover:semio_framework_plugin::app::InteractionHoverState,wire:Vec<u8>,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_framework_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<super::super::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
+struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,completion:Option<semio_framework_plugin::ArtifactToolCompletion<App>>,args:Option<DslValue>,interaction:protocol::InteractionState,hover:semio_framework_plugin::app::InteractionHoverState,wire:Vec<u8>,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_framework_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}
 pub struct DrawingClipboardJob{owner:ControlledRetirement<Workspace>,outcomes:DrawingJobOutcomes,tool:String,layer_clone:Option<Clone<DrawingLayerNode>>,asset_clone:Option<Clone<DrawingImageAsset>>,encoding:Option<NativeEncodeContinuation>,decoding:Option<NativeDecodeContinuation>,placement:PastePlacement,phase:u8,at:usize,closing:bool,complete:bool,locator:Option<DrawingLayerLocator>,footprint:Option<DrawingLayerCloneWorkAuthority>,source_root:Option<DrawingLayerAddress>,path:[usize;MAX_DEPTH],children:[usize;MAX_DEPTH],depth:usize,entered:bool,reference:usize,admitted_bytes:usize,normalize_other:usize,asset_append:usize,tree:Option<TreeCursor>,asset_search:usize,located_asset:Option<usize>,ordinal:usize,destination:[f64;6],inverse:[f64;6],offset:[f64;2],insertion:usize,scratch:[u8;MAX_ID_BYTES],material:[u8;MAX_ID_BYTES*2+64],mapped:[u8;76]}
 fn fault(error:impl std::fmt::Display)->semio_framework::Fault{semio_framework::Fault::from(error.to_string())}
 fn refused()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Invalid drawing clipboard input / Ungültige Zeichnungsdaten in der Zwischenablage")}
@@ -90,7 +102,7 @@ impl DrawingClipboardJob{
             let Some(DslValue::String(text))=property(fragment,"dslText")else{return Err(fault(refused()));};if text.len()>MAX_BYTES{return Err(fault("Drawing clipboard exceeds its declared byte capacity / Zeichnungszwischenablage überschreitet die zugelassene Größe"));}workspace.text=std::mem::take(text);
             workspace.parser=Some(semio_framework_pack_json::JsonGrammarCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject));self.phase=5;
         }else{
-            let selection=workspace.interaction.selection.get(super::super::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault(ClipboardError::EmptySelection))?;
+            let selection=workspace.interaction.selection.get(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN).ok_or_else(||fault(ClipboardError::EmptySelection))?;
             if selection.ids.len()>MAX_NODES{return Err(fault(refused()));}if selection.ids.is_empty(){return Err(fault(ClipboardError::EmptySelection));}
             initial_vec(&mut workspace.roots,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.assets,MAX_NODES,&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.selected,selection.ids.len(),&mut workspace.buffer_admitted,cx)?;initial_vec(&mut workspace.retired_ids,MAX_NODES*2,&mut workspace.buffer_admitted,cx)?;
             workspace.packet=Some(DrawingClipboard{schema:copy_identity(SCHEMA,&mut workspace.buffer_admitted,cx)?,roots:Vec::new(),selected:Vec::new(),assets:Default::default()});self.phase=12;self.at=0;
@@ -171,12 +183,12 @@ impl DrawingClipboardJob{
             },
             38=>{
                 cx.set_stage("clipboard-publication-metadata");
-                if let Some(fragment)=workspace.fragment.as_mut(){match self.at{0=>fragment.schema=copy_identity(SCHEMA,&mut workspace.buffer_admitted,cx)?,1=>fragment.source_app=copy_identity(super::super::DRAWING_PLAY_CONTROLLER_ID,&mut workspace.buffer_admitted,cx)?,2=>{use std::fmt::Write;let mut text=FixedText{bytes:&mut self.material,at:0};write!(&mut text,"{} layers / Ebenen",workspace.selected.len()).map_err(fault)?;let label=std::str::from_utf8(&text.bytes[..text.at]).map_err(fault)?;fragment.label=copy_identity(label,&mut workspace.buffer_admitted,cx)?;},_=>{fragment.dsl_text=std::mem::take(&mut workspace.text);workspace.effects.push(Effect::ClipboardWrite{fragment:workspace.fragment.take().unwrap()});self.phase=39;self.at=0;return Ok(false);}}self.at+=1;}else{self.phase=39;self.at=0;}
+                if let Some(fragment)=workspace.fragment.as_mut(){match self.at{0=>fragment.schema=copy_identity(SCHEMA,&mut workspace.buffer_admitted,cx)?,1=>fragment.source_app=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_PLAY_CONTROLLER_ID,&mut workspace.buffer_admitted,cx)?,2=>{use std::fmt::Write;let mut text=FixedText{bytes:&mut self.material,at:0};write!(&mut text,"{} layers / Ebenen",workspace.selected.len()).map_err(fault)?;let label=std::str::from_utf8(&text.bytes[..text.at]).map_err(fault)?;fragment.label=copy_identity(label,&mut workspace.buffer_admitted,cx)?;},_=>{fragment.dsl_text=std::mem::take(&mut workspace.text);workspace.effects.push(Effect::ClipboardWrite{fragment:workspace.fragment.take().unwrap()});self.phase=39;self.at=0;return Ok(false);}}self.at+=1;}else{self.phase=39;self.at=0;}
             },
             39=>{
                 cx.set_stage("clipboard-selection-publication");
-                if self.tool=="paste"&&self.at<workspace.selected.len(){let granularity=copy_identity(super::super::DRAWING_INTERACTION_GRANULARITY,&mut workspace.buffer_admitted,cx)?;let id=std::mem::take(&mut workspace.selected[self.at]);workspace.interaction_targets.push(protocol::InteractionTarget{granularity,id});self.at+=1;return Ok(false);}
-                if self.tool!="copy"{let domain=copy_identity(super::super::DRAWING_INTERACTION_DOMAIN,&mut workspace.buffer_admitted,cx)?;workspace.interaction_writes.push(semio_framework_plugin::InteractionWrite{domain,targets:std::mem::take(&mut workspace.interaction_targets),merge:protocol::MergeMode::Replace});}return Ok(true);
+                if self.tool=="paste"&&self.at<workspace.selected.len(){let granularity=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_GRANULARITY,&mut workspace.buffer_admitted,cx)?;let id=std::mem::take(&mut workspace.selected[self.at]);workspace.interaction_targets.push(protocol::InteractionTarget{granularity,id});self.at+=1;return Ok(false);}
+                if self.tool!="copy"{let domain=copy_identity(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN,&mut workspace.buffer_admitted,cx)?;workspace.interaction_writes.push(semio_framework_plugin::InteractionWrite{domain,targets:std::mem::take(&mut workspace.interaction_targets),merge:protocol::MergeMode::Replace});}return Ok(true);
             },
             29=>{
                 cx.set_stage("clipboard-destination");
@@ -246,7 +258,7 @@ impl DrawingClipboardJob{
                 cx.set_stage("clipboard-placement");
                 let mut bounds=None;let mut centroid=[0.0;2];
                 if self.placement.position.is_some()&&!matches!(self.placement.anchor,PasteAnchor::Original){let source=ClipboardScene{packet:workspace.packet.as_ref().unwrap(),selected:&workspace.selected};
-                    if workspace.placement.is_none(){workspace.placement=Some(semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob::new(&source,super::super::geometry_session::limits(),super::super::geometry_session::algorithms(),0.05).map_err(fault)?);return Ok(false);}
+                    if workspace.placement.is_none(){workspace.placement=Some(semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob::new(&source,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms(),0.05).map_err(fault)?);return Ok(false);}
                     let job=workspace.placement.as_mut().unwrap();if !job.advance(&source,1).map_err(fault)?.done{return Ok(false);}let output=job.result().map_err(fault)?;bounds=output.bounds;centroid=output.centroid;
                 }
 
@@ -276,7 +288,7 @@ impl DrawingClipboardJob{
                 self.source_root=None;
             },
             10|11=>{cx.set_stage("clipboard-normalize");let ids=if self.phase==10{&mut workspace.roots}else{&mut workspace.selected};if self.at==ids.len(){if self.phase==10{self.phase=11;self.at=0;}else{let packet=workspace.packet.as_mut().unwrap();initial_vec(&mut packet.roots,workspace.roots.len(),&mut workspace.buffer_admitted,cx)?;initial_vec(&mut packet.selected,workspace.selected.len(),&mut workspace.buffer_admitted,cx)?;self.phase=13;self.at=0;}self.normalize_other=0;return Ok(false);}if self.normalize_other==ids.len(){self.at+=1;self.normalize_other=0;return Ok(false);}let address=workspace.addresses[&ids[self.at]];let other=workspace.addresses[&ids[self.normalize_other]];if self.at!=self.normalize_other&&other.length<address.length&&address.indices[..other.length]==other.indices[..other.length]{workspace.retired_ids.push(ids.remove(self.at));self.normalize_other=0;}else{self.normalize_other+=1;}},
-            12=>{cx.set_stage("clipboard-selection");let ids=&workspace.interaction.selection[super::super::DRAWING_INTERACTION_DOMAIN].ids;if self.at==ids.len(){self.phase=1;self.at=0;return Ok(false);}let id=&ids[self.at];if id.is_empty()||id.len()>MAX_ID_BYTES{return Err(fault(refused()));}if !workspace.selected.contains(id){workspace.selected.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);}self.at+=1;},
+            12=>{cx.set_stage("clipboard-selection");let ids=&workspace.interaction.selection[semio_s_artifact_draw_drawing_editor_interaction::DRAWING_INTERACTION_DOMAIN].ids;if self.at==ids.len(){self.phase=1;self.at=0;return Ok(false);}let id=&ids[self.at];if id.is_empty()||id.len()>MAX_ID_BYTES{return Err(fault(refused()));}if !workspace.selected.contains(id){workspace.selected.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);workspace.roots.push(copy_identity(id,&mut workspace.buffer_admitted,cx)?);}self.at+=1;},
             13=>{cx.set_stage("clipboard-selected-identities");if self.at==workspace.selected.len(){self.phase=2;self.at=0;return Ok(false);}let id=copy_identity(&workspace.selected[self.at],&mut workspace.buffer_admitted,cx)?;workspace.packet.as_mut().unwrap().selected.push(id);self.at+=1;},
             _=>return Err(fault(refused()))
         };cx.consume_fuel(1);Ok(false)
@@ -288,7 +300,7 @@ impl DrawingClipboardJob{
         });
         let failed=emit.is_err();let Some(completion)=workspace.completion.as_ref()else{return self.outcomes.fault("drawing.clipboard-completion-missing");};
         if let Err(rejected)=completion.complete(emit,EphemeralEmit::default()){
-            workspace.rejected_completion=Some(super::super::completion::RejectedCompletion::new(rejected));
+            workspace.rejected_completion=Some(crate::completion::RejectedCompletion::new(rejected));
             return self.outcomes.fault("drawing.clipboard-completion-rejected");
         }
         self.complete=true;if failed{self.outcomes.fault("drawing.clipboard-refused")}else{DrawingJobTurn::Complete}

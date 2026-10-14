@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-fire-thermal-inertia`.
-use super::ChangeFireThermalInertia;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_fire_thermal_inertia::ChangeFireThermalInertia;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeFireThermalInertia, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.fire_thermal_inertia == payload.new_fire_thermal_inertia {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

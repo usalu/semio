@@ -8,9 +8,9 @@
 //! longer truncates with a `+N` that never advanced — the panel's page cursor was dead
 //! (`📓️audit-app-panels-a.md` §4a), and the scrollbar now spans the whole catalog instead.
 
-use crate::editor::puzzle3d::snapshot::catalog_entry_label;
-use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use {crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
+use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 
 use semio_framework_pack_json::{json, Value};
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
@@ -57,8 +57,6 @@ fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_
     }
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
-
-
 
 /// 🌀️ One object kind's rim-vortex templates, paired with their ordinal so sibling templates that
 /// declare the same `vortexKind` still key apart — a repeated key is a `DuplicateSiblingKey` refusal,
@@ -141,7 +139,7 @@ fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> 
 /// which is inside the navbar, and is why ticket 26/09/02 read this as "the navbar covers the catalogue"
 /// for three waves (wave B26 §5, corrected in wave B27 §1).
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let entries = |section: &str| crate::editor::puzzle3d::snapshot::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
+    let entries = |section: &str| semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
     PanelTreeBuilder::new(ROOT)?
         .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, entries("objects"), |entry| object_kind_item(entry, windows))?
         .window_section(windows, &format!("{ROOT}.vortices"), Some(ui_label(labels.vortices.as_str())?), false, entries("vortices"), |entry| catalog_kind_item(entry, "circle-dot"))?

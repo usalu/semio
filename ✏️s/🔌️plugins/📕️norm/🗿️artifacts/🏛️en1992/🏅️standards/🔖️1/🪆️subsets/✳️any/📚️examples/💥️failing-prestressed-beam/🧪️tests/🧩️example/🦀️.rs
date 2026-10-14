@@ -2,7 +2,7 @@
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../../../../🖼️assets/💥failing-prestressed-beam/💥failing-prestressed-beam/🗣️.dsl.semio");
     assert!(text.len() > 8);
-    let snap = <crate::En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("parse prestressed example");
+    let snap = <semio_s_artifact_norm_en1992_model::En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("parse prestressed example");
     assert!(snap.members.iter().any(|m| m.prestress.is_some()));
-    assert!(!crate::standards::v1::subsets::any::schema::inferences::evaluate(&snap).complies());
+    assert!(!semio_s_artifact_norm_en1992_inferences::evaluate(&snap).complies());
 }

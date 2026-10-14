@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
-use crate::editor::puzzle2d::empty_board_snapshot;
+use crate::editor::puzzle2d::snapshot::empty_board_snapshot;
 use crate::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use crate::editor::puzzle2d::modes::edit::puzzle2d_engagement;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
@@ -24,7 +24,7 @@ fn fill_count_entry_is_a_tool_measure() {
     let fill_scene = scene(empty_board_snapshot(), Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() }, overview::utilities::select::UTILITY_ID);
     assert!(matches!(&measures(&fill_scene, labels), WindowMeasure::Group { id, active_utility_id: None, .. } if id == "puzzle2d-tool-options-fill"));
     assert!(!overview::window_measures(&fill_scene, labels).iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "puzzle2d-tool-options-fill")), "fill must not surface in window_measures");
-    assert!(puzzle2d_engagement(&fill_scene, &host, overview::WINDOW_KIND_ID, labels).control.is_none(), "fill engagement HUD must not carry the relocated control");
+    assert!(puzzle2d_engagement(&fill_scene, &host, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, labels).control.is_none(), "fill engagement HUD must not carry the relocated control");
 }
 
 /// ♾️ The count is the tool's only measure: an unbounded `Number` carried verbatim, defaulting to 100, with no

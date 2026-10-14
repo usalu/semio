@@ -1,9 +1,12 @@
 //! ➕️ `create-frame` — inserts a new {@link Frame} into a page's `frames` list (paint-order
 //! significant), optionally registering it on one of the page's layers.
 
-use crate::mutations::{delete_frame, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, LayoutDiff, LayoutSnapshot};
+use crate::delete_frame;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,12 +24,12 @@ pub struct CreateFrame {
     pub layer_id: Option<String>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreateFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_frame::DeleteFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "frame", kind: "create-frame", record: "CreatedFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_create_frame(self, base)?
     
@@ -53,7 +56,7 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), page.frames.len()), [payload.frame.id().to_string()]);
     }
     let frame = match &payload.layer_id {
-        Some(layer_id) => crate::frame_in_layer(&payload.frame, layer_id),
+        Some(layer_id) => semio_s_artifact_layout_layout_model::frame_in_layer(&payload.frame, layer_id),
         None => payload.frame.clone(),
     };
     let at = payload.index.unwrap_or(page.frames.len());
@@ -65,10 +68,16 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
 //#endregion ➕️CreateFrame
 
 //#region ➕️CreateFrame
-pub fn inverse_create_frame(payload: &CreateFrame, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_frame<Op: From<crate::delete_frame::DeleteFrame>>(payload: &CreateFrame, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: payload.page_id.clone(), frame_id: payload.frame.id().to_string() })]
+    vec![Op::from(delete_frame::DeleteFrame { page_id: payload.page_id.clone(), frame_id: payload.frame.id().to_string() })]
 
     })())
 }
 //#endregion ➕️CreateFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔲️inserts/🦀️.rs"]
+mod tests_inserts_a_rect_frame_at_index_1;
+//#endregion 🪢️TaxonomyMounts

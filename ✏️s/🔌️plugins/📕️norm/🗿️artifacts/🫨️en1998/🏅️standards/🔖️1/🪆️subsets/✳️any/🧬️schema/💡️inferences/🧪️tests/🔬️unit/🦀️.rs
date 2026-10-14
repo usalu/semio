@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::schema::inferences;
-use crate::En1998Snapshot;
+use crate as inferences;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_default_runs() {

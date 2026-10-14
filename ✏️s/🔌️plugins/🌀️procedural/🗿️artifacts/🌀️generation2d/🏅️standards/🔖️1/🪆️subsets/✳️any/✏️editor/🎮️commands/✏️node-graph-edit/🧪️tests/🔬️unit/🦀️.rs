@@ -3,9 +3,9 @@
 //! press is ONE tool transaction of the ABSOLUTE `change-slider-value` leaf with provisional ticks and a zero-trace
 //! cancel, and every gesture row is labelled from its leaf in English and German.
 
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, dispatch, snapshot_read, Generation2dApp};
-use crate::editor::generation2d::Generation2dCommand;
+use semio_s_artifact_procedural_2d_node_graph_edit::*;
+use crate::app_fixture::{app, close, dispatch, snapshot_read, Generation2dApp};
+use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 use semio_framework::kernel::{HistoryEntry, UiDirtyScope};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
@@ -34,9 +34,9 @@ async fn edit_rows(app: &mut Generation2dApp) -> Vec<HistoryEntry> {
 /// 📍️ Lays every widget of the document out on the canvas (the `reorganize` verb, ONE setup edit), so a drag has base
 /// positions; answers the placed ids with their base positions.
 async fn place_every_widget(app: &mut Generation2dApp) -> Vec<(String, (f64, f64))> {
-    dispatch(app, Generation2dCommand::Reorganize(crate::editor::generation2d::commands::reorganize::Reorganize {})).await;
+    dispatch(app, Generation2dCommand::Reorganize(semio_s_artifact_procedural_2d_editor_commands::reorganize::Reorganize {})).await;
     let read = snapshot_read(app);
-    read.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
+    read.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
 }
 
 /// 📐️ Whether `id` sits at `(x, y)` up to the rounding of a relative offset re-derived from an absolute drop.
@@ -132,7 +132,7 @@ async fn zero_trace_two_transactions_and_the_palette_drop() {
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:0", "nodeIds": ["ghost"], "dx": 10.0, "dy": 0.0 }])).await;
     assert_eq!(edit_rows(&mut app).await.len(), before, "nothing moved, nothing recorded");
     edit(&mut app, serde_json::json!([{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [ids[0]], "dx": 10.0, "dy": 0.0 }])).await;
-    dispatch(&mut app, Generation2dCommand::MoveMediaNode(crate::editor::generation2d::commands::move_media_node::MoveMediaNode { node_id: ids[0].clone(), x: x + 30.0, y: y + 30.0 })).await;
+    dispatch(&mut app, Generation2dCommand::MoveMediaNode(semio_s_artifact_procedural_2d_editor_commands::move_media_node::MoveMediaNode { node_id: ids[0].clone(), x: x + 30.0, y: y + 30.0 })).await;
     let rows = edit_rows(&mut app).await;
     let rows = &rows[before..];
     assert_eq!(rows.len(), 2, "{rows:?}");
@@ -200,7 +200,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
         let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
         assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
         let args: semio_framework_value::DslValue = serde_json::json!({ "operations": batch }).into();
-        assert!(<crate::editor::generation2d::Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
+        assert!(<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
     }
 }
 //#endregion 🔗️EditRows

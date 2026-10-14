@@ -38,10 +38,10 @@
     "./value/ieee754": "./🌱️value/🔢️ieee754/🟦️.ts"
   },
   "scripts": {
-    "test": "bun repo run @semio-tech/framework:test",
-    "test-artifact-reference": "bun repo run @semio-tech/framework:test-artifact-reference",
-    "test-script-boundary": "bun repo run @semio-tech/framework:test-script-boundary",
-    "test-polygon-mesh": "bun repo run @semio-tech/framework:test-polygon-mesh"
+    "test": "bun --cwd \"../../..\" repo run @semio-tech/framework:test",
+    "test-artifact-reference": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-artifact-reference",
+    "test-script-boundary": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-script-boundary",
+    "test-polygon-mesh": "bun --cwd \"../../..\" repo run @semio-tech/framework:test-polygon-mesh"
   },
   "devDependencies": {
     "@types/d3-scale": "4.0.9",

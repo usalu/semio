@@ -6,7 +6,10 @@
 //! with the instance's own id and `interactionGranularityId`, which is why every scene instance is
 //! keyed by the RAW entity id (`🎬️scene`).
 
-use crate::{element_id, load_id, Fem3dSnapshot, FemLoad};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::GranularityDefinition;
@@ -21,10 +24,20 @@ use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Constants
-pub use crate::standards::v1::subsets::any::scene::{
-    fem3d_element_endpoints, fem3d_node_point, fem3d_solid_centroid, fem3d_solid_top_point, FEM3D_GRANULARITY_COMBINATION, FEM3D_GRANULARITY_ELEMENT, FEM3D_GRANULARITY_LOAD, FEM3D_GRANULARITY_LOAD_CASE, FEM3D_GRANULARITY_MATERIAL, FEM3D_GRANULARITY_NODE,
-    FEM3D_GRANULARITY_SECTION, FEM3D_GRANULARITY_SOLID, FEM3D_GRANULARITY_SUPPORT, FEM3D_INTERACTION_DOMAIN,
-};
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_element_endpoints;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_node_point;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_top_point;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_COMBINATION;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_ELEMENT;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_LOAD;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_LOAD_CASE;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_MATERIAL;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_NODE;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_SECTION;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_SOLID;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_GRANULARITY_SUPPORT;
+pub use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::FEM3D_INTERACTION_DOMAIN;
 pub const FEM3D_POINTER_CHANNEL: &str = "pointer";
 /// 🧰️ The one window utility fem3d declares: the host's transform gumball over the live selection.
 pub const FEM3D_UTILITY_TRANSFORM: &str = "transform";

@@ -1,10 +1,10 @@
 //! ↩️ `reorder-steps` inverse — reconstructs the pre-move position from BASE state; a step
 //! already absent from `base` has nothing to undo.
 
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::reorder_steps::ReorderSteps>>(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::reorder_steps::ReorderSteps>>(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(from) = base.step_payloads.iter().position(|step| step.id == payload.id) else {
         return Vec::new();

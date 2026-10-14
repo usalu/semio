@@ -1,5 +1,5 @@
-use crate::standards::v_ecma_376::subsets::base::io::text::diff::PptxDiffRecord;
-use super::*;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::PptxDiffRecord;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{command::DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 fn canonical_diff_fixture()->serde_json::Value{

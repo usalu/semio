@@ -6,6 +6,7 @@ import {createRequire} from "node:module";
 import {dirname,resolve,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import nativeSchema from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
+import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️native-caller.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
 const api={...await import(new URL("../../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../../🟨️.mjs",import.meta.url).href)};
@@ -59,7 +60,7 @@ test("native path authority refuses NUL while preserving literal platform paths"
  for(const row of fixture.pathCases){expect(validateJsonSchemaSubset(nativePath,row.input).length===0).toBe(row.accepted);expect(admit(row.input)).toBe(row.accepted);}
 });
 test("actual dispatcher issues two distinct selected dependencies without rebasing original authority",async()=>{
- const input=inputs(),before=JSON.stringify(input.original),validate=new Ajv({strict:true}).compile(nativeSchema),observed:any[]=[];
+ const input=inputs(),before=JSON.stringify(input.original),validate=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema),observed:any[]=[];
  for(const row of fixture.commands){let plan:any;await api.executeOwnerArgumentsV1(optionsFor(input,row),input.context,async(value:any)=>{plan=value;return {success:true};});const issued=JSON.parse(plan.env.SEMIO_SCRIPT_PROCESS_INVOCATION);expect(issued.policy).toEqual(input.original.policy);expect(issued.deadlineEpochMilliseconds).toBe(input.original.deadlineEpochMilliseconds);expect(validate(issued.capabilities),JSON.stringify(validate.errors)).toBe(true);expect(issued.capabilities.transport).toEqual(input.original.capabilities.native.transport);expect(issued.capabilities.child).toEqual(input.original.capabilities.native.child);expect(issued.capabilities.network).toEqual(input.original.capabilities.native.network);expect(issued.capabilities.artifactDirectory).toBe("/repo/artifacts");const command=issued.capabilities.command;observed.push([command.manifest,command.workingDirectory,command.program,command.arguments]);}
  expect(observed).toEqual(fixture.expectedCommands);expect(JSON.stringify(input.original)).toBe(before);
  console.log("[DEBUG] actual Nx dispatcher original dependency commands=2 parentDeadline=unchanged capabilities=closed schemaOracle=Ajv");
@@ -85,7 +86,7 @@ test("actual dispatcher refuses foreign or altered native authority before deleg
 });
 
 test("native dispatch preserves authentic zero and nullable original parent authority",async()=>{
- const validate=new Ajv({strict:true}).compile(nativeSchema);
+ const validate=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema);
  for(const row of fixture.parentCases){
   const input=inputs(),options=optionsFor(input,fixture.commands[0]);
   input.original.policy.maximumElapsedMilliseconds=row.maximumElapsedMilliseconds;
@@ -203,7 +204,7 @@ test("actual native owner process receives original build mode policy and deadli
  const {NativeScript}=await import(new URL("../../../../⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",import.meta.url).href),processApi=await import(new URL("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original generated test output directory required");
  const root=process.cwd(),directory=mkdtempSync(join(artifacts,"native-handoff-")),saved=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;
- const artifactDirectory=resolve(root,".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture"),schemaOracle=new Ajv({strict:true}).compile(nativeSchema);
+ const artifactDirectory=resolve(root,".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture"),schemaOracle=new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema);
  try{
   for(const mode of fixture.buildModes){
    const output=join(directory,mode+".json"),program="const fs=require('node:fs');fs.writeFileSync(process.argv[1],JSON.stringify(JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION)));",arguments_=["-e",program,output],command={kind:"native-owner-command",manifest:fixture.ownerHandoff.manifest,workingDirectory:".",program:"node",arguments:arguments_};

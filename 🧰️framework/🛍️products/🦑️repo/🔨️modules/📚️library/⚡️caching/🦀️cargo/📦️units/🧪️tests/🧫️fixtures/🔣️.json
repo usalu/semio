@@ -316,6 +316,9 @@
       "cold",
       "warm",
       "restore",
+      "workspace",
+      "lock",
+      "package",
       "changed"
     ],
     "misses": {
@@ -329,15 +332,104 @@
       "changed": [
         "base",
         "consumer"
+      ],
+      "workspace": [
+        "aaa_unrelated"
+      ],
+      "lock": [],
+      "package": [
+        "base",
+        "consumer"
       ]
     },
     "tasks": 3,
-    "graphEdgeType": "implicit"
+    "graphEdgeType": "implicit",
+    "unchangedUnits": [
+      "sibling",
+      "aaa_unrelated"
+    ]
   },
   "selectedScope": {
     "required": "parser.mjs",
     "unrelated": "removed.rs",
     "before": "export const value=1;",
     "changed": "export const value=2;"
-  }
+  },
+  "producerAuthority": {
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",
+    "required": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧬️schema/🔣️.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts"
+    ],
+    "excluded": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+    ],
+    "cache": true,
+    "projectRoot": "descriptor-directory"
+  },
+  "graphPermutations": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      0
+    ]
+  ],
+  "cargoPackageMetadata": {
+    "name": "base",
+    "version": "1.2.3-beta.4+seed",
+    "manifest_path": "/repo/base/Cargo.toml",
+    "authors": [
+      "A",
+      "B"
+    ],
+    "description": "first description",
+    "homepage": "https://example.invalid",
+    "repository": "https://example.invalid/repo",
+    "license": "MIT",
+    "license_file": null,
+    "rust_version": "1.88",
+    "readme": null
+  },
+  "adapterRefusal": {
+    "kind": "build-script",
+    "provenance": "registry",
+    "expected": [
+      "build-script",
+      "foreign-source"
+    ]
+  },
+  "compilerCode": {
+    "version": 1,
+    "digest": "898e5d90c7407d7bdc962d8035f50e3086d2102427817f816d338eee34d7eb47",
+    "sourceDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "program": ".cache/b/t/m/rc/898e5d90c7407d7bdc962d8035f50e3086d2102427817f816d338eee34d7eb47/entry.mjs",
+    "programDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "programBytes": 16,
+    "receipt": ".cache/b/t/m/rc/898e5d90c7407d7bdc962d8035f50e3086d2102427817f816d338eee34d7eb47/receipt.json",
+    "receiptDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "receiptBytes": 32
+  },
+  "compilerCodeRefusals": [
+    "sourceDigest",
+    "programDigest",
+    "digest",
+    "program",
+    "receipt",
+    "programBytes",
+    "receiptBytes",
+    "unknown"
+  ],
+  "compilerAuthorityRefusals": [
+    {
+      "program": "/invented/rustc",
+      "triple": "aarch64-apple-darwin",
+      "reason": "Original complete Rust compiler generation required"
+    }
+  ],
+  "compilerEvidence": {"programDigest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","generationDigest":"9999999999999999999999999999999999999999999999999999999999999999","changedProgramDigest":"8888888888888888888888888888888888888888888888888888888888888888"}
 }

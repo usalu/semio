@@ -1,12 +1,12 @@
 //! ↩️ `change-delta-u-wb` inverse.
 
-use crate::mutations::change_delta_u_wb::ChangeDeltaUWb;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_delta_u_wb::ChangeDeltaUWb;
 
-pub fn inverse(_payload: &ChangeDeltaUWb, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeDeltaUWb, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_delta_u_wb::ChangeDeltaUWb> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeDeltaUWb(ChangeDeltaUWb { new_delta_u_wb_w_m2k: base.delta_u_wb_w_m2k })]
+    vec![Op::from(ChangeDeltaUWb { new_delta_u_wb_w_m2k: base.delta_u_wb_w_m2k })]
 
     })())
 }

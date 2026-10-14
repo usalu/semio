@@ -1,7 +1,7 @@
 //! 📤 Downloads the live scene_snapshot as round-trippable JSON.
 
-use {crate::editor::puzzle3d::snapshot::puzzle3d_projection_value, crate::editor::puzzle3d::session::Puzzle3dActionCtx, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot};
-use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_projection_value, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot};
+use semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES;
 use semio_framework_pack_json::to_json_string;
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactOutputChunks};
 use semio_framework_plugin::kernel::Effect;

@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeBatteryMaxCharge` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, BatteryAssignmentPatch, ModelPatch, Rows};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, BatteryAssignmentPatch, ModelPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeBatteryMaxCharge, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

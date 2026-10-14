@@ -1,0 +1,17 @@
+{
+ "old": "semio-framework-graph",
+ "owners": {
+  "semio-framework-graph-manifest": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust",
+  "semio-framework-graph-engine": "🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust",
+  "semio-framework-graph-algorithms": "🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust",
+  "semio-framework-graph-drawing": "🧰️framework/🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust",
+  "semio-framework-graph-dsl": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust"
+ },
+ "aliases": {
+  "graph": "semio-framework-graph-engine"
+ },
+ "catalogs": [
+  "Cargo.toml",
+  "🌎️hub/Cargo.toml"
+ ]
+}

@@ -101,7 +101,7 @@ fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {
 }
 
 fn request(kind: LayoutExportKind) -> LayoutExportRequest {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let page_id = (!matches!(kind, LayoutExportKind::Package)).then(|| snapshot.pages[0].id.clone());
     LayoutExportRequest { kind, page_id, snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "layout-test-document".into(), canonical_base_revision_hex: "09".repeat(32) }
 }
@@ -158,7 +158,7 @@ fn assert_pdf_structure(bytes: &[u8]) -> usize {
 
 #[test]
 fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, None, None).expect("document pdf");
     assert_eq!(all.filename, "Demo.pdf");
     assert_eq!(all.mime_type, "application/pdf");
@@ -193,7 +193,7 @@ fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
 
 #[test]
 fn pdf_export_prints_a_placed_drawing_mark_and_its_kind() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "drawing".into();
     snapshot.links[0].artifact_ref = "drawing-1".into();
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
@@ -212,15 +212,15 @@ fn pdf_export_prints_a_placed_drawing_mark_and_its_kind() {
 /// `drainSegmentedMediaExport` performs — one bounded chunk per call until `None`.
 #[semio_framework_async_macros::async_test]
 async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_whole_pdf() {
-    use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+    use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
     const INSTANCE: u32 = 1;
-    let mut app = crate::editor::layout::unit_tests::context::layout_app_with_registry().await;
+    let mut app = semio_s_artifact_layout_layout_editor::unit_tests::context::layout_app_with_registry().await;
     app.bind_instance_id(INSTANCE).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
-    let result = app.dispatch_typed(crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("exportPdf dispatch");
+    let result = app.dispatch_typed(semio_s_artifact_layout_layout_editor::LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("exportPdf dispatch");
     assert!(result.mutations.is_empty(), "an export never mutates the document");
     let mut download: Option<(u64, String, String, Option<String>, usize)> = None;
     let mut turns = 0usize;
@@ -312,7 +312,7 @@ fn exact_factory_dispatch_is_deterministic_across_real_one_two_four_and_default_
 #[test]
 fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fault_and_success_owners() {
     /// 🪪️ Answers the dispatch together with the host's snapshot witness, which must outlive the close.
-    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> (semio_framework::ToolJobDispatch, Arc<crate::LayoutSnapshot>) {
+    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> (semio_framework::ToolJobDispatch, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>) {
         let operation = operation();
         let bus = semio_framework::ActionBus::new();
         bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
@@ -320,11 +320,11 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         let (admission, mut input) = bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES).expect("maximum extent before encoding");
         // 🔐️ The wire is the command's `OpBinary` encoding, exactly as the host sends it.
         let command = match raw_verb {
-            "exportSvg" => crate::editor::layout::LayoutCommand::ExportSvg(crate::editor::layout::commands::export_svg::ExportSvg { page_id: None }),
-            "exportPdf" => crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }),
+            "exportSvg" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
+            "exportPdf" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),
             other => panic!("fixture verb {other}"),
         };
-        let raw = <crate::editor::layout::LayoutCommand as protocol::OpBinary>::encode_op(&command).expect("fixture wire");
+        let raw = <semio_s_artifact_layout_layout_editor::LayoutCommand as protocol::OpBinary>::encode_op(&command).expect("fixture wire");
         for bytes in raw.chunks(semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES) {
             input.admit_page(semio_framework::action_bus::ToolWirePage::try_copy_from(bytes).expect("bounded raw page")).expect("preadmitted page");
         }
@@ -336,7 +336,7 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         let spec = semio_framework::ToolOperationSpec::new("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, payload, operation);
         (bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch")), witness)
     }
-    fn drive(dispatched: (semio_framework::ToolJobDispatch, Arc<crate::LayoutSnapshot>), params: BatchJobParams) -> StepOutcome {
+    fn drive(dispatched: (semio_framework::ToolJobDispatch, Arc<semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot>), params: BatchJobParams) -> StepOutcome {
         let (dispatch, witness) = dispatched;
         let outcome = drive_test_job(dispatch.job, params);
         drop(witness);
@@ -469,7 +469,7 @@ fn collection_and_json_envelopes_accept_max_and_reject_max_plus_one() {
     snapshot.pages.resize(MAX_LAYOUT_EXPORT_PAGES, page);
     let style = snapshot.paragraph_styles[0].clone();
     snapshot.paragraph_styles.resize(MAX_LAYOUT_EXPORT_STYLES, style);
-    let character = snapshot.character_styles.first().cloned().unwrap_or(crate::CharacterStyle { id: "character.test".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None });
+    let character = snapshot.character_styles.first().cloned().unwrap_or(semio_s_artifact_layout_layout_model::CharacterStyle { id: "character.test".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None });
     snapshot.character_styles.resize(MAX_LAYOUT_EXPORT_STYLES, character);
     snapshot.data_fields = Some(dictionary_at_json_bytes(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES));
     assert!(run_layout_export_headless_batch(operation(), max).is_ok());
@@ -489,27 +489,27 @@ fn collection_and_json_envelopes_accept_max_and_reject_max_plus_one() {
 fn every_top_level_collection_rejects_its_max_plus_one() {
     let mut parent_pages = request(LayoutExportKind::Svg);
     Arc::make_mut(&mut parent_pages.snapshot).parent_pages =
-        (0..=MAX_LAYOUT_EXPORT_PARENT_PAGES).map(|index| crate::ParentPage { id: format!("parent-{index}"), name: "Parent".into(), width: 100.0, height: 100.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() }).collect();
+        (0..=MAX_LAYOUT_EXPORT_PARENT_PAGES).map(|index| semio_s_artifact_layout_layout_model::ParentPage { id: format!("parent-{index}"), name: "Parent".into(), width: 100.0, height: 100.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() }).collect();
     assert!(run_layout_export_headless_batch(operation(), parent_pages).expect_err("parent max + 1").contains("document-envelope"));
 
     let mut spreads = request(LayoutExportKind::Svg);
-    Arc::make_mut(&mut spreads.snapshot).spreads = (0..=MAX_LAYOUT_EXPORT_SPREADS).map(|index| crate::Spread { id: format!("spread-{index}"), name: "Spread".into(), page_ids: Vec::new() }).collect();
+    Arc::make_mut(&mut spreads.snapshot).spreads = (0..=MAX_LAYOUT_EXPORT_SPREADS).map(|index| semio_s_artifact_layout_layout_model::Spread { id: format!("spread-{index}"), name: "Spread".into(), page_ids: Vec::new() }).collect();
     assert!(run_layout_export_headless_batch(operation(), spreads).expect_err("spread max + 1").contains("document-envelope"));
 
     let mut stories = request(LayoutExportKind::Svg);
-    Arc::make_mut(&mut stories.snapshot).stories = (0..=MAX_LAYOUT_EXPORT_STORIES).map(|index| crate::TextStory { id: format!("story-{index}"), content: String::new(), style_runs: Vec::new() }).collect();
+    Arc::make_mut(&mut stories.snapshot).stories = (0..=MAX_LAYOUT_EXPORT_STORIES).map(|index| semio_s_artifact_layout_layout_model::TextStory { id: format!("story-{index}"), content: String::new(), style_runs: Vec::new() }).collect();
     assert!(run_layout_export_headless_batch(operation(), stories).expect_err("story max + 1").contains("document-envelope"));
 
     let mut links = request(LayoutExportKind::Svg);
     Arc::make_mut(&mut links.snapshot).links =
-        (0..=MAX_LAYOUT_EXPORT_LINKS).map(|index| crate::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() }).collect();
+        (0..=MAX_LAYOUT_EXPORT_LINKS).map(|index| semio_s_artifact_layout_layout_model::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() }).collect();
     assert!(run_layout_export_headless_batch(operation(), links).expect_err("link max + 1").contains("document-envelope"));
 
     for character_styles in [false, true] {
         let mut styles = request(LayoutExportKind::Svg);
         let snapshot = Arc::make_mut(&mut styles.snapshot);
         if character_styles {
-            let seed = crate::CharacterStyle { id: "character.seed".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
+            let seed = semio_s_artifact_layout_layout_model::CharacterStyle { id: "character.seed".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
             snapshot.character_styles.resize(MAX_LAYOUT_EXPORT_STYLES + 1, seed);
         } else {
             let seed = snapshot.paragraph_styles[0].clone();
@@ -525,7 +525,7 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
     let snapshot = Arc::make_mut(&mut max.snapshot);
     let frame = snapshot.pages[0].frames[0].clone();
     let layer = snapshot.pages[0].layers[0].clone();
-    let guide = crate::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
+    let guide = semio_s_artifact_layout_layout_model::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let page = &mut snapshot.pages[0];
     page.frames.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, frame);
     page.overrides.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
@@ -546,7 +546,7 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
     assert!(run_layout_export_headless_batch(operation(), frames).expect_err("frame max + 1").contains("page-envelope"));
 
     let mut guides = request(LayoutExportKind::Svg);
-    Arc::make_mut(&mut guides.snapshot).pages[0].guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE + 1, crate::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 });
+    Arc::make_mut(&mut guides.snapshot).pages[0].guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE + 1, semio_s_artifact_layout_layout_model::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 });
     assert!(run_layout_export_headless_batch(operation(), guides).expect_err("guide max + 1").contains("page-envelope"));
 
     let mut spread_ids = request(LayoutExportKind::Svg);
@@ -608,10 +608,10 @@ fn owned_crc32_is_standard_and_incremental() {
 fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
     snapshot.background_drawing =
-        Some(crate::LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
+        Some(semio_s_artifact_layout_layout_model::LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/model").expect("model reference"), pin: store::LinkPin::Head, role: "model".into() });
     let expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("independent document JSON oracle");
     let mut cursor = TypedJsonCursor::document();
@@ -674,7 +674,7 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
 
 #[test]
 fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
     let json = semio_framework_pack_json::to_json_string(&snapshot);
     let package = export_package_zip_headless_batch(&json, supplied).expect("package");
@@ -777,7 +777,7 @@ fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
 
 #[test]
 fn pdf_export_prints_proxy_png_pixels() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
@@ -813,7 +813,7 @@ fn base64_encode(bytes: &[u8]) -> String {
 
 #[test]
 fn pdf_export_rotates_a_proxy_with_its_frame() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
@@ -822,7 +822,7 @@ fn pdf_export_rotates_a_proxy_with_its_frame() {
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
-    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -837,9 +837,9 @@ fn pdf_export_rotates_a_proxy_with_its_frame() {
 
 #[test]
 fn pdf_export_prints_a_character_style_run() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    snapshot.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
-    snapshot.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    snapshot.character_styles.push(semio_s_artifact_layout_layout_model::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
+    snapshot.stories[0].style_runs.push(semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -852,15 +852,15 @@ fn pdf_export_prints_a_character_style_run() {
 
 #[test]
 fn pdf_export_obliques_and_tracks_a_character_span() {
-    let mut tracked = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    tracked.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: None, font_weight: Some(700), italic: Some(true), color: None, tracking: Some(10.0) });
-    tracked.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let mut tracked = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    tracked.character_styles.push(semio_s_artifact_layout_layout_model::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: None, font_weight: Some(700), italic: Some(true), color: None, tracking: Some(10.0) });
+    tracked.stories[0].style_runs.push(semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let mut plain = tracked.clone();
     plain.character_styles[0].tracking = Some(0.0);
     plain.character_styles[0].italic = Some(false);
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let tracked_list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &tracked, &tracked.pages[0], "", &[], None, false);
-    let plain_list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &plain, &plain.pages[0], "", &[], None, false);
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let tracked_list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &tracked, &tracked.pages[0], "", &[], None, false);
+    let plain_list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &plain, &plain.pages[0], "", &[], None, false);
     let tracked_glyphs = &tracked_list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
     let plain_glyphs = &plain_list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
     assert!(tracked_glyphs.iter().take(5).all(|glyph| glyph.italic));
@@ -878,8 +878,8 @@ fn pdf_export_obliques_and_tracks_a_character_span() {
 
 #[test]
 fn pdf_export_prints_a_page_override() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    snapshot.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    snapshot.pages[0].overrides.push(semio_s_artifact_layout_layout_model::PageOverride { object_id: "frame-inherited".into(), bounds: Some(semio_s_artifact_layout_layout_model::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -890,7 +890,7 @@ fn pdf_export_prints_a_page_override() {
 
 #[test]
 fn pdf_export_omits_a_hidden_layer() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].layers[0].visible = false;
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -903,11 +903,11 @@ fn pdf_export_omits_a_hidden_layer() {
 
 #[test]
 fn pdf_export_omits_a_frame_on_a_hidden_layer() {
-    use crate::mutations::create_layer::CreateLayer;
-    use crate::mutations::set_frame_layer::SetFrameLayer;
-    use crate::mutations::LayoutMutation;
+    use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
+    use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
+    use semio_s_artifact_layout_layout_mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
     let mut snapshot = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     snapshot.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
@@ -948,10 +948,10 @@ fn pdf_export_prints_the_background_drawing() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -989,19 +989,19 @@ fn pdf_export_prints_a_styled_plan_stroke() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     assert_eq!(list.strokes[0].color, [1.0, 0.0, 0.0, 0.5]);
     assert_eq!(list.strokes[0].width, 2.0);
-    let json = crate::editor::layout::canvas::canvas_layers(
+    let json = semio_s_artifact_layout_layout_editor_commands::canvas::canvas_layers(
         &snapshot,
-        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
-        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
-        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(),
         false,
     );
     assert!(json.contains("drawing.plan.0") && json.contains("[1.0,0.0,0.0,0.5]") && json.contains("\"width\":2.0"), "{json}");
@@ -1042,18 +1042,18 @@ fn pdf_export_prints_a_filled_plan_path() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     assert_eq!(list.strokes[0].fill, Some([0.0, 0.0, 1.0, 1.0]));
-    let json = crate::editor::layout::canvas::canvas_layers(
+    let json = semio_s_artifact_layout_layout_editor_commands::canvas::canvas_layers(
         &snapshot,
-        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
-        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
-        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(),
         false,
     );
     assert!(json.contains("drawing.plan.0") && json.contains("[0.0,0.0,1.0,1.0]"), "{json}");
@@ -1092,10 +1092,10 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
@@ -1135,12 +1135,12 @@ fn pdf_export_prints_drawing_text() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     let glyphs = list.text_runs.iter().map(|run| run.glyphs.len()).sum::<usize>();
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -1181,10 +1181,10 @@ fn pdf_export_prints_an_embedded_drawing_png() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let pdf = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&pdf);
@@ -1224,13 +1224,13 @@ fn pdf_export_prints_a_rotated_drawing_png() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
-    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let pdf = decode_base64(&all.data).expect("base64 pdf");
     let text = String::from_utf8_lossy(&pdf);
@@ -1240,8 +1240,8 @@ fn pdf_export_prints_a_rotated_drawing_png() {
 
 #[test]
 fn pdf_export_prints_edited_drawing_text() {
-    use crate::mutations::set_drawing_text::SetDrawingText;
-    use crate::mutations::LayoutMutation;
+    use semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::SetDrawingText;
+    use semio_s_artifact_layout_layout_mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
@@ -1258,18 +1258,18 @@ fn pdf_export_prints_edited_drawing_text() {
             root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    snapshot.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
     let edited = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("rename");
-    let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
-    let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &edited, &edited.pages[0], "", &[], None, false);
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &edited, &edited.pages[0], "", &[], None, false);
     assert!(list.text_runs.iter().any(|run| run.content == "Title"));
-    let json = crate::editor::layout::canvas::canvas_layers(
+    let json = semio_s_artifact_layout_layout_editor_commands::canvas::canvas_layers(
         &edited,
-        &crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
-        &crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
-        &crate::editor::layout::LayoutInteractionSnapshot::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutWindowConfig::default(),
+        &semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient::default(),
+        &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(),
         false,
     );
     assert!(json.contains("Title"), "{json}");
@@ -1283,10 +1283,10 @@ fn pdf_export_prints_edited_drawing_text() {
 
 #[test]
 fn pdf_export_prints_a_front_rect_after_the_image() {
-    use crate::mutations::reorder_frame::ReorderFrame;
-    use crate::mutations::LayoutMutation;
+    use semio_s_artifact_layout_layout_mutations_frames::reorder_frame::ReorderFrame;
+    use semio_s_artifact_layout_layout_mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     for _ in 0..8 {
         let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), forward: true });
         let outcome = mutation.diff(&snapshot);
@@ -1304,9 +1304,9 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
     assert!(rect > image, "the front rectangle follows the image in the content stream");
 }
 
-fn dictionary_with_nulls(count:usize)->crate::FormDictionary{crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null;count])}]}}
-fn dictionary_at_json_bytes(count:usize)->crate::FormDictionary{
- let mut dictionary=crate::FormDictionary{entries:(0..8).map(|index|crate::FormDictionaryEntry{question_id:index.to_string(),value:semio_framework_value::DslValue::String(String::new())}).collect()};
+fn dictionary_with_nulls(count:usize)->semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null;count])}]}}
+fn dictionary_at_json_bytes(count:usize)->semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{
+ let mut dictionary=semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:(0..8).map(|index|semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:index.to_string(),value:semio_framework_value::DslValue::String(String::new())}).collect()};
  let base=semio_framework_pack_json::to_json_string(&dictionary).len();let mut remaining=count.checked_sub(base).expect("dictionary wrapper fits byte witness");
  for entry in &mut dictionary.entries{let bytes=remaining.min(MAX_LAYOUT_EXPORT_STRING_BYTES);entry.value=semio_framework_value::DslValue::String("a".repeat(bytes));remaining-=bytes;}
  assert_eq!(remaining,0);assert_eq!(semio_framework_pack_json::to_json_string(&dictionary).len(),count);dictionary

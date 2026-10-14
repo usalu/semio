@@ -1346,7 +1346,7 @@ diff --git a/dist/src/daemon/server/server.js b/dist/src/daemon/server/server.js
 diff --git a/dist/src/utils/workspace-context.js b/dist/src/utils/workspace-context.js
 --- a/dist/src/utils/workspace-context.js
 +++ b/dist/src/utils/workspace-context.js
-@@ -1,6 +1,67 @@
+@@ -1,5 +1,66 @@
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
 +exports.loadSemioGraphAuthorizersV1 = loadSemioGraphAuthorizersV1;
@@ -1392,7 +1392,7 @@ diff --git a/dist/src/utils/workspace-context.js b/dist/src/utils/workspace-cont
 +        const original = inspect(); if (!original) return null;
 +        if (semioGraphAuthorizers && (semioGraphAuthorizers.identity !== original.toolingIdentity || semioGraphAuthorizers.markerSha256 !== original.markerSha256 || semioGraphAuthorizers.outputSha256 !== original.outputSha256)) return null;
 +        if (!semioGraphAuthorizers) semioGraphAuthorizers = { identity: original.toolingIdentity, markerSha256: original.markerSha256, outputSha256: original.outputSha256, module: import(url.pathToFileURL(original.entry).href) };
-+        const authorizers = await semioGraphAuthorizers.module, current = inspect();
++        const authorizers = await semioGraphAuthorizers.module, current = inspect(); semioGraphAuthorizers.value = authorizers;
 +        if (!current || current.toolingIdentity !== original.toolingIdentity || current.authority !== original.authority || current.markerSha256 !== original.markerSha256 || current.outputSha256 !== original.outputSha256 || ['createRepositoryFilesystemJournalV1', 'repositoryFilesystemJournalPolicyV1', 'readFilesystemJournalRpcRequestV1', 'readFilesystemJournalRpcResponseV1', 'isGlobalGraphIdentityPathV1', 'writeSelectedGraphPublisherReceiptV1', 'selectedTaskScopeV1', 'nativeSelectedTaskPlannerV1'].some(name => typeof authorizers[name] !== 'function')) return null;
 +        return { toolingIdentity: original.toolingIdentity, authorizers, entry: original.entry };
 +    } catch (error) { if (process.env.NX_VERBOSE_LOGGING === 'true') console.error('[DEBUG] Immutable graph authorizer refused:', String(error)); return null; }
@@ -1413,7 +1413,47 @@ diff --git a/dist/src/utils/workspace-context.js b/dist/src/utils/workspace-cont
  exports.setupWorkspaceContext = setupWorkspaceContext;
  exports.getNxWorkspaceFilesFromContext = getNxWorkspaceFilesFromContext;
  exports.globWithWorkspaceContextSync = globWithWorkspaceContextSync;
- exports.globWithWorkspaceContext = globWithWorkspaceContext;
+@@ -18,18 +79,23 @@
+ const is_on_daemon_1 = require("../daemon/is-on-daemon");
+ const client_1 = require("../daemon/client/client");
+ const handle_import_1 = require("./handle-import");
+-let workspaceContext;
++let workspaceContext, workspaceContextAuthorityRoot;
+ function setupWorkspaceContext(workspaceRoot) {
+     const { WorkspaceContext } = require('../native');
+     perf_hooks_1.performance.mark('workspace-context');
+-    workspaceContext = new WorkspaceContext(workspaceRoot, (0, cache_directory_1.workspaceDataDirectoryForWorkspace)(workspaceRoot));
++    const selected = process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT === undefined ? undefined : semioGraphAuthorizers?.value?.selectedNativeWorkspaceRootV1(workspaceRoot);
++    if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined && !selected) throw Error('Original selected Native Source reader required');
++    workspaceContextAuthorityRoot = workspaceRoot;
++    workspaceContext = new WorkspaceContext(selected ?? workspaceRoot, (0, cache_directory_1.workspaceDataDirectoryForWorkspace)(workspaceRoot));
+     perf_hooks_1.performance.mark('workspace-context:end');
+     perf_hooks_1.performance.measure('workspace context init', 'workspace-context', 'workspace-context:end');
+ }
+ async function getNxWorkspaceFilesFromContext(workspaceRoot, projectRootMap, useDaemonProcess = true) {
+     if (!useDaemonProcess || (0, is_on_daemon_1.isOnDaemon)() || !client_1.daemonClient.enabled()) {
+         ensureContextAvailable(workspaceRoot);
+-        return workspaceContext.getWorkspaceFiles(projectRootMap);
++        const files = workspaceContext.getWorkspaceFiles(projectRootMap);
++        if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined) semioGraphAuthorizers.value.requireSelectedNativeFileCoverageV1(workspaceRoot, files);
++        return files;
+     }
+     return client_1.daemonClient.getWorkspaceFiles(projectRootMap);
+ }
+@@ -111,10 +177,10 @@
+     return workspaceContext?.updateProjectFiles(projectRootMappings, rustReferences.projectFiles, rustReferences.globalFiles, updatedFiles, deletedFiles);
+ }
+ function ensureContextAvailable(workspaceRoot) {
+-    if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
++    if (!workspaceContext || workspaceContextAuthorityRoot !== workspaceRoot) {
+         setupWorkspaceContext(workspaceRoot);
+     }
+ }
+ function resetWorkspaceContext() {
+-    workspaceContext = undefined;
+-}
++    workspaceContext = undefined; workspaceContextAuthorityRoot = undefined;
++}
 diff --git a/dist/src/project-graph/nx-deps-cache.d.ts b/dist/src/project-graph/nx-deps-cache.d.ts
 --- a/dist/src/project-graph/nx-deps-cache.d.ts
 +++ b/dist/src/project-graph/nx-deps-cache.d.ts
@@ -1482,3 +1522,46 @@ diff --git a/dist/src/project-graph/plugins/resolve-plugin.js b/dist/src/project
          let resolvedFromNode;
          try {
              resolvedFromNode = require.resolve(moduleName, { paths });
+diff --git a/dist/src/utils/cache-directory.js b/dist/src/utils/cache-directory.js
+--- a/dist/src/utils/cache-directory.js
++++ b/dist/src/utils/cache-directory.js
+@@ -27,2 +27,7 @@
+ function cacheDirectory(root, cacheDirectory) {
++    if (cacheDirectory === '.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts') {
++        const declared = absolutePath(root, cacheDirectory);
++        const owned = (0, path_1.dirname)((0, path_1.dirname)(declared));
++        if (process.env.SEMIO_NX_FIXED_STORAGE !== owned || process.env.NX_CACHE_DIRECTORY !== declared) throw Error('Original bounded Nx namespace required');
++    }
+     const cacheDirFromEnv = process.env.NX_CACHE_DIRECTORY;
+diff --git a/dist/src/project-graph/utils/retrieve-workspace-files.js b/dist/src/project-graph/utils/retrieve-workspace-files.js
+--- a/dist/src/project-graph/utils/retrieve-workspace-files.js
++++ b/dist/src/project-graph/utils/retrieve-workspace-files.js
+@@ -49,5 +49,10 @@
+     const defaultGlobPatterns = getGlobPatternsOfPlugins(defaultWithCreateNodes);
++    const profiledGlob = async (role, globs) => {
++        const started = perf_hooks_1.performance.now(), files = await (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, globs);
++        if (process.env.SEMIO_NX_PROFILE_INPUTS === '1') console.log('[DEBUG] Nx configuration globs ' + JSON.stringify({ role, globs, milliseconds: perf_hooks_1.performance.now() - started, files: files.flat().length }));
++        return files;
++    };
+     const [specifiedPluginFiles, defaultPluginFiles] = await Promise.all([
+-        (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, specifiedGlobPatterns),
+-        (0, workspace_context_1.multiGlobWithWorkspaceContext)(workspaceRoot, defaultGlobPatterns),
++        profiledGlob('specified', specifiedGlobPatterns),
++        profiledGlob('default', defaultGlobPatterns),
+     ]);
+diff --git a/dist/bin/nx.js b/dist/bin/nx.js
+--- a/dist/bin/nx.js
++++ b/dist/bin/nx.js
+@@ -30,6 +30,12 @@
+ const isTsExt = (0, path_1.extname)(__filename).endsWith('.ts');
+ const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
+ async function main() {
++    if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT === undefined) return mainWithOriginalNativeSnapshotV1();
++    const workspace = (0, find_workspace_root_1.findWorkspaceRoot)(process.cwd()), frozen = await require('../src/utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!workspace || !frozen || typeof frozen.authorizers.withOriginalSelectedNativeSnapshotV1 !== 'function') throw Error('Original immutable Native snapshot authority required');
++    return frozen.authorizers.withOriginalSelectedNativeSnapshotV1(workspace.dir, process.env, mainWithOriginalNativeSnapshotV1);
++}
++async function mainWithOriginalNativeSnapshotV1() {
+     // Tab-completion fast path. Bare env-var read so nothing runs before
+     // the try/catch — a throw here would splice a stack trace into the
+     // user's command line.

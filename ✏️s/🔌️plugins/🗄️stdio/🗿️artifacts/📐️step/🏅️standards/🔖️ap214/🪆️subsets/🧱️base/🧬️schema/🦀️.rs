@@ -2,9 +2,10 @@
 //! id-keyed entity graph (never a raw `Part21Document` — same specific-code mandate as the
 //! snapshot itself).
 
-use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepHeader};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepHeader;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -44,8 +45,8 @@ impl StepArtifact {
     /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
     /// `StepSnapshot::to_part21_document`, never stored.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn brep_mesh(&self) -> crate::standards::v_ap214::subsets::base::io::brep::BrepMeshView {
-        crate::standards::v_ap214::subsets::base::io::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
+    pub fn brep_mesh(&self) -> semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::brep::BrepMeshView {
+        semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }
 }
 //#endregion 🔖️Conversions
@@ -108,7 +109,12 @@ pub fn empty_step_snapshot() -> StepSnapshot {
 /// for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_step_snapshot() -> StepSnapshot {
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity as _StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepHeader as _StepHeader, StepValue};
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepEntity as _StepEntity;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepHeader as _StepHeader;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepValue;
     StepSnapshot {
         schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
         header: _StepHeader {

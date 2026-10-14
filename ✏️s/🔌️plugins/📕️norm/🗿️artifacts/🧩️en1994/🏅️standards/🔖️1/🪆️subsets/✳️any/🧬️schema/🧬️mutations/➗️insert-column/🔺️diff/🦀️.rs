@@ -1,7 +1,7 @@
 //! Diff for `insert-column`.
-use super::InsertColumn;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsInserted};
+use crate::insert_column::InsertColumn;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsInserted};
 
 pub fn diff(payload: &InsertColumn, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.index > base.columns.len() {

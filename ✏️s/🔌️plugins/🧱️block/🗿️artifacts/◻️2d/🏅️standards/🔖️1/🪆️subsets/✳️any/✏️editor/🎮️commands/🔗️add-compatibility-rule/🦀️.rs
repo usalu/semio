@@ -1,9 +1,9 @@
 //! 🔗️ 🔗️ Block 2D play app commands command — `add-compatibility-rule`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
-use crate::Block2dSnapshot;
-use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
-use crate::BlockCompatibilityRule;
+use semio_s_artifact_block_2d_mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use crate::config::{Block2dConfig, Block2dConfigMutation};
+use semio_s_plugin_block::BlockCompatibilityRule;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,7 +19,7 @@ pub fn handle(payload: &AddCompatibilityRule, doc: &ArtifactView<'_, Block2dSnap
     if payload.source.is_empty() || payload.target.is_empty() {
         return Ok(Emit::default());
     }
-    let id = crate::standards::v1::subsets::any::schema::next_id(doc.snapshot.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
+    let id = semio_s_artifact_block_2d_schema::next_id(doc.snapshot.compatibility.iter().map(|rule| rule.id.as_str()), "compat-");
     let rule = BlockCompatibilityRule { id, source: payload.source.clone(), target: payload.target.clone(), bidirectional: true };
-    Ok(Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::add_compatibility_rule(rule)]))
+    Ok(Emit::mutations(vec![semio_s_artifact_block_2d_mut_meta::add_compatibility_rule(rule)]))
 }

@@ -1,6 +1,6 @@
 //! 🏷️ EN 1995 NormFieldMeta — SI units + en/de labels (`[]` wildcards for list leaves, nested action tables).
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }
@@ -164,6 +164,3 @@ pub fn en1995_field_meta(path: &str) -> Option<NormFieldMeta> {
     lookup_norm_field_meta(TABLE, path)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

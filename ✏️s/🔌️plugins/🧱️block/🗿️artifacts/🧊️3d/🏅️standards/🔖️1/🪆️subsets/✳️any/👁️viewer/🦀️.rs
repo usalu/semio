@@ -4,9 +4,17 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::viewer::block3d::modes::view;
-use crate::viewer::block3d::modes::view::windows::world;
-use crate::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::modes::view;
+use crate::modes::view::windows::world;
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Fault;
@@ -50,7 +58,7 @@ pub struct Block3dViewer;
 
 impl ArtifactViewer for Block3dViewer {
     type Snapshot = Block3dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+    type Mutation = semio_s_artifact_block_3d_mutations::Block3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -104,7 +112,7 @@ impl ArtifactViewer for Block3dViewer {
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot()
+        semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block3dViewCommand::Noop` variant never carries a config
@@ -143,3 +151,21 @@ pub fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

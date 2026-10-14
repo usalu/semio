@@ -1,8 +1,7 @@
 //! 🏔 Block5d mutation — `ChangeRepresentationLod`: a representation's `lod`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🏔 `change-representation-lod` payload.
@@ -19,19 +18,19 @@ pub struct ChangeRepresentationLod {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_representation_lod(id: String, new_lod: Option<String>) -> Block5dMutation {
-    Block5dMutation::ChangeRepresentationLod(ChangeRepresentationLod { id, new_lod })
+pub fn change_representation_lod<Op: From<crate::change_representation_lod::ChangeRepresentationLod>>(id: String, new_lod: Option<String>) -> Op {
+    Op::from(ChangeRepresentationLod { id, new_lod })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeRepresentationLod {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeRepresentationLod where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_representation_lod::ChangeRepresentationLod> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation", kind: "change-representation-lod", record: "ChangedRepresentationLod" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::change_representation_lod::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_representation_lod::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeRepresen
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

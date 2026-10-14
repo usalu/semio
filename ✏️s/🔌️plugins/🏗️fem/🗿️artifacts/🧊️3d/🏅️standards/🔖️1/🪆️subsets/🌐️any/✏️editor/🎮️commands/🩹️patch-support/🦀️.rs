@@ -1,13 +1,13 @@
 //! 🩹️ Fem3d play app command — `patch-support`: one-field edit of a support (`nodeId`, or one of
 //! the six DOF toggles `tx`…`rz`) → `ReplaceSupport`.
 
-use crate::standards::v1::subsets::any::schema::mutations::replace_support;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::FemDof;
+use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️PatchSupport
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -55,7 +55,4 @@ pub fn handle(payload: &PatchSupport, doc: &ArtifactView<'_, Fem3dSnapshot>, _cf
 //#endregion 🔖️PatchSupport
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

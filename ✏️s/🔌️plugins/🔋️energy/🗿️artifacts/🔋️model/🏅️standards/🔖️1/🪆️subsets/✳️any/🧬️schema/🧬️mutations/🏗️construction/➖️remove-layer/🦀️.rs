@@ -1,8 +1,7 @@
 //! ➖️ Energy model mutation — `RemoveConstructionLayer`: Removes the material layer a construction holds at a stated position. Addressed by position rather than by material id because the same material may legitimately appear in a construction more than once.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveConstructionLayer {
     pub index: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_construction_layer(id: crate::model::EntityId, index: u32) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveConstructionLayer(RemoveConstructionLayer { id, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_construction_layer<Op: From<RemoveConstructionLayer>>(id: crate::model::EntityId, index: u32) -> Op {
+    RemoveConstructionLayer { id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveConstructionLayer {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveConstructionLayer
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveConstructionLayer> + From<crate::AddConstructionLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "construction-layer", kind: "remove-construction-layer", record: "RemovedConstructionLayer" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

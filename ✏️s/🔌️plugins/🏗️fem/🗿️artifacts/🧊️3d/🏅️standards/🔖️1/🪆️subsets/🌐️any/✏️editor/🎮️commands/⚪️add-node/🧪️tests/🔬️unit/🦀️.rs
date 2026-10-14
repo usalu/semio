@@ -1,7 +1,12 @@
-use super::*;
-use crate::editor::fem3d::commands::{add_frame, add_material, add_section, add_solid};
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_empty_app, Fem3dApp};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::{add_frame, add_material, add_section, add_solid};
+use crate::context::{dispatch, fem3d_empty_app, Fem3dApp};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_node_action_emits_op_3d() {
@@ -41,7 +46,7 @@ async fn add_frame_action_emits_op_3d() {
     dispatch(&mut app, Fem3dCommand::AddFrame(add_frame::AddFrame { start, end, material_id, section_id, roll: 0.5 })).await;
     let snapshot = app.snapshot().expect("snapshot");
     match snapshot.elements.last().expect("element added") {
-        crate::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
+        semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
         _ => panic!("expected Frame"),
     }
 }

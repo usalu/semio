@@ -1,9 +1,9 @@
 //! Inverse for `change-t-min`.
-use super::ChangeTMin;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeTMin, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_t_min::ChangeTMin;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeTMin, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_t_min::ChangeTMin> {
     Ok((|| {
-    vec![En1991Mutation::ChangeTMin(ChangeTMin { new_t_min: base.t_min })]
+    vec![Op::from(ChangeTMin { new_t_min: base.t_min })]
 
     })())
 }

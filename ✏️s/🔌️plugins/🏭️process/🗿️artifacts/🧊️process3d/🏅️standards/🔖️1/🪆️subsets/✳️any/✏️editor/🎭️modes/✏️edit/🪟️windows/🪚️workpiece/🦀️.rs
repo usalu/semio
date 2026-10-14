@@ -1,10 +1,12 @@
 //! 🪚️ Process 3d play app — the workpiece window: the 3D world view of the processed stock, plus the
 //! process-timeline engagement (cursor stepper + command-line input).
+use crate::windows::workpiece;
+use semio_framework::kernel::Effect;
 
-use crate::editor::process3d::config::Process3dConfig;
-use crate::editor::process3d::modes::edit::windows::workpiece::options;
-use crate::schema::inferences::processed_mesh;
-use crate::{Process3dSnapshot, ProcessWorkingScene};
+use semio_s_artifact_process_process3d_config::Process3dConfig;
+use crate::windows::workpiece::options;
+use semio_s_artifact_process_process3d_inferences::processed_mesh;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene};
 use semio_framework_pack_json as json;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::mesh_from_kind;
@@ -93,7 +95,7 @@ fn process3d_selection_json(active_utility: &str) -> String {
 }
 
 fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: crate::editor::process3d::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 //#endregion 🔖️Selection
 
@@ -136,7 +138,7 @@ struct Process3dPreviewCache {
 
 fn with_preview_cache<T>(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
     static CACHE: std::sync::OnceLock<std::sync::Mutex<Option<Process3dPreviewCache>>> = std::sync::OnceLock::new();
-    let scene = crate::process_working_scene_from_snapshot(snapshot);
+    let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(snapshot);
     let cell = CACHE.get_or_init(|| std::sync::Mutex::new(None));
     let Ok(mut slot) = cell.lock() else {
         let entry = build_preview_cache(snapshot, scene, resolved_up_to);
@@ -151,7 +153,7 @@ fn with_preview_cache<T>(snapshot: &Process3dSnapshot, resolved_up_to: Option<us
 
 fn build_preview_cache(snapshot: &Process3dSnapshot, scene: ProcessWorkingScene, resolved_up_to: Option<usize>) -> Process3dPreviewCache {
     let payload = evaluated_preview_payload(snapshot, &scene, resolved_up_to);
-    let volume = crate::schema::inferences::processed_volume(&scene, resolved_up_to).unwrap_or(0.0);
+    let volume = semio_s_artifact_process_process3d_inferences::processed_volume(&scene, resolved_up_to).unwrap_or(0.0);
     Process3dPreviewCache { scene, resolved_up_to, label: snapshot.stock_label.clone(), payload, volume }
 }
 
@@ -173,7 +175,7 @@ pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_uti
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
+pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let len = snapshot.step_payloads.len();
     let cursor = config.resolved_up_to.unwrap_or(len).min(len);
     let volume = processed_volume_cached(snapshot, config.resolved_up_to);
@@ -212,7 +214,12 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
 //#endregion 🔖️Engagement
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔖️Constants
+/// 🧰️ Host effect that programmatically switches the workpiece window's active utility. Shared by
+/// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
+pub fn set_active_utility_effect(utility: &str) -> Effect {
+    Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
+}
+//#endregion 🔖️Constants

@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `RenameObjectKind`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::RenameObjectKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::rename_object_kind::RenameObjectKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     // 🪪️ `object_kind` is the document's single root kind (not a catalog member addressed by id), so
     // there is no missing-target case and no collection to collide with — only the no-op check applies.
     if payload.new_name == base.object_kind.name {

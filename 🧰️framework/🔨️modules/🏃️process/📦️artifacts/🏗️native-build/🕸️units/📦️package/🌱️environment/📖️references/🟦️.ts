@@ -1,0 +1,11 @@
+import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "../../../../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import {selectRustSourceV1} from "../../../../📥️source/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json";
+import policy from "./🔣️policy.json";
+/** 🌱️ Admits only literal compiler environment observations whose presence and value are represented before artifact hashing. */
+export function rustCompileEnvironmentReferencesV1(value:unknown):Readonly<Record<string,string|null>>{
+ if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed Rust compiler environment Source request required");const request=value as {source:string;cfg:string[];environment:Record<string,string|null>},tokens=rustTokens(selectRustSourceV1(request.source,request.cfg)),pairs=rustTokenPairs(tokens),result:Record<string,string|null>={},aliases=new Map([["env","env"],["option_env","option_env"]]);let changed=true;while(changed){changed=false;for(let index=0;index<tokens.length;index++){const name=tokens[index]!.text.replace(/^r#/u,""),macro=aliases.get(name),alias=tokens[index+2]?.text.replace(/^r#/u,"");if(macro&&tokens[index+1]?.text==="as"&&tokens[index+2]?.kind==="identifier"&&alias&&!aliases.has(alias)){aliases.set(alias,macro);changed=true;}}}
+ for(let index=0;index<tokens.length;index++){const macro=aliases.get(tokens[index]!.text.replace(/^r#/u,""));if(!macro||tokens[index+1]?.text!=="!")continue;const open=index+2,close=pairs.get(open);if(close===undefined)throw Error("Literal Rust compiler environment name required");const args=rustTokenSegments(tokens,pairs,open+1,close,",").filter(([start,end])=>start<end),first=args[0],name=first&&first[1]===first[0]+1&&!tokens[first[0]]!.text.startsWith("b")?rustStringValue(tokens[first[0]]):null;if(!name||args.length>(macro==="env"?2:1)||args[1]&&(args[1][1]!==args[1][0]+1||rustStringValue(tokens[args[1][0]])===null))throw Error("Literal Rust compiler environment name required");if(!policy.names.includes(name))throw Error("Transient or unowned Rust compiler environment refused: "+name);result[name]=request.environment[name]??null;index=close;}
+ return Object.fromEntries(Object.entries(result).sort(([left],[right])=>left.localeCompare(right)));
+}

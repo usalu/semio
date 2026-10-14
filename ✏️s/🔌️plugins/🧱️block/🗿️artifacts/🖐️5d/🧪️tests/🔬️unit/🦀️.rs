@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_declares_the_5d_block_interchange_kind() {

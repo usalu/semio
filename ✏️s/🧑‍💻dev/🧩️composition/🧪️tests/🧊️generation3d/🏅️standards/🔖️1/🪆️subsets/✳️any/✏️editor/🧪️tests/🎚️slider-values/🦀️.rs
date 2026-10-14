@@ -98,7 +98,7 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
         let eval_json = host.evaluate().unwrap_or_default();
         let mut session = semio_framework_os_flow::FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
         crate::flow_operators::resolve_preview_geometry(&eval_json, &host.host_snapshot, lod_mode, &mut session);
-        let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
+        let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks::default());
         let mut widget_errors = widget_errors_of(semio_s_artifact_procedural_3d_preview_eval::preview_status_json(&eval_json, &host.host_snapshot).as_deref());
         if payload_mesh_ids(&payload.meshes_json).is_empty() && widget_errors.is_empty() {
             widget_errors.extend(tessellation_refusals(&eval_json, host, semio_s_artifact_procedural_3d_preview_eval::preview_tolerance(lod_mode)));

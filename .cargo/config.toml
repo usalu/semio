@@ -3,6 +3,8 @@
 # `fine-grain-locking` serializes compilation units; `checksum-freshness` compares actual source contents.
 # https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#fine-grain-locking
 [build]
+rustc = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📜️script.ts"
+rustc-wrapper = "bun"
 target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
 build-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/build"
 rustflags = ["-Z", "threads=0"]

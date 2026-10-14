@@ -1,11 +1,11 @@
 use super::*;
-use crate::FemAxis;
-use semio_s_artifact_fem_2d::editor::fem2d::transient::fem_gumball_drive;
-use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballDrive;
-use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballDrive;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -14,7 +14,7 @@ fn ids(values: &[&str]) -> Vec<String> {
 
 fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Fem3dSnapshot {
     let mut snapshot = doc.clone();
-    crate::central_apply::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
+    semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
     snapshot
 }
 
@@ -170,14 +170,14 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let base = demo();
     let tick = |motion| Fem3dMutation::MoveSelection(fem3d_gumball_tick(&base, &ids(&["n20_l1", "sol1"]), motion).expect("the selection moves geometry"));
     let log = [tick(Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 }), tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.5 })];
-    let mut store = store::ArtifactStore::<Fem3dSnapshot, Fem3dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::FEM_3D_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<Fem3dSnapshot, Fem3dMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "gumball-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     for mutation in &log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem3dGumballMotion::Translate { dx: -0.5, dy: 3.0, dz: 0.25 });
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::FEM_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
     assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
@@ -186,7 +186,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let fold = |mutations: &[Fem3dMutation]| {
         let mut snapshot = base.clone();
         for mutation in mutations {
-            crate::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
+            semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
         }
         snapshot
     };

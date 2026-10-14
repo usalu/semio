@@ -1,8 +1,7 @@
 //! 🚽️ Energy model mutation — `CreateWaterSystem`: Adds one cold-water use system: the fixtures it serves, their combined peak flow, and the draw schedule the profile is read from.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -20,19 +19,22 @@ pub struct CreateWaterSystem {
     pub schedule_id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_water_system(index: u32, id: crate::model::EntityId, fixture_count: u32, peak_flow_l_s: f64, schedule_id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::CreateWaterSystem(CreateWaterSystem { index, id, fixture_count, peak_flow_l_s, schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_water_system<Op: From<CreateWaterSystem>>(index: u32, id: crate::model::EntityId, fixture_count: u32, peak_flow_l_s: f64, schedule_id: crate::schedule::ScheduleId) -> Op {
+    CreateWaterSystem { index, id, fixture_count, peak_flow_l_s, schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateWaterSystem {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateWaterSystem
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateWaterSystem> + From<crate::DeleteWaterSystem>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "water-system", kind: "create-water-system", record: "CreatedWaterSystem" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

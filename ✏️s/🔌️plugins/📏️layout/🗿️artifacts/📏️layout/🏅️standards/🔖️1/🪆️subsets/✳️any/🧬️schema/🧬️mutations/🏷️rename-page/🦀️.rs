@@ -1,8 +1,10 @@
 //! 🏷️ `rename-page` — changes a page's identity `name` field.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,12 +20,12 @@ pub struct RenamePage {
     pub new_name: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
+impl<Op> MutationKind<LayoutSnapshot, Op> for RenamePage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_page::RenamePage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "page", kind: "rename-page", record: "RenamedPage" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_page(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_rename_page(self, base)?
     
@@ -54,13 +56,19 @@ pub fn diff_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> protocol
 //#endregion 🏷️RenamePage
 
 //#region 🏷️RenamePage
-pub fn inverse_rename_page(payload: &RenamePage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_rename_page<Op: From<crate::rename_page::RenamePage>>(payload: &RenamePage, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
-        Some(page) => vec![LayoutMutation::RenamePage(RenamePage { id: payload.id.clone(), new_name: page.name.clone() })],
+        Some(page) => vec![Op::from(RenamePage { id: payload.id.clone(), new_name: page.name.clone() })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🏷️RenamePage
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🏷️renames-page-1/🦀️.rs"]
+mod tests_renames_page_1;
+//#endregion 🪢️TaxonomyMounts

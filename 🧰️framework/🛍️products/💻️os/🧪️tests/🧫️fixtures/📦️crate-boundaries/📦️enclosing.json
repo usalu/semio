@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "package": "semio-framework-geometry",
+      "manifest": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/📐️geometry/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-dsl",
+      "manifest": "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs"
+    },
+    {
+      "package": "semio-framework-dsl-record",
+      "manifest": "../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs"
+    }
+  ]
+}

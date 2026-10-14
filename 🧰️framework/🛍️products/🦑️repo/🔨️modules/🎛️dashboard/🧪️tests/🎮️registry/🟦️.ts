@@ -31,7 +31,7 @@ const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`
 
 // #region 🔖️Binary
 function binary(): string {
-  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo,readBuildMode(process.env.SEMIO_BUILD_MODE));
+  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo,readBuildMode(process.env.SEMIO_BUILD_MODE),repo);
 }
 
 let root = "";

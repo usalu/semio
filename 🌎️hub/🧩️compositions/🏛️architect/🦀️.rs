@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -23,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
 /// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
 pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
-    Plugin::<ArchitectApps>::builder("architect")
+    PluginBuilder::<_, ArchitectApps>::new("architect")
         .label("Architect")
         .version("0.1.0")
         .package_id("semio:architect")

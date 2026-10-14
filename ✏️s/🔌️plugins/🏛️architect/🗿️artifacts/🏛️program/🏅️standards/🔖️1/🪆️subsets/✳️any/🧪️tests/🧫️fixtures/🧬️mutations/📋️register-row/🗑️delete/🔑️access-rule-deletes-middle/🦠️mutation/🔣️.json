@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "accessRule",
+  "id": "access-rule-a"
+}

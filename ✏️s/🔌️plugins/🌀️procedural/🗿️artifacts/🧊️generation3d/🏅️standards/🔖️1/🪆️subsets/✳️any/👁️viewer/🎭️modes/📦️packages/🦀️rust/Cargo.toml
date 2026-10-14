@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-viewer-modes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d viewer view mode and its preview window"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-procedural-core-semantic-ui = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
+semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-s-artifact-procedural-3d-viewer-config = { workspace = true }
+semio-s-artifact-procedural-3d-viewer-transient = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

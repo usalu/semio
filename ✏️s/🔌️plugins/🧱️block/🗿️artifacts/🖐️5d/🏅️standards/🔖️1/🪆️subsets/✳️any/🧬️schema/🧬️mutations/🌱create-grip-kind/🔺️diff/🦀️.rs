@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `CreateGripKind`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dGripKindsDelta};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::{Block5dDiff, Block5dGripKindsDelta};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::CreateGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::create_grip_kind::CreateGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     if base.grip_kinds.iter().any(|item| item.id == payload.grip_kind.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} \"{}\" already exists", "grip-kind", payload.grip_kind.id), vec![payload.grip_kind.id.clone()]);
     }

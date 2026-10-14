@@ -1,8 +1,8 @@
 //! 🔺️ `replace-elements` sparse diff.
 
-use crate::mutations::replace_elements::ReplaceElements;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599ElementsRows};
+use crate::replace_elements::ReplaceElements;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599ElementsRows};
 
 pub fn diff(payload: &ReplaceElements, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if base.elements == payload.new_elements {

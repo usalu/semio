@@ -38,7 +38,7 @@ impl Default for Puzzle2dWindowConfig {
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            lod_mode: crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
+            lod_mode: crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC.into(),
             grid_visible: true,
             grid_snap_enabled: false,
             grid_factor: 1.0,
@@ -670,9 +670,9 @@ macro_rules! owners {
     };
 }
 
-owners!(Puzzle2dOverviewWindowConfigOwner, Puzzle2dOverviewWindowTransientOwner, overview::WINDOW_KIND_ID);
-owners!(Puzzle2dDetailWindowConfigOwner, Puzzle2dDetailWindowTransientOwner, detail::WINDOW_KIND_ID);
-owners!(Puzzle2dSelectionWindowConfigOwner, Puzzle2dSelectionWindowTransientOwner, selection::WINDOW_KIND_ID);
+owners!(Puzzle2dOverviewWindowConfigOwner, Puzzle2dOverviewWindowTransientOwner, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
+owners!(Puzzle2dDetailWindowConfigOwner, Puzzle2dDetailWindowTransientOwner, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID);
+owners!(Puzzle2dSelectionWindowConfigOwner, Puzzle2dSelectionWindowTransientOwner, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID);
 
 pub fn register_config(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
     registry.register::<Puzzle2dOverviewWindowConfigOwner>()?;
@@ -744,9 +744,9 @@ pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle
     let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
     let mutation = Puzzle2dWindowConfigMutation::Set(Puzzle2dWindowConfigMutationSet { patch: Puzzle2dWindowConfigDiff::of(&config) });
     match kind {
-        overview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
-        detail::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),
-        selection::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dSelectionWindowConfigOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dSelectionWindowConfigOwner>(id, mutation)),
         _ => Err(semio_framework_plugin::Fault::from("puzzle2d-window-kind-required")),
     }
 }
@@ -755,15 +755,15 @@ pub fn addressed_transient(view: &semio_framework_plugin::ViewModel, transient: 
     let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
     let mutation = Puzzle2dWindowTransientMutation::Snapshot { transient };
     match kind {
-        overview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dOverviewWindowTransientOwner>(id, mutation)),
-        detail::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dDetailWindowTransientOwner>(id, mutation)),
-        selection::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dSelectionWindowTransientOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dOverviewWindowTransientOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dDetailWindowTransientOwner>(id, mutation)),
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowTransientMutation::of::<Puzzle2dSelectionWindowTransientOwner>(id, mutation)),
         _ => Err(semio_framework_plugin::Fault::from("puzzle2d-window-kind-required")),
     }
 }
 
 pub fn runtime(config: &crate::editor::puzzle2d::config::Puzzle2dConfig, window: &Puzzle2dWindowConfig, transient: &Puzzle2dWindowTransient, window_kind: Option<&str>) -> crate::editor::puzzle2d::config::Puzzle2dPlayRuntime {
-    let kind = window_kind.unwrap_or(overview::WINDOW_KIND_ID);
+    let kind = window_kind.unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
     let mut lod = BTreeMap::new();
     lod.insert(kind.to_string(), window.lod_mode.clone());
     let mut engagement = BTreeMap::new();
@@ -810,7 +810,7 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
             camera_x: runtime.camera_x,
             camera_y: runtime.camera_y,
             camera_zoom: runtime.camera_zoom,
-            lod_mode: runtime.lod_mode_by_pane.get(window_kind).cloned().unwrap_or_else(|| crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.into()),
+            lod_mode: runtime.lod_mode_by_pane.get(window_kind).cloned().unwrap_or_else(|| crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC.into()),
             grid_visible: runtime.grid_visible,
             grid_snap_enabled: runtime.grid_snap_enabled,
             grid_factor: runtime.grid_factor,

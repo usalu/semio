@@ -1,10 +1,13 @@
 import {readFileSync} from "node:fs";
+import {resolve,relative,isAbsolute,sep} from "node:path";
 const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
 const nativeSchema=JSON.parse(readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
 const key="SEMIO_OWNER_ARGUMENTS";
 
 /** 🧬️ Admits the closed native caller and command contracts in the Node executor. */
 export function conformsOwnerContractV1(contract,value){
+ if(contract.anyOf)return contract.anyOf.some(rule=>conformsOwnerContractV1(rule,value));
+ if(contract.type==="null")return value===null;
  if(contract.const!==undefined&&value!==contract.const)return false;
  if(contract.type==="object"){if(value===null||typeof value!=="object"||Array.isArray(value))return false;const keys=Object.keys(value);if(contract.required?.some(key=>!Object.hasOwn(value,key)))return false;if(contract.additionalProperties===false&&keys.some(key=>!Object.hasOwn(contract.properties??{},key)))return false;return Object.entries(contract.properties??{}).every(([key,rule])=>!Object.hasOwn(value,key)||conformsOwnerContractV1(rule,value[key]));}
  if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>conformsOwnerContractV1(contract.items,item));
@@ -24,6 +27,17 @@ export function literalCommandTokensV1(command){
   if(cursor<command.length&&!/\s/u.test(command[cursor]))throw Error("Native command requires distinct literal arguments");
  }
  return tokens;
+}
+
+/** 🧭️ Binds only the outer runtime script while preserving every remaining literal argument. */
+export function bindBuildCommandV1(command,workspaceRoot,workingDirectory,projectRoot,arguments_=[]){
+ if(!conformsOwnerContractV1(schema.$defs.BuildCommandBindingV1,{command,workspaceRoot,workingDirectory,projectRoot,arguments:arguments_}))throw Error("Closed build command binding required");
+ const root=resolve(workspaceRoot),expand=value=>value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",projectRoot),cwd=resolve(root,expand(workingDirectory)),tokens=literalCommandTokensV1(command),program=tokens[0],args=[...tokens.slice(1),...arguments_],runtime=/(?:^|[\\/])(?:bun|node)(?:\.exe)?$/u.test(program??""),index=/(?:^|[\\/])bun(?:\.exe)?$/u.test(program??"")&&args[0]==="run"?1:0;
+ const admit=path=>{const local=relative(root,path);if(local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Build command Source escapes workspace");return path;};
+ admit(cwd);let script=null;
+ if(runtime&&args[index]?.endsWith("📜️script.ts")){script=admit(resolve(cwd,expand(args[index])));args[index]=script.replaceAll("\\","/");}
+ const result={program,arguments:args,cwd,script,command:[program,...args].map(value=>JSON.stringify(value)).join(" ")};
+ if(!conformsOwnerContractV1(schema.$defs.BoundBuildCommandV1,result))throw Error("Bound build command required");return result;
 }
 
 /** 📜️ Binds one discovered literal native child command without shell evaluation. */

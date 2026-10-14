@@ -14,7 +14,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 async fn math_document_text_round_trips_through_store() {
     use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
     let initial = EquationSnapshot::default();
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` refuses
     // every `Apply` with `edit history insertion requires its exact mutation retirement factory`.
     let mut store = crate::host::owned::new_equation_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");

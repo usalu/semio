@@ -14,3 +14,8 @@ fn the_tool_declares_the_read_only_run_under_its_schema_id_and_label() {
     assert!(!run.mutating, "adopting a simulation result never wrote the document, so the run is read-only");
     assert_eq!(run, energy_simulation_run_definition());
 }
+
+#[test]
+fn no_run_publishes_no_surface_map() {
+    assert_eq!(surface_energy_from_run(None), None, "no run at all");
+}

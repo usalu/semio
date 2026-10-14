@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "validationRecord",
+  "id": "validation-record-a"
+}

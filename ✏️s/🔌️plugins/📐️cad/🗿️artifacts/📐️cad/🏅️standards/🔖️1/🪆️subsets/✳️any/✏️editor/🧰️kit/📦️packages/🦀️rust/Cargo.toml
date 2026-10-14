@@ -20,6 +20,7 @@ semio-framework = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-contract = { workspace = true }

@@ -1,8 +1,10 @@
 //! 📝 `edit-story` — splices a story's authored `content` body: `delete` characters from `offset` are replaced by `insert`.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoriesModification};
-use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
+
+use semio_s_artifact_layout_layout_diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesModification;
+use semio_s_artifact_layout_layout_diff::{LayoutDiff, TextStoryPatch};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,12 +35,12 @@ fn spliced_range(content: &str, offset: usize, delete: usize) -> Option<(usize, 
     })
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
+impl<Op> MutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "story", kind: "edit-story", record: "EditedStory" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_edit_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_edit_story(self, base)?
     
@@ -73,12 +75,18 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
 //#endregion 📝EditStory
 
 //#region 📝EditStory
-pub fn inverse_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_edit_story<Op: From<crate::edit_story::EditStory>>(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else { return Vec::new() };
     let Some((start, end)) = spliced_range(&story.content, payload.offset, payload.delete) else { return Vec::new() };
-    vec![LayoutMutation::EditStory(EditStory { id: payload.id.clone(), offset: payload.offset, delete: payload.insert.chars().count(), insert: story.content[start..end].to_string() })]
+    vec![Op::from(EditStory { id: payload.id.clone(), offset: payload.offset, delete: payload.insert.chars().count(), insert: story.content[start..end].to_string() })]
 
     })())
 }
 //#endregion 📝EditStory
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📝️rewrites-story-1-body/🦀️.rs"]
+mod tests_rewrites_story_1_body;
+//#endregion 🪢️TaxonomyMounts

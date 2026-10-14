@@ -1,6 +1,6 @@
 //! ⚠️ Non-compliant DE multi-part seismic example (EN 1998-1…6).
 
-use crate::En1998Snapshot;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

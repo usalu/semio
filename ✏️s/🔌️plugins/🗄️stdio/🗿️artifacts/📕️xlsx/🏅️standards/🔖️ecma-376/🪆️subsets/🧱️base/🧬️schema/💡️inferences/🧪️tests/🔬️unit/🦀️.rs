@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_xlsx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

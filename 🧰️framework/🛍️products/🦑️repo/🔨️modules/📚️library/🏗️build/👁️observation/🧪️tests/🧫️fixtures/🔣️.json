@@ -56,6 +56,75 @@
     "parentValidation": {
       "projects": 2,
       "expectedReads": 2
+    },
+    "evaluations": {
+      "source": "import './leaf.ts'; export const value=1;",
+      "leaf": "export const leaf=true;",
+      "ownerBefore": "export const owner=1;",
+      "ownerAfter": "export const owner=2;",
+      "expectedImports": [
+        "./leaf.ts"
+      ],
+      "expectedFiles": [
+        "leaf.ts",
+        "source.ts"
+      ],
+      "providerMaximumCharacters": 256,
+      "owners": [
+        {
+          "url": "file:///workspace/build/inference.mjs",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "url": "file:///workspace/build/inference.mjs",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        {
+          "url": "file:///C:/workspace/build/inference.mjs",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    "declarationExports": [
+      "captureObservedSourceInputsV1",
+      "captureSourcePreparationV1",
+      "inferenceAuthorityDigestV1",
+      "inferenceHeaderLine",
+      "memoizedFileRecord",
+      "memoizedFileRecordAsyncV1",
+      "memoizedObservedAsyncComputationV1",
+      "memoizedObservedComputationV1",
+      "memoizedRecord",
+      "observationsHold",
+      "observeDependencies",
+      "observeInference",
+      "observeProjectInferenceV1",
+      "observedFs",
+      "observedRequireResolve",
+      "observedSourceAnalysisAsyncV1",
+      "observedSourceAnalysisV1",
+      "observedTypeScriptHost",
+      "projectInferenceCountsV1",
+      "receiveSourcePreparationV1",
+      "registerSourceAnalysisV1",
+      "settleObservedComputationV1",
+      "sourceObservationStatsV1"
+    ],
+    "settlement": {
+      "before": "original source\n",
+      "after": "changed source\n",
+      "cases": [
+        {
+          "id": "abort during successful compute",
+          "phase": "compute",
+          "reason": "Original settlement compute canceled"
+        },
+        {
+          "id": "abort during last onRound",
+          "phase": "round",
+          "reason": "Original settlement round canceled"
+        }
+      ]
     }
   },
   "corruption": {
@@ -203,29 +272,34 @@
         "name": "literal astral path",
         "source": "[package]\nname=\"probe\"\n[lib]\npath=\"🧩️module/🦀️.rs\"\n",
         "accepted": true,
-        "path": "🧩️module/🦀️.rs"
+        "path": "🧩️module/🦀️.rs",
+        "smolAccepted": true
       },
       {
         "name": "scalar astral escape",
         "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\U0001F9E9module.rs\"\n",
         "accepted": true,
-        "path": "🧩module.rs"
+        "path": "🧩module.rs",
+        "smolAccepted": true
       },
       {
         "name": "surrogate JSON pair refuses",
         "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\uD83E\\uDDE9module.rs\"\n",
-        "accepted": false
+        "accepted": false,
+        "smolAccepted": true
       },
       {
         "name": "unpaired surrogate refuses",
         "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\uD800module.rs\"\n",
-        "accepted": false
+        "accepted": false,
+        "smolAccepted": true
       },
       {
         "name": "literal slash-u text",
         "source": "[package]\nname='probe'\n[lib]\npath='\\uD83E\\uDDE9module.rs'\n",
         "accepted": true,
-        "path": "\\uD83E\\uDDE9module.rs"
+        "path": "\\uD83E\\uDDE9module.rs",
+        "smolAccepted": true
       }
     ],
     "boundaryOwner": "@iarna/toml",

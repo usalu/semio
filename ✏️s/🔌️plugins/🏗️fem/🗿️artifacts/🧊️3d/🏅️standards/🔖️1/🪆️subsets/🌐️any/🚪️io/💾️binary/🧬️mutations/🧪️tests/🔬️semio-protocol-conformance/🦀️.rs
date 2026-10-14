@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use semio_s_artifact_fem_3d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 
 #[test]
 fn component_protocol_semio_is_protocol_dialect() {
@@ -10,7 +10,7 @@ fn component_protocol_semio_is_protocol_dialect() {
 }
 #[test]
 fn verify_protocol_bytes_against_encoded_spr() {
-    let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings: crate::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+    let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::UpdateAnalysisSettings { settings: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
     let bytes = encode_op(&operation).expect("encode op");
     let g = semio_framework_dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
     ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

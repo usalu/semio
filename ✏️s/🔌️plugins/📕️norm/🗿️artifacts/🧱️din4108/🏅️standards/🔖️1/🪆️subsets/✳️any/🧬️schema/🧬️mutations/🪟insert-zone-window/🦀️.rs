@@ -1,6 +1,6 @@
 //! 🪟 `insert-zone-window`.
 
-use crate::{Din4108Mutation, Din4108Snapshot};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -11,22 +11,22 @@ use crate::{Din4108Mutation, Din4108Snapshot};
 pub struct InsertZoneWindow {
     pub zone_id: String,
     pub index: Option<usize>,
-    pub window: crate::ZoneWindow,
+    pub window: semio_s_artifact_norm_din4108_model::ZoneWindow,
 }
 
-impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertZoneWindow {
+impl<Op> protocol::MutationKind<Din4108Snapshot, Op> for InsertZoneWindow where Op: protocol::Mutation<Din4108Snapshot, Diff = semio_s_artifact_norm_din4108_diff::Din4108Diff> + From<crate::remove_zone_window::RemoveZoneWindow> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert",
         entity: "zone-window",
         kind: "insert-zone-window",
         record: "InsertedZoneWindow",
     };
-    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Din4108Snapshot>>::Diff> {
+        crate::insert_zone_window::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::insert_zone_window::inverse::inverse(self, base)?
     
     })
 }
@@ -34,3 +34,10 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertZoneWind
         semio_framework_ui_locale::LocalizedLabel::native("Insert window", "Fenster einfügen")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

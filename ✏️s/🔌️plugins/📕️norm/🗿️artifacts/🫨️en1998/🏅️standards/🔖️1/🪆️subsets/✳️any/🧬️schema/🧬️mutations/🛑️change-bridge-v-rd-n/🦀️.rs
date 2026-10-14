@@ -1,6 +1,6 @@
 //! 🛑️ `change-bridge-v-rd-n` mutation leaf.
 
-use crate::{En1998Mutation, En1998Snapshot};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -13,7 +13,7 @@ pub struct ChangeBridgeVRdN {
     pub new_v_rd_n: f64,
 }
 
-impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBridgeVRdN {
+impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeBridgeVRdN where Op: protocol::Mutation<En1998Snapshot, Diff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_bridge_v_rd_n::ChangeBridgeVRdN> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "bridge-v-rd-n",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBridgeVRdN
         record: "ChangeBridgeVRdN",
     };
 
-    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<En1998Mutation as protocol::Mutation<En1998Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1998Snapshot>>::Diff> {
+        crate::change_bridge_v_rd_n::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_bridge_v_rd_n::inverse::inverse(self, base)?
     
     })
 }
@@ -37,3 +37,10 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBridgeVRdN
         vec!["change-bridge-v-rd-n".into()]
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

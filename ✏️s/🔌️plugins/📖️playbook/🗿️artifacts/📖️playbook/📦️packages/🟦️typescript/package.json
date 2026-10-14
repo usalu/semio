@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/playbook-playbook:build",
-    "check": "bun repo run @semio-tech/playbook-playbook:check",
-    "test": "bun repo run @semio-tech/playbook-playbook:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/playbook-playbook:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/playbook-playbook:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/playbook-playbook:test"
   },
   "exports": {
     ".": {

@@ -9,7 +9,7 @@ pub type FormsStore = store::ArtifactStore<FormsSnapshot, crate::op::FormMutatio
 /// read but never mutated, undone or closed. The editor app installs the same catalog through
 /// `FormsPlayApp::build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_forms_store(envelope: FormsEnvelope, actor: protocol::ActorId) -> Result<OwnedFormsStore, store::VcsError> {
-    let mut store = FormsStore::new(envelope, actor).await?;
+    let mut store = FormsStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<FormsSnapshot, crate::op::FormMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedFormsStore(store))
 }

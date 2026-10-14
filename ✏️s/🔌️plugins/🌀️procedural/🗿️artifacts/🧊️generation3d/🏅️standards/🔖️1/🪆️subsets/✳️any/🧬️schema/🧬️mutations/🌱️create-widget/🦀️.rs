@@ -2,7 +2,6 @@
 //! index (FINAL-state, per `📓️derivation-rules.md` rule 3's addressing convention).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️CreateWidget
@@ -15,14 +14,17 @@ pub struct CreateWidget {
     pub widget: Widget,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for CreateWidget {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for CreateWidget
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<crate::delete_widget::DeleteWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::create_widget::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::create_widget::inverse::inverse(self, base)?
     

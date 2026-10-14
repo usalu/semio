@@ -4,7 +4,7 @@
 //! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
 //! no collection-typed top-level field).
 
-use crate::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["catalogue", "dictionary", "geometry", "selection", "part_number_rule", "part_number_inputs", "script_limits", "exchange_process"];

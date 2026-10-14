@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use super::topology::compute_generation2d_topology;
-use crate::Generation2dSnapshot;
+use crate::inferences::topology::compute_generation2d_topology;
+use crate::snapshot::Generation2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
@@ -76,5 +76,5 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::topology::Generation2dTopology;
+pub use crate::inferences::topology::Generation2dTopology;
 //#endregion 🔁️Re-exports

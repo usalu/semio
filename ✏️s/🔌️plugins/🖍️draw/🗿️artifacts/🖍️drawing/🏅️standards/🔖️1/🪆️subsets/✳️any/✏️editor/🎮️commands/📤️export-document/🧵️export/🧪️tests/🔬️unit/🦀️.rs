@@ -10,7 +10,7 @@ async fn original_export_read_returns_under_exact_physical_grants(){
  assert_eq!(corpus["readReturn"]["exportConsumer"]["identity"],"original-read");
  for format in ["png","svg","pdf","unsupported"]{
   let document=DrawingSnapshot{id:"original-export-source".into(),..Default::default()};
-  let mut issuer=store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","original-export-source",document,None),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+  let mut issuer=store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>("drawing.drawing","original-export-source",document,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer),protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
   issuer.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
   let read=issuer.snapshot_read().unwrap();let pointer=read.get()as*const DrawingSnapshot;
   let mut work=Work::new(read,Default::default(),Default::default());

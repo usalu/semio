@@ -1,6 +1,6 @@
 //! 🏷️ EN 1992 NormFieldMeta — SI units + en/de labels (`[]` wildcards for list leaves).
 
-use crate::app_surface::{NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{NormFieldChoice, NormFieldMeta};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }

@@ -1,6 +1,7 @@
-use super::ChangeImposedCategory;
-use crate::{En1996Diff, En1996Snapshot};
-use crate::diff::{En1996LoadCaseDelta, En1996LoadCasePatch, En1996WallDelta, En1996WallPatch};
+use crate::change_imposed_category::ChangeImposedCategory;
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use semio_s_artifact_norm_en1996_diff::{En1996LoadCaseDelta, En1996LoadCasePatch, En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeImposedCategory, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.wall_index >= base.walls.len() || payload.index >= base.walls[payload.wall_index].load_cases.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid load-case index."), Vec::<String>::new());

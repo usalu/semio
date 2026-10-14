@@ -26,7 +26,7 @@ export async function prepareTargetExecutionInventoryV1(root:string,output:strin
   await control.advance("manifest-catalog");
   const developmentRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",printRoot="🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",printProject=JSON.parse(observedFs.readFileSync(join(root,printRoot,"📋️project.json"),"utf8"));
   const groups:Record<string,Record<string,unknown>>={root:cacheInternals.rootCommandTargets(join(root,"📜️script.ts")),sessions:await cacheInternals.playgroundSessionTargets(manifests,root,contributions)};
-  await control.advance("sessions");groups.playgrounds=cacheInternals.playgroundPreparationTargets(manifests,root,developmentRoot,{},contributions);await control.advance("playgrounds");groups.documents=cacheInternals.printDocumentTargets(printProject,printRoot,root);
+  await control.advance("sessions");groups.playgrounds=await cacheInternals.playgroundPreparationTargets(manifests,root,developmentRoot,{},contributions,{preparationControl:control});await control.advance("playgrounds");groups.documents=await cacheInternals.printDocumentTargets(printProject,printRoot,root);
   for(const component of cacheInternals.componentCrateRoots(manifests,root)){await control.advance("component-sites");groups[`component:${component}`]=await cacheInternals.componentBuildTargets(component,root);const sites=cacheInternals.pluginSiteTargetsForCrate(component,catalog,developmentRoot,root);if(Object.keys(sites).length)groups[`sites:${component}`]=sites;}
   if(cacheInternals.implementationRevision()!==producer)throw Error("Original target execution producer changed");
   return {producer,groups};

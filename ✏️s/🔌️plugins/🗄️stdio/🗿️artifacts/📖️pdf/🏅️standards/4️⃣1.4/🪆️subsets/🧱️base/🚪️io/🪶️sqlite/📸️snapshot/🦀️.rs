@@ -159,7 +159,7 @@ mod tests {
 mod own14_public_page_domain {
     use crate::standards::v1_4::subsets::base::io::sqlite::snapshot::*;
     use store::os_store::serialization::ArtifactSqliteSnapshotHost;
-    const CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../\u{1f3c5}️standards/4️⃣1.4/\u{1fa86}️subsets/\u{1f9f1}️base/✏️editor/\u{1f9eb}️fixtures/\u{1f4c4}️resolved-page-domain/\u{1f523}️.json"));
+    const CORPUS: &str = include_str!("../../../✏️editor/🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json");
     fn owner(edited: bool) -> PdfSnapshot {
         let fixture: serde_json::Value = serde_json::from_str(CORPUS).unwrap();
         let pages = fixture["pages"].as_array().unwrap().iter().enumerate().map(|(index, page)| {

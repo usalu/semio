@@ -1,0 +1,618 @@
+{
+  "version": 1,
+  "scope": "actor-codec",
+  "refusals": {
+    "unexported": "actor-codec.unexported",
+    "operation": "actor-codec.operation",
+    "answer": "actor-codec.answer",
+    "request": "actor-codec.request"
+  },
+  "invalidAnswers": [
+    {
+      "ok": 42
+    },
+    {
+      "okHex": "00",
+      "faultHex": "ff"
+    },
+    {
+      "okPair": {
+        "packHex": "00"
+      }
+    },
+    {
+      "okMirror": [
+        "one"
+      ]
+    },
+    {
+      "okMirror": [
+        "one",
+        "two",
+        "three"
+      ]
+    },
+    {
+      "okHex": "AB"
+    },
+    {
+      "faultHex": "f"
+    },
+    {
+      "okHex": "00",
+      "extra": true
+    }
+  ],
+  "cases": [
+    {
+      "id": "pack-schema-hash-answers-the-fingerprint",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": "note.document"
+      },
+      "component": {
+        "bytesHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      },
+      "expected": {
+        "okHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+      }
+    },
+    {
+      "id": "genesis-answers-the-minted-pair",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note.document",
+        "documentId": "artifact-ffe16f4e05776efdde9a094f3796af77"
+      },
+      "component": {
+        "pair": {
+          "packHex": "53504b01",
+          "sprHex": "53505201"
+        }
+      },
+      "expected": {
+        "okPair": {
+          "packHex": "53504b01",
+          "sprHex": "53505201"
+        }
+      }
+    },
+    {
+      "id": "print-mirror-answers-the-text-mirror",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note.document",
+        "pair": {
+          "packHex": "53504b01",
+          "sprHex": "53505201"
+        }
+      },
+      "component": {
+        "mirror": [
+          "note {}",
+          "[]"
+        ]
+      },
+      "expected": {
+        "okMirror": [
+          "note {}",
+          "[]"
+        ]
+      }
+    },
+    {
+      "id": "a-guest-plugin-error-answers-its-fault-pack",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note.document",
+        "documentId": "local-7"
+      },
+      "component": {
+        "faultHex": "0a0b0c"
+      },
+      "expected": {
+        "faultHex": "0a0b0c"
+      }
+    },
+    {
+      "id": "a-component-without-codec-refuses",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": "note.document"
+      },
+      "component": {
+        "exported": false
+      },
+      "expected": {
+        "refusal": "actor-codec.unexported"
+      }
+    },
+    {
+      "id": "an-unknown-operation-refuses",
+      "request": {
+        "operation": "apply-ops",
+        "artifactKind": "note.document"
+      },
+      "component": {
+        "bytesHex": ""
+      },
+      "expected": {
+        "refusal": "actor-codec.operation:apply-ops"
+      }
+    },
+    {
+      "id": "a-host-trap-is-not-a-guest-fault",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note.document",
+        "documentId": "artifact-1"
+      },
+      "component": {
+        "throws": "RuntimeError: unreachable"
+      },
+      "expected": {
+        "refusal": "RuntimeError: unreachable"
+      }
+    }
+  ],
+  "runtimeCases": [
+    {
+      "id": "0-valid",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "okHex": "00"
+      },
+      "accepted": true
+    },
+    {
+      "id": "1-valid",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "okHex": ""
+      },
+      "accepted": true
+    },
+    {
+      "id": "2-valid",
+      "operation": "genesis",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": "ff"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "3-valid",
+      "operation": "print-mirror",
+      "answer": {
+        "okMirror": [
+          "source",
+          "history"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "4-valid",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "faultHex": "ff"
+      },
+      "accepted": true
+    },
+    {
+      "id": "5-valid",
+      "operation": "genesis",
+      "answer": {
+        "faultHex": "ff"
+      },
+      "accepted": true
+    },
+    {
+      "id": "6-valid",
+      "operation": "print-mirror",
+      "answer": {
+        "faultHex": "ff"
+      },
+      "accepted": true
+    },
+    {
+      "id": "7-refused",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": "ff"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "8-refused",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "okMirror": [
+          "source",
+          "history"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "9-refused",
+      "operation": "genesis",
+      "answer": {
+        "okHex": "00"
+      },
+      "accepted": false
+    },
+    {
+      "id": "10-refused",
+      "operation": "genesis",
+      "answer": {
+        "okMirror": [
+          "source",
+          "history"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "11-refused",
+      "operation": "print-mirror",
+      "answer": {
+        "okHex": "00"
+      },
+      "accepted": false
+    },
+    {
+      "id": "12-refused",
+      "operation": "print-mirror",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": "ff"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "13-refused",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "ok": 42
+      },
+      "accepted": false
+    },
+    {
+      "id": "14-refused",
+      "operation": "genesis",
+      "answer": {
+        "okPair": {
+          "packHex": "00"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "15-refused",
+      "operation": "genesis",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": 42
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "16-refused",
+      "operation": "genesis",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": "ff",
+          "extra": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "17-refused",
+      "operation": "print-mirror",
+      "answer": {
+        "okMirror": [
+          "one"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "18-refused",
+      "operation": "print-mirror",
+      "answer": {
+        "okMirror": [
+          "one",
+          "two",
+          "three"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "19-refused",
+      "operation": "print-mirror",
+      "answer": {
+        "okMirror": [
+          "one",
+          2
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "20-refused",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "fault": 42
+      },
+      "accepted": false
+    },
+    {
+      "id": "21-refused",
+      "operation": "genesis",
+      "answer": {
+        "okPair": {
+          "packHex": "00",
+          "sprHex": "ff"
+        },
+        "faultHex": "ff"
+      },
+      "accepted": false
+    },
+    {
+      "id": "22-refused",
+      "operation": "pack-schema-hash",
+      "answer": {
+        "okHex": "00",
+        "extra": true
+      },
+      "accepted": false
+    }
+  ],
+  "requestCases": [
+    {
+      "id": "0-accepted",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": "note"
+      },
+      "accepted": true
+    },
+    {
+      "id": "1-accepted",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": "作品"
+      },
+      "accepted": true
+    },
+    {
+      "id": "2-accepted",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note",
+        "documentId": "document"
+      },
+      "accepted": true
+    },
+    {
+      "id": "3-accepted",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": " ",
+        "documentId": " "
+      },
+      "accepted": true
+    },
+    {
+      "id": "4-accepted",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": {
+          "packHex": "",
+          "sprHex": "ff"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "5-refused",
+      "request": null,
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "6-refused",
+      "request": [],
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "7-refused",
+      "request": 42,
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "8-refused",
+      "request": {
+        "artifactKind": "note"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "9-refused",
+      "request": {
+        "operation": 42,
+        "artifactKind": "note"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "10-refused",
+      "request": {
+        "operation": "other",
+        "artifactKind": "note"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.operation:other"
+    },
+    {
+      "id": "11-refused",
+      "request": {
+        "operation": "pack-schema-hash"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "12-refused",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": ""
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "13-refused",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": 42
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "14-refused",
+      "request": {
+        "operation": "pack-schema-hash",
+        "artifactKind": "note",
+        "documentId": "unused"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "15-refused",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "16-refused",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note",
+        "documentId": ""
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "17-refused",
+      "request": {
+        "operation": "genesis",
+        "artifactKind": "note",
+        "documentId": "document",
+        "pair": {
+          "packHex": "",
+          "sprHex": ""
+        }
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "18-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note"
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "19-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": null
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "20-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": {
+          "packHex": ""
+        }
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "21-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": {
+          "packHex": "",
+          "sprHex": 42
+        }
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "22-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": {
+          "packHex": "",
+          "sprHex": "",
+          "extra": true
+        }
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    },
+    {
+      "id": "23-refused",
+      "request": {
+        "operation": "print-mirror",
+        "artifactKind": "note",
+        "pair": {
+          "packHex": "",
+          "sprHex": ""
+        },
+        "extra": true
+      },
+      "accepted": false,
+      "refusal": "actor-codec.request"
+    }
+  ]
+}

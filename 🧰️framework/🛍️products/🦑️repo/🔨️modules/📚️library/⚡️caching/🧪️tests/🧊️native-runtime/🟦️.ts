@@ -25,7 +25,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   put("component/Cargo.toml", '[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:sample"\n[package.metadata.semio]\ncomponent-kind = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "fixture"\n'.replaceAll("\\n", "\n"));
   const { cacheInternals, libraryBootstrap } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   await libraryBootstrap;
-  const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
+  const targets = await cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
   for (const profile of fixture.profiles) {
     const prepare = targets[`prepare-${fixture.variant}-native-${profile}`];
     assert.ok(prepare, "Every native variant/profile needs an outer Nx preparation producer");
@@ -152,19 +152,19 @@ if (operation === "consumer" || operation === "waiting") {
   process.once("SIGINT", cancelCompile); process.once("SIGTERM", cancelCompile);
   const nativeEnv = { ...env, CARGO_TARGET_DIR: join(root, ".native-target"), CARGO_BUILD_BUILD_DIR: join(root, ".native-build"), CARGO_NET_OFFLINE: "true" };
   try {
-    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo",[...args, "--manifest-path", join(root, "reader/Cargo.toml")],root,compile.signal,false,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo",[...args, "--manifest-path", join(root, "reader/Cargo.toml")],root,compile.signal,false,nativeEnv,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
     const binary = join(root, ".native-target/debug", process.platform === "win32" ? "reader.exe" : "reader");
     for (const profile of fixture.profiles) {
       const path = join(publication.nativeRuntimeDirectory(root, fixture.variant, profile), "🔣️runtime.json");
       const manifest = JSON.parse(readFileSync(path, "utf8"));
-      const rows = await runTool(binary,[path, fixture.variant],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+      const rows = await runTool(binary,[path, fixture.variant],root,compile.signal,true,nativeEnv,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       assert.deepEqual(JSON.parse(rows), manifest.modules.map(({ pluginId, wasmSha256 }: any) => ({ pluginId, wasmSha256 })));
-      await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program}), /failed \(2\)/);
+      await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program}), /failed \(2\)/);
     }
     const path = join(root, "reader/manifest.json"), valid = JSON.parse(readFileSync(join(publication.nativeRuntimeDirectory(root, fixture.variant, "prototype"), "🔣️runtime.json"), "utf8"));
     const validateNative = async (value: unknown, accepted: boolean) => {
       put("reader/manifest.json", typeof value === "string" ? value : JSON.stringify(value));
-      const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
+      const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output,leaseDirectory:repositoryCargoPreparationStorageV1(process.cwd()).leaseDirectory,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       if (accepted) await result; else await assert.rejects(result, /failed \(2\)/);
     };
     for (const entry of fixture.paths) {

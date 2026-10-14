@@ -1,0 +1,5 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs", "crate": "semio_s_artifact_puzzle_2d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "from_module": "editor::puzzle2d", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "to_module": "editor::puzzle2d::snapshot",
+   "select": ["regionx:🔖️Constants", "regionx:🔖️Scene", "region:🔖️BoardReads", "regionx:📋️Clipboard", "regionx:🔖️BoardHostSync", "regionx:🔖️UiScopes", "regionx:🔖️Puzzle2dCommand"]}
+ ]}

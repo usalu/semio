@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
-use crate::{AccidentalAction, ImportanceClass, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
+use semio_s_artifact_norm_en1990_model::{AccidentalAction, ImportanceClass, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
 
 pub const ID: &str = "accidental-seismic-failing";
 pub fn label() -> LocalizedLabel {
@@ -15,9 +15,9 @@ pub fn source() -> ExampleSource {
 }
 
 /// 💥🌋️ Non-compliant accidental + seismic design situations (EN 1990 6.11 / 6.12b).
-pub fn reference_snapshot() -> crate::En1990Snapshot {
-    crate::En1990Snapshot {
-        annex: crate::document::AnnexChoice::De,
+pub fn reference_snapshot() -> semio_s_artifact_norm_en1990_model::En1990Snapshot {
+    semio_s_artifact_norm_en1990_model::En1990Snapshot {
+        annex: semio_s_plugin_norm_compliance::AnnexChoice::De,
         project_id: "accidental-seismic-failing".into(),
         structure_kind: "building".into(),
         altitude_m: 120.0,
@@ -71,7 +71,3 @@ pub fn reference_snapshot() -> crate::En1990Snapshot {
     }
 }
 
-
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod example;

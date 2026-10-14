@@ -1,11 +1,11 @@
 //! ↩️ `change-t-int-c` inverse.
 
-use super::ChangeTIntC;
-use crate::{Din4108Mutation, Din4108Snapshot};
+use crate::change_t_int_c::ChangeTIntC;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
-pub fn inverse(_payload: &ChangeTIntC, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeTIntC, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_t_int_c::ChangeTIntC> {
     Ok((|| {
-    vec![Din4108Mutation::ChangeTIntC(ChangeTIntC { new_t_int_c: base.t_int_c })]
+    vec![Op::from(ChangeTIntC { new_t_int_c: base.t_int_c })]
 
     })())
 }

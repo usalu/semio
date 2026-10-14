@@ -1,6 +1,6 @@
 use super::translate_selection::{handle, TranslateSelection};
-use crate::editor::fem2d::unit_tests::context::{close, dispatch, dispatch_rows, fem2d_mounted_app, history_verb, render, Fem2dApp};
-use crate::editor::fem2d::Fem2dCommand;
+use crate::context::{close, dispatch, dispatch_rows, fem2d_mounted_app, history_verb, render, Fem2dApp};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
@@ -9,7 +9,7 @@ use pack::snapshot::ArtifactDsl;
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem2dCommand {
@@ -60,11 +60,11 @@ async fn one_drag_is_one_edit_one_row_and_one_transaction() {
 async fn a_streamed_gesture_is_one_transaction_with_a_preview() {
     let mut app = fem2d_mounted_app();
     let before = x_of(&app, "n1");
-    let idle = render(&mut app, crate::editor::fem2d::modes::edit::windows::model::BODY_KEY);
+    let idle = render(&mut app, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::BODY_KEY);
     assert!(dispatch_rows(&mut app, translate(0.25, Some("stream"))).await.is_empty(), "a stream tick is no history");
     assert!(dispatch_rows(&mut app, translate(0.5, Some("stream"))).await.is_empty());
     assert_eq!(x_of(&app, "n1"), before, "the committed document never moves mid-gesture");
-    let previewed = render(&mut app, crate::editor::fem2d::modes::edit::windows::model::BODY_KEY);
+    let previewed = render(&mut app, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::BODY_KEY);
     assert_ne!(previewed, idle, "the model window paints the open gesture's preview");
     let rows = dispatch_rows(&mut app, translate(0.0, Some("commit"))).await;
     assert_eq!(rows.len(), 1, "the commit is one row: {rows:?}");

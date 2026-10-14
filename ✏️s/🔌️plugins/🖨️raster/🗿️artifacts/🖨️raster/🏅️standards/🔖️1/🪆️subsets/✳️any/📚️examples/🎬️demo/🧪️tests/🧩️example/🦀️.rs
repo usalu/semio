@@ -6,8 +6,8 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::RasterInference;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_model::inferences::RasterInference;
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
     use protocol::Inference;
     let snapshot = RasterSnapshot::default();
     assert_eq!(RasterInference::infer(&snapshot).expect("valid materialized inference fixture"), RasterInference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -15,8 +15,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::RasterInference;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_model::inferences::RasterInference;
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
     use protocol::Inference;
     assert_eq!(RasterInference::infer(&RasterSnapshot::default()).expect("valid materialized inference fixture"), RasterInference::default());
 }

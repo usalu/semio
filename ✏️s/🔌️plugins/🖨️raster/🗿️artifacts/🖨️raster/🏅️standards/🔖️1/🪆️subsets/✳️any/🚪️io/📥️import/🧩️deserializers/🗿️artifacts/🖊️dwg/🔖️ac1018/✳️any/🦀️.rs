@@ -4,11 +4,11 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: vectors become pixels at one unit per pixel; layers, entity identity and
 //! everything the drawing bridge itself drops (points, 3D faces, `z`) are gone.
-use crate::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use {semio_s_artifact_stdio_semio_drawing_import::decode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    crate::standards::v1::subsets::any::io::raster_document_from_dwg_drawing(&decode_drawing(bytes, SemioDrawingFormat::Dwg)?)
+    crate::raster_document_from_dwg_drawing(&decode_drawing(bytes, SemioDrawingFormat::Dwg)?)
 }

@@ -17,11 +17,11 @@ pub struct RenameNode {
 
 impl<Op> MutationKind<CadSnapshot, Op> for RenameNode
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::rename_node::RenameNode>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::rename_node::RenameNode>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "node", kind: "rename-node", record: "RenamedNode" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

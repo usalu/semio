@@ -1,69 +1,78 @@
 //! 🧬️ En1996 artifact — document mutation dispatch for masonry building subject.
 
-use crate::{En1996Diff, En1996Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
+pub use crate::edit_rules::EDIT_RULES;
 
-use super::change_concentrated_bearing_length;
-use super::change_slab_span;
-use super::change_wall_length;
-use super::change_wall_height;
-use super::change_wall_thickness;
-use super::change_eccentricity_bottom;
-use super::change_eccentricity_top;
-use super::change_phi_infinity;
-use super::change_qk_snow;
-use super::insert_concentrated;
-use super::insert_load_case;
-use super::insert_opening;
-use super::insert_wall;
-use super::remove_concentrated;
-use super::remove_load_case;
-use super::remove_opening;
-use super::remove_wall;
-use super::change_annex;
-use super::change_qp_wind;
-use super::change_design_situation;
-use super::change_load_case_situation;
-use super::change_concentrated_force;
-use super::change_gk_slab;
-use super::change_qk_imposed;
-use super::change_is_basement;
-use super::change_storeys;
-use super::change_masonry_class;
-use super::change_imposed_category;
-use super::change_wall_label_de;
-use super::change_wall_label_en;
-use super::change_exposure;
-use super::change_concentrated_bearing_area;
-use super::change_slab_bearing_depth;
-use super::change_tributary_area;
-use super::change_fire_rei;
-use super::change_as_horizontal;
-use super::change_as_vertical;
-use super::change_f_yd;
-use super::change_reinforced;
-use super::change_bed_joint_thickness;
-use super::change_fm;
-use super::change_mortar_class;
-use super::change_mortar_type;
-use super::change_c_pe;
-use super::change_density;
-use super::change_support_sides;
-use super::change_unit_fb;
-use super::change_unit_group;
-use super::change_unit_height;
-use super::change_unit_length;
-use super::change_unit_material;
-use super::change_unit_width;
-use super::change_wall_type;
-use super::change_mu;
-use super::change_opening_height;
-use super::change_opening_sill;
-use super::change_opening_width;
-use super::change_hk_earth;
+use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_bearing_length;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_slab_span;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_length;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_height;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_thickness;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_eccentricity_bottom;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_eccentricity_top;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_phi_infinity;
+use semio_s_artifact_norm_en1996_mut_loads::change_qk_snow;
+use semio_s_artifact_norm_en1996_mut_concentrated::insert_concentrated;
+use semio_s_artifact_norm_en1996_mut_loads::insert_load_case;
+use semio_s_artifact_norm_en1996_mut_openings::insert_opening;
+use semio_s_artifact_norm_en1996_mut_walls::insert_wall;
+use semio_s_artifact_norm_en1996_mut_concentrated::remove_concentrated;
+use semio_s_artifact_norm_en1996_mut_loads::remove_load_case;
+use semio_s_artifact_norm_en1996_mut_openings::remove_opening;
+use semio_s_artifact_norm_en1996_mut_walls::remove_wall;
+use semio_s_artifact_norm_en1996_mut_project::change_annex;
+use semio_s_artifact_norm_en1996_mut_loads::change_qp_wind;
+use semio_s_artifact_norm_en1996_mut_loads::change_design_situation;
+use semio_s_artifact_norm_en1996_mut_loads::change_load_case_situation;
+use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_force;
+use semio_s_artifact_norm_en1996_mut_loads::change_gk_slab;
+use semio_s_artifact_norm_en1996_mut_loads::change_qk_imposed;
+use semio_s_artifact_norm_en1996_mut_project::change_is_basement;
+use semio_s_artifact_norm_en1996_mut_project::change_storeys;
+use semio_s_artifact_norm_en1996_mut_units::change_masonry_class;
+use semio_s_artifact_norm_en1996_mut_project::change_imposed_category;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_label_de;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_label_en;
+use semio_s_artifact_norm_en1996_mut_walls::change_exposure;
+use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_bearing_area;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_slab_bearing_depth;
+use semio_s_artifact_norm_en1996_mut_eccentricity::change_tributary_area;
+use semio_s_artifact_norm_en1996_mut_project::change_fire_rei;
+use semio_s_artifact_norm_en1996_mut_reinforcement::change_as_horizontal;
+use semio_s_artifact_norm_en1996_mut_reinforcement::change_as_vertical;
+use semio_s_artifact_norm_en1996_mut_reinforcement::change_f_yd;
+use semio_s_artifact_norm_en1996_mut_reinforcement::change_reinforced;
+use semio_s_artifact_norm_en1996_mut_mortar::change_bed_joint_thickness;
+use semio_s_artifact_norm_en1996_mut_mortar::change_fm;
+use semio_s_artifact_norm_en1996_mut_mortar::change_mortar_class;
+use semio_s_artifact_norm_en1996_mut_mortar::change_mortar_type;
+use semio_s_artifact_norm_en1996_mut_loads::change_c_pe;
+use semio_s_artifact_norm_en1996_mut_units::change_density;
+use semio_s_artifact_norm_en1996_mut_walls::change_support_sides;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_fb;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_group;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_height;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_length;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_material;
+use semio_s_artifact_norm_en1996_mut_units::change_unit_width;
+use semio_s_artifact_norm_en1996_mut_walls::change_wall_type;
+use semio_s_artifact_norm_en1996_mut_mortar::change_mu;
+use semio_s_artifact_norm_en1996_mut_openings::change_opening_height;
+use semio_s_artifact_norm_en1996_mut_openings::change_opening_sill;
+use semio_s_artifact_norm_en1996_mut_openings::change_opening_width;
+use semio_s_artifact_norm_en1996_mut_loads::change_hk_earth;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -195,12 +204,32 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-pub(crate) mod fixture_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
-#[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
+
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::En1996Mutation;
+    use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+
+/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+pub fn apply_en1996_mutation(base: &En1996Snapshot, mutation: &En1996Mutation) -> Result<(En1996Snapshot, Vec<String>), String> {
+    let raised = <En1996Mutation as protocol::Mutation<En1996Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+pub fn inverse_en1996_mutation(mutation: &En1996Mutation, base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+    Ok({
+    <En1996Mutation as protocol::Mutation<En1996Snapshot>>::inverse(mutation, base)?
+
+    })
+}
+}
+pub use crate::mutation_bridge::*;

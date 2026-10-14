@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app, render as render_body, scene as body_scene};
+use semio_s_artifact_layout_layout_editor::unit_tests::context::{layout_app, render as render_body, scene as body_scene};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_blueprint_canvas_scene() {

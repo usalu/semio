@@ -58,7 +58,7 @@ export async function proveBoundedNativeLeavesV1(workspace:string,directory:stri
 /** 🧯️ Recovers only the explicitly owned failed Nx fixture after original children and current readers settle. */
 export async function recoverOriginalFailedImageV1(directory:string,leaseDirectory:string,control:ResourceLeaseControl):Promise<void>{
  const receipt=JSON.parse(readFileSync(join(directory,"image.json"),"utf8")),image=await openNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:receipt.filesystemBytes,maximumPhysicalBytes:receipt.maximumPhysicalBytes+1048576,control});
- try{await image.withExclusiveMaintenance(async actual=>{
+ try{await image.withExclusiveMaintenance({version:1,wait:true},async actual=>{
   const processes=await captureOwnedCommandV1("ps",["-axo","pid,ppid,stat"],directory,{control});if(Buffer.byteLength(processes)>=64512)throw Error("Current process inventory exceeds original capture allowance");console.log("[DEBUG] Original failed-image recovery obtained complete process inventory bytes="+Buffer.byteLength(processes));
   let handles:string;try{handles=await captureOwnedCommandV1("/usr/sbin/lsof",["+f","--",image.root],directory,{control});}catch(error){if(!(error instanceof Error)||!error.message.endsWith("exited with status 1\n"))throw error;handles="";}if(handles.trim())throw Error("Original failed image still has current handles");console.log("[DEBUG] Actual lsof entire mounted filesystem contains no handles under exclusive image custody");
   let state=nativeStorageStateV1();for(const line of readFileSync(join(image.root,"storage-events.jsonl"),"utf8").split("\n").filter(Boolean))state=nativeStorageEventV1(state,JSON.parse(line),image.maximumPhysicalBytes);

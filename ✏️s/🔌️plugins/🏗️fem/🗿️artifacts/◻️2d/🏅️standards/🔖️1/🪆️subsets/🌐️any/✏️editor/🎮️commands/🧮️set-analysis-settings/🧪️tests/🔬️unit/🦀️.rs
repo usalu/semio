@@ -1,6 +1,12 @@
-use super::*;
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_analysis_settings::*;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::context::{dispatch, fem2d_app};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_analysis_settings_partial_args_keep_current_2d() {

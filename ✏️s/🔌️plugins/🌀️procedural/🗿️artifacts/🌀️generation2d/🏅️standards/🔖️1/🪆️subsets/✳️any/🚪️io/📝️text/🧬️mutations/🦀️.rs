@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
 
 
 //#region 📖️SemioGrammar
@@ -16,10 +16,21 @@ pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.
 /// 🧭️ Identifies the artifact mutation grammar.
 pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutations.grammar.semio");
 
-use crate::standards::v1::subsets::any::io::text::snapshot::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
-    WidgetLayoutDsl,
-};
+use crate::snapshot::camera_from_dsl;
+use crate::snapshot::camera_to_dsl;
+use crate::snapshot::form_generation_from_dsl;
+use crate::snapshot::form_generation_to_dsl;
+use crate::snapshot::layout_from_dsl;
+use crate::snapshot::layout_to_dsl;
+use crate::snapshot::synapse_from_dsl;
+use crate::snapshot::synapse_to_dsl;
+use crate::snapshot::widget_from_dsl;
+use crate::snapshot::widget_to_dsl;
+use crate::snapshot::CameraJsonDsl;
+use crate::snapshot::FormGenerationDsl;
+use crate::snapshot::SynapseSpecDsl;
+use crate::snapshot::WidgetDsl;
+use crate::snapshot::WidgetLayoutDsl;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub(crate) enum Generation2dOperationDsl {
     CreateWidget {
@@ -135,7 +146,23 @@ pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) ->
 }
 
 pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Result<Generation2dMutation, semio_framework_diagnostic::TextError> {
-    use crate::standards::v1::subsets::any::schema::mutations::{change_generation_value,change_schema,change_slider_value,clear_widget_layout,connect_synapse,create_generation,create_widget,delete_generation,delete_widget,disconnect_synapse,move_nodes,move_widget,rename_generation,select_generation,replace_synapse,replace_widget,update_camera};
+    use semio_s_artifact_procedural_2d_mut_generations::change_generation_value;
+    use semio_s_artifact_procedural_2d_mut_document::change_schema;
+    use semio_s_artifact_procedural_2d_mut_widgets::change_slider_value;
+    use semio_s_artifact_procedural_2d_mut_widgets::clear_widget_layout;
+    use semio_s_artifact_procedural_2d_mut_synapses::connect_synapse;
+    use semio_s_artifact_procedural_2d_mut_generations::create_generation;
+    use semio_s_artifact_procedural_2d_mut_widgets::create_widget;
+    use semio_s_artifact_procedural_2d_mut_generations::delete_generation;
+    use semio_s_artifact_procedural_2d_mut_widgets::delete_widget;
+    use semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse;
+    use semio_s_artifact_procedural_2d_mut_widgets::move_nodes;
+    use semio_s_artifact_procedural_2d_mut_widgets::move_widget;
+    use semio_s_artifact_procedural_2d_mut_generations::rename_generation;
+    use semio_s_artifact_procedural_2d_mut_generations::select_generation;
+    use semio_s_artifact_procedural_2d_mut_synapses::replace_synapse;
+    use semio_s_artifact_procedural_2d_mut_widgets::replace_widget;
+    use semio_s_artifact_procedural_2d_mut_document::update_camera;
 
     Ok(match operation {
         Generation2dOperationDsl::CreateWidget { index, widget } => create_widget(index, widget_from_dsl(*widget)?),

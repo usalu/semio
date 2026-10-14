@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `DeleteSolid`.
 use super::DeleteSolid;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidRemoval, Fem3dSolidsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::{solid_referrers,target_referenced};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidRemoval;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::solid_referrers;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_referenced;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSolid, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

@@ -2,10 +2,13 @@
 //! stacked CAD structure-classic member set on the puzzle3d vortex coordinates, and the engine solves
 //! its deformation (self weight + slab dead + live, ULS/SLS) to a balanced, physically ordered result.
 
-use crate::fem3d_engine::fem3d_solve_all;
-use crate::model::{Dof, StaticResult};
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
-use crate::{element_id, FemElement, Fem3dSnapshot};
+use semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all;
+use semio_s_fem_model::{Dof, StaticResult};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::print_dsl;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use std::collections::HashMap;
 
 const VORTEX_XY: [(f64, f64); 7] = [(4.05001, 4.676537), (6.75001, 4.676537), (9.45001, 4.676537), (6.75001, 0.0), (4.05001, 0.0), (1.35001, 0.0), (9.45001, 2.338269)];
@@ -43,8 +46,8 @@ fn applied_vertical_load(doc: &Fem3dSnapshot, case_id: &str) -> f64 {
         .loads
         .iter()
         .map(|load| match load {
-            crate::FemLoad::MemberUdl { element_id: target, wz, .. } => wz * length(doc.elements.iter().find(|element| element_id(element) == target).expect("udl element")),
-            crate::FemLoad::Nodal { dof: crate::FemDof::Tz, value, .. } => *value,
+            semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::MemberUdl { element_id: target, wz, .. } => wz * length(doc.elements.iter().find(|element| element_id(element) == target).expect("udl element")),
+            semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value, .. } => *value,
             _ => 0.0,
         })
         .sum();

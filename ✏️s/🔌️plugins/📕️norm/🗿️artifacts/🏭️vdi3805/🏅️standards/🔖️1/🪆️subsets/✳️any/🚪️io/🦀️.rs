@@ -5,6 +5,14 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.norm.vdi3805` dialect only.
+
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
@@ -13,8 +21,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Vdi3805Analyzer;
-    use crate::Vdi3805Snapshot;
+    use crate::Vdi3805Analyzer;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.vdi3805", standard: StandardId("1"), subset: SubsetId("*") };
@@ -46,14 +54,14 @@ pub mod derived_composition {
         }
     }
 }
-pub use derived_composition::*;
+pub use crate::derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚪️JsonSerializers
-use crate::document::NormError;
+use semio_s_plugin_norm_compliance::NormError;
 /// 🚪️ Whole-artifact JSON (de)serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
-use crate::{ManufacturerCatalog, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_model::{ManufacturerCatalog, Vdi3805Snapshot};
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
 pub fn catalog_to_json(catalog: &ManufacturerCatalog) -> Result<String, NormError> {
@@ -78,7 +86,7 @@ pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
 /// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
 /// composer dispatch belongs.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Vdi3805Composer as Vdi3805AnyComposer;
+    use crate::Vdi3805Composer as Vdi3805AnyComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -106,7 +114,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+    use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
+    use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -153,10 +163,10 @@ pub mod derived_construction {
         }
     }
 }
-pub use derived_construction::*;
+pub use crate::derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Vdi3805Snapshot;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -200,7 +210,7 @@ pub mod derived_analysis {
         }
     }
 }
-pub use derived_analysis::*;
+pub use crate::derived_analysis::*;
 
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Vdi3805BuilderFacets {
@@ -213,23 +223,4 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Vdi3805Composer,
 );
 
-//#region 🌉️ExternalCodecBridge
-/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
-pub mod mutation_bridge {
-    use crate::{Vdi3805Mutation, Vdi3805Snapshot};
-
-    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
-    pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
-        let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
-        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-        Ok((applied, messages))
-    }
-
-    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-    pub fn inverse_vdi3805_mutation(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
-        <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::inverse(mutation, base)
-    }
-}
 pub use mutation_bridge::*;
-//#endregion 🌉️ExternalCodecBridge

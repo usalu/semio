@@ -6,14 +6,17 @@
 //! 🔁️ `SEMIO_FEM3D_WRITE_HOUSE_ASSET=1` rewrites `🖼️assets/🏠️house/🗣️.dsl.semio` from `build()`
 //! before the comparison runs — the one sanctioned way to regenerate the committed text.
 
-use crate::fem3d_engine::meshing::{mesh_solids, NODE_MERGE_TOLERANCE};
-use crate::fem3d_engine::fem3d_solve_all;
-use crate::model::Dof;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
-use crate::{FemAxis, Fem3dSnapshot};
+use semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::mesh_solids;
+use semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::NODE_MERGE_TOLERANCE;
+use semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all;
+use semio_s_fem_model::Dof;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::print_dsl;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use std::collections::{HashMap, HashSet};
 
-const ASSET_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🏠️house/🗣️.dsl.semio");
+const ASSET_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🏠️house/🗣️.dsl.semio");
 
 fn on_module(value: f64) -> bool {
     (value / super::MODULE - (value / super::MODULE).round()).abs() < 1e-9
@@ -49,7 +52,7 @@ fn every_solid_is_drawn_on_the_module_with_openings_and_a_gable() {
         assert!(on_module(solid.base_z) || solid.id == "roof", "{}: the extrusion offset sits on the module", solid.id);
         assert_eq!(solid.layers, (solid.height / super::MODULE).round().max(1.0) as usize, "{}: one layer per module along the extrusion", solid.id);
     }
-    let by_id: HashMap<&str, &crate::FemSolid> = doc.solids.iter().map(|solid| (solid.id.as_str(), solid)).collect();
+    let by_id: HashMap<&str, &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid> = doc.solids.iter().map(|solid| (solid.id.as_str(), solid)).collect();
     assert_eq!(by_id["wall_west"].axis, FemAxis::X, "a long wall is drawn in elevation and extruded through its thickness");
     assert_eq!(by_id["wall_south"].axis, FemAxis::Y);
     assert_eq!(by_id["roof"].axis, FemAxis::Y, "the roof is its chevron section swept along the ridge");
@@ -129,7 +132,7 @@ fn deformation_solves_balanced_and_sags_under_gravity() {
         assert!(result.displacements.iter().all(|row| row.values.iter().all(|value| value.is_finite())), "{case_id}: finite displacements");
         assert!(result.checks.residual_norm < 1e-6, "{case_id}: residual {}", result.checks.residual_norm);
     }
-    let footprint_area = |solid_id: &str| crate::fem3d_engine::meshing::footprint_area(meshes.iter().find(|mesh| mesh.solid_id == solid_id).expect(solid_id));
+    let footprint_area = |solid_id: &str| semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::footprint_area(meshes.iter().find(|mesh| mesh.solid_id == solid_id).expect(solid_id));
     let dead = &results["dead"];
     let reaction_z: f64 = dead.reactions.iter().filter(|reaction| reaction.dof == Dof::Tz).map(|reaction| reaction.value).sum();
     let self_weight: f64 = doc

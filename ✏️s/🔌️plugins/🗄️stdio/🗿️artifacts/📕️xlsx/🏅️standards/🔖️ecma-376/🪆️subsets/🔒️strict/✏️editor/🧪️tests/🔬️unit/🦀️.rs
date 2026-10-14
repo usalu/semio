@@ -1,8 +1,10 @@
 use super::*;
 
 fn fixture() -> XlsxSnapshot {
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Sheet 1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Boolean(true) }] }], ..Default::default() })
 }
 
@@ -29,7 +31,7 @@ async fn strict_cell_action_preserves_unicode_and_requires_a_complete_address() 
 #[semio_framework_async_macros::async_test]
 async fn strict_cell_edit_uses_the_canonical_lineage_revision() {
     let snapshot = fixture();
-    let address = crate::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
+    let address = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snapshot, "Sheet 1", 1, 0).unwrap();
     let command = XlsxStrictEditorCommand::SetCell { sheet_name: "Sheet 1".into(), row: 1, column: 0, revision: address.revision.clone(), value: "false".into() };
     let emit = xlsx_set_cell_emit(&snapshot, &command).unwrap();
     assert_eq!(emit.artifact_mutations, vec![XlsxMutation::SetCell(set_cell::SetCell { address, value: XlsxCellValue::Boolean(false), node: None })]);

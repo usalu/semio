@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "string",
+  "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\\.json$",
+  "maxLength": 69,
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumReportBytes",
+        "maximumRetainedBytes",
+        "maximumReports"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumReportBytes": {
+          "const": 16777216
+        },
+        "maximumRetainedBytes": {
+          "const": 67108864
+        },
+        "maximumReports": {
+          "const": 64
+        }
+      }
+    }
+  }
+}

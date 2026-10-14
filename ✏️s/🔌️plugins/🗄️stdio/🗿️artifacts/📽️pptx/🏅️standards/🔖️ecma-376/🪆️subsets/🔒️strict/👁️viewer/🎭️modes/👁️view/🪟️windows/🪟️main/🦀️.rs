@@ -3,7 +3,7 @@
 //! mutation-capable surface — the same slide-to-page mapping, no edit affordances
 //! (`window_kind()`, the read-only variant, not the editable one).
 
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::WindowKindDefinition;
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `PptxSnapshot -> BuiltNode` read: one `DocumentPage` per slide.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = crate::schema::mutations::xml_address::pptx_slides(document)
+    let pages = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(document)
         .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("pptx.projection", error))?
         .into_iter()
         .map(|slide| DocumentPage { text: slide.shapes.into_iter().filter_map(|shape| shape.text).collect::<Vec<_>>().join("\n") })

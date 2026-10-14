@@ -1,19 +1,19 @@
 //! Puzzle3d mutation — `ReplaceReferenceSource`: whole-value swap of a reference's media source (url + media kind together).
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `replace-reference-source` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "replace-reference-source")]
 pub struct ReplaceReferenceSource {
     pub id: String,
-    pub new_source: crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource,
+    pub new_source: semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource,
 }
 
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ReplaceReferenceSource
@@ -41,6 +41,6 @@ where
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_reference_source<Op: From<ReplaceReferenceSource>>(id: String, new_source: crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource) -> Op {
+pub fn replace_reference_source<Op: From<ReplaceReferenceSource>>(id: String, new_source: semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource) -> Op {
     Op::from(ReplaceReferenceSource { id, new_source })
 }

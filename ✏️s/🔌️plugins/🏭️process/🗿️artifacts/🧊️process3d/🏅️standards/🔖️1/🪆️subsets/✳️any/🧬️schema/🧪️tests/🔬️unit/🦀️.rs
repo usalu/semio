@@ -1,12 +1,18 @@
+extern crate semio_framework_schema as framework_schema;
 use pack::snapshot::ArtifactDsl;
-use crate::standards::v1::subsets::any::io::text::snapshot::plate_document;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
-use super::*;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::plate_document;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document;
+use semio_s_artifact_process_process3d_model::*;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::StockQuantity, snapshot::Workshop, snapshot::WorkshopMachine};
+use framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️ExampleFixtures
 /// 🧭️ Every `step.origin` on a document must name a machine+capability that actually exists in
 /// that document's own `workshop` — the mutations' only source of truth for legal origins.
-fn assert_origins_resolve(document: &crate::Process3dSnapshot) {
+fn assert_origins_resolve(document: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot) {
     for step in &document.step_payloads {
         let origin = step.origin.as_ref().unwrap_or_else(|| panic!("step {:?} is missing its origin", step.id));
         let machine = document.workshop.machines.iter().find(|m| m.id == origin.machine_id).unwrap_or_else(|| panic!("step {:?} references unknown machine {:?}", step.id, origin.machine_id));
@@ -20,11 +26,11 @@ async fn default_document_parses_timber_example() {
     assert!(!document.steps.child_id.is_empty());
 
     let printed = document.print_dsl();
-    let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
+    let round_tripped = <semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
     assert_eq!(round_tripped, document, "timber fixture must round-trip through print_dsl/parse_dsl unchanged");
 
     match &document.stock_payload.solid {
-        crate::WorkingSolid::Box { width, depth, height } => {
+        semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Box { width, depth, height } => {
             assert!((*width - 3.0).abs() < 1e-9, "timber beam width should be 3.0m, got {width}");
             assert!((*depth - 0.2).abs() < 1e-9, "timber beam depth should be 0.2m, got {depth}");
             assert!((*height - 0.3).abs() < 1e-9, "timber beam height should be 0.3m, got {height}");
@@ -47,11 +53,11 @@ async fn plate_document_parses_and_round_trips() {
     assert!(!document.steps.child_id.is_empty());
 
     let printed = document.print_dsl();
-    let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
+    let round_tripped = <semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
     assert_eq!(round_tripped, document, "plate fixture must round-trip through print_dsl/parse_dsl unchanged");
 
     match &document.stock_payload.solid {
-        crate::WorkingSolid::Box { width, depth, height } => {
+        semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Box { width, depth, height } => {
             assert!((*width - 1.2).abs() < 1e-9, "plate width should be 1.2m, got {width}");
             assert!((*depth - 0.8).abs() < 1e-9, "plate depth should be 0.8m, got {depth}");
             assert!((*height - 0.02).abs() < 1e-9, "plate height should be 0.02m, got {height}");
@@ -63,7 +69,7 @@ async fn plate_document_parses_and_round_trips() {
     for (index, step) in document.step_payloads.iter().enumerate() {
         assert_eq!(step.id, format!("drill-{}", index + 1));
         assert!(step.enabled, "step {:?} should be enabled", step.id);
-        assert!(matches!(step.measure, crate::ProcessMeasure::Drill { .. }), "plate step {:?} should be a Drill measure", step.id);
+        assert!(matches!(step.measure, semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure::Drill { .. }), "plate step {:?} should be a Drill measure", step.id);
     }
     assert_origins_resolve(&document);
 }
@@ -318,15 +324,15 @@ mod concrete_catalog_tests {
 }
 //#endregion 🔖️ConcreteCatalog
 //#region 🔖️DocumentHelpers
-fn timeline_fixture() -> crate::Process3dSnapshot {
-    use crate::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, WorkingSolid, Workshop};
+fn timeline_fixture() -> semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot {
+    use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::WorkingSolid, snapshot::Workshop};
     let step = |id: &str| ProcessStep { id: id.into(), label: id.into(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.05, pose: Pose::default() } };
     let scene = ProcessWorkingScene { stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 0.5, height: 0.25 }, pose: Pose::default() }, steps: vec![step("a"), step("b"), step("c"), step("d")] };
-    crate::process_working_scene_to_snapshot(&scene, Workshop::default())
+    semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&scene, Workshop::default())
 }
 
 fn new_step() -> ProcessStep {
-    use crate::{Pose, ProcessMeasure, ProcessStep, WorkingSolid};
+    use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::WorkingSolid};
     ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
 }
 
@@ -335,7 +341,7 @@ fn new_step() -> ProcessStep {
 /// which the step the user just added is the one that becomes visible. The document carries no cursor at all.
 #[semio_framework_async_macros::async_test]
 async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one() {
-    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+    use semio_s_artifact_process_process3d_mutations::Process3dMutation;
     let fixture = timeline_fixture();
     let operations = insert_step_mutations(&fixture, new_step(), Some(2));
     assert_eq!(operations.len(), 1, "the cursor is view state: inserting a step is ONE document mutation");
@@ -349,7 +355,7 @@ async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one()
 
 #[semio_framework_async_macros::async_test]
 async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_unset() {
-    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+    use semio_s_artifact_process_process3d_mutations::Process3dMutation;
     let fixture = timeline_fixture();
     let operations = insert_step_mutations(&fixture, new_step(), None);
     match &operations[..] {

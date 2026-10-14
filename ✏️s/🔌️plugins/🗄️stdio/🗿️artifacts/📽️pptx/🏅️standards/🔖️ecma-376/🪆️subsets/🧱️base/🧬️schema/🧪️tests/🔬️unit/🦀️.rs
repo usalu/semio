@@ -1,9 +1,9 @@
-use super::*;
-use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
-use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-use crate::standards::v_ecma_376::subsets::base::{io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML},schema::{refusal::{PptxError},vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART}}};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
+use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
+use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::{io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML},schema::{refusal::{PptxError},vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART}}};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -37,7 +37,7 @@ fn construction_fidelity_snapshot(fixture: &serde_json::Value) -> PptxSnapshot {
     decode_pptx(&opc::encode_opc(&opc).expect("fixture OPC encode")).expect("fixture PPTX decode")
 }
 
-fn xml_part<'a>(snapshot: &'a PptxSnapshot, path: &str) -> &'a crate::schema::snapshot::PptxXmlPart {
+fn xml_part<'a>(snapshot: &'a PptxSnapshot, path: &str) -> &'a semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart {
     snapshot.xml_parts.iter().find(|part| part.path == path).unwrap_or_else(|| panic!("missing retained XML part {path}"))
 }
 
@@ -478,8 +478,8 @@ async fn assert_exact_export(snapshot: &PptxSnapshot, expected: &[u8]) {
     }
 }
 
-fn first_positioned_shape(snapshot: &PptxSnapshot) -> (crate::schema::mutations::PptxShapeAddress, PptxTransform) {
-    for slide in crate::schema::mutations::xml_address::pptx_slides(snapshot).expect("retained slide authorities") {
+fn first_positioned_shape(snapshot: &PptxSnapshot) -> (semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxShapeAddress, PptxTransform) {
+    for slide in semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(snapshot).expect("retained slide authorities") {
         for shape in slide.shapes {
             if let Some(position) = shape.position {
                 return (shape.address, position);
@@ -491,8 +491,9 @@ fn first_positioned_shape(snapshot: &PptxSnapshot) -> (crate::schema::mutations:
 
 #[semio_framework_async_macros::async_test]
 async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
-    use crate::schema::mutations::{set_shape_position, set_shape_text};
-    use crate::{PptxDiff, PptxMutation};
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{set_shape_position, set_shape_text};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::{PptxDiff};
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{PptxMutation};
     use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
@@ -501,8 +502,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert!(!snapshot.xml_parts.is_empty());
     let xml_paths: std::collections::HashSet<&str> = snapshot.xml_parts.iter().map(|part| part.path.as_str()).collect();
     assert_eq!(xml_paths.len(), snapshot.xml_parts.len(), "every logical XML part must have one authority");
-    assert!(crate::schema::snapshot::pptx_part_is_xml("ppt/drawings/vmlDrawing1.vml", "application/vnd.openxmlformats-officedocument.vmlDrawing"), "VML must be parsed as logical XML");
-    assert!(snapshot.opc.parts.iter().all(|part| !crate::schema::snapshot::pptx_part_is_xml(&part.path, &part.content_type)), "OPC byte parts must contain no XML");
+    assert!(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml("ppt/drawings/vmlDrawing1.vml", "application/vnd.openxmlformats-officedocument.vmlDrawing"), "VML must be parsed as logical XML");
+    assert!(snapshot.opc.parts.iter().all(|part| !semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml(&part.path, &part.content_type)), "OPC byte parts must contain no XML");
     assert!(snapshot.opc.parts.iter().all(|part| !xml_paths.contains(part.path.as_str())), "XML and binary authorities must be disjoint");
     assert!(
         snapshot.opc.parts.iter().all(|part| {
@@ -527,7 +528,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_exact_export(&analyzed, &exact_bytes).await;
 
     let dialect = <PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-    let composition = crate::standards::v_ecma_376::subsets::base::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&source_bytes) }]).expect("compose native PPTX fixture");
+    let composition = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&source_bytes) }]).expect("compose native PPTX fixture");
     assert_eq!(composition.snapshot, snapshot);
     assert_exact_export(&composition.snapshot, &exact_bytes).await;
 
@@ -541,8 +542,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(unpacked, snapshot);
     assert_exact_export(&unpacked, &exact_bytes).await;
 
-    let binary = crate::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::base::serialize(&snapshot).expect("serialize exact fixture to binary");
-    let from_binary = crate::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::base::deserialize(&binary).expect("deserialize exact fixture from binary");
+    let binary = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::artifacts::zip::v2_0::base::serialize(&snapshot).expect("serialize exact fixture to binary");
+    let from_binary = semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::artifacts::zip::v2_0::base::deserialize(&binary).expect("deserialize exact fixture from binary");
     assert_eq!(from_binary, snapshot);
     assert_exact_export(&from_binary, &exact_bytes).await;
 
@@ -559,7 +560,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     let mut missing = address.clone();
     missing.node.part_path = "ppt/slides/missing.xml".into();
     let mut rejected = snapshot.clone();
-    let refusal = crate::schema::mutations::apply_pptx_mutation(&mut rejected, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: missing, text: String::new() }));
+    let refusal = semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation(&mut rejected, &PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: missing, text: String::new() }));
     assert!(refusal.diff().is_empty());
     assert!(!refusal.messages().is_empty());
     assert_eq!(rejected, snapshot);
@@ -568,11 +569,11 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     let changed_x = if position.x == i64::MAX { position.x - 1 } else { position.x + 1 };
     let mutation = PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address, position: PptxTransform { x: changed_x, ..position } });
     let mut changed = snapshot.clone();
-    let forward = crate::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
+    let forward = semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation(&mut changed, &mutation);
     assert_ne!(changed, snapshot);
     assert_ne!(encode_pptx(&changed).expect("encode mutated presentation"), exact_bytes);
     for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
-        crate::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
+        semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_pptx_mutation(&mut changed, &inverse);
     }
     assert_eq!(changed, snapshot);
     assert_exact_export(&changed, &exact_bytes).await;
@@ -588,8 +589,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_exact_export(&protocol::apply_diff(&absorbed, &snapshot).unwrap(), &exact_bytes).await;
 
     let part = &snapshot.xml_parts[0];
-    let replace = PptxMutation::ReplaceXmlNode(crate::schema::mutations::replace_xml_node::ReplaceXmlNode {
-        address: crate::schema::mutations::xml_address::pptx_xml_address(&snapshot, &part.path, Vec::new()).expect("root address"),
+    let replace = PptxMutation::ReplaceXmlNode(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::replace_xml_node::ReplaceXmlNode {
+        address: semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_xml_address(&snapshot, &part.path, Vec::new()).expect("root address"),
         node: part.document.root.clone().expect("root"),
     });
     assert_eq!(PptxMutation::parse_op(&replace.print_op()).expect("parse replace-xml-node"), replace);
@@ -606,8 +607,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
-    use super::*;
-    use crate::schema::{diff, mutations, snapshot};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -616,11 +617,11 @@ mod conformance_laws {
     /// message).
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
@@ -628,7 +629,7 @@ mod conformance_laws {
     /// 🧾️ The native Text grammar recognizes the complete owned logical presentation.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
         let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
@@ -641,7 +642,7 @@ mod conformance_laws {
     /// output for every `PptxMutation` variant (`mutations::demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
@@ -654,7 +655,7 @@ mod conformance_laws {
     /// for every representative `PptxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
@@ -666,21 +667,21 @@ mod conformance_laws {
     /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_pptx_snapshot().await;
         let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
-        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));

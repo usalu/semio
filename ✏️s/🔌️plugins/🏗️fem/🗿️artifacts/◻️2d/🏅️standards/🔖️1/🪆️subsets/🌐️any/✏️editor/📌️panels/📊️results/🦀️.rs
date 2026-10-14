@@ -7,10 +7,11 @@
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
 use semio_s_fem_app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
-use crate::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsWindowConfig;
-use crate::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
-use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{fem2d_action, ui_label};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsWindowConfig;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_action;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::ui_node_list;
@@ -171,7 +172,7 @@ fn result_sources(doc: &Fem2dSnapshot) -> Vec<(String, String)> {
 /// slider follows the animation while it plays and rests where it paused.
 pub fn render(doc: &Fem2dSnapshot, window: Option<&Fem2dResultsWindowConfig>, clock: Option<&FemPlaybackClock>, window_id: &str, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let live = window.is_some();
-    let window = crate::editor::fem2d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem2dResultsWindowConfig::default()), clock);
+    let window = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::effective(window.unwrap_or(&Fem2dResultsWindowConfig::default()), clock);
     let window = &window;
     let animation = &window.animation;
     let sources = result_sources(doc);

@@ -4,9 +4,9 @@
 //! `SubsetValidator` directly), not per-leaf `register()` — same pattern `🧱️base/🚪️io` established.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ap214::subsets::base::io::ladder::ensure_file_schema;
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-    use crate::standards::v_ap214::subsets::base::io::StepComposer as StepAnyComposer;
+    use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::ensure_file_schema;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::io::StepComposer as StepAnyComposer;
     use crate::standards::v_ap214::subsets::cc2::io::check_cc2_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -94,8 +94,8 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     use crate::standards::v_ap214::subsets::cc2::io::check_cc2_conformance;
-    use crate::standards::v_ap214::subsets::base::schema::diff::{StepDiff};
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use crate::standards::v_ap214::subsets::cc2::schema::mutations::{StepCc2Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -163,10 +163,12 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ap214::subsets::base::io::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
-    use crate::standards::v_ap214::subsets::base::io::StepAnalyzer as StepAnyAnalyzer;
-    pub use crate::standards::v_ap214::subsets::base::io::StepParts;
+    use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::file_schema_contains;
+    use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::has_product_definition_chain;
+    use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::ladder_violations;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::io::StepAnalyzer as StepAnyAnalyzer;
+    pub use semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::io::StepParts;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
@@ -217,7 +219,7 @@ use semio_framework_diagnostic::TextSpan;
     }
     /// 🛡️ Checks owned CC2 facts with cancellation before diagnostic allocation.
     pub fn check_cc2_conformance_controlled(snapshot:&StepSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
-        let facts=crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
+        let facts=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::sqlite::snapshot::conformance_facts(snapshot,MAX_RUNG,control)?;let mut out=Vec::new();
         if !facts.file_schema{out.push(hard(CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema".into()));}
         for(index,(id,type_name,rung))in facts.violations.into_iter().enumerate(){if index%256==0||type_name.len()>65536{control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,index,0)?;}out.push(hard(CODE_LADDER,format!("instance #{id} is a {type_name} (ladder rung {rung}) -- exceeds cc2's max rung 2")));}
         if !facts.product_chain{out.push(soft(CODE_PRODUCT_CHAIN,"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one".into()));}Ok(out)

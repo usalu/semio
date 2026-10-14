@@ -2,9 +2,11 @@
 //! sparse restoration `paint-stroke`, `fill-region` and `fill-selection` invert to (the samples the repaint overwrote, read
 //! from the base image), and a gesture of its own for a host that already holds the pixels to write.
 
-use crate::diff::{RasterDiff, RasterPixelRegion};
-use crate::mutations::paint_stroke::{canvas, inverse_pixel_region, refused, rect_samples, RASTER_PAINT_TARGETS};
-use crate::{RasterMutation, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{RasterDiff, RasterPixelRegion};
+use semio_s_artifact_raster_raster_diff::{canvas, inverse_pixel_region, rect_samples};
+use crate::paint_stroke::{refused, RASTER_PAINT_TARGETS};
+#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Payload
 /// 🔲 `width × height` RGBA8 `samples`, row-major, written at `(x, y)` of `layer_id`'s `target` image (`pixels` or `mask`).
@@ -63,24 +65,24 @@ pub fn diff(payload: &WritePixelRegion, base: &RasterSnapshot) -> protocol::Muta
 //#region 🔖️Inverse
 /// ↩️ The same kind carrying `base`'s samples of the rectangle. Nothing when `base` shows no image there or already holds the
 /// samples.
-pub fn inverse(payload: &WritePixelRegion, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::write_pixel_region::WritePixelRegion>>(payload: &WritePixelRegion, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let Some(restore) = inverse_pixel_region(&payload.region(), base) else { return Ok(Vec::new()) };
     if restore.samples == payload.samples {
         return Ok(Vec::new());
     }
-    Ok(vec![RasterMutation::WritePixelRegion(WritePixelRegion { layer_id: restore.layer_id, target: restore.target, x: restore.x, y: restore.y, width: restore.width, height: restore.height, samples: restore.samples })])
+    Ok(vec![Op::from(WritePixelRegion { layer_id: restore.layer_id, target: restore.target, x: restore.x, y: restore.y, width: restore.width, height: restore.height, samples: restore.samples })])
 }
 //#endregion 🔖️Inverse
 
 //#region 🔖️Kind
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for WritePixelRegion {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for WritePixelRegion where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "pixel-region", kind: "write-pixel-region", record: "WrittenPixelRegion" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         inverse(self, base)
     }
 

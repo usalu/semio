@@ -2,7 +2,7 @@
 //! read-only counterpart of the editor's `edit` mode. Both windows render the same real composited
 //! pixels through `ImageWindowKit` (contract §2.6) — no editing chrome, no utilities.
 
-use crate::viewer::raster::modes::view::windows::{composite, navigator};
+use crate::modes::view::windows::{composite, navigator};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -27,3 +27,13 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🖼️composite/🦀️.rs"]
+    pub mod composite;
+    #[path = "🪟️windows/🧭️navigator/🦀️.rs"]
+    pub mod navigator;
+}
+//#endregion 🪢️TaxonomyMounts

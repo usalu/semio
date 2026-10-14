@@ -1,8 +1,7 @@
 //! 🔅️ Energy model mutation — `ChangeLightingGainVisibleFraction`: Sets visible fraction on one lighting gain, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeLightingGainVisibleFraction {
     pub new_visible_fraction: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_lighting_gain_visible_fraction(id: crate::model::EntityId, new_visible_fraction: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeLightingGainVisibleFraction(ChangeLightingGainVisibleFraction { id, new_visible_fraction })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_lighting_gain_visible_fraction<Op: From<ChangeLightingGainVisibleFraction>>(id: crate::model::EntityId, new_visible_fraction: f64) -> Op {
+    ChangeLightingGainVisibleFraction { id, new_visible_fraction }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeLightingGainVisibleFraction {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeLightingGainVisibleFraction
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeLightingGainVisibleFraction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "lighting-gain", kind: "change-lighting-gain-visible-fraction", record: "ChangedLightingGainVisibleFraction" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

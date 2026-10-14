@@ -1,8 +1,7 @@
 //! 🏜️ Energy model mutation — `DeleteHumidistat`: Drops one zone's humidity control. Refused when no humidistat carries the id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteHumidistat {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_humidistat(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteHumidistat(DeleteHumidistat { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_humidistat<Op: From<DeleteHumidistat>>(id: crate::model::EntityId) -> Op {
+    DeleteHumidistat { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteHumidistat {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteHumidistat
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteHumidistat> + From<crate::CreateHumidistat>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "humidistat", kind: "delete-humidistat", record: "DeletedHumidistat" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

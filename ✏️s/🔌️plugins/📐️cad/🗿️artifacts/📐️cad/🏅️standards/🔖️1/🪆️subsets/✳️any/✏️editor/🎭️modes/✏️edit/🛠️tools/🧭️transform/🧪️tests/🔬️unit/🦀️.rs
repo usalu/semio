@@ -4,9 +4,25 @@
 //! literal targets and parameters, every member edit stamped with the gesture's `TransactionRef`, and zero trace when
 //! nothing moves. The leaves stay editable: a history edit of the drag's offset replays onto any base.
 
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
 use semio_s_artifact_cad_cad_transform::*;
+use semio_s_artifact_cad_cad_config::CadConfigMutation;
+use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_model, snapshot::cad_pane_model_slot, snapshot::CadPaneId, snapshot::CadSnapshot};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use machine::Command;
+use semio_framework_diagnostic::Fault;
+use semio_framework_plugin::app::ChildEmitPreparation;
+use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
+use std::collections::VecDeque;
+use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
+use {semio_s_artifact_stdio_semio_model::schema::mutations::drag_elements::DragElements, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::rotate_elements::RotateElements, semio_s_artifact_stdio_semio_model::schema::mutations::scale_elements::ScaleElements, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{SemioModelElement, SemioModelSnapshot};
+use std::sync::Arc;
 use semio_s_artifact_cad_cad_interaction::apply_event;
-use semio_s_artifact_cad_cad_editor::{unit_tests::context::close, unit_tests::context::member_rows, unit_tests::context::meta, unit_tests::context::new_app, unit_tests::context::pane_objects, unit_tests::context::settle, unit_tests::context::CadFixtureApp, unit_tests::context::TEST_INSTANCE};
+use crate::context::{close, member_rows, meta, new_app, pane_objects, settle, CadFixtureApp, TEST_INSTANCE};
 use semio_s_artifact_cad_cad_kit::{start_interaction_session, try_commit_session_entries, CadPlayRuntime};
 use semio_s_artifact_cad_cad_editor::CadCommand;
 use semio_s_artifact_cad_cad_testing::sample_object;

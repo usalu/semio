@@ -1,6 +1,6 @@
-use super::InsertLayer;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997LayersRows};
+use crate::insert_layer::InsertLayer;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997LayersRows};
 
 pub fn diff(payload: &InsertLayer, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.layers.iter().any(|existing| existing.id == payload.layer.id) {

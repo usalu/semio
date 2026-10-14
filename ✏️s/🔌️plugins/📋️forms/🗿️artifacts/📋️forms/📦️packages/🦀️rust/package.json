@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-forms-document-contract": "bun repo run @semio-tech/forms-forms-rs:verify-forms-document-contract"
+    "verify-forms-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/forms-forms-rs:verify-forms-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

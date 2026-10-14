@@ -1,8 +1,8 @@
 //! 🔺️ `update-renewables` sparse diff.
 
-use crate::mutations::update_renewables::UpdateRenewables;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599RenewablesPatch};
+use crate::update_renewables::UpdateRenewables;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599RenewablesPatch};
 
 pub fn diff(payload: &UpdateRenewables, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

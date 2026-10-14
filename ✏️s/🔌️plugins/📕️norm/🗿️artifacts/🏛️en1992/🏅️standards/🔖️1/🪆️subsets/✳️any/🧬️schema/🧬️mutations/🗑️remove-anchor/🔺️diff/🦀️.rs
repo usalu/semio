@@ -1,6 +1,6 @@
-use crate::diff::{En1992Diff, En1992AnchorsRows};
-use super::RemoveAnchor;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::{En1992Diff, En1992AnchorsRows};
+use crate::remove_anchor::RemoveAnchor;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &RemoveAnchor, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let Some(index) = base.anchors.iter().position(|anchor| anchor.id == payload.anchor_id) else {

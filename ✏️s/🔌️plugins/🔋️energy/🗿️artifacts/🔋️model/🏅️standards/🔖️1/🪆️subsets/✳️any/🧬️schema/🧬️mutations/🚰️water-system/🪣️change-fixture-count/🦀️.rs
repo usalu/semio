@@ -1,8 +1,7 @@
 //! 🪣️ Energy model mutation — `ChangeWaterSystemFixtureCount`: Sets how many fixtures one water system carries.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeWaterSystemFixtureCount {
     pub new_fixture_count: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_water_system_fixture_count(id: crate::model::EntityId, new_fixture_count: u32) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeWaterSystemFixtureCount(ChangeWaterSystemFixtureCount { id, new_fixture_count })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_water_system_fixture_count<Op: From<ChangeWaterSystemFixtureCount>>(id: crate::model::EntityId, new_fixture_count: u32) -> Op {
+    ChangeWaterSystemFixtureCount { id, new_fixture_count }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeWaterSystemFixtureCount {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeWaterSystemFixtureCount
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeWaterSystemFixtureCount>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "water-system", kind: "change-water-system-fixture-count", record: "ChangedWaterSystemFixtureCount" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

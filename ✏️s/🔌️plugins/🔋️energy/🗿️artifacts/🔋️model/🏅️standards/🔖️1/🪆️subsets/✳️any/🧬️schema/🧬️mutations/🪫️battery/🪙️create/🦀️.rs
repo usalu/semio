@@ -1,8 +1,7 @@
 //! 🪙️ Energy model mutation — `CreateBattery`: Adds one electrical storage unit. Capacity bounds the state of charge; the two power limits bound each timestep's charge and discharge, and the round-trip efficiency is what the stored energy is debited by.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -21,19 +20,22 @@ pub struct CreateBattery {
     pub round_trip_efficiency: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_battery(index: u32, id: crate::model::EntityId, capacity_kwh: f64, max_charge_w: f64, max_discharge_w: f64, round_trip_efficiency: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateBattery(CreateBattery { index, id, capacity_kwh, max_charge_w, max_discharge_w, round_trip_efficiency })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_battery<Op: From<CreateBattery>>(index: u32, id: crate::model::EntityId, capacity_kwh: f64, max_charge_w: f64, max_discharge_w: f64, round_trip_efficiency: f64) -> Op {
+    CreateBattery { index, id, capacity_kwh, max_charge_w, max_discharge_w, round_trip_efficiency }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateBattery {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateBattery
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateBattery> + From<crate::DeleteBattery>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "battery", kind: "create-battery", record: "CreatedBattery" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

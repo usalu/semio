@@ -1,10 +1,18 @@
-use super::*;
-use crate::editor::fem3d::modes::edit::windows::model;
-use crate::editor::fem3d::unit_tests::context::view;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::focus_entity::*;
+use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_camera::{self, SetCamera};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_point;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_os_kernel::Viewport3dOrbit;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model;
+use crate::context::view;
 use semio_framework_plugin::HistoryView;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 /// 🎯️ LAW: focusing re-aims the orbit at the entity and carries the eye offset along, on the
@@ -19,7 +27,7 @@ fn focus_entity_re_aims_the_addressed_window_orbit() {
     let emit = handle_window(&FocusEntity { id: "n20_l1".into() }, &view_doc, &cfg, &view(model::FEM3D_WINDOW_MODEL)).expect("focus");
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert_eq!(emit.window_config_mutations[0].window_id(), "model-left");
-    let initial = crate::viewport::INITIAL;
+    let initial = semio_s_artifact_fem_3d_scene::viewport::INITIAL;
     let focused = focused_orbit(&initial, [8.0, 0.0, 2.8]);
     assert_eq!(focused.target, [8.0, 0.0, 2.8]);
     assert_eq!(focused.position, [8.0 + initial.position[0] - initial.target[0], 0.0 + initial.position[1] - initial.target[1], 2.8 + initial.position[2] - initial.target[2]], "the eye keeps its offset");

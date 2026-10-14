@@ -205,7 +205,7 @@ impl ArtifactEditor for SvgBasicEditor {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
     fn build_document_store_initialization_job(envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_SVG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str { svg_basic_editor_command_id(command) }
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {

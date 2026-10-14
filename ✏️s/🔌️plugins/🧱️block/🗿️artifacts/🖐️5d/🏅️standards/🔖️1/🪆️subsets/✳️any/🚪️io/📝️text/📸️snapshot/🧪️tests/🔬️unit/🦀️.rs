@@ -1,7 +1,7 @@
 
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
-use crate::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
+use crate::text::snapshot::*;
+use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
+use semio_s_plugin_block::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
 pub fn hexagonal_cut_concrete_forest_left() -> Block5dSnapshot {
     let mut definition = Block5dSnapshot {

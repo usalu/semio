@@ -1,5 +1,5 @@
-use super::*;
-use crate::results_window_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
+use crate::modes::edit::windows::results::*;
+use semio_s_plugin_norm_results_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
 use protocol::{Mutation, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
@@ -85,10 +85,10 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
         .name("norm-results-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_norm_results_windows(async {
-            use crate::editor::en1996::commands::selected_check;
-            use crate::editor::en1996::{create_en1996_app, En1996Command, En1996PlayApp};
-            use crate::editor::en1996::modes::edit::windows::inputs;
-            use crate::editor::en1996::panels::inspection;
+            use crate::commands::selected_check;
+            use crate::{create_en1996_app, En1996Command, En1996PlayApp};
+            use crate::modes::edit::windows::inputs;
+            use crate::panels::inspection;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             type NormApp = VcsArtifactApp<EditorApp<En1996PlayApp>>;

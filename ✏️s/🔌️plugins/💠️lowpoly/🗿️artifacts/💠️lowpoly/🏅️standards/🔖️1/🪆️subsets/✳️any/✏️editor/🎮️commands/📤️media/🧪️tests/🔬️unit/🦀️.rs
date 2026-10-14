@@ -1,6 +1,18 @@
-use super::*;
-use crate::editor::lowpoly::unit_tests::context::{app, committed_edits, dispatch};
-use crate::editor::lowpoly::LowpolyCommand;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_commands::media::*;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_io::{export::serializers::artifacts::obj::v3_0::any as obj_export, export::serializers::artifacts::ply::v1_0::any as ply_export, export::serializers::artifacts::stl::v_ascii::any as stl_export};
+use semio_s_artifact_lowpoly_lowpoly_io::{import::deserializers::artifacts::obj::v3_0::any as obj_import, import::deserializers::artifacts::ply::v1_0::any as ply_import, import::deserializers::artifacts::stl::v_ascii::any as stl_import};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
+use semio_framework::kernel::Effect;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
+use serde::{Deserialize, Serialize};
+use crate::context::{app, committed_edits, dispatch};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 
 fn faces(snapshot: &LowpolySnapshot) -> usize {
     snapshot.objects.iter().filter(|object| !object.mesh_content.is_empty()).map(|object| semio_framework_3d::mesh::HalfedgeMesh::from_json(&object.mesh_content).expect("mesh content parses").face_count()).sum()
@@ -47,7 +59,7 @@ async fn opened_file_bytes_reads_raw_text_and_base64_data_urls() {
 #[semio_framework_async_macros::async_test]
 async fn import_mesh_file_emits_a_load_document_effect() {
     let obj = "o Quad\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\n";
-    let projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let projection = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
     let cfg = ConfigView { snapshot: &LowpolyConfig::default(), window: None };

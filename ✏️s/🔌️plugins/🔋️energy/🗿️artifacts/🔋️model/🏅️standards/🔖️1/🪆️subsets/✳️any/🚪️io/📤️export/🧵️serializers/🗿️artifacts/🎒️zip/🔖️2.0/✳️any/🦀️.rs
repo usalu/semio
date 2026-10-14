@@ -1,6 +1,6 @@
 //! energy → zip — the shared document archive (`encode_document_archive`): this artifact's DSL as the
 //! authoritative member plus its rfc8259 rendition, both lossless (`IoFidelity::Exact`).
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_document_archive;
 
 pub fn register() {}

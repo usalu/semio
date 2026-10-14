@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -28,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 pub fn plugin() -> Result<Plugin<VcsApps>, PluginAssemblyError> {
     let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency()?;
     let catalog = semio_hub_stdio_catalog::native_artifact_catalog_contribution()?;
-    Plugin::<VcsApps>::builder("vcs")
+    PluginBuilder::<_, VcsApps>::new("vcs")
         .label("VCS")
         .version("0.1.0")
         .package_id("semio:vcs")

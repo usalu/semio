@@ -1,0 +1,13 @@
+# Source Analysis Provider Registration
+
+This read-only diagnosis concerns Selected14's terminal `Current registered source analysis provider required` failure during its failure re-inventory. No parser, provider, Source guard or production file was changed.
+
+The actual registry keeps one immutable provider handle per ID. Registering the same callback and revision returns that exact handle. Registering a different callback at the same revision throws `Ambiguous source analysis revision registration` before changing the map. Registering a different revision replaces the handle; an older handle then throws the exact current-provider error observed by Selected14. `prepareSourceAnalysesV1()` retains its original handles in its module instance.
+
+An isolated actual-production registry diagnostic exercised all three cases against a real current JSON Source. It passed, exit 0, with exact JSON parser results preserved; log `🗑️generated/provider-registration-diagnostic.txt`. It used unique diagnostic IDs and process-local state, with no Source edits, fake provider binding, lookup fallback or store mutation. This proves the registry mechanism, not the full historical cause.
+
+Core's current implementation-input census records process birth at 1792013708095.1055 ms and only one listed input timestamp afterward: Repository caching policy, 36.571 seconds into the process, now 10,099 bytes with SHA-256 `e7f1e6099b2cf6461c1eb96a94ad24cc47d29a66b4e9402bf76afd39a5ce9438`. The census is `selected14-implementation-inputs.json`.
+
+The additional command-provider inputs were checked at their actual resolver paths. TypeScript is `.cache/b/d/m/j/4b1c9d841ca0df9ef210/node_modules/typescript/lib/typescript.js`, SHA-256 `3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675`, with mtime and ctime before process birth. The dynamically read build-mode enum schema is 203 bytes, SHA-256 `80a098a1f51e60abf051c3caa03204bf9ff15576657c95587dc8b13b0806c450`, also predating the process. Exact metadata is retained in `provider-extra-revision-inputs.json`.
+
+The one previously known NP sample was already reclaimed. `provider-policy-sample.json` records its absence and explicitly does not tie it to Selected14. Consequently this evidence does not establish the policy's previously consumed SHA or prove byte change rather than an identical rewrite. It does rule out an ordinary duplicate callback at the same revision as the direct mechanism for the observed stale-handle error. A production correction must retain strict revision identity and establish genuine Source change or a proven revision-computation defect first.

@@ -1,6 +1,41 @@
 //! 🧬️ Cad diff schema — sparse field delta over the artifact.
 
-use crate::{snapshot::CadBrepChild, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReference};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_cad_cad_model::{snapshot::CadBrepChild, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReference};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -82,7 +117,7 @@ protocol::plain_list_delta! {
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️Rows
-use crate::snapshot::CadSnapshot;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::list_delta::RowPatch;
 use protocol::MutationDiff;
 
@@ -391,3 +426,6 @@ pub struct CadOpacitySet {
     pub value: Option<f64>,
 }
 //#endregion 🔖️InternalPatches
+
+/// 🔺️ The diff facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

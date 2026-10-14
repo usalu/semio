@@ -3,13 +3,13 @@
 //! empty runs, matching the original write's own out-of-range no-op behavior).
 
 use super::EditPaintLayer;
-use crate::schema::PixelRun;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::edit_paint_layer::EditPaintLayer>>(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    let pixels = crate::schema::layer_pixels_at(base, &payload.object_id, payload.layer_index);
+    let pixels = semio_s_artifact_lowpoly_lowpoly_model::layer_pixels_at(base, &payload.object_id, payload.layer_index);
     let inverse_runs = payload
         .runs
         .iter()
@@ -32,7 +32,7 @@ pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Result<Vec<L
             PixelRun { offset: run.offset, bytes }
         })
         .collect();
-    vec![LowpolyMutation::EditPaintLayer(EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs: inverse_runs })]
+    vec![Op::from(EditPaintLayer { object_id: payload.object_id.clone(), layer_index: payload.layer_index, runs: inverse_runs })]
 
     })())
 }

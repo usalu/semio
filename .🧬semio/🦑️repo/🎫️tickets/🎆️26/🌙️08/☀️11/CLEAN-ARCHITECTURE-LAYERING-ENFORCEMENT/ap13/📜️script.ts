@@ -1,0 +1,26 @@
+import {createBuildBootstrapCapabilitiesV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts";
+import {readFileSync,writeFileSync,mkdirSync,openSync,closeSync,existsSync} from "node:fs";
+import {join,resolve} from "node:path";
+import {createHash} from "node:crypto";
+
+/** 🎟️ Captures the unchanged registered Actor command after its selected discovery Source freezes. */
+const privateKeys=new Set(["SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_SCRIPT_CAPABILITIES","SEMIO_OWNER_ARGUMENTS","SEMIO_NX_COMMAND_DIRECTORY","SEMIO_NX_COMMAND_RUNNER","SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP","SEMIO_NX_SELECTED_GRAPH_RECEIPT","SEMIO_NX_GRAPH_SEAL_REUSE","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST","SEMIO_BUILD_REUSE_GRAPH","SEMIO_CARGO_PREPARATION_ACTIVE","SEMIO_CARGO_PREPARATION_OBSERVATION","SEMIO_CARGO_PREPARATION_STORAGE","SEMIO_BUILD_INVOCATION_PID","SEMIO_OWNER_POLICY_RECEIPT","SEMIO_PROCESS_OWNER_CONTEXT","SEMIO_NX_NATIVE_SOURCE_SNAPSHOT","SEMIO_COMPILER_RESOURCE_ROOT","SEMIO_BAZEL_SELECTION_CHAIN"]);
+for(const key of Object.keys(process.env))if(privateKeys.has(key)||key.startsWith("SEMIO_SOURCE_CLOSURE_")||key.startsWith("SEMIO_CARGO_LOCK_")||key.startsWith("NX_TASK_")||/^(?:SEMIO|NX)_.*(?:PRIVATE|CUSTODY)/u.test(key))throw Error("Preexisting issued authority refused: "+key);
+const root=process.cwd(),ticket=resolve(import.meta.dir,".."),directory=join(ticket,"🗑️generated/ap-gui13"),caller=join(ticket,"actor-public-canonical-gui-caller13.json"),launchSource=readFileSync(join(root,".vscode/launch.json"),"utf8"),rows=JSON.parse(launchSource).configurations.filter((row:{command?:string})=>row.command==="bun repo run @semio-tech/framework-actor:canonical-architecture");
+if(rows.length!==1)throw Error("One registered Actor caller required");
+const row=rows[0],policy=JSON.parse(row.env.SEMIO_SCRIPT_POLICY),argv:string[]=row.command.split(" ");
+if(policy.version!==1||policy.owner!=="actor:canonical-architecture:caller"||policy.maximumElapsedMilliseconds!==600000||row.env.SEMIO_SCRIPT_CAPABILITIES!==undefined||row.cwd!=="${workspaceFolder}")throw Error("Original Actor initial policy required");
+if(existsSync(directory)||existsSync(caller))throw Error("Fresh Actor GUI13 output ownership required");
+const frontier=["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs","🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts","🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts","📋️build-owners.json"];
+const observations=()=>frontier.map(path=>({path,sha256:createHash("sha256").update(readFileSync(join(root,path))).digest("hex")}));
+mkdirSync(directory,{recursive:false});
+writeFileSync(caller,JSON.stringify({version:1,row,launchSha256:createHash("sha256").update(launchSource).digest("hex"),outputRedirectOnly:directory,sourceObservationKind:"read-only-source-observation-not-authority",sourceObservations:observations(),reason:"Fresh original registered caller after resource/prerequisite and cooperative command-source discovery repairs"},null,2)+"\n",{flag:"wx"});
+const environment={...process.env,...Object.fromEntries(Object.entries(row.env as Record<string,string>).map(([key,value])=>[key,value.replaceAll("${workspaceFolder}",root)])),SEMIO_TEST_ARTIFACT_DIR:directory},capabilities=await createBuildBootstrapCapabilitiesV1(root,argv.slice(2),environment),encoded=JSON.stringify(capabilities);
+writeFileSync(join(directory,"factory.json"),encoded+"\n",{flag:"wx"});
+const descriptor=openSync(join(directory,"current.log"),"wx"),started=Date.now();
+console.log("[DEBUG] Registered Actor GUI13 started "+JSON.stringify({argv,initialPolicy:policy,factory:join(directory,"factory.json"),log:join(directory,"current.log")}));
+let status:number;
+try{const child=Bun.spawn(argv,{cwd:root,env:{...environment,SEMIO_SCRIPT_CAPABILITIES:encoded},stdin:"ignore",stdout:descriptor,stderr:descriptor});writeFileSync(join(directory,"started.json"),JSON.stringify({pid:child.pid,startedAt:new Date(started).toISOString(),argv,initialPolicy:policy},null,2)+"\n",{flag:"wx"});status=await child.exited;}finally{closeSync(descriptor);}
+const result={exitCode:status,elapsedMilliseconds:Date.now()-started,initialPolicy:policy,factorySha256:createHash("sha256").update(encoded).digest("hex"),registeredCommand:row.command};
+writeFileSync(join(directory,"result.json"),JSON.stringify(result,null,2)+"\n",{flag:"wx"});writeFileSync(join(directory,"terminal-source-observations.json"),JSON.stringify({kind:"read-only-source-observation-not-authority",files:observations()},null,2)+"\n",{flag:"wx"});
+console.log("[DEBUG] Registered Actor GUI13 terminal "+JSON.stringify(result));process.exitCode=status;

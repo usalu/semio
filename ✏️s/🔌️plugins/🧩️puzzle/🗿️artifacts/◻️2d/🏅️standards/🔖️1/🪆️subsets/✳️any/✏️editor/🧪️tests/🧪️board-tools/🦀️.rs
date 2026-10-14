@@ -20,7 +20,7 @@ fn corpus() -> Value {
 
 /// 📬️ One flush of `rows` from the overview window.
 fn flush(app: &mut Puzzle2dApp, rows: &Value) -> InvocationResult {
-    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": rows.to_string() })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
+    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": rows.to_string() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
 /// 🧾️ The applied history rows one dispatch upserted that carry document ops.

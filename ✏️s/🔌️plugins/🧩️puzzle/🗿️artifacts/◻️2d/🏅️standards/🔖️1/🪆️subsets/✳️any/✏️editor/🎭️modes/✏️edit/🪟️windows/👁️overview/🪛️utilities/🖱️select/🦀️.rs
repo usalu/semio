@@ -12,9 +12,9 @@
 #![allow(unexpected_cfgs)]
 
 use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
-use crate::apply_puzzle2d_mutation;
-use crate::editor::puzzle2d::{board_snapshot_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
-use crate::standards::v1::subsets::any::schema::mutations::{connect_handles_in_proximity,drag_selection,puzzle2d_handle_distance,rotate_selection,scale_selection,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
+use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::puzzle2d_occupied_handles, crate::editor::puzzle2d::snapshot::puzzle2d_push_edge, crate::editor::puzzle2d::snapshot::PUZZLE2D_PROXIMITY_GESTURE_MAX};
+use {crate::standards::v1::subsets::any::schema::mutations::connect_handles_in_proximity, crate::standards::v1::subsets::any::schema::mutations::drag_selection, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance, crate::standards::v1::subsets::any::schema::mutations::rotate_selection, crate::standards::v1::subsets::any::schema::mutations::scale_selection, crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation};
 
 use crate::standards::v1::subsets::any::io::text::mutations::{puzzle2d_declared_precision};
 use crate::Puzzle2dSnapshot;

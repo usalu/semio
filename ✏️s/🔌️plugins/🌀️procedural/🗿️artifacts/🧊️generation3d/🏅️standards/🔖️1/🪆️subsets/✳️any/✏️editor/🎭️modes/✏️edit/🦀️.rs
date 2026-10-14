@@ -1,7 +1,12 @@
 //! ✏️ Generation3d play app — the `edit` mode: the default two-window authoring layout (flow graph +
 //! 3D preview).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
-use crate::editor::generation3d::modes::edit::windows::{flow, preview};
+use crate::windows::flow;
+use crate::windows::preview;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -37,3 +42,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🕸️flow/🦀️.rs"]
+    pub mod flow;
+    #[path = "🪟️windows/👁️preview/🦀️.rs"]
+    pub mod preview;
+}

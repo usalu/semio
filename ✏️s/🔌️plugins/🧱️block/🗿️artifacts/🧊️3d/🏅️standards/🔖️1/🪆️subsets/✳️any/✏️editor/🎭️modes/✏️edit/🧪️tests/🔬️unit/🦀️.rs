@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_default_layout_lists_the_world_window() {

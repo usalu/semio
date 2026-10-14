@@ -1,7 +1,9 @@
 //! 📐️ Exact, conflict-checked affine placement for pixel and group layers.
-use crate::{RasterLayerNode,RasterLayerPatch,RasterMutation,RasterSnapshot,RasterTransform};
-use crate::diff::{diff_patch_layer,RasterDiff};
-use crate::standards::v1::subsets::any::schema::{find_layer,layer_transform};
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
+#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::{find_layer, layer_transform};
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
@@ -13,16 +15,16 @@ pub fn validate(payload:&ChangeLayerTransform,base:&RasterSnapshot)->Result<(),p
     for value in [&payload.expected,&payload.transform] {semio_framework_pixels::compositing::inverse(value.as_affine()).map_err(|_|protocol::OutcomeCode::Invariant)?;}
     Ok(())
 }
-impl protocol::MutationKind<RasterSnapshot,RasterMutation> for ChangeLayerTransform {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerTransform where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_transform::ChangeLayerTransform> {
     const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor {verb:"change",entity:"layer-transform",kind:"change-layer-transform",record:"ChangedLayerTransform"};
     fn diff(&self,base:&RasterSnapshot)->protocol::MutationOutcome<RasterDiff>{
         if let Err(code)=validate(self,base){return protocol::MutationOutcome::refuse(code,"Transform cannot be applied to this layer revision.",[self.layer_id.clone()]);}
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id,RasterLayerPatch {transform:Some(self.transform.clone()),..Default::default()}))
     }
-    fn inverse(&self,base:&RasterSnapshot)-> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self,base:&RasterSnapshot)-> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         if validate(self,base).is_err(){return Vec::new();}
-        vec![RasterMutation::ChangeLayerTransform(Self {layer_id:self.layer_id.clone(),expected:self.transform.clone(),transform:self.expected.clone()})]
+        vec![Op::from(Self {layer_id:self.layer_id.clone(),expected:self.transform.clone(),transform:self.expected.clone()})]
     
     })())
 }

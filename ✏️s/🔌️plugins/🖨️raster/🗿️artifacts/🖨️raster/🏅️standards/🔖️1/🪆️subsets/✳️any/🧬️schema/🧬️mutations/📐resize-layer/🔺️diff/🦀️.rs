@@ -1,12 +1,13 @@
 //! 🔺️ `resize-layer` sparse diff — writes only the layer's `width`/`height`; `RasterDiff::default()`
 //! when the addressed layer isn't a `Pixel` (or doesn't exist).
 
-use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ResizeLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &crate::resize_layer::mutation::ResizeLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     match find_layer(&base.layers, &payload.layer_id) {
         None => protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]),
         Some(_) if payload.new_width == 0 || payload.new_height == 0 => {

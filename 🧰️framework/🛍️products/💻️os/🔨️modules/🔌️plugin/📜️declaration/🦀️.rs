@@ -20,12 +20,12 @@ use {semio_framework_artifact_reference::{ArtifactDialect, Dialect}, semio_frame
 use crate::app_contract::ArtifactApp;
 use crate::artifact_identity::ArtifactCapabilityKind;
 use crate::artifact_identity::ArtifactDefinition;
-use crate::sdk_fault::ArtifactDefinitionError;
+use semio_framework_plugin_ownership::sdk_fault::ArtifactDefinitionError;
 use crate::artifact_identity::ArtifactDefinitionRegistry;
 use crate::artifact_identity::ArtifactIdentity;
 use crate::artifact_identity::ArtifactIdentityClaim;
 use crate::artifact_identity::ArtifactIdentityNamespace;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::artifact_identity::preflight_artifact_identity;
 use crate::artifact_identity::require_declared_capability_or_record;
 use crate::artifact_inference::ArtifactInferenceService;

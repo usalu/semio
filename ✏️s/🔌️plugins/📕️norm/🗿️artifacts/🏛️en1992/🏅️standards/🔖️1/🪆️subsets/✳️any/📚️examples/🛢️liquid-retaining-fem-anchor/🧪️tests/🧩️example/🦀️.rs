@@ -2,10 +2,10 @@
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../../../../🖼️assets/🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio");
     assert!(text.len() > 8);
-    let snap = <crate::En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("parse liquid example");
+    let snap = <semio_s_artifact_norm_en1992_model::En1992Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("parse liquid example");
     assert!(!snap.members.is_empty());
-    assert!(snap.members.iter().any(|m| m.tightness.is_some() || m.kind == crate::MemberKind::LiquidRetaining));
-    let report = crate::standards::v1::subsets::any::schema::inferences::evaluate(&snap);
+    assert!(snap.members.iter().any(|m| m.tightness.is_some() || m.kind == semio_s_artifact_norm_en1992_model::MemberKind::LiquidRetaining));
+    let report = semio_s_artifact_norm_en1992_inferences::evaluate(&snap);
     assert!(!report.checks.is_empty(), "liquid example must produce checks");
     assert!(
         report.checks.iter().any(|c| c.id.contains("liquid") || c.id.contains("7.3") || c.explanation.en.to_lowercase().contains("crack") || c.explanation.de.to_lowercase().contains("riss")),
@@ -14,11 +14,10 @@ async fn primary_asset_is_nonempty() {
     );
 }
 
-
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1992Inference;
-    use crate::En1992Snapshot;
+    use semio_s_artifact_norm_en1992_inferences::En1992Inference;
+    use semio_s_artifact_norm_en1992_model::En1992Snapshot;
     use protocol::Inference;
     let snapshot = En1992Snapshot::default();
     assert_eq!(En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -26,8 +25,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1992Inference;
-    use crate::En1992Snapshot;
+    use semio_s_artifact_norm_en1992_inferences::En1992Inference;
+    use semio_s_artifact_norm_en1992_model::En1992Snapshot;
     use protocol::Inference;
     assert_eq!(En1992Inference::infer(&En1992Snapshot::default()).expect("valid materialized inference fixture"), En1992Inference::default());
 }

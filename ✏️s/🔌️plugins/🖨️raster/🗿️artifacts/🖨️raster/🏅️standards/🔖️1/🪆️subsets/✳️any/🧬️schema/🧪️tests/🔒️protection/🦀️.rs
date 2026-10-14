@@ -1,9 +1,10 @@
 //! 🔒️ Layer protection persists across text, binary and subtree duplication.
 
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot;
+use crate::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 use super::*;
-use crate::{diff::diff_patch_layer,RasterLayerPatch};
-use crate::standards::v1::subsets::any::schema::snapshot;
+use semio_s_artifact_raster_raster_diff::diff_patch_layer;
+use crate::RasterLayerPatch;
+use crate::snapshot;
 use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
 #[test]
 fn protection_vectors_and_document_round_trips() {
@@ -23,7 +24,7 @@ fn protection_mutations_preserve_inverse_and_refuse_stale_guards() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     for row in fixture["changes"].as_array().unwrap() {
         let mut base=empty_raster_snapshot();base.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let operation=crate::RasterMutation::ChangeLayerLocked(crate::mutations::change_layer_locked::ChangeLayerLocked {layer_id:row["id"].as_str().unwrap().into(),expected:row["expected"].as_bool().unwrap(),locked:row["locked"].as_bool().unwrap()});
+        let operation=semio_s_artifact_raster_raster_mutations::RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::ChangeLayerLocked {layer_id:row["id"].as_str().unwrap().into(),expected:row["expected"].as_bool().unwrap(),locked:row["locked"].as_bool().unwrap()});
         let (next,messages)=semio_framework_os_kernel::apply_mutation(&base,&operation).unwrap();
         if row["accepted"].as_bool().unwrap() {
             assert!(messages.is_empty());assert_eq!(layer_locked(find_layer(&next.layers,row["id"].as_str().unwrap()).unwrap()),row["locked"].as_bool().unwrap());

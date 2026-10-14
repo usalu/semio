@@ -5,7 +5,7 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test": "bun repo run semio-framework-pixels:test"
+    "test": "bun --cwd \"../../../../..\" repo run semio-framework-pixels:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

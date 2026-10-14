@@ -3,11 +3,11 @@
 //! `crate::standards::v1::subsets::any::schema`/`crate::standards::v1::subsets::any::schema::inferences` on purpose: an
 //! artifact must never depend on an app, and every function here takes at least one app-only type.
 
-use crate::Block3dWindowView;
-use crate::{Block3dSnapshot, Block3dVortexKind};
-use crate::editor::block3d::config::Block3dConfig;
-use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrushPreview;
-use crate::BlockRepresentation;
+use semio_s_artifact_block_3d_model::Block3dWindowView;
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKind};
+use semio_s_artifact_block_3d_editor_config::Block3dConfig;
+use crate::edit::windows::world::transient::Block3dBrushPreview;
+use semio_s_plugin_block::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 
 use semio_framework_pack_json::{json, parse, Value};
@@ -41,7 +41,7 @@ pub fn instance_offset_for_representation(definition: &Block3dSnapshot, view: &B
 //#endregion 🔖️Visibility
 
 //#region 🔖️Scene
-pub fn effective_camera<'a>(definition: &'a Block3dSnapshot, config: &'a Block3dConfig) -> &'a crate::BlockCamera3d {
+pub fn effective_camera<'a>(definition: &'a Block3dSnapshot, config: &'a Block3dConfig) -> &'a semio_s_plugin_block::BlockCamera3d {
     config.camera.as_ref().unwrap_or(&definition.camera3d)
 }
 
@@ -83,7 +83,7 @@ pub fn world_instances_json(definition: &Block3dSnapshot, visible: &[&BlockRepre
 }
 
 fn vortex_kind_color(definition: &Block3dSnapshot, vortex_kind_id: &str) -> String {
-    crate::vortex_kinds_of(definition).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
+    semio_s_artifact_block_3d_model::vortex_kinds_of(definition).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
 pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
@@ -111,7 +111,7 @@ pub fn world_vortices_json(definition: &Block3dSnapshot, config: &Block3dConfig,
         let direction = if config.brush_flip { [-preview.direction[0], -preview.direction[1], -preview.direction[2]] } else { preview.direction };
         records.push(json!({
             "fullId": "__brush_preview__",
-            "objectId": visible.first().map_or(crate::editor::block3d::BLOCK3D_WORLD_OBJECT_ID, |r| r.id.as_str()),
+            "objectId": visible.first().map_or(crate::BLOCK3D_WORLD_OBJECT_ID, |r| r.id.as_str()),
             "vortexKind": config.brush_vortex_kind_id.clone().unwrap_or_else(|| "brush".into()),
             "position": vec3(preview.position),
             "direction": vec3(direction),
@@ -161,6 +161,6 @@ pub fn default_vortex_kind() -> Block3dVortexKind {
 }
 
 pub fn resolve_brush_vortex_kind_id(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
-    config.brush_vortex_kind_id.clone().or_else(|| crate::vortex_kinds_of(definition).first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
+    config.brush_vortex_kind_id.clone().or_else(|| semio_s_artifact_block_3d_model::vortex_kinds_of(definition).first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
 }
 //#endregion 🔖️Brush

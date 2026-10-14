@@ -1,11 +1,7 @@
 //! ⚖️ EN 1996 masonry checks — DIN EN 1996-1-1/NA, 1-2, 2, 3/NA with EN 1990 combinations.
 
-use crate::document::{
-    AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef,
-};
-use crate::{
-    ExposureClass, MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType,
-};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1996_model::{ExposureClass, MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType};
 
 fn loc(en: &str, de: &str) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
@@ -30,7 +26,6 @@ fn load_case_path(wall: &MasonryWall, lc: &WallLoadCase, field: &str) -> String 
 fn concentrated_path(wall: &MasonryWall, lc: &WallLoadCase, cid: &str, field: &str) -> String {
     format!("walls[id={}].loadCases[id={}].concentrated[id={}].{field}", wall.id, lc.id, cid)
 }
-
 
 //#region ⚖️AnnexParams
 #[derive(Clone, Copy, Debug)]

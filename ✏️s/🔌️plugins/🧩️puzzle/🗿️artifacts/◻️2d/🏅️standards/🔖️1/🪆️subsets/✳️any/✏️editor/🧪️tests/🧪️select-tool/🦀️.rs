@@ -5,7 +5,7 @@
 //! leaf states its inputs at their declared precision.
 
 use super::*;
-use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles,DragSelection};
 
 use protocol::Mutation as _;
@@ -75,14 +75,14 @@ fn a_drag_record_yields_its_leaf_then_the_connection_its_drop_lands() {
 #[test]
 fn recorded_pairs_connect_as_recorded_and_minted_ids_stay_unique() {
     let mut base = board();
-    base.edges.push(crate::Puzzle2dEdge { id: "edge-right:v0-left:v0".into(), source: "ghost:a".into(), target: "ghost:b".into(), ..Default::default() });
+    base.edges.push(crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: "edge-right:v0-left:v0".into(), source: "ghost:a".into(), target: "ghost:b".into(), ..Default::default() });
     let record = Puzzle2dSelectionRecord { targets: ids(&["right"]), motion: Puzzle2dSelectionMotion::Drag { dx: -10.0, dy: 0.0 }, proximity: vec![("right:v0".into(), "left:v0".into()), ("right:v0".into(), "missing:v9".into())], connect: false };
     let yields = puzzle2d_selection_yields(&base, &[record], 0.0);
     assert_eq!(yields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), vec!["selection:0", "connect:edge-right:v0-left:v0-2"], "the recorded pair connects as recorded, past the id the document already holds; a pair naming a missing handle is dropped");
     let Puzzle2dMutation::ConnectHandles(ConnectHandles { tolerance, .. }) = &yields[1].1 else { panic!("the recorded pair lands a connection: {:?}", yields[1].1) };
     let mut dropped = base.clone();
     apply_puzzle2d_mutation(&mut dropped, &yields[0].1).expect("the drag applies");
-    assert_eq!(*tolerance, crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_distance(&dropped, &"right:v0".into(), &"left:v0".into()), "a pair the board recorded from farther than the radius states its recorded distance");
+    assert_eq!(*tolerance, crate::standards::v1::subsets::any::schema::puzzle2d_handle_distance(&dropped, &"right:v0".into(), &"left:v0".into()), "a pair the board recorded from farther than the radius states its recorded distance");
     assert!(yields[1].1.diff(&dropped).messages().is_empty(), "replayed where it was recorded, the connection reports nothing");
     assert_eq!(puzzle2d_minted_edge_id(&board(), "a", "b"), "edge-a-b");
 }

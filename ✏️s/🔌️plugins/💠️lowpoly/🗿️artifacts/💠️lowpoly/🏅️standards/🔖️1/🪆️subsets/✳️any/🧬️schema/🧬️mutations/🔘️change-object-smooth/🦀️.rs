@@ -1,6 +1,6 @@
 //! 🔘️ `change-object-smooth-shading` — flips the mesh's smooth/flat shading flag.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -16,13 +16,16 @@ pub struct ChangeObjectSmoothShading {
     pub new_smooth_shading: bool,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangeObjectSmoothShading {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for ChangeObjectSmoothShading
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::change_object_smooth_shading::ChangeObjectSmoothShading>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-smooth-shading", record: "ChangedObjectSmoothShading" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_dsl_roundtrips() {
-    let reference = crate::En1990Snapshot::default();
+    let reference = semio_s_artifact_norm_en1990_model::En1990Snapshot::default();
     let text = print_dsl(&reference);
     let document = parse_dsl(&text).expect("parse");
     assert_eq!(document, reference);

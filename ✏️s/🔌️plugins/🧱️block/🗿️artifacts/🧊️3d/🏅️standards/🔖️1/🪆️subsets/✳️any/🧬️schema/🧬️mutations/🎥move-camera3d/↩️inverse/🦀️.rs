@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `MoveCamera3d`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::MoveCamera3d, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::move_camera3d::MoveCamera3d, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::move_camera3d::MoveCamera3d> {
     Ok((|| {
-    vec![super::super::move_camera3d::move_camera3d(base.camera3d.position, base.camera3d.target)]
+    vec![crate::move_camera3d::move_camera3d(base.camera3d.position, base.camera3d.target)]
 
     })())
 }

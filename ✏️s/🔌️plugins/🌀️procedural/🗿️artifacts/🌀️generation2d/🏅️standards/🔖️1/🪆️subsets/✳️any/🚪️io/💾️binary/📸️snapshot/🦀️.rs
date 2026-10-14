@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 #[cfg(test)]
 use store::PackError;
 
@@ -1017,12 +1017,14 @@ mod retained_mounted_laws;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 #[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 #[cfg(test)] use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 #[cfg(test)] use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
 #[cfg(test)] use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::text::snapshot::{Generation2dSnapshotDsl,generation2d_document_to_dsl,generation2d_document_from_dsl};
+use semio_s_artifact_procedural_2d_io_text::snapshot::Generation2dSnapshotDsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::generation2d_document_to_dsl;
+use semio_s_artifact_procedural_2d_io_text::snapshot::generation2d_document_from_dsl;
 
 impl pack::snapshot::ArtifactPack for Generation2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

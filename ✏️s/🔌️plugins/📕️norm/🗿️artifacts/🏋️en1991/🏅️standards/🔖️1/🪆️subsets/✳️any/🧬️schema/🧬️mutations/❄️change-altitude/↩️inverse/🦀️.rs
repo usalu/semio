@@ -1,9 +1,9 @@
 //! Inverse for `change-altitude`.
-use super::ChangeAltitude;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAltitude, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_altitude::ChangeAltitude;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAltitude, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_altitude::ChangeAltitude> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAltitude(ChangeAltitude { new_altitude: base.altitude })]
+    vec![Op::from(ChangeAltitude { new_altitude: base.altitude })]
 
     })())
 }

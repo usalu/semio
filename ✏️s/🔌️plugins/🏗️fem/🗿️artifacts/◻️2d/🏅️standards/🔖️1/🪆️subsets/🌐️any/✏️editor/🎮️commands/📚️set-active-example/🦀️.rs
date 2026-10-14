@@ -24,19 +24,16 @@ pub struct SetActiveExample {
 /// `Snapshot`, which would also wipe the session locale.
 ///
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
-/// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
+/// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `reset_document_effect` (io)
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let document = if payload.example_id == semio_s_artifact_fem_2d_io::examples::demo::ID {
-        Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot())
+        Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).unwrap_or_else(|_| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot())
     } else {
-        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()
     };
-    Ok(Emit { effects: vec![crate::editor::fem2d::reset_document_effect(&document)], ..Default::default() })
+    Ok(Emit { effects: vec![semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&document)], ..Default::default() })
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,11 +1,12 @@
 //! 🔺️ `change-layer-visible` sparse diff — writes only the layer's `visible` field.
 
-use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeLayerVisible, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
+pub fn diff(payload: &crate::change_layer_visible::mutation::ChangeLayerVisible, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
     let Some(layer) = find_layer(&base.layers, &payload.layer_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.clone()]);
     };

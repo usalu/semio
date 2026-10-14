@@ -1,0 +1,1420 @@
+{
+  "scope": "General module canonical script leaves; literal TS AST syntax only, no Source execution",
+  "enumerated": 105,
+  "remaining": 55,
+  "importDeclarations": 84,
+  "groups": {
+    "standardTests": [
+      "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "exact": [
+      "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts",
+      "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "build": [
+      "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "lint": [
+      "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "command": [
+      "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "other": []
+  },
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "8690a7dd4b894b4c7e6add80b1a5beb28a48bba2205bcf19471ccf51c7ba852c",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "49aacaa70c54a50225450f420f6b5a2fafc67397c5e4bd18d5a58a8d418b1d95",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "f066b43ba17e25ae28ab9cc1c8c86fc6f9e269c29bfb676d2ebea3e97d9f0fc7",
+      "edges": [
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 5,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "5b50a9a443d11cca07b3df9bd88695d7d18484b64192352dbffa3829246ab730",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "8e23bf4d98825c675870c8c74923e0391a7e19c9a91e5b0893e2cc541503ebe0",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "68e5283731c810ea9583d8dc61a3062eff9116394d45af9f5c5535b5113fc54e",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "775cfaa7d104de8c231430892747dcc1140e762d6d699d27e1208163e98fc2cf",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "16de09fd2d16f91cfca521408fd92208b1e3f89b933a64f6aac81c6e6d9abfa0",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "8819e62358f6f2d303eba2156d88b1a6c9207ed6a642b30c702cb9235ae26b1d",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a27747fa920c809debe0fd0c1b289e31961b1f0332a4fff030c8b9e205e2795d",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "281753dfcc9416b6cf5c747813ae6de70c5fa70460efc3b5da07574d4ebc813f",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+          "names": [
+            {
+              "imported": "repositoryCargoNetworkV1",
+              "local": "repositoryCargoNetworkV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        },
+        {
+          "line": 5,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+          "names": [
+            {
+              "imported": "buildRepositoryCargoArtifacts",
+              "local": "buildRepositoryCargoArtifacts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "ccdddb96981bd1b5686580509fe78c55b59d1b88851af4d5e3bff0b3b641da00",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "bf9ab24bfa2717bb697dd8dc7ee63e1a9930837d8b4b33f81f23e25cd1e7ba08",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "2ed3d2425e09c7ec917ec603b27d0542df314471e454b13244fce164f884e679",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "1a94ac84cfa13f0617c8a0a521bd1be6764fc278113afda0b78fa7cc37a37034",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "c33de67c81f498aa68f6764f6dad42268bdad9ee51d37f204dd46ef1e582b862",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+          "names": [
+            {
+              "imported": "repositoryCargoNetworkV1",
+              "local": "repositoryCargoNetworkV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        },
+        {
+          "line": 5,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+          "names": [
+            {
+              "imported": "buildRepositoryCargoArtifacts",
+              "local": "buildRepositoryCargoArtifacts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "d6d20da94528eb3bdad376bc3d2610566d30609c412f5322c45a49a09d63ed69",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "6e61fbca51acbde350c78cfe2809c88c2a06dc6f1641640904bb773ee03ae8f5",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "64615554c950f4380900a457a8b22320ac8b73e32e001bb8da95d5bd26f04a82",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "81f1e35636184db7b1066165477a788246970de061cc30d609c93f393ced033a",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            },
+            {
+              "imported": "runRepositoryCargoLintV1",
+              "local": "runCargoLintV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "3daa0e65a753052bff99c78ca44ca1491bcf75db8f358c62e794becfce08ab37",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "3909ecf6a0674b62c66e3532f29b3ad4f1bb0214945b29a2101e5cced19d044f",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "2865e10c509532ddac3df8be291311ca22e8018f57b102a4e4c251e7b0d81f20",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            },
+            {
+              "imported": "runRepositoryCargoLintV1",
+              "local": "runCargoLintV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "d7d8609f642ff9e916c94386ef8b08c5e5ea1aa3a082a5bb9219f07353d2e8b4",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "035e6b9747d308c19c11d1ad94e9c6910a7b3e6880bcc21891959b775c9bfab8",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "90591579cd5a82f53fc75016166aedeb58a81d25f78f759c6bf6026273c348b4",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "edc34b17a6736b6ccb8585a0164c12c71d513f24e7338c9d9caaddc76e4e5aa1",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "3e7a93780eb0fb78ab7039b35e1d350b325f29689792a8c3df314a035ad969d2",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "5dbaaf1ab08e3ae1ceed3a880f9b5efd9efbad13cc752de38b24709fa6c5c4f1",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "690128dac5494b6afd415e66addf1fc3bc1b59894ecf9a76eb0e76c7084b185f",
+      "edges": [
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 5,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "e73477d179b284a1229ffae449e11ea491212e5b036bdd8dbb44b7c4a76f4dc1",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "cd7fc85eb5a77f2fd009e09b6887f22fe63ef5c76d869dca6bebb3262c5d06af",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+          "names": [
+            {
+              "imported": "repositoryCargoNetworkV1",
+              "local": "repositoryCargoNetworkV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+          "names": [
+            {
+              "imported": "buildRepositoryCargoArtifacts",
+              "local": "buildRepositoryCargoArtifacts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "63aa21f35a3fbbc31939072c07bcc640ec977f28efb027142b32e05c82e04dd6",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "cc3f82f8eaebedf32875fce53e84b5196349d1db61dfc89c6138fab952b47ad6",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "6c2e08c941b41a7c77f5659b58ca5a07544d5ed2e2b233bd19f4f2f288a1d939",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "1ca2820178faa1e21b5f4a5a4f19f62f976798bb84e2c9c0642b5b08fc4bde9a",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "b8929f54572cb5f7d3a948683d3f390519ec16fbbaf06c49c6dcaa852459df78",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "f52714541eefd8191ea5b1ed357b4f54d700857abbdf79ddb0191031b09a7ba5",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a1e1abac38ed0f3907d9f3fd4cba7e5c19bb8a47a06fb10eed176b175479a6c3",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a149e29a67fa5e8d144d0da9c225eabd22c2b21ed23b95af8d8efad102b3c047",
+      "edges": [
+        {
+          "line": 5,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runRepositoryCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts",
+      "sha256": "c72eae0bc0434a79c01e06a2d540ed6a72e1b70cb21923fcdee498a7734fb216",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "fe0a23bbe83f4b891bcf40429f0d29750f17a988a92296451d211a40a229ce87",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "7e23164f4688bbfab99ef6e4984c5b25fd69ca996fa3b0e564fc74a79001e9f4",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "601e7b4ec1cdab3436934707f58c9fe5804aff4788038690dce8681e04d7b54d",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "9c5c5fa670b50bd762b7f64594ee4848c4d1a3767876ac92b84aaca515059cc4",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "5158ff355ee99ac67f139228e8a2854db08f525f1445793576c398026770ad79",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "629d4a98a0edd369b5891012ba3de020254ec1be61043123c19f9e052df0f64d",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoCommandV1",
+              "local": "runRepositoryCargoCommandV1"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            },
+            {
+              "imported": "runRepositoryCargoLintV1",
+              "local": "runCargoLintV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "68a5ccb5d6cfff13acd229a7aa5278b5520ef59022a00154f48725ac5ce4fa64",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "9d9b7432fb76a592d3acf3a3356c0dbe02acde4eb5fce0d616fbb11d5042df22",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "b98e657ae0a82affe66ef09c639ce5c1f568d79d952595818e8ced37a6f31f26",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a07debd6da8e5d1981255c668b6a0f11fa982c19cffce88b1aabfc1e30a86b14",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a15340d8aeca2500f747955bbb7a444af321161886eff0da71af43ce5130d5b7",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "384982d87790759282e6abbe31dc27c70494d2e24394257f3b31a41cecc45f95",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "11f3a23577b2246235d771fa1e856114b5a017f8a1c30260ae02909485c5c6de",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            },
+            {
+              "imported": "runRepositoryCargoLintV1",
+              "local": "runCargoLintV1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "1bb3ef8a8730d42c777823775add362ac90faec171e11229877037d539639c33",
+      "edges": [
+        {
+          "line": 2,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryExactCargoLaws",
+              "local": "runExactCargoLaws"
+            },
+            {
+              "imported": "configuredRepositoryCargoPreparationPolicyV1",
+              "local": "configuredRepositoryCargoPreparationPolicyV1"
+            }
+          ]
+        },
+        {
+          "line": 3,
+          "kind": "import",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+          "names": [
+            {
+              "imported": "runRepositoryCargoTestsV1",
+              "local": "runCargoTestsV1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

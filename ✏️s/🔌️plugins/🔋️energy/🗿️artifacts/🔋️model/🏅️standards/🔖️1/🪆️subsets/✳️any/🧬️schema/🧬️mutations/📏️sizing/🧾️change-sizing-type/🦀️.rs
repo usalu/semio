@@ -1,8 +1,7 @@
 //! 🧾️ Energy model mutation — `ChangeSizingObjectSizingType`: Swaps which load the sizing run solves for.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSizingObjectSizingType {
     pub new_sizing_type: crate::model::SizingType,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_sizing_object_sizing_type(id: crate::model::EntityId, new_sizing_type: crate::model::SizingType) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSizingObjectSizingType(ChangeSizingObjectSizingType { id, new_sizing_type })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_sizing_object_sizing_type<Op: From<ChangeSizingObjectSizingType>>(id: crate::model::EntityId, new_sizing_type: crate::model::SizingType) -> Op {
+    ChangeSizingObjectSizingType { id, new_sizing_type }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSizingObjectSizingType {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSizingObjectSizingType
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSizingObjectSizingType>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sizing-object", kind: "change-sizing-object-sizing-type", record: "ChangedSizingObjectSizingType" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

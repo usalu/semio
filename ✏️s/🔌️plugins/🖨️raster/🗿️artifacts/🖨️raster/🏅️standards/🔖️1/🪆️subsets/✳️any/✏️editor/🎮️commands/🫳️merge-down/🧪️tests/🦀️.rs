@@ -4,19 +4,19 @@ use protocol::Mutation;
 use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapshot {
-    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
+    let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (key,value) in fixture["images"].as_object().unwrap() {
         let image=RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect()};
-        let asset=crate::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
-        document.assets.insert(key.clone(),crate::mint_raster_asset_child(key,&asset)).unwrap();
+        let asset=semio_s_artifact_raster_raster_model::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&image).unwrap()};
+        document.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(key,&asset)).unwrap();
     }
     document
 }
 fn composite(document:&RasterSnapshot)->semio_framework_pixels::compositing::layers::RasterStackResult {
-    let mut job=crate::standards::v1::subsets::any::io::raster_composite_job(document).unwrap();while !job.advance(1).unwrap().done {}job.into_result().unwrap()
+    let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(document).unwrap();while !job.advance(1).unwrap().done {}job.into_result().unwrap()
 }
-fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);}
+fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
 fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
     let fixture=fixture();
@@ -58,18 +58,19 @@ fn unsupported_merge_and_cancel_leave_the_document_intact() {
 }
 
 fn fill_assets(document:&mut RasterSnapshot,capacity:usize) {
-    let asset=crate::raster_asset(&document.assets,"blue").unwrap();
-    for index in document.assets.len()..capacity {let key=format!("spare-{index}");document.assets.insert(key.clone(),crate::mint_raster_asset_child(&key,&asset)).unwrap();}
+    let asset=semio_s_artifact_raster_raster_io::raster_asset(&document.assets,"blue").unwrap();
+    for index in document.assets.len()..capacity {let key=format!("spare-{index}");document.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(&key,&asset)).unwrap();}
 }
 #[semio_framework_async_macros::async_test]
 async fn layer_baking_at_asset_capacity_publishes_and_restores_retained_history() {
-    use crate::editor::raster::{RasterCommand,unit_tests::context};
+    use crate::RasterCommand;
+    use crate::unit_tests::context;
     use semio_framework_plugin::PluginApp;
     let fixture=fixture();
     for merge in [true,false] {
         let mut app=context::app().await;
         let mut source=document(&fixture["cases"][0]["layers"],&fixture);fill_assets(&mut source,fixture["cases"][0]["assetCapacity"].as_u64().unwrap() as usize);
-        let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"bake-capacity",source,None);
+        let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA,"bake-capacity",source,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files=store::os_store::text_format::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
         semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
         let before=app.snapshot().unwrap();assert_eq!(before.assets.len(),64);

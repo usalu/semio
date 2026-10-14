@@ -2,12 +2,11 @@
 
 use crate::create_generation::CreateGeneration;
 use crate::delete_generation::DeleteGeneration;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
-pub fn inverse(payload: &CreateGeneration, _base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::delete_generation::DeleteGeneration>>(payload: &CreateGeneration, _base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Generation3dMutation::DeleteGeneration(DeleteGeneration { id: payload.generation.id.clone() })]
+    vec![Op::from(DeleteGeneration { id: payload.generation.id.clone() })]
 
     })())
 }

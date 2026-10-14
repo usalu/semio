@@ -4,7 +4,7 @@
 //! same `crate::energy_model` read, no edit affordances (`window_kind()`, the
 //! read-only variant, not the editable one).
 
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::model::create_energy_model_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Structure", "Struktur"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
 }
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `crate::energy_structure_tree` (artifact root, never the editor surface) — grouped so no node
 /// exceeds the kit's 32-sibling ceiling.
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::energy_structure_tree(&crate::energy_model(document)))
+    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&crate::snapshot::energy_model(document)))
 }
 //#endregion 🔖️Render
 

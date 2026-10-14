@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::SetSnapshot;
+use semio_s_artifact_procedural_3d_editor_config::SetSnapshot;
 use semio_s_artifact_procedural_3d_mutations::generation3d_host_snapshot_operations;
 use crate::SnapshotRead;
 use semio_s_artifact_procedural_3d_model::default_snapshot;

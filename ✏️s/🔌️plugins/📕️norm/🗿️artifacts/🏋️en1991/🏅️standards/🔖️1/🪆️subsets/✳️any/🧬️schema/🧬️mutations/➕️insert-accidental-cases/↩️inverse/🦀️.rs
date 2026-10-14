@@ -1,9 +1,9 @@
 //! Inverse for `insert-accidental-cases`.
-use super::InsertAccidentalCases;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(payload: &InsertAccidentalCases, _base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::insert_accidental_cases::InsertAccidentalCases;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(payload: &InsertAccidentalCases, _base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_accidental_cases::RemoveAccidentalCases> {
     Ok((|| {
-    vec![En1991Mutation::RemoveAccidentalCases(crate::mutations::remove_accidental_cases::RemoveAccidentalCases { index: payload.index })]
+    vec![Op::from(crate::remove_accidental_cases::RemoveAccidentalCases { index: payload.index })]
 
     })())
 }

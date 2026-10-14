@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem2d::modes::edit::windows::results;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};
 
 fn results_view() -> ViewModel {
@@ -14,7 +14,7 @@ fn results_view() -> ViewModel {
 /// configuration partition and never into the document.
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_is_config_only() {
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();

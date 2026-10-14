@@ -1,8 +1,11 @@
 //! 📎 `set-page-overrides` — replaces one page's overrides of its parent-page frames.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch, page_override_rows};
-use crate::{LayoutBounds, LayoutDiff, LayoutSnapshot, PageOverride};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch, page_override_rows};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::{LayoutBounds, PageOverride};
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,10 +20,10 @@ pub struct SetPageOverrides {
     pub overrides: Vec<PageOverride>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetPageOverrides {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetPageOverrides where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_page_overrides::SetPageOverrides> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "page-overrides", kind: "set-page-overrides", record: "SetPageOverrides" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_page_overrides(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_page_overrides(self, base)? 
     })
 }
@@ -56,10 +59,10 @@ pub fn diff_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { overrides: delta, ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_page_overrides<Op: From<crate::set_page_overrides::SetPageOverrides>>(payload: &SetPageOverrides, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::SetPageOverrides(SetPageOverrides { id: page.id.clone(), overrides: page.overrides.clone() })]
+    vec![Op::from(SetPageOverrides { id: page.id.clone(), overrides: page.overrides.clone() })]
 
     })())
 }

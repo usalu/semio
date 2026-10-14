@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "extension-quoted-birth-lost",
+      "change": {
+        "role": "producer",
+        "from": "::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<$snapshot, $mutation>()",
+        "to": "Ok(Default::default())"
+      },
+      "accepted": false
+    },
+    {
+      "id": "extension-owner-grant-lost",
+      "change": {
+        "role": "producer",
+        "from": "::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners::<$snapshot, $mutation>(grant)",
+        "to": "unreachable!()"
+      },
+      "accepted": false
+    },
+    {
+      "id": "extension-selected-producer-type-lost",
+      "change": {
+        "role": "members",
+        "from": "::semio_s_artifact_stdio_contract::SemioMemberStoreProducer<",
+        "to": "::wrong::OtherProducer<",
+        "occurrence": 0
+      },
+      "accepted": false
+    }
+  ],
+  "inputCases": [
+    {
+      "id": "extension-extra-authority",
+      "path": [
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "declaration-extra-authority",
+      "path": [
+        "declaration",
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "wrong-producer-reference-symbol",
+      "path": [
+        "declaration",
+        "roles",
+        "producer",
+        "symbols"
+      ],
+      "value": [
+        "Wrong",
+        "semio_member_owner"
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-member-reference-symbol",
+      "path": [
+        "declaration",
+        "roles",
+        "members",
+        "symbols"
+      ],
+      "value": [
+        "Wrong",
+        "SemioMembersOpen"
+      ],
+      "accepted": false
+    },
+    {
+      "id": "extension-body-extra-authority",
+      "path": [
+        "producer",
+        "authority"
+      ],
+      "value": true,
+      "accepted": false
+    }
+  ],
+  "sourceWrappers": [
+    {
+      "id": "test-only-member-table",
+      "role": "members",
+      "prefix": "#[cfg(test)] mod false_proof {\n",
+      "suffix": "\n}",
+      "accepted": false
+    },
+    {
+      "id": "foreign-module-member-table",
+      "role": "members",
+      "prefix": "mod foreign_proof {\n",
+      "suffix": "\n}",
+      "accepted": false
+    },
+    {
+      "id": "wrong-module-member-table",
+      "role": "members",
+      "prefix": "mod member_bindings {\n",
+      "suffix": "\n}",
+      "accepted": false
+    }
+  ]
+}

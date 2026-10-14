@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "owner": "fixture:repository-artifact",
+  "file": "entry.js",
+  "before": "console.log('original');",
+  "after": "console.log('successor');",
+  "maximumBytes": 65536,
+  "maximumFiles": 16,
+  "invalidFiles": [
+    [
+      "../escape"
+    ],
+    [
+      "/absolute"
+    ],
+    [
+      "duplicate",
+      "duplicate"
+    ],
+    [
+      "windows\\escape"
+    ]
+  ],
+  "manifest": {
+    "version": 1,
+    "owner": "fixture:repository-artifact",
+    "files": [
+      "entry.js"
+    ]
+  },
+  "extraFile": "undeclared.bin",
+  "minimumBudget": 1
+}

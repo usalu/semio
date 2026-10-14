@@ -35,7 +35,7 @@ fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_own
 
 #[test]
 fn dag_opens_as_an_owned_member_through_its_own_pack_codec(){
- assert_eq!(std::any::type_name::<<DagSnapshot as MemberStoreOwner<DagMutation>>::SnapshotOpen>(),std::any::type_name::<crate::os_store::PackMemberSnapshotOpen<DagSnapshot>>());
+ assert_eq!(std::any::type_name::<<crate::DagMemberStoreProducer as MemberStoreProducer<DagSnapshot,DagMutation>>::SnapshotOpen>(),std::any::type_name::<crate::os_store::ProducedMemberSnapshotOpen<DagSnapshot,crate::os_store::ArtifactPackSnapshotDecoder<DagSnapshot>>>());
  let snapshot=crate::default_dag_document();let encoded=pack::snapshot::ArtifactPack::encode_pack(&snapshot);let decoded=<DagSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).unwrap();assert_eq!(decoded.nodes,snapshot.nodes);assert!(<DagSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported());
  let(mut owner,born,released)=heap(||semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap());assert_eq!((born,released),(0,0));let grant=Grant{maximum_items:0,maximum_depth:1,..Default::default()};let(step,a,b)=heap(||owner.step(grant).unwrap());assert_eq!(step.progress(),Progress::default());assert_eq!((a,b),(0,0));
  for turn in 0..1_000_000{let copy=owner.next_copy_byte_demand().unwrap().max(7);let grant=Grant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy.max(owner.next_copy_byte_demand().unwrap())).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};owner.step(grant).unwrap();if owner.terminal_is_empty(){return;}assert!(turn<999_999);}

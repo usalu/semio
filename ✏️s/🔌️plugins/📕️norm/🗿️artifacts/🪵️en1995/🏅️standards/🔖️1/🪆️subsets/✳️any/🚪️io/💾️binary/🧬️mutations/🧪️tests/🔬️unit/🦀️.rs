@@ -1,9 +1,9 @@
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::mutations::change_annex;
-use crate::En1995Snapshot;
+use crate::binary::mutations::*;
+use semio_s_artifact_norm_en1995_mut_members::change_annex;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 fn sample_mutation() -> En1995Mutation {
-    En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En })
+    En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -16,7 +16,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
-    let envelope = store::os_store::document_materialize::create_document_envelope("norm.en1995/v1", "en1995", En1995Snapshot::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope("norm.en1995/v1", "en1995", En1995Snapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     // 🏪️ A bare `ArtifactStore::new` installs NO document-store owners: the first `Apply` is refused
     // with `edit history insertion requires its exact mutation retirement factory`, and a store that
     // survived would then trip the terminal-empty shallow-shell witness in `Drop`.

@@ -1,8 +1,8 @@
 //! 🔺️ `rename-product-group` — sparse diff construction; missing id is `mutation.target-missing`.
 
-use super::mutation::RenameProductGroup;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductGroupsRows, Iso16757ProductGroupsPatch};
+use crate::rename_product_group::mutation::RenameProductGroup;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductGroupsRows, Iso16757ProductGroupsPatch};
 
 //#region 🔖️Diff
 

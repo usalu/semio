@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::mutations::bridge_decode_pair;
+use crate::text::mutations_codec::bridge_decode_pair;
 use super::*;
-use crate::{Frame, LayoutBounds, LayoutRect, TextStory};
+use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds, LayoutRect, TextStory};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
@@ -43,17 +43,17 @@ fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapsho
 #[semio_framework_async_macros::async_test]
 async fn document_scalar_mutations_round_trip() {
     let doc = sample_doc();
-    let renamed = round_trip(&doc, &LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "Renamed".into() }));
+    let renamed = round_trip(&doc, &LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout { new_name: "Renamed".into() }));
     assert_eq!(renamed.name, "Renamed");
 
-    let with_target = round_trip(&doc, &LayoutMutation::ChangePrintTarget(change_print_target::ChangePrintTarget { new_print_target: Some("cmyk".into()) }));
+    let with_target = round_trip(&doc, &LayoutMutation::ChangePrintTarget(semio_s_artifact_layout_layout_mutations_content::change_print_target::ChangePrintTarget { new_print_target: Some("cmyk".into()) }));
     assert_eq!(with_target.print_target.as_deref(), Some("cmyk"));
-    let cleared = round_trip(&with_target, &LayoutMutation::ChangePrintTarget(change_print_target::ChangePrintTarget { new_print_target: None }));
+    let cleared = round_trip(&with_target, &LayoutMutation::ChangePrintTarget(semio_s_artifact_layout_layout_mutations_content::change_print_target::ChangePrintTarget { new_print_target: None }));
     assert!(cleared.print_target.is_none());
 
-    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_fields: Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}) }));
-    assert_eq!(with_fields.data_fields,Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}));
-    let cleared_fields = round_trip(&with_fields, &LayoutMutation::ChangeDataFields(change_data_fields::ChangeDataFields { new_fields: None }));
+    let with_fields = round_trip(&doc, &LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}) }));
+    assert_eq!(with_fields.data_fields,Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"key".into(),value:semio_framework_value::DslValue::String("value".into())}]}));
+    let cleared_fields = round_trip(&with_fields, &LayoutMutation::ChangeDataFields(semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields { new_fields: None }));
     assert!(cleared_fields.data_fields.is_none());
 }
 //#endregion ✏️🖨️🧾document-scalars
@@ -64,31 +64,31 @@ async fn pages_create_rename_resize_delete_round_trip() {
     let doc = sample_doc();
     let mut page_2 = doc.pages[0].clone();
     page_2.id = "page-2".into();
-    let create = LayoutMutation::CreatePage(create_page::CreatePage { page: page_2, index: Some(1) });
+    let create = LayoutMutation::CreatePage(semio_s_artifact_layout_layout_mutations_content::create_page::CreatePage { page: page_2, index: Some(1) });
     let with_page = round_trip(&doc, &create);
     assert_eq!(with_page.pages.len(), 2);
 
-    let rename = LayoutMutation::RenamePage(rename_page::RenamePage { id: "page-1".into(), new_name: "Renamed".into() });
+    let rename = LayoutMutation::RenamePage(semio_s_artifact_layout_layout_mutations_content::rename_page::RenamePage { id: "page-1".into(), new_name: "Renamed".into() });
     let renamed = round_trip(&with_page, &rename);
     assert_eq!(renamed.pages.iter().find(|page| page.id == "page-1").unwrap().name, "Renamed");
 
-    let width = LayoutMutation::ChangePageWidth(change_page_width::ChangePageWidth { id: "page-1".into(), new_width: 300.0 });
+    let width = LayoutMutation::ChangePageWidth(semio_s_artifact_layout_layout_mutations_content::change_page_width::ChangePageWidth { id: "page-1".into(), new_width: 300.0 });
     let widened = round_trip(&renamed, &width);
     assert_eq!(widened.pages[0].width, 300.0);
 
-    let height = LayoutMutation::ChangePageHeight(change_page_height::ChangePageHeight { id: "page-1".into(), new_height: 400.0 });
+    let height = LayoutMutation::ChangePageHeight(semio_s_artifact_layout_layout_mutations_content::change_page_height::ChangePageHeight { id: "page-1".into(), new_height: 400.0 });
     let heightened = round_trip(&widened, &height);
     assert_eq!(heightened.pages[0].height, 400.0);
 
-    let margins = LayoutMutation::UpdatePageMargins(update_page_margins::UpdatePageMargins { id: "page-1".into(), top: 1.0, right: 2.0, bottom: 3.0, left: 4.0 });
+    let margins = LayoutMutation::UpdatePageMargins(semio_s_artifact_layout_layout_mutations_content::update_page_margins::UpdatePageMargins { id: "page-1".into(), top: 1.0, right: 2.0, bottom: 3.0, left: 4.0 });
     let with_margins = round_trip(&heightened, &margins);
     assert_eq!((with_margins.pages[0].margins.top, with_margins.pages[0].margins.left), (1.0, 4.0));
 
-    let columns = LayoutMutation::UpdatePageColumns(update_page_columns::UpdatePageColumns { id: "page-1".into(), count: 3, gutter: 12.0 });
+    let columns = LayoutMutation::UpdatePageColumns(semio_s_artifact_layout_layout_mutations_content::update_page_columns::UpdatePageColumns { id: "page-1".into(), count: 3, gutter: 12.0 });
     let with_columns = round_trip(&with_margins, &columns);
     assert_eq!((with_columns.pages[0].columns.count, with_columns.pages[0].columns.gutter), (3, 12.0));
 
-    let delete = LayoutMutation::DeletePage(delete_page::DeletePage { id: "page-2".into() });
+    let delete = LayoutMutation::DeletePage(semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage { id: "page-2".into() });
     let deleted = round_trip(&with_columns, &delete);
     assert_eq!(deleted.pages.len(), 1);
 }
@@ -101,7 +101,7 @@ async fn reorder_pages_round_trips() {
     let mut page_3 = doc.pages[0].clone();
     page_3.id = "page-3".into();
     doc.pages = vec![doc.pages[0].clone(), page_2, page_3];
-    let reorder = LayoutMutation::ReorderPages(reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
+    let reorder = LayoutMutation::ReorderPages(semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
     let reordered = round_trip(&doc, &reorder);
     assert_eq!(reordered.pages.iter().map(|page| page.id.clone()).collect::<Vec<_>>(), vec!["page-2", "page-3", "page-1"]);
 }
@@ -109,7 +109,7 @@ async fn reorder_pages_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn delete_page_of_a_missing_id_has_an_empty_inverse() {
     let doc = sample_doc();
-    let delete = LayoutMutation::DeletePage(delete_page::DeletePage { id: "no-page".into() });
+    let delete = LayoutMutation::DeletePage(semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage { id: "no-page".into() });
     assert!(delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 }
 //#endregion 📄pages
@@ -118,15 +118,15 @@ async fn delete_page_of_a_missing_id_has_an_empty_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn stories_create_edit_delete_round_trip() {
     let doc = sample_doc();
-    let create = LayoutMutation::CreateStory(create_story::CreateStory { story: TextStory { id: "story-2".into(), content: "New".into(), style_runs: Vec::new() }, index: Some(1) });
+    let create = LayoutMutation::CreateStory(semio_s_artifact_layout_layout_mutations_content::create_story::CreateStory { story: TextStory { id: "story-2".into(), content: "New".into(), style_runs: Vec::new() }, index: Some(1) });
     let with_story = round_trip(&doc, &create);
     assert_eq!(with_story.stories.len(), 2);
 
-    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited".into() });
+    let edit = LayoutMutation::EditStory(semio_s_artifact_layout_layout_mutations_content::edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited".into() });
     let edited = round_trip(&with_story, &edit);
     assert_eq!(edited.stories.iter().find(|story| story.id == "story-1").unwrap().content, "Edited");
 
-    let delete = LayoutMutation::DeleteStory(delete_story::DeleteStory { id: "story-2".into() });
+    let delete = LayoutMutation::DeleteStory(semio_s_artifact_layout_layout_mutations_content::delete_story::DeleteStory { id: "story-2".into() });
     let deleted = round_trip(&edited, &delete);
     assert_eq!(deleted.stories.len(), 1);
 }
@@ -134,18 +134,18 @@ async fn stories_create_edit_delete_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn links_create_change_path_delete_round_trip() {
     let doc = sample_doc();
-    let create = LayoutMutation::CreateLink(create_link::CreateLink {
-        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
+    let create = LayoutMutation::CreateLink(semio_s_artifact_layout_layout_mutations_content::create_link::CreateLink {
+        link: semio_s_artifact_layout_layout_model::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
         index: Some(1),
     });
     let with_link = round_trip(&doc, &create);
     assert_eq!(with_link.links.len(), 2);
 
-    let relink = LayoutMutation::ChangeLinkPath(change_link_path::ChangeLinkPath { id: "link-1".into(), new_path: "c.png".into() });
+    let relink = LayoutMutation::ChangeLinkPath(semio_s_artifact_layout_layout_mutations_content::change_link_path::ChangeLinkPath { id: "link-1".into(), new_path: "c.png".into() });
     let relinked = round_trip(&with_link, &relink);
     assert_eq!(relinked.links.iter().find(|link| link.id == "link-1").unwrap().path, "c.png");
 
-    let delete = LayoutMutation::DeleteLink(delete_link::DeleteLink { id: "link-2".into() });
+    let delete = LayoutMutation::DeleteLink(semio_s_artifact_layout_layout_mutations_content::delete_link::DeleteLink { id: "link-2".into() });
     let deleted = round_trip(&relinked, &delete);
     assert_eq!(deleted.links.len(), 1);
 }
@@ -155,32 +155,32 @@ async fn links_create_change_path_delete_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn frame_create_move_resize_style_delete_round_trip() {
     let doc = sample_doc();
-    let create = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-2"), index: Some(1), layer_id: Some("layer-1".into()) });
+    let create = LayoutMutation::CreateFrame(semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-2"), index: Some(1), layer_id: Some("layer-1".into()) });
     let with_frame = round_trip(&doc, &create);
     assert_eq!(with_frame.pages[0].frames.len(), 2);
     assert!(with_frame.pages[0].layers[0].object_ids.iter().any(|id| id == "frame-2"));
 
-    let mv = LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 99.0, new_y: 88.0 });
+    let mv = LayoutMutation::MoveFrame(semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 99.0, new_y: 88.0 });
     let moved = round_trip(&with_frame, &mv);
     let bounds = moved.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap().bounds();
     assert_eq!((bounds.x, bounds.y), (99.0, 88.0));
 
-    let resize = LayoutMutation::ResizeFrame(resize_frame::ResizeFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_width: 55.0, new_height: 66.0 });
+    let resize = LayoutMutation::ResizeFrame(semio_s_artifact_layout_layout_mutations_frames::resize_frame::ResizeFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_width: 55.0, new_height: 66.0 });
     let resized = round_trip(&moved, &resize);
     let bounds = resized.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap().bounds();
     assert_eq!((bounds.width, bounds.height), (55.0, 66.0));
 
-    let fill = LayoutMutation::ChangeFrameFill(change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.5, 0.5, 0.5, 1.0]) });
+    let fill = LayoutMutation::ChangeFrameFill(semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.5, 0.5, 0.5, 1.0]) });
     let filled = round_trip(&resized, &fill);
     let Frame::Rect { fill, .. } = filled.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap() else { panic!("expected rect") };
     assert_eq!(fill.unwrap(), [0.5, 0.5, 0.5, 1.0]);
 
-    let stroke = LayoutMutation::ChangeFrameStroke(change_frame_stroke::ChangeFrameStroke { page_id: "page-1".into(), frame_id: "frame-1".into(), new_stroke: Some([0.1, 0.1, 0.1, 1.0]) });
+    let stroke = LayoutMutation::ChangeFrameStroke(semio_s_artifact_layout_layout_mutations_frames::change_frame_stroke::ChangeFrameStroke { page_id: "page-1".into(), frame_id: "frame-1".into(), new_stroke: Some([0.1, 0.1, 0.1, 1.0]) });
     let stroked = round_trip(&filled, &stroke);
     let Frame::Rect { stroke, .. } = stroked.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap() else { panic!("expected rect") };
     assert_eq!(stroke.unwrap(), [0.1, 0.1, 0.1, 1.0]);
 
-    let delete = LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "frame-2".into() });
+    let delete = LayoutMutation::DeleteFrame(semio_s_artifact_layout_layout_mutations_frames::delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "frame-2".into() });
     let deleted = round_trip(&stroked, &delete);
     assert_eq!(deleted.pages[0].frames.len(), 1);
 }
@@ -188,22 +188,22 @@ async fn frame_create_move_resize_style_delete_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
     let doc = sample_doc();
-    let add = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
+    let add = LayoutMutation::CreateFrame(semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
     let with_text = protocol::apply_diff(add.diff(&doc).diff(), &doc).expect("valid mutation diff");
 
-    let wrap = LayoutMutation::ChangeFrameWrapMode(change_frame_wrap_mode::ChangeFrameWrapMode { page_id: "page-1".into(), frame_id: "frame-text".into(), new_wrap_mode: "column".into() });
+    let wrap = LayoutMutation::ChangeFrameWrapMode(semio_s_artifact_layout_layout_mutations_frames::change_frame_wrap_mode::ChangeFrameWrapMode { page_id: "page-1".into(), frame_id: "frame-text".into(), new_wrap_mode: "column".into() });
     let wrapped = round_trip(&with_text, &wrap);
     let Frame::Text { wrap_mode, .. } = wrapped.pages[0].frames.iter().find(|frame| frame.id() == "frame-text").unwrap() else { panic!("expected text frame") };
     assert_eq!(wrap_mode, "column");
 
-    let columns = LayoutMutation::ChangeFrameColumns(change_frame_columns::ChangeFrameColumns { page_id: "page-1".into(), frame_id: "frame-text".into(), new_columns: 3 });
+    let columns = LayoutMutation::ChangeFrameColumns(semio_s_artifact_layout_layout_mutations_frames::change_frame_columns::ChangeFrameColumns { page_id: "page-1".into(), frame_id: "frame-text".into(), new_columns: 3 });
     let columned = round_trip(&wrapped, &columns);
     let Frame::Text { columns, .. } = columned.pages[0].frames.iter().find(|frame| frame.id() == "frame-text").unwrap() else { panic!("expected text frame") };
     assert_eq!(*columns, 3);
 
     // 🖼️ Fill/stroke are Rect-only fields — a change against a text frame is a no-op, and its
     // inverse (nothing captured) is therefore empty.
-    let fill_on_text = LayoutMutation::ChangeFrameFill(change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
+    let fill_on_text = LayoutMutation::ChangeFrameFill(semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
     let unchanged = protocol::apply_diff(fill_on_text.diff(&columned).diff(), &columned).expect("valid mutation diff");
     assert_eq!(unchanged, columned, "fill patch on a text frame must be a no-op");
     assert!(fill_on_text.inverse(&columned).expect("valid retained mutation inverse fixture").is_empty());
@@ -214,27 +214,27 @@ async fn frame_mutations_are_no_ops_when_target_missing() {
     let doc = sample_doc();
     let apply = |operation: &LayoutMutation| protocol::apply_diff(operation.diff(&doc).diff(), &doc).expect("valid mutation diff");
 
-    let missing_page_create = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: Some(0), layer_id: None });
+    let missing_page_create = LayoutMutation::CreateFrame(semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: Some(0), layer_id: None });
     assert_eq!(apply(&missing_page_create), doc, "creating on a missing page must be a no-op");
 
-    let unmatched_layer = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-y"), index: Some(0), layer_id: Some("no-layer".into()) });
+    let unmatched_layer = LayoutMutation::CreateFrame(semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame { page_id: "page-1".into(), frame: new_rect("frame-y"), index: Some(0), layer_id: Some("no-layer".into()) });
     let result = apply(&unmatched_layer);
     assert!(result.pages[0].frames.iter().any(|frame| frame.id() == "frame-y"));
     assert!(result.pages[0].layers[0].object_ids.iter().all(|id| id != "frame-y"), "unmatched layer id must not be populated");
 
-    let missing_page_delete = LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "no-page".into(), frame_id: "frame-1".into() });
+    let missing_page_delete = LayoutMutation::DeleteFrame(semio_s_artifact_layout_layout_mutations_frames::delete_frame::DeleteFrame { page_id: "no-page".into(), frame_id: "frame-1".into() });
     assert_eq!(apply(&missing_page_delete), doc);
     assert!(missing_page_delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
-    let missing_frame_delete = LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "no-frame".into() });
+    let missing_frame_delete = LayoutMutation::DeleteFrame(semio_s_artifact_layout_layout_mutations_frames::delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "no-frame".into() });
     assert_eq!(apply(&missing_frame_delete), doc);
     assert!(missing_frame_delete.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
-    let missing_page_move = LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "no-page".into(), frame_id: "frame-1".into(), new_x: 1.0, new_y: 1.0 });
+    let missing_page_move = LayoutMutation::MoveFrame(semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame { page_id: "no-page".into(), frame_id: "frame-1".into(), new_x: 1.0, new_y: 1.0 });
     assert_eq!(apply(&missing_page_move), doc);
     assert!(missing_page_move.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 
-    let missing_frame_resize = LayoutMutation::ResizeFrame(resize_frame::ResizeFrame { page_id: "page-1".into(), frame_id: "no-frame".into(), new_width: 1.0, new_height: 1.0 });
+    let missing_frame_resize = LayoutMutation::ResizeFrame(semio_s_artifact_layout_layout_mutations_frames::resize_frame::ResizeFrame { page_id: "page-1".into(), frame_id: "no-frame".into(), new_width: 1.0, new_height: 1.0 });
     assert_eq!(apply(&missing_frame_resize), doc);
     assert!(missing_frame_resize.inverse(&doc).expect("valid retained mutation inverse fixture").is_empty());
 }
@@ -251,25 +251,25 @@ async fn create_page_obeys_the_inverse_and_absorb_laws() {
     let base = sample_doc();
     let mut page_2 = base.pages[0].clone();
     page_2.id = "page-9".into();
-    let create = LayoutMutation::CreatePage(create_page::CreatePage { page: page_2, index: None });
+    let create = LayoutMutation::CreatePage(semio_s_artifact_layout_layout_mutations_content::create_page::CreatePage { page: page_2, index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).diff().clone();
     let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
-    let d2 = LayoutMutation::RenamePage(rename_page::RenamePage { id: "page-9".into(), new_name: "Renamed".into() }).diff(&after).diff().clone();
+    let d2 = LayoutMutation::RenamePage(semio_s_artifact_layout_layout_mutations_content::rename_page::RenamePage { id: "page-9".into(), new_name: "Renamed".into() }).diff(&after).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_frame_obeys_the_inverse_law() {
     let base = sample_doc();
-    let mv = LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 42.0, new_y: 43.0 });
+    let mv = LayoutMutation::MoveFrame(semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: 42.0, new_y: 43.0 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mv).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_layout_obeys_the_inverse_law() {
     let base = sample_doc();
-    let rename = LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "Renamed".into() });
+    let rename = LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout { new_name: "Renamed".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &rename).await;
 }
 
@@ -281,7 +281,7 @@ async fn delete_page_obeys_the_inverse_law() {
     let mut page_2 = base.pages[0].clone();
     page_2.id = "page-2".into();
     base.pages.push(page_2);
-    let delete = LayoutMutation::DeletePage(delete_page::DeletePage { id: "page-2".into() });
+    let delete = LayoutMutation::DeletePage(semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage { id: "page-2".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &delete).await;
 }
 
@@ -295,7 +295,7 @@ async fn reorder_pages_obeys_the_inverse_law() {
     let mut page_3 = base.pages[0].clone();
     page_3.id = "page-3".into();
     base.pages = vec![base.pages[0].clone(), page_2, page_3];
-    let reorder = LayoutMutation::ReorderPages(reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
+    let reorder = LayoutMutation::ReorderPages(semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &reorder).await;
 }
 
@@ -303,7 +303,7 @@ async fn reorder_pages_obeys_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn update_page_margins_obeys_the_inverse_law() {
     let base = sample_doc();
-    let margins = LayoutMutation::UpdatePageMargins(update_page_margins::UpdatePageMargins { id: "page-1".into(), top: 5.0, right: 6.0, bottom: 7.0, left: 8.0 });
+    let margins = LayoutMutation::UpdatePageMargins(semio_s_artifact_layout_layout_mutations_content::update_page_margins::UpdatePageMargins { id: "page-1".into(), top: 5.0, right: 6.0, bottom: 7.0, left: 8.0 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &margins).await;
 }
 
@@ -312,7 +312,7 @@ async fn update_page_margins_obeys_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn change_frame_fill_obeys_the_inverse_law() {
     let base = sample_doc();
-    let fill = LayoutMutation::ChangeFrameFill(change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.9, 0.1, 0.1, 1.0]) });
+    let fill = LayoutMutation::ChangeFrameFill(semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-1".into(), new_fill: Some([0.9, 0.1, 0.1, 1.0]) });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &fill).await;
 }
 
@@ -321,10 +321,10 @@ async fn change_frame_fill_obeys_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn edit_story_and_create_link_obey_the_inverse_law() {
     let base = sample_doc();
-    let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited.".into() });
+    let edit = LayoutMutation::EditStory(semio_s_artifact_layout_layout_mutations_content::edit_story::EditStory { id: "story-1".into(), offset: 0, delete: 5, insert: "Edited.".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &edit).await;
-    let link = LayoutMutation::CreateLink(create_link::CreateLink {
-        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
+    let link = LayoutMutation::CreateLink(semio_s_artifact_layout_layout_mutations_content::create_link::CreateLink {
+        link: semio_s_artifact_layout_layout_model::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
         index: None,
     });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &link).await;
@@ -335,7 +335,7 @@ async fn edit_story_and_create_link_obey_the_inverse_law() {
 async fn semantic_kinds_cover_every_variant() {
     assert_eq!(LayoutMutation::kinds().len(), KINDS.len(), "one semantic descriptor per declared kind");
     assert_eq!(KINDS.len(), 48, "the 48 leaves of the layout vocabulary");
-    let mutation = LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "x".into() });
+    let mutation = LayoutMutation::RenameLayout(semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout { new_name: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-layout");
     assert_eq!(mutation.semantics().record, "RenamedLayout");
 }
@@ -350,50 +350,50 @@ async fn semantic_kinds_cover_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_frame_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: None, layer_id: None })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::CreateFrame(semio_s_artifact_layout_layout_mutations_frames::create_frame::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: None, layer_id: None })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_frame_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::DeleteFrame(delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "ghost".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::DeleteFrame(semio_s_artifact_layout_layout_mutations_frames::delete_frame::DeleteFrame { page_id: "page-1".into(), frame_id: "ghost".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_frame_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "ghost".into(), new_x: 1.0, new_y: 1.0 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::MoveFrame(semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "ghost".into(), new_x: 1.0, new_y: 1.0 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_pages_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::ReorderPages(reorder_pages::ReorderPages { id: "ghost".into(), to_index: 0 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::ReorderPages(semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages { id: "ghost".into(), to_index: 0 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_page_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::RenamePage(rename_page::RenamePage { id: "ghost".into(), new_name: "x".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::RenamePage(semio_s_artifact_layout_layout_mutations_content::rename_page::RenamePage { id: "ghost".into(), new_name: "x".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_page_height_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::ChangePageHeight(change_page_height::ChangePageHeight { id: "ghost".into(), new_height: 1.0 })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::ChangePageHeight(semio_s_artifact_layout_layout_mutations_content::change_page_height::ChangePageHeight { id: "ghost".into(), new_height: 1.0 })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn edit_story_missing_target_is_error() {
     let base = sample_doc();
-    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::EditStory { id: "ghost".into(), offset: 0, delete: 0, insert: "x".into() })).await;
+    protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(semio_s_artifact_layout_layout_mutations_content::edit_story::EditStory { id: "ghost".into(), offset: 0, delete: 0, insert: "x".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_page_duplicate_id_is_fatal() {
     let base = sample_doc();
     let duplicate = base.pages[0].clone();
-    let outcome = LayoutMutation::CreatePage(create_page::CreatePage { page: duplicate, index: None }).diff(&base);
+    let outcome = LayoutMutation::CreatePage(semio_s_artifact_layout_layout_mutations_content::create_page::CreatePage { page: duplicate, index: None }).diff(&base);
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
@@ -456,7 +456,7 @@ fn bounds_of(document: &LayoutSnapshot, id: &str) -> LayoutBounds {
 async fn frame_selection_leaves_replay_on_a_moved_base() {
     for start in [10.0, -35.5] {
         let mut document = sample_doc();
-        document = applied(&document, &LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: start, new_y: start }));
+        document = applied(&document, &LayoutMutation::MoveFrame(semio_s_artifact_layout_layout_mutations_frames::move_frame::MoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), new_x: start, new_y: start }));
         let dragged = round_trip(&document, &drag_frames(&["frame-1"], 4.0, -2.0));
         assert_eq!((bounds_of(&dragged, "frame-1").x, bounds_of(&dragged, "frame-1").y), (start + 4.0, start - 2.0));
     }
@@ -495,7 +495,7 @@ async fn frame_selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::new_layout_store(store::os_store::document_materialize::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = semio_s_artifact_layout_layout_host::new_layout_store(store::os_store::document_materialize::create_document_envelope::<LayoutSnapshot, LayoutMutation>(semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
     for mutation in &log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a frame transform applies");
@@ -503,7 +503,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), 3, "one applied op per gesture");
     let edited = drag_frames(&["frame-1"], -5.0, 20.0);
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let preview_base = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
     assert_eq!(preview_base, sample_doc(), "the preview base is the state right before the edited drag");
     let preview = applied(&preview_base, &edited);

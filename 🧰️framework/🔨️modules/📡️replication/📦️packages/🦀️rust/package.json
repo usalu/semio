@@ -2,8 +2,8 @@
   "name": "@semio-tech/framework-replication-rs",
   "private": true,
   "scripts": {
-    "test-command-ingress-ownership": "bun repo run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
-    "test-command-ingress-native": "bun repo run @semio-tech/framework-replication-rs:test-command-ingress-native"
+    "test-command-ingress-ownership": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
+    "test-command-ingress-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication-rs:test-command-ingress-native"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

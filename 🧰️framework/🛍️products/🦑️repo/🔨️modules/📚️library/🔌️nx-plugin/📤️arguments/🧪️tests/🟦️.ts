@@ -3,6 +3,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
+import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import {createRequire} from "node:module";
 import {dirname,resolve} from "node:path";
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
@@ -40,7 +41,7 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
   options.env={...options.env,SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(original),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(capabilities),CARGO_TARGET_DIR:native.resources.artifactDirectory,CARGO_NET_OFFLINE:String(native.resources.network.offline)};
   const result=await api.executeOwnerArgumentsV1(options,{root,projectName:"literal-owner",targetName:"probe",taskGraph,projectsConfigurations:{projects}},async(plan:any)=>{observed=plan;return {success:true};});
   const issued=JSON.parse(observed.env.SEMIO_SCRIPT_PROCESS_INVOCATION);
-  expect(new Ajv({strict:true}).compile(nativeSchema)(issued.capabilities)).toBe(true);
+  expect(new Ajv({strict:true}).addSchema(cargoExecutionSchema).compile(nativeSchema)(issued.capabilities)).toBe(true);
   expect(issued.policy).toEqual(original.policy);expect(issued.deadlineEpochMilliseconds).toBe(original.deadlineEpochMilliseconds);
   expect(issued.capabilities.command).toEqual({...native.command,arguments:[...native.command.arguments,...row.arguments]});
   expect(result.success).toBe(true);expect(observed.command).toBe(options.command);expect(observed.forwardAllArgs).toBe(false);expect(observed.__unparsed__).toEqual([]);expect(observed.args).toBeUndefined();

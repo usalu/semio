@@ -1,8 +1,7 @@
 //! 🕜️ Energy model mutation — `CreateConstantSchedule`: Defines one schedule that holds the same value at every timestep — the shape a fixed setpoint, a fixed fraction or an always-on availability takes.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct CreateConstantSchedule {
     pub value: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_constant_schedule(index: u32, id: crate::schedule::ScheduleId, value: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateConstantSchedule(CreateConstantSchedule { index, id, value })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_constant_schedule<Op: From<CreateConstantSchedule>>(index: u32, id: crate::schedule::ScheduleId, value: f64) -> Op {
+    CreateConstantSchedule { index, id, value }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateConstantSchedule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateConstantSchedule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateConstantSchedule> + From<crate::DeleteConstantSchedule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "constant-schedule", kind: "create-constant-schedule", record: "CreatedConstantSchedule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

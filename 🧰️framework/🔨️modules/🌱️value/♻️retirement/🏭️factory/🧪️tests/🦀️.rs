@@ -1,47 +1,9 @@
 use super::*;
 use crate::{retirement::controlled::ControlledRetirement,RetireOwned};
 
-#[test]
-fn factory_authority_keeps_original_typed_source_until_admitted_close_and_reports_all_physical_frees(){
-    use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🔗️authority/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    use std::io::Write;let mut oracle=std::process::Command::new("bun").args(["-e","const x=JSON.parse(await Bun.stdin.text());console.log(JSON.stringify([...new TextEncoder().encode(x.fixture.payload)]));"]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();oracle.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture}).to_string().as_bytes()).unwrap();let output=oracle.wait_with_output().unwrap();assert!(output.status.success());let reference:Vec<u8>=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(reference,fixture["payload"].as_str().unwrap().as_bytes());
-    for work in fixture["copyGrants"].as_array().unwrap(){let work=work.as_u64().unwrap()as usize;
-        let mut payload=Vec::with_capacity(fixture["payloadCapacity"].as_u64().unwrap()as usize);payload.extend_from_slice(&reference);let payload_capacity=payload.capacity();let factory=Arc::new(OwnedFactory{payload});let factory_extent=arc_extent::<OwnedFactory>();
-        let original=String::from("source");let original_bytes=original.capacity();
-        let authority=FactoryAuthority::new(factory.clone());let pointer=Arc::as_ptr(&factory);
-        let (refused,heap)=crate::observe_retirement_allocations(||RetainedCloneSource::admit_owned(original,authority,Default::default()));assert_eq!(heap,(0,0));let (_,original,authority)=refused.err().unwrap();assert_eq!(authority.factory_address(),pointer as*const()as usize);
-        let capacity=RetainedCloneSource::<String>::constructor_capacity_bytes::<FactoryAuthority>();let (admitted,heap)=crate::observe_retirement_allocations(||RetainedCloneSource::admit_owned(original,authority,grant(capacity,0,1)));let(mut source,receipt)=admitted.unwrap_or_else(|_|panic!("source authority admission"));assert_eq!(heap,(receipt.retained_capacity_bytes,0));let mut born=receipt.retained_capacity_bytes;let mut physical=0;
-        let mut cursor=String::retained_clone_cursor();cursor.advance(source.borrow(),RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).unwrap();drop(factory);cursor.begin_close();
-        for _ in 0..100000{if source.terminal_is_empty()&&cursor.terminal_is_empty(){break;}let grant=if !source.terminal_is_empty(){RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:source.next_close_capacity_byte_demand(work).unwrap(),maximum_release_bytes:source.next_close_release_byte_demand().unwrap(),maximum_depth:source.next_close_depth_demand().unwrap()}}else{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:cursor.next_close_capacity_byte_demand(work).unwrap(),maximum_release_bytes:cursor.next_close_release_byte_demand().unwrap(),maximum_depth:64}};let(step,heap)=crate::observe_retirement_allocations(||if !source.terminal_is_empty(){source.close_step(grant).unwrap()}else{cursor.close_step(grant).unwrap()});let p=step.progress();assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;physical+=heap.1;}
-        assert!(source.terminal_is_empty()&&cursor.terminal_is_empty());assert_eq!(original_bytes+factory_extent+payload_capacity+born,physical);println!("[DEBUG] Factory source authority work={work} original={} born={born} physical={physical}",original_bytes+factory_extent+payload_capacity);
-    }
-}
-
-struct OwnedFactory {payload:Vec<u8>}
-#[derive(crate::FactoryPayloadRetirement)]
-struct ScalarFactory {tag:u64,name:&'static str}
-impl FactoryPayloadRetirement for OwnedFactory {
-    type CloseState=Option<ControlledRetirement<Vec<u8>>>;
-    fn close_state_birth_bytes(&self)->usize {0}
-    fn close_state_constructor_depth(&self)->usize {0}
-    fn close_state_constructor_copy_bytes(&self)->usize {0}
-    fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
-    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->Result<crate::RetainedCloneStep,crate::ValueError>{Ok(crate::RetainedCloneStep::Complete(Default::default()))}
-    fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
-    fn prepare_close_state(&self)->Self::CloseState {None}
-    fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(ControlledRetirement::new(value.payload).unwrap_or_else(|_|panic!("Vec payload supports controlled retirement")));}
-    fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {
-        state.as_ref().map_or(Ok(RetirementDemand::default()),|owner|Ok(RetirementDemand {copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))
-    }
-    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let Some(owner)=state.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-        if owner.terminal_is_empty(){if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}drop(state.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}));}
-        owner.step(grant)
-    }
-    fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {state.is_none()}
-}
-fn grant(capacity:usize,release:usize,depth:usize)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}}
+#[path="../🧪️testing/🦀️.rs"]
+mod original_factory_fixture;
+use original_factory_fixture::*;
 fn admit<T:FactoryPayloadRetirement>(owner:Arc<T>)->(Box<dyn FactoryRetirementTicket>,usize) {
     let birth=owner.factory_retirement_birth_bytes();
     let depth=owner.factory_retirement_depth_demand();
@@ -105,6 +67,7 @@ fn factory_preborn_tickets_never_wait_on_weak_aliases_and_copy_only_body_truthfu
 }
 
 #[derive(crate::FactoryPayloadRetirement)]
+#[value(crate="crate")]
 struct NestedFactory {#[factory_child] child:Arc<dyn FactoryRetirement>,tag:u64}
 #[test]
 fn factory_preborn_tickets_retire_nested_original_children_without_close_birth() {
@@ -121,6 +84,7 @@ fn factory_preborn_tickets_retire_nested_original_children_without_close_birth()
 }
 
 #[derive(crate::FactoryPayloadRetirement)]
+#[value(crate="crate")]
 struct InlineFactory {#[factory_owned] payload:OwnedFactory,tag:u64}
 #[test]
 fn factory_preborn_tickets_move_inline_original_payload_into_prefunded_state() {

@@ -3,10 +3,11 @@
 //! 🪟️ The derived mask list is ONE windowed section: it stamps the full number of masked layers in the
 //! document and materialises only the slice the host asked for, whatever the layer tree's depth.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::{mask_row_id, raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text, RASTER_TREE_PREFIX};
-use crate::{RasterLayerMask, RasterLayerNode, RasterSnapshot as RasterDocument};
+use crate::config::RasterConfig;
+use crate::terminology::RasterPlayLabels;
+use crate::{mask_row_id, raster_action, ui_label, ui_value_list, ui_value_map, ui_value_text, RASTER_TREE_PREFIX};
+use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterLayerNode};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot as RasterDocument;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
 use semio_framework_ui_contract as ui;
 use semio_framework_plugin::BuiltNode;

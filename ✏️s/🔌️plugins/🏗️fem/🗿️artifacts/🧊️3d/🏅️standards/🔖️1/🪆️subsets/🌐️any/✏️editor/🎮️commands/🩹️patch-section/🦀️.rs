@@ -1,12 +1,12 @@
 //! 🩹️ Fem3d play app command — `patch-section`: one-field edit of a section (`name`, `area`, `iy`,
 //! `iz`, `j`) → `ReplaceSection`.
 
-use crate::standards::v1::subsets::any::schema::mutations::replace_section;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::replace_section;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem3dSnapshot = crate::Fem3dSnapshot;
+type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️PatchSection
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -37,7 +37,4 @@ pub fn handle(payload: &PatchSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cf
 //#endregion 🔖️PatchSection
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

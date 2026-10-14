@@ -1,12 +1,11 @@
 //! 🏗️ Complete dimensional finite-element entities and exact binary64 words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use crate::{FemAnalysisSettings,FemAxis,FemCombination,FemDof,FemElement,FemLoad,FemLoadCase,FemMaterial,FemNode,FemSection,FemSolid,FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+use crate::standards::v1::subsets::any::schema::structure::{FemAxis, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,FloatColumn}}};
-#[path="../../../../../../../../../🧩️sqlite/🦀️.rs"]
-mod rows;
-use rows::*;
+use semio_s_fem_sqlite::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -81,6 +80,3 @@ impl Fem3dSnapshot{
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

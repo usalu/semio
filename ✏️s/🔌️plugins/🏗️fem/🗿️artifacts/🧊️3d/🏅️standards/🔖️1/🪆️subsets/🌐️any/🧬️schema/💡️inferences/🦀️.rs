@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
 use super::bounds::compute_fem3d_bounds;
-use crate::Fem3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
@@ -41,18 +41,6 @@ impl protocol::InferenceSpec<Fem3dSnapshot> for Fem3dInference {
 }
 //#endregion 🔖️Inference
 
-//#region 🔖️Descriptor
-/// 💡️ Registers `s.fem.fem3d.inference`'s facet leaves into the OS-wide inference catalog — call
-/// once at plugin init, alongside `fem3d_artifact_schema_descriptor`'s registration.
-pub fn fem3d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
-    ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
-        id: "s.fem.fem3d.inference",
-        inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
-        },
-    }
-}
-//#endregion 🔖️Descriptor
 
 #[cfg(test)]
 //#region 🧪️Tests

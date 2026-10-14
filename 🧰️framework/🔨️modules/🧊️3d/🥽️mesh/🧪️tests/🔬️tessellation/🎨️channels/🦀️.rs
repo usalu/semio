@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn original_mesh_tessellation_normal_indexed_channels_preserve_source_rows(){
     use crate::test_support::observe_tessellation_system as observe;
-    use protocol::value::{DslValue,FromValue,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::{ControlledRetirement,ErasedControlledRetirement}};
+    use semio_framework_value::{DslValue,FromValue,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::{ControlledRetirement,ErasedControlledRetirement}};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();let fixture=&law["indexedChannels"];
     for face_uv in[false,true]{for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(fixture["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(fixture["faces"].clone()).unwrap();let mut mesh=HalfedgeMesh::from_faces(&positions,&faces).unwrap();for row in fixture["attributes"].as_array().unwrap(){let alternate=face_uv&&row["name"]=="uv";let value=serde_json::json!({"domain":if alternate{"face"}else{row["domain"].as_str().unwrap()},"semantic":row["semantic"],"interpolation":if alternate{"constant"}else{row["interpolation"].as_str().unwrap()},"values":if alternate{&fixture["faceUv"]["values"]}else{&row["values"]},"indices":if alternate{&serde_json::Value::Null}else{&row["indices"]}});mesh.set_attribute(row["name"].as_str().unwrap().to_owned(),MeshAttribute::from_value(DslValue::from(value)).unwrap()).unwrap();}MeshTessellationJob::new(mesh)});

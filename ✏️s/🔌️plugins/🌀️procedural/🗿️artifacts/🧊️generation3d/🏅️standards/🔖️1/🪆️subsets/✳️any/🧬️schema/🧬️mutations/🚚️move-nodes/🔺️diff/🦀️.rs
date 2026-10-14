@@ -7,7 +7,7 @@ use semio_s_artifact_procedural_3d_model::diff::Generation3dLayoutRow;
 use crate::move_nodes::MoveNodes;
 use crate::generation3d_partial;
 use crate::generation3d_targets_invariant;
-use crate::widget_index;
+use semio_s_artifact_procedural_3d_model::widget_index;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;

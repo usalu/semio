@@ -27,7 +27,7 @@ struct BoundedTransientPreparation<P, M> {
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    pub(crate) closing: bool,
+    pub closing: bool,
 }
 
 impl<P, M> BoundedTransientPreparation<P, M> {
@@ -35,7 +35,7 @@ impl<P, M> BoundedTransientPreparation<P, M> {
         RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.request.is_none() && self.prepared.is_none() && self.retained_bytes == 0
     }
 }
@@ -168,7 +168,7 @@ impl<P> BoundedTransientRootRetirement<P> {
         RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.root.is_none() && self.retained_bytes == 0
     }
 }
@@ -347,7 +347,7 @@ pub struct TransientStoreDisposer<P, M> {
     retirement: Option<store::TransientStoreRetirement<P>>,
     factory: Option<Arc<dyn store::ArtifactOwnedValueRetirementFactory<P>>>,
     factory_close: Option<semio_framework_value::FactoryAuthority>,
-    pub(crate) closing: bool,
+    pub closing: bool,
     marker: std::marker::PhantomData<fn() -> M>,
 }
 

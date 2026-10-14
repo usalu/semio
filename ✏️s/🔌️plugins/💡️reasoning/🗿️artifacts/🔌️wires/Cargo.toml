@@ -27,11 +27,11 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
   edition = "2021"
   rust-version = "1.95"
 
+[workspace.dependencies.semio-framework-graph-manifest]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-artifact-reference]
 path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-framework-graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-graph-layout-run]
 path = "../../../../../🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust"

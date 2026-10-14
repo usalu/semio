@@ -1,10 +1,10 @@
 //! Inverse for `update-site`.
-use super::UpdateSite;
-use crate::{En1998Mutation, En1998Snapshot};
+use crate::update_site::UpdateSite;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
-pub fn inverse(_payload: &UpdateSite, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &UpdateSite, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_site::UpdateSite> {
     Ok((|| {
-    vec![En1998Mutation::UpdateSite(UpdateSite { site: base.site.clone() })]
+    vec![Op::from(UpdateSite { site: base.site.clone() })]
 
     })())
 }

@@ -12,7 +12,7 @@
 //! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `semio_framework_pack_json::from_dsl_value`
 //! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block3d` leaf already
 //! uses.
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
@@ -20,7 +20,7 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &Puzzle3dSnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(snapshot),false).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e,semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let raw = crate::json_native::convert(semio_framework_value::ToValue::to_value(snapshot),false).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e,semio_framework_diagnostic::TextSpan::at(1,1)))?;
     Ok(JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&raw)))
 }
 

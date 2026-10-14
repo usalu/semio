@@ -2,7 +2,7 @@
 //! replaced document root or a folded mutation is released in paid pages, never by a bare drop. The
 //! shared `Block*` rows retire through their plugin owner `semio-s-plugin-block`.
 
-use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
+use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 
 //#region 🖐️Block5dRows
 semio_framework_value::artifact_retire_struct!(Block5dPart2d { shape, radius, width, height, color, icon_kind });

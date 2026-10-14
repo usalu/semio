@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "name": "exact",
+      "kind": "regular",
+      "bytes": 8,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": true
+    },
+    {
+      "name": "oversized",
+      "kind": "regular",
+      "bytes": 9,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "no-file-slot",
+      "kind": "regular",
+      "bytes": 0,
+      "maximumBytes": 8,
+      "remainingFiles": 0,
+      "accepted": false
+    },
+    {
+      "name": "empty",
+      "kind": "regular",
+      "bytes": 0,
+      "maximumBytes": 0,
+      "remainingFiles": 1,
+      "accepted": true
+    },
+    {
+      "name": "missing",
+      "kind": "missing",
+      "bytes": 0,
+      "maximumBytes": 0,
+      "remainingFiles": 0,
+      "accepted": true
+    },
+    {
+      "name": "symbolic-file",
+      "kind": "symlink",
+      "bytes": 8,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "symbolic-parent",
+      "kind": "ancestor",
+      "bytes": 8,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "hardlinked",
+      "kind": "hardlink",
+      "bytes": 8,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    }
+  ]
+}

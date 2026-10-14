@@ -1,6 +1,6 @@
 //! ➖ `remove-self-weight-elements`.
 
-use crate::{En1991Mutation, En1991Snapshot};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +13,7 @@ pub struct RemoveSelfWeightElements {
     pub index: usize,
 }
 
-impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveSelfWeightElements {
+impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveSelfWeightElements where Op: protocol::Mutation<En1991Snapshot, Diff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::insert_self_weight_elements::InsertSelfWeightElements> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove",
         entity: "self-weight-elements",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveSelfWeight
         record: "RemovedSelfWeightElements",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+        crate::remove_self_weight_elements::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_self_weight_elements::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveSelfWeight
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,0 +1,173 @@
+{
+ "order": [
+  "model",
+  "engine",
+  "mesh-topology",
+  "mesh",
+  "load",
+  "boundary",
+  "material",
+  "analysis",
+  "mutations",
+  "io",
+  "scene",
+  "aggregator"
+ ],
+ "allow": {
+  "engine": [
+   "model"
+  ],
+  "mesh-topology": [
+   "model"
+  ],
+  "mesh": [
+   "model",
+   "mesh-topology"
+  ],
+  "load": [
+   "model"
+  ],
+  "boundary": [
+   "model"
+  ],
+  "material": [
+   "model"
+  ],
+  "analysis": [
+   "model"
+  ],
+  "mutations": [
+   "model",
+   "mesh-topology",
+   "mesh",
+   "load",
+   "boundary",
+   "material",
+   "analysis"
+  ],
+  "io": [
+   "model",
+   "engine",
+   "mutations"
+  ],
+  "scene": [
+   "model",
+   "engine"
+  ],
+  "aggregator": [
+   "model",
+   "engine",
+   "mesh-topology",
+   "mesh",
+   "load",
+   "boundary",
+   "material",
+   "analysis",
+   "mutations",
+   "io",
+   "scene"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "^🪟️viewport/",
+   "model"
+  ],
+  [
+   "^⚙️engine/🧊️3d/",
+   "engine"
+  ],
+  [
+   "🪆️subsets/[^/]+/🧬️schema/🧬️mutations/[^/]+/🧪️tests/",
+   "mutations"
+  ],
+  [
+   "🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/(⚪️create-node|🕳️delete-node|🔁️replace-node|🧩️create-element|🗑️delete-element|♻️replace-element)/",
+   "mesh-topology"
+  ],
+  [
+   "🪆️subsets/🕸️mesh/",
+   "mesh"
+  ],
+  [
+   "🪆️subsets/🏋️load/",
+   "load"
+  ],
+  [
+   "🪆️subsets/🛡️boundary/",
+   "boundary"
+  ],
+  [
+   "🪆️subsets/🧱️material/",
+   "material"
+  ],
+  [
+   "🪆️subsets/📈️analysis/",
+   "analysis"
+  ],
+  [
+   "🪆️subsets/🌐️any/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/(📝️text|💾️binary)/(📸️snapshot|🔺️diff)/",
+   "model"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/🪶️sqlite/",
+   "model"
+  ],
+  [
+   "🪆️subsets/🌐️any/🧬️schema/",
+   "model"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/",
+   "io"
+  ],
+  [
+   "🪆️subsets/🌐️any/📚️examples/",
+   "io"
+  ],
+  [
+   "🪆️subsets/🌐️any/🎬️scene/",
+   "scene"
+  ],
+  [
+   "🪆️subsets/🌐️any/👁️viewer/",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/",
+   "aggregator"
+  ],
+  [
+   "🏅️standards/🔖️1/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "^🧪️tests/",
+   "aggregator"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

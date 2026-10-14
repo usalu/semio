@@ -1,7 +1,8 @@
 //! 🖱️ Fem2d play app command — `canvas-pointer-down`: viewport pick — hit-tests the addressed model/results window and requests the framework `interactionSelect`.
 
-use crate::editor::fem2d::interaction::canvas_gesture;
-use crate::editor::fem2d::interaction::{fem2d_addressed_camera, selection_merge_mode};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::selection_merge_mode;
+use crate::editor::fem2d::modes::edit::{fem2d_addressed_body_key, fem2d_addressed_camera};
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -31,7 +32,7 @@ pub fn handle(_payload: &CanvasPointerDown, _doc: &ArtifactView<'_, Fem2dSnapsho
 pub fn handle_window(payload: &CanvasPointerDown, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: &semio_framework_plugin::ViewModel) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let camera = fem2d_addressed_camera(cfg, view, "fem2d.canvas-pointer-down")?;
     let merge = selection_merge_mode(payload.shift, payload.ctrl, payload.meta);
-    canvas_gesture::pointer_down(doc.snapshot, &camera, view, payload.x, payload.y, payload.width, payload.height, payload.button, merge)
+    canvas_gesture::pointer_down(doc.snapshot, &camera, view, fem2d_addressed_body_key(view, "fem2d.canvas-pointer-down")?, payload.x, payload.y, payload.width, payload.height, payload.button, merge)
 }
 //#endregion 🔖️CanvasPointerDown
 

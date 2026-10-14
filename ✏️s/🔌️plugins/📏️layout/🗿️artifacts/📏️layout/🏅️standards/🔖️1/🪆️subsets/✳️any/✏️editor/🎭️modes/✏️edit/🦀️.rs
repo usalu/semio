@@ -1,7 +1,7 @@
 //! ✏️ Layout play app — the `edit` mode: the only mode, laying out the Blueprint (authoring) and
 //! Preview (read-only) surfaces side by side.
 
-use crate::editor::layout::modes::edit::windows::{blueprint, preview};
+use crate::modes::edit::windows::{blueprint, preview};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -27,3 +27,13 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📐️blueprint/🦀️.rs"]
+    pub mod blueprint;
+    #[path = "🪟️windows/👁️preview/🦀️.rs"]
+    pub mod preview;
+}
+//#endregion 🪢️TaxonomyMounts

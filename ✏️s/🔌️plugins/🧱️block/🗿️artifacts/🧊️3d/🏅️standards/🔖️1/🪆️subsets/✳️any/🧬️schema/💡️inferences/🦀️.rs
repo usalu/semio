@@ -10,11 +10,18 @@
 //! positions, expressed as a plain `Inference` impl (no per-entity `InferredField` caching needed —
 //! there is nothing to invalidate incrementally over a flat template list).
 
-use crate::Block3dSnapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
-
-use super::bounds::{compute_block3d_bounds};
+use crate::bounds::compute_block3d_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -81,13 +88,14 @@ pub fn block3d_artifact_inference_descriptor() -> ::semio_framework_schema_regis
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::bounds::Block3dBounds;
+pub use crate::bounds::Block3dBounds;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "📦bounds/🦀️.rs"]
+pub mod bounds;
+//#endregion 🪢️Mounts

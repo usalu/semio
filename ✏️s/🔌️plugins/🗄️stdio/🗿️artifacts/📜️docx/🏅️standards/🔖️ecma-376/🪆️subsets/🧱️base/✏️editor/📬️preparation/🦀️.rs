@@ -1,8 +1,11 @@
 //! 📬️ Paged structural edit for strictly admitted DOCX XML publication.
 
 use super::*;
-use crate::schema::mutations::xml_address::{resolve_docx_xml_address, validate_replacement_identity};
-use crate::schema::mutations::{prepare_addressed_xml_mutation, DocxXmlAddress, PreparedDocxXmlMutation};
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address::resolve_docx_xml_address;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address::validate_replacement_identity;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::prepare_addressed_xml_mutation;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxXmlAddress;
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PreparedDocxXmlMutation;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
@@ -28,7 +31,7 @@ fn replace_addressed_node(snapshot: &mut DocxSnapshot, address: &DocxXmlAddress,
     *node = replacement;
     semio_s_artifact_stdio_xml::schema::snapshot::validate_xml_document_boundaries(&document).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
     snapshot.xml_parts[part_index].replace_document(document)?;
-    snapshot.validate_authority().map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)
+    snapshot.validate_authority().map_err(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)
 }
 
 /// ▶️ Applies one revision-bound canonical XML edit in place on an OWNED snapshot -- the bounded retained-execution seam that moves the document's parts into the
@@ -205,13 +208,13 @@ pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> 
 pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
     set_run_text_is_admitted(address, text)?;
     let mutation = if address.expected_name.ends_with("}p") {
-        let Some(mutation) = crate::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(ValueError::into_message)? else { return Ok(None) };
+        let Some(mutation) = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(ValueError::into_message)? else { return Ok(None) };
         measure_mutation(&mutation)?;
         mutation
     } else {
         DocxMutation::SetRunText(set_run_text::SetRunText { address: address.clone(), text: text.to_owned() })
     };
-    let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation).map_err(ValueError::into_message)?;
+    let prepared = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation).map_err(ValueError::into_message)?;
     Ok(prepared.changed.then_some(mutation))
 }
 

@@ -1,8 +1,7 @@
 //! ⚛️ Energy model mutation — `ChangePvSystemDcCapacity`: Sets DC capacity (W) on one pv system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePvSystemDcCapacity {
     pub new_dc_capacity_w: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_pv_system_dc_capacity(id: crate::model::EntityId, new_dc_capacity_w: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePvSystemDcCapacity(ChangePvSystemDcCapacity { id, new_dc_capacity_w })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_pv_system_dc_capacity<Op: From<ChangePvSystemDcCapacity>>(id: crate::model::EntityId, new_dc_capacity_w: f64) -> Op {
+    ChangePvSystemDcCapacity { id, new_dc_capacity_w }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePvSystemDcCapacity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePvSystemDcCapacity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePvSystemDcCapacity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "pv-system", kind: "change-pv-system-dc-capacity", record: "ChangedPvSystemDcCapacity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

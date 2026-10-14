@@ -37,11 +37,11 @@ async fn generate_preview_entry_state_is_an_idle_status_host_with_a_hint() {
 #[test]
 fn both_previews_offer_the_same_gumball_surface() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let app_definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let app_definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     let window = |id: &str| app_definition.window_kinds.iter().find(|kind| kind.id == id).unwrap_or_else(|| panic!("{id} window kind"));
     let actions = |id: &str| window(id).actions.iter().map(|action| action.id.clone()).collect::<std::collections::BTreeSet<_>>();
     let utilities = |id: &str| window(id).utilities.iter().map(|utility| utility.as_str().to_string()).collect::<Vec<_>>();
-    let edit = semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW;
+    let edit = semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW;
     let generate = GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     for verb in ["translateSelection", "rotateSelection", "scaleSelection"] {
         assert!(actions(generate).contains(verb), "the generate preview must own {verb}, the edit preview already does");
@@ -56,12 +56,12 @@ fn both_previews_offer_the_same_gumball_surface() {
 /// live (`gumballLiveDispatch`): the host streams into the guest's open tool transaction.
 #[test]
 fn the_generate_preview_selection_payload_arms_the_gumball_under_a_transform_utility() {
-    let config = semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig::default();
-    let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload { selected_ids: vec!["extrude@solid#0".into()], ..Default::default() };
-    let armed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(&config, "move", &payload)).expect("selection json");
+    let config = semio_s_artifact_procedural_3d_editor_config::Generation3dConfig::default();
+    let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewPayload { selected_ids: vec!["extrude@solid#0".into()], ..Default::default() };
+    let armed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json(&config, "move", &payload)).expect("selection json");
     assert_eq!(armed["gumballActive"], serde_json::Value::Bool(true));
     assert_eq!(armed["gumballLiveDispatch"], serde_json::Value::Bool(true), "a shape gumball streams into the guest's tool transaction");
     assert_eq!(armed["transformMode"], serde_json::Value::String("move".into()));
-    let idle: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json(&config, "move", &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload::default())).expect("selection json");
+    let idle: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json(&config, "move", &semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewPayload::default())).expect("selection json");
     assert_eq!(idle["gumballActive"], serde_json::Value::Bool(false), "an empty selection must never arm a gumball");
 }

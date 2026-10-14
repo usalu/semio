@@ -1,0 +1,23 @@
+import {test,expect} from "bun:test";
+import {mkdtempSync,writeFileSync,rmSync,mkdirSync,linkSync} from "node:fs";
+import {join,resolve,relative} from "node:path";
+import Ajv from "ajv";
+import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,acquireCompilerCapacityLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {stageArtifacts} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import {publishedCargoArtifactDirectoryV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryPublishedCargoExecutableV1} from "../🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import fixture from "./🔣️.json" with {type:"json"};
+
+test("real published executable runs inside finite image reader custody and holds its publisher until settlement",async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original publication artifacts required");const directory=mkdtempSync(join(artifacts,"pe-")),workspace=process.cwd(),manifest=join(directory,"Cargo.toml"),source=join(directory,"main.rs"),mode=process.env.SEMIO_BUILD_MODE;if(mode!=="prototype"&&mode!=="release")throw Error("Original published executable mode required");writeFileSync(manifest,'[package]\nname="published"\nversion="0.1.0"\n');writeFileSync(source,fixture.source);
+ try{await receiveScriptProcessInvocation(process.env,async original=>{const control=scriptCompilerAdmissionControlV1(original,"cargo:published-executable",120000);await withRepositoryCompilerStoreV1(workspace,mode,control,process.env,async store=>{const scratch=join(store.captureDirectory,"published-test-"+directory.split("/").at(-1)),name=fixture.name+(process.platform==="win32"?".exe":""),executable=join(scratch,name),published=publishedCargoArtifactDirectoryV1(store.root,resolve(manifest),mode),owner=relative(workspace,manifest).replaceAll("\\","/"),leases=join(workspace,".cache/b/l/m/data");mkdirSync(scratch,{recursive:true});try{
+ const capacity=await acquireCompilerCapacityLeaseV1({directory:leases,control,environment:store.environment,requestedParallelism:1});try{await captureOwnedCommandV1("rustc",[source,"--edition=2021","-o",executable],workspace,{control,env:store.environment});}finally{capacity.release();}await stageArtifacts(published,owner,new Map([[name,executable]]),{control,leaseDirectory:leases});
+ let writer:Promise<void>|undefined,waiting!:()=>void;const queued=new Promise<void>(done=>waiting=done);await withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,mode,original,async artifact=>{expect(new Ajv({strict:true}).compile(schema)(artifact.receipt)).toBe(true);expect(artifact.receipt.bytes).toBeGreaterThan(0);for(const key of fixture.environmentKeys)expect(artifact.environment[key]).toBe(store.environment[key]);expect(await captureOwnedCommandV1(artifact.path,[],workspace,{control,env:artifact.environment})).toBe(fixture.output);writer=stageArtifacts(published,owner,new Map([[name,executable]]),{control,leaseDirectory:leases,onWait:()=>waiting()});await queued;console.log("[DEBUG] Published executable reader holds actual writer lease while genuine child runs");});await writer;
+ writeFileSync(join(published,"stray"),"stray");await expect(withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,mode,original,async()=>{})).rejects.toThrow("inventory");rmSync(join(published,"stray"));linkSync(executable,join(published,"hardlink"));await expect(withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,mode,original,async()=>{})).rejects.toThrow("physical tree");rmSync(join(published,"hardlink"));const controller=new AbortController(),reason=new Error("original published reader cancellation");controller.abort(reason);await expect(withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,mode,{...original,control:{...original.control,signal:controller.signal}},async()=>{})).rejects.toThrow(reason);
+ console.log("[DEBUG] Actual published Rust executable reader preserves fixed image lifetime and exact runnable receipt in "+mode);
+ }finally{rmSync(scratch,{recursive:true,force:true});rmSync(published,{recursive:true,force:true});await store.storage.recheck();}});});}finally{rmSync(directory,{recursive:true,force:true});}
+},120000);

@@ -1,8 +1,8 @@
 //! 🔺️ `change-selection-class` — sparse diff construction.
 
-use super::mutation::ChangeSelectionClass;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff};
+use crate::change_selection_class::mutation::ChangeSelectionClass;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
 
 //#region 🔖️Diff
 

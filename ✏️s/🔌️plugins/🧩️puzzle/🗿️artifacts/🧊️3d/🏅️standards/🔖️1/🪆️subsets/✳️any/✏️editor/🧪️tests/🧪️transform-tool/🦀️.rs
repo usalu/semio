@@ -3,11 +3,11 @@
 //! zero trace, and every host payload states the RELATIVE motion from its own start pose.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
+use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
-use {crate::standards::v1::subsets::any::schema::quat_from_axis_angle, crate::standards::v1::subsets::any::schema::quat_mul};
+use {semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 
-use {crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 
 /// 🧱️ Two objects facing each other along x — `a` locked-free with vortex `a:v` at +x, `b` with vortex `b:v` at -x —
 /// a locked `pin`, and one target volume.
@@ -15,7 +15,7 @@ fn scene() -> Puzzle3dSnapshot {
     let vortex = |id: &str, x: f64| Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position: [x, 0.0, 0.0], direction: Some([x.signum(), 0.0, 0.0]), radius: None, hidden: false, locked: false };
     let object = |id: &str, x: f64, vortices: Vec<Puzzle3dVortex>, locked: bool| Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor: Default::default(), origin: [x, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices, hidden: false, locked };
     Puzzle3dSnapshot {
-        schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.into(),
+        schema: semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA.into(),
         objects: vec![object("a", 0.0, vec![vortex("v", 1.0)], false), object("b", 10.0, vec![vortex("v", -1.0)], false), object("pin", 20.0, Vec::new(), true)],
         target_volumes: vec![Puzzle3dTargetVolume { id: "box".into(), origin: [0.0; 3], orientation: None, scale: None, hidden: false, locked: false }],
         ..Default::default()
@@ -35,7 +35,7 @@ fn a_gumball_delta_is_one_transaction_of_its_parametric_leaf() {
     let base = scene();
     let record = Puzzle3dSelectionRecord::from_gumball("translateSelection", Some(&json!({ "dx": 2.0, "dy": 0.0, "dz": -1.0 })), ["a".to_string(), "box".to_string(), "a".to_string()]).expect("a finite delta decodes");
     let (transaction, mutations) = commit("translateSelection", &base, vec![record.clone()]).expect("a moving record commits");
-    assert_eq!(mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["a".into(), "box".into()], [2.0, 0.0, -1.0])], "one leaf over the deduplicated targets");
+    assert_eq!(mutations, vec![semio_s_artifact_puzzle_3d_mutations_selection::drag_selection::mutation::drag_selection(vec!["a".into(), "box".into()], [2.0, 0.0, -1.0])], "one leaf over the deduplicated targets");
     assert_eq!(transaction.tool, "s.puzzle.puzzle3d@1/*#editor#translateSelection");
     assert_ne!(commit("translateSelection", &base, vec![record]).map(|(again, _)| again), Some(transaction), "each released gesture mints its own transaction even within one clock millisecond");
 }
@@ -113,7 +113,7 @@ fn a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds() {
     for (index, y) in [0.2, -0.3, 0.6, 2.0, 0.1].into_iter().enumerate() {
         base.objects.push(Puzzle3dObject { id: format!("n{index}"), label: None, object_kind: None, anchor: Default::default(), origin: [1.5, y, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![vortex(0.0)], hidden: false, locked: false });
     }
-    base.attractions.push(crate::standards::v1::subsets::any::schema::Puzzle3dAttraction { id: "held".into(), attracting: "n4:v".into(), attracted: "b:v".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    base.attractions.push(semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction { id: "held".into(), attracting: "n4:v".into(), attracted: "b:v".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
     let whole = puzzle3d_relocate_record(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
     assert_eq!(whole.attractions, vec![("a:v".to_string(), "b:v".to_string()), ("n0:v".to_string(), "b:v".to_string()), ("n1:v".to_string(), "b:v".to_string()), ("n2:v".to_string(), "b:v".to_string())], "every free vortex within the radius, in document order; `n4` is already attracted and `n3` is out of reach");
     for page in 1..=base.objects.len() + 1 {
@@ -135,7 +135,7 @@ fn a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds() {
 
 #[test]
 fn the_transform_chart_obeys_the_shared_phase_fixture() {
-    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let fixture = semio_framework_pack_json::parse(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json")).expect("committed test data reads").as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let values = case.get("offset").unwrap().as_array().unwrap();
         let offset = [values[0].as_f64().unwrap(), values[1].as_f64().unwrap(), values[2].as_f64().unwrap()];

@@ -1,5 +1,0 @@
-{
-  "mutation": "renameServiceRequirement",
-  "id": "service-requirement-a",
-  "newName": "Renamed Service Requirement A"
-}

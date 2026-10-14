@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes;
-use crate::RasterLayerNode;
+use crate::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
@@ -24,7 +24,7 @@ fn rectangle(x0: f64, y0: f64, x1: f64, y1: f64) -> DrawNode {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn only_pixel_layer(document: &crate::RasterSnapshot) -> (u32, u32, crate::RasterImageAsset) {
+fn only_pixel_layer(document: &semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot) -> (u32, u32, semio_s_artifact_raster_raster_model::RasterImageAsset) {
     assert_eq!(document.layers.len(), 1);
     let RasterLayerNode::Pixel { image_key, width, height, .. } = &document.layers[0] else {
         panic!("expected pixel layer");
@@ -39,9 +39,9 @@ async fn imports_real_dwg_bytes_into_a_page_of_the_drawing_bounds() {
     let (width, height, asset) = only_pixel_layer(&document);
     assert_eq!((width, height), (30, 10), "the page is the world bounds, not the file's canvas or origin");
     assert_eq!(asset.mime, "image/png");
-    let image = crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&asset.data).expect("canonical png");
+    let image = crate::semio_image_from_png_bytes(&asset.data).expect("canonical png");
     assert!(image.frames[0].rgba8.chunks(4).any(|px| px[3] > 0), "the rectangle outline is painted");
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,7 +50,7 @@ async fn imports_empty_dwg_into_blank_raster_document() {
     let (width, height, asset) = only_pixel_layer(&document);
     assert_eq!((width, height), (1, 1));
     assert!(!asset.data.is_empty());
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]

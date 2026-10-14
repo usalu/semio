@@ -3,8 +3,87 @@
 //! (`handle_action` → `command_from_action` → retained job → settle), so the arg bridge, the mesh-domain
 //! selection, the persisted mesh content and undo are exercised together rather than per unit.
 
-use super::*;
-use crate::editor::lowpoly::unit_tests::context::{act, app_with_registry, LowpolyApp};
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../🧰️support/🦀️.rs"]
+mod context;
+
+use semio_s_artifact_lowpoly_lowpoly_editor::*;
+use semio_s_artifact_lowpoly_lowpoly_commands::{paint::LowpolyPaintTick, paint::lowpoly_paint_tick};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::lowpoly_paint_drive;
+use semio_s_artifact_lowpoly_lowpoly_mut_paint::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer};
+use semio_framework_tool_machine::GesturePhase;
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText;
+use semio_s_artifact_lowpoly_lowpoly_commands::{add_primitive, camera, chrome, engagement, document, media, mesh_edit, object, paint, patch_object, selection, sun, transform, utility, uv};
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit, SetPaintUtilityEdit, SetUtilityParamsEdit, SetPaintColorEdit, SetEngagementInputEdit, SetSunEdit};
+use semio_s_artifact_lowpoly_lowpoly_modes::{self, editor::lowpoly::modes::paint as paint_mode};
+use semio_s_artifact_lowpoly_lowpoly_panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::LowpolyScratch, editor::lowpoly::session::LowpolyTransient, editor::lowpoly::session::LowpolyTransientMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::artifact_kind, snapshot::LowpolyObject, snapshot::LowpolySnapshot, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
+use protocol::Mutation;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionRef;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowEngagementInput;
+use semio_framework_plugin::WindowEngagementOption;
+use semio_framework_plugin::WindowEngagementPossible;
+use semio_framework_plugin::WindowEngagementStatus;
+use semio_framework_plugin::WindowMeasure;
+use std::collections::HashMap;
+use pack::snapshot::ArtifactPack;
+use semio_framework_2d::compute::EngineHandles;
+use camera::set_camera;
+use chrome::toggle_show_edges;
+use engagement::{engagement_input, engagement_submit};
+use document::{replace_snapshot_json, set_snapshot_json};
+use media::{export_mesh, import_mesh_file, load_mesh_request};
+use object::{delete_selection, duplicate_object};
+use mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, toggle_smooth, triangulate};
+use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, fill_bucket, paint_at, paint_fill, paint_sample, paint_stroke};
+use selection::{set_active_object, set_active_paint_layer};
+use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
+use transform::{rotate_selection, scale_selection, translate_selection};
+use utility::set_utility_param;
+use uv::{clear_seam, mark_uv_seam, unwrap_active};
+use semio_framework_plugin::InteractionRef;
+use crate::context::{act, app_with_registry, LowpolyApp};
 
 type Mounted = LowpolyApp;
 
@@ -64,8 +143,8 @@ async fn add_primitive_pick_translate_and_camera() {
     assert_eq!(snapshot.objects.len(), 2, "addPrimitive creates an object");
     let id = snapshot.objects[1].id.clone();
     let before = object(&app, &id);
-    act(&mut app, "interactionSelect", select(&[("object", &crate::editor::lowpoly::view::document_object_row_id(&id))])).await;
-    act(&mut app, "translateSelection", serde_json::json!({ "mode": "mesh", "ids": [crate::editor::lowpoly::view::document_object_row_id(&id)], "dx": 1.0, "dy": 0.0, "dz": 0.0 })).await;
+    act(&mut app, "interactionSelect", select(&[("object", &semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id))])).await;
+    act(&mut app, "translateSelection", serde_json::json!({ "mode": "mesh", "ids": [semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id)], "dx": 1.0, "dy": 0.0, "dz": 0.0 })).await;
     assert_ne!(object(&app, &id).mesh_content, before.mesh_content, "the picked object moved");
     assert_eq!(object(&app, "obj-1").mesh_content, object(&app, "obj-1").mesh_content);
     act(&mut app, "setCamera", serde_json::json!({ "windowId": "lowpoly-main", "camera": { "position": [3.0, 2.0, 5.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })).await;
@@ -78,7 +157,7 @@ async fn add_primitive_pick_translate_and_camera() {
 async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     let mut app = mounted();
     let before = object(&app, "obj-1");
-    let row = crate::editor::lowpoly::view::document_object_row_id("obj-1");
+    let row = semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id("obj-1");
     act(&mut app, "interactionSelect", select(&[("object", &row)])).await;
     act(&mut app, "rotateSelection", serde_json::json!({ "mode": "mesh", "ids": [row], "ax": 0.0, "ay": 1.0, "az": 0.0, "angle": 0.5 })).await;
     let rotated = object(&app, "obj-1");
@@ -111,18 +190,18 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
 async fn a_host_paint_drag_is_one_edit_and_a_blurred_drag_is_none() {
     let mut app = mounted();
     let before = object(&app, "obj-1").paint_layers[0].materialized_pixels();
-    let edits = crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await;
+    let edits = crate::context::committed_edits(&mut app).await;
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.4, "v": 0.5, "phase": "stream" })).await;
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.45, "v": 0.5, "phase": "stream" })).await;
     assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "a streamed tick never reaches the document");
     act(&mut app, "paintAt", serde_json::json!({ "phase": "commit" })).await;
     assert_ne!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "the release paints the stroke");
-    assert_eq!(crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await, edits + 1, "one drag is one edit");
+    assert_eq!(crate::context::committed_edits(&mut app).await, edits + 1, "one drag is one edit");
     let painted = object(&app, "obj-1").paint_layers[0].materialized_pixels();
     act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.6, "v": 0.5, "phase": "stream" })).await;
     act(&mut app, "paintAt", serde_json::json!({ "phase": "abort", "reason": "blur" })).await;
     assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), painted, "a blurred drag paints nothing");
-    assert_eq!(crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await, edits + 1, "a blurred drag is no edit");
+    assert_eq!(crate::context::committed_edits(&mut app).await, edits + 1, "a blurred drag is no edit");
 }
 
 /// 📐️ Vertex and edge picks select through the same `<object>.<granularity>.<id>` targets, and the
@@ -137,10 +216,10 @@ async fn component_selection_reaches_the_model_scene() {
     let domain_selection = protocol::DomainSelection { granularity: "face".into(), ids: vec!["lowpoly-document.obj-1.face.2".into()], ..Default::default() };
     let snapshot = app.0.snapshot().expect("snapshot");
     let config = LowpolyConfig::default();
-    let world = crate::editor::lowpoly::view::world_selection_from_state(&snapshot, &config, &domain_selection, Some("face"));
+    let world = semio_s_artifact_lowpoly_lowpoly_view::world_selection_from_state(&snapshot, &config, &domain_selection, Some("face"));
     assert_eq!(world.component_ids, vec![2]);
     let scratch = LowpolyScratch::default();
-    let loaded = crate::editor::lowpoly::view::build_doc(&snapshot, &config, &scratch).expect("document loads from persisted content");
+    let loaded = semio_s_artifact_lowpoly_lowpoly_view::build_doc(&snapshot, &config, &scratch).expect("document loads from persisted content");
     assert_eq!(world.granularity, "face");
     assert_eq!(world.active_object_id, "obj-1");
     edit::windows::model::render(LowpolyView { snapshot: &snapshot, config: &config }, Some(&loaded), "move", &HashMap::new(), &world).expect("the model scene renders from persisted content");

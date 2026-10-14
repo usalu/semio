@@ -1,6 +1,6 @@
 //! 🧾 Document outline for EN 1995 timber structure.
 
-use crate::En1995Snapshot;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 const SECTION_FIELDS: &[&str] = &["annex", "members", "connections"];
 

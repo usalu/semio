@@ -1,12 +1,12 @@
 //! ↩️ `specify-dhw-system` inverse.
 
-use crate::mutations::specify_dhw_system::SpecifyDhwSystem;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::specify_dhw_system::SpecifyDhwSystem;
 
-pub fn inverse(_payload: &SpecifyDhwSystem, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &SpecifyDhwSystem, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::specify_dhw_system::SpecifyDhwSystem> {
     Ok((|| {
-    vec![Din18599Mutation::SpecifyDhwSystem(SpecifyDhwSystem { new_dhw: base.dhw.clone() })]
+    vec![Op::from(SpecifyDhwSystem { new_dhw: base.dhw.clone() })]
 
     })())
 }

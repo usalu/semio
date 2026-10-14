@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::En1999Snapshot;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 /// 🗄️ The aluminium-roof-purlin example fixture, handcrafted in `en1999`'s DSL (`pack::snapshot::ArtifactDsl`):
 /// a welded AW-6082-T6 aluminium roof purlin under the EN annex, exercising the higher-strength alloy's
@@ -38,9 +38,9 @@ pub type En1999SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1999_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
 
 pub fn encode_en1999_snapshot_json(snapshot: &En1999Snapshot) -> String {
@@ -59,19 +59,16 @@ pub fn encode_en1999_dsl(snapshot: &En1999Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_en1999_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
 
-
-
-
 }
-#[cfg(test)] pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text En1999Snapshot, extension="en1999", envelope_id="norm.en1999");
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1999Snapshot, extension="en1999", envelope_id="norm.en1999");

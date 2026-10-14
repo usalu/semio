@@ -18,10 +18,10 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("EnergyModelConfigMutation", descriptors::<semio_s_artifact_energy_model::editor::model::config::EnergyModelConfig, semio_s_artifact_energy_model::editor::model::config::mutations::EnergyModelConfigMutation>),
-    ("EnergyModelWindowConfigMutation", descriptors::<semio_s_artifact_energy_model::editor::model::modes::edit::windows::model::config::EnergyModelWindowConfig, semio_s_artifact_energy_model::editor::model::modes::edit::windows::model::config::EnergyModelWindowConfigMutation>),
-    ("EnergyModelMutation", descriptors::<semio_s_artifact_energy_model::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot, semio_s_artifact_energy_model::standards::v1::subsets::any::schema::mutations::EnergyModelMutation>),
-    ("EnergyModelViewerWindowConfigMutation", descriptors::<semio_s_artifact_energy_model::viewer::model::modes::view::windows::model::config::EnergyModelViewerWindowConfig, semio_s_artifact_energy_model::viewer::model::modes::view::windows::model::config::EnergyModelViewerWindowConfigMutation>),
+    ("EnergyModelConfigMutation", descriptors::<semio_s_artifact_energy_model_editor_config::EnergyModelConfig, semio_s_artifact_energy_model_editor_config::mutations::EnergyModelConfigMutation>),
+    ("EnergyModelWindowConfigMutation", descriptors::<semio_s_artifact_energy_model_editor_edit::windows::model::config::EnergyModelWindowConfig, semio_s_artifact_energy_model_editor_edit::windows::model::config::EnergyModelWindowConfigMutation>),
+    ("EnergyModelMutation", descriptors::<semio_s_artifact_energy_model_snapshot::EnergyModelSnapshot, semio_s_artifact_energy_model_mutations::EnergyModelMutation>),
+    ("EnergyModelViewerWindowConfigMutation", descriptors::<semio_s_artifact_energy_model_viewer::modes::view::windows::model::config::EnergyModelViewerWindowConfig, semio_s_artifact_energy_model_viewer::modes::view::windows::model::config::EnergyModelViewerWindowConfigMutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

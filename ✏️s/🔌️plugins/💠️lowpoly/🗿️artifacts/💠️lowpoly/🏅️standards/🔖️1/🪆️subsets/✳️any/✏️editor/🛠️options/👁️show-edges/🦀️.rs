@@ -2,9 +2,9 @@
 //! windows (model + uv), since they expose an identical option set — see the master ticket's TEMPLATE.md
 //! §12.2 "shared options across multiple windows" pattern, extended here to windows split across modes.
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::lowpoly_window_action;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
 use semio_framework_plugin::WindowMeasure;
 
 /// 🎛️ The live chrome measure for this option.

@@ -1,7 +1,7 @@
 //! Diff for `change-slab-action-q-area-pa`.
-use super::ChangeSlabActionQAreaPa;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994SlabsRows, En1994SlabsPatch, En1994SlabsActionsRows, En1994SlabsActionsPatch};
+use crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994SlabsRows, En1994SlabsPatch, En1994SlabsActionsRows, En1994SlabsActionsPatch};
 
 pub fn diff(payload: &ChangeSlabActionQAreaPa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_q_area_pa.is_finite() {

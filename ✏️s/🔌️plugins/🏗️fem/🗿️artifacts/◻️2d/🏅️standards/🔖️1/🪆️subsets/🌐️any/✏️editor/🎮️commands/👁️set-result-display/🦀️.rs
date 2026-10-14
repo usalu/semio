@@ -5,7 +5,7 @@
 //! `{field, value}` — the host merges a control's own scalar under the single key `value`, so one
 //! control cannot name the field it just changed any other way.
 
-use crate::editor::fem2d::modes::edit::windows::results;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
@@ -57,7 +57,7 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
             next.result_mode_index = payload.mode_index;
         }
     }
-    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![crate::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
+    Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: semio_framework::kernel::UiDirtyScope::Partial { window_bodies: vec![results::BODY_KEY.to_owned()], panel_bodies: vec![semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results::BODY_KEY.to_owned()], utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
 }
 //#endregion 🔖️SetResultDisplay
 

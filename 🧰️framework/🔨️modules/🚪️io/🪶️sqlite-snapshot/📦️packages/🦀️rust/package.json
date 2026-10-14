@@ -5,10 +5,10 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-refusal": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
-    "test-native": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-native",
-    "test-operation": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
-    "test-ownership": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
+    "test-refusal": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
+    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-native",
+    "test-operation": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
+    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

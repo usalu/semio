@@ -11,14 +11,34 @@
 //! LOD steps and a full sun rig — every one of them a `Migrated` interactive job with an exact
 //! app-owned bounded reducer, publishing on the CONFIG lane only. That publication contract is the
 //! runtime half of the read-only guarantee whose compile-time half is `ViewEmit`.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
-use semio_s_artifact_procedural_3d_preview_eval;
-use crate::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use crate::viewer::generation3d::modes::view;
-use crate::viewer::generation3d::modes::view::windows::preview;
-use crate::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
-use crate::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_viewer_commands::export_document;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_tick;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example;
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera;
+use semio_s_artifact_procedural_3d_viewer_commands::set_contributions;
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_modes::view;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
@@ -280,7 +300,7 @@ semio_framework_plugin::view_commands! {
 
 impl Default for Generation3dViewCommand {
     fn default() -> Self {
-        Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: crate::viewer::generation3d::config::default_view_show_mode() })
+        Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: semio_s_artifact_procedural_3d_viewer_config::default_view_show_mode() })
     }
 }
 //#endregion 🔖️Command
@@ -467,8 +487,8 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         let mut emit = generation3d_view_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation)?;
         let next = generation3d_view_next_config(input.config, &emit.config_mutations);
         self.presence = vec![
-            Generation3dViewPresenceMutation::from(crate::viewer::generation3d::presence::SetPreviewCamera { camera: next.preview_camera.clone() }),
-            Generation3dViewPresenceMutation::from(crate::viewer::generation3d::presence::SetShowMode { value: next.show_mode.clone() }),
+            Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetPreviewCamera { camera: next.preview_camera.clone() }),
+            Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetShowMode { value: next.show_mode.clone() }),
         ];
         // 🪟️ A view command that changes what the evaluation reads — the viewed example or the LOD
         // deflection — owes the windows the SHELL says are attached a fresh evaluation and carries the
@@ -1597,7 +1617,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             "setCamera" => Ok(Generation3dViewCommand::SetCamera(set_camera::SetCamera {
                 camera: args
                     .get("camera")
-                    .and_then(|camera| <crate::viewer::generation3d::config::Generation3dViewCamera as semio_framework_value::FromValue>::from_value(camera.clone()).ok())
+                    .and_then(|camera| <semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera as semio_framework_value::FromValue>::from_value(camera.clone()).ok())
                     .unwrap_or_default(),
             })),
             "toggleSun" => Ok(Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {})),

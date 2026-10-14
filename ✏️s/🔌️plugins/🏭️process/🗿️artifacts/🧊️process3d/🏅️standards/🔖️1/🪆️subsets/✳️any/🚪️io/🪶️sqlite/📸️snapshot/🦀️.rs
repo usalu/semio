@@ -1,7 +1,7 @@
 //! 🏭️ Explicit Process3d parent projection into its authored semantic entities.
-use crate::standards::v1::subsets::any::schema::snapshot::Process3dSnapshot;
+use crate::snapshot::Process3dSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::{CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, StockQuantity, WorkingSolid};
+use crate::{snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::StockQuantity, snapshot::WorkingSolid};
 #[path="🔍️rows/🦀️.rs"]
 mod rows;
 #[path="🏗️ownership/🦀️.rs"]
@@ -361,25 +361,25 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
     let label = ownership::field(text(stock, 3, c)?);
     let pose = read_pose(rows.one(3, stock.rowid, c)?, c)?;
     let solid_id = rows.one(11, stock.rowid, c)?.integer(2)?;
-    let stock_payload = ownership::field(crate::Stock { id: id.take(), label: label.take(), pose, solid: read_solid(solid_id, &mut rows, c)? });
+    let stock_payload = ownership::field(crate::snapshot::Stock { id: id.take(), label: label.take(), pose, solid: read_solid(solid_id, &mut rows, c)? });
     let machines_rows = rows.children(12, document.rowid, true, c)?;
-    let mut machines = ownership::guarded_collection::<crate::WorkshopMachine>(machines_rows.len(), c)?;
+    let mut machines = ownership::guarded_collection::<crate::snapshot::WorkshopMachine>(machines_rows.len(), c)?;
     for machine in machines_rows {
         let id = ownership::field(text(machine, 3, c)?);
         let label = ownership::field(text(machine, 4, c)?);
         let icon_id = ownership::field(text(machine, 5, c)?);
         let catalog_id = ownership::optional(machine.optional_text(6)?.map(|value| Reconstruction::new(c)?.text(value)).transpose()?);
         let capabilities_rows = rows.children(13, machine.rowid, true, c)?;
-        let mut capabilities = ownership::guarded_collection::<crate::Capability>(capabilities_rows.len(), c)?;
+        let mut capabilities = ownership::guarded_collection::<crate::snapshot::Capability>(capabilities_rows.len(), c)?;
         for capability in capabilities_rows {
             let id = ownership::field(text(capability, 3, c)?);
             let label = ownership::field(text(capability, 4, c)?);
             let icon_id = ownership::field(text(capability, 5, c)?);
             let recipe = ownership::field(read_recipe(capability.text(6)?, capability.rowid, &mut rows, c)?);
             let parameters_rows = rows.children(20, capability.rowid, true, c)?;
-            let mut parameters = ownership::guarded_collection::<crate::CapabilityParameter>(parameters_rows.len(), c)?;
+            let mut parameters = ownership::guarded_collection::<crate::snapshot::CapabilityParameter>(parameters_rows.len(), c)?;
             for row in parameters_rows {
-                parameters.as_mut().push(crate::CapabilityParameter { id: text(row, 3, c)?, label: text(row, 4, c)?, value: scalar(row, 5, &PARAMETER, c)? });
+                parameters.as_mut().push(crate::snapshot::CapabilityParameter { id: text(row, 3, c)?, label: text(row, 4, c)?, value: scalar(row, 5, &PARAMETER, c)? });
             }
             let rule_rows = rows.children(21, capability.rowid, true, c)?;
             let mut rules = ownership::guarded_variants::<CapabilityRule>(rule_rows.len(), c)?;
@@ -393,12 +393,12 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
                     _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d unknown capability rule")),
                 });
             }
-            capabilities.as_mut().push(crate::Capability { id: id.take(), label: label.take(), icon_id: icon_id.take(), recipe: recipe.take(), parameters: parameters.take(), rules: rules.take() });
+            capabilities.as_mut().push(crate::snapshot::Capability { id: id.take(), label: label.take(), icon_id: icon_id.take(), recipe: recipe.take(), parameters: parameters.take(), rules: rules.take() });
         }
-        machines.as_mut().push(crate::WorkshopMachine { id: id.take(), label: label.take(), icon_id: icon_id.take(), catalog_id: catalog_id.take(), capabilities: capabilities.take() });
+        machines.as_mut().push(crate::snapshot::WorkshopMachine { id: id.take(), label: label.take(), icon_id: icon_id.take(), catalog_id: catalog_id.take(), capabilities: capabilities.take() });
     }
     let step_payloads_rows = rows.children(22, document.rowid, true, c)?;
-    let mut step_payloads = ownership::guarded_collection::<crate::ProcessStep>(step_payloads_rows.len(), c)?;
+    let mut step_payloads = ownership::guarded_collection::<crate::snapshot::ProcessStep>(step_payloads_rows.len(), c)?;
     for step in step_payloads_rows {
         let id = ownership::field(text(step, 3, c)?);
         let label = ownership::field(text(step, 4, c)?);
@@ -409,7 +409,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
             _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d invalid enabled boolean")),
         };
         let origins = rows.children(23, step.rowid, false, c)?;
-        let origin = ownership::optional(origins.first().map(|row| Ok::<_, ValueError>(crate::StepOrigin { machine_id: text(row, 2, c)?, capability_id: text(row, 3, c)? })).transpose()?);
+        let origin = ownership::optional(origins.first().map(|row| Ok::<_, ValueError>(crate::snapshot::StepOrigin { machine_id: text(row, 2, c)?, capability_id: text(row, 3, c)? })).transpose()?);
         let measure = rows.one(24, step.rowid, c)?;
         let pose = read_pose(rows.one(28, measure.rowid, c)?, c)?;
         let measure = match measure.text(2)? {
@@ -427,7 +427,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
             }
             _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d unknown measure")),
         };
-        step_payloads.as_mut().push(crate::ProcessStep { id: id.take(), label: label.take(), enabled, origin: origin.take(), measure });
+        step_payloads.as_mut().push(crate::snapshot::ProcessStep { id: id.take(), label: label.take(), enabled, origin: origin.take(), measure });
     }
     let stock_solid = ownership::field(read_child(rows.one(29, document.rowid, c)?, false, "brep", c)?);
     let steps = ownership::field(read_child(rows.one(30, document.rowid, c)?, false, "flow", c)?);
@@ -437,12 +437,9 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
         tool_solids.as_mut().push(read_child(row, true, "brep", c)?);
     }
     rows.finish()?;
-    let owner = ownership::guarded(Process3dSnapshot { workshop: crate::Workshop { machines: machines.take() }, stock_id: stock_id.take(), stock_label: stock_label.take(), stock_pose, stock_payload: stock_payload.take(), stock_solid: stock_solid.take(), steps: steps.take(), step_payloads: step_payloads.take(), tool_solids: tool_solids.take() });
+    let owner = ownership::guarded(Process3dSnapshot { workshop: crate::snapshot::Workshop { machines: machines.take() }, stock_id: stock_id.take(), stock_label: stock_label.take(), stock_pose, stock_payload: stock_payload.take(), stock_solid: stock_solid.take(), steps: steps.take(), step_payloads: step_payloads.take(), tool_solids: tool_solids.take() });
     Reconstruction::new(c)?.checkpoint()?;
     Ok(owner.take())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

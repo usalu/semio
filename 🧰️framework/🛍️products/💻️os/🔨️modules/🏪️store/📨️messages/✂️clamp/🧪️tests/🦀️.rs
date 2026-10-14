@@ -55,7 +55,7 @@ fn edit_replay_checks_deadline_during_message_settlement() {
         started_at: String::new(), finished_at: None,
     };
     let edits = HashMap::from([(edit.id.clone(), edit)]);
-    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["bounded-close".into()], 0, "demo/v1", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoMutation>::default()));
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["bounded-close".into()], 0, "demo/v1", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()));
     while replay.operation < count {
         assert!(matches!(replay.step(&edits, &mut || true).unwrap(), ReplayStep::Pending(_)));
     }
@@ -82,7 +82,7 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
         started_at: String::new(), finished_at: None,
     };
     let edits = HashMap::from([(edit.id.clone(), edit)]);
-    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["fatal-status".into()], 0, "demo.doc", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<SeverityMutation>::default()));
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["fatal-status".into()], 0, "demo.doc", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<SeverityMutation>::default()));
     while !replay.is_finished() { replay.step(&edits, &mut || true).unwrap(); }
     assert_eq!(replay.progress().done, replay.progress().total);
     assert_eq!(replay.progress().done, law["settlement"]["finishedWork"]["done"].as_u64().unwrap() as u32);

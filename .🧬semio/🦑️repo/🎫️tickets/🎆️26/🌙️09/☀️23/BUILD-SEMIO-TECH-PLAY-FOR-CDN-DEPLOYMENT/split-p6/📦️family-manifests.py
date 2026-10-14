@@ -27,7 +27,7 @@ def toml_load(path):
 config = json.load(open(sys.argv[1], encoding="utf-8"))
 write = "--write" in sys.argv
 layout = json.load(open(os.path.join(HERE, "🗑️generated", os.path.basename(sys.argv[1]).replace(".json", ".layout.json")), encoding="utf-8"))
-artifact = os.path.dirname(os.path.join(REPO, config["root"]))
+artifact = os.path.join(REPO, config["workspace"]) if config.get("workspace") else os.path.dirname(os.path.join(REPO, config["root"]))
 workspace_path = os.path.join(artifact, "Cargo.toml")
 monolith_dir = os.path.join(artifact, "📦️packages", "🦀️rust")
 monolith = toml_load(os.path.join(REPO, config["monolithManifest"]) if config.get("monolithManifest") else os.path.join(monolith_dir, "Cargo.toml"))
@@ -181,12 +181,13 @@ for name, info in layout["crates"].items():
         if key in deps or key in dev:
             ws_rows[key] = {k: v for k, v in row.items() if k != "__dev_only"}
     rel_workspace = os.path.relpath(artifact, os.path.dirname(manifest))
+    is_agg = name == aggregator
     lib_path = os.path.relpath(os.path.join(REPO, info["root"]), os.path.dirname(manifest))
     is_agg = name == aggregator
     description = config["crates"][name].get("description") or re.sub(r"^//!\s*\S+\s*", "", config["crates"][name].get("doc", family[name])).rstrip(".")
     lines = ["[package]", f'workspace = "{rel_workspace}"', f'name = "{family[name]}"', "version.workspace = true", "edition.workspace = true", "rust-version.workspace = true",
              "description = " + json.dumps(description, ensure_ascii=False), "",
-             "[package.metadata.semio]", f'role = "{"artifact" if is_agg else "library"}"', "", "[lints]", "workspace = true", "", "[lib]", f'path = "{lib_path}"', "", "[dependencies]"]
+             "[package.metadata.semio]", f'role = "{(config.get("aggregatorRole") or "artifact") if is_agg else "library"}"', "", "[lints]", "workspace = true", "", "[lib]", f'path = "{lib_path}"', "", "[dependencies]"]
     lines += [f"{k} = {toml_value(v)}" for k, v in sorted(deps.items())]
     if dev:
         lines += ["", "[dev-dependencies]"] + [f"{k} = {toml_value(v)}" for k, v in sorted(dev.items())]
@@ -194,7 +195,7 @@ for name, info in layout["crates"].items():
     print(f"{family[name]}: {len(deps)} deps, {len(dev)} dev-deps -> {os.path.relpath(manifest, artifact)}")
 
 text = open(workspace_path, encoding="utf-8").read()
-members = sorted(os.path.relpath(os.path.dirname(m), artifact) for m in manifests)
+members = sorted(set(os.path.relpath(os.path.dirname(m), artifact) for m in manifests) | set(workspace.get("workspace", {}).get("members", [])))
 text = re.sub(r"(?ms)^members = \[.*?\n\]", "members = [\n" + "".join(f'    "{m}",\n' for m in members) + "]", text, count=1)
 text = re.sub(r'(?m)^\s*"\*\*/🏅️standards/\*\*",\n', "", text)
 for name, info in layout["crates"].items():

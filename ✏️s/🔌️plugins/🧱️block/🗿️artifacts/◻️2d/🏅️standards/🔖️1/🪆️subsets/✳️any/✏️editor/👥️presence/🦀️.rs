@@ -1,6 +1,5 @@
 //! 👥️ Block2dPresence — shareable live ephemeral state + mutations.
 
-
 use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
@@ -128,3 +127,8 @@ impl protocol::OpBinary for Block2dPresenceMutation {
         Err(protocol::ProtocolError::Malformed { what: "no-presence-mutation", offset: 0, detail: "no presence mutations exist".into() })
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️Mounts

@@ -1,6 +1,7 @@
 //! Diff for `change-steel-fy-pa`.
-use super::ChangeSteelFYPa;
-use crate::{En1994Diff, En1994Snapshot};
+use crate::change_steel_fy_pa::ChangeSteelFYPa;
+use semio_s_artifact_norm_en1994_diff::En1994Diff;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn diff(payload: &ChangeSteelFYPa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_steel_f_y_pa.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());

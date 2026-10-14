@@ -1,10 +1,13 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-member-udl`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{add_load,create_load_case};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
 
-use crate::{Fem3dSnapshot, FemLoad, FemLoadCase};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -30,7 +33,7 @@ fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) 
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
 fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
-    crate::app_surface::next_id(loads.iter().map(|l| crate::load_id(l).to_string()), "l")
+    semio_s_fem_app_surface::next_id(loads.iter().map(|l| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad

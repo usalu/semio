@@ -2,11 +2,12 @@
 //! one, or clears the layout entry entirely when this move is what created it (BASE had none, so
 //! there is no "old position" to move back to — the true undo is removing the entry `move` added).
 
-use crate::standards::v1::subsets::any::schema::mutations::{clear_widget_layout,move_widget,Generation2dMutation};
+use crate::clear_widget_layout;
+use crate::move_widget;
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
-pub fn inverse(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::clear_widget_layout::ClearWidgetLayout> + From<MoveWidget>>(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.host_snapshot.layout.get(&payload.id) {
         Some(previous) => vec![move_widget(payload.id.clone(), previous.clone())],

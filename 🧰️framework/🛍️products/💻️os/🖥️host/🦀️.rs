@@ -401,7 +401,7 @@ use semio_framework_value::ValueError;
     /// `conflicts` decode to empty (matching the old `Deserialize`'s implicit `Vec::default()`
     /// for an absent, non-`Option` field with no `#[serde(default)]` — those two were never
     /// actually optional on the wire in practice, but this preserves exact prior leniency).
-    impl<P: FromValue + protocol::os_vcs::io::binary::genesis::ArtifactGenesisCodec, Op: FromValue> FromValue for BackboneDocument<P, Op> {
+    impl<P: FromValue + protocol::os_store::ArtifactPack, Op: FromValue> FromValue for BackboneDocument<P, Op> {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
             let DslValue::Object(fields) = value else {
                 return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
@@ -419,7 +419,7 @@ use semio_framework_value::ValueError;
                     "schema" => schema = Some(String::from_value(entry).map_err(|e| e.under("schema"))?),
                     "id" => id = Some(String::from_value(entry).map_err(|e| e.under("id"))?),
                     "name" => name = Some(String::from_value(entry).map_err(|e| e.under("name"))?),
-                    "vcs" => vcs = Some(ArtifactVcs::from_value(entry).map_err(|e| e.under("vcs"))?),
+                    "vcs" => vcs = Some(protocol::os_vcs::io::text::vcs::native_vcs_from_value(entry,&protocol::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).map_err(|e| e.under("vcs"))?),
                     "transitions" => transitions = Some(Vec::from_value(entry).map_err(|e| e.under("transitions"))?),
                     "editMessages" => edit_messages = Some(Vec::from_value(entry).map_err(|e| e.under("editMessages"))?),
                     "conflicts" => conflicts = Some(Vec::from_value(entry).map_err(|e| e.under("conflicts"))?),
@@ -466,14 +466,14 @@ use semio_framework_value::ValueError;
     /// 🌱️ Mints a fresh backbone document wrapping `initial_snapshot` with empty edit history.
     pub fn create_backbone_document<P, Op>(schema: &str, id: &str, name: &str, initial_snapshot: P) -> BackboneDocument<P, Op>
     where
-        P: Clone + protocol::os_vcs::io::binary::genesis::ArtifactGenesisCodec,
+        P: Clone + protocol::os_store::ArtifactPack,
         Op: Clone,
     {
         BackboneDocument {
             schema: schema.into(),
             id: id.into(),
             name: name.into(),
-            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).into_owners().vcs,
+            vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners().vcs,
             transitions: Vec::new(),
             edit_messages: Vec::new(),
             conflicts: Vec::new(),
@@ -619,7 +619,7 @@ use semio_framework_value::ValueError;
         let (name_bytes, inner) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(bytes))?;
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let (pack, spr) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))?;
-        let parsed: store::os_store::text_format::ParsedDocumentText<P, Op> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<P, Op> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let envelope = parsed.into_envelope();
         if envelope.schema != expected_schema {
             envelope.retire_unadopted();
@@ -850,7 +850,7 @@ use semio_framework_value::ValueError;
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
             let (name, envelope) = take_backbone_envelope(document);
-            let mut inner = resolve_kernel_future(ArtifactStore::new(envelope, actor))?;
+            let mut inner = resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor))?;
             inner.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
             Ok(Self { inner, name })
         }
@@ -1186,7 +1186,7 @@ use semio_framework_value::ValueError;
     /// 📦️ Pack counterpart of `import_os_space_from_dsl`: admits the pair under its own document id and the head
     /// manifest's name (the catalog lists a studio by its document name).
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let name = parsed.snapshot.name.trim().to_owned();
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
         let mut owners = parsed.into_envelope().into_owners();
@@ -1475,7 +1475,7 @@ pub mod backbone {
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         let dsl_mirror = pack::snapshot::ArtifactDsl::print_dsl(&parsed.into_snapshot());
                         let pack_files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));

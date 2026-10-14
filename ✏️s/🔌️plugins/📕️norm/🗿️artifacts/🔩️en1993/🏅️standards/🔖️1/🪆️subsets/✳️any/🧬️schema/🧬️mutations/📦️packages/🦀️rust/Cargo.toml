@@ -20,14 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
-semio-s-plugin-norm-compliance = { workspace = true }
-semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-norm-contract = { workspace = true }
 semio-s-artifact-norm-en1993-diff = { workspace = true }
 semio-s-artifact-norm-en1993-model = { workspace = true }
 semio-s-artifact-norm-en1993-mut-connections = { workspace = true }
@@ -36,10 +33,12 @@ semio-s-artifact-norm-en1993-mut-fire-fatigue = { workspace = true }
 semio-s-artifact-norm-en1993-mut-general = { workspace = true }
 semio-s-artifact-norm-en1993-mut-thin-walled = { workspace = true }
 semio-s-artifact-norm-en1993-mut-towers = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
 
 [dev-dependencies]
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-s-plugin-norm-mutation-vectors = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }

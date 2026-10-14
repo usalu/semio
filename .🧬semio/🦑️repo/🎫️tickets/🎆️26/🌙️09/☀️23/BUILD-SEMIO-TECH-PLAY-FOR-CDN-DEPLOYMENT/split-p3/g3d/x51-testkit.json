@@ -1,0 +1,36 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-testkit",
+ "description": "Procedural generation3d test support: the serial lease lock, the publication door, the retirement driver and the document store fixture (dev-dependency only)",
+ "owner": "🧪️tests/🧰️support",
+ "moves": [
+  {
+   "from": "test_serial",
+   "to": "test_serial"
+  },
+  {
+   "from": "publication_authority",
+   "to": "publication_authority"
+  },
+  {
+   "from": "retirement_driver",
+   "to": "retirement_driver"
+  },
+  {
+   "from": "store_fixture",
+   "to": "store_fixture"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "doc": "🧰️ Generation3d test support: the serial lease lock, the publication door, the retirement driver and the document store fixture. A dev-dependency only."
+}

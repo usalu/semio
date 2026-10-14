@@ -14,7 +14,7 @@ use semio_framework_plugin::ViewerApp;
 /// `every_viewer_publication_lane_is_a_window_config_lane`.
 #[semio_framework_async_macros::async_test]
 async fn energy_model_viewer_never_mutates() {
-    let definition = crate::viewer::model::create_energy_model_viewer();
+    let definition = semio_s_artifact_energy_model_viewer::create_energy_model_viewer();
     let actions: Vec<_> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
     assert!(!actions.is_empty(), "the energy model viewer declares at least one verb");
     for action in &actions {
@@ -29,7 +29,7 @@ async fn energy_model_viewer_never_mutates() {
 
 #[semio_framework_async_macros::async_test]
 async fn energy_model_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<crate::editor::model::EnergyModelEditor, crate::viewer::model::EnergyModelViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_energy_model_editor::EnergyModelEditor, semio_s_artifact_energy_model_viewer::EnergyModelViewer>().await;
 }
 
 /// 🧩️ Over the real `SemioMembers` roster, not `new_viewer`'s `NoMembers`: the viewer's
@@ -43,9 +43,9 @@ async fn energy_model_editor_and_viewer_share_dialect() {
 /// `interactive-job.catalog-authority` … `generated_migrated=false`, `migrated={}` (tool `setCamera`).
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::viewer::model::create_energy_model_viewer());
-    let mut app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<crate::viewer::model::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
-        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<crate::viewer::model::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
+    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&semio_s_artifact_energy_model_viewer::create_energy_model_viewer());
+    let mut app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
+        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
     // 🧹️ The two genesis members opened onto the store must be retired before Drop.
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }

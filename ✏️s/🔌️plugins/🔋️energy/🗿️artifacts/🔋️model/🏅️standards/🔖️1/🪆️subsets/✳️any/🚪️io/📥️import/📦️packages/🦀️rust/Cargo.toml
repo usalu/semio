@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-energy-model-import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model import: epJSON, JSON, TXT and ZIP deserializers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-energy-model-export = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-plugin-energy-engine-air-exchange = { workspace = true }
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+semio-s-plugin-energy-engine-geometry = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-s-plugin-energy-engine-bestest = { workspace = true }

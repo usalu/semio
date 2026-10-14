@@ -9,7 +9,7 @@
 //! through the app and through a standalone store (`state_before`, `begin_report_replay`).
 
 use super::select_tool_transaction_tests::{dispatched_rows, english, flush, german, move_to, painted_host_of, press, release};
-use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use super::*;
 use crate::editor::puzzle2d::engine::board_host::unit_tests::context::close_board_host;
 use crate::editor::puzzle2d::unit_tests::context::*;
@@ -51,7 +51,7 @@ fn ids(value: &Value) -> Vec<String> {
 /// 🪟️ The overview window, focused — the view every history verb and the history panel are read under, so a `Config`
 /// snap source reads that window's grid.
 fn focused_view() -> ViewModel {
-    ViewModel { focused_window_id: Some(overview::WINDOW_KIND_ID.into()), ..window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID) }
+    ViewModel { focused_window_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) }
 }
 
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
@@ -210,7 +210,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         }
         "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)))).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
         "gridFactor" => {
-            dispatch(app, "setGridFactor", Some(&json!({ "value": spec })), Some(overview::WINDOW_KIND_ID)).expect("grid factor");
+            dispatch(app, "setGridFactor", Some(&json!({ "value": spec })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("grid factor");
         }
         "begin" => {
             let mutation = match spec.as_str() {
@@ -441,7 +441,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
     let board: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(&corpus["board"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus board decodes");
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
-        let mut store = puzzle2d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = puzzle2d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA, id, board.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
         }
@@ -452,7 +452,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
             .iter()
             .map(|draft| {
                 let replacement = match draft.get("leaf") {
-                    Some(replaced) => protocol::InputReplacement::Input { schema: crate::PUZZLE_2D_SCHEMA.into(), payload: leaf(replaced).encode_op().expect("the draft encodes") },
+                    Some(replaced) => protocol::InputReplacement::Input { schema: crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA.into(), payload: leaf(replaced).encode_op().expect("the draft encodes") },
                     None => protocol::InputReplacement::Withdrawn,
                 };
                 (mutation_ids[draft["index"].as_u64().expect("draft index") as usize].clone(), replacement)

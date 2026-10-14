@@ -3,7 +3,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer;
-    use crate::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -47,8 +47,6 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::XlsxComposer as XlsxRawAnyComposer;
-    use crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictComposer;
-    use crate::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -56,23 +54,21 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>(), composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<XlsxRawAnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-    use crate::{XlsxDiff, XlsxMutation, XlsxSnapshot};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -127,7 +123,7 @@ pub mod derived_construction {
         pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
             let mut workbook = self.snapshot.project_workbook().unwrap_or_default();
             workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook);
+            self.snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook);
             self
         }
 
@@ -139,7 +135,7 @@ pub mod derived_construction {
             if let Some(sheet) = workbook.sheets.last_mut() {
                 sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
             }
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook);
+            self.snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook);
             self
         }
     }
@@ -148,7 +144,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
@@ -216,7 +212,7 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: XlsxComposer,
 );
 
-impl crate::XlsxSnapshot {
+impl semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot {
     pub fn part_text(&self, path: &str) -> Option<String> {
         let key = path.trim_start_matches('/');
         self.xml_part(key).map(|part| semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&part.document)).or_else(|| self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok()))

@@ -1,7 +1,7 @@
 //! Diff for `change-beam-slab-thickness-m`.
-use super::ChangeBeamSlabThicknessM;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch};
+use crate::change_beam_slab_thickness_m::ChangeBeamSlabThicknessM;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch};
 
 pub fn diff(payload: &ChangeBeamSlabThicknessM, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_slab_thickness_m.is_finite() {

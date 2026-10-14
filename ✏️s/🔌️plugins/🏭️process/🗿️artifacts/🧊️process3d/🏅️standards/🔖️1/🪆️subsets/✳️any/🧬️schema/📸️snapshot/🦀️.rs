@@ -54,7 +54,7 @@ pub struct Process3dSnapshot {
 
 impl Default for Process3dSnapshot {
     fn default() -> Self {
-        crate::empty_process3d_snapshot()
+        crate::snapshot::empty_process3d_snapshot()
     }
 }
 
@@ -191,6 +191,10 @@ impl MeasureRecipe {
         }
     }
 }
+/// 🌉️ Hand `dsl::DslField` impl — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
+/// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
+/// 🏷️ A tagged enum stored in one field is a one-statement `Shape::Statements` keyed by its variant.
+include!("../../🚪️io/🪶️sqlite/📸️snapshot/🪆️native-fields/🦀️.rs");
 controlled_tagged_variant_field!(MeasureRecipe, WorkingSolid, ProcessMeasure);
 /// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
 /// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
@@ -352,12 +356,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     /// `macro_rules!` textual scoping — so the enum lives here, and `editor::installed_catalogs` imports
     /// `MachineCatalogs` like any other type.
     pub enum MachineCatalogs: MachineCatalog {
-        Generic(crate::schema::GenericCatalog),
-        Metal(crate::schema::MetalCatalog),
-        Wood(crate::schema::WoodCatalog),
-        Robotic(crate::schema::RoboticCatalog),
-        Concrete(crate::schema::ConcreteCatalog),
-        Contributed(crate::editor::process3d::ContributedMachineCatalog),
+        Generic(crate::GenericCatalog),
+        Metal(crate::MetalCatalog),
+        Wood(crate::WoodCatalog),
+        Robotic(crate::RoboticCatalog),
+        Concrete(crate::ConcreteCatalog),
+        Contributed(crate::snapshot::ContributedMachineCatalog),
     }
 }
 //#endregion 🔖️Workshop
@@ -621,7 +625,7 @@ impl ReferenceSolid {
     /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
     /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
     pub fn import(&self, kernel: &mut semio_framework_3d_brep_engine::Brep) -> Option<semio_framework_3d_brep_engine::GeometryHandle> {
-        semio_s_artifact_stdio_step::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
+        semio_s_artifact_stdio_step_geometry::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
     }
 
     /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this
@@ -639,7 +643,7 @@ pub const REFERENCE_SOLID_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-f
 pub const REFERENCE_SOLIDS: &[ReferenceSolid] = &[ReferenceSolid {
     id: REFERENCE_SOLID_CONCRETE_FOREST_LEFT,
     label: "Hexagonal Cut Concrete Forest Left",
-    step: include_str!("../../🖼️assets/🌲️concrete-forest/📐️.stp"),
+    step: semio_s_artifact_process_process3d_reference_solids::CONCRETE_FOREST_LEFT_STEP,
     extent: [10.800_010_282_482_4, 4.676_537_180_435_97, 3.0],
 }];
 pub fn reference_solid(reference_id: &str) -> Option<&'static ReferenceSolid> {
@@ -1006,3 +1010,53 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 //#endregion 🔖️ArtifactKind
+
+//#region 🔧️Behavior
+/// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
+/// 🔓️ `pub` (not private): a variant payload of `crate::MachineCatalogs`
+/// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
+/// itself `pub` — a variant field can never be less visible than the enum wrapping it.
+#[derive(Clone)]
+pub struct ContributedMachineCatalog {
+    catalog_id: String,
+    label: String,
+    icon_id: String,
+    machines: Vec<WorkshopMachine>,
+}
+impl MachineCatalog for ContributedMachineCatalog {
+    fn catalog_id(&self) -> &str {
+        &self.catalog_id
+    }
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn icon_id(&self) -> &str {
+        &self.icon_id
+    }
+
+    fn machines(&self) -> Vec<WorkshopMachine> {
+        self.machines.clone()
+    }
+}
+//#endregion 🔧️Behavior
+//#region 🔧️Behavior
+//#region 🔖️ProcessMachinesTopicPayload
+/// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
+/// `contributed_machine_catalogs` decodes. See `TopicContribution` in
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`.
+#[derive(semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ProcessMachinesTopicPayload {
+    app_id: String,
+    module_id: String,
+    label: String,
+    icon_id: String,
+    machines_json: String,
+}
+//#endregion 🔖️ProcessMachinesTopicPayload
+//#endregion 🔧️Behavior
+
+/// 📸️ The snapshot facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

@@ -1,8 +1,7 @@
 //! 🔍 Block5d mutation — `ScaleCamera2d`: the 2D-projection window camera's `zoom` level.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🔍 `scale-camera2d` payload.
@@ -18,19 +17,19 @@ pub struct ScaleCamera2d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_camera2d(new_zoom: f64) -> Block5dMutation {
-    Block5dMutation::ScaleCamera2d(ScaleCamera2d { new_zoom })
+pub fn scale_camera2d<Op: From<crate::scale_camera2d::ScaleCamera2d>>(new_zoom: f64) -> Op {
+    Op::from(ScaleCamera2d { new_zoom })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ScaleCamera2d {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ScaleCamera2d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::scale_camera2d::ScaleCamera2d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "camera2d", kind: "scale-camera2d", record: "ScaledCamera2d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::scale_camera2d::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::scale_camera2d::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ScaleCamera2d 
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

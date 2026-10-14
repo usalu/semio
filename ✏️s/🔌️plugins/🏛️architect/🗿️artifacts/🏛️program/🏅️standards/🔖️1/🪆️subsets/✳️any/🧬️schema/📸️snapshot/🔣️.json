@@ -15246,6 +15246,2157 @@
           "pattern": "^(0|[1-9][0-9]{0,19})$"
         }
       ]
+    },
+    "RegisterKey": {
+      "title": "RegisterKey",
+      "description": "Key of one id-keyed register.",
+      "type": "string",
+      "enum": [
+        "informationRequirement",
+        "sustainabilityRequirement",
+        "accessibilityRequirement",
+        "conflict",
+        "optionEvaluation",
+        "function",
+        "risk",
+        "decision",
+        "validationRecord",
+        "priorityRecord",
+        "flowRequirement",
+        "environmentalRequirement",
+        "workshop",
+        "scenario",
+        "benchmarkRecord",
+        "activity",
+        "infrastructureRequirement",
+        "organizationalRequirement",
+        "issue",
+        "approvalRecord",
+        "stakeholder",
+        "qualityRecord",
+        "resilienceRequirement",
+        "assumption",
+        "costRequirement",
+        "document",
+        "scheduleRequirement",
+        "growthPlan",
+        "performanceCriterion",
+        "operationalRequirement",
+        "requirement",
+        "siteContext",
+        "templateRecord",
+        "reportRecord",
+        "auditEvent",
+        "knowledgeRecord",
+        "regulatoryRequirement",
+        "communicationRequirement",
+        "resource",
+        "statusRecord",
+        "changeRecord",
+        "process",
+        "searchFilter",
+        "accessRule",
+        "privacyRequirement",
+        "quantityRequirement",
+        "analysisRecord",
+        "relationship",
+        "storageRequirement",
+        "meetingRecord",
+        "survey",
+        "deliveryConstraint",
+        "constraintRecord",
+        "complianceRecord",
+        "serviceRequirement",
+        "equipment",
+        "securityRequirement",
+        "collaborationRecord",
+        "safetyRequirement",
+        "userProfile",
+        "humanFactorRequirement",
+        "flexibilityRequirement",
+        "wayfindingRequirement",
+        "programElement"
+      ]
+    },
+    "RegisterRow": {
+      "title": "RegisterRow",
+      "description": "One typed register row, adjacently tagged by its register key.",
+      "oneOf": [
+        {
+          "title": "InformationRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "informationRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/InformationRequirement"
+            }
+          }
+        },
+        {
+          "title": "SustainabilityRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "sustainabilityRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/SustainabilityRequirement"
+            }
+          }
+        },
+        {
+          "title": "AccessibilityRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "accessibilityRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/AccessibilityRequirement"
+            }
+          }
+        },
+        {
+          "title": "Conflict",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "conflict"
+            },
+            "row": {
+              "$ref": "#/$defs/Conflict"
+            }
+          }
+        },
+        {
+          "title": "OptionEvaluation",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "optionEvaluation"
+            },
+            "row": {
+              "$ref": "#/$defs/OptionEvaluation"
+            }
+          }
+        },
+        {
+          "title": "Function",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "function"
+            },
+            "row": {
+              "$ref": "#/$defs/Function"
+            }
+          }
+        },
+        {
+          "title": "Risk",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "risk"
+            },
+            "row": {
+              "$ref": "#/$defs/Risk"
+            }
+          }
+        },
+        {
+          "title": "Decision",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "decision"
+            },
+            "row": {
+              "$ref": "#/$defs/Decision"
+            }
+          }
+        },
+        {
+          "title": "ValidationRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "validationRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ValidationRecord"
+            }
+          }
+        },
+        {
+          "title": "PriorityRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "priorityRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/PriorityRecord"
+            }
+          }
+        },
+        {
+          "title": "FlowRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "flowRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/FlowRequirement"
+            }
+          }
+        },
+        {
+          "title": "EnvironmentalRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "environmentalRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/EnvironmentalRequirement"
+            }
+          }
+        },
+        {
+          "title": "Workshop",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "workshop"
+            },
+            "row": {
+              "$ref": "#/$defs/Workshop"
+            }
+          }
+        },
+        {
+          "title": "Scenario",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "scenario"
+            },
+            "row": {
+              "$ref": "#/$defs/Scenario"
+            }
+          }
+        },
+        {
+          "title": "BenchmarkRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "benchmarkRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/BenchmarkRecord"
+            }
+          }
+        },
+        {
+          "title": "Activity",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "activity"
+            },
+            "row": {
+              "$ref": "#/$defs/Activity"
+            }
+          }
+        },
+        {
+          "title": "InfrastructureRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "infrastructureRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/InfrastructureRequirement"
+            }
+          }
+        },
+        {
+          "title": "OrganizationalRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "organizationalRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/OrganizationalRequirement"
+            }
+          }
+        },
+        {
+          "title": "Issue",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "issue"
+            },
+            "row": {
+              "$ref": "#/$defs/Issue"
+            }
+          }
+        },
+        {
+          "title": "ApprovalRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "approvalRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ApprovalRecord"
+            }
+          }
+        },
+        {
+          "title": "Stakeholder",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "stakeholder"
+            },
+            "row": {
+              "$ref": "#/$defs/Stakeholder"
+            }
+          }
+        },
+        {
+          "title": "QualityRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "qualityRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/QualityRecord"
+            }
+          }
+        },
+        {
+          "title": "ResilienceRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "resilienceRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/ResilienceRequirement"
+            }
+          }
+        },
+        {
+          "title": "Assumption",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "assumption"
+            },
+            "row": {
+              "$ref": "#/$defs/Assumption"
+            }
+          }
+        },
+        {
+          "title": "CostRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "costRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/CostRequirement"
+            }
+          }
+        },
+        {
+          "title": "Document",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "document"
+            },
+            "row": {
+              "$ref": "#/$defs/ArtifactRecord"
+            }
+          }
+        },
+        {
+          "title": "ScheduleRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "scheduleRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/ScheduleRequirement"
+            }
+          }
+        },
+        {
+          "title": "GrowthPlan",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "growthPlan"
+            },
+            "row": {
+              "$ref": "#/$defs/GrowthPlan"
+            }
+          }
+        },
+        {
+          "title": "PerformanceCriterion",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "performanceCriterion"
+            },
+            "row": {
+              "$ref": "#/$defs/PerformanceCriterion"
+            }
+          }
+        },
+        {
+          "title": "OperationalRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "operationalRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/OperationalRequirement"
+            }
+          }
+        },
+        {
+          "title": "Requirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "requirement"
+            },
+            "row": {
+              "$ref": "#/$defs/Requirement"
+            }
+          }
+        },
+        {
+          "title": "SiteContext",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "siteContext"
+            },
+            "row": {
+              "$ref": "#/$defs/SiteContext"
+            }
+          }
+        },
+        {
+          "title": "TemplateRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "templateRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/TemplateRecord"
+            }
+          }
+        },
+        {
+          "title": "ReportRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "reportRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ReportRecord"
+            }
+          }
+        },
+        {
+          "title": "AuditEvent",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "auditEvent"
+            },
+            "row": {
+              "$ref": "#/$defs/AuditEvent"
+            }
+          }
+        },
+        {
+          "title": "KnowledgeRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "knowledgeRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/KnowledgeRecord"
+            }
+          }
+        },
+        {
+          "title": "RegulatoryRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "regulatoryRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/RegulatoryRequirement"
+            }
+          }
+        },
+        {
+          "title": "CommunicationRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "communicationRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/CommunicationRequirement"
+            }
+          }
+        },
+        {
+          "title": "Resource",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "resource"
+            },
+            "row": {
+              "$ref": "#/$defs/Resource"
+            }
+          }
+        },
+        {
+          "title": "StatusRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "statusRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/StatusRecord"
+            }
+          }
+        },
+        {
+          "title": "ChangeRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "changeRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ChangeRecord"
+            }
+          }
+        },
+        {
+          "title": "Process",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "process"
+            },
+            "row": {
+              "$ref": "#/$defs/Process"
+            }
+          }
+        },
+        {
+          "title": "SearchFilter",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "searchFilter"
+            },
+            "row": {
+              "$ref": "#/$defs/SearchFilter"
+            }
+          }
+        },
+        {
+          "title": "AccessRule",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "accessRule"
+            },
+            "row": {
+              "$ref": "#/$defs/AccessRule"
+            }
+          }
+        },
+        {
+          "title": "PrivacyRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "privacyRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/PrivacyRequirement"
+            }
+          }
+        },
+        {
+          "title": "QuantityRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "quantityRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/QuantityRequirement"
+            }
+          }
+        },
+        {
+          "title": "AnalysisRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "analysisRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/AnalysisRecord"
+            }
+          }
+        },
+        {
+          "title": "Relationship",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "relationship"
+            },
+            "row": {
+              "$ref": "#/$defs/Relationship"
+            }
+          }
+        },
+        {
+          "title": "StorageRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "storageRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/StorageRequirement"
+            }
+          }
+        },
+        {
+          "title": "MeetingRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "meetingRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/MeetingRecord"
+            }
+          }
+        },
+        {
+          "title": "Survey",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "survey"
+            },
+            "row": {
+              "$ref": "#/$defs/Survey"
+            }
+          }
+        },
+        {
+          "title": "DeliveryConstraint",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "deliveryConstraint"
+            },
+            "row": {
+              "$ref": "#/$defs/DeliveryConstraint"
+            }
+          }
+        },
+        {
+          "title": "ConstraintRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "constraintRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ConstraintRecord"
+            }
+          }
+        },
+        {
+          "title": "ComplianceRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "complianceRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/ComplianceRecord"
+            }
+          }
+        },
+        {
+          "title": "ServiceRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "serviceRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/ServiceRequirement"
+            }
+          }
+        },
+        {
+          "title": "Equipment",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "equipment"
+            },
+            "row": {
+              "$ref": "#/$defs/Equipment"
+            }
+          }
+        },
+        {
+          "title": "SecurityRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "securityRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/SecurityRequirement"
+            }
+          }
+        },
+        {
+          "title": "CollaborationRecord",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "collaborationRecord"
+            },
+            "row": {
+              "$ref": "#/$defs/CollaborationRecord"
+            }
+          }
+        },
+        {
+          "title": "SafetyRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "safetyRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/SafetyRequirement"
+            }
+          }
+        },
+        {
+          "title": "UserProfile",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "userProfile"
+            },
+            "row": {
+              "$ref": "#/$defs/UserProfile"
+            }
+          }
+        },
+        {
+          "title": "HumanFactorRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "humanFactorRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/HumanFactorRequirement"
+            }
+          }
+        },
+        {
+          "title": "FlexibilityRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "flexibilityRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/FlexibilityRequirement"
+            }
+          }
+        },
+        {
+          "title": "WayfindingRequirement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "wayfindingRequirement"
+            },
+            "row": {
+              "$ref": "#/$defs/WayfindingRequirement"
+            }
+          }
+        },
+        {
+          "title": "ProgramElement",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "register",
+            "row"
+          ],
+          "properties": {
+            "register": {
+              "const": "programElement"
+            },
+            "row": {
+              "$ref": "#/$defs/ProgramElement"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "x-semio-collection-catalog": {
+    "keyType": "RegisterKey",
+    "rowType": "RegisterRow",
+    "labelType": "RegisterLabel",
+    "tag": "register",
+    "content": "row",
+    "headerField": "header",
+    "rust": {
+      "snapshot": "crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot",
+      "diff": "crate::standards::v1::subsets::any::schema::diff::ProgramDiff",
+      "deltas": "crate::standards::v1::subsets::any::schema::diff",
+      "rows": "crate::standards::v1::subsets::any::schema::registers",
+      "header": "crate::standards::v1::subsets::any::schema::kernel::EntityHeader",
+      "id": "crate::standards::v1::subsets::any::schema::kernel::EntityId",
+      "canonicalJsonOwner": "semio_framework_pack_json"
+    },
+    "typescript": {
+      "rows": "../../🟦️.ts"
+    },
+    "collections": [
+      {
+        "key": "informationRequirement",
+        "variant": "InformationRequirement",
+        "entity": "information-requirement",
+        "row": "InformationRequirement",
+        "patch": "InformationRequirementPatch",
+        "delta": "ProgramInformationDelta",
+        "rowsField": "information",
+        "diffField": "information",
+        "label": {
+          "article": "an",
+          "en": "information requirement",
+          "de": "Informationsanforderung"
+        }
+      },
+      {
+        "key": "sustainabilityRequirement",
+        "variant": "SustainabilityRequirement",
+        "entity": "sustainability-requirement",
+        "row": "SustainabilityRequirement",
+        "patch": "SustainabilityRequirementPatch",
+        "delta": "ProgramSustainabilityDelta",
+        "rowsField": "sustainability",
+        "diffField": "sustainability",
+        "label": {
+          "article": "a",
+          "en": "sustainability requirement",
+          "de": "Nachhaltigkeitsanforderung"
+        }
+      },
+      {
+        "key": "accessibilityRequirement",
+        "variant": "AccessibilityRequirement",
+        "entity": "accessibility-requirement",
+        "row": "AccessibilityRequirement",
+        "patch": "AccessibilityRequirementPatch",
+        "delta": "ProgramAccessibilityDelta",
+        "rowsField": "accessibility",
+        "diffField": "accessibility",
+        "label": {
+          "article": "an",
+          "en": "accessibility requirement",
+          "de": "Barrierefreiheitsanforderung"
+        }
+      },
+      {
+        "key": "conflict",
+        "variant": "Conflict",
+        "entity": "conflict",
+        "row": "Conflict",
+        "patch": "ConflictPatch",
+        "delta": "ProgramConflictsDelta",
+        "rowsField": "conflicts",
+        "diffField": "conflicts",
+        "label": {
+          "article": "a",
+          "en": "conflict",
+          "de": "Konflikt"
+        }
+      },
+      {
+        "key": "optionEvaluation",
+        "variant": "OptionEvaluation",
+        "entity": "option-evaluation",
+        "row": "OptionEvaluation",
+        "patch": "OptionEvaluationPatch",
+        "delta": "ProgramOptionsDelta",
+        "rowsField": "options",
+        "diffField": "options",
+        "label": {
+          "article": "an",
+          "en": "option evaluation",
+          "de": "Optionsbewertung"
+        }
+      },
+      {
+        "key": "function",
+        "variant": "Function",
+        "entity": "function",
+        "row": "Function",
+        "patch": "FunctionPatch",
+        "delta": "ProgramFunctionsDelta",
+        "rowsField": "functions",
+        "diffField": "functions",
+        "label": {
+          "article": "a",
+          "en": "function",
+          "de": "Funktion"
+        }
+      },
+      {
+        "key": "risk",
+        "variant": "Risk",
+        "entity": "risk",
+        "row": "Risk",
+        "patch": "RiskPatch",
+        "delta": "ProgramRisksDelta",
+        "rowsField": "risks",
+        "diffField": "risks",
+        "label": {
+          "article": "a",
+          "en": "risk",
+          "de": "Risiko"
+        }
+      },
+      {
+        "key": "decision",
+        "variant": "Decision",
+        "entity": "decision",
+        "row": "Decision",
+        "patch": "DecisionPatch",
+        "delta": "ProgramDecisionsDelta",
+        "rowsField": "decisions",
+        "diffField": "decisions",
+        "label": {
+          "article": "a",
+          "en": "decision",
+          "de": "Entscheidung"
+        }
+      },
+      {
+        "key": "validationRecord",
+        "variant": "ValidationRecord",
+        "entity": "validation-record",
+        "row": "ValidationRecord",
+        "patch": "ValidationRecordPatch",
+        "delta": "ProgramValidationsDelta",
+        "rowsField": "validations",
+        "diffField": "validations",
+        "label": {
+          "article": "a",
+          "en": "validation record",
+          "de": "Validierungsdatensatz"
+        }
+      },
+      {
+        "key": "priorityRecord",
+        "variant": "PriorityRecord",
+        "entity": "priority-record",
+        "row": "PriorityRecord",
+        "patch": "PriorityRecordPatch",
+        "delta": "ProgramPrioritiesDelta",
+        "rowsField": "priorities",
+        "diffField": "priorities",
+        "label": {
+          "article": "a",
+          "en": "priority record",
+          "de": "Prioritätsdatensatz"
+        }
+      },
+      {
+        "key": "flowRequirement",
+        "variant": "FlowRequirement",
+        "entity": "flow-requirement",
+        "row": "FlowRequirement",
+        "patch": "FlowRequirementPatch",
+        "delta": "ProgramFlowsDelta",
+        "rowsField": "flows",
+        "diffField": "flows",
+        "label": {
+          "article": "a",
+          "en": "flow requirement",
+          "de": "Flussanforderung"
+        }
+      },
+      {
+        "key": "environmentalRequirement",
+        "variant": "EnvironmentalRequirement",
+        "entity": "environmental-requirement",
+        "row": "EnvironmentalRequirement",
+        "patch": "EnvironmentalRequirementPatch",
+        "delta": "ProgramEnvironmentalDelta",
+        "rowsField": "environmental",
+        "diffField": "environmental",
+        "label": {
+          "article": "an",
+          "en": "environmental requirement",
+          "de": "Umweltanforderung"
+        }
+      },
+      {
+        "key": "workshop",
+        "variant": "Workshop",
+        "entity": "workshop",
+        "row": "Workshop",
+        "patch": "WorkshopPatch",
+        "delta": "ProgramWorkshopsDelta",
+        "rowsField": "workshops",
+        "diffField": "workshops",
+        "label": {
+          "article": "a",
+          "en": "workshop",
+          "de": "Workshop"
+        }
+      },
+      {
+        "key": "scenario",
+        "variant": "Scenario",
+        "entity": "scenario",
+        "row": "Scenario",
+        "patch": "ScenarioPatch",
+        "delta": "ProgramScenariosDelta",
+        "rowsField": "scenarios",
+        "diffField": "scenarios",
+        "label": {
+          "article": "a",
+          "en": "scenario",
+          "de": "Szenario"
+        }
+      },
+      {
+        "key": "benchmarkRecord",
+        "variant": "BenchmarkRecord",
+        "entity": "benchmark-record",
+        "row": "BenchmarkRecord",
+        "patch": "BenchmarkRecordPatch",
+        "delta": "ProgramBenchmarksDelta",
+        "rowsField": "benchmarks_payload",
+        "diffField": "benchmarks",
+        "label": {
+          "article": "a",
+          "en": "benchmark record",
+          "de": "Benchmark-Datensatz"
+        }
+      },
+      {
+        "key": "activity",
+        "variant": "Activity",
+        "entity": "activity",
+        "row": "Activity",
+        "patch": "ActivityPatch",
+        "delta": "ProgramActivitiesDelta",
+        "rowsField": "activities",
+        "diffField": "activities",
+        "label": {
+          "article": "an",
+          "en": "activity",
+          "de": "Aktivität"
+        }
+      },
+      {
+        "key": "infrastructureRequirement",
+        "variant": "InfrastructureRequirement",
+        "entity": "infrastructure-requirement",
+        "row": "InfrastructureRequirement",
+        "patch": "InfrastructureRequirementPatch",
+        "delta": "ProgramInfrastructureDelta",
+        "rowsField": "infrastructure",
+        "diffField": "infrastructure",
+        "label": {
+          "article": "an",
+          "en": "infrastructure requirement",
+          "de": "Infrastrukturanforderung"
+        }
+      },
+      {
+        "key": "organizationalRequirement",
+        "variant": "OrganizationalRequirement",
+        "entity": "organizational-requirement",
+        "row": "OrganizationalRequirement",
+        "patch": "OrganizationalRequirementPatch",
+        "delta": "ProgramOrganizationalDelta",
+        "rowsField": "organizational",
+        "diffField": "organizational",
+        "label": {
+          "article": "an",
+          "en": "organizational requirement",
+          "de": "Organisationsanforderung"
+        }
+      },
+      {
+        "key": "issue",
+        "variant": "Issue",
+        "entity": "issue",
+        "row": "Issue",
+        "patch": "IssuePatch",
+        "delta": "ProgramIssuesDelta",
+        "rowsField": "issues",
+        "diffField": "issues",
+        "label": {
+          "article": "an",
+          "en": "issue",
+          "de": "Vorgang"
+        }
+      },
+      {
+        "key": "approvalRecord",
+        "variant": "ApprovalRecord",
+        "entity": "approval-record",
+        "row": "ApprovalRecord",
+        "patch": "ApprovalRecordPatch",
+        "delta": "ProgramApprovalsDelta",
+        "rowsField": "approvals",
+        "diffField": "approvals",
+        "label": {
+          "article": "an",
+          "en": "approval record",
+          "de": "Freigabedatensatz"
+        }
+      },
+      {
+        "key": "stakeholder",
+        "variant": "Stakeholder",
+        "entity": "stakeholder",
+        "row": "Stakeholder",
+        "patch": "StakeholderPatch",
+        "delta": "ProgramStakeholdersDelta",
+        "rowsField": "stakeholders",
+        "diffField": "stakeholders",
+        "label": {
+          "article": "a",
+          "en": "stakeholder",
+          "de": "Beteiligter"
+        }
+      },
+      {
+        "key": "qualityRecord",
+        "variant": "QualityRecord",
+        "entity": "quality-record",
+        "row": "QualityRecord",
+        "patch": "QualityRecordPatch",
+        "delta": "ProgramQualityDelta",
+        "rowsField": "quality",
+        "diffField": "quality",
+        "label": {
+          "article": "a",
+          "en": "quality record",
+          "de": "Qualitätsdatensatz"
+        }
+      },
+      {
+        "key": "resilienceRequirement",
+        "variant": "ResilienceRequirement",
+        "entity": "resilience-requirement",
+        "row": "ResilienceRequirement",
+        "patch": "ResilienceRequirementPatch",
+        "delta": "ProgramResilienceDelta",
+        "rowsField": "resilience",
+        "diffField": "resilience",
+        "label": {
+          "article": "a",
+          "en": "resilience requirement",
+          "de": "Resilienzanforderung"
+        }
+      },
+      {
+        "key": "assumption",
+        "variant": "Assumption",
+        "entity": "assumption",
+        "row": "Assumption",
+        "patch": "AssumptionPatch",
+        "delta": "ProgramAssumptionsDelta",
+        "rowsField": "assumptions",
+        "diffField": "assumptions",
+        "label": {
+          "article": "an",
+          "en": "assumption",
+          "de": "Annahme"
+        }
+      },
+      {
+        "key": "costRequirement",
+        "variant": "CostRequirement",
+        "entity": "cost-requirement",
+        "row": "CostRequirement",
+        "patch": "CostRequirementPatch",
+        "delta": "ProgramCostsDelta",
+        "rowsField": "costs",
+        "diffField": "costs",
+        "label": {
+          "article": "a",
+          "en": "cost requirement",
+          "de": "Kostenanforderung"
+        }
+      },
+      {
+        "key": "document",
+        "variant": "Document",
+        "entity": "document",
+        "row": "ArtifactRecord",
+        "patch": "ArtifactRecordPatch",
+        "delta": "ProgramArtifactsDelta",
+        "rowsField": "artifacts",
+        "diffField": "artifacts",
+        "label": {
+          "article": "a",
+          "en": "document",
+          "de": "Dokument"
+        }
+      },
+      {
+        "key": "scheduleRequirement",
+        "variant": "ScheduleRequirement",
+        "entity": "schedule-requirement",
+        "row": "ScheduleRequirement",
+        "patch": "ScheduleRequirementPatch",
+        "delta": "ProgramSchedulesDelta",
+        "rowsField": "schedules",
+        "diffField": "schedules",
+        "label": {
+          "article": "a",
+          "en": "schedule requirement",
+          "de": "Terminanforderung"
+        }
+      },
+      {
+        "key": "growthPlan",
+        "variant": "GrowthPlan",
+        "entity": "growth-plan",
+        "row": "GrowthPlan",
+        "patch": "GrowthPlanPatch",
+        "delta": "ProgramGrowthDelta",
+        "rowsField": "growth",
+        "diffField": "growth",
+        "label": {
+          "article": "a",
+          "en": "growth plan",
+          "de": "Wachstumsplan"
+        }
+      },
+      {
+        "key": "performanceCriterion",
+        "variant": "PerformanceCriterion",
+        "entity": "performance-criterion",
+        "row": "PerformanceCriterion",
+        "patch": "PerformanceCriterionPatch",
+        "delta": "ProgramPerformanceDelta",
+        "rowsField": "performance",
+        "diffField": "performance",
+        "label": {
+          "article": "a",
+          "en": "performance criterion",
+          "de": "Leistungskriterium"
+        }
+      },
+      {
+        "key": "operationalRequirement",
+        "variant": "OperationalRequirement",
+        "entity": "operational-requirement",
+        "row": "OperationalRequirement",
+        "patch": "OperationalRequirementPatch",
+        "delta": "ProgramOperationsDelta",
+        "rowsField": "operations",
+        "diffField": "operations",
+        "label": {
+          "article": "an",
+          "en": "operational requirement",
+          "de": "Betriebsanforderung"
+        }
+      },
+      {
+        "key": "requirement",
+        "variant": "Requirement",
+        "entity": "requirement",
+        "row": "Requirement",
+        "patch": "RequirementPatch",
+        "delta": "ProgramRequirementsDelta",
+        "rowsField": "requirements",
+        "diffField": "requirements",
+        "label": {
+          "article": "a",
+          "en": "requirement",
+          "de": "Anforderung"
+        }
+      },
+      {
+        "key": "siteContext",
+        "variant": "SiteContext",
+        "entity": "site-context",
+        "row": "SiteContext",
+        "patch": "SiteContextPatch",
+        "delta": "ProgramSiteContextDelta",
+        "rowsField": "site_context",
+        "diffField": "site_context",
+        "label": {
+          "article": "a",
+          "en": "site context",
+          "de": "Standortkontext"
+        }
+      },
+      {
+        "key": "templateRecord",
+        "variant": "TemplateRecord",
+        "entity": "template-record",
+        "row": "TemplateRecord",
+        "patch": "TemplateRecordPatch",
+        "delta": "ProgramTemplatesDelta",
+        "rowsField": "templates",
+        "diffField": "templates",
+        "label": {
+          "article": "a",
+          "en": "template record",
+          "de": "Vorlagendatensatz"
+        }
+      },
+      {
+        "key": "reportRecord",
+        "variant": "ReportRecord",
+        "entity": "report-record",
+        "row": "ReportRecord",
+        "patch": "ReportRecordPatch",
+        "delta": "ProgramReportsDelta",
+        "rowsField": "reports",
+        "diffField": "reports",
+        "label": {
+          "article": "a",
+          "en": "report record",
+          "de": "Berichtsdatensatz"
+        }
+      },
+      {
+        "key": "auditEvent",
+        "variant": "AuditEvent",
+        "entity": "audit-event",
+        "row": "AuditEvent",
+        "patch": "AuditEventPatch",
+        "delta": "ProgramAuditEventsDelta",
+        "rowsField": "audit_events",
+        "diffField": "audit_events",
+        "label": {
+          "article": "an",
+          "en": "audit event",
+          "de": "Audit-Ereignis"
+        }
+      },
+      {
+        "key": "knowledgeRecord",
+        "variant": "KnowledgeRecord",
+        "entity": "knowledge-record",
+        "row": "KnowledgeRecord",
+        "patch": "KnowledgeRecordPatch",
+        "delta": "ProgramKnowledgeDelta",
+        "rowsField": "knowledge_payload",
+        "diffField": "knowledge",
+        "label": {
+          "article": "a",
+          "en": "knowledge record",
+          "de": "Wissensdatensatz"
+        }
+      },
+      {
+        "key": "regulatoryRequirement",
+        "variant": "RegulatoryRequirement",
+        "entity": "regulatory-requirement",
+        "row": "RegulatoryRequirement",
+        "patch": "RegulatoryRequirementPatch",
+        "delta": "ProgramRegulatoryDelta",
+        "rowsField": "regulatory",
+        "diffField": "regulatory",
+        "label": {
+          "article": "a",
+          "en": "regulatory requirement",
+          "de": "Regulatorische Anforderung"
+        }
+      },
+      {
+        "key": "communicationRequirement",
+        "variant": "CommunicationRequirement",
+        "entity": "communication-requirement",
+        "row": "CommunicationRequirement",
+        "patch": "CommunicationRequirementPatch",
+        "delta": "ProgramCommunicationDelta",
+        "rowsField": "communication",
+        "diffField": "communication",
+        "label": {
+          "article": "a",
+          "en": "communication requirement",
+          "de": "Kommunikationsanforderung"
+        }
+      },
+      {
+        "key": "resource",
+        "variant": "Resource",
+        "entity": "resource",
+        "row": "Resource",
+        "patch": "ResourcePatch",
+        "delta": "ProgramResourcesDelta",
+        "rowsField": "resources",
+        "diffField": "resources",
+        "label": {
+          "article": "a",
+          "en": "resource",
+          "de": "Ressource"
+        }
+      },
+      {
+        "key": "statusRecord",
+        "variant": "StatusRecord",
+        "entity": "status-record",
+        "row": "StatusRecord",
+        "patch": "StatusRecordPatch",
+        "delta": "ProgramStatusRecordsDelta",
+        "rowsField": "status_records",
+        "diffField": "status_records",
+        "label": {
+          "article": "a",
+          "en": "status record",
+          "de": "Statusdatensatz"
+        }
+      },
+      {
+        "key": "changeRecord",
+        "variant": "ChangeRecord",
+        "entity": "change-record",
+        "row": "ChangeRecord",
+        "patch": "ChangeRecordPatch",
+        "delta": "ProgramChangesDelta",
+        "rowsField": "changes",
+        "diffField": "changes",
+        "label": {
+          "article": "a",
+          "en": "change record",
+          "de": "Änderungsdatensatz"
+        }
+      },
+      {
+        "key": "process",
+        "variant": "Process",
+        "entity": "process",
+        "row": "Process",
+        "patch": "ProcessPatch",
+        "delta": "ProgramProcessesDelta",
+        "rowsField": "processes",
+        "diffField": "processes",
+        "label": {
+          "article": "a",
+          "en": "process",
+          "de": "Prozess"
+        }
+      },
+      {
+        "key": "searchFilter",
+        "variant": "SearchFilter",
+        "entity": "search-filter",
+        "row": "SearchFilter",
+        "patch": "SearchFilterPatch",
+        "delta": "ProgramSearchFiltersDelta",
+        "rowsField": "search_filters",
+        "diffField": "search_filters",
+        "label": {
+          "article": "a",
+          "en": "search filter",
+          "de": "Suchfilter"
+        }
+      },
+      {
+        "key": "accessRule",
+        "variant": "AccessRule",
+        "entity": "access-rule",
+        "row": "AccessRule",
+        "patch": "AccessRulePatch",
+        "delta": "ProgramAccessRulesDelta",
+        "rowsField": "access_rules",
+        "diffField": "access_rules",
+        "label": {
+          "article": "an",
+          "en": "access rule",
+          "de": "Zugangsregel"
+        }
+      },
+      {
+        "key": "privacyRequirement",
+        "variant": "PrivacyRequirement",
+        "entity": "privacy-requirement",
+        "row": "PrivacyRequirement",
+        "patch": "PrivacyRequirementPatch",
+        "delta": "ProgramPrivacyDelta",
+        "rowsField": "privacy",
+        "diffField": "privacy",
+        "label": {
+          "article": "a",
+          "en": "privacy requirement",
+          "de": "Datenschutzanforderung"
+        }
+      },
+      {
+        "key": "quantityRequirement",
+        "variant": "QuantityRequirement",
+        "entity": "quantity-requirement",
+        "row": "QuantityRequirement",
+        "patch": "QuantityRequirementPatch",
+        "delta": "ProgramQuantitiesDelta",
+        "rowsField": "quantities",
+        "diffField": "quantities",
+        "label": {
+          "article": "a",
+          "en": "quantity requirement",
+          "de": "Mengenanforderung"
+        }
+      },
+      {
+        "key": "analysisRecord",
+        "variant": "AnalysisRecord",
+        "entity": "analysis-record",
+        "row": "AnalysisRecord",
+        "patch": "AnalysisRecordPatch",
+        "delta": "ProgramAnalysesDelta",
+        "rowsField": "analyses",
+        "diffField": "analyses",
+        "label": {
+          "article": "an",
+          "en": "analysis record",
+          "de": "Analysedatensatz"
+        }
+      },
+      {
+        "key": "relationship",
+        "variant": "Relationship",
+        "entity": "relationship",
+        "row": "Relationship",
+        "patch": "RelationshipPatch",
+        "delta": "ProgramRelationshipsDelta",
+        "rowsField": "relationships",
+        "diffField": "relationships",
+        "label": {
+          "article": "a",
+          "en": "relationship",
+          "de": "Beziehung"
+        }
+      },
+      {
+        "key": "storageRequirement",
+        "variant": "StorageRequirement",
+        "entity": "storage-requirement",
+        "row": "StorageRequirement",
+        "patch": "StorageRequirementPatch",
+        "delta": "ProgramStorageDelta",
+        "rowsField": "storage",
+        "diffField": "storage",
+        "label": {
+          "article": "a",
+          "en": "storage requirement",
+          "de": "Stauraumanforderung"
+        }
+      },
+      {
+        "key": "meetingRecord",
+        "variant": "MeetingRecord",
+        "entity": "meeting-record",
+        "row": "MeetingRecord",
+        "patch": "MeetingRecordPatch",
+        "delta": "ProgramMeetingsDelta",
+        "rowsField": "meetings",
+        "diffField": "meetings",
+        "label": {
+          "article": "a",
+          "en": "meeting record",
+          "de": "Besprechungsdatensatz"
+        }
+      },
+      {
+        "key": "survey",
+        "variant": "Survey",
+        "entity": "survey",
+        "row": "Survey",
+        "patch": "SurveyPatch",
+        "delta": "ProgramSurveysDelta",
+        "rowsField": "surveys",
+        "diffField": "surveys",
+        "label": {
+          "article": "a",
+          "en": "survey",
+          "de": "Erhebung"
+        }
+      },
+      {
+        "key": "deliveryConstraint",
+        "variant": "DeliveryConstraint",
+        "entity": "delivery-constraint",
+        "row": "DeliveryConstraint",
+        "patch": "DeliveryConstraintPatch",
+        "delta": "ProgramDeliveryDelta",
+        "rowsField": "delivery",
+        "diffField": "delivery",
+        "label": {
+          "article": "a",
+          "en": "delivery constraint",
+          "de": "Lieferrandbedingung"
+        }
+      },
+      {
+        "key": "constraintRecord",
+        "variant": "ConstraintRecord",
+        "entity": "constraint-record",
+        "row": "ConstraintRecord",
+        "patch": "ConstraintRecordPatch",
+        "delta": "ProgramConstraintsDelta",
+        "rowsField": "constraints",
+        "diffField": "constraints",
+        "label": {
+          "article": "a",
+          "en": "constraint record",
+          "de": "Randbedingungsdatensatz"
+        }
+      },
+      {
+        "key": "complianceRecord",
+        "variant": "ComplianceRecord",
+        "entity": "compliance-record",
+        "row": "ComplianceRecord",
+        "patch": "ComplianceRecordPatch",
+        "delta": "ProgramComplianceRecordsDelta",
+        "rowsField": "compliance_records",
+        "diffField": "compliance_records",
+        "label": {
+          "article": "a",
+          "en": "compliance record",
+          "de": "Konformitätsdatensatz"
+        }
+      },
+      {
+        "key": "serviceRequirement",
+        "variant": "ServiceRequirement",
+        "entity": "service-requirement",
+        "row": "ServiceRequirement",
+        "patch": "ServiceRequirementPatch",
+        "delta": "ProgramServicesDelta",
+        "rowsField": "services",
+        "diffField": "services",
+        "label": {
+          "article": "a",
+          "en": "service requirement",
+          "de": "Dienstanforderung"
+        }
+      },
+      {
+        "key": "equipment",
+        "variant": "Equipment",
+        "entity": "equipment",
+        "row": "Equipment",
+        "patch": "EquipmentPatch",
+        "delta": "ProgramEquipmentDelta",
+        "rowsField": "equipment",
+        "diffField": "equipment",
+        "label": {
+          "article": "an",
+          "en": "equipment",
+          "de": "Ausstattung"
+        }
+      },
+      {
+        "key": "securityRequirement",
+        "variant": "SecurityRequirement",
+        "entity": "security-requirement",
+        "row": "SecurityRequirement",
+        "patch": "SecurityRequirementPatch",
+        "delta": "ProgramSecurityDelta",
+        "rowsField": "security",
+        "diffField": "security",
+        "label": {
+          "article": "a",
+          "en": "security requirement",
+          "de": "Schutzanforderung"
+        }
+      },
+      {
+        "key": "collaborationRecord",
+        "variant": "CollaborationRecord",
+        "entity": "collaboration-record",
+        "row": "CollaborationRecord",
+        "patch": "CollaborationRecordPatch",
+        "delta": "ProgramCollaborationDelta",
+        "rowsField": "collaboration",
+        "diffField": "collaboration",
+        "label": {
+          "article": "a",
+          "en": "collaboration record",
+          "de": "Zusammenarbeitsdatensatz"
+        }
+      },
+      {
+        "key": "safetyRequirement",
+        "variant": "SafetyRequirement",
+        "entity": "safety-requirement",
+        "row": "SafetyRequirement",
+        "patch": "SafetyRequirementPatch",
+        "delta": "ProgramSafetyDelta",
+        "rowsField": "safety",
+        "diffField": "safety",
+        "label": {
+          "article": "a",
+          "en": "safety requirement",
+          "de": "Sicherheitsanforderung"
+        }
+      },
+      {
+        "key": "userProfile",
+        "variant": "UserProfile",
+        "entity": "user-profile",
+        "row": "UserProfile",
+        "patch": "UserProfilePatch",
+        "delta": "ProgramUsersDelta",
+        "rowsField": "users",
+        "diffField": "users",
+        "label": {
+          "article": "an",
+          "en": "user profile",
+          "de": "Benutzerprofil"
+        }
+      },
+      {
+        "key": "humanFactorRequirement",
+        "variant": "HumanFactorRequirement",
+        "entity": "human-factor-requirement",
+        "row": "HumanFactorRequirement",
+        "patch": "HumanFactorRequirementPatch",
+        "delta": "ProgramHumanFactorsDelta",
+        "rowsField": "human_factors",
+        "diffField": "human_factors",
+        "label": {
+          "article": "a",
+          "en": "human factor requirement",
+          "de": "Ergonomieanforderung"
+        }
+      },
+      {
+        "key": "flexibilityRequirement",
+        "variant": "FlexibilityRequirement",
+        "entity": "flexibility-requirement",
+        "row": "FlexibilityRequirement",
+        "patch": "FlexibilityRequirementPatch",
+        "delta": "ProgramFlexibilityDelta",
+        "rowsField": "flexibility",
+        "diffField": "flexibility",
+        "label": {
+          "article": "a",
+          "en": "flexibility requirement",
+          "de": "Flexibilitätsanforderung"
+        }
+      },
+      {
+        "key": "wayfindingRequirement",
+        "variant": "WayfindingRequirement",
+        "entity": "wayfinding-requirement",
+        "row": "WayfindingRequirement",
+        "patch": "WayfindingRequirementPatch",
+        "delta": "ProgramWayfindingDelta",
+        "rowsField": "wayfinding",
+        "diffField": "wayfinding",
+        "label": {
+          "article": "a",
+          "en": "wayfinding requirement",
+          "de": "Wegeführungsanforderung"
+        }
+      },
+      {
+        "key": "programElement",
+        "variant": "ProgramElement",
+        "entity": "program-element",
+        "row": "ProgramElement",
+        "patch": "ProgramElementPatch",
+        "delta": "ProgramElementsDelta",
+        "rowsField": "elements",
+        "diffField": "elements",
+        "label": {
+          "article": "a",
+          "en": "program element",
+          "de": "Programmelement"
+        }
+      }
+    ],
+    "output": {
+      "rust": "../🗄️registers/🗂️catalog/🦀️.rs",
+      "typescript": "../🗄️registers/🗂️catalog/🟦️.ts"
     }
   }
 }

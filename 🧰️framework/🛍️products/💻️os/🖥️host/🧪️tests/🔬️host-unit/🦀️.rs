@@ -462,8 +462,8 @@ mod tests {
     }
 
     fn test_space_store() -> OsSpaceStore {
-        let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None);
-        resolve_kernel_future(ArtifactStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture")
+        let envelope = create_document_envelope(space::S_SPACE_SCHEMA, "space", space::empty_space_snapshot("Space", space::SpaceKind::Studio, space::SpaceVisibility::Private), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture")
     }
 
     fn test_workflow_store() -> OsWorkflowStore {
@@ -572,7 +572,7 @@ mod tests {
         assert_eq!(rebuilt_document.conflicts, document.conflicts);
 
         let text = export_backbone_dsl(&document).expect("backbone text encodes");
-        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
+        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("backbone text decodes");
         assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
         assert_eq!(parsed.envelope.conflicts, document.conflicts);
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), document_history(&document));
@@ -581,7 +581,7 @@ mod tests {
         invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
         assert!(encode_backbone_payload(&invalid).is_err(), "host binary persistence must reject a non-content-addressed conflict id");
         let malformed_text = text.ops.replacen(&document.conflicts[0].id.0, "conflict-invalid", 1);
-        assert!(resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text)).is_err(), "host text persistence must reject a non-content-addressed conflict id");
+        assert!(resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).is_err(), "host text persistence must reject a non-content-addressed conflict id");
     }
 
     #[test]
@@ -603,7 +603,7 @@ mod tests {
         assert_eq!(document_history(&OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow rebuild").document()), history);
 
         let text = export_backbone_dsl(&document).expect("text encode");
-        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
+        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("text decode");
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
     }
 
@@ -906,8 +906,8 @@ mod tests {
     #[test]
     fn document_text_round_trips_store_with_applied_operation() {
         test_identity!(identity);
-        let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None);
-        let mut store = resolve_kernel_future(ArtifactStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+        let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut store = resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
         resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], transaction: None }, &mut identity)).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);

@@ -1,33 +1,41 @@
 //! 🧬️ En1997 closed semantic mutation vocabulary for the geotechnical project subject.
 
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 //#region 🔖️Leaves
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::{resolve_edit, EDIT_RULES};
+pub use crate::edit_rules::{resolve_edit, EDIT_RULES};
 
-use super::change_annex;
-use super::change_geotechnical_category;
-use super::change_design_situation;
-use super::change_design_approach;
-use super::change_groundwater_level;
-use super::change_investigation_depth;
-use super::change_footing_width;
-use super::change_footing_embedment;
-use super::change_pile_length;
-use super::change_pile_count;
-use super::change_wall_base_width;
-use super::change_slope_angle;
-use super::change_layer_phi_prime;
-use super::change_layer_oedometric_modulus;
-use super::insert_layer;
-use super::remove_layer;
-use super::insert_footing;
-use super::remove_footing;
-use super::insert_pile;
-use super::remove_pile;
+use semio_s_artifact_norm_en1997_mut_design::change_annex;
+use semio_s_artifact_norm_en1997_mut_design::change_geotechnical_category;
+use semio_s_artifact_norm_en1997_mut_design::change_design_situation;
+use semio_s_artifact_norm_en1997_mut_design::change_design_approach;
+use semio_s_artifact_norm_en1997_mut_design::change_groundwater_level;
+use semio_s_artifact_norm_en1997_mut_design::change_investigation_depth;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_width;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_embedment;
+use semio_s_artifact_norm_en1997_mut_foundations::change_pile_length;
+use semio_s_artifact_norm_en1997_mut_foundations::change_pile_count;
+use semio_s_artifact_norm_en1997_mut_foundations::change_wall_base_width;
+use semio_s_artifact_norm_en1997_mut_ground::change_slope_angle;
+use semio_s_artifact_norm_en1997_mut_ground::change_layer_phi_prime;
+use semio_s_artifact_norm_en1997_mut_ground::change_layer_oedometric_modulus;
+use semio_s_artifact_norm_en1997_mut_ground::insert_layer;
+use semio_s_artifact_norm_en1997_mut_ground::remove_layer;
+use semio_s_artifact_norm_en1997_mut_foundations::insert_footing;
+use semio_s_artifact_norm_en1997_mut_foundations::remove_footing;
+use semio_s_artifact_norm_en1997_mut_foundations::insert_pile;
+use semio_s_artifact_norm_en1997_mut_foundations::remove_pile;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -84,12 +92,27 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🔖️Mutations
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
+pub mod mutation_bridge {
+    use crate::En1997Mutation;
+    use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+
+    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+    pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -> Result<(En1997Snapshot, Vec<String>), String> {
+        let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);
+        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+        Ok((applied, messages))
+    }
+
+    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+    pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+        <En1997Mutation as protocol::Mutation<En1997Snapshot>>::inverse(mutation, base)
+    }
+}
+pub use crate::mutation_bridge::*;

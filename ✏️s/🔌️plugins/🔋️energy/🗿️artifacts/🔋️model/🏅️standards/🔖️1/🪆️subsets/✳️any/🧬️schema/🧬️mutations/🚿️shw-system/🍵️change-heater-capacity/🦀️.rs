@@ -1,8 +1,7 @@
 //! 🍵️ Energy model mutation — `ChangeShwSystemHeaterCapacity`: Sets heater capacity (W) on one service hot water system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeShwSystemHeaterCapacity {
     pub new_heater_capacity_w: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_shw_system_heater_capacity(id: crate::model::EntityId, new_heater_capacity_w: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeShwSystemHeaterCapacity(ChangeShwSystemHeaterCapacity { id, new_heater_capacity_w })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_shw_system_heater_capacity<Op: From<ChangeShwSystemHeaterCapacity>>(id: crate::model::EntityId, new_heater_capacity_w: f64) -> Op {
+    ChangeShwSystemHeaterCapacity { id, new_heater_capacity_w }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeShwSystemHeaterCapacity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeShwSystemHeaterCapacity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeShwSystemHeaterCapacity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "service-hot-water-system", kind: "change-shw-system-heater-capacity", record: "ChangedShwSystemHeaterCapacity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

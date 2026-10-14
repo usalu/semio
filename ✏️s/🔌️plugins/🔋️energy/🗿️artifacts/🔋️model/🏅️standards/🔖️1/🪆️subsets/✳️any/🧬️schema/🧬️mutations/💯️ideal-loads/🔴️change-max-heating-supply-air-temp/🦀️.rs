@@ -1,8 +1,7 @@
 //! 🔴️ Energy model mutation — `ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp`: Sets the warmest air the ideal-loads system may deliver, in °C.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,12 +16,15 @@ pub struct ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp {
     pub new_max_heating_supply_air_temp_c: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_ideal_loads_system_max_heating_supply_air_temp(id: crate::model::EntityId, new_max_heating_supply_air_temp_c: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp(ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp { id, new_max_heating_supply_air_temp_c })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_ideal_loads_system_max_heating_supply_air_temp<Op: From<ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp>>(id: crate::model::EntityId, new_max_heating_supply_air_temp_c: f64) -> Op {
+    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp { id, new_max_heating_supply_air_temp_c }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp>,
+{
     const SEMANTICS: protocol::SemanticDescriptor =
         protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-max-heating-supply-air-temp", record: "ChangedIdealLoadsSystemMaxHeatingSupplyAirTemp" };
 
@@ -30,7 +32,7 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

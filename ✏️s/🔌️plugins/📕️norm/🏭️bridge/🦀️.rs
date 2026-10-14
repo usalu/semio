@@ -18,21 +18,21 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("Din16798Mutation", descriptors::<semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::snapshot::Din16798Snapshot, semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::mutations::Din16798Mutation>),
-    ("Din18599Mutation", descriptors::<semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::Din18599Snapshot, semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::Din18599Mutation>),
-    ("Din4108Mutation", descriptors::<semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::snapshot::Din4108Snapshot, semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::mutations::Din4108Mutation>),
-    ("En1990Mutation", descriptors::<semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::snapshot::En1990Snapshot, semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::En1990Mutation>),
-    ("En1991Mutation", descriptors::<semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::snapshot::En1991Snapshot, semio_s_artifact_norm_en1991::standards::v1::subsets::any::schema::mutations::En1991Mutation>),
-    ("En1992Mutation", descriptors::<semio_s_artifact_norm_en1992::standards::v1::subsets::any::schema::snapshot::En1992Snapshot, semio_s_artifact_norm_en1992::standards::v1::subsets::any::schema::mutations::En1992Mutation>),
+    ("Din16798Mutation", descriptors::<semio_s_artifact_norm_din16798_model::Din16798Snapshot, semio_s_artifact_norm_din16798_mutations::Din16798Mutation>),
+    ("Din18599Mutation", descriptors::<semio_s_artifact_norm_din18599_model::Din18599Snapshot, semio_s_artifact_norm_din18599_mutations::Din18599Mutation>),
+    ("Din4108Mutation", descriptors::<semio_s_artifact_norm_din4108_model::Din4108Snapshot, semio_s_artifact_norm_din4108_mutations::Din4108Mutation>),
+    ("En1990Mutation", descriptors::<semio_s_artifact_norm_en1990_model::En1990Snapshot, semio_s_artifact_norm_en1990_mutations::En1990Mutation>),
+    ("En1991Mutation", descriptors::<semio_s_artifact_norm_en1991_model::En1991Snapshot, semio_s_artifact_norm_en1991_mutations::En1991Mutation>),
+    ("En1992Mutation", descriptors::<semio_s_artifact_norm_en1992_model::En1992Snapshot, semio_s_artifact_norm_en1992_mutations::En1992Mutation>),
     ("En1993Mutation", descriptors::<semio_s_artifact_norm_en1993_model::En1993Snapshot, semio_s_artifact_norm_en1993_mutations::En1993Mutation>),
-    ("En1994Mutation", descriptors::<semio_s_artifact_norm_en1994::standards::v1::subsets::any::schema::snapshot::En1994Snapshot, semio_s_artifact_norm_en1994::standards::v1::subsets::any::schema::mutations::En1994Mutation>),
-    ("En1995Mutation", descriptors::<semio_s_artifact_norm_en1995::standards::v1::subsets::any::schema::snapshot::En1995Snapshot, semio_s_artifact_norm_en1995::standards::v1::subsets::any::schema::mutations::En1995Mutation>),
-    ("En1996Mutation", descriptors::<semio_s_artifact_norm_en1996::standards::v1::subsets::any::schema::snapshot::En1996Snapshot, semio_s_artifact_norm_en1996::standards::v1::subsets::any::schema::mutations::En1996Mutation>),
-    ("En1997Mutation", descriptors::<semio_s_artifact_norm_en1997::standards::v1::subsets::any::schema::snapshot::En1997Snapshot, semio_s_artifact_norm_en1997::standards::v1::subsets::any::schema::mutations::En1997Mutation>),
-    ("En1998Mutation", descriptors::<semio_s_artifact_norm_en1998::standards::v1::subsets::any::schema::snapshot::En1998Snapshot, semio_s_artifact_norm_en1998::standards::v1::subsets::any::schema::mutations::En1998Mutation>),
-    ("En1999Mutation", descriptors::<semio_s_artifact_norm_en1999::standards::v1::subsets::any::schema::snapshot::En1999Snapshot, semio_s_artifact_norm_en1999::standards::v1::subsets::any::schema::mutations::En1999Mutation>),
-    ("Iso16757Mutation", descriptors::<semio_s_artifact_norm_iso16757::standards::v1::subsets::any::schema::snapshot::Iso16757Snapshot, semio_s_artifact_norm_iso16757::standards::v1::subsets::any::schema::mutations::Iso16757Mutation>),
-    ("Vdi3805Mutation", descriptors::<semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::snapshot::Vdi3805Snapshot, semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation>),
+    ("En1994Mutation", descriptors::<semio_s_artifact_norm_en1994_model::En1994Snapshot, semio_s_artifact_norm_en1994_mutations::En1994Mutation>),
+    ("En1995Mutation", descriptors::<semio_s_artifact_norm_en1995_model::En1995Snapshot, semio_s_artifact_norm_en1995_mutations::En1995Mutation>),
+    ("En1996Mutation", descriptors::<semio_s_artifact_norm_en1996_model::En1996Snapshot, semio_s_artifact_norm_en1996_mutations::En1996Mutation>),
+    ("En1997Mutation", descriptors::<semio_s_artifact_norm_en1997_model::En1997Snapshot, semio_s_artifact_norm_en1997_mutations::En1997Mutation>),
+    ("En1998Mutation", descriptors::<semio_s_artifact_norm_en1998_model::En1998Snapshot, semio_s_artifact_norm_en1998_mutations::En1998Mutation>),
+    ("En1999Mutation", descriptors::<semio_s_artifact_norm_en1999_model::En1999Snapshot, semio_s_artifact_norm_en1999_mutations::En1999Mutation>),
+    ("Iso16757Mutation", descriptors::<semio_s_artifact_norm_iso16757_model::Iso16757Snapshot, semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation>),
+    ("Vdi3805Mutation", descriptors::<semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot, semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

@@ -254,9 +254,11 @@ class Tree:
                 if k and k.group(1) != "macro_rules":
                     args = head[k.end():]
                     first = re.match(r"\s*(?:pub(?:\s*\([^)]*\))?\s+)?(" + IDENT + r")", args)
-                    if first and first.group(1) not in ("pub", "struct", "enum", "fn", "type", "impl", "const", "static", "trait", "mod", "use", "crate", "self", "super"):
+                    if first and first.group(1) not in ("pub", "struct", "enum", "fn", "type", "impl", "const", "static", "trait", "mod", "use", "crate", "self", "super", "u8", "u16", "u32", "u64", "usize", "i8", "i16", "i32", "i64", "isize", "f32", "f64", "bool", "str", "String", "Vec", "Option"):
                         module.defs.setdefault(first.group(1), ("macro-def", a))
-                    for d in re.finditer(r"\b(?:struct|enum|fn|type|trait|const|static|mod)\s+(" + IDENT + r")", args):
+                    for d in re.finditer(r"\b(?:struct|enum|fn|type|trait|const|static|mod|spec)\s+(" + IDENT + r")|\b(?:builder|analyzer|composer)\s*:\s*(" + IDENT + r")", args):
+                        module.defs.setdefault(d.group(1) or d.group(2), ("macro-def", a))
+                    for d in ():
                         module.defs.setdefault(d.group(1), ("macro-def", a))
             for name, child in module.children.items():
                 module.defs.setdefault(name, ("mod", None))
@@ -405,13 +407,16 @@ class Plan:
         self.idents = {name: spec["ident"] for name, spec in config["crates"].items()}
         self.aggregator = config["aggregator"]
         self.crate_roots = {name: os.path.normpath(os.path.join(REPO, spec["root"])) for name, spec in config["crates"].items()}
+        self.external_roots = set()
         for crate, file in self.crate_roots.items():
             if file not in self.tree.files:
                 path = ("@" + crate,)
                 module = Module(path, file, 0, 0, (), False, None, None)
                 self.tree.mods[path] = module
                 self.tree.files[file] = path
-                self.tree.raw[file] = self.tree.text[file] = ""
+                self.tree.raw[file] = open(file, encoding="utf-8").read() if os.path.exists(file) else ""
+                self.tree.text[file] = strip(self.tree.raw[file])
+                self.external_roots.add(file)
                 self.tree.mods[()].children[path[0]] = path
                 self.tree.mods[()].defs[path[0]] = ("mod", None)
         self.moves = self.select_moves(config.get("moves", []))
@@ -423,11 +428,13 @@ class Plan:
         """🚚️ Item spans to move (with docs, impls and attached macro invocations); re-homes their definitions."""
         out = []
         tree = self.tree
+        claimed = set()
         for move in moves:
             src_file = os.path.normpath(os.path.join(REPO, move["from"]))
             dst_file = os.path.normpath(os.path.join(REPO, move["to"]))
             src, dst = tree.files[src_file], tree.files[dst_file]
-            rules = [re.compile(r) for r in move["items"]]
+            impl_rules = [r[5:] for r in move["items"] if r.startswith("impl:")]
+            rules = [re.compile(r) for r in move["items"] if not r.startswith("impl:")]
             raw, text = tree.raw[src_file], tree.text[src_file]
             chosen, names = [], set()
             spans = tree.top_level(tree.mods[src])
@@ -447,19 +454,23 @@ class Plan:
                 k = re.match(r"(?:" + IDENT + SEP + r")*" + IDENT + r"\s*!\s*[\(\[\{]\s*(" + IDENT + r")?", head)
                 kinds.append(("macro", k.group(1) if k and k.group(1) else "?") if k else ("other", "?"))
             for (a, b), (kind, name) in zip(spans, kinds):
-                if kind == "def" and any(r.fullmatch(name) for r in rules):
+                if kind in ("def", "macro") and name != "?" and any(r.fullmatch(name) for r in rules):
                     names.add(name)
             for (a, b), (kind, name) in zip(spans, kinds):
-                if name in names:
+                if (src_file, a) in claimed:
+                    continue
+                head = text[a:b].split("{", 1)[0]
+                if name in names or (kind == "impl" and any(rule in head for rule in impl_rules)):
                     start, stop = item_extent(raw, text, a, b)
                     chosen.append((start, stop, kind, name))
+                    claimed.add((src_file, a))
             for name in names:
                 entry = tree.mods[src].defs.pop(name, None)
                 if entry:
                     tree.mods[dst].defs[name] = entry
                     tree.mods[src].uses.append((name, ["crate"] + list(dst) + [name], False, -1))
             out.append({"src": src, "dst": dst, "src_file": src_file, "dst_file": dst_file, "spans": chosen, "names": names})
-            missing = [r.pattern for r in rules if not any(r.fullmatch(n) for n in names)]
+            missing = [r.pattern for r in rules if not any(r.fullmatch(n) for n in names)] + [r for r in impl_rules if not any(k == "impl" for _a, _b, k, _n in chosen)]
             if missing:
                 print(f"MOVE {move['from']} -> {move['to']}: no item matches {missing}")
         return out
@@ -535,6 +546,7 @@ class Rewriter:
         self.test_edges = collections.defaultdict(collections.Counter)
         self.test_detail = collections.defaultdict(set)
         self.dropping = False
+        self.test_leaf = False
         self.blanked = {}
         self.unresolved = collections.Counter()
         self.header_uses = collections.defaultdict(list)
@@ -583,7 +595,7 @@ class Rewriter:
         head = "crate" if crate == home_crate else self.plan.idents[crate]
         return crate, head, segs
 
-    def leaf_text(self, segs, alias, glob, ctx, home, self_leaf=False):
+    def leaf_text(self, segs, alias, glob, ctx, home, self_leaf=False, in_use=False):
         """🍃️ Rewritten leaf (segments text, alias, glob) or None to keep; [] to drop."""
         home_crate, home_path = home
         target, rendered = self.new_target(ctx, segs)
@@ -607,8 +619,10 @@ class Rewriter:
             target = ("mod", self.facade_target(target[1]), [])
             rendered = self.plan.render_target(target, None)
         crate, head, new = self.render(rendered, home_crate)
+        if in_use and target[0] == "def" and not glob and (crate, tuple(new[:-1])) == (home_crate, tuple(home_path)) and segs[0] != "self" and (alias is None or alias == new[-1]):
+            return []
         if crate != home_crate and not self.dropping:
-            testy = self.is_test(ctx)
+            testy = self.is_test(ctx) or self.test_leaf
             (self.test_edges if testy else self.edges)[home_crate][crate] += 1
             (self.test_detail if testy else self.detail)[(home_crate, crate)].add((os.path.relpath(self.current, REPO), "::".join(new) + "  <=  " + "::".join(segs)))
         again = self.reinterpret(segs, home_crate, home_path, ctx)
@@ -727,18 +741,29 @@ class Rewriter:
                             leaves_out.append((path_text, new_alias, None))
                         self.dropping = False
                         continue
-                result = self.leaf_text(core, alias, glob, ctx, home, self_leaf)
+                self.test_leaf = not m.group("vis") and not glob and not self.is_test(ctx) and self.test_only(file, m, alias or core[-1], ctx, core)
+                result = self.leaf_text(core, alias, glob, ctx, home, self_leaf, True)
+                if self.test_leaf:
+                    if result is None:
+                        result = ("::".join(core), alias, False)
+                    if isinstance(result, tuple):
+                        result = ("#[cfg(test)] " + result[0], result[1], result[2])
+                    elif isinstance(result, list):
+                        result = [("#[cfg(test)] " + r[0], r[1], r[2]) for r in result]
+                self.test_leaf = False
                 self.dropping = False
                 if m.group("vis") and module_level and result is not None:
                     target = self.tree.resolve_path(ctx, core)
                     if target and target[0] in ("def", "mod", "macro") and self.plan.place[target[1]][0] != home[0] and m.group("vis").strip() == "pub":
                         bound = alias or core[-1]
-                        if self.mentions(bound, self.outside(file, m), target[0] == "mod") or self.mentions(bound, self.children_text(file), target[0] == "mod"):
+                        in_lib = self.mentions(bound, self.outside(file, m), target[0] == "mod") or self.mentions(bound, self.children_text(file, False), target[0] == "mod")
+                        in_test = self.mentions(bound, self.children_text(file, True), target[0] == "mod")
+                        if in_lib or in_test:
                             rendered = self.plan.render_target(target, None)
                             r_crate, r_head, r_segs = self.render(rendered, home[0])
-                            self.edges[home[0]][r_crate] += 1
-                            self.detail[(home[0], r_crate)].add((os.path.relpath(self.current, REPO), "::".join(r_segs) + "  <=  facade " + "::".join(core)))
-                            private.append(("::".join([r_head] + list(r_segs)) if r_segs else r_head, alias if alias else (None if r_segs and r_segs[-1] == bound else bound)))
+                            (self.edges if in_lib else self.test_edges)[home[0]][r_crate] += 1
+                            (self.detail if in_lib else self.test_detail)[(home[0], r_crate)].add((os.path.relpath(self.current, REPO), "::".join(r_segs) + "  <=  facade " + "::".join(core)))
+                            private.append((("" if in_lib else "#[cfg(test)] ") + ("::".join([r_head] + list(r_segs)) if r_segs else r_head), alias if alias else (None if r_segs and r_segs[-1] == bound else bound)))
                         result, changed = [], True
                     elif target and target[0] == "ext" and file == self.tree.root:
                         result, changed = [], True
@@ -753,7 +778,7 @@ class Rewriter:
             if not changed:
                 continue
             kept = [leaf for leaf in leaves_out if leaf is not None]
-            lines = [f"{m.group('attrs')}{m.group('indent')}use {path_text}{' as ' + alias if alias else ''};" for path_text, alias in private]
+            lines = [f"{m.group('attrs')}{m.group('indent')}{'#[cfg(test)] ' if path_text.startswith('#[cfg(test)] ') else ''}use {path_text.replace('#[cfg(test)] ', '')}{' as ' + alias if alias else ''};" for path_text, alias in private]
             groups = collections.OrderedDict()
             for path_text, alias, _ in kept:
                 cfg = ""
@@ -783,10 +808,10 @@ class Rewriter:
                 continue
             ctx, home = self.file_home(file, m.start())
             found = self.tree.mods[ctx].defs.get(segs[0])
-            if not (found and found[0] == "mod") and not (file == self.tree.root and ctx == ()):
-                continue
-            if file == self.tree.root and ctx == () and segs[0] not in self.tree.mods[()].children:
-                continue
+            if not (found and found[0] == "mod"):
+                bound = self.tree.resolve_name(ctx, segs[0])
+                if not (bound and bound[0] == "mod" and self.tree.mods[ctx].defs.get(segs[0]) is None and not any(name == segs[0] for name, *_ in self.tree.mods[ctx].uses)):
+                    continue
             result = self.leaf_text(segs, None, False, ctx, home)
             if result is None or result == []:
                 continue
@@ -851,6 +876,16 @@ class Rewriter:
             return False
         return True
 
+    def test_only(self, file, m, bound, ctx, core):
+        """🧪️ True for an import of an internal item that only test child modules (glob-importing `super`) mention."""
+        target = self.tree.resolve_path(ctx, core)
+        if not target or target[0] not in ("def", "mod"):
+            return False
+        if target[0] == "def" and self.tree.mods[target[1]].defs.get(target[2], ("?",))[0] not in ("fn", "struct", "enum", "const", "static", "type", "union"):
+            return False
+        is_module = target[0] == "mod"
+        return not self.mentions(bound, self.outside(file, m), is_module) and not self.mentions(bound, self.children_text(file, False), is_module) and self.mentions(bound, self.children_text(file, True), is_module)
+
     def refine_glob(self, file, m, ctx, core, home):
         """🔍️ Replaces a glob whose module now spans other crates (or the aggregator root) by explicit imports of the names
         the file uses; None keeps the ordinary glob handling."""
@@ -867,6 +902,8 @@ class Rewriter:
         used, test_only = set(), set()
         for name in names:
             found = self.tree.resolve_name(facade, name)
+            if found and found[0] == "mod":
+                continue
             if found and self.mentions(name, lib_text, found[0] == "mod"):
                 used.add(name)
             elif found and self.mentions(name, test_text, found[0] == "mod"):
@@ -950,7 +987,7 @@ class Relocation:
     def file_edits(self):
         edits = {}
         for file in self.tree.files:
-            if self.plan.file_crate(file) is None:
+            if self.plan.file_crate(file) is None or file in self.plan.external_roots:
                 continue
             found = self.rw.rewrite_file(file)
             text = self.tree.text[file]
@@ -974,14 +1011,14 @@ class Relocation:
                 continue
             crate, new = self.plan.place[path]
             if self.plan.crate_roots.get(crate) == module.file:
-                if decl_file != root:
-                    self.removals[decl_file].append((a, b))
+                self.removals[decl_file].append((a, b))
                 continue
             ctx = self.rw.context(decl_file, a)
-            keep = decl_file != root and path not in TRANSPARENT and self.plan.place[ctx] == (crate, tuple(new[:-1])) and new and new[-1] == path[-1]
+            inside_removed = decl_file == root and ctx != ()
+            keep = not inside_removed and path not in TRANSPARENT and self.plan.place[ctx] == (crate, tuple(new[:-1])) and new and new[-1] == path[-1]
             if keep:
                 continue
-            if decl_file != root:
+            if not inside_removed:
                 self.removals[decl_file].append((a, b))
                 if path in TRANSPARENT:
                     text = self.tree.text[decl_file]
@@ -1044,14 +1081,21 @@ class Relocation:
         module = self.tree.mods[ctx]
         bound = {name: segs for name, segs, _vis, _at in module.uses if name != "*"}
         for name in sorted(idents):
+            if name[0].islower() and not re.search(r"(?<![\w.:])(?<!let )(?<!mut )" + re.escape(name) + r"\b(?!\s*:(?!:))", text):
+                continue
             if name in module.defs and module.defs[name][0] not in ("mod",):
+                if module.defs[name][0] == "fn" and re.search(r"(?<![\w.:])" + re.escape(name) + r"\s*:(?!:)|\blet\s+(?:mut\s+)?" + re.escape(name) + r"\b", text):
+                    continue
+                if module.defs[name][0] == "fn" and not re.search(r"(?<![\w.:])(?<!fn )" + re.escape(name) + r"\s*(\(|::<)", text) and not re.search(r"[(,=]\s*" + re.escape(name) + r"\s*[),;]", text):
+                    continue
                 target = ("def", ctx, name, [])
             elif name in module.defs:
-                target = ("mod", module.children[name], [])
+                continue
             elif name in bound:
+                if bound[name] and bound[name][0].startswith("::"):
+                    continue
                 target = self.tree.resolve_path(ctx, bound[name])
                 if target and target[0] == "ext":
-                    lines.append(f"use {'::'.join(bound[name])}{'' if bound[name][-1] == name else ' as ' + name};")
                     continue
             else:
                 continue
@@ -1067,6 +1111,16 @@ class Relocation:
                 lines.append(f"use {'::'.join([head] + list(segs))}{'' if segs and segs[-1] == name else ' as ' + name};")
         return lines
 
+    def count_import_edge(self, home, line, testy):
+        """➕️ Counts the crate edge a generated `use` line creates."""
+        m = re.match(r"use\s+(\w+)", line)
+        if not m:
+            return
+        for crate, ident in self.plan.idents.items():
+            if ident == m.group(1) and crate != home:
+                (self.rw.test_edges if testy else self.rw.edges)[home][crate] += 1
+                (self.rw.test_detail if testy else self.rw.detail)[(home, crate)].add(("<moved-import>", line))
+
     def build(self):
         edits = self.file_edits()
         generated = self.mounts()
@@ -1080,18 +1134,29 @@ class Relocation:
             dst_home = (self.plan.place[move["dst"]][0], tuple(self.plan.place[move["dst"]][1]))
             src_home = (self.plan.place[move["src"]][0], tuple(self.plan.place[move["src"]][1]))
             dst_names = set(self.tree.mods[move["dst"]].defs) | {n for n, *_ in self.tree.mods[move["dst"]].uses}
+            idents = set(self.plan.idents.values()) | {self.plan.config["crate"]}
+            for u in USE_STMT.finditer(text):
+                head = re.match(r"\s*(?:::)?(\w+)", u.group("body"))
+                if head and head.group(1) not in ("crate", "super", "self") and head.group(1) not in idents and head.group(1) not in self.tree.mods[move["src"]].defs and self.rw.is_module_level(file, u.start()) and not u.group("vis"):
+                    imports[move["dst_file"]].append(re.sub(r"\s+", " ", raw[u.start("indent"):u.end()].strip()))
             for a, b, _kind, _name in sorted(move["spans"]):
                 inner = [(x - a, y - a, r) for x, y, r in edits[file] if a <= x < b]
                 edits[file] = [e for e in edits[file] if not (a <= e[0] < b)] + [(a, b, "")]
                 block = apply_edits(raw[a:b], inner)
                 appended[move["dst_file"]].append(block.rstrip("\n"))
                 imports[move["dst_file"]] += self.bare_imports(text[a:b], move["src"], dst_home, move["names"], dst_names)
-            rest = "".join(ch if not any(a <= i < b for a, b, _k, _n in move["spans"]) else " " for i, ch in enumerate(text))
+                for line in imports[move["dst_file"]]:
+                    self.count_import_edge(dst_home[0], line, self.rw.is_test(move["src"]))
+            all_spans = [(a, b) for other in self.plan.moves if other["src_file"] == file for a, b, _k, _n in other["spans"]]
+            rest = "".join(ch if not any(a <= i < b for a, b in all_spans) else " " for i, ch in enumerate(text))
             used = set(re.findall(r"(?<![\w.:])(" + IDENT + r")\b", rest)) & move["names"]
             for name in sorted(used):
                 rendered = self.plan.render_target(("def", move["dst"], name, []), None)
                 crate, head, segs = self.rw.render(rendered, src_home[0])
                 imports[file].append(f"use {'::'.join([head] + list(segs))};")
+                if crate != src_home[0]:
+                    self.rw.edges[src_home[0]][crate] += 1
+                    self.rw.detail[(src_home[0], crate)].add((os.path.relpath(file, REPO), f"moved-name {name}"))
         for file in self.tree.files:
             raw = self.tree.raw[file]
             found = list(edits.get(file, []))
@@ -1174,8 +1239,9 @@ class Relocation:
                                 text_path = "::".join(segs[:-1] if glob else segs)
                             tail = "::*" if glob else (f" as {alias}" if alias else (f" as {segs[-1]}" if rendered and not rendered[2] else ""))
                             lines.append(f"{m.group('attrs')}{m.group('indent')}{m.group('vis') or ''}use {text_path}{tail};")
-                        edits.append((m.start(), m.end(), "\n".join(lines)))
                         covered.append((m.start(), m.end()))
+                        if any(not re.search(r"\buse\s+" + re.escape(ident) + r"(::|;|\s)", line) for line in lines):
+                            edits.append((m.start(), m.end(), "\n".join(lines)))
                     for m in pattern.finditer(text):
                         if any(a <= m.start() < b for a, b in covered):
                             continue
@@ -1188,8 +1254,10 @@ class Relocation:
                             continue
                         crate, _h, new = self.plan.render_target(target, None)
                         used[crate] += 1
-                        edits.append((m.start(), m.end(), "::".join([self.plan.idents[crate]] + list(new))))
-                    found[path] = (apply_edits(raw, edits), dict(used))
+                        if self.plan.idents[crate] != ident or list(new) != segs:
+                            edits.append((m.start(), m.end(), "::".join([self.plan.idents[crate]] + list(new))))
+                    if edits:
+                        found[path] = (apply_edits(raw, edits), dict(used))
         return found
 
 

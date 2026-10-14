@@ -1,0 +1,47 @@
+{
+  "kind": "owned-source-freeze-observations-not-admission-receipt",
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udce4\ufe0farguments/\ud83d\udfe8\ufe0f.mjs",
+      "sha256": "e561e089d72933617ee16b7a4848ff689a26806371fb4f2c47e125b9bb6e8a94",
+      "bytes": 6228,
+      "absolutePathCharacters": 104
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udce4\ufe0farguments/\ud83d\udfe8\ufe0f.d.mts",
+      "sha256": "461e95b9badd1b66e4f27c6295c2c803693925eb49bb396508b809cc94788e49",
+      "bytes": 1833,
+      "absolutePathCharacters": 106
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udce4\ufe0farguments/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "376715898961b26b5d66bb1940cf6b3f50597196216f6bf003b0ee428ed97447",
+      "bytes": 2541,
+      "absolutePathCharacters": 114
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udce4\ufe0farguments/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "fd1527b8c63bd53b89738430b367a1c94e82d0729e332b9dd137c99a965738ad",
+      "bytes": 3412,
+      "absolutePathCharacters": 111
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udce4\ufe0farguments/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "0beeb96017cc10caf5a54de334558d9230c30fa72e4cad9f32bfc63bd508b4e4",
+      "bytes": 4444,
+      "absolutePathCharacters": 124
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfd7\ufe0fbuild/\ud83d\udd78\ufe0fgraph/\ud83d\udce5\ufe0finference/\ud83d\udfe8\ufe0f.mjs",
+      "sha256": "b323bb15647e2be393a8ca209950a6cc096f6e93dd8501a6ac8904bbd22f5e34",
+      "bytes": 172842,
+      "absolutePathCharacters": 112
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83e\uddea\ufe0ftests/\ud83d\udd17\ufe0fimport-edges/\ud83d\udcc1\ufe0fpaths/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "bd46cc1201df31af26880ee3ed170e9b3637fb8109435d8f3cd8cc6f4632298c",
+      "bytes": 3938,
+      "absolutePathCharacters": 124
+    }
+  ]
+}

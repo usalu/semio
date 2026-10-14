@@ -1,6 +1,6 @@
 //! generation2d ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 pub fn register() {}
 

@@ -20,3 +20,4 @@ semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }
+

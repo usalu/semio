@@ -1,7 +1,8 @@
 //! ✏️ `rename-layout` — changes the document's identity `name` field.
 
-use crate::mutations::LayoutMutation;
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,12 +17,12 @@ pub struct RenameLayout {
     pub new_name: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
+impl<Op> MutationKind<LayoutSnapshot, Op> for RenameLayout where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::rename_layout::RenameLayout> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "layout", kind: "rename-layout", record: "RenamedLayout" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rename_layout(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_rename_layout(self, base)?
     
@@ -43,10 +44,16 @@ pub fn diff_rename_layout(payload: &RenameLayout, base: &LayoutSnapshot) -> prot
 //#endregion ✏️RenameLayout
 
 //#region ✏️RenameLayout
-pub fn inverse_rename_layout(_payload: &RenameLayout, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_rename_layout<Op: From<crate::rename_layout::RenameLayout>>(_payload: &RenameLayout, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::RenameLayout(RenameLayout { new_name: base.name.clone() })]
+    vec![Op::from(RenameLayout { new_name: base.name.clone() })]
 
     })())
 }
 //#endregion ✏️RenameLayout
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🏷️renames/🦀️.rs"]
+mod tests_renames_the_document;
+//#endregion 🪢️TaxonomyMounts

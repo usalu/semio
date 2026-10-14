@@ -1,8 +1,7 @@
 //! 🚷️ Block2d mutation — `RemoveAuthor`: a credited author.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 🚷️ `remove-author` payload.
@@ -18,19 +17,19 @@ pub struct RemoveAuthor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_author(id: String) -> Block2dMutation {
-    Block2dMutation::RemoveAuthor(RemoveAuthor { id })
+pub fn remove_author<Op: From<crate::remove_author::RemoveAuthor>>(id: String) -> Op {
+    Op::from(RemoveAuthor { id })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveAuthor {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for RemoveAuthor where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::add_author::AddAuthor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "author", kind: "remove-author", record: "RemovedAuthor" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::remove_author::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_author::inverse::inverse(self, base)?
     
     })
 }
@@ -42,3 +41,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveAuthor {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

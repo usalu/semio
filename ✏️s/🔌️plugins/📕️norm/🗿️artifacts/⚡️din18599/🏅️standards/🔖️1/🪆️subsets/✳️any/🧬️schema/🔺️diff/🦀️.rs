@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::Din18599Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 use protocol::list_delta::Keyed as _;
 
@@ -16,7 +24,7 @@ use protocol::list_delta::Keyed as _;
 pub struct Din18599ZonesPatch {
     pub label_en: Option<String>,
     pub label_de: Option<String>,
-    pub usage_profile: Option<crate::UsageProfile>,
+    pub usage_profile: Option<semio_s_artifact_norm_din18599_model::UsageProfile>,
     pub area_m2: Option<f64>,
     pub volume_m3: Option<f64>,
     pub theta_i_heat_c: Option<f64>,
@@ -26,8 +34,8 @@ pub struct Din18599ZonesPatch {
     pub lighting_power_w_m2: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::ThermalZone> for Din18599ZonesPatch {
-    fn commit_into(&self, row: &mut crate::ThermalZone, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::ThermalZone> for Din18599ZonesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_din18599_model::ThermalZone, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }
@@ -94,7 +102,7 @@ impl protocol::list_delta::RowPatch<crate::ThermalZone> for Din18599ZonesPatch {
         }
     }
 
-    fn inverse(&self, row: &crate::ThermalZone) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_din18599_model::ThermalZone) -> Self {
         Self {
             label_en: self.label_en.as_ref().map(|_| row.label_en.clone()),
             label_de: self.label_de.as_ref().map(|_| row.label_de.clone()),
@@ -118,12 +126,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `zones` list (rows keyed by `id`).
-    pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: crate::ThermalZone, patch: Din18599ZonesPatch, key: id }
+    pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: semio_s_artifact_norm_din18599_model::ThermalZone, patch: Din18599ZonesPatch, key: id }
 }
 
 impl Din18599ZonesRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::ThermalZone], new: &[crate::ThermalZone]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_din18599_model::ThermalZone], new: &[semio_s_artifact_norm_din18599_model::ThermalZone]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| Din18599ZonesRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| Din18599ZonesInserted { index, row: row.clone() }).collect(),
@@ -141,7 +149,7 @@ impl Din18599ZonesRows {
 pub struct Din18599ElementsPatch {
     pub label_en: Option<String>,
     pub label_de: Option<String>,
-    pub kind: Option<crate::ElementKind>,
+    pub kind: Option<semio_s_artifact_norm_din18599_model::ElementKind>,
     pub zone_id: Option<String>,
     pub area_m2: Option<f64>,
     pub u_value_w_m2k: Option<f64>,
@@ -149,11 +157,11 @@ pub struct Din18599ElementsPatch {
     pub tilt_deg: Option<f64>,
     pub g_value: Option<f64>,
     pub fc: Option<f64>,
-    pub adjacency: Option<crate::Adjacency>,
+    pub adjacency: Option<semio_s_artifact_norm_din18599_model::Adjacency>,
 }
 
-impl protocol::list_delta::RowPatch<crate::EnvelopeElement> for Din18599ElementsPatch {
-    fn commit_into(&self, row: &mut crate::EnvelopeElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::EnvelopeElement> for Din18599ElementsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_din18599_model::EnvelopeElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }
@@ -226,7 +234,7 @@ impl protocol::list_delta::RowPatch<crate::EnvelopeElement> for Din18599Elements
         }
     }
 
-    fn inverse(&self, row: &crate::EnvelopeElement) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_din18599_model::EnvelopeElement) -> Self {
         Self {
             label_en: self.label_en.as_ref().map(|_| row.label_en.clone()),
             label_de: self.label_de.as_ref().map(|_| row.label_de.clone()),
@@ -251,12 +259,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `elements` list (rows keyed by `id`).
-    pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: crate::EnvelopeElement, patch: Din18599ElementsPatch, key: id }
+    pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: semio_s_artifact_norm_din18599_model::EnvelopeElement, patch: Din18599ElementsPatch, key: id }
 }
 
 impl Din18599ElementsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::EnvelopeElement], new: &[crate::EnvelopeElement]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_din18599_model::EnvelopeElement], new: &[semio_s_artifact_norm_din18599_model::EnvelopeElement]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| Din18599ElementsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| Din18599ElementsInserted { index, row: row.clone() }).collect(),
@@ -280,7 +288,7 @@ pub struct Din18599HeatingPatch {
 }
 
 impl Din18599HeatingPatch {
-    fn apply_to_row(&self, row: &mut crate::HeatingSystem) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::HeatingSystem) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.generation_efficiency {
             row.generation_efficiency = value.clone();
         }
@@ -317,7 +325,7 @@ impl Din18599HeatingPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::HeatingSystem) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::HeatingSystem) -> Self {
         Self {
             generation_efficiency: self.generation_efficiency.as_ref().map(|_| row.generation_efficiency.clone()),
             distribution_efficiency: self.distribution_efficiency.as_ref().map(|_| row.distribution_efficiency.clone()),
@@ -341,7 +349,7 @@ pub struct Din18599DhwPatch {
 }
 
 impl Din18599DhwPatch {
-    fn apply_to_row(&self, row: &mut crate::DhwSystem) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::DhwSystem) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.specific_demand_kwh_person_a {
             row.specific_demand_kwh_person_a = value.clone();
         }
@@ -372,7 +380,7 @@ impl Din18599DhwPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::DhwSystem) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::DhwSystem) -> Self {
         Self {
             specific_demand_kwh_person_a: self.specific_demand_kwh_person_a.as_ref().map(|_| row.specific_demand_kwh_person_a.clone()),
             storage_loss_kwh_a: self.storage_loss_kwh_a.as_ref().map(|_| row.storage_loss_kwh_a.clone()),
@@ -394,7 +402,7 @@ pub struct Din18599VentilationPatch {
 }
 
 impl Din18599VentilationPatch {
-    fn apply_to_row(&self, row: &mut crate::VentilationSystem) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::VentilationSystem) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.airflow_m3_h {
             row.airflow_m3_h = value.clone();
         }
@@ -419,7 +427,7 @@ impl Din18599VentilationPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::VentilationSystem) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::VentilationSystem) -> Self {
         Self {
             airflow_m3_h: self.airflow_m3_h.as_ref().map(|_| row.airflow_m3_h.clone()),
             heat_recovery_eta: self.heat_recovery_eta.as_ref().map(|_| row.heat_recovery_eta.clone()),
@@ -438,7 +446,7 @@ pub struct Din18599CoolingPatch {
 }
 
 impl Din18599CoolingPatch {
-    fn apply_to_row(&self, row: &mut crate::CoolingSystem) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::CoolingSystem) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.plant {
             row.plant = value.value.clone();
         }
@@ -451,7 +459,7 @@ impl Din18599CoolingPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CoolingSystem) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::CoolingSystem) -> Self {
         Self {
             plant: self.plant.as_ref().map(|_| Din18599CoolingPatchPlantValue { value: row.plant.clone() }),
         }
@@ -468,7 +476,7 @@ pub struct Din18599LightingPatch {
 }
 
 impl Din18599LightingPatch {
-    fn apply_to_row(&self, row: &mut crate::LightingSystem) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::LightingSystem) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.control_factor {
             row.control_factor = value.clone();
         }
@@ -481,7 +489,7 @@ impl Din18599LightingPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::LightingSystem) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::LightingSystem) -> Self {
         Self {
             control_factor: self.control_factor.as_ref().map(|_| row.control_factor.clone()),
         }
@@ -500,7 +508,7 @@ pub struct Din18599RenewablesPatch {
 }
 
 impl Din18599RenewablesPatch {
-    fn apply_to_row(&self, row: &mut crate::Renewables) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::Renewables) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.pv_area_m2 {
             row.pv_area_m2 = value.clone();
         }
@@ -525,7 +533,7 @@ impl Din18599RenewablesPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::Renewables) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::Renewables) -> Self {
         Self {
             pv_area_m2: self.pv_area_m2.as_ref().map(|_| row.pv_area_m2.clone()),
             pv_efficiency: self.pv_efficiency.as_ref().map(|_| row.pv_efficiency.clone()),
@@ -545,7 +553,7 @@ pub struct Din18599ClimatePatch {
 }
 
 impl Din18599ClimatePatch {
-    fn apply_to_row(&self, row: &mut crate::MonthlyClimate) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::MonthlyClimate) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.theta_e_c {
             row.theta_e_c = value.clone();
         }
@@ -564,7 +572,7 @@ impl Din18599ClimatePatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::MonthlyClimate) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::MonthlyClimate) -> Self {
         Self {
             theta_e_c: self.theta_e_c.as_ref().map(|_| row.theta_e_c.clone()),
             g_h_w_m2: self.g_h_w_m2.as_ref().map(|_| row.g_h_w_m2.clone()),
@@ -578,7 +586,7 @@ impl Din18599ClimatePatch {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599CoolingPatchPlantValue {
-    pub value: Option<crate::CoolingPlant>,
+    pub value: Option<semio_s_artifact_norm_din18599_model::CoolingPlant>,
 }
 
 /// 🔺️ Keyed sparse diff of the Din18599 artifact: scalar setters, keyed row diffs and per-field section patches.
@@ -589,13 +597,13 @@ pub struct Din18599CoolingPatchPlantValue {
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Diff {
     #[state(artifact)]
-    pub building_category: Option<crate::BuildingCategory>,
+    pub building_category: Option<semio_s_artifact_norm_din18599_model::BuildingCategory>,
     #[state(artifact)]
-    pub attachment: Option<crate::Attachment>,
+    pub attachment: Option<semio_s_artifact_norm_din18599_model::Attachment>,
     #[state(artifact)]
-    pub use_class: Option<crate::UseClass>,
+    pub use_class: Option<semio_s_artifact_norm_din18599_model::UseClass>,
     #[state(artifact)]
-    pub method: Option<crate::CalculationMethod>,
+    pub method: Option<semio_s_artifact_norm_din18599_model::CalculationMethod>,
     #[state(artifact)]
     pub net_floor_area_m2: Option<f64>,
     #[state(artifact)]
@@ -605,7 +613,7 @@ pub struct Din18599Diff {
     #[state(artifact)]
     pub delta_u_wb_w_m2k: Option<f64>,
     #[state(artifact)]
-    pub automation_class: Option<crate::AutomationClass>,
+    pub automation_class: Option<semio_s_artifact_norm_din18599_model::AutomationClass>,
     #[state(artifact)]
     pub zones: Option<Din18599ZonesRows>,
     #[state(artifact)]
@@ -684,7 +692,7 @@ impl protocol::MutationDiff<Din18599Snapshot> for Din18599Diff {
             patch.apply_to_row(&mut next.climate).map_err(|error| error.under(["climate"]))?;
         }
         if self.climate.is_some() {
-            next.climate_table = crate::din18599_climate_table_child(&next.climate);
+            next.climate_table = semio_s_artifact_norm_din18599_model::din18599_climate_table_child(&next.climate);
         }
         Ok(next)
     }
@@ -805,6 +813,7 @@ impl protocol::DiffAlgebra<Din18599Snapshot> for Din18599Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

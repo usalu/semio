@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/lowpoly-lowpoly:build",
-    "check": "bun repo run @semio-tech/lowpoly-lowpoly:check",
-    "test": "bun repo run @semio-tech/lowpoly-lowpoly:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/lowpoly-lowpoly:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/lowpoly-lowpoly:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/lowpoly-lowpoly:test"
   },
   "exports": {
     ".": {

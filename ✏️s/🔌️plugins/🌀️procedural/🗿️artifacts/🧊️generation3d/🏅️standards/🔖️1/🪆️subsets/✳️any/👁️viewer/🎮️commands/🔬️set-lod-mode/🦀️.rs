@@ -1,8 +1,9 @@
 //! 🔬️ Generation3d viewer command — `set-lod-mode`. Read-only by construction: the emitted
 //! `ViewEmit` carries config operations only, never an artifact or draft mutation.
 
-use crate::viewer::generation3d::config;
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};

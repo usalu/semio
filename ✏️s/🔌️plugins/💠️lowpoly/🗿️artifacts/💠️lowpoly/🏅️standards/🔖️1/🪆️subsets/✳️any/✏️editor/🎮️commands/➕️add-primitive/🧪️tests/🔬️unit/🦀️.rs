@@ -1,6 +1,16 @@
-use super::*;
-use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
-use crate::editor::lowpoly::LowpolyCommand;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_commands::add_primitive::*;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_view::{build_doc, primitive_kind};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+use crate::context::{app, dispatch};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn add_primitive_emits_objects_add_operation() {
@@ -31,10 +41,10 @@ async fn add_primitive_supports_every_known_kind() {
 /// the extruded mesh is not reverted/lost in the process.
 #[semio_framework_async_macros::async_test]
 async fn add_primitive_after_mesh_edit_adds_object_and_preserves_the_edit() {
-    let mut a = crate::editor::lowpoly::unit_tests::context::app_with_registry().await;
+    let mut a = crate::context::app_with_registry().await;
     let object_id = a.snapshot().expect("projection").objects[0].id.clone();
-    crate::editor::lowpoly::unit_tests::context::select_face(&mut a, &object_id, 0).await;
-    dispatch(&mut a, LowpolyCommand::Extrude(crate::editor::lowpoly::commands::mesh_edit::extrude::Extrude { extrude_distance: None })).await;
+    crate::context::select_face(&mut a, &object_id, 0).await;
+    dispatch(&mut a, LowpolyCommand::Extrude(semio_s_artifact_lowpoly_lowpoly_commands::mesh_edit::extrude::Extrude { extrude_distance: None })).await;
     let extruded_mesh = a.snapshot().expect("projection").objects[0].mesh.clone();
     assert!(extruded_mesh.is_some(), "extrude must have produced a mesh handle to guard");
     dispatch(&mut a, LowpolyCommand::AddPrimitive(AddPrimitive { kind: Some("cone".into()) })).await;

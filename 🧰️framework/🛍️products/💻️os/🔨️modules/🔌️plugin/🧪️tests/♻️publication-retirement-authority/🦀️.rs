@@ -13,7 +13,7 @@ use super::{
 };
 use crate::app_testing::artifact_app_laws;
 use crate::app_testing::artifact_app_laws::close_registered_fixture_app;
-use crate::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_document_store_disposer, bounded_document_store_owners};
+use semio_framework_plugin_ownership::store_lifecycle::{bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_document_store_disposer, bounded_document_store_owners};
 use crate::window_surface::built_text_to_component_tree;
 use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
 use crate::store;
@@ -90,8 +90,8 @@ fn presence_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPrep
     Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
         presence_footprint,
         presence_transfer,
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationPresence>::default()),
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationPresenceMutation>::default()),
+        Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationPresence>::default()),
+        Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationPresenceMutation>::default()),
     ))
 }
 
@@ -108,8 +108,8 @@ fn transient_preparation_factory() -> Arc<dyn store::ArtifactEphemeralOneItemPre
     Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
         transient_footprint,
         transient_transfer,
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default()),
-        Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransientMutation>::default()),
+        Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default()),
+        Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransientMutation>::default()),
     ))
 }
 
@@ -133,7 +133,7 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
         crate::window_config::bounded_window_config_preparation_factory::<Self>()
     }
 
-    fn build_store_disposer() -> Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
+    fn build_store_disposer() -> Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
         crate::window_config::bounded_window_config_store_disposer::<Self>()
     }
 }
@@ -181,15 +181,15 @@ impl ArtifactApp for RetirementApp {
         registry.register::<RetirementWindowTransientOwner>()
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
         Some(bounded_config_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
 
@@ -213,24 +213,24 @@ impl ArtifactApp for RetirementApp {
         Some(transient_preparation_factory())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::bounded_presence_store_disposer::<Self::Presence,Self::PresenceMutation>())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(crate::bounded_transient_store_disposer::<Self::Transient,Self::TransientMutation>())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<PublicationPresence>::default()))
+        Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<PublicationPresence>::default()))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<PublicationPresence>::default()))
+        Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<PublicationPresence>::default()))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<PublicationTransient>::default()))
+        Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<PublicationTransient>::default()))
     }
 
     async fn initial_snapshot() -> TestSnapshot {

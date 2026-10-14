@@ -1,8 +1,8 @@
 //! 🗑️ `delete-step` payload — removes an id-keyed [`ProcessStep`] from the document's ordered
 //! timeline.
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️DeleteStep
@@ -16,7 +16,7 @@ pub struct DeleteStep {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for DeleteStep
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::create_step::CreateStep>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::create_step::CreateStep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 

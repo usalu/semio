@@ -1,6 +1,6 @@
-use super::ChangePileLength;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997PilesRows, En1997PilesPatch};
+use crate::change_pile_length::ChangePileLength;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997PilesRows, En1997PilesPatch};
 
 pub fn diff(payload: &ChangePileLength, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_length.is_finite() || payload.new_length <= 0.0 {

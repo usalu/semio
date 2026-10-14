@@ -1,5 +1,51 @@
-use super::*;
-use crate::editor::fem2d::terminology::fem2d_labels;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::artifact::*;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_NODE;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_REGION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::ui_label;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_ui_contract::Label as UiLabel;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_ui_contract as ui;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_ui_locale::Locale;
@@ -10,7 +56,7 @@ use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
 
 //#region 🔖️Fixtures
 fn demo() -> Fem2dSnapshot {
-    semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
 }
 
 fn english() -> &'static Fem2dLabels {
@@ -320,7 +366,7 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
 /// panel; the routed render belongs back here once the harness retires its store.
 #[semio_framework_async_macros::async_test]
 async fn the_app_declares_the_artifact_panel_under_its_body_key() {
-    let definition = crate::editor::fem2d::create_fem2d_app();
+    let definition = semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app();
     let panel = definition.panel_tabs.iter().find(|tab| tab.body_key.as_deref() == Some(BODY_KEY)).expect("the artifact panel is declared");
     assert!(matches!(panel.group, PanelGroup::Workbench));
     assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));

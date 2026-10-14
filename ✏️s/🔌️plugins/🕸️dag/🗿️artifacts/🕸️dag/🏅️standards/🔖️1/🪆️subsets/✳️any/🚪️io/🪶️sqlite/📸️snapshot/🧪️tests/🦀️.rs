@@ -234,7 +234,7 @@ mod public_owned {
         use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
         use std::{io::Write,process::{Command,Stdio}};
         let contract=serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🚦️public/🔣️.json")).unwrap();
-        let _plugin=semio_framework_plugin::Plugin::<DagSqliteApps>::builder("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
+        let _plugin=semio_framework_plugin::PluginBuilder::<_, DagSqliteApps>::new("dag").label("DAG owning SQLite").version("0.1.0").package_id("semio:dag").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.dag.dag".into(),standard:"1".into(),subset:"*".into()};
         let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         let export=io_route(&dialect,&sqlite,1).await.unwrap().value;

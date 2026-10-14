@@ -1,7 +1,7 @@
-use semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp;
-use semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer;
+use semio_s_artifact_procedural_2d_editor::Generation2dPlayApp;
+use semio_s_artifact_procedural_2d_viewer::Generation2dViewer;
+use semio_s_artifact_procedural_3d_editor::Generation3dPlayApp;
+use semio_s_artifact_procedural_3d_viewer::Generation3dViewer;
 
 
 #[test]
@@ -47,12 +47,12 @@ async fn generation3d_editor_and_viewer_share_dialect() {
 #[test]
 fn generation3d_manifest_examples_are_registered_on_the_dialect_for_both_surfaces() {
     let plugin = super::plugin().expect("procedural plugin manifest should build synchronously");
-    let editor = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
-    let viewer = semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer();
+    let editor = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
+    let viewer = semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer();
     assert_eq!(editor.id, "s.procedural.generation3d@1/*#editor");
     assert_eq!(viewer.id, "s.procedural.generation3d@1/*#viewer");
     assert_eq!(editor.dialect, viewer.dialect, "both surfaces are bound to one dialect");
-    let expected_sources = semio_s_artifact_procedural_generation3d::editor::generation3d::examples();
+    let expected_sources = semio_s_artifact_procedural_3d_editor::examples();
     let expected_ids: Vec<&str> = expected_sources.iter().map(|source| source.id()).collect();
     for app in [&editor, &viewer] {
         let registered_ids: Vec<&str> = semio_framework_plugin::manifest::examples_for_app(&plugin.manifest.examples, app).into_iter().map(|example| example.id.as_str()).collect();

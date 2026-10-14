@@ -2,15 +2,19 @@
 //! tool-machine runner that yields ONE relative leaf (`drag-`/`rotate-`/`scale-transforms`) of the transform operators
 //! the gesture composes into; the release commits it with the absolute splice rows that insert a missing operator as ONE
 //! `ToolTransaction`. Tools are never history; the yielded leaf is, so editing it re-derives the operator on any base.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
 
-use crate::editor::generation3d::config::Generation3dConfigMutation;
-use crate::editor::generation3d::selection::{component_group, ComponentTarget, DOMAIN};
-use semio_s_artifact_procedural_3d_mutations::drag_transforms::drag_transforms;
-use semio_s_artifact_procedural_3d_mutations::rotate_transforms::rotate_transforms;
-use semio_s_artifact_procedural_3d_mutations::scale_transforms::scale_transforms;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_editor_selection::component_group;
+use semio_s_artifact_procedural_3d_editor_selection::ComponentTarget;
+use semio_s_artifact_procedural_3d_editor_selection::DOMAIN;
+use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::drag_transforms;
+use semio_s_artifact_procedural_3d_mut_transforms::rotate_transforms::rotate_transforms;
+use semio_s_artifact_procedural_3d_mut_transforms::scale_transforms::scale_transforms;
 use semio_s_artifact_procedural_3d_model::transforms::compose_scale;
 use semio_s_artifact_procedural_3d_model::transforms::AxisAngle;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
@@ -312,7 +316,7 @@ impl GestureTool for Generation3dGumballTool {
     type Mutation = Generation3dMutation;
 
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.into()), GumballToolContext::default(), GumballToolHost)?;
+        let runner = ToolMachineRunner::start(format!("{}#{verb}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.into()), GumballToolContext::default(), GumballToolHost)?;
         Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string(), ids: Vec::new() })
     }
 
@@ -321,7 +325,7 @@ impl GestureTool for Generation3dGumballTool {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: <gumball_tool::GumballTool as machine::Machine>::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
         let snapshot = machine::restore::<gumball_tool::GumballTool, machine::NoMigrations>(&persisted, GumballToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
         let transaction = ToolTransaction::resume(gesture.transaction.clone(), gesture.entries.clone());
-        let runner = ToolMachineRunner::resume(format!("{}#{}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, gesture.verb), protocol::ActorId(gesture.authoring_seed.as_str().into()), GumballToolContext::default(), snapshot, Some(transaction), GumballToolHost)?;
+        let runner = ToolMachineRunner::resume(format!("{}#{}", semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID, gesture.verb), protocol::ActorId(gesture.authoring_seed.as_str().into()), GumballToolContext::default(), snapshot, Some(transaction), GumballToolHost)?;
         Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone(), ids: gesture.ids.clone() })
     }
 
@@ -602,7 +606,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     }
     let next_kind = format!("brep.mesh.{operation}Components");
     let selection = serde_json::to_string(&components).map_err(|error| GumballRefusal::ComponentSelection(error.to_string()))?;
-    let current = crate::editor::generation3d::transform_commands::gumball_widget_json(editor.host(), target.widget);
+    let current = crate::gumball_widget_json(editor.host(), target.widget);
     let params = current.as_ref().and_then(|value| value.get("params"));
     let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str);
     let inputs = editor.snapshot().synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
@@ -693,8 +697,8 @@ impl GumballRefusal {
 /// 🎚️ The literals a gumball composes from on an operator it inserts: a translate's zero offset, a rotate's zero turn about
 /// +z, a scale's unit factors — the inserted record holds its kind's declared defaults (design §20.9), which need not be the
 /// identity, so the gesture's relative leaf only composes correctly after these land.
-pub fn gumball_identity(operation: &str) -> Vec<(&'static str, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue)> {
-    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+pub fn gumball_identity(operation: &str) -> Vec<(&'static str, semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue)> {
+    use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
     match operation {
         "translate" => vec![("offset", WidgetInputValue::Vector([0.0; 3]))],
         "rotate" => vec![("axis", WidgetInputValue::Vector([0.0, 0.0, 1.0])), ("angle", WidgetInputValue::Number(0.0))],
@@ -706,9 +710,9 @@ pub fn gumball_identity(operation: &str) -> Vec<(&'static str, semio_s_artifact_
 /// 🧾️ The `change-widget-input` leaves an inserted operator's record needs to hold `wanted` (design §19.4): one per wanted
 /// channel the record holds with another literal, typed like the record's own literal (a point stays a point); a channel
 /// the record does not hold is not one of its inputs and is skipped.
-pub fn record_input_leaves(record: &Widget, wanted: &[(&str, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue)]) -> Vec<semio_s_artifact_procedural_3d_mutations::Generation3dMutation> {
-    use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
-    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+pub fn record_input_leaves(record: &Widget, wanted: &[(&str, semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue)]) -> Vec<semio_s_artifact_procedural_3d_mutations::Generation3dMutation> {
+    use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input;
+    use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
     let Widget::Neuron { id, params, .. } = record else { return Vec::new() };
     wanted
         .iter()

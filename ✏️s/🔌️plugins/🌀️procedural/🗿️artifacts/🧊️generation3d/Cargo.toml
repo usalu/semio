@@ -3,6 +3,39 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️transforms/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+    "🧪️tests/🧰️support/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust",
@@ -239,6 +272,9 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-step]
 path = "../../../🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-step-geometry]
+path = "../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-stl]
 path = "../../../🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust"
 
@@ -397,10 +433,10 @@ path = "🔨️modules/🏠️host/📐️geometry-service/📦️packages/🦀�
 [workspace.dependencies.semio-s-artifact-procedural-3d-host]
 path = "🔨️modules/🏠️host/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-procedural-3d-host-envelope]
+[workspace.dependencies.semio-s-artifact-procedural-3d-envelope]
 path = "🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-procedural-3d-host-initialization]
+[workspace.dependencies.semio-s-artifact-procedural-3d-initialization]
 path = "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-procedural-3d-preview-eval]
@@ -408,6 +444,105 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/�
 
 [workspace.dependencies.semio-s-artifact-procedural-3d-examples]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-testkit]
+path = "🧪️tests/🧰️support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-config]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-transient]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-presence]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-selection]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mode-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mode-generate]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-add-widget]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-set-widget-input]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-transforms]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-flow-eval-tick]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-node-graph-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-export-document]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-set-contributions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-delete-selection]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-navigate-graph]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-rotate-selection]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-scale-selection]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-import-document]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer-config]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer-transient]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer-presence]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer-modes]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mut-widgets]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mut-transforms]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️transforms/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mut-synapses]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mut-generations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mut-document]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

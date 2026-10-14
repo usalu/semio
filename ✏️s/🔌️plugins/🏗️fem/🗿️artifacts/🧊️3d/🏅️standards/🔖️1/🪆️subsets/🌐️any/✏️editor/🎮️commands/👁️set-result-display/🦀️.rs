@@ -2,9 +2,9 @@
 //! window config only. The staged form speaks the TYPED fields; a results-panel control speaks
 //! `{field, value, windowId}`, because the host merges a control's own scalar under `value`.
 
-use crate::editor::fem3d::modes::edit::windows::results;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,7 +25,7 @@ pub struct SetResultDisplay {
 fn apply_field(config: &mut results::config::Fem3dResultsWindowConfig, field: &str, value: &str) -> Result<(), Fault> {
     match field {
         "sourceId" => config.result_source_id = Some(value.to_string()).filter(|id| !id.is_empty()),
-        "mode" => config.result_mode = crate::app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
+        "mode" => config.result_mode = semio_s_fem_app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
         "modeIndex" => {
             let index = value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem3d.results.value: '{value}' is not a number")))?;
             config.result_mode_index = index.max(0.0) as u32;
@@ -46,13 +46,10 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
         Some(field) => apply_field(&mut next, field, payload.value.as_deref().unwrap_or_default())?,
         None => {
             next.result_source_id = payload.source_id.clone();
-            next.result_mode = crate::app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
+            next.result_mode = semio_s_fem_app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
             next.result_mode_index = payload.mode_index;
         }
     }
     Ok(Emit { window_config_mutations: vec![results::config::addressed_to(&window_id, next)], ui_scope: <crate::editor::fem3d::commands::set_result_animation::Fem3dResultsPlayback as crate::editor::fem3d::commands::set_result_animation::FemPlaybackTransport>::dirty_scope(), ..Default::default() })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

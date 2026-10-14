@@ -3,8 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::viewer::generation3d::config::component::mutations::*;
-use crate::viewer::generation3d::config::component::{Generation3dViewCamera, Generation3dViewConfig};
+use crate::mutations::*;
+use crate::Generation3dViewCamera;
+use crate::Generation3dViewConfig;
 
 impl protocol::OpText for Generation3dViewConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -30,8 +31,9 @@ impl protocol::OpText for Generation3dViewConfigMutation {
 #[allow(unused_imports)]
 mod mutations_wire_codec {
 use super::*;
-use crate::viewer::generation3d::config::component::mutations::*;
-use crate::viewer::generation3d::config::component::{Generation3dViewCamera, Generation3dViewConfig};
+use crate::mutations::*;
+use crate::Generation3dViewCamera;
+use crate::Generation3dViewConfig;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
 /// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dViewConfig`.

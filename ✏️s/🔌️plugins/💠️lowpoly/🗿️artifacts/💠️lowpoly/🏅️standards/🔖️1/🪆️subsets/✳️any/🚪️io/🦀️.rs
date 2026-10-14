@@ -1,5 +1,222 @@
 //! 🚪️ IO s.lowpoly (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from ⚙️engine::register), not per-leaf register().
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod import {
+    #[path = "."]
+    pub mod deserializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod ply {
+                #[path = "."]
+                pub mod v1_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod v_ac1018 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod stl {
+                #[path = "."]
+                pub mod v_ascii {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod gltf {
+                #[path = "."]
+                pub mod v2_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod obj {
+                #[path = "."]
+                pub mod v3_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod export {
+    #[path = "."]
+    pub mod serializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod las {
+                #[path = "."]
+                pub mod v1_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/☁️las/🔖️1.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod ply {
+                #[path = "."]
+                pub mod v1_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🧱️ply/🔖️1.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod png {
+                #[path = "."]
+                pub mod v1_2 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod dwg {
+                #[path = "."]
+                pub mod v_ac1018 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod stl {
+                #[path = "."]
+                pub mod v_ascii {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔺️stl/🔖️ascii/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod gltf {
+                #[path = "."]
+                pub mod v2_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod obj {
+                #[path = "."]
+                pub mod v3_0 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🗿️obj/🔖️3.0/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.obj", "stdio.ply", "stdio.stl", "stdio.txt"]
 }
@@ -8,8 +225,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::LowpolyAnalyzer;
-    use crate::LowpolySnapshot;
+    use crate::LowpolyAnalyzer;
+    use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
@@ -48,7 +265,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -57,7 +274,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -66,7 +283,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -75,7 +292,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -84,7 +301,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -93,7 +310,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -102,7 +319,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -115,8 +332,8 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::LowpolyBuilder as LowpolyAnyBuilder;
-    use crate::standards::v1::subsets::any::io::LowpolyComposer as LowpolyAnyComposer;
+    use crate::LowpolyBuilder as LowpolyAnyBuilder;
+    use crate::LowpolyComposer as LowpolyAnyComposer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
@@ -136,7 +353,7 @@ pub mod io_registry {
     const LOWPOLY_DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
     const LOWPOLY_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::LowpolySnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == LOWPOLY_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => LowpolyAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -152,7 +369,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "LowpolyComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -161,7 +378,7 @@ pub mod io_registry {
     fn compose_export_las(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_LAS_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -169,7 +386,7 @@ pub mod io_registry {
     fn compose_export_ply(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PLY_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -177,7 +394,7 @@ pub mod io_registry {
     fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -185,7 +402,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -193,7 +410,7 @@ pub mod io_registry {
     fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -201,7 +418,7 @@ pub mod io_registry {
     fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -209,7 +426,7 @@ pub mod io_registry {
     fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_GLTF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -217,7 +434,7 @@ pub mod io_registry {
     fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -225,7 +442,7 @@ pub mod io_registry {
     fn compose_export_txt(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_TXT_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -259,9 +476,9 @@ pub mod io_registry {
 /// (scale → semantic Euler-degree XYZ rotation → translation) on
 /// export.
 pub mod mesh_geometry {
-    use crate::{managed_mesh_child_handle, LowpolyMeshState, LowpolyObject, LowpolyPaintLayer, LowpolySnapshot, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+    use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::managed_mesh_child_handle, managed_mesh::LowpolyMeshState, snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, VertexId};
-    use crate::standards::v1::subsets::any::schema::inferences::apply_transform;
+    use semio_s_artifact_lowpoly_lowpoly_inferences::apply_transform;
 
     /// 🧮 Document object ceiling; more imported parts than this are merged into one object.
     pub const MAX_IMPORTED_OBJECTS: usize = 64;
@@ -398,19 +615,13 @@ pub mod mesh_geometry {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::LowpolyDiff;
-    use crate::schema::mutations::LowpolyMutation;
-    use crate::schema::snapshot::LowpolySnapshot;
+    use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+    use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+    use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -460,7 +671,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::LowpolySnapshot;
+    use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

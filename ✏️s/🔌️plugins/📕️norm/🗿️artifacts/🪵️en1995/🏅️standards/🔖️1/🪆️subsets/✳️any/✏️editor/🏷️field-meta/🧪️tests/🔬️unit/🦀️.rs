@@ -1,5 +1,4 @@
 //! 🧪️ `tests` — moved out of `🏷️field-meta/🦀️.rs` into its canonical test implementation.
-use super::*;
 
 #[test]
 fn every_editable_leaf_has_meta_with_both_labels() {
@@ -17,8 +16,8 @@ fn every_editable_leaf_has_meta_with_both_labels() {
 #[test]
 fn strength_choices_are_exactly_the_tabulated_classes() {
     let values: Vec<&str> = STRENGTH.iter().map(|c| c.value).collect();
-    assert_eq!(values, crate::artifact_schema::strength_class_options());
+    assert_eq!(values, semio_s_artifact_norm_en1995_schema::strength_class_options());
     for value in values {
-        assert!(crate::artifact_schema::properties_for_class(value).is_some(), "{value} must be tabulated");
+        assert!(semio_s_artifact_norm_en1995_schema::properties_for_class(value).is_some(), "{value} must be tabulated");
     }
 }

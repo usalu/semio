@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-3d-scene"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d World3d scene and initial viewport"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-3d-engine = { workspace = true }
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+semio-s-fem-model = { workspace = true }

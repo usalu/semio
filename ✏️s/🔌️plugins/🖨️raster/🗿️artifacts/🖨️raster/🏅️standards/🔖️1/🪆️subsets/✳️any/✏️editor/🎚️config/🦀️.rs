@@ -8,8 +8,8 @@
 //! `"layer"`, `HierarchyProvider::Topology`), read via `InteractionView::selection("layers")` instead of
 //! this config.
 
-use crate::RasterCamera;
-pub use crate::editor::raster::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_model::RasterCamera;
+pub use crate::selection::RasterPixelSelection;
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -90,7 +90,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 //#endregion 🔖️ArtifactCodec
 
-pub type RasterConfigViewportSize = crate::RasterViewportSize;
+pub type RasterConfigViewportSize = semio_s_artifact_raster_raster_model::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
@@ -636,3 +636,8 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

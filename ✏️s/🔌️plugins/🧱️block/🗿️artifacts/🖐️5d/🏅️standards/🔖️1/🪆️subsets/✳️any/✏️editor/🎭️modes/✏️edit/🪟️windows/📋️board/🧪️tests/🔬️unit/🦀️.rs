@@ -1,5 +1,5 @@
 
-use super::*;
+use crate::modes::edit::windows::board::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_board_surface_and_body_key() {

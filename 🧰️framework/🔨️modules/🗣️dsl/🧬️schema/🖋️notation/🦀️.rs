@@ -109,7 +109,7 @@ impl Cursor {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
-            Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected {kind:?}, found {:?}", self.peek().kind),self.peek().span))
+            Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("expected {kind:?}, found {:?}", self.peek().kind),self.peek().span))
         }
     }
 
@@ -121,8 +121,8 @@ impl Cursor {
 fn edge_text(cursor: &mut Cursor) -> Result<String, TextError> {
     match cursor.peek().kind {
         TokenKind::Ident => Ok(cursor.advance().text.as_str().to_string()),
-        TokenKind::Text => { let token = cursor.advance(); semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, token.span)) }
-        _ => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected wire Text", cursor.span())),
+        TokenKind::Text => { let token = cursor.advance(); semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|error| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, error, token.span)) }
+        _ => Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "expected wire Text", cursor.span())),
     }
 }
 fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
@@ -143,16 +143,16 @@ fn parse_edge_node(cursor: &mut Cursor) -> Result<EdgeNode, TextError> {
 }
 
 pub fn decode_fused_edge_arrow(text: &str) -> Result<(bool, EdgeLabel), TextError> {
-    let body = text.strip_prefix('-').ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fused edge must start with `-`",TextSpan::at(1, 1)))?;
+    let body = text.strip_prefix('-').ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"fused edge must start with `-`",TextSpan::at(1, 1)))?;
     let (core, directed) = if let Some(core) = body.strip_suffix('>') {
         (core, true)
     } else if let Some(core) = body.strip_suffix('-') {
         (core, false)
     } else {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fused edge must end with `>` or `-`",TextSpan::at(1, 1)));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"fused edge must end with `>` or `-`",TextSpan::at(1, 1)));
     };
     if core.is_empty() {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"fused edge label is empty",TextSpan::at(1, 1)));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"fused edge label is empty",TextSpan::at(1, 1)));
     }
     let (id, kind) = if let Some(rest) = core.strip_prefix(':') {
         (None, Some(rest.to_string()))
@@ -188,7 +188,7 @@ fn parse_edge_label(cursor: &mut Cursor) -> Result<EdgeLabel, TextError> {
     };
     let label = EdgeLabel { id, kind };
     if label.is_empty() {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"edge label `[...]` must name an id and/or a `:kind`",cursor.span()));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"edge label `[...]` must name an id and/or a `:kind`",cursor.span()));
     }
     cursor.expect(TokenKind::RBracket)?;
     Ok(label)
@@ -233,7 +233,7 @@ fn parse_edge(cursor: &mut Cursor) -> Result<EdgeValue, TextError> {
                     cursor.advance();
                     false
                 }
-                other => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected `->` or `-` to close a labeled edge, found {other:?}"),cursor.span())),
+                other => return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("expected `->` or `-` to close a labeled edge, found {other:?}"),cursor.span())),
             };
             let to = parse_edge_node(cursor)?;
             Some(EdgeLink { directed, label, to })
@@ -257,7 +257,7 @@ pub fn parse_edge_text(text: &str) -> Result<EdgeValue, TextError> {
     let mut cursor = Cursor::new(tokens);
     let edge = parse_edge(&mut cursor)?;
     if cursor.peek().kind != TokenKind::Eof {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unexpected trailing {:?} after edge literal", cursor.peek().kind),cursor.span()));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unexpected trailing {:?} after edge literal", cursor.peek().kind),cursor.span()));
     }
     Ok(edge)
 }
@@ -316,25 +316,25 @@ pub fn print_edge(edge: &EdgeValue) -> String {
 pub fn parse_quantity_text(text: &str, native: &'static semio_framework_dsl::UnitSpec) -> Result<f64, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
-    let number = tokens.first().ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a quantity",TextSpan::at(1, 1)))?;
+    let number = tokens.first().ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"expected a quantity",TextSpan::at(1, 1)))?;
     if !matches!(number.kind, TokenKind::Float | TokenKind::Int) {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a number, found {:?}", number.kind),number.span));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("expected a number, found {:?}", number.kind),number.span));
     }
-    let raw: f64 = number.text.as_str().parse().map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("not a valid number: {}", number.text.as_str()),number.span))?;
+    let raw: f64 = number.text.as_str().parse().map_err(|_| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("not a valid number: {}", number.text.as_str()),number.span))?;
 
     let suffix = tokens.get(1).filter(|t| t.kind == TokenKind::Ident && t.byte_range.0 == number.byte_range.1);
     let value = match suffix {
         Some(suffix_token) => {
             let symbol = suffix_token.text.as_str();
-            let unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown unit `{symbol}`"),suffix_token.span))?;
-            semio_framework_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unit `{symbol}` is not compatible with `{}`", native.symbol),suffix_token.span))?
+            let unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unknown unit `{symbol}`"),suffix_token.span))?;
+            semio_framework_dsl::convert(raw, unit, native).ok_or_else(|| TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,format!("unit `{symbol}` is not compatible with `{}`", native.symbol),suffix_token.span))?
         }
         None => raw,
     };
 
     let consumed = if suffix.is_some() { 2 } else { 1 };
     if tokens.len() > consumed {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"unexpected trailing content after quantity",tokens[consumed].span));
+        return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue,"unexpected trailing content after quantity",tokens[consumed].span));
     }
     Ok(value)
 }

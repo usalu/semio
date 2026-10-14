@@ -1,6 +1,6 @@
 //! 🧾 Document outline for the DIN 4108 envelope subject.
 
-use crate::Din4108Snapshot;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "climateZone",

@@ -262,7 +262,7 @@ impl Generation2dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = crate::host::owned::generation2d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let _ = semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Generation2d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -413,33 +413,33 @@ mod mounted_laws {
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
 
-        let _serial = crate::publication_authority::lock();
+        let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::host::owned::generation2d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::host::owned::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS }),
+            semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(operation, Generation(41), 41, 40, 41, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS }),
             Err("generation2d-publication.initial-freshness")
         );
-        assert!(crate::host::owned::generation2d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::host::owned::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS })
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(operation, Generation(41), 41, 41, 41, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
-        assert_eq!(crate::host::owned::generation2d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::host::owned::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.authority-missing"));
-        assert_eq!(crate::host::owned::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation2d-publication.wrong-generation"));
-        crate::host::owned::generation2d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(crate::host::owned::generation2d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation2d-publication.wrong-base"));
-        assert!(crate::host::owned::generation2d_release_publication_authority(operation, Generation(41)));
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.authority-missing"));
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation2d-publication.wrong-generation"));
+        semio_s_artifact_procedural_2d_host::generation2d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation2d-publication.wrong-base"));
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::host::owned::generation2d_admit_publication_authority(operation, Generation(42), 42, 42, 42, crate::host::owned::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS })
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(operation, Generation(42), 42, 42, 42, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION2D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
-        assert!(crate::host::owned::generation2d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(crate::host::owned::generation2d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(crate::host::owned::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(crate::host::owned::generation2d_release_publication_authority(operation, Generation(42)));
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(operation, Generation(42)));
     }
 
     #[test]
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_two_dimensional_coverage() {
-        let owner_source = include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-        let snapshot_source = include_str!("../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs");
+        let owner_source = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs")).expect("scanned source");
+        let snapshot_source = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs")).expect("scanned source");
         let lifecycle_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/🧷️p8yz-a-retained-mounted-laws.json");
         let owner_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/👑️p8yz-a-owner-catalog-laws.json");
 
@@ -459,7 +459,7 @@ mod mounted_laws {
         assert!(snapshot_source.contains("one scalar byte opportunity"));
         assert!(lifecycle_fixture.contains("complete-before-ack"));
         assert!(owner_fixture.contains("change-generation-value"));
-        assert!(crate::host::owned::generation2d_retained_catalog_is_complete());
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_retained_catalog_is_complete());
     }
 }
 //#endregion 🧪️MountedLaws

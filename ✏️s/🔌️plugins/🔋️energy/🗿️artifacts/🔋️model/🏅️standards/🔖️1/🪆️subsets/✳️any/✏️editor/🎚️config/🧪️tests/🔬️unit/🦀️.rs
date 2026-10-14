@@ -63,7 +63,7 @@ fn the_config_round_trips_through_its_pack_and_dsl_codecs() {
 
 #[test]
 fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone() {
-    use crate::editor::model::results::{result_field, ResultField};
+    use crate::{result_field, ResultField};
     let base = EnergyModelConfig { zone_timestep_minutes: 10, system_timestep_minutes: 2, warmup_days: 3, result_field: "conductionLoss".into() };
     let mutation = EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: "solarTransmitted".into() });
     let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
@@ -71,7 +71,7 @@ fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone(
     assert_eq!(result_field(&next), ResultField::SolarTransmitted);
     assert_eq!(next.simulation_template(), base.simulation_template(), "the engine template is untouched, so a live run is never reconfigured");
     assert!(
-        !crate::energy_simulation_session::ENERGY_SIMULATION_RUN_SETTINGS.iter().any(|pointer| *pointer == "/resultField"),
+        !crate::session::ENERGY_SIMULATION_RUN_SETTINGS.iter().any(|pointer| *pointer == "/resultField"),
         "resultField must stay out of the run's settings reads or recolouring restarts the run"
     );
     let mut restored = next;

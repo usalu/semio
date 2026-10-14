@@ -1,7 +1,7 @@
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use super::*;
-use crate::bounded_ownership::PluginLifecycleFailure;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 
 fn handoff() -> RetainedCloneProgress {
@@ -493,30 +493,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         active.retirement_demands(body,&self.tool_cancellations)
     }
 
-    fn close_segment_demands(registry: &ArtifactFixedRegistry<ArtifactDownloadOutput>) -> RetirementDemand {
-        let Some((_, id)) = registry.next_id_from(0) else { return RetirementDemand::default() };
-        if registry.get(id).is_some_and(|output| output.chunks.chunks_remaining() != 0) { release_demand(ARTIFACT_OUTPUT_CHUNK_BYTES) } else { handoff_demand() }
+    fn close_segment_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<ArtifactDownloadOutput>()+size_of::<crate::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}
+    fn close_segment_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PluginLifecycleFailure>{
+        let Some((_,id))=self.segmented_downloads.next_id_from(0)else{return Ok(RetainedCloneStep::Progress(Default::default()))};let demand=self.close_segment_demands();if !semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.segmented_closures.can_insert(id){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"segmented close receiving slot is occupied").into())}
+        let output=self.segmented_downloads.remove(id).expect("quoted original segmented owner");self.segmented_closures.insert_admitted(id,crate::media_export::MediaDownloadRetirement::pending(output));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
     }
-
-    fn close_segment_step(registry: &mut ArtifactFixedRegistry<ArtifactDownloadOutput>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        let idle = RetainedCloneProgress::default();
-        let Some((_, id)) = registry.next_id_from(0) else { return Ok(RetainedCloneStep::Progress(idle)) };
-        let output = registry.get(id).ok_or_else(|| plugin_sdk_fault("segmented close authority changed during one fixed step"))?;
-        if output.chunks.chunks_remaining() != 0 {
-            if !plugin_turn_admitted(release_demand(ARTIFACT_OUTPUT_CHUNK_BYTES), grant)? { return Ok(RetainedCloneStep::Progress(idle)); }
-            return Ok(RetainedCloneStep::Progress(match output.chunks.close_take_chunk()? {
-                Some(chunk) => released(chunk.len()),
-                None => idle,
-            }));
-        }
-        if !plugin_turn_admitted(handoff_demand(), grant)? { return Ok(RetainedCloneStep::Progress(idle)); }
-        let output = registry.remove(id).ok_or_else(|| plugin_sdk_fault("terminal segmented owner changed before exact removal"))?;
-        if !output.terminal_is_empty() {
-            registry.insert_admitted(id, output);
-            return Err(plugin_sdk_fault("segmented owner reached terminal without an empty exact chunk witness"));
-        }
-        drop(output);
-        Ok(RetainedCloneStep::Progress(handoff()))
+    fn close_segment_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{let Some((_,id))=self.segmented_closures.next_id_from(0)else{return Ok(Default::default())};let original=self.segmented_closures.get(id).expect("retained segmented close owner");if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()})}else{original.retirement_demands(body)}}
+    fn close_segment_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PluginLifecycleFailure>{
+        let Some((_,id))=self.segmented_closures.next_id_from(0)else{return Ok(RetainedCloneStep::Progress(Default::default()))};if let Some(source)=self.snapshot_retirements.get(id){source.validate_retirement(cx)?}
+        let original=self.segmented_closures.get_mut(id).expect("retained segmented close owner");if original.terminal_is_empty(){let demand=RetirementDemand{copy_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()};if !semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.segmented_closures.remove(id);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}original.close_step(cx,grant).map(Self::lifecycle_retained)
     }
 
     fn close_media_step(&mut self, closures: bool, cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<RetainedCloneStep,PluginLifecycleFailure> {
@@ -581,7 +566,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
 
     fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=self.close_typed_operation_demands(grant.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
     }
 
     fn close_typed_operation_granted(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
@@ -664,8 +649,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::ActionIngress=>self.action_ingress_sources_demands(body,true),
             CloseRung::MediaExports => self.close_media_demands(&self.media_exports, body),
             CloseRung::MediaClosures => self.close_media_demands(&self.media_closures, body),
-            CloseRung::Segments => Ok(Self::close_segment_demands(&self.segmented_downloads)),
-            CloseRung::SegmentClosures => Ok(Self::close_segment_demands(&self.segmented_closures)),
+            CloseRung::Segments => Ok(self.close_segment_demands()),
+            CloseRung::SegmentClosures => self.close_segment_retirement_demands(body),
             CloseRung::SnapshotRetentions => registry_demands(&self.snapshot_retirements, self.close_snapshot_cursor, body),
             CloseRung::ChildMemberRetirements => {
                 let member = self.child_member_retirement_demands(body)?;
@@ -711,12 +696,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::MountedJobs=>{let Some(instance_id)=self.live_runtime_instance_id else{return Ok(RetainedCloneStep::Progress(idle))};A::mounted_job_close_step(instance_id, cx, grant).map(Self::lifecycle_retained)}
             CloseRung::CancellationSlots=>{
                 let before=cx.retained_progress();let complete=self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor,cx,false)?;
-                let progress=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                let progress=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 if complete&&progress==RetainedCloneProgress::default(){
                     let bytes=std::mem::size_of::<usize>();if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes||cx.retained_grant().maximum_depth==0{return Ok(RetainedCloneStep::Progress(idle))}
                     cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);self.close_cancellation_cursor+=1;
                 }
-                Ok(RetainedCloneStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+                Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
             },
             CloseRung::LatestWinsKeys=>Ok(RetainedCloneStep::Progress(self.latest_wins_keys.advance(grant)?.progress())),
             CloseRung::LatestWinsCommands=>{let Some(operation_id)=self.latest_wins_order.items.front().copied()else{return Ok(RetainedCloneStep::Progress(idle))};self.close_latest_wins_command_step(operation_id,grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
@@ -734,8 +719,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::ActionIngress=>self.close_action_ingress_sources(cx,grant,true).map(Self::lifecycle_retained),
             CloseRung::MediaExports=>self.close_media_step(false,cx,grant),
             CloseRung::MediaClosures=>self.close_media_step(true,cx,grant),
-            CloseRung::Segments=>Self::close_segment_step(&mut self.segmented_downloads,grant).map_err(PluginLifecycleFailure::from),
-            CloseRung::SegmentClosures=>Self::close_segment_step(&mut self.segmented_closures,grant).map_err(PluginLifecycleFailure::from),
+            CloseRung::Segments=>self.close_segment_step(grant),
+            CloseRung::SegmentClosures=>self.close_segment_retirement_step(cx,grant),
             CloseRung::SnapshotRetentions=>registry_step(&mut self.snapshot_retirements,&mut self.close_snapshot_cursor,cx,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
             CloseRung::ChildMemberRetirements=>{let progress=self.child_member_retirement_step(grant)?;if progress==idle&&!self.child_content_retirements.is_empty(){return Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?))}Ok(RetainedCloneStep::Progress(progress))}
             CloseRung::ChildRootRetirements=>Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?)),

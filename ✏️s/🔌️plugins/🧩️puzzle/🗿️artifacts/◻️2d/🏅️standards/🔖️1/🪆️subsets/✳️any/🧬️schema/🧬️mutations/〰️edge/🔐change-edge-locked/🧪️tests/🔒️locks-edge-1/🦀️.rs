@@ -1,0 +1,129 @@
+//! 🧪️ `change-edge-locked` snapshot — `🔒️locks-edge-1`.
+//!
+//! Sets `edge-1`'s tri-state `locked` flag to `Some(true)`, producing an ordinary edge patch —
+//! locking is a document edit here, not a presence or config lane change.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+
+use crate::Puzzle2dSnapshot;
+
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks-edge-1/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks-edge-1/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔐change-edge-locked/🔒️locks-edge-1/🎯️outcome/🔣️.json");
+
+fn before() -> Puzzle2dSnapshot {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+}
+fn expected_after() -> Puzzle2dSnapshot {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+}
+fn mutation() -> Puzzle2dMutation {
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+}
+
+/// ▶️ The committed `change-edge-locked` payload carries `before` to exactly the committed `after`, and
+/// lands the change this case is named for.
+#[test]
+fn applies_to_committed_after() {
+    let mut snapshot = before();
+    apply_puzzle2d_mutation(&mut snapshot, &mutation()).expect("change-edge-locked applies to its committed before-snapshot");
+    assert_eq!(snapshot, expected_after(), "change-edge-locked/locks-edge-1: applied state differs from committed after-snapshot");
+    let edge = snapshot.edges.iter().find(|edge| edge.id == "edge-1").expect("edge-1 survives being locked");
+    assert_eq!(edge.locked, Some(true), "change-edge-locked/locks-edge-1: edge-1 is still unlocked");
+    assert_eq!(edge.visible, before().edges[0].visible, "change-edge-locked/locks-edge-1: locking must not change visibility");
+}
+
+/// ↩️ Applying `change-edge-locked` then the inverse it derives from `before` restores `before` exactly.
+#[test]
+fn inverse_restores_before() {
+    let base = before();
+    let mutation = mutation();
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
+    let mut snapshot = base.clone();
+    apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    for step in inverse.iter().rev() {
+        apply_puzzle2d_mutation(&mut snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "change-edge-locked/locks-edge-1: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed `change-edge-locked` payload are already canonical:
+/// decode→encode is a fixed point.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "change-edge-locked/locks-edge-1: committed {label} JSON is not canonical");
+    }
+    let decoded_mutation = mutation();
+    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "change-edge-locked/locks-edge-1: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `change-edge-locked` actually produces on this base.
+#[test]
+fn declared_outcome_holds() {
+    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    let mut snapshot = before();
+    let applied = apply_puzzle2d_mutation(&mut snapshot, &mutation()).is_ok();
+    match status {
+        "applied" => assert!(applied, "change-edge-locked/locks-edge-1: declared applied but the mutation was rejected"),
+        "rejected" => {
+            assert!(!applied, "change-edge-locked/locks-edge-1: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "change-edge-locked/locks-edge-1: rejected mutation must leave the snapshot untouched");
+        }
+        other => panic!("change-edge-locked/locks-edge-1: unknown outcome status {other:?}"),
+    }
+}
+
+/// 🔺️ The sparse delta `change-edge-locked` produces is exactly the committed diff — the single most
+/// load-bearing assertion in the snapshot: it pins WHICH collections and fields this mutation is
+/// allowed to touch, not merely that the end state matches.
+#[test]
+fn produces_committed_diff() {
+    let base = before();
+    let outcome = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "change-edge-locked/locks-edge-1: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(committed["edges"]["modified"][0]["patch"]["locked"].as_bool(), Some(true), "change-edge-locked/locks-edge-1: the patch must carry locked=true");
+    assert_eq!(committed["edges"]["removed"].as_array().map(Vec::is_empty), Some(true), "change-edge-locked/locks-edge-1: locking removes nothing");
+}
+
+/// 🔣️ The committed `change-edge-locked` diff is itself canonical and decodes to `Puzzle2dDiff`.
+#[test]
+fn committed_diff_is_canonical() {
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "change-edge-locked/locks-edge-1: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed `change-edge-locked` diff directly to `before` yields the committed `after` —
+/// the diff is a complete description of the change, not a summary of it.
+#[test]
+fn committed_diff_applies_to_after() {
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "change-edge-locked/locks-edge-1: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
+}

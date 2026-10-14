@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "source": "original-owned-typed-baseline",
+  "producer": "selected-child-genesis-publication-and-owner-factories",
+  "result": "actual-owned-typed-store",
+  "absence": "retire-original-baseline-and-refuse-history-seed",
+  "reset": "same-child-original-genesis-envelope"
+}

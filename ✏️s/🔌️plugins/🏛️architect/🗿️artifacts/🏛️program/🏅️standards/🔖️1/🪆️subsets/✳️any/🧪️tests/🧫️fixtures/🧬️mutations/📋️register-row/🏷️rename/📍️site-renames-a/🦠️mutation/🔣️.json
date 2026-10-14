@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "siteContext",
+  "id": "site-context-a",
+  "newName": "Renamed Site Context A"
+}

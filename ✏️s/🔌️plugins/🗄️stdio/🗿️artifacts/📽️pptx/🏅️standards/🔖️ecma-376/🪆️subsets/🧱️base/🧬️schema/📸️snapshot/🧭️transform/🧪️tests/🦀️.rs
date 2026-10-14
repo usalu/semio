@@ -1,4 +1,6 @@
-use super::{from_value, to_value, DslValue};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::from_value;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::to_value;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::transform::DslValue;
 use serde_json::Value as Json;
 
 #[test]

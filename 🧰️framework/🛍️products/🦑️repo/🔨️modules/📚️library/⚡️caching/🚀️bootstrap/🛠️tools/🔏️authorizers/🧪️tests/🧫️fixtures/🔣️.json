@@ -1,17 +1,19 @@
 {
   "version": 1,
   "files": {
-    "entry.ts": "#!/usr/bin/env bun\nexport { value } from './📦️helper.ts';\nexport { latin } from './\\u00e9.ts';\nexport { encoded } from './Ã©.ts';\nimport contract from './contract.json' with {type:'json'};\nexport const version = contract.version;\n",
+    "entry.ts": "#!/usr/bin/env bun\nexport { value } from './📦️helper.ts';\nexport { latin } from './\\u00e9.ts';\nexport { encoded } from './Ã©.ts';\nimport contract from './contract.json' with {type:'json'};\nexport const version = contract.version;\nexport async function lazyValue(){return (await import(\"./📥️lazy.ts\")).lazy;}\n",
     "📦️helper.ts": "export const value = 7;\n",
     "é.ts": "export const latin = 11;\n",
     "Ã©.ts": "export const encoded = 13;\n",
-    "contract.json": "{\"version\":1}\n"
+    "contract.json": "{\"version\":1}\n",
+    "📥️lazy.ts": "export const lazy = 17;\n"
   },
   "expectedFiles": [
     "contract.json",
     "entry.ts",
     "Ã©.ts",
     "é.ts",
+    "📥️lazy.ts",
     "📦️helper.ts"
   ],
   "mutation": {
@@ -19,13 +21,28 @@
     "bytes": "export const value = 9;\n"
   },
   "receiptMutations": [
-    {"id":"changed-bundle","path":"semio-authorizers.mjs","bytes":"export const value=100;\n","accept":false},
-    {"id":"changed-source-census","path":".semio-authorizer-source.json","bytes":"{}\n","accept":false}
+    {
+      "id": "changed-bundle",
+      "path": "semio-authorizers.mjs",
+      "bytes": "export const value=100;\n",
+      "accept": false
+    },
+    {
+      "id": "changed-source-census",
+      "path": ".semio-authorizer-source.json",
+      "bytes": "{}\n",
+      "accept": false
+    }
   ],
   "expectedValues": {
     "original": 7,
     "changed": 9,
     "latin": 11,
-    "encoded": 13
+    "encoded": 13,
+    "lazy": 17
+  },
+  "lazyMutation": {
+    "path": "📥️lazy.ts",
+    "bytes": "export const lazy = 19;\n"
   }
 }

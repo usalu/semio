@@ -1,10 +1,10 @@
-use super::ChangeConnectionT2;
-use crate::mutations::En1995Mutation;
-use crate::En1995Snapshot;
-pub fn inverse(payload: &ChangeConnectionT2, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+use crate::change_connection_t2::ChangeConnectionT2;
+
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+pub fn inverse<Op>(payload: &ChangeConnectionT2, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_connection_t2::ChangeConnectionT2> {
     Ok((|| {
     let Some(item) = base.connections.iter().find(|item| item.id == payload.connection_id) else { return Vec::new(); };
-    vec![En1995Mutation::ChangeConnectionT2(ChangeConnectionT2 { connection_id: payload.connection_id.clone(), new_value: item.t2_m })]
+    vec![Op::from(ChangeConnectionT2 { connection_id: payload.connection_id.clone(), new_value: item.t2_m })]
 
     })())
 }

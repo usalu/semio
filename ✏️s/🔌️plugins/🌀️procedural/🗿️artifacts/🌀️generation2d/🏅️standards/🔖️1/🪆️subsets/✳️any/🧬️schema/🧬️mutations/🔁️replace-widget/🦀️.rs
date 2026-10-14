@@ -1,7 +1,7 @@
 //! 🦠️ `🔁️replace-widget` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,19 +15,22 @@ pub struct ReplaceWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_widget(widget: Widget) -> Generation2dMutation {
-    Generation2dMutation::ReplaceWidget(ReplaceWidget { widget })
+pub fn replace_widget<Op: From<ReplaceWidget>>(widget: Widget) -> Op {
+    Op::from(ReplaceWidget { widget })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ReplaceWidget {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ReplaceWidget
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<ReplaceWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "widget", kind: "replace-widget", record: "ReplacedWidget" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::replace_widget::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::replace_widget::inverse::inverse(self, base)?
     
     })
 }

@@ -1,13 +1,13 @@
 use super::*;
 use semio_s_fem_app_surface::FemResultsAnimation;
-use crate::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
 
 fn labels() -> &'static Fem2dLabels {
     semio_framework_plugin::resolve_labels::<Fem2dLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 fn panel_json(window: &Fem2dResultsWindowConfig) -> String {
-    let doc = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let node = render(&doc, Some(window), None, "results-left", labels()).expect("results panel admission");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection")
 }
@@ -50,7 +50,7 @@ async fn results_panel_play_button_switches_to_pause_while_running() {
 /// 📚️ LAW: the source select offers every load case AND every combination of the live document.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_source_select_offers_cases_and_combinations() {
-    let doc = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     for case in &doc.load_cases {
         assert!(json.contains(case.id.as_str()), "missing load case {}: {json}", case.id);
@@ -68,15 +68,15 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
     let split = semio_framework_plugin::ViewModel {
         window_instances: vec![
-            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
-            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-left".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
+            semio_framework_plugin::ViewWindowInstance { id: "results-right".into(), window_kind_id: semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID.into() },
         ],
         focused_window_id: Some("results-left".into()),
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let tag = crate::editor::fem2d::results_window_instance_id(&split).expect("a panel projection resolves a results window");
+    let tag = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id(&split).expect("a panel projection resolves a results window");
     assert_eq!(tag, "results-left", "the panel tags the focused results pane");
-    let resolved = crate::editor::fem2d::modes::edit::windows::results::config::addressed_window_id(&cfg, &split, Some(&tag)).expect("the tag addresses an open results window");
+    let resolved = semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::config::addressed_window_id(&cfg, &split, Some(&tag)).expect("the tag addresses an open results window");
     assert_eq!(resolved, tag);
     let json = panel_json(&Fem2dResultsWindowConfig::default());
     assert!(json.contains("results-left"), "every control carries the tag: {json}");
@@ -86,7 +86,7 @@ async fn results_panel_tag_resolves_to_the_partition_the_command_writes() {
 /// play/pause toggle naming only the window — and says which pane to focus for live readouts.
 #[semio_framework_async_macros::async_test]
 async fn results_panel_without_a_captured_window_offers_a_toggle_and_a_focus_hint() {
-    let doc = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let node = render(&doc, None, None, "results-left", labels()).expect("results panel admission");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains(labels().focus_results_hint.as_str()), "{json}");

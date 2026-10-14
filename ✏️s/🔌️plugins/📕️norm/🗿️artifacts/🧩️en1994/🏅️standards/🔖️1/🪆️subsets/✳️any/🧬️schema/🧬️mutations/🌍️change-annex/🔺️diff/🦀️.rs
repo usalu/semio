@@ -1,6 +1,7 @@
 //! Diff for `change-annex`.
-use super::ChangeAnnex;
-use crate::{En1994Diff, En1994Snapshot};
+use crate::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_en1994_diff::En1994Diff;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn diff(payload: &ChangeAnnex, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if false {
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());

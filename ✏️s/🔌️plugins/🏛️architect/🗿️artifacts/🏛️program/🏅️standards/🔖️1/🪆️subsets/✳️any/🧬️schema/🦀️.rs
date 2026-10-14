@@ -2,6 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::kernel::*;
 use crate::standards::v1::subsets::any::schema::registers::*;
+pub use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
 use framework_schema::ArtifactSchema;
 use graph::{orient_endpoints, Undirected};
 

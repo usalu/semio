@@ -1,3 +1,4 @@
+use crate::retained_clone::FixtureSourceBirth;
 use super::*;
 use crate::{DslValue, FromValue, ToValue, NativeDecodeControl, NativeEncodeControl};
 use std::{io::Write, process::{Command, Stdio}};

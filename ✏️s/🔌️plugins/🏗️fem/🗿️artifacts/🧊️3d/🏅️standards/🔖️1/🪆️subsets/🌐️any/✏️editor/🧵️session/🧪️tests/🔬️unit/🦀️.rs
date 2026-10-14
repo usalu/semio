@@ -104,7 +104,7 @@ fn close(lease: &mut Fem3dPageVisualLease) -> usize {
 #[test]
 fn fem3d_visual_maximum_plus_one_rejects_before_owner_transfer() {
     let mut doc = Fem3dSnapshot::default();
-    doc.nodes.resize_with(MAXIMUM_NODES + 1, || crate::FemNode { id: "n".into(), x: 0.0, y: 0.0, z: 0.0 });
+    doc.nodes.resize_with(MAXIMUM_NODES + 1, || semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode { id: "n".into(), x: 0.0, y: 0.0, z: 0.0 });
     let producer = doc.nodes.as_ptr();
     let credit = Fem3dPageCredit { item_count: 3, byte_count: 7, draw_count: 0, draw_bytes: 3 };
     let mut job = Fem3dPageVisualJob::new(freshness(19), credit);
@@ -118,7 +118,7 @@ fn fem3d_visual_maximum_plus_one_rejects_before_owner_transfer() {
 #[test]
 fn fem3d_snapshot_preflight_page_maximum_plus_one_returns_exact_producer() {
     let mut doc = Fem3dSnapshot::default();
-    doc.nodes.push(crate::FemNode { id: "n".repeat(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY + 1), x: 0.0, y: 0.0, z: 0.0 });
+    doc.nodes.push(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode { id: "n".repeat(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY + 1), x: 0.0, y: 0.0, z: 0.0 });
     let producer = doc.nodes.as_ptr();
     let mut preflight = SnapshotPreflight::new();
     let before = preflight;
@@ -131,7 +131,7 @@ fn fem3d_snapshot_preflight_page_maximum_plus_one_returns_exact_producer() {
 #[test]
 fn fem3d_solver_nonzero_generation_corresponds_to_every_published_field_page() {
     let mut doc = Fem3dSnapshot::default();
-    doc.nodes.push(crate::FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 });
+    doc.nodes.push(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 });
     let scalar = Fem3dSolverScalar { displacement: [1.0, 2.0, 3.0], residual: [4.0, 5.0, 6.0], reaction: [7.0, 8.0, 9.0], contour: 13.0, mode_shape: [10.0, 11.0, 12.0], eigen_estimate: 17.0 };
     let solver = solver(&doc, scalar);
     assert_eq!(solver.scalar(0), Some(scalar));
@@ -224,7 +224,7 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
     assert!(ids.close_admission_one());
 
     let mut model = MountedAnalysisModel::new();
-    assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1, MOUNTED_ANALYSIS_BACKING_BYTES), Err(crate::analyses::MountedAnalysisFault::Capacity { requested: MAXIMUM_FIELDS + 1, maximum: crate::analyses::MOUNTED_ANALYSIS_NODE_SLOTS }));
+    assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1, MOUNTED_ANALYSIS_BACKING_BYTES), Err(semio_s_fem_analyses_model::MountedAnalysisFault::Capacity { requested: MAXIMUM_FIELDS + 1, maximum: semio_s_fem_analyses_model::MOUNTED_ANALYSIS_NODE_SLOTS }));
     assert_eq!(model.nodes_len(), 0);
     let node = Node { id: "returned-node".into(), pos: [0.0; 3] };
     let node_pointer = node.id.as_ptr();
@@ -232,11 +232,11 @@ fn fem3d_numerical_fixed_owner_maximum_plus_one_refuses_unchanged_and_closes_one
     assert_eq!(returned.id.as_ptr(), node_pointer);
 
     let mut domain = MountedPlanarDomain::new();
-    assert_eq!(domain.admit_outer_one(MAXIMUM_FIELDS + 1), Err(crate::mesh::MountedDomainFault::PointCapacity { requested: MAXIMUM_FIELDS + 1, maximum: crate::mesh::MOUNTED_DOMAIN_POINT_SLOTS }));
+    assert_eq!(domain.admit_outer_one(MAXIMUM_FIELDS + 1), Err(semio_s_fem_mesh::MountedDomainFault::PointCapacity { requested: MAXIMUM_FIELDS + 1, maximum: semio_s_fem_mesh::MOUNTED_DOMAIN_POINT_SLOTS }));
     assert_eq!(domain.push_outer([1.0, 2.0]), Err([1.0, 2.0]));
 
     let mut scalars = MountedScalarSlots::new();
-    assert_eq!(scalars.admit_one(MAXIMUM_FIELDS * 6 + 1), Err(crate::sparse::MountedScalarFault::Capacity { requested: MAXIMUM_FIELDS * 6 + 1, maximum: crate::sparse::MOUNTED_SCALAR_SLOTS }));
+    assert_eq!(scalars.admit_one(MAXIMUM_FIELDS * 6 + 1), Err(semio_s_fem_sparse::MountedScalarFault::Capacity { requested: MAXIMUM_FIELDS * 6 + 1, maximum: semio_s_fem_sparse::MOUNTED_SCALAR_SLOTS }));
     assert_eq!(scalars.len(), 0);
     assert_eq!(scalars.push(17.0), Err(17.0));
     assert!(started.elapsed().as_micros() < 8_000);
@@ -284,13 +284,18 @@ fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
 #[test]
 fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorized() {
 
-    use crate::{FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
     use semio_framework_trace::{InteractiveStage, StepOverrunLedger, Watchdog, INTERACTIVE_STEP_CEILING_US};
 
     let doc = Fem3dSnapshot {
         nodes: vec![FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n1".into(), x: 1.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 1.0, y: 1.0, z: 0.0 }, FemNode { id: "n3".into(), x: 0.0, y: 1.0, z: 0.0 }],
         materials: vec![FemMaterial { id: "m".into(), name: "M".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
-        solids: vec![FemSolid { id: "s".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.25, layers: 1, mesh_size: 2.0, material_id: "m".into(), axis: crate::FemAxis::Z }],
+        solids: vec![FemSolid { id: "s".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.25, layers: 1, mesh_size: 2.0, material_id: "m".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
         supports: (0..4).map(|index| FemSupport { id: format!("f{index}"), node_id: format!("n{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect(),
         load_cases: vec![FemLoadCase { id: "g".into(), name: "G".into(), loads: vec![], self_weight: true }],
         ..Default::default()
@@ -370,9 +375,9 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
 /// purpose instead of the fault being read as a mechanism in the model.
 #[test]
 fn fem3d_production_numerical_child_refuses_the_demo_at_the_mounted_owner_page() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
+    let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
     assert!(!doc.solids.is_empty(), "the demo carries a meshed slab");
-    let (analysis_nodes, _) = crate::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
+    let (analysis_nodes, _) = semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
     assert!(analysis_nodes.len() * 6 * size_of::<(String, Dof)>() > 4_096, "the demo's dof order outgrows the mounted owner page — the premise of this law");
     let operation = semio_framework_job::Operation::new(OperationId(31), RevisionId(7), Generation(3), 5);
     let mut child = Fem3dNumericalChild::new();
@@ -402,7 +407,7 @@ fn fem3d_production_numerical_child_refuses_the_demo_at_the_mounted_owner_page()
     let (stage, detail) = failure.expect("the mounted child refuses the demo");
     assert_eq!(stage, Fem3dNumericalStage::PrepareAssembly, "the refusal is the assembly construction's owner-page reservation");
     assert!(detail.contains("singular"), "the refusal carries the engine's Singular wording: {detail}");
-    let results = crate::fem3d_engine::fem3d_solve_all(&doc).expect("the synchronous path solves the same document");
+    let results = semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all(&doc).expect("the synchronous path solves the same document");
     assert!(results.contains_key("dead"), "the results window's path is not capped");
 }
 

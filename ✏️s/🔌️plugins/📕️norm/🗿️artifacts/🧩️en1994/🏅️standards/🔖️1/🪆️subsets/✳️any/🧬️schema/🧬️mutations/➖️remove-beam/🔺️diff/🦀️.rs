@@ -1,7 +1,7 @@
 //! Diff for `remove-beam`.
-use super::RemoveBeam;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994BeamsRows};
+use crate::remove_beam::RemoveBeam;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows};
 
 pub fn diff(payload: &RemoveBeam, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.index >= base.beams.len() {

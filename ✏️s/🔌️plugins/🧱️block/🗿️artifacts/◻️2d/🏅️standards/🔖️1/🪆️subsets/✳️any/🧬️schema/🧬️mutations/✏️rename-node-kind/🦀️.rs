@@ -1,8 +1,7 @@
 //! ✏️ Block2d mutation — `RenameNodeKind`: the node kind's identity `name` field.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// ✏️ `rename-node-kind` payload.
@@ -18,19 +17,19 @@ pub struct RenameNodeKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_node_kind(new_name: String) -> Block2dMutation {
-    Block2dMutation::RenameNodeKind(RenameNodeKind { new_name })
+pub fn rename_node_kind<Op: From<crate::rename_node_kind::RenameNodeKind>>(new_name: String) -> Op {
+    Op::from(RenameNodeKind { new_name })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameNodeKind {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for RenameNodeKind where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::rename_node_kind::RenameNodeKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "node-kind", kind: "rename-node-kind", record: "RenamedNodeKind" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::rename_node_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::rename_node_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameNodeKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

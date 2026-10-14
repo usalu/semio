@@ -15,6 +15,35 @@ pub mod bounds {
     mod component;
     pub use component::*;
 }
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
 //#endregion 🧩️Modules
 
 use crate::{bounds::object_count, bounds::scene_bounds, bounds::vertex_count};
@@ -640,7 +669,7 @@ mod scene_compute {
     /// exact ambient-reach anti-pattern the ticket exists to remove even though it was write-once).
     /// Every call site already builds, uses and drops its handles within the one call that owns
     /// this kernel, so no cross-call registry was ever load-bearing.
-    pub(crate) fn cad_brep_kernel() -> Brep {
+    pub fn cad_brep_kernel() -> Brep {
         Brep::new()
     }
 
@@ -689,7 +718,7 @@ mod scene_compute {
     /// ([`object_mesh_data`]): the host-snapshot primitive an object names (moved onto the primitives' centroid, as
     /// [`align_mesh_to_host_snapshot_centroid`] moves the mesh), else its typology primitive — then placed by its
     /// instance's node transform (`world_instances_json`). What a STEP/OBJ/STL export writes is what the pane shows.
-    pub(crate) fn pane_world_solids(kernel: &mut Brep, objects: &[CadObject], geometry: Option<&CadGeometry>) -> Vec<GeometryHandle> {
+    pub fn pane_world_solids(kernel: &mut Brep, objects: &[CadObject], geometry: Option<&CadGeometry>) -> Vec<GeometryHandle> {
         let handles = geometry.map(|geometry| import_geometry_handles(kernel, geometry)).unwrap_or_default();
         objects
             .iter()
@@ -980,7 +1009,7 @@ mod scene_compute {
         typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
     }
 
-    pub(crate) fn object_scale_json(object: &CadObject) -> [f64; 3] {
+    pub fn object_scale_json(object: &CadObject) -> [f64; 3] {
         object.scale.unwrap_or([1.0, 1.0, 1.0])
     }
 

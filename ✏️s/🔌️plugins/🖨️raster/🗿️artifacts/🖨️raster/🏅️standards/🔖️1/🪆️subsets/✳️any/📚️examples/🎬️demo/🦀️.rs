@@ -1,6 +1,6 @@
 //! 📚️ Example `demo`.
 
-use crate::RasterImageAsset;
+use semio_s_artifact_raster_raster_model::RasterImageAsset;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

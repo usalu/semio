@@ -21,7 +21,7 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `Effect::LoadDocument`, see
-/// `editor::fem2d::reset_document_effect`).
+/// `reset_document_effect` (io)).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]

@@ -12,8 +12,8 @@
       "order": 0,
       "variant": "DocxEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor",
-      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor",
+      "type": "semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor",
+      "factory": "semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::create_docx_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "docx_editor",
@@ -25,8 +25,8 @@
       "order": 1,
       "variant": "DocxViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer",
-      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer",
+      "type": "semio_s_artifact_stdio_docx_base::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer",
+      "factory": "semio_s_artifact_stdio_docx_base::viewer::docx::standards::v_ecma_376::subsets::base::create_docx_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -35,8 +35,8 @@
       "order": 2,
       "variant": "DocxStrictEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor",
-      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor",
+      "type": "semio_s_artifact_stdio_docx_strict::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor",
+      "factory": "semio_s_artifact_stdio_docx_strict::editor::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "docx_strict_editor",
@@ -48,8 +48,8 @@
       "order": 3,
       "variant": "DocxStrictViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer",
-      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_viewer",
+      "type": "semio_s_artifact_stdio_docx_strict::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer",
+      "factory": "semio_s_artifact_stdio_docx_strict::viewer::docx::standards::v_ecma_376::subsets::strict::create_docx_strict_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -58,8 +58,8 @@
       "order": 4,
       "variant": "DocxTransitionalEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor",
-      "factory": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_editor",
+      "type": "semio_s_artifact_stdio_docx_transitional::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_docx_transitional::editor::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "docx_transitional_editor",
@@ -71,15 +71,22 @@
       "order": 5,
       "variant": "DocxTransitionalViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer",
-      "factory": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_viewer",
+      "type": "semio_s_artifact_stdio_docx_transitional::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_docx_transitional::viewer::docx::standards::v_ecma_376::subsets::transitional::create_docx_transitional_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
   "catalogPackage": null,
-  "symbolPackages": [],
+  "symbolPackages": [
+    "semio-s-artifact-stdio-docx-base",
+    "semio-s-artifact-stdio-docx-base-model",
+    "semio-s-artifact-stdio-docx-base-mutations",
+    "semio-s-artifact-stdio-docx-strict",
+    "semio-s-artifact-stdio-docx-strict-mutations",
+    "semio-s-artifact-stdio-docx-transitional"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-office",
@@ -121,18 +128,18 @@
   "mutationDescriptors": [
     {
       "name": "DocxMutation",
-      "snapshot": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
-      "mutation": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation"
+      "snapshot": "semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
+      "mutation": "semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation"
     },
     {
       "name": "DocxStrictMutation",
-      "snapshot": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
-      "mutation": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::strict::schema::mutations::DocxStrictMutation"
+      "snapshot": "semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
+      "mutation": "semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::DocxStrictMutation"
     },
     {
       "name": "DocxTransitionalMutation",
-      "snapshot": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
-      "mutation": "semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::transitional::schema::mutations::DocxTransitionalMutation"
+      "snapshot": "semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot",
+      "mutation": "semio_s_artifact_stdio_docx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::DocxTransitionalMutation"
     }
   ],
   "mutationCoordinates": [

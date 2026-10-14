@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "source": "original-request-owned-pack-borrow",
+  "output": "producer-selected-typed-snapshot",
+  "authority": "original-member-request-and-step-context",
+  "allocation": "original-concrete-open-body-and-input-receipts",
+  "refusal": "original-request-input-and-snapshot-paid-close"
+}

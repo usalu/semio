@@ -1,10 +1,10 @@
 use super::*;
-use crate::mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn create_character_style_appends_one_and_inverse_removes_it() {
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mutation = LayoutMutation::CreateCharacterStyle(CreateCharacterStyle { id: "character.emph".into(), name: Some("Emphasis".into()), index: None });
     let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("create applies");
     assert_eq!(next.character_styles.len(), 1);

@@ -101,7 +101,7 @@ fn generate_interactions_fixture() -> GenerateInteractionsFixture {
 fn every_window_declares_exactly_the_interaction_surface_the_table_names() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
-    let definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     for window in &fixture.windows {
         let kind = definition.window_kinds.iter().find(|kind| kind.id == window.id).unwrap_or_else(|| panic!("{} is not a declared window kind", window.id));
         assert_eq!(kind.body_key, window.body_key, "{}: body key drifted", window.id);
@@ -119,7 +119,7 @@ fn every_window_declares_exactly_the_interaction_surface_the_table_names() {
 fn the_two_previews_share_object_transforms_and_scope_component_edits() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
-    let definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     let surface = |id: &str| {
         let kind = definition.window_kinds.iter().find(|kind| kind.id == id).unwrap_or_else(|| panic!("{id} window kind"));
         for action in &fixture.component_editing.actions {
@@ -146,7 +146,7 @@ fn the_two_previews_share_object_transforms_and_scope_component_edits() {
 fn every_listed_command_keeps_its_declared_triggers() {
     let _serial = serial_execution::lock();
     let fixture = generate_interactions_fixture();
-    let definition = semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app();
+    let definition = semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app();
     let declared: std::collections::BTreeSet<&str> = declared_action_ids(&definition);
     for row in &fixture.command_triggers {
         assert!(declared.contains(row.command.as_str()), "{} is listed with triggers {:?} but is not a declared action", row.command, row.triggers);
@@ -184,7 +184,7 @@ async fn every_node_graph_sub_operation_the_table_names_changes_the_fixture() {
     let operations = serde_json::json!([{ "operation": "move", "gestureId": "node-drag:1", "nodeIds": [node_id], "dx": 12.5, "dy": -7.5 }]).to_string();
     crate::editor_domain::editor_laws::context::dispatch(
         &mut app,
-        semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand::NodeGraphEdit(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::node_graph_edit::NodeGraphEdit { operations_json: operations }),
+        semio_s_artifact_procedural_3d_editor::Generation3dCommand::NodeGraphEdit(semio_s_artifact_procedural_3d_node_graph_edit::NodeGraphEdit { operations_json: operations }),
     )
     .await;
     let landed = {
@@ -204,8 +204,8 @@ fn the_rename_bridge_reads_every_spelling_the_commit_can_arrive_under() {
     let fixture = generate_interactions_fixture();
     for spelling in &fixture.rename_commit_argument.guest_reads {
         let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", spelling.as_str(): "Balcony Study" }).into();
-        let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
-        let semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own row") };
+        let command = <semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
+        let semio_s_artifact_procedural_3d_editor::Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own row") };
         assert_eq!(payload.name, "Balcony Study", "the guest must read the rename text under `{spelling}`");
     }
 }

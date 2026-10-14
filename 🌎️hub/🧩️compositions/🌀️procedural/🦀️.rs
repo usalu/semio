@@ -7,15 +7,6 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
-//#region ✏️Editor
-/// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name
-/// `procedural::editor::generation3d::…` exactly as they name `cad::editor::cad::…` — same shape as
-/// 📐️cad/🏭️process/🪵️sourcing.
-pub mod editor {
-    pub use semio_s_artifact_procedural_generation3d::editor::*;
-}
-//#endregion ✏️Editor
-
 //#region 🧮️GuestHeapWitness
 //#endregion 🧮️GuestHeapWitness
 
@@ -23,10 +14,10 @@ pub mod editor {
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
     pub enum ProceduralApps: PluginApp {
-        Generation2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>>),
-        Generation2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>>),
-        Generation3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>>),
-        Generation3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>>),
+        Generation2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>>),
+        Generation2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>>),
+        Generation3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>),
+        Generation3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -91,15 +82,15 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
             semio_s_artifact_procedural_3d_mesh_bridge::generation3d_document_from_mesh,
         )?)
         .plugin_command(commands::list_flow_extensions_command(), Box::new(commands::list_flow_extensions))
-        .editor::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app())
-        .editor_mutation_roster::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>()
-        .viewer::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>(semio_s_artifact_procedural_generation2d::viewer::generation2d::create_generation2d_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_procedural_generation2d::viewer::generation2d::Generation2dViewer>()
-        .editor::<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>(semio_s_artifact_procedural_generation3d::editor::generation3d::create_generation3d_app())
-        .editor_mutation_roster::<semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp>()
-        .viewer::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>(semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation2d::artifact_kind().id })
+        .editor::<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>(semio_s_artifact_procedural_2d_editor::create_generation2d_app())
+        .editor_mutation_roster::<semio_s_artifact_procedural_2d_editor::Generation2dPlayApp>()
+        .viewer::<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>(semio_s_artifact_procedural_2d_viewer::create_generation2d_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_procedural_2d_viewer::Generation2dViewer>()
+        .editor::<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>(semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app())
+        .editor_mutation_roster::<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>()
+        .viewer::<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>(semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_procedural_3d_viewer::Generation3dViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_2d_model::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_3d_model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {

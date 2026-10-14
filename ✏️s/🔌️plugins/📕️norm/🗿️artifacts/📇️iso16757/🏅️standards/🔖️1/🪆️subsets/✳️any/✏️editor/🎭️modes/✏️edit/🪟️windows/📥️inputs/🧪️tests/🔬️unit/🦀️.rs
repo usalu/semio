@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::iso16757::unit_tests::context;
-use crate::Iso16757Snapshot;
+use crate::modes::edit::windows::inputs::*;
+use crate::unit_tests::context;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::TreeWindowRequest;
 use semio_framework_plugin::TreeWindows;
@@ -25,13 +25,13 @@ async fn renders_structured_or_windowed_document_editor() {
 #[test]
 fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
     let document = Iso16757Snapshot::default();
-    let root_id = crate::app_surface::inputs_section_id("");
-    let catalogue_id = crate::app_surface::inputs_section_id("catalogue");
-    let products_id = crate::app_surface::inputs_section_id("catalogue.products");
-    let dictionary_id = crate::app_surface::inputs_section_id("dictionary");
-    let subjects_id = crate::app_surface::inputs_section_id("dictionary.subjects");
-    let geometry_id = crate::app_surface::inputs_section_id("geometry");
-    let objects_id = crate::app_surface::inputs_section_id("geometry.objects");
+    let root_id = semio_s_plugin_norm_app_surface::inputs_section_id("");
+    let catalogue_id = semio_s_plugin_norm_app_surface::inputs_section_id("catalogue");
+    let products_id = semio_s_plugin_norm_app_surface::inputs_section_id("catalogue.products");
+    let dictionary_id = semio_s_plugin_norm_app_surface::inputs_section_id("dictionary");
+    let subjects_id = semio_s_plugin_norm_app_surface::inputs_section_id("dictionary.subjects");
+    let geometry_id = semio_s_plugin_norm_app_surface::inputs_section_id("geometry");
+    let objects_id = semio_s_plugin_norm_app_surface::inputs_section_id("geometry.objects");
     let catalogue_path = format!("{root_id}{TREE_WINDOW_PATH_SEPARATOR}{catalogue_id}");
     let products_path = format!("{catalogue_path}{TREE_WINDOW_PATH_SEPARATOR}{products_id}");
     let dictionary_path = format!("{root_id}{TREE_WINDOW_PATH_SEPARATOR}{dictionary_id}");
@@ -56,7 +56,7 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
     assert!(collapsed_json.contains("dictionary") || collapsed_json.contains("Dictionary"), "{collapsed_json}");
     assert!(collapsed_json.contains("geometry") || collapsed_json.contains("Geometry"), "{collapsed_json}");
 
-    let product_path = format!("{products_path}{TREE_WINDOW_PATH_SEPARATOR}{}", crate::app_surface::inputs_section_id("catalogue.products[id=product-cv]"));
+    let product_path = format!("{products_path}{TREE_WINDOW_PATH_SEPARATOR}{}", semio_s_plugin_norm_app_surface::inputs_section_id("catalogue.products[id=product-cv]"));
     let expanded_view = ViewModel {
         tree_windows: vec![
             TreeWindowRequest { body_key: BODY_INPUTS.into(), node_key: root_id, open: Some(true), offset: 0, rows: 16 },
@@ -80,9 +80,9 @@ fn full_default_snapshot_inputs_expose_catalogue_sections_within_slots() {
     assert!(expanded_json.contains("catalogue.products") && (expanded_json.contains("seriesId") || expanded_json.contains("series_id") || expanded_json.contains("product-cv")), "{expanded_json}");
 
     let mut tree = semio_framework_value::ToValue::to_value(&document);
-    crate::app_surface::set_value_at_path(&mut tree, "catalogue.products[id=product-cv].seriesId", semio_framework_value::DslValue::String("series-cv-edited".into())).expect("setField path");
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, "catalogue.products[id=product-cv].seriesId", semio_framework_value::DslValue::String("series-cv-edited".into())).expect("setField path");
     assert_eq!(
-        crate::app_surface::get_value_at_path(&tree, "catalogue.products[id=product-cv].seriesId").ok(),
+        semio_s_plugin_norm_app_surface::get_value_at_path(&tree, "catalogue.products[id=product-cv].seriesId").ok(),
         Some(&semio_framework_value::DslValue::String("series-cv-edited".into()))
     );
 }

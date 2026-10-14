@@ -15,8 +15,8 @@
 //! the hand-written base cases every derived impl bottoms out on.
 
 use super::{DslValue, Number, ValueError};
-use super::native_decoding::NativeDecodeControl;
-use super::native_encoding::NativeEncodeControl;
+use crate::native_decoding::NativeDecodeControl;
+use crate::native_encoding::NativeEncodeControl;
 #[path="🛬️controlled/🦀️.rs"]
 mod controlled;
 pub use controlled::DecodedValue;

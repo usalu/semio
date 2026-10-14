@@ -121,10 +121,10 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
 }
 
 async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut envelope = crate::os_store::document_materialize::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None);
+    let mut envelope = crate::os_store::document_materialize::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
+    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, crate::os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
     store.install_document_store_owners_exact(demo_closable_store_owners());
     store
 }

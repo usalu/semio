@@ -1,6 +1,6 @@
 //! 🎛️ `change-paint-layer-blend-mode` — sets a paint layer's compositing blend mode.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -17,13 +17,16 @@ pub struct ChangePaintLayerBlendMode {
     pub new_blend_mode: String,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLayerBlendMode {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for ChangePaintLayerBlendMode
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::change_paint_layer_blend_mode::ChangePaintLayerBlendMode>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "paint-layer", kind: "change-paint-layer-blend-mode", record: "ChangedPaintLayerBlendMode" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

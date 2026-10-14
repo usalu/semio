@@ -1,8 +1,7 @@
 //! 🖋 Block3d mutation — `RenameVortexKind`: a vortex-kind catalog row's `name`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🖋 `rename-vortex-kind` payload.
@@ -19,19 +18,19 @@ pub struct RenameVortexKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_vortex_kind(id: String, new_name: String) -> Block3dMutation {
-    Block3dMutation::RenameVortexKind(RenameVortexKind { id, new_name })
+pub fn rename_vortex_kind<Op: From<crate::rename_vortex_kind::RenameVortexKind>>(id: String, new_name: String) -> Op {
+    Op::from(RenameVortexKind { id, new_name })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for RenameVortexKind {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for RenameVortexKind where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::rename_vortex_kind::RenameVortexKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "vortex-kind", kind: "rename-vortex-kind", record: "RenamedVortexKind" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::rename_vortex_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::rename_vortex_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for RenameVortexKi
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -4,10 +4,39 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
-use crate::viewer::lowpoly::modes::view;
-use crate::viewer::lowpoly::modes::view::windows::model;
-use crate::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};
+extern crate semio_framework_os_kernel as protocol;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod view {
+        #[path = "🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod windows {
+            #[path = "🎭️modes/👁️view/🪟️windows/🌐️model/🦀️.rs"]
+            pub mod model;
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
+use crate::modes::view;
+use crate::modes::view::windows::model;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolySnapshot, snapshot::LOWPOLY_DIALECT, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -47,7 +76,7 @@ pub struct LowpolyViewer;
 
 impl ArtifactViewer for LowpolyViewer {
     type Snapshot = LowpolySnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
+    type Mutation = semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

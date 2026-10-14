@@ -1,0 +1,9 @@
+{
+  "resource": "catalog-law",
+  "retiredOwner": "r",
+  "heldOwner": "h",
+  "arrival": 1,
+  "pid": 1,
+  "requestedTimeouts": [0, 25],
+  "expected": {"examined": 2, "retired": 1, "heldPresent": true, "retiredPresent": false}
+}

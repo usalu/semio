@@ -31,8 +31,8 @@ mod runtime_close_budget_tests {
         (AtomicU8::new(0), AtomicU64::new(0))
     }
 
-    fn zero_progress() -> Option<crate::bounded_ownership::PluginLifecycleStep> {
-        Some(crate::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()))
+    fn zero_progress() -> Option<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep> {
+        Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress::default()))
     }
 
     #[test]
@@ -90,7 +90,7 @@ mod runtime_close_budget_tests {
     /// unable to ever reach `Retired`.
     #[test]
     fn pending_close_authority_waits_without_consuming_structural_close_credit() {
-        for progress in [crate::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" }, crate::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" }] {
+        for progress in [semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" }, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" }] {
             let stalled = AtomicU8::new(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT - 1);
             let since = AtomicU64::new(1);
             for tick in 0..1_024 {
@@ -117,12 +117,12 @@ mod runtime_close_budget_tests {
             for step in 0..u64::from(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT) {
                 let _ = runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1 + step));
             }
-            assert_eq!(runtime_close_stall_verdict(false, Some(crate::bounded_ownership::PluginLifecycleStep::Progress(receipt)), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
+            assert_eq!(runtime_close_stall_verdict(false, Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(receipt)), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
             assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);
         }
         let (stalled, since) = stall_state();
-        assert_eq!(runtime_close_stall_verdict(false, Some(crate::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
+        assert_eq!(runtime_close_stall_verdict(false, Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
         assert_eq!(stalled.load(Ordering::SeqCst), 0);
         assert_eq!(runtime_close_stall_verdict(false, zero_progress(), &stalled, &since, Some(1_000_000 + RUNTIME_CLOSE_STALL_CREDIT_US)).0, RuntimeCloseStatus::Ready);
     }
@@ -144,7 +144,7 @@ mod runtime_close_budget_tests {
     #[test]
     fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
         let stalled = AtomicU32::new(0);
-        let blocked = Some(crate::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" });
+        let blocked = Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason: "injected permanent external wait" });
         for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RuntimeMaintenanceStatus::Ready);
         }
@@ -155,7 +155,7 @@ mod runtime_close_budget_tests {
     #[test]
     fn exact_host_input_wait_resets_structural_live_cleanup_stall_credit() {
         let stalled = AtomicU32::new(RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT - 1);
-        let awaiting_input = Some(crate::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
+        let awaiting_input = Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" });
         for _ in 0..1_024 {
             assert_eq!(runtime_live_cleanup_nonterminal_status(false, awaiting_input, &stalled), RuntimeMaintenanceStatus::Ready);
         }
@@ -193,7 +193,7 @@ mod runtime_close_budget_tests {
                     unreachable!("undergrant called the original lifecycle owner")
                 }));
                 assert_eq!(called, 0);
-                assert!(matches!(result, Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
+                assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(owner.as_ref().unwrap().as_ptr(), pointer);
             }
@@ -202,12 +202,12 @@ mod runtime_close_budget_tests {
                 called += 1;
                 assert_eq!(actual, grant);
                 drop(owner.take());
-                Ok((crate::bounded_ownership::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
+                Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
             }));
             assert_eq!(called, fixture["maximumItems"].as_u64().unwrap() as usize);
             assert!(owner.is_none());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
-            assert!(matches!(result, Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent && progress.copied_bytes == 0 && progress.fits(grant)));
+            assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent && progress.copied_bytes == 0 && progress.fits(grant)));
             eprintln!("[DEBUG] actual runtime lifecycle originalExtent={extent} copyGrant={} capacityGrant={} releaseGrant={} called={called} heap={:?} terminalDrop=0", grant.maximum_copy_bytes, grant.maximum_capacity_bytes, grant.maximum_release_bytes, heap);
         }
         let extent = fixture["refusedAllocationBytes"].as_u64().unwrap() as usize;
@@ -218,7 +218,7 @@ mod runtime_close_budget_tests {
             work += 1;
             unreachable!("fixed original release grant was enlarged")
         }));
-        assert!(matches!(result, Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
+        assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)) if progress == RetainedCloneProgress::default()));
         assert_eq!(owner.as_ref().unwrap().as_ptr(), pointer);
         assert_eq!(work, fixture["refusedWorkItems"].as_u64().unwrap() as usize);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -226,9 +226,9 @@ mod runtime_close_budget_tests {
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| runtime_lifecycle_step(RetirementDemand { release_bytes: extent, depth: 1, ..Default::default() }, actual, |received| {
             assert_eq!(received, actual);
             drop(owner.take());
-            Ok((crate::bounded_ownership::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
+            Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }), owner.is_none()))
         }));
-        assert!(matches!(result, Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent));
+        assert!(matches!(result, Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress)) if progress.released_bytes == extent));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
         eprintln!("[DEBUG] actual runtime lifecycle one-below release originalPointer retained0heap; independently admitted exact release={extent} physical={}", heap.released_bytes);
     }
@@ -237,7 +237,7 @@ mod runtime_close_budget_tests {
     fn every_actual_progress_currency_resets_close_and_live_stall_credit() {
         for receipt in [RetainedCloneProgress { copied_items: 1, ..Default::default() }, RetainedCloneProgress { copied_bytes: 1, ..Default::default() }, RetainedCloneProgress { retained_capacity_bytes: 1, ..Default::default() }, RetainedCloneProgress { released_bytes: 1, ..Default::default() }] {
             let (stalled, since) = (AtomicU8::new(RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT), AtomicU64::new(1));
-            let progress = Some(crate::bounded_ownership::PluginLifecycleStep::Progress(receipt));
+            let progress = Some(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(receipt));
             assert_eq!(runtime_close_stall_verdict(false, progress, &stalled, &since, Some(1_000_000)), (RuntimeCloseStatus::Ready, 0));
             assert_eq!(stalled.load(Ordering::SeqCst), 0);
             assert_eq!(since.load(Ordering::SeqCst), 0);

@@ -47,7 +47,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
-    let mut store = crate::host::owned::new_forms_store(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    let mut store = crate::host::owned::new_forms_store(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::mutations::create_step::mutation::CreateStep { step, index: None })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

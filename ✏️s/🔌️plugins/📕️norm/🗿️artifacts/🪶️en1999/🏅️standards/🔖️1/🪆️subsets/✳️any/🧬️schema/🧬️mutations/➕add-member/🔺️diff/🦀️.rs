@@ -1,8 +1,8 @@
 //! 🔺️ `add-member` diff.
 
-use crate::mutations::add_member::AddMember;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999MembersRows};
+use crate::add_member::AddMember;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999MembersRows};
 
 pub fn diff(payload: &AddMember, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if base.members.iter().any(|existing| existing.id == payload.member.id) {

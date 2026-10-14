@@ -6,7 +6,9 @@
 
 use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view;
 use crate::viewer::pptx::standards::v_ecma_376::subsets::base::modes::view::windows::main;
-use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -67,7 +69,7 @@ impl ArtifactViewer for PptxViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PptxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
+        semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `PptxViewCommand::Noop` variant never carries a config

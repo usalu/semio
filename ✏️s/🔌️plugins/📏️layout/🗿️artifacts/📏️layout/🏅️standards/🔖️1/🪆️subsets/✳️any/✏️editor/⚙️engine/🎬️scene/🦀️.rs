@@ -11,10 +11,11 @@
 //! `compose_svg_from_drawing`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
-use crate::standards::v1::subsets::any::io::LayoutError;
-use crate::standards::v1::subsets::any::schema::{resolve_page};
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_layout_document};
-use crate::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
+use semio_s_artifact_layout_layout_model::LayoutError;
+use semio_s_artifact_layout_layout_model::resolve_page;
+use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire2_codec::parse_layout_document;
+use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds, LayoutRect, Page, ParagraphStyle, TextStory};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_canvas::camera::{self, Camera, Viewport};
 use semio_framework_canvas::{Affine, BezPath, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 #[cfg(test)]
@@ -929,7 +930,6 @@ fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnap
 }
 
 
-
 fn story_run_glyphs(engine: &mut LayoutEngine, doc: &LayoutSnapshot, story: &TextStory, paragraph: &ParagraphStyle, frame_width: f32, frame_height: f32, base_x: f32, base_y: f32) -> Vec<DisplayGlyph> {
     let mut pen = 0.0;
     let mut glyphs = Vec::new();
@@ -1237,7 +1237,13 @@ pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f
 
 //#region 📤️Export
 #[cfg(test)]
-pub use crate::editor::layout::engine::export::{export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch};
+#[cfg(test)] use semio_s_artifact_layout_layout_engine_export::export_document_pdf_headless_batch;
+#[cfg(test)]
+#[cfg(test)] use semio_s_artifact_layout_layout_engine_export::export_document_png_headless_batch;
+#[cfg(test)]
+#[cfg(test)] use semio_s_artifact_layout_layout_engine_export::export_document_svg_headless_batch;
+#[cfg(test)]
+#[cfg(test)] use semio_s_artifact_layout_layout_engine_export::export_package_zip_headless_batch;
 //#endregion 📤️Export
 
 //#region 🧪️Tests

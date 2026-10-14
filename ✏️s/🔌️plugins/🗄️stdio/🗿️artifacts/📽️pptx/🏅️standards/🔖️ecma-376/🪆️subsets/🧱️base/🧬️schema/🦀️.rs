@@ -1,12 +1,10 @@
 //! 🧬️ PptxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{PptxPresentation, PptxXmlPart};
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxPresentation, PptxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
-#[path = "🏗️construction/🦀️.rs"]
-pub mod construction;
 
 //#region Artifact
 /// 🧬️ Full `stdio.pptx` artifact state.
@@ -46,36 +44,6 @@ impl PptxArtifact {
 //#endregion Conversions
 
 //#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.pptx`.
-pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.stdio.pptx",
-        artifact: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
-        },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 
@@ -102,7 +70,7 @@ pub fn blank_pptx_snapshot() -> PptxSnapshot {
 /// asserted equal by `fixture_honesty_law` below) — same shape docx's own `demo_docx_snapshot()`
 /// establishes.
 pub async fn demo_pptx_snapshot() -> PptxSnapshot {
-    use crate::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxRun, PptxShape, PptxSlide, PptxTransform};
     use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
         let presentation = PptxPresentation {
         slides: vec![
@@ -155,9 +123,6 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[path="🏷️vocabulary/🦀️.rs"]

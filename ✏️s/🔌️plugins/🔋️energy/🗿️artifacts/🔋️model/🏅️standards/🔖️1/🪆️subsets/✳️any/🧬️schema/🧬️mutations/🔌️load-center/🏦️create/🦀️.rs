@@ -1,8 +1,7 @@
 //! 🏦️ Energy model mutation — `CreateElectricalLoadCenter`: Adds one electrical load centre — the node that sums on-site generation and storage against the building's electrical demand. `pvIds` and `batteryIds` are checked against the document; `generatorIds` is carried verbatim and NOT checked, because `Model` has no generator collection for it to reference (vocabulary §5.4), which is also why this group ships no `add-electrical-load-center-generator`.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -21,19 +20,22 @@ pub struct CreateElectricalLoadCenter {
     pub battery_ids: Vec<crate::model::EntityId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_electrical_load_center(index: u32, id: crate::model::EntityId, name: String, generator_ids: Vec<crate::model::EntityId>, pv_ids: Vec<crate::model::EntityId>, battery_ids: Vec<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateElectricalLoadCenter(CreateElectricalLoadCenter { index, id, name, generator_ids, pv_ids, battery_ids })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_electrical_load_center<Op: From<CreateElectricalLoadCenter>>(index: u32, id: crate::model::EntityId, name: String, generator_ids: Vec<crate::model::EntityId>, pv_ids: Vec<crate::model::EntityId>, battery_ids: Vec<crate::model::EntityId>) -> Op {
+    CreateElectricalLoadCenter { index, id, name, generator_ids, pv_ids, battery_ids }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateElectricalLoadCenter {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateElectricalLoadCenter
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateElectricalLoadCenter> + From<crate::DeleteElectricalLoadCenter>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "electrical-load-center", kind: "create-electrical-load-center", record: "CreatedElectricalLoadCenter" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -14,6 +14,14 @@ name = "semio-procedural-mutation-bridge"
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-procedural-2d-mutations = { path = "../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-2d-model = { path = "../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-2d-editor-transient = { path = "../🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-viewer-transient = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-viewer-presence = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-viewer-config = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-editor-transient = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-editor-config = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-mutations = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-model = { path = "../🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

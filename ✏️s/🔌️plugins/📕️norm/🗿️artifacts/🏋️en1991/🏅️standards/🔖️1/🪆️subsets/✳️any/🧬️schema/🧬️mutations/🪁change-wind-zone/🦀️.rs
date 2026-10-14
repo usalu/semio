@@ -1,6 +1,6 @@
 //! ️ `change-wind-zone`.
 
-use crate::{En1991Mutation, En1991Snapshot};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +13,7 @@ pub struct ChangeWindZone {
     pub new_wind_zone: u8,
 }
 
-impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWindZone {
+impl<Op> protocol::MutationKind<En1991Snapshot, Op> for ChangeWindZone where Op: protocol::Mutation<En1991Snapshot, Diff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::change_wind_zone::ChangeWindZone> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "wind-zone",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWindZone {
         record: "ChangedWindZone",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+        crate::change_wind_zone::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_wind_zone::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWindZone {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -12,12 +12,12 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/stdio-mp3:build",
-    "check": "bun repo run @semio-tech/stdio-mp3:check",
-    "test": "bun repo run @semio-tech/stdio-mp3:test",
-    "metadata-source": "bun repo run @semio-tech/stdio-mp3:metadata-source",
-    "metadata-native": "bun repo run @semio-tech/stdio-mp3:metadata-native",
-    "metadata-oracle": "bun repo run @semio-tech/stdio-mp3:metadata-oracle"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:test",
+    "metadata-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:metadata-source",
+    "metadata-native": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:metadata-native",
+    "metadata-oracle": "bun --cwd \"../../../../../../..\" repo run @semio-tech/stdio-mp3:metadata-oracle"
   },
   "exports": {
     ".": {

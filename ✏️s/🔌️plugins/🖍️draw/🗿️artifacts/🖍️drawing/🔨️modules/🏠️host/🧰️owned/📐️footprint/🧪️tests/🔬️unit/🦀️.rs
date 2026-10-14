@@ -6,7 +6,8 @@ use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant
 
 #[test]
 fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes() {
-    use super::super::{DrawingDuplicateRewriteAuthority, initial_snapshot_clone_grant};
+    use semio_s_artifact_draw_drawing_host_digest::DrawingDuplicateRewriteAuthority;
+    use super::super::initial_snapshot_clone_grant;
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let retained = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize);
     for partial in law["cancelAt"].as_array().unwrap() {

@@ -14,7 +14,10 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
-        "forwardAllArgs": true
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
       },
       "cache": false,
       "continuous": true,
@@ -27,13 +30,26 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
+        "command": "bun ../../🏗️builder/🏃️execution/📜️script.ts build",
+        "forwardAllArgs": false
       },
       "cache": false,
       "outputs": [
-        "{workspaceRoot}/dist/{options.env.SEMIO_BUILD_MODE}/repo-coordinator/next"
-      ]
+        "{workspaceRoot}/.cache/b/p/m/next/{options.env.SEMIO_BUILD_MODE}/out"
+      ],
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     },
     "start": {
       "executor": "repo:script",
@@ -47,7 +63,20 @@
       "outputs": [],
       "dependsOn": [
         "build"
-      ]
+      ],
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

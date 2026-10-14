@@ -1,0 +1,82 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 3d artifact"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d-diff = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-catalog = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-object = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-pose = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-reference = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-selection = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[features]
+testing = ["dep:serde", "semio-s-artifact-puzzle-3d-model/testing", "semio-s-artifact-puzzle-3d-mutations-catalog/testing", "semio-s-artifact-puzzle-3d-mutations-object/testing", "semio-s-artifact-puzzle-3d-mutations-pose/testing", "semio-s-artifact-puzzle-3d-mutations-reference/testing", "semio-s-artifact-puzzle-3d-mutations-selection/testing", "semio-s-artifact-puzzle-3d-mutations-volume/testing", "semio-s-artifact-puzzle-3d-mutations-vortex/testing"]
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-catalog = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-object = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-pose = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-reference = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-selection = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true, features = ["testing"] }
+semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true, features = ["testing"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[[test]]
+name = "scenes-object"
+path = "../../🧊️object/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-pose"
+path = "../../🧭️pose/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-vortex"
+path = "../../🌀️vortex/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-volume"
+path = "../../🌍️volume/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-reference"
+path = "../../🖼️reference/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-catalog"
+path = "../../📚️catalog/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "scenes-selection"
+path = "../../✋️selection/🧪️tests/🦀️.rs"

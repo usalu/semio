@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, readFileSync,mkdtempSync,rmSync,writeFileSync } from "node:fs";
+import { join, relative,dirname,resolve,posix,win32 } from "node:path";
+import {pathToFileURL} from "node:url";
 import ts from "typescript";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
-import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
+import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata,readStdioArtifactBuildGraphPin } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
+import Ajv from "ajv";
+import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
 
 type CommandOwnership = Readonly<{
+  packageRouting:readonly Readonly<{platform:"posix"|"win32";root:string;package:string;script:string;target:string;accepted:boolean}>[];
   owners: readonly Readonly<{ id: string; path: string; exports: readonly string[] }>[];
   routers: readonly Readonly<{ id: "root" | "composition-package"; path: string; defaultCommand: string; commands: readonly string[] }>[];
   artifactDefinitions: readonly string[];
@@ -65,8 +69,16 @@ export async function testStdioArtifactPackageContract(repoRoot: string): Promis
 
 /** 🕸️ Compares declared artifact dependencies with Cargo metadata and the portable build graph. */
 export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
+  verifyStdioBuildGraphPinFixtures(repoRoot);
   const contract = stdioArtifactPackageContract(repoRoot);
   await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+}
+
+/** 📌️ Checks exact-pin admission and changed-byte refusal against independent schema and SHA oracles. */
+export function verifyStdioBuildGraphPinFixtures(repoRoot:string):void{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;assert(artifacts,"Original Stdio pin fixture artifacts required");const root=mkdtempSync(join(artifacts,"sp-")),path=join(root,"graph.json"),fixture=readStdioJson(join(repoRoot,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph/📌️pin.json")),validate=new Ajv({strict:true}).compile(pinSchema);
+ try{for(const row of fixture.cases){const source=row.change==="malformed-json"?"{":JSON.stringify(row.change==="invalid-graph"?{version:0}:fixture.graph);writeFileSync(path,source);const digest=new Bun.CryptoHasher("sha256").update(source).digest("hex"),publication:{path?:string;digest?:string}={path,digest};if(row.change==="missing-path")delete publication.path;if(row.change==="missing-digest")delete publication.digest;if(row.change==="relative-path")publication.path="graph.json";if(row.change==="invalid-digest")publication.digest="invalid";if(row.change==="changed-bytes")writeFileSync(path,source+" ");assert.equal(validate(publication),row.schemaAccepted,row.name);const environment={SEMIO_BUILD_GRAPH_PATH:publication.path,SEMIO_BUILD_GRAPH_DIGEST:publication.digest};if(row.accepted)assert.deepEqual(readStdioArtifactBuildGraphPin(environment),fixture.graph);else assert.throws(()=>readStdioArtifactBuildGraphPin(environment),undefined,row.name);}
+ }finally{rmSync(root,{recursive:true,force:true});}console.log(`[stdio-package-contract] immutable pin fixtures=${fixture.cases.length} independentSchemaAndSha=true`);
 }
 
 /** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, build inputs and package scripts to the command-ownership contract. */
@@ -95,14 +107,16 @@ export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot())
   const manifest = readStdioJson(join(repoRoot, fixture.registration.packagePath)) as JsonMap;
   assert.equal(project.name, fixture.registration.projectName);
   for (const [set, name] of Object.entries(STDIO_NAMED_INPUTS)) assert.deepEqual(project.namedInputs?.[name], fixture.inputs[set as keyof CommandOwnership["inputs"]], `named input ${name}`);
+  const owner=join(repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"),{parseArgsStringToArgv}=await import(pathToFileURL(await Bun.resolve("string-argv",owner)).href),packageDirectory=dirname(join(repoRoot,fixture.registration.packagePath));
+  const routing=(script:string,directory:string,workspace:string,target:string,paths:Pick<typeof posix,"resolve">)=>{const argv=parseArgsStringToArgv(script);assert.deepEqual(argv.slice(0,2),["bun","--cwd"]);assert.equal(paths.resolve(directory,argv[2]!),paths.resolve(workspace));assert.deepEqual(argv.slice(3),["repo","run",target]);};
+  for(const row of fixture.packageRouting){const check=()=>routing(row.script,row.package,row.root,row.target,row.platform==="win32"?win32:posix);if(row.accepted)check();else assert.throws(check);}
   const compositionRouter = fixture.routers.find((router) => router.id === "composition-package")!;
   for (const command of compositionRouter.commands) {
     const set = STDIO_COMMAND_INPUTS[command];
     assert(set, `stdio command ${command} declares no input set`);
     assert(project.targets?.[command]?.inputs?.includes(STDIO_NAMED_INPUTS[set]), `target ${command} does not hash ${STDIO_NAMED_INPUTS[set]}`);
     assert.equal(project.targets[command].options?.command, `bun ./📜️script.ts ${command}`);
-    const invocation = `bun repo run ${fixture.registration.projectName}:${command}`;
-    assert.equal(manifest.scripts?.[command], invocation, `package script ${command}`);
+    routing(manifest.scripts?.[command],packageDirectory,repoRoot,`${fixture.registration.projectName}:${command}`,{resolve});
   }
   console.log(`[stdio-command-ownership] owners=${fixture.owners.length} routers=${fixture.routers.length} artifacts=${fixture.artifactDefinitions.length} commands=${compositionRouter.commands.length}`);
 }

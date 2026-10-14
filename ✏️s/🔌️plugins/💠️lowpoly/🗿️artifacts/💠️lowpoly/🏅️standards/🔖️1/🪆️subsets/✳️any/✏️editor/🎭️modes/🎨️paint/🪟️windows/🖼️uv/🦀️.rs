@@ -1,12 +1,12 @@
 //! 🖼️ Lowpoly play app — the UV window: the 2D UV-canvas paint surface. Only the paint operations it
 //! shares with the Model window are scoped here (no mesh-editing/transform ops).
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::LowpolyView;
-use crate::editor::lowpoly::lowpoly_window_measures;
-use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::LowpolyView;
+use crate::lowpoly_window_measures;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;
 
@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ The live chrome measures for this window — identical set to the Model window (see the master
 /// ticket's TEMPLATE.md §12.2 shared-options pattern).
 pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
-    lowpoly_window_measures(config, labels, &crate::editor::lowpoly::options::select::SelectState::default())
+    lowpoly_window_measures(config, labels, &semio_s_artifact_lowpoly_lowpoly_options::select::SelectState::default())
 }
 //#endregion 🔖️Definition
 
@@ -57,7 +57,7 @@ pub fn window_measures(config: &LowpolyConfig, labels: &LowpolyLabels) -> Vec<Wi
 const LOWPOLY_UV_LAYERS_BUDGET_BYTES: usize = 26 * 1024;
 
 fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_cache: &HashMap<String, String>) -> String {
-    use crate::editor::lowpoly::view::resolve_active_object_id;
+    use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;
     let object_id = doc.active_object_id().to_string();
     let object_id = if object_id.is_empty() { resolve_active_object_id(view.snapshot, view.config) } else { object_id };
     let scale = LOWPOLY_PAINT_TEXTURE_SIZE as f64;
@@ -113,7 +113,4 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, texture_c
 //#endregion 🔖️Scene
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

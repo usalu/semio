@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ReplaceDailyScheduleHourlyValues` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, Rows, ScheduleSetPatch, Slots};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, DailySchedulePatch, ModelPatch, ScheduleSetPatch};
+use crate::diff_patch::{Rows, Slots};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceDailyScheduleHourlyValues, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

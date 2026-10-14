@@ -1,15 +1,13 @@
 //! ⚖️ EN 1997 compliance numeric tests + Python oracle parity + remedy laws.
 
-use crate::app_surface::{get_value_at_path, parse_path};
-use crate::document::{AnnexChoice, CheckStatus};
+use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
 use semio_framework_value::ToValue;
-use crate::standards::v1::subsets::any::schema::{
-    check_project, part_1, part_2, parse_design_approach, resolve_params, DesignApproach,
-};
-use crate::standards::v1::subsets::any::schema::inferences::outline::En1997Outline;
-use crate::standards::v1::subsets::any::schema::snapshot::{compliant_demo, noncompliant_demo};
-use crate::standards::v1::subsets::any::io::text::snapshot::{decode_en1997_dsl};
-use crate::En1997Snapshot;
+use semio_s_artifact_norm_en1997_checks::{check_project, part_1, part_2, parse_design_approach, resolve_params, DesignApproach};
+use semio_s_artifact_norm_en1997_inferences::outline::En1997Outline;
+use semio_s_artifact_norm_en1997_model::{compliant_demo, noncompliant_demo};
+use semio_s_artifact_norm_en1997_io::text::snapshot::decode_en1997_dsl;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -160,7 +158,7 @@ fn pile_correlation_n2() {
 
 #[test]
 fn investigation_depth_rule() {
-    assert!((crate::standards::v1::subsets::any::schema::part_2::min_investigation_depth_m(2.5) - 7.5).abs() < 1e-9);
+    assert!((semio_s_artifact_norm_en1997_checks::part_2::min_investigation_depth_m(2.5) - 7.5).abs() < 1e-9);
 }
 
 #[test]
@@ -259,7 +257,7 @@ fn settlement_remedy_targets_governing_layer_id_path() {
 
 #[test]
 fn field_meta_enum_choices_are_localized() {
-    use crate::standards::v1::subsets::any::schema::lookup_field_meta;
+    use semio_s_artifact_norm_en1997_checks::lookup_field_meta;
     let meta = lookup_field_meta("designSituation").expect("meta");
     let choices = meta.choices.expect("choices");
     assert!(choices.iter().any(|c| c.value == "bsP" && c.label_de.contains("BS-P")));
@@ -493,14 +491,12 @@ fn split_id_field(rest: &str) -> (&str, &str) {
     (id, field)
 }
 
-
 fn split_index_field(rest: &str) -> (usize, &str) {
     let close = rest.find(']').expect("]");
     let idx: usize = rest[..close].parse().expect("index");
     let field = rest[close + 1..].trim_start_matches('.');
     (idx, field)
 }
-
 
 #[test]
 fn groundwater_level_changes_bearing_utilization() {
@@ -549,7 +545,7 @@ fn noncompliant_dsl_asset_has_multiple_fails() {
 
 #[test]
 fn default_snapshot_editable_leaves_have_meta() {
-    use crate::standards::v1::subsets::any::schema::lookup_field_meta;
+    use semio_s_artifact_norm_en1997_checks::lookup_field_meta;
     let snap = compliant_demo();
     let value = serde_json::to_value(&snap).expect("json");
     let mut missing = Vec::new();
@@ -628,8 +624,6 @@ fn bishop_slices_uses_slope_length_and_gwl() {
     };
     assert!((fos_a - fos_b).abs() > 1e-6 || doc.slopes[0].length > 0.0, "Bishop must consume length/GWL; fos_a={fos_a} fos_b={fos_b}");
 }
-
-
 
 #[test]
 fn undrained_cu_bearing_and_sliding_can_fail_with_remedies() {
@@ -723,15 +717,13 @@ fn wall_concrete_gamma_changes_sliding_vertical_action() {
     assert!((u_light - u_heavy).abs() > 1e-6, "γ_c must change wall sliding; light={u_light} heavy={u_heavy}");
 }
 
-
-
 #[test]
 fn phi_investigation_correlation_numeric() {
     let cpt = part_2::phi_from_cpt_deg(8_000_000.0, 76_000.0);
     let spt = part_2::phi_from_spt_deg(18.0);
     assert!((cpt - 42.0).abs() < 0.05, "CPT φ′={cpt}");
     assert!((spt - 32.325).abs() < 0.05, "SPT φ′={spt}");
-    let layer = crate::SoilLayer {
+    let layer = semio_s_artifact_norm_en1997_model::SoilLayer {
         id: "t".into(),
         soil_type: "sand".into(),
         depth_top: 0.0,
@@ -864,13 +856,11 @@ fn typed_facets_have_no_unknown_and_match_rust_fields() {
     assert!(proto.contains("SoilLayer") && proto.contains("SpreadFoundation"), "proto facet drift");
 }
 
-
-
 #[test]
 fn perturb_every_editable_leaf_changes_some_check() {
     let base = compliant_demo();
     let base_report = check_project(&base);
-    fn sig(report: &crate::document::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
+    fn sig(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
         report
             .checks
             .iter()

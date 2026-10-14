@@ -158,6 +158,7 @@
       {"execution":{"commands":["printf changed-form"]}}
     ]
   },
+  "controlWait": {"originalBudgetMilliseconds":200,"resource":"bazel-snapshot-restore","progress":["publish:start","publish:end","yield"],"consumerStarted":false},
   "moduleSetup": {
     "receipt": {
       "version": 1,

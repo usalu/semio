@@ -1,7 +1,7 @@
 //! 📇️ Authored ISO catalogue, dictionary and CSG entity projection.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::Iso16757Snapshot;
-use crate::{Names,CatalogueUnit,CatalogueValue,NullState,part_1,part_2,part_4,part_5};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_model::{Names, CatalogueUnit, CatalogueValue, NullState, part_1, part_2, part_4, part_5};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,artifact::{Cell,FloatColumn,RowWriter as Projection}};
 fn insert_ieee754(p:&mut Projection<'_,'_>,table:&str,cells:&[Cell<'_>],columns:&[FloatColumn])->Result<i64,ValueError>{p.insert_float(table,cells,columns)}
 const UNIT:&[FloatColumn]=&[FloatColumn::Binary64(6)];
@@ -79,7 +79,7 @@ impl<'a> Reader<'a>{
  fn ordered(&mut self,table:&'static str,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>, ValueError>{let rows=self.groups.remove(&(table,parent)).unwrap_or_default();let mut sorted=BTreeMap::new();for(n,r)in rows.into_iter().enumerate(){checkpoint(c,n,0)?;let ordinal=usize::try_from(r.integer(2)?).map_err(|e| invalid(e.to_string()))?;if sorted.insert(ordinal,r).is_some(){return Err(invalid("ISO repeated ordinal"));}}let mut out=Vec::new();for(n,(ordinal,r))in sorted.into_iter().enumerate(){checkpoint(c,n,0)?;if ordinal!=n{return Err(invalid("ISO ordinals must be dense"));}self.take(table,r.rowid)?;out.push(r);}Ok(out)}
  fn finish(&self)->Result<(), ValueError>{if self.tables.values().any(|rows|!rows.is_empty()){return Err(invalid("ISO unowned or dangling entity"));}Ok(())}
 }
-fn read_names(reader:&mut Reader<'_>,id:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Names, ValueError>{let r=reader.take("iso16757_names",id)?;let mut alternatives=Vec::new();for a in reader.ordered("iso16757_name_alternative",id,c)?{checkpoint(c,alternatives.len(),0)?;alternatives.push(crate::LocalizedText{locale:text(a,3,c)?,text:text(a,4,c)?});}Ok(Names{preferred:crate::LocalizedText{locale:text(r,1,c)?,text:text(r,2,c)?},short_name:optional_text(r,3,c)?,alternatives})}
+fn read_names(reader:&mut Reader<'_>,id:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Names, ValueError>{let r=reader.take("iso16757_names",id)?;let mut alternatives=Vec::new();for a in reader.ordered("iso16757_name_alternative",id,c)?{checkpoint(c,alternatives.len(),0)?;alternatives.push(semio_s_plugin_norm_compliance::LocalizedText{locale:text(a,3,c)?,text:text(a,4,c)?});}Ok(Names{preferred:crate::LocalizedText{locale:text(r,1,c)?,text:text(r,2,c)?},short_name:optional_text(r,3,c)?,alternatives})}
 fn read_unit(reader:&mut Reader<'_>,id:i64,c:&mut SqliteSnapshotControl<'_>)->Result<CatalogueUnit, ValueError>{let r=reader.take("iso16757_unit",id)?;Ok(CatalogueUnit{symbol:text(r,1,c)?,dimension:crate::DimensionSignature{length:i8::try_from(r.integer(2)?).map_err(|e| invalid(e.to_string()))?,mass:i8::try_from(r.integer(3)?).map_err(|e| invalid(e.to_string()))?,time:i8::try_from(r.integer(4)?).map_err(|e| invalid(e.to_string()))?,temperature:i8::try_from(r.integer(5)?).map_err(|e| invalid(e.to_string()))?},si_factor:r.real(6)?})}
 fn read_optional_unit(reader:&mut Reader<'_>,r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<Option<CatalogueUnit>, ValueError>{if r.is_null(i)?{Ok(None)}else{Ok(Some(read_unit(reader,r.integer(i)?,c)?))}}
 fn retire_values(values:impl IntoIterator<Item=CatalogueValue>){let mut stack:Vec<_>=values.into_iter().collect();while let Some(v)=stack.pop(){if let CatalogueValue::List{items}=v{stack.extend(items);}}}
@@ -141,7 +141,7 @@ pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Iso
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Iso16757Snapshot{
  
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {crate::sqlite::snapshot::semantic_cells::admit_record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   admit_typed(self,c,SqliteSnapshotPhase::EncodeNative)?;
@@ -159,8 +159,4 @@ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,c)}
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(d,c)}
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

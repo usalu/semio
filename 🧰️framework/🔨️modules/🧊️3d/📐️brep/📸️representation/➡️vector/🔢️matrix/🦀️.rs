@@ -14,7 +14,7 @@ use semio_framework_3d_brep_polynomial::solve_cubic;
 
 /// 🧭️ A 3×3 matrix in row-major order, used for rotations and normal-transform cofactors.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Mat3 {
     pub rows: [[f64; 3]; 3],
 }
@@ -108,7 +108,7 @@ impl Mat3 {
 
 /// 🧭️ A unit quaternion `(w, x, y, z)` representing a pure rotation.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Quat {
     pub w: f64,
     pub x: f64,
@@ -221,7 +221,7 @@ impl Quat {
 /// Deliberately excludes shear/non-uniform scale so analytic surfaces stay analytic after any
 /// transform the kernel applies.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Trsf {
     pub rotation: Quat,
     pub translation: Vec3,
@@ -284,7 +284,7 @@ impl Trsf {
 /// decide whether a curve/surface can stay in its own analytic representation or must convert to
 /// NURBS to stay exact.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Affine3 {
     pub linear: Mat3,
     pub translation: Vec3,
@@ -435,7 +435,7 @@ impl Affine3 {
 
 /// 🧭️ A right-handed orthonormal frame: origin plus three unit axes with `z = x × y`.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Frame3 {
     pub origin: Pnt3,
     pub x: Vec3,

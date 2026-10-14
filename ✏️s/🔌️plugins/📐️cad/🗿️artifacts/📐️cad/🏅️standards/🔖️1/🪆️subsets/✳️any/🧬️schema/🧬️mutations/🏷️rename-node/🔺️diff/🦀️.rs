@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameNode`.
 use super::RenameNode;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadNodesDelta};
-use semio_s_artifact_cad_cad_model::diff::CadNodePatch;
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadNodesDelta};
+use semio_s_artifact_cad_cad_model_diff::CadNodePatch;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff

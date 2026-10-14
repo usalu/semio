@@ -1,7 +1,10 @@
 //! 🔺️ Sparse diff for `ReplaceSynapse`, built directly from `(payload, base)`.
 use super::ReplaceSynapse;
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dSynapseModification, Generation2dSynapsesDelta, Generation2dSynapsePatch};
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dSynapseModification;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dSynapsesDelta;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dSynapsePatch;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

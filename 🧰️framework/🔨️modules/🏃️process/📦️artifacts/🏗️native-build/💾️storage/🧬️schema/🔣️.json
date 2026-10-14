@@ -167,6 +167,20 @@
         }
       ]
     },
+    "ImageMaintenanceRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "wait"],
+      "properties": {"version": {"const": 1}, "wait": {"type": "boolean"}}
+    },
+    "ImageMaintenanceResult": {
+      "description": "Every maintenance result declares whether its receiver remains usable or has released its original image custody.",
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver"], "properties": {"acquired": {"const": false}, "receiver": {"const": "released"}}},
+        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver", "value"], "properties": {"acquired": {"const": true}, "receiver": {"const": "released"}, "value": {}}},
+        {"type": "object", "additionalProperties": false, "required": ["acquired", "receiver", "value"], "properties": {"acquired": {"const": true}, "receiver": {"const": "retained"}, "value": {}}}
+      ]
+    },
     "ImageRequest": {
       "type": "object",
       "additionalProperties": false,
@@ -197,7 +211,9 @@
         "mountDirectory": "m",
         "journalCheckpointBytes": 524288,
         "journalCheckpointFile": "storage-checkpoint.jsonl",
-        "journalProjectionCacheEntries": 8
+        "journalProjectionCacheEntries": 8,
+        "informationMaximumBytes": 1048576,
+        "informationMaximumLines": 32768
       }
     },
     "ImageReceipt": {

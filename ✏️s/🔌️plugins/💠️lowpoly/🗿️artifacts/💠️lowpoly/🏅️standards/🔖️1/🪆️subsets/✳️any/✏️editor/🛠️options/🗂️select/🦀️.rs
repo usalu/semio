@@ -7,10 +7,10 @@
 //! `window_measures_with_request_context` threads the live `InteractionView`, so every toggle's `pressed`
 //! IS the mesh domain's current granularity / selection mode (`SelectState`).
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::lowpoly_window_action;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_plugin::WindowMeasure;

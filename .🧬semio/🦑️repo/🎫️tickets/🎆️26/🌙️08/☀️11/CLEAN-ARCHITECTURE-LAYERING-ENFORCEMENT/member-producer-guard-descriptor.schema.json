@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:ticket:member-producer-guard-preparation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "roles",
+    "extension"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "os/store/member-producer"
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer",
+        "catalog",
+        "opening",
+        "store",
+        "valueFactory",
+        "readRetirement",
+        "editRetirement",
+        "messageLedger",
+        "storeLaws",
+        "catalogLaws"
+      ],
+      "properties": {
+        "producer": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+                "symbols": [
+                  "MemberStoreProducer"
+                ]
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+                "symbols": [
+                  "DocumentStoreOwners",
+                  "funded_member_store_owners",
+                  "complete_unscheduled_catalog",
+                  "bounded_artifact_store_owners"
+                ]
+              }
+            }
+          ]
+        },
+        "opening": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+                "symbols": [
+                  "InitialMemberStoreOpen",
+                  "MemberSnapshotOpenOperation"
+                ]
+              }
+            }
+          ]
+        },
+        "store": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+                "symbols": [
+                  "ArtifactStore",
+                  "ArtifactStoreOwnedDisposer",
+                  "ArtifactStoreCursorDisposer",
+                  "create_member_store",
+                  "open_member_store"
+                ]
+              }
+            }
+          ]
+        },
+        "valueFactory": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+                "symbols": [
+                  "ArtifactOwnedValueRetirementFactory"
+                ]
+              }
+            }
+          ]
+        },
+        "readRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+                "symbols": [
+                  "ArtifactStoreVcsRetirement",
+                  "ArtifactStoreEnvelopeRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "editRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+                "symbols": [
+                  "ArtifactStoreOperationRowsRetirement",
+                  "ArtifactStoreDecodedEditRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "messageLedger": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+                "symbols": [
+                  "ArtifactEditMessageLedger",
+                  "ArtifactEditMessageLedgerRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "storeLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+                "symbols": [
+                  "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
+                  "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
+                  "typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child"
+                ]
+              }
+            }
+          ]
+        },
+        "catalogLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+                "symbols": [
+                  "member_catalog_constructor_birth_and_retirement_match_original_system_allocations",
+                  "member_catalog_initial_open_cancellation_pays_original_catalog_and_page_before_drop"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "extension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "roles"
+      ],
+      "properties": {
+        "owner": {
+          "const": "s/stdio/semio/v1"
+        },
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "members"
+          ],
+          "properties": {
+            "producer": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ModuleReference"
+                },
+                {
+                  "const": {
+                    "language": "rust",
+                    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+                    "symbols": [
+                      "SemioMemberStoreProducer",
+                      "semio_member_owner"
+                    ]
+                  }
+                }
+              ]
+            },
+            "members": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/ModuleReference"
+                },
+                {
+                  "const": {
+                    "language": "rust",
+                    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+                    "symbols": [
+                      "SemioMembers",
+                      "SemioMembersOpen"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ModuleReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "path",
+        "symbols"
+      ],
+      "properties": {
+        "language": {
+          "const": "rust"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+          }
+        }
+      }
+    }
+  }
+}

@@ -41,4 +41,3 @@ pub fn drawing_text_fallback_extent(content: &(impl semio_framework_value::paged
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[path="🔤️font/🦀️.rs"] pub mod font;

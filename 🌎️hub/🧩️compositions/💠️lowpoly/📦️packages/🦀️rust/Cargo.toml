@@ -42,6 +42,7 @@ serde.workspace = true
 serde_json.workspace = true
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-s-artifact-lowpoly-lowpoly-viewer = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

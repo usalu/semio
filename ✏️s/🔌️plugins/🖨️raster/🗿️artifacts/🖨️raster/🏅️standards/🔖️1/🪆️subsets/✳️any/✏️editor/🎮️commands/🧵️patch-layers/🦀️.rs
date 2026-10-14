@@ -1,8 +1,8 @@
 //! 🖼️ 🖼️ Raster play app commands command — `patch-layers`.
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::op::RasterMutation;
-use crate::RasterSnapshot;
+use crate::config::{RasterConfig, RasterConfigMutation};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

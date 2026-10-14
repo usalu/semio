@@ -16,13 +16,26 @@
    "package": "semio-s-artifact-cad-cad-model",
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
    "description": "cad model: artifact schema, snapshot records, diff, references and geometry",
-   "doc": "//! 🧬️ The `s.cad.cad` model: artifact schema, snapshot records and pane vocabulary, diff algebra, references and geometry."
+   "doc": "//! 🧬️ The `s.cad.cad` model: artifact schema, snapshot records and pane vocabulary, diff algebra, references and geometry.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/📸️snapshot/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-model-diff",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "description": "cad diff algebra and its text and binary codecs",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/🔺️diff/"
+   ]
   },
   {
    "package": "semio-s-artifact-cad-cad-mutations",
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
    "claims": [
-    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/[^/]+/🧪️tests/"
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/[^/]+/🧪️tests/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/"
    ],
    "description": "cad mutation vocabulary: the dispatch enum and every leaf's fixture laws",
    "flatten": [
@@ -72,17 +85,15 @@
   {
    "package": "semio-s-artifact-cad-cad-inferences",
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
-   "description": "cad inference owners"
+   "description": "cad inference owners",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/💡️inferences/"
+   ]
   },
   {
    "package": "semio-s-artifact-cad-cad-io",
    "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
    "description": "cad io: text and binary codecs, import, export and geometry bridges"
-  },
-  {
-   "package": "semio-s-artifact-cad-cad-io-sqlite",
-   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
-   "description": "cad SQLite snapshot codec"
   },
   {
    "package": "semio-s-artifact-cad-cad-play",
@@ -239,7 +250,7 @@
    "name": "cad_model_document_contract"
   },
   {
-   "package": "semio-s-artifact-cad-cad-model",
+   "package": "semio-s-artifact-cad-cad-model-diff",
    "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
    "name": "cad_model_diff"
   },
@@ -269,9 +280,59 @@
    "name": "cad_transform_tool"
   },
   {
-   "package": "semio-s-artifact-cad-cad-io-sqlite",
+   "package": "semio-s-artifact-cad-cad-model",
    "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
    "name": "cad_io_sqlite_snapshot"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_binary_snapshot"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_binary_mutations"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs",
+   "name": "cad_create_shape_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot/🦀️.rs",
+   "name": "cad_delete_shape_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs",
+   "name": "cad_create_building_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs",
+   "name": "cad_delete_building_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs",
+   "name": "cad_create_energy_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs",
+   "name": "cad_delete_energy_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs",
+   "name": "cad_create_structure_classic_model"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs",
+   "name": "cad_delete_structure_classic_model"
   }
  ],
  "moves_files": [
@@ -279,7 +340,8 @@
   "🚚️editor-kit.moved.json",
   "🚚️window-runtime.moved.json",
   "🚚️patches.moved.json",
-  "🚚️artifact-kind.moved.json"
+  "🚚️artifact-kind.moved.json",
+  "🚚️descriptor.moved.json"
  ],
  "existing_tests": [
   {

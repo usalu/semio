@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::assert_native_round_trip;
-use crate::standards::v1::subsets::any::io::text::snapshot::assert_json_round_trip;
-use crate::standards::v1::subsets::any::io::text::snapshot::serialize_native_text;
-use crate::standards::v1::subsets::any::io::text::snapshot::parse_native_text;
-use super::*;
+use semio_s_artifact_norm_vdi3805_io::text::snapshot::assert_native_round_trip;
+use semio_s_artifact_norm_vdi3805_io::text::snapshot::assert_json_round_trip;
+use semio_s_artifact_norm_vdi3805_io::text::snapshot::serialize_native_text;
+use semio_s_artifact_norm_vdi3805_io::text::snapshot::parse_native_text;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn native_text_round_trip() {
@@ -107,5 +107,5 @@ async fn linear_map_interpolates_and_handles_degenerate_domain() {
 async fn round_trip_helpers_succeed_for_reference_fixture() {
     let doc = Vdi3805Snapshot::default();
     assert_json_round_trip(&doc.catalog).expect("json");
-    assert_native_round_trip(&doc.catalog, crate::SecurityLimits::default()).expect("native");
+    assert_native_round_trip(&doc.catalog, semio_s_artifact_norm_vdi3805_model::SecurityLimits::default()).expect("native");
 }

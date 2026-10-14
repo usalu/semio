@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 #[semio_framework_async_macros::async_test]
@@ -55,7 +55,7 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
         assert_eq!(protocol::apply_diff(&replay, &before).expect("codec replay applies"), after);
     }
 
-    let bytes = crate::engine::encode_docx(&after).expect("declaration-free package publishes");
+    let bytes = semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx(&after).expect("declaration-free package publishes");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("third-party ZIP reader opens package");
     let mut xml = String::new();
     archive.by_name(main_path).unwrap().read_to_string(&mut xml).unwrap();
@@ -64,7 +64,8 @@ fn canonical_fixture_clears_only_the_main_xml_declaration() {
 
 #[test]
 fn archive_comment_only_diff_replay_preserves_exact_text_and_set_part_codecs_keep_the_index() {
-    use crate::schema::mutations::{set_part, DocxMutation};
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_part;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
     use protocol::{MutationDiff, OpBinary, OpText};
 use semio_framework_value::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧪️tests/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();

@@ -1,8 +1,8 @@
 //! 🔺️ `update-ventilation` sparse diff.
 
-use crate::mutations::update_ventilation::UpdateVentilation;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599VentilationPatch};
+use crate::update_ventilation::UpdateVentilation;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599VentilationPatch};
 
 pub fn diff(payload: &UpdateVentilation, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

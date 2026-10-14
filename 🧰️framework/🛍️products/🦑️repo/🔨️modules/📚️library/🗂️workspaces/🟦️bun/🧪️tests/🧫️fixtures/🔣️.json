@@ -588,5 +588,317 @@
         "text": "neutral unrelated domain document"
       }
     }
+  },
+  "scopedPublication": {
+    "rootMembers": [
+      "framework/**"
+    ],
+    "owners": [
+      "*/package.json"
+    ],
+    "product": {
+      "directory": "product",
+      "members": [
+        "../framework/**",
+        "local/**"
+      ]
+    },
+    "packages": [
+      {
+        "path": "framework/kernel",
+        "name": "neutral-scoped-kernel"
+      },
+      {
+        "path": "product/local/app",
+        "name": "neutral-scoped-app"
+      }
+    ],
+    "independent": {
+      "directory": "specific",
+      "members": [
+        "models/**"
+      ],
+      "path": "specific/models/noise/package.json",
+      "source": "invalid independent source"
+    },
+    "acceptedSelections": [
+      {
+        "kind": "all"
+      },
+      {
+        "kind": "scope",
+        "owner": "."
+      },
+      {
+        "kind": "scope",
+        "owner": "product"
+      }
+    ],
+    "rejectedSelections": [
+      null,
+      {},
+      {
+        "kind": "all",
+        "owner": "."
+      },
+      {
+        "kind": "scope"
+      },
+      {
+        "kind": "scope",
+        "owner": ""
+      },
+      {
+        "kind": "scope",
+        "owner": ".."
+      },
+      {
+        "kind": "scope",
+        "owner": "../specific"
+      },
+      {
+        "kind": "scope",
+        "owner": "product/local"
+      },
+      {
+        "kind": "scope",
+        "owner": "/specific"
+      },
+      {
+        "kind": "scope",
+        "owner": "C:/specific"
+      },
+      {
+        "kind": "scope",
+        "owner": "hidden\u0000owner"
+      },
+      {
+        "kind": "scope",
+        "owner": ".hidden"
+      },
+      {
+        "kind": "scope",
+        "owner": "product",
+        "extra": true
+      },
+      {
+        "kind": "unknown"
+      }
+    ],
+    "cases": [
+      {
+        "name": "general remains independent of malformed separate owner",
+        "selection": {
+          "kind": "scope",
+          "owner": "."
+        },
+        "expectedManifest": "package.json",
+        "expectedPatterns": [
+          "framework/kernel"
+        ],
+        "expectedPackages": [
+          "framework/kernel"
+        ],
+        "removedManifest": "framework/kernel/package.json",
+        "expectedPatternsAfterRemoval": [],
+        "expectedPackagesAfterRemoval": [],
+        "finalManifest": "framework/kernel/package.json",
+        "mutatedManifests": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "specific uses only its declared incoming general dependency",
+        "selection": {
+          "kind": "scope",
+          "owner": "product"
+        },
+        "expectedManifest": "product/package.json",
+        "expectedPatterns": [
+          "../framework/kernel",
+          "local/app"
+        ],
+        "expectedPackages": [
+          "framework/kernel",
+          "product/local/app"
+        ],
+        "removedManifest": "product/local/app/package.json",
+        "expectedPatternsAfterRemoval": [
+          "../framework/kernel"
+        ],
+        "expectedPackagesAfterRemoval": [
+          "framework/kernel"
+        ],
+        "finalManifest": "product/local/app/package.json",
+        "mutatedManifests": [
+          "product/package.json",
+          "package.json"
+        ]
+      }
+    ],
+    "undeclared": "outside",
+    "peerDescription": "retained unrelated owner edit",
+    "finalReadOccurrence": 3
+  },
+  "diagnostics": {
+    "limit": 8,
+    "cases": [
+      {
+        "name": "mixed byte-sorted membership and kind changes",
+        "before": [
+          {
+            "name": "alpha",
+            "kind": "directory"
+          },
+          {
+            "name": "gone",
+            "kind": "directory"
+          },
+          {
+            "name": "stable",
+            "kind": "directory"
+          }
+        ],
+        "after": [
+          {
+            "name": "added",
+            "kind": "directory"
+          },
+          {
+            "name": "alpha",
+            "kind": "symlink"
+          },
+          {
+            "name": "stable",
+            "kind": "directory"
+          }
+        ],
+        "expected": {
+          "added": [
+            {
+              "name": "added",
+              "kind": "directory"
+            }
+          ],
+          "removed": [
+            {
+              "name": "gone",
+              "kind": "directory"
+            }
+          ],
+          "typeChanged": [
+            {
+              "name": "alpha",
+              "before": "directory",
+              "after": "symlink"
+            }
+          ],
+          "total": 3,
+          "omitted": 0
+        }
+      },
+      {
+        "name": "bounded larger membership difference",
+        "before": [],
+        "after": [
+          {
+            "name": "a",
+            "kind": "directory"
+          },
+          {
+            "name": "b",
+            "kind": "directory"
+          },
+          {
+            "name": "c",
+            "kind": "directory"
+          },
+          {
+            "name": "d",
+            "kind": "directory"
+          },
+          {
+            "name": "e",
+            "kind": "directory"
+          },
+          {
+            "name": "f",
+            "kind": "directory"
+          },
+          {
+            "name": "g",
+            "kind": "directory"
+          },
+          {
+            "name": "h",
+            "kind": "directory"
+          },
+          {
+            "name": "i",
+            "kind": "directory"
+          },
+          {
+            "name": "j",
+            "kind": "directory"
+          }
+        ],
+        "expected": {
+          "added": [
+            {
+              "name": "a",
+              "kind": "directory"
+            },
+            {
+              "name": "b",
+              "kind": "directory"
+            },
+            {
+              "name": "c",
+              "kind": "directory"
+            },
+            {
+              "name": "d",
+              "kind": "directory"
+            },
+            {
+              "name": "e",
+              "kind": "directory"
+            },
+            {
+              "name": "f",
+              "kind": "directory"
+            },
+            {
+              "name": "g",
+              "kind": "directory"
+            },
+            {
+              "name": "h",
+              "kind": "directory"
+            }
+          ],
+          "removed": [],
+          "typeChanged": [],
+          "total": 10,
+          "omitted": 2
+        }
+      },
+      {
+        "name": "unchanged membership has no refusal",
+        "before": [
+          {
+            "name": "stable",
+            "kind": "directory"
+          }
+        ],
+        "after": [
+          {
+            "name": "stable",
+            "kind": "directory"
+          }
+        ],
+        "expected": null
+      }
+    ]
   }
 }

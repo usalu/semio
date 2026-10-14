@@ -1,6 +1,6 @@
 //! ✏️ Undoable edits of the selected path's anchors and handles.
-use crate::commands::canvas_pointer_down::{DrawingSession, point_selection_effect};
-use crate::interaction::points;
+use semio_s_artifact_draw_drawing_editor_tool::{DrawingSession, point_selection_effect};
+use semio_s_artifact_draw_drawing_editor_interaction::points;
 use semio_s_artifact_draw_drawing_geometry::editing::{edit_path, PathEdit};
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

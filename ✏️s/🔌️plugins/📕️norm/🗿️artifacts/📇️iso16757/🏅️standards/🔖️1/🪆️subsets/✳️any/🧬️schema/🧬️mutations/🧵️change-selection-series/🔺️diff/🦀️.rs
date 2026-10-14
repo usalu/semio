@@ -1,8 +1,8 @@
 //! 🔺️ `change-selection-series` — sparse diff construction.
 
-use super::mutation::ChangeSelectionSeries;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757SelectionSeriesIdValue};
+use crate::change_selection_series::mutation::ChangeSelectionSeries;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757SelectionSeriesIdValue};
 
 //#region 🔖️Diff
 

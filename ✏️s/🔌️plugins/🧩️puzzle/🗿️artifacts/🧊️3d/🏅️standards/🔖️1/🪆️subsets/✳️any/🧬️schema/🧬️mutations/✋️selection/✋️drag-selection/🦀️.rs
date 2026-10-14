@@ -1,21 +1,21 @@
 //! ✋️ Puzzle3d mutation — `DragSelection`: a relative, parametric drag of a set of objects and target
 //! volumes by one common world offset. The gesture's own inputs (which ids, which offset) are the
 //! payload, so editing the drag in history re-derives every origin from whatever base it replays on.
-use crate::standards::v1::subsets::any::schema::mutations::{MoveObject, MoveTargetVolume, ReplaceAttractionGeometry, RotateObject, ScaleObject};
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use {crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_items, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection_triple};
+use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use {crate::puzzle3d_selection_items, crate::puzzle3d_selection_triple};
 
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// ✋️ `drag-selection` payload — object and target-volume ids (classified by document membership) and
 /// the world offset every one of them moves by.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "drag-selection")]
 pub struct DragSelection {
     pub targets: Vec<String>,

@@ -9,11 +9,11 @@
 //! host's window actually asks for. Picks cost zero argument arena: the tree carries ONE
 //! `interactionSelect` binding and each row names only its granularity.
 
-use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{document_object_row_id, document_target_row_id, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use crate::editor::lowpoly::{ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
-use crate::LowpolyObject;
+use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{document_object_row_id, document_target_row_id, resolve_active_object_id, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
+use semio_s_artifact_lowpoly_lowpoly_kit::{ui_label, ui_value_list, ui_value_map, ui_value_number, LOWPOLY_PLAY_CONTROLLER_ID};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyObject;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -137,7 +137,4 @@ pub fn render(view: LowpolyView<'_>, doc: &LowpolyDocument, labels: &LowpolyLabe
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

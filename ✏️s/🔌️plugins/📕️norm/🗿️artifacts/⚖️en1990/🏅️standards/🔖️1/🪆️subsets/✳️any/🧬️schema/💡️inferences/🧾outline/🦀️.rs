@@ -1,7 +1,7 @@
 //! 🧾 `outline` — document field structure plus clause summary from `evaluate`.
 
-use crate::document::CheckStatus;
-use crate::En1990Snapshot;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
@@ -44,7 +44,7 @@ impl En1990Outline {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
         let entry_count = (snapshot.permanents.len() + snapshot.variables.len() + snapshot.members.len()) as u32;
-        let report = crate::standards::v1::subsets::any::schema::inferences::evaluate(snapshot);
+        let report = crate::evaluate(snapshot);
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|check| check.status == CheckStatus::Pass).count() as u32;
         let all_pass = report.complies();

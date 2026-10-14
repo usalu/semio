@@ -1,5 +1,6 @@
-use super::*;
-use crate::app_fixture::{app_with_registry, render_body};
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::*;
+use crate::app_fixture::app_with_registry;
+use crate::app_fixture::render_body;
 
 const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
 
@@ -20,14 +21,14 @@ fn flow_graph_node_status_is_localized() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_snapshot_states() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
     let row = fixture["surfaceBindings"].as_array().expect("surfaceBindings").iter().find(|row| row["surface"].as_str() == Some(GENERATION_3D_PLAY_SURFACE_MAIN)).expect("the node-graph canvas has a surface-binding row");
     let mut app = app_with_registry().await;
     let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await;
     let action = row["action"].as_str().expect("action");
     assert!(json.contains(action), "the rendered canvas must bind {action}");
-    assert!(json.contains(crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID), "the binding must be addressed at this app");
+    assert!(json.contains(semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID), "the binding must be addressed at this app");
     assert!(json.contains(row["trigger"].as_str().expect("trigger")), "the binding must carry the fixture's trigger");
     assert!(json.contains(row["shortcut"].as_str().expect("shortcut")), "the canvas must advertise its chord as aria-keyshortcuts");
 }
@@ -65,7 +66,7 @@ fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<Str
 
 #[test]
 fn flow_graph_outline_answers_its_language_agnostic_law() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
     let projection = law_outline_projection();
     assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(GENERATION_3D_INTERACTION_DOMAIN));
@@ -95,7 +96,7 @@ fn flow_graph_outline_answers_its_language_agnostic_law() {
 /// cannot express.
 #[test]
 fn flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let projection = law_outline_projection();
     let root = projection["bindings"].as_array().cloned().unwrap_or_default();
     let select = root.iter().find(|binding| binding["trigger"] == "activate").expect("the tree root's interactionSelect binding");

@@ -1,19 +1,36 @@
 //! ⚡️ EN 1998 — hand-rolled OpText/OpBinary for `En1998Mutation` (B2 JSON-atom field codec).
 
-use crate::artifact_schema::mutations::En1998Mutation;
+use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
 
-use crate::artifact_schema::mutations::{
-    change_annex::ChangeAnnex, update_site::UpdateSite, insert_building::InsertBuilding, remove_building::RemoveBuilding,
-    change_system_v_rd_n::ChangeSystemVRdN, change_storey_permanent_gk_n::ChangeStoreyPermanentGkN,
-    change_storey_stiffness_x::ChangeStoreyStiffnessX, change_storey_drift_xm::ChangeStoreyDriftXM,
-    change_building_plan_regular::ChangeBuildingPlanRegular, change_elevation_regular::ChangeElevationRegular,
-    change_member_detailing::ChangeMemberDetailing,
-    change_masonry_wall_ratio::ChangeMasonryWallRatio, insert_bridge::InsertBridge,
-    change_bridge_v_rd_n::ChangeBridgeVRdN, insert_assessment::InsertAssessment, change_assessment_rkn::ChangeAssessmentRKN,
-    insert_silo::InsertSilo, insert_tank::InsertTank, insert_foundation::InsertFoundation,
-    insert_retaining_wall::InsertRetainingWall, insert_tower::InsertTower, change_tower_m_rd_nm::ChangeTowerMRdNm,
-    remove_bridge::RemoveBridge, remove_assessment::RemoveAssessment, remove_silo::RemoveSilo, remove_tank::RemoveTank, remove_foundation::RemoveFoundation, remove_retaining_wall::RemoveRetainingWall, remove_tower::RemoveTower,
-};
+use semio_s_artifact_norm_en1998_mut_buildings::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_en1998_mut_buildings::update_site::UpdateSite;
+use semio_s_artifact_norm_en1998_mut_buildings::insert_building::InsertBuilding;
+use semio_s_artifact_norm_en1998_mut_buildings::remove_building::RemoveBuilding;
+use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n::ChangeSystemVRdN;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n::ChangeStoreyPermanentGkN;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x::ChangeStoreyStiffnessX;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm::ChangeStoreyDriftXM;
+use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular::ChangeBuildingPlanRegular;
+use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular::ChangeElevationRegular;
+use semio_s_artifact_norm_en1998_mut_members::change_member_detailing::ChangeMemberDetailing;
+use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio::ChangeMasonryWallRatio;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge::InsertBridge;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n::ChangeBridgeVRdN;
+use semio_s_artifact_norm_en1998_mut_members::insert_assessment::InsertAssessment;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn::ChangeAssessmentRKN;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo::InsertSilo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank::InsertTank;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation::InsertFoundation;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall::InsertRetainingWall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower::InsertTower;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm::ChangeTowerMRdNm;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge::RemoveBridge;
+use semio_s_artifact_norm_en1998_mut_members::remove_assessment::RemoveAssessment;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo::RemoveSilo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank::RemoveTank;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation::RemoveFoundation;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall::RemoveRetainingWall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower::RemoveTower;
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
@@ -165,45 +182,9 @@ impl protocol::OpText for En1998Mutation {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
-    let snap = crate::En1998Snapshot::default();
+pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
+    let snap = semio_s_artifact_norm_en1998_model::En1998Snapshot::default();
     let building = snap.buildings[0].clone();
     vec![
         En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: String::from("en") }),
@@ -249,7 +230,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::InsertBridge(InsertBridge {
             index: Some(0usize),
-            bridge: crate::En1998Bridge {
+            bridge: semio_s_artifact_norm_en1998_model::En1998Bridge {
                 id: "br-demo".into(),
                 period_ratio: 2.0,
                 fundamental_period_s: 1.5,
@@ -257,13 +238,13 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
                 bearing_d_rd_m: 0.25,
                 permanent_gk_n: 9.81e6,
                 correlated_occupancy: true,
-                variables: vec![crate::En1998VariableAction { id: "br-q".into(), category: "F".into(), qk_n: 1.0e6 }],
+                variables: vec![semio_s_artifact_norm_en1998_model::En1998VariableAction { id: "br-q".into(), category: "F".into(), qk_n: 1.0e6 }],
             },
         }),
         En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: 0usize, new_v_rd_n: 5.0e5 }),
         En1998Mutation::InsertAssessment(InsertAssessment {
             index: Some(0usize),
-            assessment: crate::En1998Assessment {
+            assessment: semio_s_artifact_norm_en1998_model::En1998Assessment {
                 id: "as-demo".into(),
                 knowledge_level: "kl2".into(),
                 limit_state: "sd".into(),
@@ -275,7 +256,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: 0usize, new_r_k_n: 4.0e5 }),
         En1998Mutation::InsertSilo(InsertSilo {
             index: Some(0usize),
-            silo: crate::En1998Silo {
+            silo: semio_s_artifact_norm_en1998_model::En1998Silo {
                 id: "si-demo".into(),
                 height_m: 10.0,
                 radius_m: 5.0,
@@ -290,7 +271,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::InsertTank(InsertTank {
             index: Some(0usize),
-            tank: crate::En1998Tank {
+            tank: semio_s_artifact_norm_en1998_model::En1998Tank {
                 id: "tk-demo".into(),
                 height_m: 8.0,
                 radius_m: 4.0,
@@ -303,7 +284,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::InsertFoundation(InsertFoundation {
             index: Some(0usize),
-            foundation: crate::En1998Foundation {
+            foundation: semio_s_artifact_norm_en1998_model::En1998Foundation {
                 supported_building_id: String::new(),
                 id: "fd-demo".into(),
                 area_m2: 100.0,
@@ -315,7 +296,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::InsertRetainingWall(InsertRetainingWall {
             index: Some(0usize),
-            wall: crate::En1998RetainingWall {
+            wall: semio_s_artifact_norm_en1998_model::En1998RetainingWall {
                 id: "rw-demo".into(),
                 height_m: 4.0,
                 phi_deg: 30.0,
@@ -326,7 +307,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1998Mutation> {
         }),
         En1998Mutation::InsertTower(InsertTower {
             index: Some(0usize),
-            tower: crate::En1998Tower {
+            tower: semio_s_artifact_norm_en1998_model::En1998Tower {
                 id: "tw-demo".into(),
                 height_m: 40.0,
                 m_rd_nm: 2.5e6,
@@ -354,46 +335,46 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::En1998Diff;
-use crate::En1998Snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::update_site;
-use crate::standards::v1::subsets::any::schema::mutations::insert_building;
-use crate::standards::v1::subsets::any::schema::mutations::remove_building;
-use crate::standards::v1::subsets::any::schema::mutations::change_system_v_rd_n;
-use crate::standards::v1::subsets::any::schema::mutations::change_storey_permanent_gk_n;
-use crate::standards::v1::subsets::any::schema::mutations::change_storey_stiffness_x;
-use crate::standards::v1::subsets::any::schema::mutations::change_storey_drift_xm;
-use crate::standards::v1::subsets::any::schema::mutations::change_building_plan_regular;
-use crate::standards::v1::subsets::any::schema::mutations::change_elevation_regular;
-use crate::standards::v1::subsets::any::schema::mutations::change_member_detailing;
-use crate::standards::v1::subsets::any::schema::mutations::change_masonry_wall_ratio;
-use crate::standards::v1::subsets::any::schema::mutations::insert_bridge;
-use crate::standards::v1::subsets::any::schema::mutations::change_bridge_v_rd_n;
-use crate::standards::v1::subsets::any::schema::mutations::insert_assessment;
-use crate::standards::v1::subsets::any::schema::mutations::change_assessment_rkn;
-use crate::standards::v1::subsets::any::schema::mutations::insert_silo;
-use crate::standards::v1::subsets::any::schema::mutations::insert_tank;
-use crate::standards::v1::subsets::any::schema::mutations::insert_foundation;
-use crate::standards::v1::subsets::any::schema::mutations::insert_retaining_wall;
-use crate::standards::v1::subsets::any::schema::mutations::insert_tower;
-use crate::standards::v1::subsets::any::schema::mutations::change_tower_m_rd_nm;
-use crate::standards::v1::subsets::any::schema::mutations::remove_bridge;
-use crate::standards::v1::subsets::any::schema::mutations::remove_assessment;
-use crate::standards::v1::subsets::any::schema::mutations::remove_silo;
-use crate::standards::v1::subsets::any::schema::mutations::remove_tank;
-use crate::standards::v1::subsets::any::schema::mutations::remove_foundation;
-use crate::standards::v1::subsets::any::schema::mutations::remove_retaining_wall;
-use crate::standards::v1::subsets::any::schema::mutations::remove_tower;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1998_mutations::*;
+use semio_s_artifact_norm_en1998_diff::En1998Diff;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use semio_s_artifact_norm_en1998_mut_buildings::change_annex;
+use semio_s_artifact_norm_en1998_mut_buildings::update_site;
+use semio_s_artifact_norm_en1998_mut_buildings::insert_building;
+use semio_s_artifact_norm_en1998_mut_buildings::remove_building;
+use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x;
+use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm;
+use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular;
+use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular;
+use semio_s_artifact_norm_en1998_mut_members::change_member_detailing;
+use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n;
+use semio_s_artifact_norm_en1998_mut_members::insert_assessment;
+use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation;
+use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge;
+use semio_s_artifact_norm_en1998_mut_members::remove_assessment;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo;
+use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation;
+use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall;
+use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower;
 
 /// 📥️ Decodes one committed mutation JSON document into [`En1998Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

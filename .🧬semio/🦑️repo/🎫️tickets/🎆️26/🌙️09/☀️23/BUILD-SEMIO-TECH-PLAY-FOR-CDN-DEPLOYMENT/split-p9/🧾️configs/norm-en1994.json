@@ -115,6 +115,11 @@
    "field_meta"
   ],
   [
+   "✳️any/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
    "✏️editor/",
    "editor"
   ],
@@ -290,7 +295,7 @@
   },
   {
    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
-   "text": "//! 🧫️ EN 1994's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_en1994_model::En1994Snapshot, semio_s_artifact_norm_en1994_mutations::En1994Mutation>(&root).await;\n}\n"
+   "text": "//! 🧫️ EN 1994's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_en1994_model::En1994Snapshot, semio_s_artifact_norm_en1994_mutations::En1994Mutation>(&root).await;\n}\n"
   }
  ],
  "transforms": [
@@ -298,7 +303,7 @@
    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
    "sub": [
     [
-     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub\\s+)?mod \\w+;\\n?",
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub(?:\\([^)]*\\))?\\s+)?mod \\w+;\\n?",
      ""
     ]
    ]
@@ -378,6 +383,20 @@
    ]
   }
  ],
+ "extra_candidates": [
+  "semio-s-plugin-norm-compliance",
+  "semio-s-plugin-norm-app-surface",
+  "semio-s-plugin-norm-results-config"
+ ],
+ "dev_features": {
+  "semio-s-plugin-norm-compliance": [
+   "compliance-testing"
+  ],
+  "semio-s-plugin-norm-app-surface": [
+   "compliance-testing"
+  ],
+  "semio-s-artifact-norm-contract": []
+ },
  "root_to": "model",
  "delete_unmounted": true,
  "consumers": [
@@ -392,7 +411,7 @@
     "name": "mutation_vectors",
     "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
     "dev": [
-     "semio-s-plugin-norm-mutation-vectors",
+     "semio-s-mutation-vectors",
      "semio-framework-async-macros",
      "semio-s-artifact-norm-en1994-model"
     ]

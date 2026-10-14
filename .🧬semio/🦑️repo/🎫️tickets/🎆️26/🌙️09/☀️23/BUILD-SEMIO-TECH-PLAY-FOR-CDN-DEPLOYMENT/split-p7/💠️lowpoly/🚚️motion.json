@@ -1,0 +1,26 @@
+{
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "from_module": "crate::standards::v1::subsets::any::schema::mutations",
+   "to": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "to_module": "crate::standards::v1::subsets::any::schema::diff",
+   "items": [
+    "LowpolySelectionMotion",
+    "lowpoly_selection_motion_diff",
+    "lowpoly_selection_vertex_violation",
+    "lowpoly_selection_moves",
+    "lowpoly_selection_normal_channels"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "from_module": "crate::standards::v1::subsets::any::schema::mutations",
+   "to": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-vertex-positions/↩️inverse/🦀️.rs",
+   "to_module": "crate::standards::v1::subsets::any::schema::mutations::set_vertex_positions::inverse",
+   "items": [
+    "lowpoly_selection_motion_inverse"
+   ]
+  }
+ ]
+}

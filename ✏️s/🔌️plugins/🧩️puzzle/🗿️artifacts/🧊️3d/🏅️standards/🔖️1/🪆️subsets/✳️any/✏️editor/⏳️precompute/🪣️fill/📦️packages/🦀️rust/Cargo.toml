@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-puzzle-3d-precompute-fill"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 3d play app"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-snapshot = { workspace = true }
+semio-s-artifact-puzzle-3d-model = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-object = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute-geometry = { workspace = true }
+semio-s-plugin-puzzle-jobs = { workspace = true }
+
+[features]
+testing = ["semio-s-artifact-puzzle-3d-model/testing", "semio-s-artifact-puzzle-3d-mutations/testing", "semio-s-artifact-puzzle-3d-mutations-object/testing", "semio-s-artifact-puzzle-3d-mutations-vortex/testing", "semio-s-artifact-puzzle-3d-precompute-brush/testing", "semio-s-plugin-puzzle-jobs/testing"]

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "sourceBoundary": {
+    "version": 1,
+    "maxSourceBytes": 262144,
+    "maxSourceFiles": 32,
+    "maxActiveLines": 4000
+  },
+  "imageSlackBytes": 8388608,
+  "stubImageBytes": 67108864,
+  "realImageBytes": 3221225472,
+  "detachAttempts": 5,
+  "detachRetryMs": 200,
+  "lawReserveBytes": 4194304,
+  "schedulerBuildMs": 900000
+}

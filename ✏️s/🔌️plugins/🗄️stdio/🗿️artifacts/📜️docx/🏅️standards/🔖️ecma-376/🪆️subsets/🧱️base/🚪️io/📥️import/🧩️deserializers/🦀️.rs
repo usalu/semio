@@ -3,10 +3,11 @@
 //! never reimplemented here: it is reused from the shared `semio_s_artifact_stdio_zip::opc` layer and,
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
-use crate::standards::v_ecma_376::subsets::base::schema::refusal::{DocxError};
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_OFFICE_DOCUMENT;
-use crate::DocxSnapshot;
-use crate::schema::snapshot::{DocxXmlPart, docx_part_is_xml};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::DocxError;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_OFFICE_DOCUMENT;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::docx_part_is_xml;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
@@ -39,8 +40,8 @@ pub fn sniff_docx_bytes(data: &[u8]) -> bool {
     opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT)
         .or_else(|| opc.resolve_relationship("", STRICT_REL_TYPE_OFFICE_DOCUMENT))
         .and_then(|path| opc.part(&path))
-        .is_some_and(|part| part.content_type == crate::standards::v_ecma_376::subsets::base::schema::vocabulary::MAIN_DOCUMENT_CONTENT_TYPE)
+        .is_some_and(|part| part.content_type == semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::MAIN_DOCUMENT_CONTENT_TYPE)
 }
 //#endregion 🔖️Sniff
 
-use crate::standards::v_ecma_376::subsets::base::schema::inferences::document::*;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::*;

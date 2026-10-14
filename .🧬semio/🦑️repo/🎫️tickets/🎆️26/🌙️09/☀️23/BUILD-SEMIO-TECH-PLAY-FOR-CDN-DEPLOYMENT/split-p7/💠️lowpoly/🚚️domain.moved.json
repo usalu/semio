@@ -1,0 +1,21 @@
+[
+ {
+  "from": "crate",
+  "to": "crate::standards::v1::subsets::any::schema::snapshot",
+  "items": [
+   "LOWPOLY_DIALECT",
+   "LOWPOLY_DOCUMENT_SCHEMA",
+   "LOWPOLY_PAINT_TEXTURE_SIZE",
+   "LowpolyObject",
+   "LowpolyObjectPatch",
+   "LowpolyPaintLayer",
+   "LowpolySelection",
+   "LowpolySelectionTargets",
+   "LowpolyTransform",
+   "artifact_kind",
+   "empty_paint_pixels",
+   "managed_mesh_child_handle",
+   "mesh_child_handle"
+  ]
+ }
+]

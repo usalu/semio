@@ -229,11 +229,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         LAST_MAINTENANCE_STAGE.store(u64::MAX,std::sync::atomic::Ordering::Relaxed);let empty=RetainedCloneProgress::default();let cursor=self.maintenance_stage;let mut awaiting=None;let mut blocked=None;
         for position in 0..MAINTENANCE_POSITIONS{
             if cx.should_yield(){return Ok(PluginLifecycleStep::Progress(empty))}
-            let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
+            let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);if grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(empty))}
             let Some(unit)=self.maintenance_unit_at(position,cursor)else{cx.consume_fuel(1);continue};
             let Some(demand)=self.maintenance_unit_demand(unit,grant.maximum_copy_bytes)?else{cx.consume_fuel(1);continue};
-            if !crate::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
-            let step=crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
+            if !semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}
+            let step=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|{
                 if let MaintenanceUnit::Stage(stage)=unit{self.maintenance_stage=(stage+1)%MAINTENANCE_STAGES}LAST_MAINTENANCE_STAGE.store(unit.trace(),std::sync::atomic::Ordering::Relaxed);
                 let step=self.maintenance_unit_step(unit,same,actual)?;Ok((step,true))
             })?;
@@ -272,16 +272,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             },
             1 => {
                 let Some((_, operation_id)) = self.media_closures.next_id_from(self.maintenance_media_cursor) else { return Ok(None) };
+                if self.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(Some(RetirementDemand::default()))}
                 self.media_closures.get(operation_id).map(|active| active.retirement_demands(body,&self.tool_cancellations)).transpose()?
             }
-            2 => {
-                let Some((_, operation_id)) = self.segmented_closures.next_id_from(self.maintenance_segment_cursor) else { return Ok(None) };
-                let remaining = self.segmented_closures.get(operation_id).map_or(0, |output| output.chunks.chunks_remaining());
-                Some(RetirementDemand { release_bytes: if remaining == 0 { 0 } else { ARTIFACT_OUTPUT_CHUNK_BYTES }, depth: 1, ..Default::default() })
-            }
+            2=>{let Some((_,operation_id))=self.segmented_closures.next_id_from(self.maintenance_segment_cursor)else{return Ok(None)};Some({let original=self.segmented_closures.get(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-quote","original segmented close owner is missing"))?;if original.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),depth:1,..Default::default()}}else{original.retirement_demands(body)?}})},
             3 => {
                 let Some((_, operation_id)) = self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor) else { return Ok(None) };
-                if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() {
+                if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() || self.segmented_downloads.contains(operation_id) || self.segmented_closures.contains(operation_id) || self.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
                     return Ok(Some(RetirementDemand::default()));
                 }
                 self.snapshot_retirements.get(operation_id).map(|retention| retention.retirement_demands(body)).transpose()?
@@ -349,13 +346,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if stage==26{return self.close_document_window_admission(cx,false)}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tool_cancellations.cleanup_slot(self.maintenance_cancellation_cursor,cx,true)?;
-            let progress=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+            let progress=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
             if complete&&progress==RetainedCloneProgress::default(){
                 let bytes=std::mem::size_of::<usize>();if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_copy_bytes<bytes||cx.retained_grant().maximum_depth==0{return Ok(idle())}
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
                 self.maintenance_cancellation_cursor=(self.maintenance_cancellation_cursor+1)%(TOOL_CANCELLATION_SLOTS+ARTIFACT_LIVE_OUTPUT_SLOTS);
             }
-            return Ok(PluginLifecycleStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+            return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
         if stage==13{return self.drive_envelope_completed_record_returns(grant,false)}
         if stage==12{return self.drive_envelope_field_decoder_returns(grant,false)}
@@ -368,6 +365,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if stage==0{return match self.maintenance_tool_selection(){MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;owner.drive_worker_step(cx).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media_closures.next_id_from(self.maintenance_media_cursor)else{return Ok(idle())};self.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+            if self.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(PluginLifecycleStep::AwaitingInput{reason:"terminal media source remains retained until its original output receiving"})}
             let authority=||maintenance_fault("interactive-job.maintenance-media-authority","live media cleanup authority changed during its original turn");
             let step=self.media_closures.get_mut(operation_id).ok_or_else(authority)?.close_step(cx,grant,&self.tool_cancellations)?;
             let PluginLifecycleStep::Complete(progress)=step else{return Ok(step)};
@@ -379,27 +377,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let result=(||->Result<PluginLifecycleStep,Fault>{
         let value_fault = plugin_retirement_fault;
         match stage {
-            2 => {
-                let Some((index, operation_id)) = self.segmented_closures.next_id_from(self.maintenance_segment_cursor) else { return Ok(idle()) };
-                self.maintenance_segment_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                let authority = || maintenance_fault("interactive-job.maintenance-segment-authority", "live segmented cleanup authority changed during one fixed step");
-                match self.segmented_closures.get(operation_id).ok_or_else(authority)?.chunks.close_take_chunk()? {
-                    Some(chunk) => Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { released_bytes: chunk.len(), ..item() })),
-                    None => {
-                        let output = self.segmented_closures.remove(operation_id).ok_or_else(authority)?;
-                        if !output.terminal_is_empty() {
-                            self.segmented_closures.insert_admitted(operation_id, output);
-                            return Err(maintenance_fault("interactive-job.maintenance-segment-terminal-not-empty", "live segmented cleanup reached terminal without an empty exact chunk queue"));
-                        }
-                        drop(output);
-                        Ok(PluginLifecycleStep::Progress(item()))
-                    }
-                }
-            }
+            2=>{
+                let Some((index,operation_id))=self.segmented_closures.next_id_from(self.maintenance_segment_cursor)else{return Ok(idle())};self.maintenance_segment_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
+                if let Some(source)=self.snapshot_retirements.get(operation_id){source.validate_retirement(cx)?}
+                let original=self.segmented_closures.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.segment-close","original segmented close owner changed"))?;
+                if original.terminal_is_empty(){self.segmented_closures.remove(operation_id);return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<crate::media_export::MediaDownloadRetirement>(),..Default::default()}))}original.close_step(cx,grant)
+            },
             3 => {
                 let Some((index, operation_id)) = self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor) else { return Ok(idle()) };
                 self.maintenance_snapshot_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() {
+                if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() || self.segmented_downloads.contains(operation_id) || self.segmented_closures.contains(operation_id) || self.media_download_preparation.as_ref().is_some_and(|pending|pending.operation_id==operation_id) {
                     return Ok(PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
                 }
                 let authority = || maintenance_fault("interactive-job.maintenance-snapshot-authority", "live snapshot retirement authority changed during one fixed step");
@@ -656,7 +643,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     /// 🎟️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
     pub(crate) fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let demand=self.store_replacement_demands(closing,loan.maximum_copy_bytes)?;
-        crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
@@ -1023,7 +1010,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 }
                 let before=cx.retained_progress();
                 let step=active.hydration.as_mut().expect("recursive document parent hydration remains retained").step(cx,RetainedCloneGrant{maximum_items:1,..grant});
-                let spent=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+                let spent=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 let item=RetainedCloneProgress{copied_items:spent.copied_items.max(1),..spent};
                 let envelope = match step {
                     store::PersistedDocumentHydrationStep::Pending(_) => return Ok(PluginLifecycleStep::Progress(item)),

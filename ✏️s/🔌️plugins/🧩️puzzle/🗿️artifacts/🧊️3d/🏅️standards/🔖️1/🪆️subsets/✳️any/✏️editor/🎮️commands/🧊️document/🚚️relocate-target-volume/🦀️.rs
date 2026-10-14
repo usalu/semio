@@ -1,7 +1,7 @@
 //! 📦️ `relocate-target-volume` command.
 
-use crate::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🚚️ One target-volume gumball relocate `{volumeId, mode, before, after}` as ONE transform-tool transaction

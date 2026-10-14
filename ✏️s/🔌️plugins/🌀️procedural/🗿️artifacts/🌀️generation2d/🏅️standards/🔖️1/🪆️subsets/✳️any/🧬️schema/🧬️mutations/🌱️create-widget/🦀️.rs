@@ -3,9 +3,9 @@
 //! generic slot this triad was repurposed from — see `sharedFileRequests` in this ticket's wave2
 //! report for the glue.rs rename that would align the directory/module with the verb.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,19 +21,22 @@ pub struct CreateWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_widget(index: usize, widget: Widget) -> Generation2dMutation {
-    Generation2dMutation::CreateWidget(CreateWidget { index, widget })
+pub fn create_widget<Op: From<CreateWidget>>(index: usize, widget: Widget) -> Op {
+    Op::from(CreateWidget { index, widget })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for CreateWidget {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for CreateWidget
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::delete_widget::DeleteWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::create_widget::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::create_widget::inverse::inverse(self, base)?
     
     })
 }

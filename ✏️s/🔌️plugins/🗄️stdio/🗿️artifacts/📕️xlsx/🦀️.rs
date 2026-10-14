@@ -9,22 +9,17 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxComposer;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use schema::diff::XlsxDiff;
-pub use schema::mutations::XlsxMutation;
-pub use schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxSnapshot, XlsxWorkbook, XlsxXmlPart};
-pub use schema::XlsxArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_XLSX_DOCUMENT_SCHEMA: &str = "stdio.xlsx";
 
-/// 🧬️ Artifact schema descriptor id.
-pub const XLSX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xlsx";
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -40,7 +35,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 }
 
 fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::bare_artifact_codec::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA);
+    let mut codec = store::bare_artifact_codec::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA);
     codec.extension = "xlsx";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -83,16 +78,17 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::xlsx_artifact_schema_descriptor())
+        .schema(semio_s_artifact_stdio_xlsx_base_descriptor::standards::v_ecma_376::subsets::base::schema::descriptor::xlsx_artifact_schema_descriptor())
         .formats(formats)
         .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.xlsx", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
-        .inferences([standards::v_ecma_376::subsets::base::schema::inferences::xlsx_artifact_inference_descriptor()])
-        .composers(standards::v_ecma_376::subsets::base::io::io_registry::entries())
+        .inferences([semio_s_artifact_stdio_xlsx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::xlsx_artifact_inference_descriptor()])
+        .composers(semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::io_registry::entries())
+        .composers(io_registry::subset_entries())
         .subset_validators(xlsx_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
-        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("strict") })
+        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.xlsx", standard: semio_framework_artifact_reference::StandardId("ecma-376"), subset: semio_framework_artifact_reference::SubsetId("transitional") })
         .try_build()
 }
 
@@ -105,8 +101,8 @@ fn xlsx_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValid
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v_ecma_376::subsets::strict::io::XlsxStrictValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_xlsx_strict::standards::v_ecma_376::subsets::strict::io::XlsxStrictValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<semio_s_artifact_stdio_xlsx_transitional::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalValidator>(),
             ]
         })
         .as_slice()
@@ -125,28 +121,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.xlsx",
                     extension: Some("xlsx"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xlsx.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.diff"),
@@ -157,8 +153,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -167,8 +163,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xlsx.spr"),
                 },
             ]
@@ -184,12 +180,12 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "s.stdio.xlsx".into(),
         label: semio_framework_ui_locale::LocalizedLabel::native("Xlsx", "Xlsx"),
-        source_format: STDIO_XLSX_DOCUMENT_SCHEMA.into(),
+        source_format: semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),
         dimension: "data".into(),
         media_capability: OsMediaCapability::MeshOnly,
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_XLSX_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA.into(),
         export_formats: vec![],
         import_formats: vec![],
         export_stdio_kinds: vec![],
@@ -199,15 +195,26 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::io_registry as v_ecma_376;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use semio_s_artifact_stdio_xlsx_strict::standards::v_ecma_376::subsets::strict::io::XlsxStrictComposer;
+    use semio_s_artifact_stdio_xlsx_transitional::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalComposer;
+    use semio_framework_plugin::composer_entry_of;
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
+    static SUBSETS: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    /// 🧩️ The composers of the subsets that extend the owning subset; they register here, above it.
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn subset_entries() -> &'static [ComposerEntry] {
+        SUBSETS.get_or_init(|| vec![composer_entry_of::<XlsxStrictComposer>(), composer_entry_of::<XlsxTransitionalComposer>()]).as_slice()
+    }
+
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_ecma_376::entries().iter().collect()).as_slice()
+        ENTRIES.get_or_init(|| v_ecma_376::entries().iter().chain(subset_entries().iter()).collect()).as_slice()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -219,397 +226,14 @@ pub mod io_registry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         register_composer_entries(v_ecma_376::entries()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(subset_entries()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "."]
-pub mod standards {
-    #[path = "."]
-    pub mod v_ecma_376 {
-        #[path = "."]
-        pub mod subsets {
-            #[path = "."]
-            pub mod base {
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🗣️vocabulary/🦀️.rs"]
-                    pub mod vocabulary;
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🛡️refusal/🦀️.rs"]
-                    pub mod refusal;
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🏗️construction/🦀️.rs"]
-                    pub mod construction;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📘️workbook/🦀️.rs"]
-                        pub mod workbook;
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod zip {
-                                    #[path = "."]
-                                    pub mod v2_0 {
-                                        #[path = "."]
-                                        pub mod base {
-                                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                // 🏅️ ISO/IEC 29500-1 Strict -- ticket
-                // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3. `schema`
-                // re-exports the ✳️any subset's `XlsxSnapshot` verbatim (same Rust type,
-                // same `s.stdio.xlsx` schema id); `io` reuses the ✳️any subset's
-                // zip/xml DAG leaves rather than duplicating them.
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-            #[path = "."]
-            pub mod transitional {
-                // 🏅️ ISO/IEC 29500-4 Transitional -- ticket
-                // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3. Same shape as
-                // ✳️strict above, opposite polarity.
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🚪️io/🦀️.rs"]
-                pub mod io;
-                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🦀️.rs"]
-                pub mod schema;
-            }
-        }
-    }
-}
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod schema {
-    pub use super::standards::v_ecma_376::subsets::base::schema::*;
-}
 
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
 
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod xlsx {
-        #[path = "."]
-        pub mod standards {
-            #[path = "."]
-            pub mod v_ecma_376 {
-                #[path = "."]
-                pub mod subsets {
-                    #[path = "."]
-                    pub mod base {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod strict {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod transitional {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod edit {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod xlsx {
-        #[path = "."]
-        pub mod standards {
-            #[path = "."]
-            pub mod v_ecma_376 {
-                #[path = "."]
-                pub mod subsets {
-                    #[path = "."]
-                    pub mod base {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod strict {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod transitional {
-                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod presence {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod config {
-                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-                            pub mod schema;
-                        }
-                        #[path = "."]
-                        pub mod modes {
-                            #[path = "."]
-                            pub mod view {
-                                #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod windows {
-                                    #[path = "."]
-                                    pub mod main {
-                                        #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                                        mod component;
-                                        pub use component::*;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-pub use crate::standards::v_ecma_376::subsets::transitional::io::{XlsxTransitionalBuilderConstruction, XlsxTransitionalAnalyzerAnalysis, XlsxTransitionalBuilderFacets, XlsxTransitionalBuilder, XlsxTransitionalAnalyzer, XlsxTransitionalComposer};
-
-pub use crate::standards::v_ecma_376::subsets::strict::io::{XlsxStrictBuilderConstruction, XlsxStrictAnalyzerAnalysis, XlsxStrictBuilderFacets, XlsxStrictBuilder, XlsxStrictAnalyzer, XlsxStrictComposer};
-
-pub use crate::standards::v_ecma_376::subsets::base::io::{XlsxBuilderConstruction, XlsxParts, XlsxAnalyzerAnalysis, XlsxBuilderFacets, XlsxBuilder, XlsxAnalyzer, XlsxComposer};

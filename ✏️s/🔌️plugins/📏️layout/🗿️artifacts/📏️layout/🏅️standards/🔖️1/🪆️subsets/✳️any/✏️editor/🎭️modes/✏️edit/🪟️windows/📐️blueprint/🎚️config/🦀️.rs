@@ -1,6 +1,6 @@
 //! 🎚️ Persisted local configuration for one exact Layout Blueprint or Preview window.
 
-use crate::LayoutCamera;
+use semio_s_artifact_layout_layout_model::LayoutCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -212,7 +212,7 @@ macro_rules! config_owner {
 }
 
 config_owner!(LayoutBlueprintWindowConfigOwner, super::LAYOUT_PLAY_WINDOW_BLUEPRINT);
-config_owner!(LayoutPreviewWindowConfigOwner, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW);
+config_owner!(LayoutPreviewWindowConfigOwner, crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW);
 
 pub fn register(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), semio_framework_plugin::Fault> {
     registry.register::<LayoutBlueprintWindowConfigOwner>()?;
@@ -227,7 +227,7 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
     let Some(snapshot) = snapshot else { return LayoutWindowConfig::default() };
     match snapshot.window_kind_id() {
         super::LAYOUT_PLAY_WINDOW_BLUEPRINT => from_owner::<LayoutBlueprintWindowConfigOwner>(snapshot),
-        crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW => from_owner::<LayoutPreviewWindowConfigOwner>(snapshot),
+        crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW => from_owner::<LayoutPreviewWindowConfigOwner>(snapshot),
         _ => None,
     }.unwrap_or_default()
 }
@@ -242,7 +242,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: LayoutWindowC
     let mutation = LayoutWindowConfigMutation::Update { patch: LayoutWindowConfigPatch::replacing(&config) };
     match kind {
         super::LAYOUT_PLAY_WINDOW_BLUEPRINT => Ok(semio_framework_plugin::WindowConfigMutation::of::<LayoutBlueprintWindowConfigOwner>(id, mutation)),
-        crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW => Ok(semio_framework_plugin::WindowConfigMutation::of::<LayoutPreviewWindowConfigOwner>(id, mutation)),
+        crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW => Ok(semio_framework_plugin::WindowConfigMutation::of::<LayoutPreviewWindowConfigOwner>(id, mutation)),
         _ => Err(semio_framework_plugin::Fault::from("layout-window-kind-required")),
     }
 }

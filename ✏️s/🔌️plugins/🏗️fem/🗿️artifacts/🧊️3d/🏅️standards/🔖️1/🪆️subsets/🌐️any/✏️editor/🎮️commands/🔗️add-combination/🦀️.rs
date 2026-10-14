@@ -1,9 +1,9 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-combination`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::create_combination;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_combination;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "add-combination")]
 pub struct AddCombination {
     pub name: String,
-    /// 📦️ A JSON-encoded `[[caseId, factor], ...]` array — `crate::FemCombination`'s
+    /// 📦️ A JSON-encoded `[[caseId, factor], ...]` array — `crate::standards::v1::subsets::any::schema::structure::FemCombination`'s
     /// `terms` is a `BTreeMap<String, f64>`, not a dedicated record type, so this stays a JSON-string
     /// blob (parsed the same way the pre-migration `handle_action` channel used to) rather than
     /// requiring the DSL engine to grow a `Vec<(String, f64)>` primitive.
@@ -23,8 +23,8 @@ pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem3dSnapshot>, _
     match semio_framework_pack_json::from_json_str::<Vec<(String, f64)>>(&payload.terms, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(parsed) => {
             let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
-            let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
-            Ok(Emit::mutations(vec![Fem3dMutation::CreateCombination(create_combination::CreateCombination { combination: crate::FemCombination { id, name: payload.name.clone(), terms }, index: None })]))
+            let id = semio_s_fem_app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
+            Ok(Emit::mutations(vec![Fem3dMutation::CreateCombination(create_combination::CreateCombination { combination: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination { id, name: payload.name.clone(), terms }, index: None })]))
         }
         Err(_) => Ok(Emit::default()),
     }

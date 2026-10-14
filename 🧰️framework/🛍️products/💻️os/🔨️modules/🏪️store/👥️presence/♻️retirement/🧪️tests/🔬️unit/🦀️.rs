@@ -2,7 +2,7 @@
 fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: String, presence: Value, received: i64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let mut actor = Some(actor); let mut presence = Some(presence);
     let result = publication.adopt(&mut actor, &mut presence, received, &mut original);
     assert!(result.is_ok(), "fixture must retain rejected inputs in its original caller");
@@ -12,7 +12,7 @@ fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: Strin
 fn commit_fixture(publication: &mut PresencePeersPublication<Value>, grant: RetainedCloneGrant) -> Result<PresencePeersCommit<Value>, ValueError> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let (commit, receipt) = publication.take_commit(&mut original)?;
     assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); Ok(commit)
 }
@@ -343,7 +343,7 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         let running = std::cell::Cell::new(refusal != "nativeCancellation");
         let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| running.get();
         let mut native = semio_framework_value::NativeDecodeControl::new(law["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observer);
-        let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, refused);
+        let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, refused);
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.adopt(&mut actor, &mut presence, law["receivedAtMilliseconds"].as_i64().unwrap(), &mut original));
         assert!(result.is_err());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (law["refusedRequestedBytes"].as_u64().unwrap() as usize, law["refusedReleasedBytes"].as_u64().unwrap() as usize));
@@ -353,7 +353,7 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         assert_eq!(presence.as_ref().unwrap().0, law["peer"]["value"].as_i64().unwrap() as i32);
         drop(original);
         running.set(true);
-        let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.adopt(&mut actor, &mut presence, law["receivedAtMilliseconds"].as_i64().unwrap(), &mut original));
         let step = step.unwrap();
         assert!(step.progress().fits(grant));

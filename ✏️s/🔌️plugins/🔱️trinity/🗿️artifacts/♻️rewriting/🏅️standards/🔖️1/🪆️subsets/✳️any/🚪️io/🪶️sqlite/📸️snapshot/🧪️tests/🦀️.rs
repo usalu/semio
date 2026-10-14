@@ -307,7 +307,7 @@ mod populated_public_owner {
     async fn sqlite_snapshot_rewriting_populated_actual_app_public_both_forms_independent_child_edit(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};
         use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};use store::sqlite_snapshot::*;use std::{io::Write,process::{Command,Stdio}};
-        let _plugin=semio_framework_plugin::Plugin::<RewritingArtifactApps>::builder("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::artifact::<RewritingArtifactApps>()).try_build().unwrap();
+        let _plugin=semio_framework_plugin::PluginBuilder::<_, RewritingArtifactApps>::new("trinity").label("Rewriting SQLite owner").version("0.1.0").package_id("semio:trinity").declare_artifact(crate::artifact::<RewritingArtifactApps>()).try_build().unwrap();
         let dialect=ArtifactDialect{artifact_kind:"s.trinity.rewriting".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
         for route in[io_route(&dialect,&sqlite,1).await.unwrap().value,io_route(&sqlite,&dialect,1).await.unwrap().value]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,IoFidelity::Exact);}
         for word in words(){let expected=Owned::new(full(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{

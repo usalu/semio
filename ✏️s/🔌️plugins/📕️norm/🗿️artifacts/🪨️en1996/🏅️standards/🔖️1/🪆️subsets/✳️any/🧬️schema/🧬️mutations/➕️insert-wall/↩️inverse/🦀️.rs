@@ -1,10 +1,10 @@
-use super::InsertWall;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-use crate::mutations::remove_wall;
-pub fn inverse(payload: &InsertWall, _base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::insert_wall::InsertWall;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use crate::remove_wall;
+pub fn inverse<Op>(payload: &InsertWall, _base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_wall::RemoveWall> {
     Ok((|| {
-    vec![En1996Mutation::RemoveWall(remove_wall::RemoveWall { index: payload.index })]
+    vec![Op::from(remove_wall::RemoveWall { index: payload.index })]
 
     })())
 }

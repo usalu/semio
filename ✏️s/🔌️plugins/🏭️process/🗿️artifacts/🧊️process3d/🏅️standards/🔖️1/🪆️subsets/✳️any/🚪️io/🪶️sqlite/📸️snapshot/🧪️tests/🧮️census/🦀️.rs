@@ -6,7 +6,7 @@ use super::*;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,SqliteValue}};
 #[test]
 fn sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️census/🔣️.json")).unwrap();assert_eq!(contract["scalarBytes"],8);
+ let contract:serde_json::Value=serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧮️census/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧮️census/🔣️.json").leak()).unwrap();assert_eq!(contract["scalarBytes"],8);
  for word in words(){
   let expected=full(word);
   let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();

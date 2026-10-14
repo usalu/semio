@@ -37,7 +37,7 @@ impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.
 impl<'a> NativeDecodeControl<'a> {
 
     /// 🫴️ Loans the original decoder's exact remaining capacity to a foreign construction phase.
-    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(crate::native_encoding::NativeEncodeProgress)->bool,&mut crate::native_encoding::NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.scoped_stage(|original|crate::value::native_receiving::scoped_encoding_receiver!(original,operation,NativeDecodeAllocation,NativeDecodeProgress))}
+    pub fn with_encoding_receiver<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(usize,&mut dyn FnMut(crate::native_encoding::NativeEncodeProgress)->bool,&mut crate::native_encoding::NativeEncodeAllocationPort<'_>)->Result<T,E>)->Result<T,E>{self.scoped_stage(|original|semio_framework_value_native_encoding::scoped_encoding_receiver!(original,operation,NativeDecodeAllocation,NativeDecodeProgress))}
     /// 🔭️ Reborrows the complete caller owner and composes observers without resetting its receipt.
     pub fn scoped_observer<T,E>(&mut self,observer:&mut dyn FnMut(NativeDecodeProgress)->bool,operation:impl FnOnce(&mut NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{observer::run(self,observer,operation)}
 
@@ -105,7 +105,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 🛂️ Starts with zero storage authority; each original retained turn must supply its grant.
     pub fn new_retained(callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self{let mut control=Self::new(0,callback);control.receiving=true;control}
     /// 🎟️ Binds this original turn's allocation authority without resetting cumulative ownership.
-    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=crate::value::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
+    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=semio_framework_value_native_encoding::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
 
     /// 📏️ Returns the caller's complete native allocation allowance.
     pub fn maximum_bytes(&self)->usize { self.maximum_bytes }

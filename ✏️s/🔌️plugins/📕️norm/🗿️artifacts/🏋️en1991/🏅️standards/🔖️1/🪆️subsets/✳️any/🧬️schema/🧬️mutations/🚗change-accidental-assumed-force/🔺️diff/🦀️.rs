@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `change-accidental-assumed-force`.
-use super::ChangeAccidentalAssumedForce;
-use crate::diff::{En1991AccidentalCaseDelta, En1991AccidentalCasePatch};
-use crate::{AccidentalImpact, En1991Diff, En1991Snapshot};
+use crate::change_accidental_assumed_force::ChangeAccidentalAssumedForce;
+use semio_s_artifact_norm_en1991_diff::{En1991AccidentalCaseDelta, En1991AccidentalCasePatch};
+use semio_s_artifact_norm_en1991_model::{AccidentalImpact, En1991Snapshot};
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
 pub fn diff(payload: &ChangeAccidentalAssumedForce, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.accidental_cases.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);

@@ -19,16 +19,40 @@
 //! slice it is looking at and the section stamps the full extent beside it, so neither listing needs
 //! a row cap nor a `+N` row standing in for the rest.
 
-use crate::editor::fem3d::commands::patch_combination::{ADD_TERM_FIELD, REMOVE_TERM_FIELD, TERM_FIELD_PREFIX};
-use crate::editor::fem3d::interaction::{
-    fem3d_entity_kind, fem3d_load_owner, Fem3dInteractionSnapshot, FEM3D_GRANULARITY_COMBINATION, FEM3D_GRANULARITY_ELEMENT, FEM3D_GRANULARITY_LOAD, FEM3D_GRANULARITY_LOAD_CASE, FEM3D_GRANULARITY_MATERIAL, FEM3D_GRANULARITY_NODE,
-    FEM3D_GRANULARITY_SECTION, FEM3D_GRANULARITY_SOLID, FEM3D_GRANULARITY_SUPPORT, FEM3D_INTERACTION_DOMAIN,
-};
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::ADD_TERM_FIELD;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::REMOVE_TERM_FIELD;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::TERM_FIELD_PREFIX;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_kind;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SOLID;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
 use crate::editor::fem3d::panels::artifact::dof_symbol;
-use crate::editor::fem3d::terminology::Fem3dLabels;
-use crate::editor::fem3d::{fem3d_action, ui_label};
-use crate::Fem3dSnapshot;
-use crate::{element_id, load_id, FemAxis, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_action;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
@@ -371,7 +395,7 @@ fn remove_term_row(doc: &Fem3dSnapshot, combination: &FemCombination, labels: &F
 /// and how much of it there is, plus the analysis settings read-only.
 fn summary(doc: &Fem3dSnapshot, labels: &Fem3dLabels) -> UiAssemblyResult<BuiltNode> {
     let mut counts = UiFixedList::default();
-    push(&mut counts, read_only_row("summary.schema", labels.schema.as_str(), crate::FEM_3D_SCHEMA))?;
+    push(&mut counts, read_only_row("summary.schema", labels.schema.as_str(), semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA))?;
     for (suffix, label, count) in [
         ("summary.nodes", labels.nodes.as_str(), doc.nodes.len()),
         ("summary.elements", labels.elements.as_str(), doc.elements.len()),
@@ -480,7 +504,4 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

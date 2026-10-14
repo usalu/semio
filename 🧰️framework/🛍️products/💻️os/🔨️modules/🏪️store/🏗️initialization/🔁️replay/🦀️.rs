@@ -1,9 +1,9 @@
 //! 🔁️ The framework-default retained store initializer: a ledger replay under the grant-based retained-clone contract.
 
 use super::{
-    ActorId, ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPack, ArtifactStore, ArtifactStoreInitializationAuthority, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog,
+    ActorId, ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreInitializationAuthority, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationOwnerCatalog,
     ArtifactStoreInitializationRuntime, CursorRevisionAccumulator, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, MutationId, OpBinary, OpText, ReturnedSnapshotReadRetirement, ToValue, artifact_retirement_admit_owned, artifact_retirement_box_close_step,
-    artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, bounded_artifact_store_owners, bounded_artifact_store_owners_birth_bytes, bounded_artifact_store_owners_birth_demand, fold_operation, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
+    artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, fold_operation, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
 };
 use semio_framework_job::{Generation, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, OperationId, RetainedJobPublication, StepContext};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -11,6 +11,8 @@ use semio_framework_value::retirement::{controlled::ControlledRetirement, Retire
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, size_of_val, ManuallyDrop};
 use std::sync::Arc;
+use super::document_store_owners::DocumentStoreOwnerProducer;
+use std::marker::PhantomData;
 
 /// 📏️ The widest id or encoded operation one replay turn admits, the page every retained store initializer shares.
 pub const ARTIFACT_STORE_REPLAY_FIELD_BYTES: usize = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
@@ -160,11 +162,13 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 /// by exact retirement of whatever the replay had born so far.
 ///
 /// 🔗️ [`ArtifactStoreInitializationRuntime`] · [`ArtifactStore::from_initialized_runtime_with_owners`]
-pub struct ArtifactStoreReplayInitializer<P, M>
+pub struct ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    C:DocumentStoreOwnerProducer<P,M>,
 {
+    producer:PhantomData<fn()->C>,
     operation: OperationId,
     generation: Generation,
     schema: &'static str,
@@ -191,14 +195,16 @@ where
     terminal_handoff: bool,
 }
 
-impl<P, M> ArtifactStoreReplayInitializer<P, M>
+impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    C:DocumentStoreOwnerProducer<P,M>,
 {
     /// 🌱️ Captures the completed `envelope` of a document of `schema` for the replay `operation` of `generation`, owned by `actor`.
     pub fn new(envelope: ArtifactEnvelope<P, M>, schema: &'static str, operation: OperationId, generation: Generation, actor: ActorId) -> Self {
         Self {
+            producer:PhantomData,
             operation,
             generation,
             schema,
@@ -416,14 +422,14 @@ where
     fn admit_owners(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Turn {
         let admitted = match self.owners.as_mut() {
             None => {
-                let demand = match bounded_artifact_store_owners_birth_demand::<P, M>() {
+                let demand = match C::source_demands() {
                     Ok(demand) => demand,
                     Err(error) => return self.refuse(cx, error),
                 };
-                if demand.admit(grant).is_err() {
+                if !permits(grant,demand) {
                     return Turn::Yield;
                 }
-                match bounded_artifact_store_owners::<P, M>(grant) {
+                match C::admit_sources(grant) {
                     Ok((owners, progress)) => {
                         *self.owners = Some(owners);
                         Ok(progress)
@@ -656,7 +662,7 @@ where
         }
         if let Some(envelope) = self.envelope.as_ref() {
             let Some(owners) = self.owners.as_ref() else {
-                return Ok(RetirementDemand { copy_bytes: size_of::<Option<DocumentStoreOwners<P, M>>>(), capacity_bytes: bounded_artifact_store_owners_birth_bytes::<P, M>(), depth: 1, ..Default::default() });
+                let mut source=C::source_demands()?;source.copy_bytes=source.copy_bytes.checked_add(size_of::<Option<DocumentStoreOwners<P,M>>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"replay original catalog placement overflows"))?;return Ok(source);
             };
             if !owners.constructor_is_complete() {
                 return nested(owners.constructor_demands(body)?);
@@ -744,7 +750,7 @@ where
             if self.owners.is_none() {
                 let placement = demand.copy_bytes;
                 let owner_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - placement, ..grant };
-                return match bounded_artifact_store_owners::<P, M>(owner_grant) {
+                return match C::admit_sources(owner_grant) {
                     Ok((owners, mut receipt)) => {
                         *self.owners = Some(owners);
                         receipt.copied_bytes += placement;
@@ -816,10 +822,11 @@ where
     }
 }
 
-impl<P, M> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M>
+impl<P, M, C> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    C:DocumentStoreOwnerProducer<P,M>,
 {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         match self.turn(cx) {
@@ -886,10 +893,11 @@ where
     }
 }
 
-impl<P, M> Drop for ArtifactStoreReplayInitializer<P, M>
+impl<P, M, C> Drop for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + RetireOwned + Send + Sync + 'static,
+    P: Clone + ToValue + FromValue + RetireOwned + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    C:DocumentStoreOwnerProducer<P,M>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.terminal_handoff && self.close_is_terminal()), "replay initializer reached Drop before exact candidate handoff or retained rejection close");

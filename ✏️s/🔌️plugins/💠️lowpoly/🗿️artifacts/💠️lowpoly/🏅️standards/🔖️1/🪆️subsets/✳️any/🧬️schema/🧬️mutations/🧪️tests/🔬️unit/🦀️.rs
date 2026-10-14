@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use super::*;
-use crate::{schema::default_snapshot, LowpolyObject, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::{default_snapshot, snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 use protocol::Mutation;
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
@@ -15,19 +15,19 @@ fn tiny_object(id: &str, name: &str) -> LowpolyObject {
 #[semio_framework_async_macros::async_test]
 async fn create_object_obeys_the_inverse_and_absorb_laws() {
     let base = default_snapshot();
-    let create = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
+    let create = LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
     let d1 = create.diff(&base).into_parts().0;
     let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
-    let d2 = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
+    let d2 = LowpolyMutation::RenameObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
     let base = default_snapshot();
-    let delete = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "nope".into() });
+    let delete = LowpolyMutation::DeleteObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::delete_object::DeleteObject { id: "nope".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an absent id has nothing to undo");
 }
 
@@ -35,7 +35,7 @@ async fn delete_object_of_a_missing_id_has_an_empty_inverse() {
 async fn move_object_obeys_the_inverse_law() {
     let base = default_snapshot();
     let id = base.objects[0].id.clone();
-    let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
+    let mutation = LowpolyMutation::MoveObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
@@ -48,21 +48,21 @@ async fn move_object_obeys_the_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn delete_object_missing_target_is_an_error() {
     let base = default_snapshot();
-    let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "does-not-exist".into() });
+    let mutation = LowpolyMutation::DeleteObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::delete_object::DeleteObject { id: "does-not-exist".into() });
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_object_missing_target_is_an_error() {
     let base = default_snapshot();
-    let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
+    let mutation = LowpolyMutation::MoveObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::move_object::MoveObject { id: "does-not-exist".into(), new_position: [1.0, 2.0, 3.0] });
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_object_missing_target_is_an_error() {
     let base = default_snapshot();
-    let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
+    let mutation = LowpolyMutation::RenameObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject { id: "does-not-exist".into(), new_name: "X".into() });
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
@@ -70,7 +70,7 @@ async fn rename_object_missing_target_is_an_error() {
 async fn create_object_duplicate_id_is_fatal_and_never_applies() {
     let base = default_snapshot();
     let existing_id = base.objects[0].id.clone();
-    let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
+    let mutation = LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index: 0, object: tiny_object(&existing_id, "Dup") });
     let outcome = mutation.diff(&base);
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
@@ -79,7 +79,7 @@ async fn create_object_duplicate_id_is_fatal_and_never_applies() {
 #[semio_framework_async_macros::async_test]
 async fn create_object_outcome_obeys_the_policy_matrix() {
     let base = default_snapshot();
-    let mutation = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
+    let mutation = LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
@@ -87,7 +87,7 @@ async fn create_object_outcome_obeys_the_policy_matrix() {
 async fn delete_object_outcome_obeys_the_policy_matrix() {
     let base = default_snapshot();
     let existing_id = base.objects[0].id.clone();
-    let mutation = LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: existing_id });
+    let mutation = LowpolyMutation::DeleteObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::delete_object::DeleteObject { id: existing_id });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
@@ -95,7 +95,7 @@ async fn delete_object_outcome_obeys_the_policy_matrix() {
 async fn move_object_outcome_obeys_the_policy_matrix() {
     let base = default_snapshot();
     let id = base.objects[0].id.clone();
-    let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
+    let mutation = LowpolyMutation::MoveObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 
@@ -103,7 +103,7 @@ async fn move_object_outcome_obeys_the_policy_matrix() {
 async fn rename_object_outcome_obeys_the_policy_matrix() {
     let base = default_snapshot();
     let id = base.objects[0].id.clone();
-    let mutation = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id, new_name: "Renamed".into() });
+    let mutation = LowpolyMutation::RenameObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject { id, new_name: "Renamed".into() });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws
@@ -120,7 +120,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -129,11 +129,11 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 //#region 🔄TestInputresh
 fn fixture_json_encode<T: semio_framework_value::ToValue>(value: &T) -> String {
-    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(crate::standards::v1::subsets::any::io::text::lowpoly_json_value(value))).expect("fixture json encode") + "\n"
+    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_value(value))).expect("fixture json encode") + "\n"
 }
 
 fn fixture_json_decode<T: semio_framework_value::FromValue>(text: &str) -> T {
-    crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
+    semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
 }
 
 /// 🔄️ Re-encodes every committed mutation quintet under `🧫️fixtures/🧬️mutations` when
@@ -183,14 +183,14 @@ fn refresh_lowpoly_mutation_fixtures_when_requested() {
 async fn middle_row_edits_restore_their_original_index() {
     let mut base = default_snapshot();
     base.objects = ["a", "b", "c", "d"].map(|id| tiny_object(id, id)).to_vec();
-    base.objects[1].paint_layers = ["x", "y", "z"].map(crate::LowpolyPaintLayer::new).to_vec();
+    base.objects[1].paint_layers = ["x", "y", "z"].map(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::new).to_vec();
     let mutations = vec![
-        LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "b".into() }),
-        LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 2, object: tiny_object("n", "New") }),
-        LowpolyMutation::ReorderObjects(super::super::reorder_objects::ReorderObjects { id: "b".into(), to_index: 3 }),
-        LowpolyMutation::ReorderObjects(super::super::reorder_objects::ReorderObjects { id: "c".into(), to_index: 0 }),
-        LowpolyMutation::RemovePaintLayer(super::super::remove_paint_layer::RemovePaintLayer { object_id: "b".into(), index: 1 }),
-        LowpolyMutation::InsertPaintLayer(super::super::insert_paint_layer::InsertPaintLayer { object_id: "b".into(), index: 1, layer: crate::LowpolyPaintLayer::new("new") }),
+        LowpolyMutation::DeleteObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::delete_object::DeleteObject { id: "b".into() }),
+        LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index: 2, object: tiny_object("n", "New") }),
+        LowpolyMutation::ReorderObjects(semio_s_artifact_lowpoly_lowpoly_mut_objects::reorder_objects::ReorderObjects { id: "b".into(), to_index: 3 }),
+        LowpolyMutation::ReorderObjects(semio_s_artifact_lowpoly_lowpoly_mut_objects::reorder_objects::ReorderObjects { id: "c".into(), to_index: 0 }),
+        LowpolyMutation::RemovePaintLayer(semio_s_artifact_lowpoly_lowpoly_mut_paint::remove_paint_layer::RemovePaintLayer { object_id: "b".into(), index: 1 }),
+        LowpolyMutation::InsertPaintLayer(semio_s_artifact_lowpoly_lowpoly_mut_paint::insert_paint_layer::InsertPaintLayer { object_id: "b".into(), index: 1, layer: semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::new("new") }),
     ];
     for mutation in mutations {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;

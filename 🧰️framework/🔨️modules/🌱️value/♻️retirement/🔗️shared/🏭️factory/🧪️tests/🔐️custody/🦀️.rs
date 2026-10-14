@@ -1,6 +1,6 @@
 //! 🧪️ Original weak aliases and refused payloads remain attached through exact physical closure.
 use super::super::*;
-use crate::{FactoryPayloadRetirement,value::observe_retirement_allocations,retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement,controlled_retirement_birth_bytes}};
+use crate::{FactoryPayloadRetirement,allocation_testing::observe_retirement_allocations,retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement,controlled_retirement_birth_bytes}};
 use std::sync::atomic::{AtomicBool,Ordering};
 struct Factory {refuse:AtomicBool,payload:String}
 impl FactoryPayloadRetirement for Factory {
@@ -41,7 +41,8 @@ fn shared_factory_custody_retains_original_weak_refused_and_empty_capacity_owner
 
 #[test]
 fn shared_factory_in_place_admission_preserves_original_slots_and_exact_issuer_receipts(){
-    use crate::retirement::{queue::RetirementQueue,admit_original_owned_retirement};
+    use semio_framework_value_retirement_queue::RetirementQueue;
+    use crate::admit_original_owned_retirement;
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["admissionRoutes"].as_array().unwrap(){for row in law["cases"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){
         let payload=text(&row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize),row["capacity"].as_u64().unwrap()as usize);let pointer=payload.as_ptr();let shared=route=="shared";let originals=payload.capacity()+271+crate::retirement::shared::arc_bytes::<Factory>()+if shared{crate::retirement::shared::arc_bytes::<String>()}else{0};

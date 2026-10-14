@@ -8,7 +8,7 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_tool_run::{ToolRunCounterDefinition, ToolRunReasonDefinition, ToolRunStageDefinition};
-use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
+use {semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunCounter, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunReason, semio_s_artifact_puzzle_3d_model::BrushSuggestionsRunStage, semio_s_artifact_puzzle_3d_model::FillRunCounter, semio_s_artifact_puzzle_3d_model::FillRunReason, semio_s_artifact_puzzle_3d_model::FillRunStage};
 
 //#region 🔖️Labels
 semio_framework_ui_locale::app_labels! {

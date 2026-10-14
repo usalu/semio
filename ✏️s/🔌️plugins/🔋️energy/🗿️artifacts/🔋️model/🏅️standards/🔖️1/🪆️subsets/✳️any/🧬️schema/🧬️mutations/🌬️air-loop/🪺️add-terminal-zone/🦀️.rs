@@ -1,8 +1,7 @@
 //! 🪺️ Energy model mutation — `AddAirLoopTerminalZone`: Puts one more zone on the air loop's terminal list, at its ascending position.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct AddAirLoopTerminalZone {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_air_loop_terminal_zone(id: crate::model::EntityId, zone_id: crate::model::EntityId, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::AddAirLoopTerminalZone(AddAirLoopTerminalZone { id, zone_id, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn add_air_loop_terminal_zone<Op: From<AddAirLoopTerminalZone>>(id: crate::model::EntityId, zone_id: crate::model::EntityId, index: Option<u32>) -> Op {
+    AddAirLoopTerminalZone { id, zone_id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddAirLoopTerminalZone {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddAirLoopTerminalZone
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddAirLoopTerminalZone> + From<crate::RemoveAirLoopTerminalZone>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "air-loop", kind: "add-air-loop-terminal-zone", record: "AddedAirLoopTerminalZone" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

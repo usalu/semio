@@ -1,15 +1,15 @@
 //! 🏭️ Borrowed VDI catalogue, custom tagged values and physical cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
 use semio_framework_value::{DslValue as V,NativeDecodeControl};
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 type Object<'a>=&'a[(String,V)];
 fn attributes(configuration:&R)->Result<Object<'_>,ValueError>{match n::field(configuration,1)?{F::Value(V::Object(fields))=>Ok(fields),_=>Err(invalid("VDI native attributes require their authored value object"))}}
-fn vf<'a>(fields:Object<'a>,key:&str)->Result<&'a V,ValueError>{crate::sheet_attribute_field(fields,key)}
+fn vf<'a>(fields:Object<'a>,key:&str)->Result<&'a V,ValueError>{semio_s_artifact_norm_vdi3805_model::sheet_attribute_field(fields,key)}
 fn vt<'a>(fields:Object<'a>,key:&str)->Result<Cell<'a>,ValueError>{vf(fields,key)?.as_str().map(Cell::Text).ok_or_else(||invalid("VDI attribute text required"))}
-fn vr(fields:Object<'_>,key:&str)->Result<Cell<'static>,ValueError>{crate::sheet_attribute_real(fields,key).map(Cell::Real)}
-fn vu(fields:Object<'_>,key:&str)->Result<Cell<'static>,ValueError>{crate::sheet_attribute_u16(fields,key).map(|value|Cell::Integer(i64::from(value)))}
+fn vr(fields:Object<'_>,key:&str)->Result<Cell<'static>,ValueError>{semio_s_artifact_norm_vdi3805_model::sheet_attribute_real(fields,key).map(Cell::Real)}
+fn vu(fields:Object<'_>,key:&str)->Result<Cell<'static>,ValueError>{semio_s_artifact_norm_vdi3805_model::sheet_attribute_u16(fields,key).map(|value|Cell::Integer(i64::from(value)))}
 fn vo<'a>(fields:Object<'a>,key:&str)->Result<Cell<'a>,ValueError>{match fields.iter().find(|(k,_)|k==key).map(|(_,v)|v){None|Some(V::Null)=>Ok(Cell::Null),Some(V::String(value))=>Ok(Cell::Text(value)),_=>Err(invalid("VDI optional attribute text required"))}}
 fn kind(fields:Object<'_>)->Result<&str,ValueError>{vf(fields,"kind")?.as_str().ok_or_else(||invalid("VDI attribute kind required"))}
 fn entries(fields:Object<'_>)->Result<&[V],ValueError>{match fields.iter().find(|(k,_)|k=="entries").map(|(_,v)|v){None=>Ok(&[]),Some(V::Array(values))=>Ok(values),_=>Err(invalid("VDI generic attribute list required"))}}
@@ -41,8 +41,8 @@ fn count<'r>(root:&'r R,native:&mut NativeDecodeControl<'_>,maps:&Maps<'r>)->Res
  let catalog=n::record(n::field(root,0)?)?;let file=n::record(n::field(catalog,0)?)?;let mut rows=n::add(n::add(5,maps.values(extension(n::field(catalog,2)?)?).count())?,maps.values(extension(n::field(file,6)?)?).count())?;
  for p in n::list(n::field(catalog,1)?)?{let p=n::record(p)?;rows=n::add(rows,3)?;for id in[2,6,7]{rows=n::add(rows,n::list(n::field(p,id)?)?.len())?}rows=n::add(rows,maps.values(extension(n::field(p,8)?)?).count())?;
  for r in n::list(n::field(p,4)?)?{let r=n::record(r)?;rows=n::add(rows,n::add(n::add(1,n::list(n::field(r,1)?)?.len())?,maps.values(extension(n::field(r,2)?)?).count())?)?;}
- let c=n::record(n::field(p,5)?)?;rows=n::add(rows,n::list(n::field(c,3)?)?.len())?;let fields=attributes(c)?;let allowed:&[&str]=match kind(fields)?{"valveHeating"=>&["kind","dn","kvsM3S","pressureClass","connectionType","authorityMin","authorityMax"],"radiator"=>&["kind","standardOutputW","heatExponentN","lengthM","heightM","depthM","connectionType"],"pumpHeating"=>&["kind","dnSuction","dnDischarge","nominalFlowM3S","nominalHeadM","motorPowerW","hydraulicEfficiency","qhCurveRef"],"heatGenerator"=>&["kind","nominalHeatOutputW","fuelType","flowTempMaxC","returnTempMinC"],"generic"=>&["kind","entries"],_=>return Err(invalid("unknown VDI sheet attribute kind"))};let F::Value(value)=n::field(c,1)?else{unreachable!()};crate::sheet_attribute_object(value,allowed,native)?;
- if kind(fields)?=="generic"{let entries=entries(fields)?;rows=n::add(rows,entries.len())?;for entry in entries{crate::sheet_attribute_object(entry,&["key","value","unit"],native)?;}}
+ let c=n::record(n::field(p,5)?)?;rows=n::add(rows,n::list(n::field(c,3)?)?.len())?;let fields=attributes(c)?;let allowed:&[&str]=match kind(fields)?{"valveHeating"=>&["kind","dn","kvsM3S","pressureClass","connectionType","authorityMin","authorityMax"],"radiator"=>&["kind","standardOutputW","heatExponentN","lengthM","heightM","depthM","connectionType"],"pumpHeating"=>&["kind","dnSuction","dnDischarge","nominalFlowM3S","nominalHeadM","motorPowerW","hydraulicEfficiency","qhCurveRef"],"heatGenerator"=>&["kind","nominalHeatOutputW","fuelType","flowTempMaxC","returnTempMinC"],"generic"=>&["kind","entries"],_=>return Err(invalid("unknown VDI sheet attribute kind"))};let F::Value(value)=n::field(c,1)?else{unreachable!()};semio_s_artifact_norm_vdi3805_model::sheet_attribute_object(value,allowed,native)?;
+ if kind(fields)?=="generic"{let entries=entries(fields)?;rows=n::add(rows,entries.len())?;for entry in entries{semio_s_artifact_norm_vdi3805_model::sheet_attribute_object(entry,&["key","value","unit"],native)?;}}
  }
  rows=n::add(rows,maps.values(n::map(n::field(root,1)?)?).count())?;for entry in n::list(n::field(n::record(n::field(root,4)?)?,0)?)?{let e=n::record(entry)?;rows=n::add(rows,n::add(1,n::list(n::field(e,2)?)?.len())?)?;}
  for(_,g)in maps.values(n::map(n::field(root,5)?)?){let g=n::record(g)?;rows=n::add(rows,n::add(n::add(1,n::list(n::field(g,2)?)?.len())?,maps.values(n::map(n::field(g,3)?)?).count())?)?;}
@@ -81,4 +81,4 @@ fn write<'r>(root:&'r R,out:&mut RowWriter<'_,'_>,maps:&Maps<'r>)->Result<(),Val
  for(index,p)in n::list(n::field(c,3)?)?.iter().enumerate(){n::entity(out,"vdi3805_curve_point",parent,index,&n::cells(n::record(p)?,[Real(0),Real(1)])?,POINT)?;}}Ok(())
 }
 /// 🛂️ Thirty-two physical tables with all authored tagged branches and copied controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(0)?;let maps=Maps::new(root,native,limits)?;let rows=count(root,native,&maps)?;n::admit(root,native,limits,Vdi3805Snapshot::SQLITE_SCHEMA,32,27,rows,|root,out|write(root,out,&maps))})}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(0)?;let maps=Maps::new(root,native,limits)?;let rows=count(root,native,&maps)?;n::admit(root,native,limits,Vdi3805Snapshot::SQLITE_SCHEMA,32,27,rows,|root,out|write(root,out,&maps))})}

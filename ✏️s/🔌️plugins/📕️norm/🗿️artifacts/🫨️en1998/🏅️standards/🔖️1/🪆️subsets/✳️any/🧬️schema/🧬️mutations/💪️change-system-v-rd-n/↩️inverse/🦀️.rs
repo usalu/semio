@@ -1,11 +1,11 @@
 //! Inverse for `change-system-v-rd-n`.
-use super::ChangeSystemVRdN;
-use crate::{En1998Mutation, En1998Snapshot};
+use crate::change_system_v_rd_n::ChangeSystemVRdN;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
-pub fn inverse(payload: &ChangeSystemVRdN, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &ChangeSystemVRdN, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_system_v_rd_n::ChangeSystemVRdN> {
     Ok((|| {
     match base.buildings.get(payload.building_index).and_then(|b| b.systems.get(payload.system_index)) {
-        Some(sys) => vec![En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN { building_index: payload.building_index, system_index: payload.system_index, new_base_shear_resistance_n: sys.base_shear_resistance_n })],
+        Some(sys) => vec![Op::from(ChangeSystemVRdN { building_index: payload.building_index, system_index: payload.system_index, new_base_shear_resistance_n: sys.base_shear_resistance_n })],
         None => Vec::new(),
     }
 

@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -23,7 +24,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// effects, all UI-chrome/RPC `Effect` variants with no documented `CapabilityId`, justifies
 /// otherwise), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin<CadApps>, PluginAssemblyError> {
-    Plugin::<CadApps>::builder("cad")
+    PluginBuilder::<_, CadApps>::new("cad")
         .label("CAD")
         .version("0.1.0")
         .package_id("semio:cad")

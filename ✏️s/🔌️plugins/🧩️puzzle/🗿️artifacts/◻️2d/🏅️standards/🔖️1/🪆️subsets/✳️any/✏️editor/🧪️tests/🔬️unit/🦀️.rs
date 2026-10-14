@@ -60,7 +60,7 @@ pub(crate) mod context {
     }
     
     pub fn window_view(kind: &str, id: &str) -> ViewModel {
-        let mut window_instances = [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID]
+        let mut window_instances = [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID]
             .into_iter()
             .map(|kind| ViewWindowInstance { id: kind.into(), window_kind_id: kind.into() })
             .collect::<Vec<_>>();
@@ -75,9 +75,9 @@ pub(crate) mod context {
             .and_then(|value| value.get("windowId").or_else(|| value.get("window_id")).or_else(|| value.get("pane")).or_else(|| value.get("window")))
             .and_then(Value::as_str);
         let kind = requested
-            .filter(|kind| [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID].contains(kind))
-            .or_else(|| window_id.filter(|kind| [overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID].contains(kind)))
-            .unwrap_or(overview::WINDOW_KIND_ID);
+            .filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind))
+            .or_else(|| window_id.filter(|kind| [crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID].contains(kind)))
+            .unwrap_or(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
         let id = window_id.or(requested).unwrap_or(kind);
         ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
     }
@@ -248,9 +248,9 @@ pub(crate) mod context {
     /// 🪟️ The window kind a canvas body paints, `None` for a panel body.
     fn body_window_kind(body_key: &str) -> Option<&'static str> {
         match body_key {
-            overview::BODY_KEY => Some(overview::WINDOW_KIND_ID),
-            detail::BODY_KEY => Some(detail::WINDOW_KIND_ID),
-            selection::BODY_KEY => Some(selection::WINDOW_KIND_ID),
+            overview::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID),
+            detail::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID),
+            selection::BODY_KEY => Some(crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID),
             _ => None,
         }
     }
@@ -379,7 +379,7 @@ pub(crate) mod context {
 }
 
 use context::*;
-use crate::apply_puzzle2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use super::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
@@ -593,11 +593,11 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle2d_store,puzzle2d_store};
 
-    use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
-    let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
+    let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
@@ -632,8 +632,8 @@ async fn exact_overview_window_cameras_isolate_render_and_reload_through_registe
     let mut reopened = Box::new(app_with_registry());
     let window_a = "puzzle2d-overview-a";
     let window_b = "puzzle2d-overview-b";
-    let view_a = window_view(overview::WINDOW_KIND_ID, window_a);
-    let view_b = window_view(overview::WINDOW_KIND_ID, window_b);
+    let view_a = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, window_a);
+    let view_b = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, window_b);
     let document_before = fixture_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before window publications");
     let result_a = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "x": 18.0, "y": -4.0, "zoom": 2.0 } })), Some(window_a)).expect("setCamera a");
@@ -665,20 +665,20 @@ async fn exact_overview_window_transient_isolates_abort_and_resets_on_reload() {
     let mut reopened = Box::new(app_with_registry());
     let window_a = "puzzle2d-transient-a";
     let window_b = "puzzle2d-transient-b";
-    let view_a = window_view(overview::WINDOW_KIND_ID, window_a);
-    let view_b = window_view(overview::WINDOW_KIND_ID, window_b);
-    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
+    let view_a = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, window_a);
+    let view_b = window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, window_b);
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "fill" })), Some(window_a)).expect("window a engagement input");
     let transient_a = app.window_transient_snapshot(&view_a).expect("window a transient").expect("window a owner");
     let transient_b = app.window_transient_snapshot(&view_b).expect("window b transient").expect("window b owner");
     assert_eq!(transient_a.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some("fill"));
     assert_eq!(transient_b.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
-    dispatch(&mut app, "engagementAbort", Some(&json!({ "pane": overview::WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
+    dispatch(&mut app, "engagementAbort", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID })), Some(window_a)).expect("abort window a engagement");
     let aborted = app.window_transient_snapshot(&view_a).expect("aborted transient").expect("aborted owner");
     assert_eq!(aborted.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
-    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
-    let submitted = dispatch(&mut app, "engagementSubmit", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("window a second engagement input");
+    let submitted = dispatch(&mut app, "engagementSubmit", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "brush" })), Some(window_a)).expect("submit window a engagement");
     assert!(submitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id, .. } if window_id == window_a)));
-    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": overview::WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
+    dispatch(&mut app, "engagementInput", Some(&json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "draft" })), Some(window_a)).expect("window a third engagement input");
     let reset = reopened.window_transient_snapshot(&view_a).expect("reopened transient").expect("reopened owner");
     assert_eq!(reset.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
@@ -821,7 +821,7 @@ async fn add_node_action_declares_full_ui_scope() {
 fn app_definition_has_three_lod_pane_window_kinds() {
     let definition = create_puzzle2d_app();
     let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
-    assert_eq!(ids, vec![overview::WINDOW_KIND_ID, detail::WINDOW_KIND_ID, selection::WINDOW_KIND_ID]);
+    assert_eq!(ids, vec![crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID]);
     for window in &definition.window_kinds {
         assert!(window.options.engagement.as_option().is_some(), "pane {} must have engagement", window.id);
         assert!(!window.options.measures.is_empty(), "pane {} must have LOD/suggestion measures", window.id);
@@ -847,7 +847,7 @@ fn utility_registry_declares_utilities() {
     let definition = create_puzzle2d_app();
     let ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
     assert_eq!(ids, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
-    let overview_window = definition.window_kinds.iter().find(|window| window.id == overview::WINDOW_KIND_ID).expect("overview pane");
+    let overview_window = definition.window_kinds.iter().find(|window| window.id == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).expect("overview pane");
     let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     assert!(dispatchable_actions(&definition, overview_window).iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
@@ -900,10 +900,10 @@ fn every_declared_action_resolves_to_a_command() {
 async fn settings_steppers_address_the_focused_pane_or_no_pane() {
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
-    let focused = semio_framework_plugin::ViewModel { focused_window_id: Some(detail::WINDOW_KIND_ID.into()), ..window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID) }.for_panel();
+    let focused = semio_framework_plugin::ViewModel { focused_window_id: Some(crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID.into()), ..window_view(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID) }.for_panel();
     let body = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &focused);
     assert!(body.contains("setFillCount"), "the settings body must carry the fill-count stepper: {}", &body[..body.len().min(300)]);
-    assert!(body.contains(&format!("\"windowId\":\"{}\"", detail::WINDOW_KIND_ID)), "a stepper must address the focused pane: {}", &body[..body.len().min(600)]);
+    assert!(body.contains(&format!("\"windowId\":\"{}\"", crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID)), "a stepper must address the focused pane: {}", &body[..body.len().min(600)]);
     let unhosted = render_body_with_view(&mut app, settings::PUZZLE2D_PLAY_BODY_SETTINGS, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     close_app(&mut app);
     assert!(unhosted.contains("setFillCount") && !unhosted.contains("windowId"), "with no live pane the steppers must carry no windowId: {}", &unhosted[..unhosted.len().min(600)]);
@@ -992,13 +992,13 @@ async fn view_actions_emit_no_ops_through_the_registry() {
         ("selectSameKind", Value::Null),
         ("setGridSnapEnabled", json!({ "enabled": true })),
         ("setGridFactor", json!({ "value": 2.0 })),
-        ("setLodModeForPane", json!({ "pane": overview::WINDOW_KIND_ID, "value": "detail" })),
+        ("setLodModeForPane", json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "detail" })),
         ("setBrushKindWeights", json!({ "kindId": "node", "value": 0.5 })),
         ("setBrushNodeSize", json!({ "size": 12.0 })),
         ("setSuggestionOffset", json!({ "value": 40.0 })),
-        ("engagementInput", json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })),
-        ("engagementSubmit", json!({ "pane": overview::WINDOW_KIND_ID, "value": "brush" })),
-        ("engagementAbort", json!({ "pane": overview::WINDOW_KIND_ID })),
+        ("engagementInput", json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "brush" })),
+        ("engagementSubmit", json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, "value": "brush" })),
+        ("engagementAbort", json!({ "pane": crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID })),
         ("cycleBrushCandidate", json!({ "forward": true })),
         ("cycleBrushCandidateBack", Value::Null),
         ("hoverSuggestion", json!({ "index": 0 })),
@@ -1093,7 +1093,7 @@ async fn dragging_a_node_keeps_the_painted_board_parseable() {
     let x = node.get("x").and_then(Value::as_f64).expect("x") + 8.0;
     let y = node.get("y").and_then(Value::as_f64).expect("y") + 4.0;
     let events = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": [id], "dx": 8.0, "dy": 4.0, "proximity": [] } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(overview::WINDOW_KIND_ID));
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID));
     assert!(result.is_ok(), "applyBoardEvents must not fault: {:?}", result.err());
     let moved = board_snapshot_nodes(&fixture_of(&app)).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id.as_str())).cloned().expect("moved node");
     assert_eq!(moved.get("x").and_then(Value::as_f64), Some(x), "the drag must commit the new x");
@@ -1110,7 +1110,7 @@ async fn board_select_row_reaches_the_inspector_and_the_board() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
     let id = first_node_id(&app);
     let events = json!([{ "name": "hover", "payload": { "id": id } }, { "name": "select", "payload": { "ids": [id], "gesture": "click" } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(overview::WINDOW_KIND_ID));
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": events })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID));
     assert!(result.is_ok(), "applyBoardEvents must not fault: {:?}", result.err());
     let board = render_body(&mut app, overview::BODY_KEY);
     let inspector = render_body(&mut app, inspection::PUZZLE2D_PLAY_BODY_PROPERTIES);
@@ -1201,7 +1201,7 @@ fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
         }
     }
     let idle = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    assert!(edit::puzzle2d_board_scene("{}", &idle, overview::WINDOW_KIND_ID).hovered_id.is_none(), "no hover must paint no hover");
+    assert!(edit::puzzle2d_board_scene("{}", &idle, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).hovered_id.is_none(), "no hover must paint no hover");
 }
 
 /// 💡️ LAW: the popup rides the board scene with the SAME candidate page the armed brush cycles, and the
@@ -1211,14 +1211,14 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
     let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let handle_id = first_free_handle_id(&snapshot).expect("concrete forest offers a free handle");
     let runtime = crate::editor::puzzle2d::config::Puzzle2dPlayRuntime {
-        suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: overview::WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
+        suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
         brush_candidate_source_handle_id: handle_id.clone(),
         brush_candidate_index: 1,
         brush_candidates: vec![semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "alpha", "targetHandleIndex": 0 }))), semio_framework_value::ToValue::to_value(&(&json!({ "nodeKind": "beta", "targetHandleIndex": 2 })))],
         ..Default::default()
     };
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    let scene = edit::puzzle2d_board_scene("{}", &envelope, overview::WINDOW_KIND_ID);
+    let scene = edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID);
     let menu: Value = semio_framework_pack_json::from_json_str(&scene.suggestion_menu_json.expect("an open popup must reach the client"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("menu json");
     assert_eq!(menu["open"], json!(true));
     assert_eq!((menu["x"].as_f64(), menu["y"].as_f64()), (Some(12.0), Some(34.0)));
@@ -1236,7 +1236,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
 fn a_closed_suggestion_popup_publishes_no_menu() {
     let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
-    assert!(edit::puzzle2d_board_scene("{}", &envelope, overview::WINDOW_KIND_ID).suggestion_menu_json.is_none());
+    assert!(edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).suggestion_menu_json.is_none());
 }
 
 /// 💡️ LAW: the context menu offers the popup on ONE selected handle and on nothing else — the entry
@@ -1275,10 +1275,10 @@ async fn open_hover_accept_places_one_node_on_concrete_forest_and_reselects_it()
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
     let before_nodes = board_snapshot_nodes(&before).len();
-    let opened = dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 10.0, "y": 20.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    let opened = dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 10.0, "y": 20.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("open the popup");
     assert_eq!(committed_edits(&opened), 0, "opening the picker must not touch the document");
-    dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("preview a candidate");
-    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept");
+    dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("preview a candidate");
+    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "handleId": handle_id.as_str() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("accept");
     let after = fixture_of(&app);
     let placed: Vec<String> = board_snapshot_nodes(&after).iter().filter_map(|node| node.get("id").and_then(Value::as_str)).filter(|id| !board_snapshot_nodes(&before).iter().any(|node| node.get("id").and_then(Value::as_str) == Some(*id))).map(str::to_string).collect();
     let fastened = board_snapshot_edges(&after).iter().any(|edge| [edge.get("source"), edge.get("target")].iter().flatten().any(|end| end.as_str() == Some(handle_id.as_str())));
@@ -1299,8 +1299,8 @@ async fn nakagin_refuses_the_suggestions_popup_politely() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
     let before = fixture_of(&app);
     let handle_id = board_snapshot_edges(&before)[0].get("source").and_then(Value::as_str).expect("edge source").to_string();
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
-    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "handleId": handle_id.as_str() })), Some(overview::WINDOW_KIND_ID)).expect("accept must not fault");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("open the popup");
+    let accepted = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "handleId": handle_id.as_str() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("accept must not fault");
     let after = fixture_of(&app);
     close_app(&mut app);
     assert_eq!(committed_edits(&accepted), 0, "there is nothing to place, so nothing commits");
@@ -1315,8 +1315,8 @@ async fn closing_the_suggestions_popup_discards_the_preview() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
-    let closed = dispatch(&mut app, "closeHandleSuggestions", None, Some(overview::WINDOW_KIND_ID)).expect("close");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("open the popup");
+    let closed = dispatch(&mut app, "closeHandleSuggestions", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("close");
     let after = fixture_of(&app);
     close_app(&mut app);
     assert_eq!(committed_edits(&closed), 0, "closing the picker never commits");
@@ -1331,9 +1331,9 @@ async fn cycling_candidates_forward_and_back_never_commits() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     let handle_id = first_free_handle_id(&before).expect("concrete forest offers a free handle");
-    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(overview::WINDOW_KIND_ID)).expect("open the popup");
+    dispatch(&mut app, "openHandleSuggestions", Some(&json!({ "handleId": handle_id.as_str(), "x": 0.0, "y": 0.0 })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("open the popup");
     for action in ["cycleBrushCandidate", "cycleBrushCandidateBack"] {
-        let result = dispatch(&mut app, action, None, Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
+        let result = dispatch(&mut app, action, None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
         assert_eq!(committed_edits(&result), 0, "{action} is a preview step, never a commit");
     }
     let after = fixture_of(&app);
@@ -1443,7 +1443,7 @@ fn patching_an_addressed_handle_field_writes_the_nested_handle() {
 async fn set_grid_visible_toggles_the_window_flag() {
     let mut app = app_with_registry();
     for expected in [false, true] {
-        let result = dispatch(&mut app, "setGridVisible", None, Some(overview::WINDOW_KIND_ID)).expect("setGridVisible must not fault");
+        let result = dispatch(&mut app, "setGridVisible", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("setGridVisible must not fault");
         assert_eq!(committed_edits(&result), 0, "a window-config verb never mutates the document");
         let measures = render_body(&mut app, overview::BODY_KEY);
         let _ = (&measures, expected);
@@ -1459,7 +1459,7 @@ async fn set_selectable_kind_is_a_view_verb_that_never_mutates_the_document() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
     for kind in [PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_EDGE] {
-        let result = dispatch(&mut app, "setSelectableKind", Some(&json!({ "kind": kind })), Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("setSelectableKind {kind} must not fault: {error:?}"));
+        let result = dispatch(&mut app, "setSelectableKind", Some(&json!({ "kind": kind })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("setSelectableKind {kind} must not fault: {error:?}"));
         assert_eq!(committed_edits(&result), 0, "setSelectableKind {kind} never mutates the document");
     }
     let after = fixture_of(&app);
@@ -1476,7 +1476,7 @@ async fn placement_tuning_verbs_are_config_only_and_clamped() {
     let before = fixture_of(&app);
     for action in ["setBrushPlacementContactTolerance", "setBrushPlacementOverlapBudget"] {
         for value in [4.0, -1.0, f64::from(u16::MAX)] {
-            let result = dispatch(&mut app, action, Some(&json!({ "value": value })), Some(overview::WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
+            let result = dispatch(&mut app, action, Some(&json!({ "value": value })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).unwrap_or_else(|error| panic!("{action} must not fault: {error:?}"));
             assert_eq!(committed_edits(&result), 0, "{action} never mutates the document");
         }
     }
@@ -1492,7 +1492,7 @@ async fn engagement_repeat_last_never_mutates_the_document() {
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
-    let result = dispatch(&mut app, "engagementRepeatLast", None, Some(overview::WINDOW_KIND_ID)).expect("engagementRepeatLast must not fault");
+    let result = dispatch(&mut app, "engagementRepeatLast", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("engagementRepeatLast must not fault");
     assert_eq!(committed_edits(&result), 0, "repeat-last is a tool reconfiguration, never a document edit");
     let after = fixture_of(&app);
     close_app(&mut app);
@@ -1506,7 +1506,7 @@ async fn open_add_node_dialog_is_shell_only() {
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let before = fixture_of(&app);
-    let result = dispatch(&mut app, "openAddNodeDialog", None, Some(overview::WINDOW_KIND_ID)).expect("openAddNodeDialog must not fault");
+    let result = dispatch(&mut app, "openAddNodeDialog", None, Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("openAddNodeDialog must not fault");
     assert_eq!(committed_edits(&result), 0, "opening a dialog never mutates the document");
     let after = fixture_of(&app);
     close_app(&mut app);
@@ -1561,13 +1561,13 @@ fn rendered_transform_flags(scene_json: &str) -> (bool, bool) {
 #[semio_framework_async_macros::async_test]
 async fn set_transform_gumball_flag_composes_the_handles_without_touching_the_document() {
     let mut app = app();
-    let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(overview::WINDOW_KIND_ID)).expect("rotate off");
+    let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("rotate off");
     assert_eq!(committed_edits(&result), 0, "a gumball flag is window config, never a document operation");
     assert_eq!(rendered_transform_flags(&render_body(&mut app, overview::BODY_KEY)), (true, false), "the board scene must carry the composed flags");
-    let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": true })), Some(overview::WINDOW_KIND_ID)).expect("rotate on");
+    let result = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": true })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("rotate on");
     assert_eq!(committed_edits(&result), 0);
     assert_eq!(rendered_transform_flags(&render_body(&mut app, overview::BODY_KEY)), (true, true), "and turn it back on");
-    let unknown = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "scale", "pressed": true })), Some(overview::WINDOW_KIND_ID)).expect("unknown flag");
+    let unknown = dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "scale", "pressed": true })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("unknown flag");
     assert_eq!(committed_edits(&unknown), 0, "scale is deliberately absent — an unknown flag is a no-op, not a new handle");
     close_app(&mut app);
 }
@@ -1583,15 +1583,15 @@ async fn a_rotate_gesture_record_commits_one_rotate_selection_edit() {
     let node_before = board_snapshot_nodes(&before).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node before");
     let (x0, y0) = (node_before.get("x").and_then(Value::as_f64).expect("x"), node_before.get("y").and_then(Value::as_f64).expect("y"));
     let record = |angle: f64, targets: Value| json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "rotate", "targets": targets, "pivotX": x0, "pivotY": y0 + 10.0, "angle": angle, "proximity": [] } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(std::f64::consts::PI, json!([node_id.clone()])) })), Some(overview::WINDOW_KIND_ID)).expect("rotate record");
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(std::f64::consts::PI, json!([node_id.clone()])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("rotate record");
     assert_eq!(committed_edits(&result), 1, "a rotate record is one document edit");
     let after = fixture_of(&app);
     let node_after = board_snapshot_nodes(&after).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id.as_str())).cloned().expect("node after");
     let (x1, y1) = (node_after.get("x").and_then(Value::as_f64).expect("x"), node_after.get("y").and_then(Value::as_f64).expect("y"));
     assert!((x1 - x0).abs() < 1e-6 && (y1 - (y0 + 20.0)).abs() < 1e-6, "a half turn about a pivot 10 below mirrors the node 20 down: ({x0},{y0}) -> ({x1},{y1})");
-    let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(0.0, json!([node_id.clone()])) })), Some(overview::WINDOW_KIND_ID)).expect("zero rotate");
+    let noop = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(0.0, json!([node_id.clone()])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("zero rotate");
     assert_eq!(committed_edits(&noop), 0, "a zero-angle record commits nothing");
-    let targetless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(1.0, json!([])) })), Some(overview::WINDOW_KIND_ID)).expect("target-less rotate");
+    let targetless = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": record(1.0, json!([])) })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("target-less rotate");
     assert_eq!(committed_edits(&targetless), 0, "a target-less record commits nothing");
     close_app(&mut app);
 }
@@ -1643,27 +1643,27 @@ fn law_target_regions(snapshot: &Value) -> Vec<Value> {
 async fn board_region_events_commit_one_edit_each_through_the_target_region_verbs() {
     let mut app = concrete_forest_app();
     let created = json!([{ "name": "regionCreate", "payload": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }]).to_string();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": created })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": created })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("region create");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions.len(), 1, "exactly one row is minted: {regions:?}");
     let id = regions[0].get("id").and_then(Value::as_str).expect("minted id").to_string();
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "the engine's rectangle is committed verbatim — it already snapped it");
 
     let moved = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": [id.clone()], "dx": 121.0, "dy": 211.0, "proximity": [] } }]).to_string();
-    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": moved })), Some(overview::WINDOW_KIND_ID)).expect("region move");
+    let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": moved })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("region move");
     assert_eq!(committed_edits(&result), 1, "a region body drag is one edit");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a move translates the minimum corner by the offset");
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(60.5), "and never restates the extent it did not touch");
 
     let resized = json!([{ "name": "regionResize", "payload": { "id": id.clone(), "x": 100.5, "y": 200.5, "width": 12.5, "height": 8.5 } }]).to_string();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": resized })), Some(overview::WINDOW_KIND_ID)).expect("region resize");
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": resized })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("region resize");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions[0].get("width").and_then(Value::as_f64), Some(12.5), "a resize pushes corner AND extent");
     assert_eq!(regions[0].get("height").and_then(Value::as_f64), Some(8.5));
 
     let unknown = json!([{ "name": "gesture", "payload": { "gestureId": "gesture-2", "kind": "drag", "targets": ["never-painted"], "dx": 1.5, "dy": 1.5, "proximity": [] } }]).to_string();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": unknown })), Some(overview::WINDOW_KIND_ID)).expect("unknown region");
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": unknown })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("unknown region");
     let regions = law_target_regions(&fixture_of(&app));
     assert_eq!(regions[0].get("x").and_then(Value::as_f64), Some(100.5), "a row naming a region the board never held moves nothing");
     close_app(&mut app);
@@ -1675,7 +1675,7 @@ async fn board_region_events_commit_one_edit_each_through_the_target_region_verb
 #[semio_framework_async_macros::async_test]
 async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_fixture() {
     let mut app = concrete_forest_app();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("region create");
     let rendered: Value = semio_framework_pack_json::from_json_str(&render_body(&mut app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered board surface parses");
     let board = rendered.get("board2d").expect("board scene");
     let encoded = board.get("areaBrushSize").and_then(Value::as_str).expect("the board scene declares areaBrushSize");
@@ -1695,7 +1695,7 @@ async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_
 #[test]
 fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
     let mut app = concrete_forest_app();
-    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(overview::WINDOW_KIND_ID)).expect("region create");
+    dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 10.5, "height": 10.5 } }]).to_string() })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("region create");
     let node = first_node_id(&app);
     let region = law_target_regions(&fixture_of(&app))[0].get("id").and_then(Value::as_str).expect("the painted region has an id").to_string();
     for (verb, flag, mut args) in [

@@ -1,8 +1,7 @@
 //! ⚠️ Energy model mutation — `CreateFault`: Adds one equipment fault. `targetEquipmentId` is checked against `ideal_loads` because that is the collection the kernel actually matches it against (`SystemSubstepStage::Fault` compares `fault.target_equipment_id == ideal.id`); the field's own type carries no discriminator, so this is the only referent the engine gives it.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -21,19 +20,22 @@ pub struct CreateFault {
     pub start_schedule_id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_fault(index: u32, id: crate::model::EntityId, target_equipment_id: crate::model::EntityId, fault_type: crate::model::FaultType, severity: f64, start_schedule_id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::CreateFault(CreateFault { index, id, target_equipment_id, fault_type, severity, start_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_fault<Op: From<CreateFault>>(index: u32, id: crate::model::EntityId, target_equipment_id: crate::model::EntityId, fault_type: crate::model::FaultType, severity: f64, start_schedule_id: crate::schedule::ScheduleId) -> Op {
+    CreateFault { index, id, target_equipment_id, fault_type, severity, start_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateFault {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateFault
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateFault> + From<crate::DeleteFault>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "fault", kind: "create-fault", record: "CreatedFault" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

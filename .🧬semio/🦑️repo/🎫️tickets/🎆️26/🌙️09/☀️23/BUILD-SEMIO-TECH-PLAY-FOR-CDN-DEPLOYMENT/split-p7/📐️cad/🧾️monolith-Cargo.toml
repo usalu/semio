@@ -49,7 +49,8 @@ semio-s-artifact-stdio-semio-model = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
-graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-graph-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-graph-manifest = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }

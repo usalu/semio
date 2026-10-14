@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch, snapshot, Generation3dApp};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 async fn edit(app: &mut Generation3dApp, operations: serde_json::Value) {
     dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: operations.to_string() })).await;

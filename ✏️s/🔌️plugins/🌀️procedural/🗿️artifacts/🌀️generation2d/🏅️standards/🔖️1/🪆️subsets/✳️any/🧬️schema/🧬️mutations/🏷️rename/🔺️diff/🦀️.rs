@@ -1,7 +1,10 @@
 //! 🔺️ Sparse diff for `RenameGeneration`, built directly from `(payload, base)`.
 use super::RenameGeneration;
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dGenerationPatch, Generation2dGenerationModification, Generation2dGenerationsDelta};
-use crate::{Generation2dDiff, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dGenerationPatch;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dGenerationModification;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dGenerationsDelta;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameGeneration, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

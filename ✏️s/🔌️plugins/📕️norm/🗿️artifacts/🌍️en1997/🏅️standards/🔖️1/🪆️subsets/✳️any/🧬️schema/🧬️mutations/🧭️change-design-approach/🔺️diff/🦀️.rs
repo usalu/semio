@@ -1,6 +1,6 @@
-use super::ChangeDesignApproach;
-use crate::diff::En1997Diff;
-use crate::En1997Snapshot;
+use crate::change_design_approach::ChangeDesignApproach;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 pub fn diff(payload: &ChangeDesignApproach, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.design_approach == payload.new_design_approach {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "approach unchanged");

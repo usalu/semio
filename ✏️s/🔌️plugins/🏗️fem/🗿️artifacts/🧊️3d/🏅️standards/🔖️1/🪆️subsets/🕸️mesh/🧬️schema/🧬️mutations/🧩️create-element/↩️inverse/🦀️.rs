@@ -1,14 +1,14 @@
 //! ↩️ Inverse for `CreateElement` — always a `delete-element` of the created id.
 use super::CreateElement;
-use crate::element_id;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_element,Fem3dMutation};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use crate::standards::v1::subsets::any::schema::mutations::delete_element;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateElement, _base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<delete_element::DeleteElement>>(payload: &CreateElement, _base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Fem3dMutation::DeleteElement(delete_element::DeleteElement { id: element_id(&payload.element).to_string() })]
+    vec![Op::from(delete_element::DeleteElement { id: element_id(&payload.element).to_string() })]
 
     })())
 }

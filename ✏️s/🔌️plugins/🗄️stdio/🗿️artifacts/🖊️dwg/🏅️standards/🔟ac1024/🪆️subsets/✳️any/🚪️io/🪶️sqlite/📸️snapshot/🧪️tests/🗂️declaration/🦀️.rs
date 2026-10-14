@@ -6,7 +6,7 @@ use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabaseLimits,SqliteSna
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_dwg_actual_declared_ac1018_ac1024_typed_and_erased_io() {
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("DWG actual owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("DWG actual owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
     let mut snapshot=DwgSnapshot::default();snapshot.version="independent intermediate version".into();snapshot.summary.total_editing_time=u64::MAX;snapshot.summary.title="世界 🖊️".into();snapshot.header.units.unit1_conversion=f64::from_bits(0xfff0000000000123);
     let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎭️bodies/🔣️.json")).unwrap();

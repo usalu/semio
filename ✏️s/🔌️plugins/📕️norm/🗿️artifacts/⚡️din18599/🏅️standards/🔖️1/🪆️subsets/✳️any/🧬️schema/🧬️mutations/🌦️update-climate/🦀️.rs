@@ -5,9 +5,9 @@
 //! `MonthlyClimate::german_reference`), never meaningfully edited one month/array at a time from this
 //! app's own input surface — an inseparable ≥2-field facet, not independently-set scalars.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::Din18599Mutation;
-use crate::{Din18599Snapshot, MonthlyClimate};
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+
+use semio_s_artifact_norm_din18599_model::{Din18599Snapshot, MonthlyClimate};
 //#region 🔖️UpdateClimate
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -19,16 +19,16 @@ pub struct UpdateClimate {
     pub new_climate: MonthlyClimate,
 }
 
-impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateClimate {
+impl<Op> protocol::MutationKind<Din18599Snapshot, Op> for UpdateClimate where Op: protocol::Mutation<Din18599Snapshot, Diff = semio_s_artifact_norm_din18599_diff::Din18599Diff> + From<crate::update_climate::UpdateClimate> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "climate", kind: "update-climate", record: "UpdatedClimate" };
 
     fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
-        super::diff::diff(self, base)
+        crate::update_climate::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_climate::inverse::inverse(self, base)?
     
     })
 }
@@ -38,3 +38,10 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateClimat
     }
 }
 //#endregion 🔖️UpdateClimate
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,7 +1,10 @@
 //! ✏️ Generation2d play app — the `edit` mode: the default two-window authoring layout (flow graph +
 //! preview).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as store;
 
-use crate::editor::generation2d::modes::edit::windows::{flow, preview};
+use crate::windows::flow;
+use crate::windows::preview;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -19,7 +22,7 @@ pub fn definition() -> ModeDefinition {
         id: GENERATION2D_PLAY_MODE_EDIT.into(),
         label: LocalizedLabel::native("Edit", "Bearbeiten"),
         icon_id: "pencil".into(),
-        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_procedural_2d_preview_eval::PREVIEW_EVAL_TOOL_ID))],
         layout_id: None,
         commands: Vec::new(),
     }
@@ -37,3 +40,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🕸️flow/🦀️.rs"]
+    pub mod flow;
+    #[path = "🪟️windows/👁️preview/🦀️.rs"]
+    pub mod preview;
+}

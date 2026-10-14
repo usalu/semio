@@ -18,11 +18,11 @@ pub struct ChangeReferenceWidth {
 
 impl<Op> MutationKind<CadSnapshot, Op> for ChangeReferenceWidth
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::change_reference_width::ChangeReferenceWidth>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::change_reference_width::ChangeReferenceWidth>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "reference", kind: "change-reference-width", record: "ChangedReferenceWidth" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

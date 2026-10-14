@@ -1,8 +1,7 @@
 //! 🎉️ Energy model mutation — `AddAnnualScheduleHoliday`: Marks one calendar date as a holiday of a year, so lookups on it take the holiday profile instead of the matching rule. The dates are a set, but a JSON array positionally, so the payload carries the position the date takes.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -20,19 +19,22 @@ pub struct AddAnnualScheduleHoliday {
     pub day: u8,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_annual_schedule_holiday(id: crate::schedule::ScheduleId, index: u32, year: u16, month: u8, day: u8) -> EnergyModelMutation {
-    EnergyModelMutation::AddAnnualScheduleHoliday(AddAnnualScheduleHoliday { id, index, year, month, day })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn add_annual_schedule_holiday<Op: From<AddAnnualScheduleHoliday>>(id: crate::schedule::ScheduleId, index: u32, year: u16, month: u8, day: u8) -> Op {
+    AddAnnualScheduleHoliday { id, index, year, month, day }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddAnnualScheduleHoliday {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddAnnualScheduleHoliday
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddAnnualScheduleHoliday> + From<crate::RemoveAnnualScheduleHoliday>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "annual-schedule", kind: "add-annual-schedule-holiday", record: "AddedAnnualScheduleHoliday" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

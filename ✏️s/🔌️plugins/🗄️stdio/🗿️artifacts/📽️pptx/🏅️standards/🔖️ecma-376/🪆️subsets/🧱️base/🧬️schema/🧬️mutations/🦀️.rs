@@ -1,10 +1,10 @@
 //! 🧬️ PptxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
-use crate::schema::diff::PptxDiff;
-use crate::schema::snapshot::{PptxTransform};
-#[cfg(test)] use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+#[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
@@ -38,7 +38,6 @@ pub mod set_shape_position;
 pub mod set_shape_text;
 #[path = "🧭️xml-address/🦀️.rs"]
 pub mod xml_address;
-pub use xml_address::{PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress};
 /// 📐️ Typed content mutation for `stdio.pptx`. Addresses `presentation.slides` by index
 /// (slide order matters -- see `MoveSlide`) and, within a slide, `shapes` by
 /// `(slide_index, shape_index)` -- a flat two-level address is sufficient since PresentationML
@@ -168,9 +167,9 @@ pub(crate) fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::sc
     }
     let modified = edits
         .into_iter()
-        .map(|(id, root)| crate::schema::diff::PptxXmlPartModification { id, patch: crate::schema::diff::PptxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) } })
+        .map(|(id, root)| semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartModification { id, patch: semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartDiff { content_type: None, document: Some(semio_s_artifact_stdio_xml::schema::diff::XmlDiff { root: Some(root), ..Default::default() }) } })
         .collect();
-    PptxDiff { schema: None, opc: None, xml_parts: Some(crate::schema::diff::PptxXmlPartsDelta { modified, ..Default::default() }) }
+    PptxDiff { schema: None, opc: None, xml_parts: Some(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartsDelta { modified, ..Default::default() }) }
 }
 
 /// 🌿️ The attribute edit that sets (`Some`) or removes (`None`) attribute `name` on the ROOT element of `document`; `None` when nothing changes.
@@ -209,13 +208,13 @@ pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::
 /// override. `None` when a part of that name already exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<PptxDiff> {
-    use crate::schema::diff::PptxXmlPartsDelta;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartsDelta;
     use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let key = path.trim_start_matches('/');
     if base.xml_parts.iter().any(|part| part.path == key) || base.opc.part(key).is_some() {
         return None;
     }
-    let part = crate::schema::snapshot::PptxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() };
+    let part = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() };
     let name = format!("/{key}");
     let list = &base.opc.content_types.overrides;
     let overrides = match list.iter().position(|(existing, _)| *existing == name) {
@@ -232,7 +231,7 @@ pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type
 /// 🧩️ The diff that removes XML part `path` and its content-type override; `None` when no such part exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<PptxDiff> {
-    use crate::schema::diff::PptxXmlPartsDelta;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartsDelta;
     let key = path.trim_start_matches('/');
     let at = base.xml_parts.iter().position(|part| part.path == key)?;
     let name = format!("/{key}");
@@ -259,7 +258,7 @@ pub(crate) fn xml_part_positions(base: &PptxSnapshot, path: &str) -> Option<(usi
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_fixture() -> PptxSnapshot {
-    opc_layer::with_demo_entries(crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
+    opc_layer::with_demo_entries(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation {
         slides: vec![
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("first")], position: PptxTransform { x: 0, y: 0, cx: 100, cy: 100 } }] },
             PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("second")], position: PptxTransform::default() }] },
@@ -271,17 +270,17 @@ pub(crate) fn demo_fixture() -> PptxSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
     let fixture = demo_fixture();
-    let slides = xml_address::pptx_slides(&fixture).expect("canonical demo slides");
+    let slides = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&fixture).expect("canonical demo slides");
     let first_shape = slides[0].shapes[0].address.clone();
     let second_slide = slides[1].address.clone();
-    let slide_entry = xml_address::resolve_pptx_xml_address(&fixture, &slides[0].address.entry).expect("canonical slide entry").clone();
-    let shape_node = xml_address::resolve_pptx_xml_address(&fixture, &first_shape.node).expect("canonical shape node").clone();
+    let slide_entry = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::resolve_pptx_xml_address(&fixture, &slides[0].address.entry).expect("canonical slide entry").clone();
+    let shape_node = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::resolve_pptx_xml_address(&fixture, &first_shape.node).expect("canonical shape node").clone();
     let shape_node_for_replace = shape_node.clone();
     vec![
-        PptxMutation::InsertSlide(insert_slide::InsertSlide { vacancy: xml_address::pptx_slide_vacancy(&fixture, 1).expect("slide vacancy"), entry: slide_entry }),
+        PptxMutation::InsertSlide(insert_slide::InsertSlide { vacancy: semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slide_vacancy(&fixture, 1).expect("slide vacancy"), entry: slide_entry }),
         PptxMutation::RemoveSlide(remove_slide::RemoveSlide { address: slides[0].address.clone() }),
         PptxMutation::MoveSlide(move_slide::MoveSlide { address: second_slide, destination_index: 0 }),
-        PptxMutation::InsertShape(insert_shape::InsertShape { vacancy: xml_address::pptx_shape_vacancy(&fixture, &slides[0].address, 1).expect("shape vacancy"), shape: shape_node }),
+        PptxMutation::InsertShape(insert_shape::InsertShape { vacancy: semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_shape_vacancy(&fixture, &slides[0].address, 1).expect("shape vacancy"), shape: shape_node }),
         PptxMutation::RemoveShape(remove_shape::RemoveShape { address: first_shape.clone() }),
         PptxMutation::SetShapeText(set_shape_text::SetShapeText { address: first_shape.clone(), text: "z".into() }),
         PptxMutation::SetShapePosition(set_shape_position::SetShapePosition { address: first_shape.clone(), position: PptxTransform { x: 5, y: 6, cx: 7, cy: 8 } }),
@@ -294,7 +293,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<PptxMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

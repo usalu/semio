@@ -4,9 +4,10 @@
 //! `duplicate-id` case applies here).
 
 use super::RenamePaintLayer;
-use crate::diff::diff_patch_paint_layer;
-use crate::diff::schema::LowpolyPaintLayerPatch;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_patch_paint_layer;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyPaintLayerPatch;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenamePaintLayer, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

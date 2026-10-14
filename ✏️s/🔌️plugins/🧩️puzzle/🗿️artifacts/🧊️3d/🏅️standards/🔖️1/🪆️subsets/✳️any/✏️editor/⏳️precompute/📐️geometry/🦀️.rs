@@ -10,7 +10,15 @@
 //! `semio_framework_3d::rigid` (vectors/points/quaternions/isometries) and
 //! `semio_framework_3d::collision` (BVH triangle-mesh intersection + winding-number containment).
 
-use crate::standards::v1::subsets::any::schema::{Quat, Vec3, WorldVolumeProps};
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_model::{Quat, Vec3, WorldVolumeProps};
 use semio_framework_3d::{collision, rigid};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
 use std::borrow::Borrow;
@@ -21,54 +29,54 @@ use std::mem::MaybeUninit;
 /// grows by, the retiring hand-off slots. It bounds one interactive close step's
 /// retirement work, never how large a document may be: document capacities are the
 /// `DOCUMENT_*_SLOTS` constants below.
-pub(crate) const FIXED_OWNER_SLOTS: usize = 32;
+pub const FIXED_OWNER_SLOTS: usize = 32;
 /// 📏️ Byte ceiling for one bookkeeping owner page.
-pub(crate) const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
+pub const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
 /// 📐️ Byte ceiling for one document-scale owner page, expressed in bookkeeping pages: the widest
 /// declared page is `FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>` (≈432 KiB), and the fill
 /// envelope reserves `FILL_ENVELOPE_MAX_BYTES` (256 × 16 KiB) for every page of one session
 /// together, so a single page may claim at most a quarter of that reservation.
-pub(crate) const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
+pub const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
 /// 🏢️ Objects the flagship scene_snapshot carries — the Nakagin capsule tower, the largest real document
 /// this artifact plans against. Every document-scale page is sized from it plus
 /// [`DOCUMENT_FILL_HEADROOM_SLOTS`], never from a plan ceiling: the planner has none any more.
-pub(crate) const NAKAGIN_DOCUMENT_OBJECTS: usize = 180;
+pub const NAKAGIN_DOCUMENT_OBJECTS: usize = 180;
 /// 🧊️ Fill placements a document page keeps free above the flagship scene_snapshot. It is a DOCUMENT
 /// capacity, not a request ceiling — the count the user asks for is unbounded, and a plan that
 /// exhausts these slots reports `stall_reason = "artifact-capacity"` and stops, visibly, instead of
 /// being clamped or faulting.
-pub(crate) const DOCUMENT_FILL_HEADROOM_SLOTS: usize = 1024;
+pub const DOCUMENT_FILL_HEADROOM_SLOTS: usize = 1024;
 /// 🧊️ Objects one fill session owns: the flagship scene_snapshot plus its fill headroom — 1204 — rounded up
 /// to the next power of two, 2048, which also bounds `placed`/`placed_lookup`/the spatial entry map.
-pub(crate) const DOCUMENT_OBJECT_SLOTS: usize = (NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS).next_power_of_two();
+pub const DOCUMENT_OBJECT_SLOTS: usize = (NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS).next_power_of_two();
 /// 🔘️ Vortices one fill session reasons about: Nakagin measures 358 vortices over 180 objects (≈2
 /// per object, at most 10 on one object), so two per object slot bounds the blocked-vortex and
 /// seen-candidate sets at document scale.
-pub(crate) const DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS;
+pub const DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS;
 /// 🧲️ Attractions one fill session owns: the scene's own plus one per placement — Nakagin carries
 /// 358 — so it shares the object ceiling.
-pub(crate) const DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
+pub const DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
 /// 🧱️ Target volumes one fill session owns: a document declares fill regions by hand, so it stays
 /// at the kind scale rather than the object scale.
-pub(crate) const DOCUMENT_VOLUME_SLOTS: usize = DOCUMENT_KIND_SLOTS;
+pub const DOCUMENT_VOLUME_SLOTS: usize = DOCUMENT_KIND_SLOTS;
 /// 🗂️ Catalog rows one fill session owns — object/vortex/cable kinds, compatibility rows, kind
 /// weight maps, registered mesh urls. Nakagin declares 12 object kinds, 18 vortex kinds and 14
 /// compatibility rows, so 256 is an order of magnitude of headroom on the flagship scene_snapshot.
-pub(crate) const DOCUMENT_KIND_SLOTS: usize = 256;
+pub const DOCUMENT_KIND_SLOTS: usize = 256;
 /// 🎯️ Candidates one target vortex may enumerate: object kinds × their vortex templates, drained
 /// again before the next target, so four templates per kind slot bounds the classification maps.
-pub(crate) const DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS;
+pub const DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS;
 /// 🗺️ Spatial hash cells one fill session may occupy: an object's AABB straddles up to a handful of
 /// 8.0-world-unit cells, so four cells per object slot bounds the cell map; each cell's member bucket is
 /// [`DOCUMENT_CELL_MEMBER_SLOTS`] wide.
-pub(crate) const DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS;
+pub const DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS;
 /// 🏙️ Members one spatial hash cell may hold: every object the session owns. A dense document — Nakagin's capsule tower
 /// with its bodies' own meshes at 1.5× puts 43 bodies into one 8-unit cell — must never be refused by a cell before the
 /// entry map refuses the object itself, so the only density bound is the document's object capacity. The bucket is
 /// claimed in [`FIXED_OWNER_SLOTS`]-wide sub-pages, so a sparse cell still costs one bookkeeping page.
-pub(crate) const DOCUMENT_CELL_MEMBER_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
+pub const DOCUMENT_CELL_MEMBER_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
 /// 📏️ The sub-page ceiling an owner declares when only the guest's contiguous-request ceiling sizes its sub-pages.
-pub(crate) const OWNER_SUB_PAGE_UNBOUNDED: usize = usize::MAX;
+pub const OWNER_SUB_PAGE_UNBOUNDED: usize = usize::MAX;
 
 //#region 🧯️Reservation
 /// 📏️ Slots ONE sub-page of an owner over `T` backs: the largest power of two whose block stays at
@@ -79,7 +87,7 @@ pub(crate) const OWNER_SUB_PAGE_UNBOUNDED: usize = usize::MAX;
 /// under it is served from a small bin, a split of `dv`/`top`, or one page of growth, while a larger
 /// one needs a pre-existing large free chunk or a multi-page grow — the FIRST request a fragmented
 /// guest refuses. A power of two keeps the index arithmetic a shift and a mask on the hot path.
-pub(crate) const fn owner_sub_page_slots<T>(slots: usize) -> usize {
+pub const fn owner_sub_page_slots<T>(slots: usize) -> usize {
     let width = size_of::<T>();
     if width == 0 || slots == 0 {
         return if slots == 0 { 1 } else { slots };
@@ -101,7 +109,7 @@ pub(crate) const fn owner_sub_page_slots<T>(slots: usize) -> usize {
 /// 📏️ Slots ONE sub-page of an owner over `T` declared `slots` wide backs when it also declares a `ceiling` in slots:
 /// [`owner_sub_page_slots`] over the narrower of the two, so a document-wide owner that is usually sparse grows in
 /// bookkeeping-sized steps instead of claiming its guest-ceiling sub-page up front.
-pub(crate) const fn owner_sub_page_slots_within<T>(slots: usize, ceiling: usize) -> usize {
+pub const fn owner_sub_page_slots_within<T>(slots: usize, ceiling: usize) -> usize {
     owner_sub_page_slots::<T>(if ceiling < slots { ceiling } else { slots })
 }
 
@@ -152,11 +160,11 @@ fn owner_reservation_admits(bytes: usize) -> bool {
 /// request over `ceiling_bytes`, and every request past the `grants`th, is refused exactly the way
 /// `dlmalloc` refuses a block it cannot serve out of a memory that never shrinks.
 #[cfg(test)]
-pub(crate) struct OwnerReservationLimit((usize, usize));
+pub struct OwnerReservationLimit((usize, usize));
 
 #[cfg(test)]
 impl OwnerReservationLimit {
-    pub(crate) fn install(ceiling_bytes: usize, grants: usize) -> Self {
+    pub fn install(ceiling_bytes: usize, grants: usize) -> Self {
         OWNER_RESERVATION.with(|policy| {
             let restored = policy.get();
             policy.set((ceiling_bytes, grants));
@@ -174,7 +182,7 @@ impl Drop for OwnerReservationLimit {
 //#endregion 🧯️Reservation
 
 #[derive(Debug)]
-pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
+pub struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
     pages: Vec<Box<[MaybeUninit<T>]>>,
     sealed: bool,
     len: usize,
@@ -183,12 +191,12 @@ pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
 impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// 📏️ Slots ONE sub-page of this owner backs — derived from `size_of::<T>()` and
     /// [`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`], never hand-picked.
-    pub(crate) const fn sub_page_slots() -> usize {
+    pub const fn sub_page_slots() -> usize {
         owner_sub_page_slots::<MaybeUninit<T>>(N)
     }
 
     /// 📏️ Bytes of ONE contiguous sub-page request this owner makes.
-    pub(crate) const fn sub_page_bytes() -> usize {
+    pub const fn sub_page_bytes() -> usize {
         Self::sub_page_slots() * size_of::<MaybeUninit<T>>()
     }
 
@@ -200,7 +208,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// remaining sub-pages are claimed by [`FixedOwnerVec::try_push`] as `len` crosses their
     /// boundaries, so an owner declared at document width costs one sub-page until it is used and
     /// never asks the guest for a block over the contiguous ceiling.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         const { assert!(Self::sub_page_bytes() <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a fixed owner sub-page is over the guest contiguous-request ceiling") };
         const { assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES, "a fixed owner page is over the document page ceiling") };
         let mut pages = Vec::new();
@@ -218,11 +226,11 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// every insert refused. Production reaches it through [`FixedOwnerVec::new`]'s refused first
     /// sub-page; a law reaches it directly, because a native suite cannot exhaust a 512 MiB linear
     /// memory to get there.
-    pub(crate) const fn refused() -> Self {
+    pub const fn refused() -> Self {
         Self { pages: Vec::new(), sealed: true, len: 0 }
     }
 
-    pub(crate) const fn page_bytes() -> usize {
+    pub const fn page_bytes() -> usize {
         size_of::<[MaybeUninit<T>; N]>()
     }
 
@@ -243,29 +251,29 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_ptr(&self) -> Option<*const MaybeUninit<T>> {
+    pub fn backing_ptr(&self) -> Option<*const MaybeUninit<T>> {
         self.pages.first().map(|page| page.as_ptr())
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
+    pub fn backing_credit(&self) -> Option<(usize, usize)> {
         (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<MaybeUninit<T>>()).sum()))
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 
     /// 📃️ The one contiguous view a SINGLE-sub-page owner still offers. A document-scale owner is
     /// backed by several sub-pages and has no such view — the const assertion refuses the call at
     /// compile time rather than handing back a prefix, and [`FixedOwnerVec::iter`] is the answer.
-    pub(crate) fn as_slice(&self) -> &[T] {
+    pub fn as_slice(&self) -> &[T] {
         const { assert!(Self::sub_pages() == 1, "a multi-sub-page owner has no contiguous slice — iterate it instead") };
         let Some(page) = self.pages.first() else { return &[] };
         unsafe { std::slice::from_raw_parts(page.as_ptr().cast::<T>(), self.len) }
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
         let len = self.len;
         self.pages.iter().enumerate().flat_map(move |(index, page)| {
             let filled = len.saturating_sub(index * Self::sub_page_slots()).min(page.len());
@@ -273,7 +281,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         })
     }
 
-    pub(crate) fn get(&self, index: usize) -> Option<&T> {
+    pub fn get(&self, index: usize) -> Option<&T> {
         if index >= self.len {
             return None;
         }
@@ -283,7 +291,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// ✍️ In-place mutation of a slot. Production never reaches for it — a fill session appends and
     /// pops its owners and rebuilds a changed object — so only the laws that seed one name it.
     #[cfg(test)]
-    pub(crate) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index >= self.len {
             return None;
         }
@@ -295,11 +303,11 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// turned an out-of-memory refusal into a guest trap (`live fixed owner page`, ticket 26/09/02
     /// build #29). Until a refusal every declared slot is still reachable, because the sub-pages a
     /// growing owner still needs have not been asked for yet.
-    pub(crate) fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         if self.sealed { self.backed_slots() } else { N }
     }
 
-    pub(crate) fn try_push(&mut self, value: T) -> Result<(), T> {
+    pub fn try_push(&mut self, value: T) -> Result<(), T> {
         if self.len == self.capacity() {
             return Err(value);
         }
@@ -314,7 +322,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         Ok(())
     }
 
-    pub(crate) fn pop(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         if self.len == 0 {
             return None;
         }
@@ -326,7 +334,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
     /// ♻️ Gives ONE sub-page back per close grant, last claimed first, and seals the owner so a
     /// retired page is never silently re-claimed. The retirement cursor spends one grant per call,
     /// so a document-scale owner retires over as many grants as it holds sub-pages.
-    pub(crate) fn retire_backing(&mut self) -> bool {
+    pub fn retire_backing(&mut self) -> bool {
         if self.len != 0 {
             return false;
         }
@@ -338,7 +346,7 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         released
     }
 
-    pub(crate) fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.len == 0 && self.pages.is_empty()
     }
 }
@@ -350,14 +358,14 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
+pub struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
     pages: Vec<Box<[Option<(K, V)>]>>,
     sealed: bool,
     len: usize,
 }
 
 #[derive(Debug)]
-pub(crate) enum FixedOwnerMapInsert<K, V> {
+pub enum FixedOwnerMapInsert<K, V> {
     Inserted,
     Occupied { input_key: K, input_value: V },
 }
@@ -365,12 +373,12 @@ pub(crate) enum FixedOwnerMapInsert<K, V> {
 impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
     /// 📏️ Slots ONE sub-page of this owner backs — see [`FixedOwnerVec::sub_page_slots`], never more than its declared
     /// sub-page ceiling `S`.
-    pub(crate) const fn sub_page_slots() -> usize {
+    pub const fn sub_page_slots() -> usize {
         owner_sub_page_slots_within::<Option<(K, V)>>(N, S)
     }
 
     /// 📏️ Bytes of ONE contiguous sub-page request this owner makes.
-    pub(crate) const fn sub_page_bytes() -> usize {
+    pub const fn sub_page_bytes() -> usize {
         Self::sub_page_slots() * size_of::<Option<(K, V)>>()
     }
 
@@ -380,7 +388,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
 
     /// 🧱️ Claims its first sub-page and grows one sub-page at a time, for the same reason as
     /// [`FixedOwnerVec::new`].
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         const { assert!(Self::sub_page_bytes() <= GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a fixed owner sub-page is over the guest contiguous-request ceiling") };
         const { assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES, "a fixed owner page is over the document page ceiling") };
         let mut pages = Vec::new();
@@ -395,11 +403,11 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
     }
 
     /// 🚫️ The owner a guest that could not spare a page hands back — see [`FixedOwnerVec::refused`].
-    pub(crate) const fn refused() -> Self {
+    pub const fn refused() -> Self {
         Self { pages: Vec::new(), sealed: true, len: 0 }
     }
 
-    pub(crate) const fn page_bytes() -> usize {
+    pub const fn page_bytes() -> usize {
         size_of::<[Option<(K, V)>; N]>()
     }
 
@@ -423,25 +431,25 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
     /// refused, for the same reason as [`FixedOwnerVec::capacity`]. Every collision-mutation
     /// preflight compares `len()` against this, so an honest answer turns an exhausted guest into a
     /// refused mutation instead of an `unreachable!` two frames later.
-    pub(crate) fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         if self.sealed { self.backed_slots() } else { N }
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
+    pub fn backing_credit(&self) -> Option<(usize, usize)> {
         (!self.pages.is_empty()).then(|| (self.pages.len(), self.pages.iter().map(|page| page.len() * size_of::<Option<(K, V)>>()).sum()))
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, V)>> {
+    pub fn backing_ptr(&self) -> Option<*const Option<(K, V)>> {
         self.pages.first().map(|page| page.as_ptr())
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
@@ -463,7 +471,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         }
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &(K, V)> {
+    pub fn iter(&self) -> impl Iterator<Item = &(K, V)> {
         let len = self.len;
         self.pages.iter().enumerate().flat_map(move |(index, page)| {
             let filled = len.saturating_sub(index * Self::sub_page_slots()).min(page.len());
@@ -472,12 +480,12 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         .filter_map(Option::as_ref)
     }
 
-    pub(crate) fn keys(&self) -> impl Iterator<Item = &K> {
+    pub fn keys(&self) -> impl Iterator<Item = &K> {
         self.iter().map(|(key, _)| key)
     }
 
     #[cfg(test)]
-    pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
+    pub fn values(&self) -> impl Iterator<Item = &V> {
         self.iter().map(|(_, value)| value)
     }
 
@@ -489,7 +497,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         self.iter().position(|(candidate, _)| <K as Borrow<Q>>::borrow(candidate) == key)
     }
 
-    pub(crate) fn get<Q>(&self, key: &Q) -> Option<&V>
+    pub fn get<Q>(&self, key: &Q) -> Option<&V>
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -497,7 +505,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         self.entry(self.index_of(key)?)?.as_ref().map(|(_, value)| value)
     }
 
-    pub(crate) fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
+    pub fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -506,7 +514,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         self.entry_mut(index)?.as_mut().map(|(_, value)| value)
     }
 
-    pub(crate) fn contains_key<Q>(&self, key: &Q) -> bool
+    pub fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -514,7 +522,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         self.index_of(key).is_some()
     }
 
-    pub(crate) fn try_insert(&mut self, key: K, value: V) -> Result<FixedOwnerMapInsert<K, V>, (K, V)>
+    pub fn try_insert(&mut self, key: K, value: V) -> Result<FixedOwnerMapInsert<K, V>, (K, V)>
     where
         K: Ord,
     {
@@ -538,7 +546,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         Ok(FixedOwnerMapInsert::Inserted)
     }
 
-    pub(crate) fn remove_entry<Q>(&mut self, key: &Q) -> Option<(K, V)>
+    pub fn remove_entry<Q>(&mut self, key: &Q) -> Option<(K, V)>
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -553,7 +561,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         Some(entry)
     }
 
-    pub(crate) fn pop_first(&mut self) -> Option<(K, V)> {
+    pub fn pop_first(&mut self) -> Option<(K, V)> {
         if self.len == 0 {
             return None;
         }
@@ -567,7 +575,7 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
     }
 
     /// ♻️ Gives ONE sub-page back per close grant — see [`FixedOwnerVec::retire_backing`].
-    pub(crate) fn retire_backing(&mut self) -> bool {
+    pub fn retire_backing(&mut self) -> bool {
         if self.len != 0 {
             return false;
         }
@@ -579,61 +587,61 @@ impl<K, V, const N: usize, const S: usize> FixedOwnerMap<K, V, N, S> {
         released
     }
 
-    pub(crate) fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.len == 0 && self.pages.is_empty()
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedOwnerSet<K, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
+pub struct FixedOwnerSet<K, const N: usize = FIXED_OWNER_SLOTS, const S: usize = OWNER_SUB_PAGE_UNBOUNDED> {
     values: FixedOwnerMap<K, (), N, S>,
 }
 
 #[derive(Debug)]
-pub(crate) enum FixedOwnerSetInsert<K> {
+pub enum FixedOwnerSetInsert<K> {
     Inserted,
     Present { input: K },
 }
 
 impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { values: FixedOwnerMap::new() }
     }
 
     /// 🚫️ The owner a guest that could not spare the page hands back — see [`FixedOwnerVec::refused`].
     /// Production reaches the state through [`FixedOwnerSet::new`]'s inner map; only the law names it.
     #[cfg(test)]
-    pub(crate) const fn refused() -> Self {
+    pub const fn refused() -> Self {
         Self { values: FixedOwnerMap::refused() }
     }
 
-    pub(crate) fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.values.capacity()
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
+    pub fn backing_credit(&self) -> Option<(usize, usize)> {
         self.values.backing_credit()
     }
 
     #[cfg(test)]
-    pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, ())>> {
+    pub fn backing_ptr(&self) -> Option<*const Option<(K, ())>> {
         self.values.backing_ptr()
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.values.len()
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &K> {
+    pub fn iter(&self) -> impl Iterator<Item = &K> {
         self.values.keys()
     }
 
-    pub(crate) fn contains<Q>(&self, value: &Q) -> bool
+    pub fn contains<Q>(&self, value: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -641,7 +649,7 @@ impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
         self.values.contains_key(value)
     }
 
-    pub(crate) fn try_insert(&mut self, value: K) -> Result<FixedOwnerSetInsert<K>, K>
+    pub fn try_insert(&mut self, value: K) -> Result<FixedOwnerSetInsert<K>, K>
     where
         K: Ord,
     {
@@ -654,7 +662,7 @@ impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
             .map_err(|(value, ())| value)
     }
 
-    pub(crate) fn remove_entry<Q>(&mut self, value: &Q) -> Option<K>
+    pub fn remove_entry<Q>(&mut self, value: &Q) -> Option<K>
     where
         K: Borrow<Q>,
         Q: Ord + ?Sized,
@@ -662,15 +670,15 @@ impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
         self.values.remove_entry(value).map(|(value, ())| value)
     }
 
-    pub(crate) fn pop_first(&mut self) -> Option<K> {
+    pub fn pop_first(&mut self) -> Option<K> {
         self.values.pop_first().map(|(value, ())| value)
     }
 
-    pub(crate) fn retire_backing(&mut self) -> bool {
+    pub fn retire_backing(&mut self) -> bool {
         self.values.retire_backing()
     }
 
-    pub(crate) fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.values.terminal_owners_empty()
     }
 }
@@ -679,22 +687,22 @@ impl<K, const N: usize, const S: usize> FixedOwnerSet<K, N, S> {
 /// 🔒️ Thin wrappers over `semio_framework_3d::{rigid, collision}` — the one interface boundary
 /// this artifact depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Vec3d(rigid::Vector3);
+pub struct Vec3d(rigid::Vector3);
 
 impl Vec3d {
-    pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self(rigid::Vector3::new(x, y, z))
     }
-    pub(crate) fn x(&self) -> f32 {
+    pub fn x(&self) -> f32 {
         self.0.x
     }
-    pub(crate) fn y(&self) -> f32 {
+    pub fn y(&self) -> f32 {
         self.0.y
     }
-    pub(crate) fn z(&self) -> f32 {
+    pub fn z(&self) -> f32 {
         self.0.z
     }
-    pub(crate) fn amax(&self) -> f32 {
+    pub fn amax(&self) -> f32 {
         self.0.amax()
     }
 }
@@ -714,35 +722,35 @@ impl std::ops::Mul<f32> for Vec3d {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Point3d(rigid::Point3);
+pub struct Point3d(rigid::Point3);
 
 semio_framework_value::artifact_retire_leaf!(Point3d);
 
 impl Point3d {
-    pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self(rigid::Point3::new(x, y, z))
     }
-    pub(crate) fn x(&self) -> f32 {
+    pub fn x(&self) -> f32 {
         self.0.x
     }
-    pub(crate) fn y(&self) -> f32 {
+    pub fn y(&self) -> f32 {
         self.0.y
     }
-    pub(crate) fn z(&self) -> f32 {
+    pub fn z(&self) -> f32 {
         self.0.z
     }
-    pub(crate) fn inf(&self, other: &Self) -> Self {
+    pub fn inf(&self, other: &Self) -> Self {
         Self(self.0.inf(other.0))
     }
-    pub(crate) fn sup(&self, other: &Self) -> Self {
+    pub fn sup(&self, other: &Self) -> Self {
         Self(self.0.sup(other.0))
     }
     #[cfg(test)]
-    pub(crate) fn coords(&self) -> Vec3d {
+    pub fn coords(&self) -> Vec3d {
         Vec3d(self.0.coords())
     }
     #[cfg(test)]
-    pub(crate) fn from_coords(v: Vec3d) -> Self {
+    pub fn from_coords(v: Vec3d) -> Self {
         Self(rigid::Point3::from_coords(v.0))
     }
 }
@@ -755,47 +763,47 @@ impl std::ops::Sub for Point3d {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Rotation3d(rigid::UnitQuaternion);
+pub struct Rotation3d(rigid::UnitQuaternion);
 
 impl Rotation3d {
-    pub(crate) fn identity() -> Self {
+    pub fn identity() -> Self {
         Self(rigid::UnitQuaternion::identity())
     }
     /// 🔓️ Builds from CAD's `[i, j, k, w]` quaternion convention.
-    pub(crate) fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
+    pub fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
         Self(rigid::UnitQuaternion::from_quaternion(rigid::Quaternion::new(w, i, j, k)))
     }
-    pub(crate) fn to_ijkw(self) -> (f32, f32, f32, f32) {
+    pub fn to_ijkw(self) -> (f32, f32, f32, f32) {
         let q = self.0.quaternion();
         (q.i, q.j, q.k, q.w)
     }
-    pub(crate) fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
+    pub fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
         rigid::UnitQuaternion::rotation_between(from.0, to.0).map(Self)
     }
-    pub(crate) fn apply(&self, v: Vec3d) -> Vec3d {
+    pub fn apply(&self, v: Vec3d) -> Vec3d {
         Vec3d(self.0.apply(v.0))
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Pose3d(rigid::Isometry3);
+pub struct Pose3d(rigid::Isometry3);
 
 semio_framework_value::artifact_retire_leaf!(Pose3d);
 
 impl Pose3d {
-    pub(crate) fn identity() -> Self {
+    pub fn identity() -> Self {
         Self(rigid::Isometry3::identity())
     }
-    pub(crate) fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
+    pub fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
         Self(rigid::Isometry3::from_parts(translation.0, rotation.0))
     }
-    pub(crate) fn inverse(&self) -> Self {
+    pub fn inverse(&self) -> Self {
         Self(self.0.inverse())
     }
-    pub(crate) fn transform_point(&self, point: &Point3d) -> Point3d {
+    pub fn transform_point(&self, point: &Point3d) -> Point3d {
         Point3d(self.0.transform_point(point.0))
     }
-    pub(crate) fn semio_compose_rs(&self, other: &Self) -> Self {
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
         Self(self.0.compose(other.0))
     }
 }
@@ -803,7 +811,7 @@ impl Pose3d {
 /// 🔺️ The shared triangle mesh of one collision shape. Its retirement releases a last share buffer by buffer: the vertex array, the
 /// triangle array, then the BVH one node per turn; a share that is not the last releases only its handle.
 #[derive(Clone)]
-pub(crate) struct CollisionMesh(std::sync::Arc<collision::TriMesh>);
+pub struct CollisionMesh(std::sync::Arc<collision::TriMesh>);
 
 impl std::ops::Deref for CollisionMesh {
     type Target = collision::TriMesh;
@@ -934,16 +942,16 @@ impl semio_framework_value::retirement::RetireOwned for CollisionMesh {
 }
 
 #[derive(Clone, semio_framework_value::RetireOwned)]
-pub(crate) struct CollisionShape {
+pub struct CollisionShape {
     shape: CollisionMesh,
 }
 
 impl CollisionShape {
-    pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
+    pub fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<rigid::Point3> = vertices.iter().map(|p| p.0).collect();
         Self { shape: CollisionMesh(std::sync::Arc::new(collision::TriMesh::new(verts, indices))) }
     }
-    pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
+    pub fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
         collision::contains_point(pose.0, &self.shape, point.0)
     }
 }
@@ -964,11 +972,11 @@ const COLLISION_EDGE_PROBES: usize = 8;
 /// surface, and an unbounded measure (an infinite tolerance) still probes a real point instead of one at infinity.
 const COLLISION_INSET_MIN_M: f64 = 1e-4;
 const COLLISION_INSET_MAX_M: f64 = 0.05;
-pub(crate) const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
+pub const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
 //#endregion 🔖️Constants
 
 //#region 🔖️Vectors
-pub(crate) fn normalize_vec3(v: Vec3) -> Vec3 {
+pub fn normalize_vec3(v: Vec3) -> Vec3 {
     let len = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt();
     if len < 1e-9 {
         return [0.0, 0.0, -1.0];
@@ -976,27 +984,27 @@ pub(crate) fn normalize_vec3(v: Vec3) -> Vec3 {
     [v[0] / len, v[1] / len, v[2] / len]
 }
 
-pub(crate) fn vec3_dot(a: Vec3, b: Vec3) -> f64 {
+pub fn vec3_dot(a: Vec3, b: Vec3) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-pub(crate) fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-pub(crate) fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-pub(crate) fn vec3_sub(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_sub(a: Vec3, b: Vec3) -> Vec3 {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-pub(crate) fn negate_vec3(v: Vec3) -> Vec3 {
+pub fn negate_vec3(v: Vec3) -> Vec3 {
     [-v[0], -v[1], -v[2]]
 }
 
-pub(crate) fn vec3_scale(v: Vec3, scale: &Option<semio_framework_value::DslValue>) -> Vec3 {
+pub fn vec3_scale(v: Vec3, scale: &Option<semio_framework_value::DslValue>) -> Vec3 {
     match scale {
         None => v,
         Some(semio_framework_value::DslValue::Number(n)) => {
@@ -1013,22 +1021,22 @@ pub(crate) fn vec3_scale(v: Vec3, scale: &Option<semio_framework_value::DslValue
     }
 }
 
-pub(crate) fn unit_quat_from_cad(q: Quat) -> Rotation3d {
+pub fn unit_quat_from_cad(q: Quat) -> Rotation3d {
     Rotation3d::from_ijkw(q[0] as f32, q[1] as f32, q[2] as f32, q[3] as f32)
 }
 
-pub(crate) fn quat_rotate_vec(q: Quat, v: Vec3) -> Vec3 {
+pub fn quat_rotate_vec(q: Quat, v: Vec3) -> Vec3 {
     let uq = unit_quat_from_cad(q);
     let rotated = uq.apply(Vec3d::new(v[0] as f32, v[1] as f32, v[2] as f32));
     [rotated.x() as f64, rotated.y() as f64, rotated.z() as f64]
 }
 
-pub(crate) fn quaternion_from_180_degree_axis(axis: Vec3) -> Quat {
+pub fn quaternion_from_180_degree_axis(axis: Vec3) -> Quat {
     let unit = normalize_vec3(axis);
     [unit[0], unit[1], unit[2], 0.0]
 }
 
-pub(crate) fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
+pub fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     let z_axis: Vec3 = [0.0, 0.0, 1.0];
     if target_dir[2].abs() < BRUSH_PLACEMENT_PARALLEL_TOLERANCE {
         return quaternion_from_180_degree_axis(z_axis);
@@ -1040,13 +1048,13 @@ pub(crate) fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     quaternion_from_180_degree_axis(axis)
 }
 
-pub(crate) fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<semio_framework_value::DslValue>) -> Pose3d {
+pub fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<semio_framework_value::DslValue>) -> Pose3d {
     let q = unit_quat_from_cad(orientation);
     let t = Vec3d::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
     Pose3d::from_parts(t, q)
 }
 
-pub(crate) fn compute_brush_placement_pose(
+pub fn compute_brush_placement_pose(
     source_local_position: Vec3,
     source_local_direction: Vec3,
     scale: &Option<semio_framework_value::DslValue>,
@@ -1094,7 +1102,7 @@ thread_local! {
 
 /// 🧮️ Charges `units` of primitive work to this thread's [`precompute_work_done`] meter; a no-op outside test builds.
 #[inline(always)]
-pub(crate) fn precompute_work(units: usize) {
+pub fn precompute_work(units: usize) {
     #[cfg(test)]
     PRECOMPUTE_WORK.with(|meter| meter.set(meter.get().saturating_add(units as u64)));
     #[cfg(not(test))]
@@ -1103,32 +1111,32 @@ pub(crate) fn precompute_work(units: usize) {
 
 /// 🕰️ This thread's primitive precompute work so far — the deterministic clock the interactive laws drive and bound steps by.
 #[cfg(test)]
-pub(crate) fn precompute_work_done() -> u64 {
+pub fn precompute_work_done() -> u64 {
     PRECOMPUTE_WORK.with(std::cell::Cell::get)
 }
 
 /// ⏲️ [`precompute_work_done`] as a job clock: a step's deadline then expires after a fixed amount of work, not of wall time.
 #[cfg(test)]
-pub(crate) fn precompute_work_clock() -> Option<u64> {
+pub fn precompute_work_clock() -> Option<u64> {
     Some(precompute_work_done())
 }
 //#endregion 🧮️WorkMeter
 
 //#region 🔖️Collision
 #[derive(Clone, semio_framework_value::RetireOwned)]
-pub(crate) struct CollisionMeshPart {
-    pub(crate) shape: CollisionShape,
-    pub(crate) local_pose: Pose3d,
+pub struct CollisionMeshPart {
+    pub shape: CollisionShape,
+    pub local_pose: Pose3d,
 }
 
 #[derive(Clone, semio_framework_value::RetireOwned)]
-pub(crate) struct CollisionBody {
-    pub(crate) parts: Vec<CollisionMeshPart>,
-    pub(crate) local_bounds_min: Point3d,
-    pub(crate) local_bounds_max: Point3d,
+pub struct CollisionBody {
+    pub parts: Vec<CollisionMeshPart>,
+    pub local_bounds_min: Point3d,
+    pub local_bounds_max: Point3d,
 }
 
-pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
+pub fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
     if positions.len() < 9 || indices.len() < 3 {
         return None;
     }
@@ -1154,7 +1162,7 @@ pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) ->
     Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Pose3d::identity() }], local_bounds_min: min, local_bounds_max: max })
 }
 
-pub(crate) fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
+pub fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
     let corners = [
         Point3d::new(body.local_bounds_min.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
         Point3d::new(body.local_bounds_max.x(), body.local_bounds_min.y(), body.local_bounds_min.z()),
@@ -1175,7 +1183,7 @@ pub(crate) fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Po
     (min, max)
 }
 
-pub(crate) fn volume_scale_vec(scale: &Option<semio_framework_value::DslValue>) -> [f32; 3] {
+pub fn volume_scale_vec(scale: &Option<semio_framework_value::DslValue>) -> [f32; 3] {
     match scale {
         Some(semio_framework_value::DslValue::Number(n)) => {
             let s = n.as_f64() as f32;
@@ -1189,7 +1197,7 @@ pub(crate) fn volume_scale_vec(scale: &Option<semio_framework_value::DslValue>) 
     }
 }
 
-pub(crate) fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3d, max: Point3d) -> bool {
+pub fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Point3d, max: Point3d) -> bool {
     if volumes.is_empty() {
         return true;
     }
@@ -1227,7 +1235,7 @@ pub(crate) fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Poin
 }
 
 #[cfg(test)]
-pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
+pub fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
     let local = world.inverse().transform_point(&point);
     for part in &body.parts {
         let part_local = part.local_pose.inverse().transform_point(&local);
@@ -1239,7 +1247,7 @@ pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Poi
 }
 
 #[cfg(test)]
-pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
+pub fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
     if amax.x() < bmin.x() || bmax.x() < amin.x() || amax.y() < bmin.y() || bmax.y() < amin.y() || amax.z() < bmin.z() || bmax.z() < amin.z() {
@@ -1260,27 +1268,27 @@ pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &Collisio
 
 //#region 🗺️BroadPhase
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-pub(crate) struct CollisionAabb {
-    pub(crate) min: [f32; 3],
-    pub(crate) max: [f32; 3],
+pub struct CollisionAabb {
+    pub min: [f32; 3],
+    pub max: [f32; 3],
 }
 
 impl CollisionAabb {
-    pub(crate) fn from_body(body: &CollisionBody, world: &Pose3d) -> Self {
+    pub fn from_body(body: &CollisionBody, world: &Pose3d) -> Self {
         let (min, max) = world_bounds(body, world);
         Self { min: [min.x(), min.y(), min.z()], max: [max.x(), max.y(), max.z()] }
     }
 
-    pub(crate) fn intersects(&self, other: &Self) -> bool {
+    pub fn intersects(&self, other: &Self) -> bool {
         self.max[0] >= other.min[0] && other.max[0] >= self.min[0] && self.max[1] >= other.min[1] && other.max[1] >= self.min[1] && self.max[2] >= other.min[2] && other.max[2] >= self.min[2]
     }
 }
 
 /// 🏙️ One spatial cell's member ids: document-wide ([`DOCUMENT_CELL_MEMBER_SLOTS`]), claimed a bookkeeping page at a time.
-pub(crate) type CollisionCellMembers = FixedOwnerSet<String, DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>;
+pub type CollisionCellMembers = FixedOwnerSet<String, DOCUMENT_CELL_MEMBER_SLOTS, FIXED_OWNER_SLOTS>;
 
 #[derive(Debug)]
-pub(crate) struct CollisionSpatialIndex {
+pub struct CollisionSpatialIndex {
     cell_size: f32,
     entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>,
     cells: FixedOwnerMap<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>,
@@ -1290,12 +1298,12 @@ pub(crate) struct CollisionSpatialIndex {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) enum CollisionIndexRejectedOwner {
+pub enum CollisionIndexRejectedOwner {
     Capacity(String),
 }
 
 impl CollisionIndexRejectedOwner {
-    pub(crate) fn retire_one(&mut self) -> bool {
+    pub fn retire_one(&mut self) -> bool {
         match self {
             Self::Capacity(id) if id.capacity() != 0 => {
                 drop(std::mem::take(id));
@@ -1307,9 +1315,9 @@ impl CollisionIndexRejectedOwner {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct CollisionIndexOwner {
-    pub(crate) operation: u64,
-    pub(crate) generation: u64,
+pub struct CollisionIndexOwner {
+    pub operation: u64,
+    pub generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1359,7 +1367,7 @@ enum CollisionMutationStage {
     Rejected,
 }
 
-pub(crate) struct CollisionIndexMutation {
+pub struct CollisionIndexMutation {
     owner: CollisionIndexOwner,
     id: String,
     bounds: CollisionAabb,
@@ -1373,7 +1381,7 @@ pub(crate) struct CollisionIndexMutation {
 }
 
 #[derive(Debug)]
-pub(crate) enum CollisionMutationStep {
+pub enum CollisionMutationStep {
     Pending,
     Complete,
     Rejected(CollisionIndexRejectedOwner),
@@ -1383,7 +1391,7 @@ pub(crate) enum CollisionMutationStep {
 /// 🗑️ Resumable withdrawal of one indexed owner — the production counterpart of
 /// [`CollisionIndexMutation`], driven one cell per step by the interactive brush lane's incremental
 /// scene sync so a deleted object leaves the broad phase without a whole-index rebuild.
-pub(crate) struct CollisionIndexRemoval {
+pub struct CollisionIndexRemoval {
     owner: CollisionIndexOwner,
     id: String,
     span: Option<CollisionCellSpan>,
@@ -1399,7 +1407,7 @@ enum CollisionQueryStage {
     Complete,
 }
 
-pub(crate) struct CollisionQueryCursor {
+pub struct CollisionQueryCursor {
     owner: CollisionIndexOwner,
     bounds: CollisionAabb,
     span: Option<CollisionCellSpan>,
@@ -1414,33 +1422,33 @@ pub(crate) struct CollisionQueryCursor {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum CollisionQueryStep {
+pub enum CollisionQueryStep {
     Pending,
     Complete,
     Stale,
 }
 
 impl CollisionQueryCursor {
-    pub(crate) fn candidate(&self, index: usize) -> Option<&String> {
+    pub fn candidate(&self, index: usize) -> Option<&String> {
         self.candidates.iter().nth(index)
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.candidates.len()
     }
 
-    pub(crate) fn truncated(&self) -> bool {
+    pub fn truncated(&self) -> bool {
         self.truncated
     }
 
     /// 📏️ Broad-phase work actually spent by this cursor — `(cells, members)`. The interactive brush
     /// lane publishes it so a document-scale scene can prove the query touched only the cells its own
     /// bounds span instead of every placed object.
-    pub(crate) fn examined(&self) -> (usize, usize) {
+    pub fn examined(&self) -> (usize, usize) {
         (self.examined_cells, self.examined_members)
     }
 
-    pub(crate) fn retire_one_owner(&mut self) -> bool {
+    pub fn retire_one_owner(&mut self) -> bool {
         if let Some(key) = self.retiring_key.as_mut() {
             if key.capacity() != 0 {
                 drop(std::mem::take(key));
@@ -1459,13 +1467,13 @@ impl CollisionQueryCursor {
         true
     }
 
-    pub(crate) fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.candidates.terminal_owners_empty() && self.retiring_key.is_none()
     }
 }
 
 impl CollisionIndexMutation {
-    pub(crate) fn retire_one_owner(&mut self) -> bool {
+    pub fn retire_one_owner(&mut self) -> bool {
         if self.id.capacity() != 0 {
             drop(std::mem::take(&mut self.id));
             return false;
@@ -1477,7 +1485,7 @@ impl CollisionIndexMutation {
 impl CollisionIndexRemoval {
     /// ♻️ One owner per close grant, exactly as the replacement cursor: the withdrawn owner id is the
     /// removal's only allocation.
-    pub(crate) fn retire_one_owner(&mut self) -> bool {
+    pub fn retire_one_owner(&mut self) -> bool {
         if self.id.capacity() != 0 {
             drop(std::mem::take(&mut self.id));
             return false;
@@ -1488,7 +1496,7 @@ impl CollisionIndexRemoval {
 
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum CollisionIndexOwnerCensusStep {
+pub enum CollisionIndexOwnerCensusStep {
     Pending { items: usize, bytes: usize },
     Complete,
     Rejected,
@@ -1496,7 +1504,7 @@ pub(crate) enum CollisionIndexOwnerCensusStep {
 
 #[cfg(test)]
 #[derive(Default)]
-pub(crate) struct CollisionIndexOwnerCensusCursor {
+pub struct CollisionIndexOwnerCensusCursor {
     section: u8,
     index: usize,
     inner: usize,
@@ -1519,27 +1527,27 @@ fn collision_index_backing_credit(credit: Option<(usize, usize)>) -> (usize, usi
 impl CollisionSpatialIndex {
     const MAX_CELLS_PER_ENTRY: u64 = 4_096;
 
-    pub(crate) fn new(cell_size: f32) -> Self {
+    pub fn new(cell_size: f32) -> Self {
         assert!(cell_size.is_finite() && cell_size > 0.0);
         Self { cell_size, entries: FixedOwnerMap::new(), cells: FixedOwnerMap::new(), oversized: FixedOwnerSet::new(), retiring_key: None, retiring_bucket: None }
     }
 
     /// 📐️ World bounds already indexed for one owner id, or `None` when it was never admitted.
-    pub(crate) fn entry_bounds(&self, id: &str) -> Option<&CollisionAabb> {
+    pub fn entry_bounds(&self, id: &str) -> Option<&CollisionAabb> {
         self.entries.get(id)
     }
 
     /// 🔑️ Every indexed owner id, in the entries page's own sorted order — the incremental scene sync
     /// walks it one id per step to withdraw owners the new scene no longer carries.
-    pub(crate) fn entry_ids(&self) -> impl Iterator<Item = &String> {
+    pub fn entry_ids(&self) -> impl Iterator<Item = &String> {
         self.entries.keys()
     }
 
-    pub(crate) fn entry_len(&self) -> usize {
+    pub fn entry_len(&self) -> usize {
         self.entries.len()
     }
 
-    pub(crate) fn begin_replacement(&self, owner: CollisionIndexOwner, id: String, bounds: CollisionAabb) -> CollisionIndexMutation {
+    pub fn begin_replacement(&self, owner: CollisionIndexOwner, id: String, bounds: CollisionAabb) -> CollisionIndexMutation {
         let old_bounds = self.entries.get(id.as_str()).copied();
         CollisionIndexMutation {
             owner,
@@ -1555,7 +1563,7 @@ impl CollisionSpatialIndex {
         }
     }
 
-    pub(crate) fn step_replacement(&mut self, mutation: &mut CollisionIndexMutation, current: CollisionIndexOwner) -> CollisionMutationStep {
+    pub fn step_replacement(&mut self, mutation: &mut CollisionIndexMutation, current: CollisionIndexOwner) -> CollisionMutationStep {
         if mutation.owner != current {
             return CollisionMutationStep::Stale;
         }
@@ -1689,12 +1697,12 @@ impl CollisionSpatialIndex {
         CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(std::mem::take(&mut mutation.id)))
     }
 
-    pub(crate) fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
+    pub fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
         let bounds = *self.entries.get(id.as_str())?;
         Some(CollisionIndexRemoval { owner, id, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
     }
 
-    pub(crate) fn step_removal(&mut self, removal: &mut CollisionIndexRemoval, current: CollisionIndexOwner) -> CollisionMutationStep {
+    pub fn step_removal(&mut self, removal: &mut CollisionIndexRemoval, current: CollisionIndexOwner) -> CollisionMutationStep {
         if removal.owner != current {
             return CollisionMutationStep::Stale;
         }
@@ -1722,7 +1730,7 @@ impl CollisionSpatialIndex {
         CollisionMutationStep::Complete
     }
 
-    pub(crate) fn begin_query(&self, owner: CollisionIndexOwner, bounds: CollisionAabb) -> CollisionQueryCursor {
+    pub fn begin_query(&self, owner: CollisionIndexOwner, bounds: CollisionAabb) -> CollisionQueryCursor {
         let span = CollisionCellSpan::new(self.cell_size, bounds);
         CollisionQueryCursor {
             owner,
@@ -1739,7 +1747,7 @@ impl CollisionSpatialIndex {
         }
     }
 
-    pub(crate) fn step_query(&self, query: &mut CollisionQueryCursor, current: CollisionIndexOwner) -> CollisionQueryStep {
+    pub fn step_query(&self, query: &mut CollisionQueryCursor, current: CollisionIndexOwner) -> CollisionQueryStep {
         if query.owner != current {
             return CollisionQueryStep::Stale;
         }
@@ -1808,7 +1816,7 @@ impl CollisionSpatialIndex {
         CollisionQueryStep::Pending
     }
 
-    pub(crate) fn retire_one_owner(&mut self) -> bool {
+    pub fn retire_one_owner(&mut self) -> bool {
         if let Some(key) = self.retiring_key.as_mut() {
             if key.capacity() != 0 {
                 drop(std::mem::take(key));
@@ -1852,12 +1860,12 @@ impl CollisionSpatialIndex {
         true
     }
 
-    pub(crate) fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty() && self.retiring_key.is_none() && self.retiring_bucket.is_none()
     }
 
     #[cfg(test)]
-    pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 3] {
+    pub fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 3] {
         [
             (self.entries.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.entries.len()),
             (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), CollisionCellMembers, DOCUMENT_CELL_SLOTS>::page_bytes(), self.cells.len()),
@@ -1866,7 +1874,7 @@ impl CollisionSpatialIndex {
     }
 
     #[cfg(test)]
-    pub(crate) fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
+    pub fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
         let credit = match cursor.section {
             0 => Some(collision_index_backing_credit(self.entries.backing_credit())),
             1 => match self.entries.keys().nth(cursor.index) {
@@ -1986,7 +1994,7 @@ impl CollisionSpatialIndex {
 //#endregion 🗺️BroadPhase
 
 //#region ⏳️OverlapStateMachine
-pub(crate) trait CollisionStepContext {
+pub trait CollisionStepContext {
     fn is_cancelled(&self) -> bool;
     fn should_yield(&self) -> bool;
     fn consume_fuel(&mut self, units: u64);
@@ -2009,7 +2017,7 @@ impl CollisionStepContext for semio_framework_job::StepContext<'_> {
 /// 🕳️ Where a [`CollisionPenetrationState`] stands. `A`/`B` name the two bodies; `Vertices*` probe one body's vertices
 /// against the other solid, `Faces*` probe the parts of one body's triangles that pass behind the other body's faces.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-pub(crate) enum CollisionPenetrationStage {
+pub enum CollisionPenetrationStage {
     BroadPhase,
     VerticesA,
     VerticesB,
@@ -2021,7 +2029,7 @@ pub(crate) enum CollisionPenetrationStage {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum CollisionStepResult {
+pub enum CollisionStepResult {
     Pending,
     Cancelled,
     /// `depth`: how far (m) one body's surface dives into the other solid, measured to that solid's nearest surface —
@@ -2046,8 +2054,8 @@ pub(crate) enum CollisionStepResult {
 /// its host (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, dev directive: only tiny collisions on the touching
 /// surfaces).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-pub(crate) struct CollisionPenetrationState {
-    pub(crate) stage: CollisionPenetrationStage,
+pub struct CollisionPenetrationState {
+    pub stage: CollisionPenetrationStage,
     part_a: usize,
     part_b: usize,
     cursor: usize,
@@ -2057,21 +2065,21 @@ pub(crate) struct CollisionPenetrationState {
 }
 
 impl CollisionPenetrationState {
-    pub(crate) fn new(tolerance: f64) -> Self {
+    pub fn new(tolerance: f64) -> Self {
         Self { stage: CollisionPenetrationStage::BroadPhase, part_a: 0, part_b: 0, cursor: 0, tolerance, depth: 0.0, rejected_early: false }
     }
 
     #[cfg(test)]
-    pub(crate) fn checkpoint(&self) -> Self {
+    pub fn checkpoint(&self) -> Self {
         self.clone()
     }
 
     #[cfg(test)]
-    pub(crate) fn resume(checkpoint: Self) -> Self {
+    pub fn resume(checkpoint: Self) -> Self {
         checkpoint
     }
 
-    pub(crate) fn step<C: CollisionStepContext>(&mut self, context: &mut C, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> CollisionStepResult {
+    pub fn step<C: CollisionStepContext>(&mut self, context: &mut C, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> CollisionStepResult {
         if context.is_cancelled() {
             return CollisionStepResult::Cancelled;
         }

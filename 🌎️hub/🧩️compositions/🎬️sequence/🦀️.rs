@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -27,7 +28,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape.
 pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
-    Plugin::<SequenceApps>::builder("sequence")
+    PluginBuilder::<_, SequenceApps>::new("sequence")
         .label("Sequence")
         .version("0.1.0")
         .package_id("semio:sequence")

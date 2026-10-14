@@ -24,7 +24,3 @@ pub(crate) fn dec_semio_path_bin(reader:&mut store::ByteReader<'_>)->Result<Semi
  });}
  Ok(path)
 }
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

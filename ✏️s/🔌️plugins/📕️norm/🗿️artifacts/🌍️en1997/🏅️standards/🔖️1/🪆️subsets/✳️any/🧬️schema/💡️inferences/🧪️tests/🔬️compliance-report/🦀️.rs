@@ -1,7 +1,7 @@
 //! 🔬 Compliance report projection tests.
 
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::schema::snapshot::{compliant_demo, noncompliant_demo};
+use crate::evaluate;
+use semio_s_artifact_norm_en1997_model::{compliant_demo, noncompliant_demo};
 
 #[test]
 fn evaluate_default_has_checks() {

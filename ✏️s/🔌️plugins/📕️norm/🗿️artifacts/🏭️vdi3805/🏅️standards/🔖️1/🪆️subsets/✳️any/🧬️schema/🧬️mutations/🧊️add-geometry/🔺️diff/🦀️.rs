@@ -1,8 +1,8 @@
 //! 🔺️ `add-geometry` — sparse diff construction.
 
-use super::AddGeometry;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805GeometryRows, Vdi3805GeometryEntry};
+use crate::add_geometry::AddGeometry;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805GeometryRows, Vdi3805GeometryEntry};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate id is `mutation.duplicate-id` — an id-keyed entity that already exists cannot be

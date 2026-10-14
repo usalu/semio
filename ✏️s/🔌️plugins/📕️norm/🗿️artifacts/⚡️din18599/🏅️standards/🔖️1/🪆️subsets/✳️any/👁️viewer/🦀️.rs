@@ -4,10 +4,18 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::viewer::din18599::modes::view;
-use crate::viewer::din18599::modes::view::windows::report;
-use crate::Din18599Snapshot;
-use crate::{DIN18599_DIALECT, DIN18599_DOCUMENT_SCHEMA};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::modes::view;
+use crate::modes::view::windows::report;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_model::{DIN18599_DIALECT, DIN18599_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `Dialect` is only reachable
 // through `app`, not yet in the crate-root re-export list.
@@ -43,7 +51,7 @@ impl ArtifactViewer for Din18599Viewer {
     /// 🪆️ The derived `climateTable` child (`s.stdio.semio@v1/table`) opens through the stdio semio member family.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Din18599Snapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
+    type Mutation = semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -62,11 +70,11 @@ impl ArtifactViewer for Din18599Viewer {
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::din18599_child_restore_projection(snapshot)
+        semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
-        Ok(crate::genesis_din18599_child_pack(snapshot, slot, child_id))
+        Ok(semio_s_artifact_norm_din18599_model::genesis_din18599_child_pack(snapshot, slot, child_id))
     }
 
     /// 👁️ Structurally read-only: the sole `Din18599ViewCommand::Noop` variant never carries a config
@@ -98,7 +106,7 @@ pub fn create_din18599_viewer() -> semio_framework_plugin::AppDefinition {
         .document(["semio", "norm", "din18599"])
         .icon_id("check-circle")
         .mode_def(view::definition())
-        .default_mode_id(crate::app_surface::MODE_VIEW)
+        .default_mode_id(semio_s_plugin_norm_app_surface::MODE_VIEW)
         .window_kind_def(report::definition())
         .default_layout(view::layout())
         .build_definition()
@@ -110,3 +118,21 @@ pub fn create_din18599_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

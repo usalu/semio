@@ -1,5 +1,5 @@
 //! 🎭️ Mask events match independent JSON edits and undo exactly through both wire formats.
-use crate::{RasterMutation,RasterSnapshot};
+use crate::RasterMutation;
 use protocol::{Mutation,MutationDiff,OpText,OpBinary};
 
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🔣️.json")).unwrap()}
@@ -32,7 +32,7 @@ fn mask_mutations_match_json_oracle_and_exact_history() {
         let (undo,messages)=inverse[0].diff(&actual).into_parts();assert!(messages.is_empty());
         let restored=protocol::apply_diff(&undo, &actual).unwrap();assert_eq!(restored,base);
         MutationDiff::retire_cold(diff);MutationDiff::retire_cold(undo);
-        for document in [base,actual,restored] {crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);}
+        for document in [base,actual,restored] {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
     }
 }
 #[test]
@@ -44,7 +44,7 @@ fn mask_mutations_reject_conflicts_and_invalid_assets() {
         let mutation:RasterMutation=semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":expected,"mask":mask}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let (diff,messages)=mutation.diff(&base).into_parts();assert!(!messages.is_empty());MutationDiff::retire_cold(diff);
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }
 /// 🧾️ The committed wire witness is the canonical Rust wire of the fixture's "Add Reveal Mask" case.
 #[test]

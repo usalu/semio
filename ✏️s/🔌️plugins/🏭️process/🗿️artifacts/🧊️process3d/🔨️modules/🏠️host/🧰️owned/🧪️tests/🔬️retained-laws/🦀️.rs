@@ -1,5 +1,12 @@
-use super::*;
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+use semio_s_artifact_process_process3d_host::*;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::process3d_protocol_error, standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MUTATION_BINARY_FORMAT};
+use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
+use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::*;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 
 fn every_mutation() -> Vec<Process3dMutation> {
     process3d_all_retained_mutation_fixtures_for_test()
@@ -170,10 +177,10 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
 fn owned_store_measured(label: &str, operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
     let operation = semio_framework_job::OperationId(operation_value);
     let generation = semio_framework_job::Generation(51);
-    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::host::owned::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
-    let mut snapshot = crate::empty_process3d_snapshot();
+    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, semio_s_artifact_process_process3d_host::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
+    let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, label, snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None);
     let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
@@ -211,7 +218,7 @@ fn retained_initializer_replays_every_neutral_timeline_mutation() {
         let after = std::fs::read_to_string(folder.join("📸️snapshot/➡️after/🔣️.json")).unwrap();
         let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, case, snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, case, snapshot, None);
         envelope.cursor = None;
         envelope.vcs.edits.try_push(protocol::Edit { id: format!("timeline-{index}"), actor: Some("neutral-law".into()), line: None, forwards: vec![mutation], inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 1, started_at: "1".into(), finished_at: None }).unwrap();
         let operation = semio_framework_job::OperationId(u64::MAX - 4_000 - index as u64);
@@ -246,7 +253,7 @@ fn retained_initializer_replays_every_neutral_timeline_mutation() {
 
 #[test]
 fn retained_timeline_cancellation_closes_partial_rows_and_json_with_exact_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json").leak()).unwrap();
     assert_eq!(fixture["maximumAdmittedReleaseBytes"].as_u64().unwrap() as usize, PROCESS3D_MAXIMUM_DOMAIN_BYTES);
     let backing = &fixture["physicalBacking"];
     let mut owner = Process3dTimelineOwner::empty();
@@ -425,7 +432,7 @@ fn owner_census_rejects_zero_depth_and_maximum_plus_one() {
 
 #[test]
 fn interrupted_snapshot_close_reaches_terminal_empty() {
-    let mut owner = Process3dOwnedRetirement::snapshot(crate::empty_process3d_snapshot());
+    let mut owner = Process3dOwnedRetirement::snapshot(semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot());
     assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut owner, 0, 0), Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })));
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         if matches!(store::ErasedSnapshotRetirement::close_step(&mut owner, 1, PROCESS3D_OWNER_BYTES), Ok(store::SnapshotRetirementStep::Complete)) {
@@ -545,7 +552,7 @@ fn retained_string_cursor_enforces_one_byte_grants_and_hostile_boundaries() {
 #[test]
 fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
     use store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json").leak()).unwrap();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
     let mut timeline = Process3dTimelineOwner::empty();
@@ -573,7 +580,7 @@ fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
 #[test]
 fn mutation_decoder_forwards_large_retained_backing_grant() {
     use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json").leak()).unwrap();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
     let mut timeline = Process3dTimelineOwner::empty();
@@ -609,7 +616,7 @@ fn mutation_decoder_forwards_large_retained_backing_grant() {
 /// 🧵️ The retirement stack retains string backing under insufficient grants and advertises one unit for structural work.
 #[test]
 fn retained_owner_demand_distinguishes_structural_work_from_exact_string_allocation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).expect("../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json").leak()).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
     let mut failures = Vec::new();
     for row in fixture["cases"].as_array().unwrap() {
@@ -628,10 +635,10 @@ fn retained_owner_demand_distinguishes_structural_work_from_exact_string_allocat
         eprintln!("[DEBUG] Process string extent={extent} demand={demand} caller={caller} step={step:?} retained={retained}");
         if demand != extent || reported != expected || (expected == 0 && (!retained || retained_demand != extent)) { failures.push((extent, demand, reported, retained)); }
     }
-    let fields = Process3dMutationFields::from_mutation(Process3dMutation::ChangeStockLabel(crate::standards::v1::subsets::any::schema::mutations::change_stock_label::ChangeStockLabel { new_label: "neutral-label".into() }));
+    let fields = Process3dMutationFields::from_mutation(Process3dMutation::ChangeStockLabel(semio_s_artifact_process_process3d_mut_stock::change_stock_label::ChangeStockLabel { new_label: "neutral-label".into() }));
     let mut structural = Process3dRetirementStack::new(Process3dRetirementOwner::MutationFields { value: fields, phase: 0 });
     let work_demand = structural.next_close_byte_demand();
-    let domain_fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let domain_fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json").leak()).unwrap();
     let first_step = structural.advance(admission).unwrap();
     let structural_release = match first_step { store::SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => usize::MAX };
     for _ in 0..64 { if structural.terminal_is_empty() { break; } structural.advance(admission).unwrap(); }

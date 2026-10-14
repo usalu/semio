@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::Puzzle3dSnapshot;
+use crate::snapshot::Puzzle3dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Puzzle3dSnapshot` to its binary pack form.
@@ -23,14 +23,13 @@ pub fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
+use crate::snapshot::*;
 use ::semio_framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for Puzzle3dSnapshot {
@@ -61,15 +60,8 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{Puzzle3dSnapshot};
-use ::semio_framework_schema::ArtifactSchema;
+use crate::*;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::Puzzle3dMeta;
-use crate::standards::v1::subsets::any::schema::Puzzle3dObject;
-use crate::standards::v1::subsets::any::schema::Puzzle3dAttraction;
-use crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume;
-use crate::standards::v1::subsets::any::schema::Puzzle3dReference;
 
 impl protocol::OpBinary for Puzzle3dEngineCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

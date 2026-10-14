@@ -4,11 +4,11 @@
 //! edges / the faces around the selected vertices of the active object (a mesh rebuild, the faces variant
 //! every polygon modeller ships). `duplicateObject` (⌘D) copies the active object beside itself.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
-use crate::editor::lowpoly::session::{mesh_edit, LowpolyScratch};
-use crate::editor::lowpoly::view::resolve_active_object_id;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::{LowpolyObject, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetActiveObjectEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::{editor::lowpoly::session::mesh_edit, editor::lowpoly::session::LowpolyScratch};
+use semio_s_artifact_lowpoly_lowpoly_view::resolve_active_object_id;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
@@ -42,7 +42,7 @@ pub mod delete_selection {
             if ids.len() >= projection.objects.len() {
                 return Err(Fault::from("lowpoly delete: a document keeps at least one object"));
             }
-            let mutations = ids.into_iter().map(|id| LowpolyMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { id })).collect();
+            let mutations = ids.into_iter().map(|id| LowpolyMutation::DeleteObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::delete_object::DeleteObject { id })).collect();
             return Ok(Emit::mutations(mutations));
         }
         let ids = selection.ids;
@@ -90,23 +90,23 @@ pub mod duplicate_object {
             name: format!("{} copy", source.name),
             transform,
             smooth_shading: source.smooth_shading,
-            mesh: Some(crate::mesh_child_handle(&id, &source.mesh_content)),
-            paint_layers: source.paint_layers.iter().cloned().map(crate::LowpolyPaintLayer::compacted).collect(),
+            mesh: Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::mesh_child_handle(&id, &source.mesh_content)),
+            paint_layers: source.paint_layers.iter().cloned().map(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::compacted).collect(),
             mesh_content: source.mesh_content.clone(),
         };
         let index = projection.objects.iter().position(|object| object.id == source_id).map_or(projection.objects.len(), |position| position + 1);
         // 🎯️ The copy becomes the selection too — the mesh domain's selection is framework-owned, so the
         // app asks the host to redispatch `interactionSelect` on the copy's row (a Delete right after a
         // ⌘D then removes the copy, not the still-selected source).
-        let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": crate::editor::lowpoly::view::MESH_GRANULARITY_OBJECT, "id": crate::editor::lowpoly::view::document_object_row_id(&id) })]).unwrap_or_default();
+        let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": semio_s_artifact_lowpoly_lowpoly_view::MESH_GRANULARITY_OBJECT, "id": semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id) })]).unwrap_or_default();
         let select = semio_framework::kernel::Effect::DispatchAction {
             req: semio_framework_plugin::RequestId(1_302),
             action: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
-            args: Some(semio_framework::dsl_value!({ "domainId": crate::editor::lowpoly::view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
+            args: Some(semio_framework::dsl_value!({ "domainId": semio_s_artifact_lowpoly_lowpoly_view::MESH_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
             delay_ms: 0,
         };
         Ok(Emit {
-            artifact_mutations: vec![LowpolyMutation::CreateObject(crate::mutations::create_object::CreateObject { index, object: copy })],
+            artifact_mutations: vec![LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index, object: copy })],
             config_mutations: vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: id })],
             effects: vec![select],
             ..Default::default()
@@ -116,7 +116,4 @@ pub mod duplicate_object {
 //#endregion 🔖️DuplicateObject
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

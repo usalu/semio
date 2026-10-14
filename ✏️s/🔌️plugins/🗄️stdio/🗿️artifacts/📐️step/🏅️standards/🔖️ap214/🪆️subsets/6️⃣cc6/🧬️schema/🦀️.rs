@@ -5,7 +5,7 @@
 //! `🪆️subsets/6️⃣cc6/🧬️schema/` is present per `🔣️taxonomy.json`'s `subsetChildDirs`, without
 //! duplicating the schema definition.
 
-pub use crate::standards::v_ap214::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_step_base::standards::v_ap214::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per ISO 10303-214 CC6 (advanced B-Rep, top of the ladder) conformance

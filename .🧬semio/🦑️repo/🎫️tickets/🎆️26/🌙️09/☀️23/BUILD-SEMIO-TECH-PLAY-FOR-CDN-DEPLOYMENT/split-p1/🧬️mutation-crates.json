@@ -1,0 +1,490 @@
+[
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️model",
+  "package": "semio-s-artifact-energy-model-mut-model",
+  "alias": "model_mutations",
+  "description": "Energy model mutation domain model: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site",
+  "package": "semio-s-artifact-energy-model-mut-site",
+  "alias": "site_mutations",
+  "description": "Energy model mutation domain site: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏯️run",
+  "package": "semio-s-artifact-energy-model-mut-run",
+  "alias": "run_mutations",
+  "description": "Energy model mutation domain run: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️zone",
+  "package": "semio-s-artifact-energy-model-mut-zone",
+  "alias": "zone_mutations",
+  "description": "Energy model mutation domain zone: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space",
+  "package": "semio-s-artifact-energy-model-mut-space",
+  "alias": "space_mutations",
+  "description": "Energy model mutation domain space: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface",
+  "package": "semio-s-artifact-energy-model-mut-surface",
+  "alias": "surface_mutations",
+  "description": "Energy model mutation domain surface: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲️boundary",
+  "package": "semio-s-artifact-energy-model-mut-boundary",
+  "alias": "boundary_mutations",
+  "description": "Energy model mutation domain boundary: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration",
+  "package": "semio-s-artifact-energy-model-mut-fenestration",
+  "alias": "fenestration_mutations",
+  "description": "Energy model mutation domain fenestration: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️glazing",
+  "package": "semio-s-artifact-energy-model-mut-glazing",
+  "alias": "glazing_mutations",
+  "description": "Energy model mutation domain glazing: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️shading-device",
+  "package": "semio-s-artifact-energy-model-mut-shading-device",
+  "alias": "shading_device_mutations",
+  "description": "Energy model mutation domain shading-device: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️shading",
+  "package": "semio-s-artifact-energy-model-mut-shading",
+  "alias": "shading_mutations",
+  "description": "Energy model mutation domain shading: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️material",
+  "package": "semio-s-artifact-energy-model-mut-material",
+  "alias": "material_mutations",
+  "description": "Energy model mutation domain material: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️finish",
+  "package": "semio-s-artifact-energy-model-mut-finish",
+  "alias": "finish_mutations",
+  "description": "Energy model mutation domain finish: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer",
+  "package": "semio-s-artifact-energy-model-mut-window-layer",
+  "alias": "window_layer_mutations",
+  "description": "Energy model mutation domain window-layer: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction",
+  "package": "semio-s-artifact-energy-model-mut-construction",
+  "alias": "construction_mutations",
+  "description": "Energy model mutation domain construction: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain",
+  "package": "semio-s-artifact-energy-model-mut-people-gain",
+  "alias": "people_gain_mutations",
+  "description": "Energy model mutation domain people-gain: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️lighting-gain",
+  "package": "semio-s-artifact-energy-model-mut-lighting-gain",
+  "alias": "lighting_gain_mutations",
+  "description": "Energy model mutation domain lighting-gain: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain",
+  "package": "semio-s-artifact-energy-model-mut-equipment-gain",
+  "alias": "equipment_gain_mutations",
+  "description": "Energy model mutation domain equipment-gain: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️infiltration",
+  "package": "semio-s-artifact-energy-model-mut-infiltration",
+  "alias": "infiltration_mutations",
+  "description": "Energy model mutation domain infiltration: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️leakage",
+  "package": "semio-s-artifact-energy-model-mut-leakage",
+  "alias": "leakage_mutations",
+  "description": "Energy model mutation domain leakage: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️ventilation",
+  "package": "semio-s-artifact-energy-model-mut-ventilation",
+  "alias": "ventilation_mutations",
+  "description": "Energy model mutation domain ventilation: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermostat",
+  "package": "semio-s-artifact-energy-model-mut-thermostat",
+  "alias": "thermostat_mutations",
+  "description": "Energy model mutation domain thermostat: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️humidistat",
+  "package": "semio-s-artifact-energy-model-mut-humidistat",
+  "alias": "humidistat_mutations",
+  "description": "Energy model mutation domain humidistat: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💯️ideal-loads",
+  "package": "semio-s-artifact-energy-model-mut-ideal-loads",
+  "alias": "ideal_loads_mutations",
+  "description": "Energy model mutation domain ideal-loads: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️zone-equipment",
+  "package": "semio-s-artifact-energy-model-mut-zone-equipment",
+  "alias": "zone_equipment_mutations",
+  "description": "Energy model mutation domain zone-equipment: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️daylight-zone",
+  "package": "semio-s-artifact-energy-model-mut-daylight-zone",
+  "alias": "daylight_zone_mutations",
+  "description": "Energy model mutation domain daylight-zone: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️sizing",
+  "package": "semio-s-artifact-energy-model-mut-sizing",
+  "alias": "sizing_mutations",
+  "description": "Energy model mutation domain sizing: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air",
+  "package": "semio-s-artifact-energy-model-mut-room-air",
+  "alias": "room_air_mutations",
+  "description": "Energy model mutation domain room-air: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️setpoint",
+  "package": "semio-s-artifact-energy-model-mut-setpoint",
+  "alias": "setpoint_mutations",
+  "description": "Energy model mutation domain setpoint: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️air-loop",
+  "package": "semio-s-artifact-energy-model-mut-air-loop",
+  "alias": "air_loop_mutations",
+  "description": "Energy model mutation domain air-loop: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop",
+  "package": "semio-s-artifact-energy-model-mut-plant-loop",
+  "alias": "plant_loop_mutations",
+  "description": "Energy model mutation domain plant-loop: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️outdoor-air",
+  "package": "semio-s-artifact-energy-model-mut-outdoor-air",
+  "alias": "outdoor_air_mutations",
+  "description": "Energy model mutation domain outdoor-air: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️load-center",
+  "package": "semio-s-artifact-energy-model-mut-load-center",
+  "alias": "load_center_mutations",
+  "description": "Energy model mutation domain load-center: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system",
+  "package": "semio-s-artifact-energy-model-mut-pv-system",
+  "alias": "pv_system_mutations",
+  "description": "Energy model mutation domain pv-system: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪫️battery",
+  "package": "semio-s-artifact-energy-model-mut-battery",
+  "alias": "battery_mutations",
+  "description": "Energy model mutation domain battery: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️shw-system",
+  "package": "semio-s-artifact-energy-model-mut-shw-system",
+  "alias": "shw_system_mutations",
+  "description": "Energy model mutation domain shw-system: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️solar-thermal",
+  "package": "semio-s-artifact-energy-model-mut-solar-thermal",
+  "alias": "solar_thermal_mutations",
+  "description": "Energy model mutation domain solar-thermal: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️refrigeration",
+  "package": "semio-s-artifact-energy-model-mut-refrigeration",
+  "alias": "refrigeration_mutations",
+  "description": "Energy model mutation domain refrigeration: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️water-system",
+  "package": "semio-s-artifact-energy-model-mut-water-system",
+  "alias": "water_system_mutations",
+  "description": "Energy model mutation domain water-system: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault",
+  "package": "semio-s-artifact-energy-model-mut-fault",
+  "alias": "fault_mutations",
+  "description": "Energy model mutation domain fault: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list",
+  "package": "semio-s-artifact-energy-model-mut-space-list",
+  "alias": "space_list_mutations",
+  "description": "Energy model mutation domain space-list: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️enclosure",
+  "package": "semio-s-artifact-energy-model-mut-enclosure",
+  "alias": "enclosure_mutations",
+  "description": "Energy model mutation domain enclosure: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕐️fixed-schedule",
+  "package": "semio-s-artifact-energy-model-mut-fixed-schedule",
+  "alias": "fixed_schedule_mutations",
+  "description": "Energy model mutation domain fixed-schedule: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️day-schedule",
+  "package": "semio-s-artifact-energy-model-mut-day-schedule",
+  "alias": "day_schedule_mutations",
+  "description": "Energy model mutation domain day-schedule: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗓️week-schedule",
+  "package": "semio-s-artifact-energy-model-mut-week-schedule",
+  "alias": "week_schedule_mutations",
+  "description": "Energy model mutation domain week-schedule: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule",
+  "package": "semio-s-artifact-energy-model-mut-year-schedule",
+  "alias": "year_schedule_mutations",
+  "description": "Energy model mutation domain year-schedule: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️time-series",
+  "package": "semio-s-artifact-energy-model-mut-time-series",
+  "alias": "time_series_mutations",
+  "description": "Energy model mutation domain time-series: payloads, builders, diff and inverse of its operations"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "package": "semio-s-artifact-energy-model-mutations",
+  "alias": "mutations",
+  "description": "Energy model mutations: the EnergyModelMutation aggregate over the domain payloads and its op codecs"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixtures",
+  "package": "semio-s-artifact-energy-model-mutation-fixtures",
+  "alias": "fixtures",
+  "description": "Energy model mutation fixture laws: committed vectors, the eight laws, the roster and codec probes",
+  "tests": [
+   [
+    "model_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️model/🦀️.rs"
+   ],
+   [
+    "site_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️site/🦀️.rs"
+   ],
+   [
+    "run_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️run/🦀️.rs"
+   ],
+   [
+    "zone_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️zone/🦀️.rs"
+   ],
+   [
+    "space_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️space/🦀️.rs"
+   ],
+   [
+    "surface_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️surface/🦀️.rs"
+   ],
+   [
+    "boundary_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️boundary/🦀️.rs"
+   ],
+   [
+    "fenestration_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fenestration/🦀️.rs"
+   ],
+   [
+    "glazing_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️glazing/🦀️.rs"
+   ],
+   [
+    "shading_device_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️shading-device/🦀️.rs"
+   ],
+   [
+    "shading_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️shading/🦀️.rs"
+   ],
+   [
+    "material_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️material/🦀️.rs"
+   ],
+   [
+    "finish_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️finish/🦀️.rs"
+   ],
+   [
+    "window_layer_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️window-layer/🦀️.rs"
+   ],
+   [
+    "construction_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️construction/🦀️.rs"
+   ],
+   [
+    "people_gain_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️people-gain/🦀️.rs"
+   ],
+   [
+    "lighting_gain_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️lighting-gain/🦀️.rs"
+   ],
+   [
+    "equipment_gain_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️equipment-gain/🦀️.rs"
+   ],
+   [
+    "infiltration_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️infiltration/🦀️.rs"
+   ],
+   [
+    "leakage_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️leakage/🦀️.rs"
+   ],
+   [
+    "ventilation_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️ventilation/🦀️.rs"
+   ],
+   [
+    "thermostat_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️thermostat/🦀️.rs"
+   ],
+   [
+    "humidistat_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️humidistat/🦀️.rs"
+   ],
+   [
+    "ideal_loads_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️ideal-loads/🦀️.rs"
+   ],
+   [
+    "zone_equipment_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️zone-equipment/🦀️.rs"
+   ],
+   [
+    "daylight_zone_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️daylight-zone/🦀️.rs"
+   ],
+   [
+    "sizing_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️sizing/🦀️.rs"
+   ],
+   [
+    "room_air_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️room-air/🦀️.rs"
+   ],
+   [
+    "setpoint_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️setpoint/🦀️.rs"
+   ],
+   [
+    "air_loop_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️air-loop/🦀️.rs"
+   ],
+   [
+    "plant_loop_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️plant-loop/🦀️.rs"
+   ],
+   [
+    "outdoor_air_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️outdoor-air/🦀️.rs"
+   ],
+   [
+    "load_center_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️load-center/🦀️.rs"
+   ],
+   [
+    "pv_system_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️pv-system/🦀️.rs"
+   ],
+   [
+    "battery_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️battery/🦀️.rs"
+   ],
+   [
+    "shw_system_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️shw-system/🦀️.rs"
+   ],
+   [
+    "solar_thermal_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️solar-thermal/🦀️.rs"
+   ],
+   [
+    "refrigeration_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️refrigeration/🦀️.rs"
+   ],
+   [
+    "water_system_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️water-system/🦀️.rs"
+   ],
+   [
+    "fault_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fault/🦀️.rs"
+   ],
+   [
+    "space_list_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️space-list/🦀️.rs"
+   ],
+   [
+    "enclosure_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️enclosure/🦀️.rs"
+   ],
+   [
+    "fixed_schedule_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixed-schedule/🦀️.rs"
+   ],
+   [
+    "day_schedule_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️day-schedule/🦀️.rs"
+   ],
+   [
+    "week_schedule_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️week-schedule/🦀️.rs"
+   ],
+   [
+    "year_schedule_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️year-schedule/🦀️.rs"
+   ],
+   [
+    "time_series_vectors",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️time-series/🦀️.rs"
+   ],
+   [
+    "aggregate_laws",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️aggregate-laws/🦀️.rs"
+   ]
+  ]
+ }
+]

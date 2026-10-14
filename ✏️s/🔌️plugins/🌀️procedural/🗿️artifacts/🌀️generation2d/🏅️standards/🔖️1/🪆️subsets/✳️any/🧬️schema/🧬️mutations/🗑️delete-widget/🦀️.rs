@@ -3,9 +3,8 @@
 //! generic slot this triad was repurposed from — see `sharedFileRequests` in this ticket's wave2
 //! report for the glue.rs rename that would align the directory/module with the verb.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️DeleteWidget
@@ -19,19 +18,22 @@ pub struct DeleteWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_widget(id: String) -> Generation2dMutation {
-    Generation2dMutation::DeleteWidget(DeleteWidget { id })
+pub fn delete_widget<Op: From<DeleteWidget>>(id: String) -> Op {
+    Op::from(DeleteWidget { id })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for DeleteWidget {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for DeleteWidget
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::create_widget::CreateWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "widget", kind: "delete-widget", record: "DeletedWidget" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::delete_widget::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::delete_widget::inverse::inverse(self, base)?
     
     })
 }

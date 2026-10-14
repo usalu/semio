@@ -16,3 +16,5 @@ export {withOriginalNxFixedCacheV1} from "../../../../💾️storage/🔒️enfo
 export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
 export {compactTaskPlans} from "../../../../🕸️graph/📤️export/🟨️.mjs";
 export {readNxGraphSourceProofV1} from "../../../../🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts";
+
+export {withOriginalSelectedNativeSnapshotV1,selectedNativeWorkspaceRootV1,requireSelectedNativeFileCoverageV1} from "../../../../../🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts";

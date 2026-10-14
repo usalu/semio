@@ -8,8 +8,8 @@ use std::sync::atomic::Ordering;
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootRetirementFactory;
 impl SnapshotRetirementFactory<Edit<MapMutation>> for RootRetirementFactory {
- fn retirement_birth_bytes(&self, root: &Arc<Edit<MapMutation>>) -> usize { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retirement_birth_bytes(root) }
- fn retire(&self, root: Arc<Edit<MapMutation>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<Edit<MapMutation>>)> { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retire(root, grant) }
+ fn retirement_birth_bytes(&self, root: &Arc<Edit<MapMutation>>) -> usize { semio_framework_value::factory::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retirement_birth_bytes(root) }
+ fn retire(&self, root: Arc<Edit<MapMutation>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<Edit<MapMutation>>)> { semio_framework_value::factory::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retire(root, grant) }
 }
 /// 🧱️ The smallest copy grant a kind-0 canonical frame starts under (`ArtifactCanonicalJsonCursor::next_encode_demand`).
 const FRAME_COPY_FLOOR: usize = 64;
@@ -208,15 +208,15 @@ impl ArtifactCanonicalJson for ErrorRoot {
 }
 
 impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
- fn retirement_birth_bytes(&self,root:&Arc<ErrorRoot>)->usize {semio_framework_value::retirement::SharedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
+ fn retirement_birth_bytes(&self,root:&Arc<ErrorRoot>)->usize {semio_framework_value::factory::SharedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
  fn retire(&self,root:Arc<ErrorRoot>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<ErrorRoot>)> {
-  let unique=Arc::strong_count(&root)==1;let admitted=semio_framework_value::retirement::SharedValueRetirementFactory::<ErrorRoot>::default().retire(root,grant);if admitted.is_ok()&&unique{self.0.fetch_add(1,Ordering::SeqCst);}admitted
+  let unique=Arc::strong_count(&root)==1;let admitted=semio_framework_value::factory::SharedValueRetirementFactory::<ErrorRoot>::default().retire(root,grant);if admitted.is_ok()&&unique{self.0.fetch_add(1,Ordering::SeqCst);}admitted
  }
 }
 impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
- fn retirement_birth_bytes(&self,root:&ErrorRoot)->usize {semio_framework_value::retirement::OwnedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
+ fn retirement_birth_bytes(&self,root:&ErrorRoot)->usize {semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
  fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> {
-  let admitted=semio_framework_value::retirement::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted
+  let admitted=semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted
  }
 }
 impl ArtifactCanonicalJsonTree for ErrorLeaf {

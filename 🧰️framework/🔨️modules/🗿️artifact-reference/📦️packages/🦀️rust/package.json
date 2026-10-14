@@ -5,8 +5,8 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-native": "bun repo run @semio-tech/framework-artifact-reference-rs:test-native",
-    "test:binding": "bun repo run @semio-tech/framework-artifact-reference-rs:test-binding"
+    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-native",
+    "test:binding": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-artifact-reference-rs:test-binding"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

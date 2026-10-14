@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "wayfindingRequirement",
+  "id": "wayfinding-requirement-a",
+  "newName": "Renamed Wayfinding Requirement A"
+}

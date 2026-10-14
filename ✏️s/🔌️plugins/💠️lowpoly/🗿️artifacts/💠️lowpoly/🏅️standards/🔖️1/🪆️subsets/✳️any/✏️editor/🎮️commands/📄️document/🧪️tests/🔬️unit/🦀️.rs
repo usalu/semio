@@ -1,8 +1,17 @@
-use super::*;
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::unit_tests::context::{app, dispatch};
-use crate::editor::lowpoly::LowpolyCommand;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
+extern crate semio_framework_os_kernel as protocol;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_lowpoly_lowpoly_commands::document::*;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use crate::context::{app, dispatch};
+use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 
 /// 🧬️ `importSnapshotJson`/`replaceSnapshotJson` emit a `Effect::LoadDocument` (outside undo
 /// history), not an `artifact_mutations` entry — driven directly through `handle` (not
@@ -10,11 +19,11 @@ use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
 #[semio_framework_async_macros::async_test]
 async fn import_snapshot_json_replaces_the_whole_document() {
-    let mesh_json = crate::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace()["obj-1"].clone();
-    let mut replacement=crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json("", "obj-x", "X");
-    replacement.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-x",&mesh_json));
+    let mesh_json = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_mesh_workspace()["obj-1"].clone();
+    let mut replacement=semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json("", "obj-x", "X");
+    replacement.objects[0].mesh=Some(semio_s_artifact_lowpoly_lowpoly_model::snapshot::managed_mesh_child_handle("obj-x",&mesh_json));
     replacement.objects[0].mesh_state=Some(mesh_json);
-    let json = crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(&replacement);
+    let json = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(&replacement);
     let snapshot = default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);

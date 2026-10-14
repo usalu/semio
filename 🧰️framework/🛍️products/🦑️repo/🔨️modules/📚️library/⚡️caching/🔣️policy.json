@@ -113,7 +113,8 @@
         "Cargo.toml",
         ".cargo/config.toml",
         "rust-toolchain.toml",
-        "rustfmt.toml"
+        "rustfmt.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"
       ],
       "environment": [
         "RUSTUP_TOOLCHAIN",

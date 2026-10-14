@@ -5,7 +5,7 @@ import {acquireQueuedResourceLease,checkResourceLeaseControl,requireMaterialized
 import {validateJsonSchemaSubset} from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
-/** 💾️ Describes one fixed managed allocation envelope, independently of eviction preferences. */
+/** 💾️ Describes one fixed managed allocation envelope; its lease directory fixes the sole queue catalog. */
 export type NativeStoragePolicyV1=Readonly<{version:1;root:string;leaseDirectory:string;capacityBytes:number;maximumWorkspaceBytes:number;maximumArtifactBytes:number}>;
 /** 🧮️ Retains conservative charge through publication, cancellation and physical retirement. */
 export type NativeStorageAllocationV1=Readonly<{id:string;owner:string;kind:"compiler-workspace"|"artifact-publication"|"artifact-restore";bytes:number;phase:"reserved"|"committed"|"retiring"}>;

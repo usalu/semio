@@ -37,9 +37,9 @@ fn history_edit_puzzle2d_native_lookup_follows_sqlite_first_match_and_exact_alia
     for case in corpus["cases"].as_array().unwrap() {
         let scope = match case["scope"].as_str().unwrap() { "node" => Puzzle2dLookupScope::Node, "edge" => Puzzle2dLookupScope::Edge, "region" => Puzzle2dLookupScope::Region, "handle" => Puzzle2dLookupScope::Handle, _ => panic!("unknown authored lookup scope") };
         let mut snapshot = Puzzle2dSnapshot::default();
-        snapshot.nodes = case["nodes"].as_array().unwrap().iter().enumerate().map(|(index, id)| crate::Puzzle2dNode { id: text(id), handles: case["handles"][index].as_array().unwrap().iter().map(|id| crate::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
-        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
-        snapshot.target_regions = case["regions"].as_array().unwrap().iter().map(|id| crate::Puzzle2dTargetRegion { id: text(id), ..Default::default() }).collect();
+        snapshot.nodes = case["nodes"].as_array().unwrap().iter().enumerate().map(|(index, id)| crate::standards::v1::subsets::any::schema::Puzzle2dNode { id: text(id), handles: case["handles"][index].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: text(id), ..Default::default() }).collect(), ..Default::default() }).collect();
+        snapshot.edges = case["edges"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: text(id), ..Default::default() }).collect();
+        snapshot.target_regions = case["regions"].as_array().unwrap().iter().map(|id| crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion { id: text(id), ..Default::default() }).collect();
         let target = text(&case["target"]);
         let original = serde_json::to_value(&snapshot).unwrap();
         let mut source = crate::test_source_custody::admit();

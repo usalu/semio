@@ -1,6 +1,6 @@
 
-use super::*;
-use crate::Block5dGripTemplate;
+use crate::bounds::*;
+use semio_s_artifact_block_5d_model::Block5dGripTemplate;
 
 fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
     Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }

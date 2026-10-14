@@ -1,7 +1,7 @@
 //! 🧩️ Process wood machine catalog extension — contributes wood-shop machines to `process3d-play`.
 
 use semio_framework_plugin::ExtensionBundle;
-use semio_s_artifact_process_process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::StockQuantity, snapshot::WorkshopMachine};
 
 //#region 🔖️Catalog
 pub struct WoodCatalog;

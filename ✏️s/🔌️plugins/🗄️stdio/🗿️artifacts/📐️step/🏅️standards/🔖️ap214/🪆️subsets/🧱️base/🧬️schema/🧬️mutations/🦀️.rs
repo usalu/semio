@@ -1,7 +1,14 @@
 //! 🧬️ StepMutation — document mutation dispatch. Every leaf builds its sparse `StepDiff` directly and a concrete,
 //! key/index-aware inverse from its payload and reads of `base`.
 
-use crate::standards::v_ap214::subsets::base::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepArgAdded;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepArgModified;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepArgsDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepEntitiesDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepEntityAdded;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepEntityDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepEntityModified;
 
 
 
@@ -32,8 +39,12 @@ use crate::standards::v_ap214::subsets::base::schema::diff::{StepArgAdded, StepA
 
 
 
-use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepValue;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 #[cfg(test)] use protocol::Mutation;
 
@@ -121,7 +132,11 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepTypedValue, StepValue as SV};
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepTypedValue;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepValue as SV;
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),

@@ -12,9 +12,9 @@ script = os.path.join(os.path.dirname(os.path.join(REPO, cfg["root"])), "📦️
 text = open(script, encoding="utf-8").read()
 packages = sorted(c["package"] for k, c in cfg["crates"].items() if k != "agg") + [cfg["crates"]["agg"]["package"]]
 listed = "packages:[" + ",".join(json.dumps(p) for p in packages) + "]"
-m = re.search(r'runArtifactRustPackageMain\(import\.meta\.dir,\s*"([^"]+)"\s*(?:,\s*\{(.*)\})?\s*\);', text, re.S)
-body = (m.group(2) or "").strip()
+m = re.search(r'runArtifactRustPackageMain\(([^,()]+),\s*([^,()]+?)\s*(?:,\s*\{(.*?)\})?\s*\);', text, re.S)
+body = (m.group(3) or "").strip()
 body = re.sub(r"packages:\[[^\]]*\],?", "", body).strip().strip(",")
-new = f'runArtifactRustPackageMain(import.meta.dir, "{m.group(1)}", {{{listed}{"," + body if body else ""}}});'
+new = f'runArtifactRustPackageMain({m.group(1).strip()}, {m.group(2).strip()}, {{{listed}{"," + body if body else ""}}});'
 open(script, "w", encoding="utf-8").write(text[:m.start()] + new + text[m.end():])
 print(new[:300])

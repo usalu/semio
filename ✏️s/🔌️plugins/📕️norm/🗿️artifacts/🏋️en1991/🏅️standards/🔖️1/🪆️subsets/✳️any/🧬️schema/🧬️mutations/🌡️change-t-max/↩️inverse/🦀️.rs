@@ -1,9 +1,9 @@
 //! Inverse for `change-t-max`.
-use super::ChangeTMax;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeTMax, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_t_max::ChangeTMax;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeTMax, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_t_max::ChangeTMax> {
     Ok((|| {
-    vec![En1991Mutation::ChangeTMax(ChangeTMax { new_t_max: base.t_max })]
+    vec![Op::from(ChangeTMax { new_t_max: base.t_max })]
 
     })())
 }

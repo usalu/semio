@@ -1,6 +1,11 @@
 //! 🔪️ Cuts one selected mesh face with two point controls and a retained graph edit.
-use crate::editor::generation3d::{config::{Generation3dConfig, Generation3dConfigMutation}, edit_mesh_selection::{mesh_edit_emit, mesh_operation_rows}, selection::{component_group, DOMAIN}};
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use crate::edit_mesh_selection::mesh_edit_emit;
+use crate::edit_mesh_selection::mesh_operation_rows;
+use semio_s_artifact_procedural_3d_editor_selection::component_group;
+use semio_s_artifact_procedural_3d_editor_selection::DOMAIN;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

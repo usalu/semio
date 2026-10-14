@@ -22,10 +22,10 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 pub fn subset<A: crate::DrawingApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: DRAWING_DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::drawing_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
+        schema: SchemaDeclaration { descriptor: semio_s_artifact_draw_drawing_descriptor::drawing_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::DrawingViewer, A>(viewer::create_drawing_viewer()),
-        editor: editor_surface::<editor::DrawingPlayApp, A>(editor::create_drawing_app()),
+        editor: editor_surface::<editor::DrawingPlayApp, A>(crate::editor_manifest::create_drawing_app()),
         examples: examples(),
     }
 }

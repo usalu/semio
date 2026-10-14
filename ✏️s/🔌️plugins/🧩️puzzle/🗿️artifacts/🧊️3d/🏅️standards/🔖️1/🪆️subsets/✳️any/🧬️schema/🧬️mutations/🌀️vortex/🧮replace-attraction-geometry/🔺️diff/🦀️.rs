@@ -1,7 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceAttractionGeometry` — patches the one addressed attraction in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionsDelta, Puzzle3dDiff};
-use protocol::list_delta::RowPatch;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ReplaceAttractionGeometry, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

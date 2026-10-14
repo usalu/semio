@@ -113,7 +113,7 @@ export function internProjectInputGroups(groups) {
 }
 
 /** 📥️ Projects source and compiler input ownership independently of target orchestration. */
-export function inferProjectInputs(json, root, workspaceRoot, facts, scripts, context) {
+export async function inferProjectInputs(json, root, workspaceRoot, facts, scripts, context) {
   const { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs, owned } = context;
   const nativeRoot = json.metadata?.nativeRoot ?? root;
   const tools = ["javascript"];
@@ -152,7 +152,7 @@ export function inferProjectInputs(json, root, workspaceRoot, facts, scripts, co
   const examples = [...exampleCollectionInputs("{projectRoot}"), ...exampleCollectionInputs("{workspaceRoot}")];
   const production = ["!{projectRoot}/**/🧪️tests/**/*", ...examples, "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
   if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
-  const declarations = json.namedInputs ?? {}, sourceContracts = declaredSourceInputs(json, workspaceRoot);
+  const declarations = json.namedInputs ?? {}, sourceContracts = await declaredSourceInputs(json, workspaceRoot);
   const sourceScopes = [...inputs, ...Object.values(declarations).flat(), ...Object.values(sourceContracts).flat(), ...(nativeSources ?? []), ...(nativeTests ?? [])];
   const exclusions = [];
   for (const target of Object.values(json.targets ?? {})) for (const output of target.outputs ?? []) {
@@ -176,9 +176,9 @@ export function inferProjectInputs(json, root, workspaceRoot, facts, scripts, co
   const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeRoot}/Cargo.toml`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
-  const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
+  const artifactSources = artifactTypeScript ? [...await relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
   const javascript = POLICY.toolchains.javascript;
-  const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
+  const artifactCommandSources = artifactTypeScript ? [...await relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
   const groups = { ...declarations, ...sourceContracts, default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
   return internProjectInputGroups(Object.fromEntries(Object.entries(groups).map(([name, inputs]) => [name, context.sourceRepresentation === "source" ? deduplicateProjectInputs(inputs, root) : compactSourceInputs(deduplicateProjectInputs(inputs, root), workspaceRoot, root)])));
 }

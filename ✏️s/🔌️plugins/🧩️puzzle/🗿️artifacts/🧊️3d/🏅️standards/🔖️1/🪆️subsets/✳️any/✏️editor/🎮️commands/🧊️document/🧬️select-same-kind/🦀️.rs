@@ -1,7 +1,7 @@
 //! 🗂️ `select-same-kind` command.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
-use crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT;
 
 /// 🎯️ Widens the selection to every object sharing the clicked object's kind. Selection is
 /// framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so this emits one

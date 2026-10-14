@@ -1,6 +1,7 @@
-use super::ChangeUnitMaterial;
-use crate::{En1996Diff, En1996Snapshot};
-use crate::diff::{En1996WallDelta, En1996WallPatch};
+use crate::change_unit_material::ChangeUnitMaterial;
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use semio_s_artifact_norm_en1996_diff::{En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeUnitMaterial, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.index >= base.walls.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());

@@ -1,10 +1,10 @@
 use super::*;
-use crate::mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn set_page_overrides_moves_an_inherited_frame_and_inverse_clears_it() {
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mutation = LayoutMutation::SetPageOverrides(SetPageOverrides { id: "page-1".into(), overrides: vec![PageOverride { object_id: "frame-inherited".into(), bounds: Some(LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None }] });
     let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("override applies");
     assert_eq!(next.pages[0].overrides[0].bounds.as_ref().unwrap().x, 90.0);

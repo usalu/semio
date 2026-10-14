@@ -1,7 +1,8 @@
 //! 🎥️ 🎥️ Fem2d play app commands command — `set-camera`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::fem2d::modes::edit::windows::{model, results};
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -46,7 +47,4 @@ pub fn handle_window(payload: &SetCamera, cfg: &ConfigView<'_, NoConfig>, view: 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,8 @@
 //! 🪨️ Handwritten masonry wall, opening, load-case and concentrated-load snapshot relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1996Snapshot;
-use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass, WallOpening, ConcentratedLoad, document::{AnnexChoice, DesignSituation}};
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use semio_s_artifact_norm_en1996_model::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass, WallOpening, ConcentratedLoad};
+use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, validate_sqlite_database_schema, artifact::{Cell, FloatColumn, FloatRow, NativeEncodingBound, RowWriter, reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -103,8 +104,5 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1996Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

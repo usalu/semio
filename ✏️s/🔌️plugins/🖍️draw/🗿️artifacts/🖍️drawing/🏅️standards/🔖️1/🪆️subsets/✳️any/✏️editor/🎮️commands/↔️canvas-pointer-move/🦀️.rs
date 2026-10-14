@@ -3,7 +3,7 @@
 //! 🎯️ Pointer batches retain every sample. Lasso routes consume one sample per retained turn;
 //! hover, shape and draft cursor projections consume the newest position.
 
-use crate::commands::canvas_pointer_down::{canvas_point_to_world, DrawingSession};
+use crate::{canvas_point_to_world, DrawingSession};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

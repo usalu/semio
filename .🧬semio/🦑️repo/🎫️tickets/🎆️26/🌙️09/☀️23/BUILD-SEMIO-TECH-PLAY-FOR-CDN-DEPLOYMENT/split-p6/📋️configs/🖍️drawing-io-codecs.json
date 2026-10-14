@@ -1,0 +1,63 @@
+{
+ "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+ "crate": "semio_s_artifact_draw_drawing_io",
+ "aggregator": "io",
+ "workspace": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+ "aggregatorRole": "library",
+ "consumers": [
+  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+  "🌎️hub/🧩️compositions/🖍️draw",
+  "🌎️hub/🧩️compositions/🪐️space",
+  "✏️s/🔌️plugins/🖍️draw/🏭️bridge",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "crates": {
+  "io": {
+   "ident": "semio_s_artifact_draw_drawing_io",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "doc": ""
+  },
+  "model": {
+   "ident": "semio_s_artifact_draw_drawing_model",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "doc": ""
+  },
+  "diff": {
+   "ident": "semio_s_artifact_draw_drawing_diff",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "doc": ""
+  }
+ },
+ "rules": [
+  [
+   "",
+   "io",
+   ""
+  ],
+  [
+   "text::snapshot",
+   "model",
+   "io::text::snapshot"
+  ],
+  [
+   "binary::snapshot",
+   "model",
+   "io::binary::snapshot"
+  ],
+  [
+   "sqlite::snapshot",
+   "model",
+   "io::sqlite::snapshot"
+  ],
+  [
+   "text::diff",
+   "diff",
+   "io::text"
+  ],
+  [
+   "binary::diff",
+   "diff",
+   "io::binary"
+  ]
+ ]
+}

@@ -14,7 +14,7 @@ mod snapshot_codec {
 use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native;
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
-use crate::STDIO_PPTX_DOCUMENT_SCHEMA;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
@@ -122,5 +122,5 @@ impl PptxSnapshotRecord {
 }
 
 
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;

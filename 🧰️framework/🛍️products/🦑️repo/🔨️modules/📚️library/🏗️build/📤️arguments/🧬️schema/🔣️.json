@@ -1,5 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/build/arguments/component.json",
+  "title": "BuildOwnerArgumentsV1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,6 +19,95 @@
         "type": "string",
         "maxLength": 1048576,
         "pattern": "^[^\\u0000]*$"
+      }
+    }
+  },
+  "$defs": {
+    "BuildCommandBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "workspaceRoot",
+        "workingDirectory",
+        "projectRoot",
+        "arguments"
+      ],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "workingDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "projectRoot": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
+          }
+        }
+      }
+    },
+    "BoundBuildCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "arguments",
+        "cwd",
+        "script",
+        "command"
+      ],
+      "properties": {
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^\\u0000]*$"
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "script": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\\u0000]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\u0000]+$"
+        }
       }
     }
   }

@@ -1,5 +1,5 @@
 //! 🧩️ Puzzle catalog physical projection.
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_framework_pack_json::Value;
 /// 🌉️ Maps this `NodeKind` definition into the `s/plugin/puzzle` 2d manifest shape (`portKinds`/
 /// `wireKinds`/`edgeKinds`/`nodeKinds`/`kindCompatibility` — see

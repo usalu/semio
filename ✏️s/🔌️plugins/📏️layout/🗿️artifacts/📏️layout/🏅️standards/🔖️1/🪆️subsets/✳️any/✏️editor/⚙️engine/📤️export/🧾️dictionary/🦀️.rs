@@ -1,5 +1,6 @@
 //! 🧾️ Borrowed, resumable dictionary word JSON publication.
-use super::{JsonStringWriteCursor,TypedJsonCursor,LayoutSnapshot,MAX_LAYOUT_EXPORT_JSON_NODES,MAX_LAYOUT_EXPORT_STRING_BYTES,MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES};
+use super::{TypedJsonCursor, MAX_LAYOUT_EXPORT_JSON_NODES, MAX_LAYOUT_EXPORT_STRING_BYTES, MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value::{DslValue,Number};
 
 #[derive(Clone,Debug)]
@@ -15,15 +16,15 @@ enum Task {
 }
 
 #[derive(Clone,Debug)]
-pub(super) struct DictionaryJsonCursor { tasks:Vec<Task>,bytes:usize,nodes:usize }
+pub struct DictionaryJsonCursor { tasks:Vec<Task>,bytes:usize,nodes:usize }
 
 impl DictionaryJsonCursor {
- pub(super) fn new()->Self{Self{tasks:vec![Task::Static(b"}"),Task::Entries(0),Task::Static(b"{\"entries\":[")],bytes:0,nodes:0}}
- pub(super) fn owned_bytes(&self)->usize{self.tasks.capacity().saturating_mul(size_of::<Task>()).saturating_add(self.tasks.iter().map(|task|match task{Task::Value{path,..}|Task::Array{path,..}|Task::Object{path,..}|Task::Bytes{path,..}|Task::Text{path,..}=>path.capacity().saturating_mul(size_of::<usize>()),_=>0}).sum::<usize>())}
+ pub fn new()->Self{Self{tasks:vec![Task::Static(b"}"),Task::Entries(0),Task::Static(b"{\"entries\":[")],bytes:0,nodes:0}}
+ pub fn owned_bytes(&self)->usize{self.tasks.capacity().saturating_mul(size_of::<Task>()).saturating_add(self.tasks.iter().map(|task|match task{Task::Value{path,..}|Task::Array{path,..}|Task::Object{path,..}|Task::Bytes{path,..}|Task::Text{path,..}=>path.capacity().saturating_mul(size_of::<usize>()),_=>0}).sum::<usize>())}
  fn value<'a>(snapshot:&'a LayoutSnapshot,entry:usize,path:&[usize])->Result<&'a DslValue,String>{let mut value=&snapshot.data_fields.as_ref().ok_or("layout-export-dictionary")?.entries.get(entry).ok_or("layout-export-dictionary-entry")?.value;for index in path{value=match value{DslValue::Array(items)=>items.get(*index),DslValue::Object(members)=>members.get(*index).map(|(_,value)|value),_=>None}.ok_or("layout-export-dictionary-path")?;}Ok(value)}
  fn push(&mut self,tasks:impl IntoIterator<Item=Task>){self.tasks.extend(tasks);}
  fn node(&mut self)->Result<(),String>{self.nodes=self.nodes.checked_add(1).ok_or("layout-export-json-node-limit")?;if self.nodes>MAX_LAYOUT_EXPORT_JSON_NODES{return Err("layout-export-json-node-limit".into());}Ok(())}
- pub(super) fn advance(&mut self,snapshot:&LayoutSnapshot)->Result<(Vec<u8>,bool),String>{let Some(task)=self.tasks.pop()else{return Ok((Vec::new(),true));};let mut output=Vec::new();match task{
+ pub fn advance(&mut self,snapshot:&LayoutSnapshot)->Result<(Vec<u8>,bool),String>{let Some(task)=self.tasks.pop()else{return Ok((Vec::new(),true));};let mut output=Vec::new();match task{
   Task::Static(bytes)=>output.extend_from_slice(bytes),Task::Scalar(value)=>output.extend_from_slice(value.to_string().as_bytes()),
   Task::Entries(index)=>{let entries=&snapshot.data_fields.as_ref().ok_or("layout-export-dictionary")?.entries;if index==entries.len(){output.push(b']');}else{if index>0{output.push(b',');}self.push([Task::Entries(index+1),Task::Static(b"}"),Task::Value{entry:index,path:Vec::new()},Task::Static(b",\"value\":"),Task::Text{entry:index,path:Vec::new(),member:None,question:true,cursor:JsonStringWriteCursor::default()},Task::Static(b"{\"questionId\":")]);}},
   Task::Value{entry,path}=>{self.node()?;if path.len()>64{return Err("layout-export-json-depth-limit".into());}match Self::value(snapshot,entry,&path)?{

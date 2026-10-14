@@ -1,5 +1,5 @@
 //! 🌍️ Borrowed geotechnical physical entity cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use store::sqlite_snapshot::artifact::RowWriter;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
@@ -18,4 +18,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,v)in n::list(n::field(root,12)?)?.iter().enumerate(){n::entity(out,"en1997_uplift_case",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3),Real(4),Real(5)])?,UPLIFT)?;}Ok(())
 }
 /// 🛂️ Nine authored physical tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1997Snapshot::SQLITE_SCHEMA,9,42,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1997Snapshot::SQLITE_SCHEMA,9,42,count(root)?,write)}

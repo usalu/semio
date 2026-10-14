@@ -5,9 +5,9 @@ use protocol::Mutation;
 #[test]
 fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
-    document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",3,2));
-    let id = crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
+    let mut document = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+    document.layers.push(semio_s_artifact_raster_raster_model::create_pixel_layer("Paint",3,2));
+    let id = semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();
     let command = MaskFromSelection { layer_id: id, expected_image_key: None, selection: semio_framework_pack_json::from_json_str(&fixture["selection"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() };
     for invalid in fixture["invalid"].as_array().unwrap() {
         let decoded=semio_framework_pack_json::from_json_str(&invalid.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject);
@@ -31,7 +31,7 @@ fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     }
     let RasterLayerNode::Pixel { mask:Some(mask), image_key, .. } = &document.layers[0] else { panic!("mask must be attached"); };
     assert!(image_key.is_none());
-    let asset = crate::raster_asset(&document.assets,mask.image_key.as_ref().unwrap()).unwrap();
+    let asset = semio_s_artifact_raster_raster_io::raster_asset(&document.assets,mask.image_key.as_ref().unwrap()).unwrap();
     assert_eq!(serde_json::to_value(semio_framework_pixels::decode_png(&asset.data).unwrap().pixels).unwrap(),fixture["expectedRgba"]);
     assert!(publish(semio_framework_pixels::png_encoding::EncodedPngImage { width:3,height:2,data:vec![],content_hash:0 }, &candidate, &document).is_err());
     for inverse in inverses.into_iter().rev().flatten() {
@@ -43,14 +43,14 @@ fn selection_mask_preserves_soft_coverage_and_round_trips_history() {
     retire(document);retire(before);
 }
 
-fn retire(document: RasterSnapshot) { crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document); }
+fn retire(document: RasterSnapshot) { semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document); }
 
 #[test]
 fn selection_mask_cancellation_releases_private_work_without_publication() {
-    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
-    document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",256,256));
-    let id=crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_owned();
-    let command=MaskFromSelection {layer_id:id,expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 65536, coverage: 255 }]};
+    let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+    document.layers.push(semio_s_artifact_raster_raster_model::create_pixel_layer("Paint",256,256));
+    let id=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();
+    let command=MaskFromSelection {layer_id:id,expected_image_key:None,selection:vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 0, length: 65536, coverage: 255 }]};
     let mut work=MaskFromSelectionWork {candidate:Some(prepare(&command,&document).unwrap()),..Default::default()};
     assert!(!work.candidate.as_mut().unwrap().advance(32768));
     work.begin_close();
@@ -66,10 +66,10 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
 #[test]
 fn protected_pixels_refuse_before_preparation() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for id in ["locked-pixel","inherited-pixel"] {
-        let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};
+        let command=MaskFromSelection {layer_id:id.into(),expected_image_key:None,selection:vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 0, length: 1, coverage: 255 }]};
         assert!(prepare(&command,&document).is_err());
     }
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }

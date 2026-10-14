@@ -1,9 +1,17 @@
 //! ✋️ Puzzle3d selection mutations — the three parametric selection transforms (`drag-`, `rotate-`, `scale-selection`)
 //! and the selection, outcome and attraction-follow helpers they share.
 
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::{PUZZLE3D_IDENTITY_QUATERNION, Puzzle3dPose, derive_attraction_params, puzzle3d_attraction_child_pose, puzzle3d_vortex_full_id};
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::{PUZZLE3D_IDENTITY_QUATERNION, Puzzle3dPose, derive_attraction_params, puzzle3d_attraction_child_pose, puzzle3d_vortex_full_id};
 
 /// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
 /// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`:
@@ -12,8 +20,8 @@ use crate::standards::v1::subsets::any::schema::mutations::{PUZZLE3D_IDENTITY_QU
 /// `minItems`/`uniqueItems` forbid. Absent ids and locked records are skipped with one warning per reason (in that
 /// order, ids in payload order); nothing left is `mutation.target-missing`.
 pub struct Puzzle3dSelection<'a> {
-    pub objects: Vec<&'a crate::standards::v1::subsets::any::schema::Puzzle3dObject>,
-    pub volumes: Vec<&'a crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume>,
+    pub objects: Vec<&'a semio_s_artifact_puzzle_3d_model::Puzzle3dObject>,
+    pub volumes: Vec<&'a semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume>,
     pub warnings: Vec<protocol::MutationMessage>,
 }
 
@@ -55,9 +63,9 @@ pub fn puzzle3d_selection_outcome(
     targets: &[String],
     solved: Puzzle3dSelectionFollow,
     base: &Puzzle3dSnapshot,
-    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dTargetVolumeModification>,
+    volumes: Vec<semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumeModification>,
 ) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectModification, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
+    use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectModification, Puzzle3dObjectsDelta, Puzzle3dTargetVolumesDelta};
     let mut messages = selection.warnings;
     let objects: Vec<Puzzle3dObjectModification> = base
         .objects
@@ -133,7 +141,7 @@ pub fn puzzle3d_selection_items(count: usize) -> (String, String) {
 pub struct Puzzle3dSelectionFollow {
     pub poses: Vec<Option<Puzzle3dPose>>,
     pub followers: Vec<String>,
-    pub attractions: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle3dAttractionModification>,
+    pub attractions: Vec<semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionModification>,
 }
 
 /// 🌲️ Re-solves the attraction graph of one selection move on `base`, with the document's own placement kernel
@@ -145,8 +153,8 @@ pub struct Puzzle3dSelectionFollow {
 /// other attraction touching a moved object gets its six connection parameters re-derived from the moved poses
 /// ([`derive_attraction_params`]), so resolving the document afterwards never snaps a moved object back. Without
 /// `follow` (a scaling) nothing follows and no attraction changes.
-pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], selection: &Puzzle3dSelection<'_>, pose: &dyn Fn(&crate::standards::v1::subsets::any::schema::Puzzle3dObject) -> Puzzle3dPose, follow: bool) -> Puzzle3dSelectionFollow {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionModification};
+pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], selection: &Puzzle3dSelection<'_>, pose: &dyn Fn(&semio_s_artifact_puzzle_3d_model::Puzzle3dObject) -> Puzzle3dPose, follow: bool) -> Puzzle3dSelectionFollow {
+    use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionModification};
     let survivors: std::collections::BTreeSet<&str> = selection.objects.iter().map(|entry| entry.id.as_str()).collect();
     let mut solved = Puzzle3dSelectionFollow { poses: vec![None; base.objects.len()], ..Default::default() };
     let mut queue = std::collections::VecDeque::new();
@@ -228,3 +236,33 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], se
         .collect();
     solved
 }
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod drag_selection {
+    #[path = "✋️drag-selection/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "✋️drag-selection/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    #[path = "✋️drag-selection/🦀️.rs"]
+    pub mod mutation;
+}
+#[path = "."]
+pub mod rotate_selection {
+    #[path = "🔄️rotate-selection/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔄️rotate-selection/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    #[path = "🔄️rotate-selection/🦀️.rs"]
+    pub mod mutation;
+}
+#[path = "."]
+pub mod scale_selection {
+    #[path = "🔍️scale-selection/🔺️diff/🦀️.rs"]
+    pub mod diff;
+    #[path = "🔍️scale-selection/↩️inverse/🦀️.rs"]
+    pub mod inverse;
+    #[path = "🔍️scale-selection/🦀️.rs"]
+    pub mod mutation;
+}
+//#endregion 🌳️Modules

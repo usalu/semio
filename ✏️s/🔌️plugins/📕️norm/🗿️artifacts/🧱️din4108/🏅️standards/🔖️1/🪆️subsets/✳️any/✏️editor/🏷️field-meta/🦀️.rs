@@ -1,6 +1,6 @@
 //! 🏷️ DIN 4108 NormFieldMeta lookup — SI display units + human en/de choice labels (`[]` wildcards).
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }
@@ -99,7 +99,6 @@ const ACOUSTIC: &[NormFieldChoice] = &[
     choice("sg", "Acoustic class sg", "Schwingungsgruppe sg"),
 ];
 
-
 const TABLE: &[(&str, NormFieldMeta)] = &[
     ("climateZone", NormFieldMeta { label_en: "Climate zone", label_de: "Klimazone", unit: None, choices: Some(CLIMATE) }),
     ("usage", NormFieldMeta { label_en: "Usage", label_de: "Nutzung", unit: None, choices: Some(USAGE) }),
@@ -163,6 +162,3 @@ pub fn din4108_field_meta(path: &str) -> Option<NormFieldMeta> {
     lookup_norm_field_meta(TABLE, path)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

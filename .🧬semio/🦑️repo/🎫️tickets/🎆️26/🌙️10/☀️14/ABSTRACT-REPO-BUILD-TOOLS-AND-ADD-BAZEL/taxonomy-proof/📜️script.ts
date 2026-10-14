@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {createRequire} from "node:module";
+import {join} from "node:path";
+const root=process.cwd(),library=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),bytes=readFileSync(join(library,"🔣️taxonomy.json")),digest=createHash("sha256").update(bytes).digest("hex");
+assert.equal(digest,"aa4f4099516035c1e9736cde45410044326440879ec600a9aa69f491a7d0ebd1");
+const require=createRequire(join(root,".nx/installation/package.json")),sortBy=require("lodash/sortBy"),taxonomy=JSON.parse(bytes.toString()),contract=taxonomy.generatorContracts["wgpu-frame-worker"],browser=contract.packageGeneration.browserProfile.sourceModulePaths,patterns=contract.inputPatterns;
+assert.equal(taxonomy.generatorContracts["graph-catalog"].nativeConsumers,undefined);
+assert.equal(browser.length,171);assert.equal(patterns.length,193);assert.equal(new Set(browser).size,browser.length);assert.equal(new Set(patterns).size,patterns.length);
+assert.deepEqual(browser,[...browser].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b))));assert.deepEqual(browser,sortBy(browser,(path:string)=>Buffer.from(path).toString("hex")));assert.deepEqual(patterns,[...patterns].sort());assert.deepEqual(patterns,sortBy(patterns));
+console.log("[DEBUG] Independent lodash byte/lexical ordering passed "+JSON.stringify({digest,browser:browser.length,patterns:patterns.length}));
+const {loadTaxonomy,loadCatalogTaxonomy}=await import(join(library,"🔍️discovery/🟦️.ts"));loadCatalogTaxonomy();console.log("[DEBUG] Actual strict catalog taxonomy validator passed");const validated=loadTaxonomy();assert.deepEqual(validated.generatorContracts["wgpu-frame-worker"].packageGeneration.browserProfile.sourceModulePaths,browser);assert.deepEqual(validated.generatorContracts["wgpu-frame-worker"].inputPatterns,patterns);
+console.log("[DEBUG] Actual taxonomy validator and independent lodash byte/lexical ordering passed "+JSON.stringify({digest,browser:browser.length,patterns:patterns.length}));

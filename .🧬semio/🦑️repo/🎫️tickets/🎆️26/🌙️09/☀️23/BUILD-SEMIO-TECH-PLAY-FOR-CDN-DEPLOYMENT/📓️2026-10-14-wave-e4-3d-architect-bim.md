@@ -1,4 +1,4 @@
-# 🧊️ Wave E4: framework-3d, architect program and BIM model (2026-10-13 / 2026-10-14)
+# 🧊️ Wave E4: framework-3d, architect program and BIM model (2026-10-13 / 2026-10-15)
 
 Executor: Lane D / E4. Scope: `semio-framework-3d`, `semio-s-artifact-architect-program` and `semio-s-artifact-bim-model`.
 
@@ -21,7 +21,7 @@ All tools are kept in `e4-3d-architect-bim/` (§8).
 | Crate | 10-13 | 10-14 | Ceiling status |
 |---|---|---|---|
 | framework-3d | Step 1–4 done: cut into 5 crates. Measured, tests identical. | Cut further into **14 crates**. 11 of them are admitted under the ceiling for both production and tests. All 14 compile native with tests and wasm32-wasip2. 733/733 tests are accounted for. | 11 admitted. Refused: `semio-framework-3d` (mesh), `-brep-operations`, `-brep-engine` (plan §5.1). |
-| architect program | Step 2 map done. Step 3 decoupling done in source: 0 forbidden facet edges. | Step 3 is unchanged and **not compile-verified**: os-kernel and plugin are red upstream all day (§6). The 6-crate root split is scripted and dry-run (`✂️architect-split.json`) but not applied. | Refused. The ceiling needs a mutation-model change (§5.2). |
+| architect program | Step 2 map done. Step 3 decoupling done in source: 0 forbidden facet edges. | Step 3 is unchanged and **not compile-verified**: os-kernel and plugin are red upstream all day (§6). The 6-crate root split is scripted and dry-run (`✂️architect-split.json`) but not applied. | Refused. **Phase 2 (§9):** the 256 per-register leaves are replaced by four schema-generated generic register-row leaves (266 → 14 kinds); production closure 23.3 k lines / 170 files. **Uncompiled, awaiting K0.** |
 | BIM model | Baseline peak 4.75 GB (unit compile interrupted). | Step 2 map done. **Step 3 started**: root barrels removed and 2,082 paths canonicalized, schema identity moved into the model. **Not compile-verified**, upstream red. Remaining edges are listed name by name (§4). | Refused. Cut plan to ~40 units in §5.3. |
 
 Upstream state on 10-14 (`📓️2026-10-14-compile-baseline.md` plus my own checks): `ui-theme`, `canvas`, `job`, `os-store-message-ledger`, `os-pack` and `os-command` all fail with working-tree edits from other lanes. Every crate depending on os-kernel or plugin therefore could not be checked: architect, BIM, their hub compositions, the 3d consumers above the kernel, the hub wasm workspace check and the manifest sweep.
@@ -177,6 +177,7 @@ Remaining facet edges against the target DAG, from the path-resolved census (`�
 ### 5.2 architect program
 
 - **What is ready.** The 6-crate L6 split is ready to apply once upstream is green: model 10.3 k, mutations 20.2 k, inferences 2.2 k, io 2.4 k, editor 6.0 k, aggregator. Step 3 left 0 forbidden edges. `✂️split-root.py` writes each crate root with rebased `#[path]`s, and the module paths stay `standards::v1::subsets::any::…`.
+- **Phase 2 resolved this blocker with option (b)** (§9). The text below is the 10-14 analysis.
 - **What blocks the ceiling.** The ceiling (and the 32-file limit in particular) cannot be met by a cut alone.
   - Each of the 260 mutation leaves implements `MutationKind<ProgramSnapshot, ProgramMutation>`. Its `inverse` builds `ProgramMutation`, so the enum and its leaves form one SCC of 1,140 files and 20 k lines.
   - Two options exist:
@@ -198,7 +199,7 @@ After §4, the target is about 40 units:
 | write | 3 | ifc, energy/gbxml, sheets/svg/pdf/gltf |
 | inferences | 6 | by topic: element-solids, model-graph, diagnostics, layout/linework, energy, quantities/schedules |
 | editor + viewer + render | 6 | |
-| mutations | | Same SCC problem as architect: `ModelMutation` ↔ leaves, 2,253 files. Needs the generic or generated mutation decision of §5.2. |
+| mutations | | Same SCC problem as architect: `ModelMutation` ↔ leaves, 2,253 files. Phase 2 plan in §9.5: the §9 pattern plus per-collection validators and a declared cascade policy. |
 | aggregator | 1 | |
 
 ## 6. Gates I could not run, and why
@@ -232,3 +233,133 @@ After §4, the target is about 40 units:
 ## 8. Corrections entry
 
 Appended to `📓️2026-10-10-migration-corrections.md` as `wave-e4`.
+
+Phase 2 is appended to the same file as entry 103 (`wave-e4 phase 2`).
+
+## 9. Phase 2 (10-14 / 10-15): schema-driven generic register mutation
+
+Status: **architect source complete, uncompiled, awaiting K0.** Since 10-14 20:40 every cargo run stops at the compiler-ingress gate (`rustc -vV`); before that the workspace manifest was broken (`🕸️graph/📦️packages/🦀️rust/Cargo.toml` missing, a peer move). No Rust in this section has been compiled or tested. The JSON, Python and TypeScript evidence below was run.
+
+### 9.1 Design
+
+- **Schema first.** The source of truth is the `x-semio-collection-catalog` extension of the snapshot facet `🧬️schema/📸️snapshot/🔣️.json`, beside two new `$defs`:
+  - `RegisterKey`: the 64 id-keyed registers as camelCase keys;
+  - `RegisterRow`: a oneOf of `{register: const <key>, row: $ref #/$defs/<Row>}`, so the row type is tied to its key.
+  - Each catalog entry names: key, variant, entity, row, patch and delta types, the snapshot and diff fields, and EN/DE labels with the article.
+- **Generator** (framework, domain-neutral): `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts`.
+  - It parses and validates the extension against the `$defs`.
+  - It writes Rust and TypeScript side by side at the declared `output` paths: `🧬️schema/🗄️registers/🗂️catalog/{🦀️.rs,🟦️.ts}`.
+  - The Rust part has `RegisterKey`, `RegisterRow` and `RegisterLabel`, plus per-register `position`, `len`, `row_at`, `removal`, `renaming`, `insertion`, `replacement` and `equals_row_at` (all built on the existing `list_delta!` deltas) and `From<Row>`.
+  - The TypeScript part has the key and row unions and a `REGISTERS` table.
+- **Four leaves** under `🧬️mutations/📋️register-row/{🌱️create,🗑️delete,🏷️rename,♻️replace}`:
+  - `CreateRegisterRow{row, index}`, `DeleteRegisterRow{register, id}`, `RenameRegisterRow{register, id, new_name}`, `ReplaceRegisterRow{row}`.
+  - Each has a `🔣️.json` descriptor (binaryTag 0–3) and a payload schema that `$ref`s `snapshot.json#/$defs/RegisterRow|RegisterKey`.
+  - Each has `🔺️diff` and `↩️inverse` with the same codes, messages, labels and laws as the 256 leaves they replace.
+- **The cycle is gone.** `ProgramMutation` has 14 variants: 4 generic, connect/disconnect over the two edge registers, and rename/replace over the three facets. Edge and facet binaryTags were renumbered from 256–265 to 4–13.
+  - Register-row inverses still build `ProgramMutation`, but the enum now spans 7 domains and about 40 files, not 1,140.
+- **Deleted without compatibility:** the 64 register domain directories (256 leaves) and their 256 per-case test files.
+  - `editor::catalog::{add,remove,patch}_register_item_operation` are now generic through `register_key` (editor id → `RegisterKey`; `documents` → `Document`).
+  - Patch now covers all 64 registers through `merge_row_patch`. It used to be an 8-register allowlist.
+
+### 9.2 Fixtures and tests
+
+- **326 committed cases** moved from `🧫️fixtures/🧬️mutations/<domain>/<op>/<case>` to `🧫️fixtures/🧬️mutations/📋️register-row/<op>/<domain>-<case>`.
+  - Only `🦠️mutation/🔣️.json` was rewritten, into the generic wire, e.g. `{"mutation":"createRegisterRow","row":{"register":"stakeholder","row":{…}},"index":0}`.
+  - Before/after snapshots, diffs and outcomes are byte-identical.
+  - The longest path is 199 characters (214 UTF-16 units).
+- **Rust corpus test** `📋️register-row/🧪️tests/🔬️corpus/🦀️.rs` reads every case at run time and holds the eight per-case laws of the old suites:
+  - apply → after; inverse restores; canonical JSON; declared outcome (code and path); produced diff = committed diff; committed diff canonical and complete; L3 inverse-sum law; diff-member/status consistency.
+  - Each law is one test that names every failing case. The lib test count drops by design: about 2,300 per-case tests become 8 corpus tests. **Not run.**
+- **Language-agnostic test with a third-party oracle (run):** `📚️library/🧪️tests/🗂️collection-catalog/🟦️.ts`, which uses Ajv 8.20 as the oracle. **4/4 pass:**
+  - catalog admission, plus refusal of an out-of-order key enum;
+  - generated outputs fresh;
+  - all 326 committed payloads validate against their leaf schemas;
+  - a row tagged with the wrong register is rejected, and so is a non-catalog register.
+- **Exhaustive differential case** `🧪️tests/🏛️mutate-program-1`:
+  - The feature tables, the Rust adapter `KINDS`/`GUARD_VECTORS` and the independent Python implementation now address 266 vectors as `<op>-register-row-<entity>` plus the 10 edge/facet kinds.
+  - The Python oracle restates generic payloads in its per-noun vocabulary after checking the register.
+  - **Run offline against the real fixtures with a stub host: 532 rows, 1,056 handler runs ok, 8 refused by its documented clause (create over knowledge/benchmark), 0 failures.** The Rust half is not run.
+- **Other updates.**
+  - Mutation unit tests, the binary codec test, editor tests (catalog, graph tool, report window) and io tables were moved to the generic leaves.
+  - The graph-tool fixture and its TS oracle now name `delete-register-row`.
+  - The sqlite and JSON-import tests point at the moved fixtures.
+
+### 9.3 Registries and language surfaces
+
+- **Taxonomy and authority.** `🔣️taxonomy.json` and `🔣️mutation-authority.json` (architect root: 6 domains, 14 operations) were checked equal to the generator projection.
+- **`🗂️schema-document-index.json`.** The architect root was rewritten to the generator projection.
+- **`🔣️schema-catalog.json`.** The architect scopes were replaced by the official renderer's output (`inventorySchemaScopes`/`renderSchemaCatalog`). Only `s.architect.program*` was merged; 399 other scopes differ through other lanes and were left alone.
+- **Root TS and Rust schema facets** re-export `RegisterKey`/`RegisterRow`, which keeps them at the existing export-completeness level of the row types. GraphQL and proto stay incomplete for rows, as before.
+- **Mutation facet:** `🔣️.json` (14 refs), `🟦️.ts`, `🔗️.graphql` (with `enum RegisterKey`) and `🛰️.proto` (with `enum RegisterKey`; oneof 1–14).
+  - The TS surface type-checks with `tsc --strict`. This also fixed a pre-existing missing import of `ProgramMeta`/`ProjectDefinition`/`Governance`.
+- **`io/text` grammar:** 14 productions plus `register` and `register-row-block`.
+- **`io/binary` protocol:** 14 records, tags 0–13.
+- **Oracle manifest and catalog** (`🔮️oracles/🔣️.json`): 14 manifest entries and 14 kinds. Each catalog vector lists its real case directories.
+- **Commands and launch entries.** Commands: `@semio-tech/architect-program-rs:{generate,check}-register-catalog` and `@semio-tech/repo-lib:test-collection-catalog`. Each has a `📋️project.json` target and a `🧩️launch.seed.jsonc`/`launch.json` entry.
+
+### 9.4 Measurement (canonical closure reader)
+
+| Unit | files | active lines | full bytes | verdict |
+|---|---:|---:|---:|---|
+| architect, production, 10-13 | ~1,300 | 44.3 k | – | REFUSED |
+| architect, production, now | 170 | 23,337 | 2,826,336 | REFUSED |
+
+- The test closure cannot be measured with the tool. `✏️editor/🎮️commands/🕸️graph/🧪️tests/🦀️.rs` uses `include_str!(concat!(env!("CARGO_MANIFEST_DIR"), …))`, which the reader rejects as generated input. This was pre-existing.
+- **Bytes are the binding limit now.** `🗄️registers/🦀️.rs` (7.7 k lines) and the generated catalog (1.8 k) live in the model.
+- **Cut to the ceiling: not applied.** It needs compile verification, which K0 blocks. The plan, with the mutation SCC gone:
+  - model ×4: kernel+snapshot, registers split by the catalog's register groups, catalog, diff;
+  - mutations ×1 (about 40 files; split edge+facet from register-row if the 32-file rule binds);
+  - inferences ×1;
+  - io ×2: text/binary/tables, export/import serializers;
+  - editor ×3;
+  - aggregator.
+  - `✂️split-root.py` and `✂️architect-split.json` need the new mutation tree.
+
+### 9.5 BIM: phase-2 plan (not started)
+
+- **Vocabulary.** `ModelMutation` has 216 variants: 56 create, 57 delete, 82 set, and about 21 geometric verbs (split, trim, mirror, array…).
+- **The leaves are not plain CRUD.**
+  - Creates check referential integrity and finiteness (`create-column`: storey, column type, top storey in the same building, finite position, tilt ≤ 60°).
+  - Deletes go through the shared `cascade::outcome`.
+- **The pattern, extended:**
+  - the same collection catalog in `📸️snapshot/🔣️.json`;
+  - a per-collection `validate(base, row)` function generated as a dispatch onto handwritten pure validators, which never build `ModelMutation`, so the SCC breaks;
+  - a schema-declared cascade policy per collection, which the generic delete calls;
+  - `set-*` maps to generic replace when it replaces the whole entity. Field-level sets need the field catalog of §9.6;
+  - the geometric verbs stay hand-written leaves.
+- **Status.** Not started. Doing it without a compiler would stack a second uncompiled mutation migration on the first.
+
+### 9.6 Energy (lane P1): same shape, reusable pattern
+
+- `s.energy.model` has 297 kinds in 47 domains: 168 `change-<entity>-<field>`, 38 create, 38 delete, 16 rename, 7 replace, 10 remove, 9 add, 2 bind. Every leaf inverse builds the aggregate enum, which is the same SCC.
+- **The pattern for P1 and other lanes:**
+  1. Declare the id-keyed collections as `x-semio-collection-catalog` in the subset's snapshot facet schema, with `$defs.<Key>` (enum) and `$defs.<Row>` (adjacently tagged oneOf). Set `output` to a generated module beside the row types.
+  2. Run the framework generator `🗂️collection-catalog`, wired as `generate-*-catalog` / `check-*-catalog` script commands.
+  3. Write four generic leaves (create/delete/rename/replace) over the generated key and row types. Their payload schemas `$ref` the snapshot facet `$defs`.
+  4. For per-field changes, add a field catalog (`<entity>.<field>` → value schema). Generate a `FieldKey` and a `change-field{collection, id, field, value}` leaf. This collapses energy's 168 change leaves.
+  5. Move fixtures to `📋️register-row/<op>/<domain>-<case>`; only the mutation JSON changes. Replace the per-case Rust tests with one runtime corpus test per law.
+  6. Regenerate the taxonomy/authority domain owners, the schema index and the architect-style schema-catalog scopes. Renumber binary tags.
+  7. Add the Ajv fixture test and adapt the differential host.
+- I sent this to the coordinator in my status. P1 owns the energy crates, so I did not touch them.
+
+### 9.7 Notes
+
+- The census gate failure in `bun install --frozen-lockfile` points to a peer changing `package.json` without updating `bun.lock`. Noted, not fixed.
+- Phase-2 framework-3d cuts (mesh, brep-operations, brep-engine) were **not started**. The peer PROCEDURAL lane is still active in `🥽️mesh` and `⚙️engine/🪅️shape-value`, and nothing can be compile-checked until K0.
+- **Phase-2 files.**
+  - architect crate root `🦀️.rs`;
+  - `🧬️schema/{🦀️.rs,🟦️.ts,📸️snapshot/{🔣️.json,🦀️.rs},🗄️registers/🗂️catalog/{🦀️.rs,🟦️.ts}}`;
+  - `🧬️mutations/{🦀️.rs,🔣️.json,🟦️.ts,🔗️.graphql,🛰️.proto,📋️register-row/**,🧪️tests/{🔬️fixture,🔬️unit}/🦀️.rs,*/*/🔣️.json}`;
+  - the 64 deleted register domains;
+  - `🚪️io/{📝️text,💾️binary}/🧬️mutations/*`, `🚪️io/📊️tables/🦀️.rs`, `🚪️io/🪶️sqlite/📸️snapshot/**`, `🚪️io/📥️import/…/rfc8259/✳️any/🦀️.rs`;
+  - `✏️editor/{🦀️.rs,🗂️catalog/🦀️.rs,🎮️commands/{🏗️element,🔬️analysis,🕸️graph}/**,🧪️tests/**,…/🔬️window-ownership/🦀️.rs}`;
+  - `🧪️tests/{🏛️mutate-program-1/*,🧫️fixtures/🧬️mutations/**,🧫️fixtures/🛠️graph-tool/🔣️.json}`;
+  - `🔮️oracles/🔣️.json`;
+  - `📦️packages/🦀️rust/{📜️script.ts,📋️project.json}`;
+  - `✏️s/🔌️plugins/🏛️architect/🧪️tests/🧪️graph-tool/🟦️.ts`;
+  - the generator and its test;
+  - `📚️library/📦️packages/🟦️typescript/{📜️script.ts,📋️project.json}`;
+  - `🔣️taxonomy.json`, `🔣️schema-catalog.json`, `🔣️mutation-authority.json`, `🗂️schema-document-index.json`;
+  - `.vscode/{🧩️launch.seed.jsonc,launch.json}`.
+- **Phase-2 ticket input (kept):** `e4-3d-architect-bim/📋️register-row-cut.py` (phases tree/fixtures/callsites) and `📋️register-row-domains.json`.
+- **Clean-up.** `⚡️cache/e4` is deleted, and so are my scratch copies.

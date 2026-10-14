@@ -37,7 +37,7 @@ impl DslValueRetainedCloneCursor {
     }
     fn verify_source(&self,source:RetainedCloneRef<'_,DslValue>)->Result<(),ValueError> {
         if let Some(expected)=&self.state.source {
-            if expected.lease.as_ref().map(|lease|lease.id)!=Some(source.lease.id)||expected.projection!=source.projection {return Err(Self::refusal("dynamic clone original source identity changed"));}
+            if !source.matches_binding(expected) {return Err(Self::refusal("dynamic clone original source identity changed"));}
         }
         Ok(())
     }

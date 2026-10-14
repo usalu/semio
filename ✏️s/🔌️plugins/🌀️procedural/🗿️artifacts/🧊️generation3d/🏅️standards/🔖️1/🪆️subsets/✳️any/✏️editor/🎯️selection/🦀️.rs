@@ -1,14 +1,10 @@
 //! 🎯️ Stable references to evaluated mesh instances and their editable components.
+#![allow(clippy::result_large_err)]
 
 use std::collections::BTreeSet;
 
 pub const DOMAIN: &str = "geometry";
 
-pub fn edits_components(view: Option<&semio_framework_plugin::ViewModel>, granularity: Option<&str>) -> bool {
-    let Some(view) = view else { return false };
-    let kind = view.window_id.as_deref().and_then(|id| view.window_instances.iter().find(|window| window.id == id)).map(|window| window.window_kind_id.as_str()).or(view.active_window_kind_id.as_deref());
-    kind == Some(super::edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW) && matches!(granularity, Some("vertex" | "edge" | "face"))
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AnalyticComponent<'a> {
@@ -247,7 +243,7 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
             icon_id: Some(icon.into()),
             pressed: Some(if mode == "object" { !selection.active() } else { selection.granularity == mode }),
             disabled: None,
-            action: Some(super::generation3d_action("setInteractionGranularity", Some(semio_framework_plugin::dsl_value!({"domainId": DOMAIN, "granularityId": mode})))),
+            action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("setInteractionGranularity", Some(semio_framework_plugin::dsl_value!({"domainId": DOMAIN, "granularityId": mode})))),
         }).collect();
     let analytic = component_group(&selection.selected).is_ok_and(|(target, _)| target.analytic.is_some());
     let edits: &[(&str, &str, &str)] = if analytic { match selection.granularity.as_str() {
@@ -264,7 +260,7 @@ pub fn engagement(selection: &ComponentSelection, is_de: bool) -> semio_framewor
         edits.iter().map(|&(operation, en, de)| semio_framework_plugin::WindowEngagementPossible {
                 id: format!("procedural.{}-{operation}", if analytic { "brep" } else { "mesh" }), label: if is_de { de } else { en }.into(),
                 detail: Some(if is_de { "Danach im Inspektor einstellbar" } else { "Adjustable in the inspector afterwards" }.into()),
-                action: Some(super::generation3d_action("editMeshSelection", Some(semio_framework_plugin::dsl_value!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0,"width":0.1,"segments":1,"mergeMode":"center","tolerance":0.0001,"radius":if analytic { 0.1 } else { 1.0 },"grid":1.0,"center":[0.0,0.0,0.0],"angle":0.1,"pullDirection":[0.0,0.0,1.0],"neutralPoint":[0.0,0.0,0.0]})))),
+                action: Some(semio_s_artifact_procedural_3d_model::generation3d_action("editMeshSelection", Some(semio_framework_plugin::dsl_value!({"operation":operation,"amount":0.1,"cuts":1,"dx":0.0,"dy":0.0,"dz":0.0,"width":0.1,"segments":1,"mergeMode":"center","tolerance":0.0001,"radius":if analytic { 0.1 } else { 1.0 },"grid":1.0,"center":[0.0,0.0,0.0],"angle":0.1,"pullDirection":[0.0,0.0,1.0],"neutralPoint":[0.0,0.0,0.0]})))),
             }).collect()
     } else { Vec::new() };
     let status = if selection.active() {

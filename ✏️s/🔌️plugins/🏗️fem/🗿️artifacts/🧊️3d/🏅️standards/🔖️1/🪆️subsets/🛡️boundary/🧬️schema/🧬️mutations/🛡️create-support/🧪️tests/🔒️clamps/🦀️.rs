@@ -7,26 +7,26 @@
 //!
 //! A full 3D fixity restrains all six DOFs at once — the whole `FemDof` vocabulary has to round-trip in one list.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🔒️clamps/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `create-support` clamps `n1` in six DOFs and carries `before` to exactly the committed `after`.
@@ -37,7 +37,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "create-support/clamps-the-column-f801c9: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.supports.len(), 1, "create-support/clamps-the-column-f801c9: exactly one support may be coined");
     assert_eq!(snapshot.supports[0].fixed.len(), 6, "create-support/clamps-the-column-f801c9: a full 3D fixity restrains every DOF");
-    assert_eq!(snapshot.supports[0].fixed, crate::FemDof::ALL.to_vec(), "create-support/clamps-the-column-f801c9: the DOF tags must round-trip in the canonical order");
+    assert_eq!(snapshot.supports[0].fixed, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec(), "create-support/clamps-the-column-f801c9: the DOF tags must round-trip in the canonical order");
 }
 
 /// ↩️ The inverse is a `delete-support` of `s1`, restoring the unrestrained frame.
@@ -57,7 +57,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -65,7 +65,7 @@ fn committed_json_is_canonical() {
     }
     let decoded_mutation = mutation();
     let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-support/clamps-the-column-f801c9: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +76,7 @@ fn committed_json_is_canonical() {
 /// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_value::DslValue::as_str).expect("outcome carries a status");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let refused = produced.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
@@ -86,7 +86,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "create-support/clamps-the-column-f801c9: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "create-support/clamps-the-column-f801c9: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-support/clamps-the-column-f801c9: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "create-support/clamps-the-column-f801c9: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "create-support/clamps-the-column-f801c9: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-support/clamps-the-column-f801c9: unknown outcome status {other:?}"),
@@ -101,23 +101,23 @@ fn produces_committed_diff() {
     assert!(outcome.diff().supports.is_some(), "create-support/clamps-the-column-f801c9: the new clamp must surface in the supports delta");
     assert!(outcome.diff().nodes.is_none(), "create-support/clamps-the-column-f801c9: the node the support validates against is read-only");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
-    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-support/clamps-the-column-f801c9: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-support/clamps-the-column-f801c9: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `supports.added` entry on `before` must reproduce the clamped base.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-support/clamps-the-column-f801c9: committed diff did not carry before to after");
 }

@@ -33,8 +33,8 @@ async fn csv_round_trips_and_a_third_party_reader_agrees() {
 async fn xlsx_round_trips_and_a_third_party_reader_agrees() {
     use calamine::Reader;
     let payload = VcsIntoXlsx::serialize(&sample(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx").value;
-    let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(binary(&payload)).expect("pack");
-    let bytes = semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
+    let snapshot = <semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot as pack::snapshot::ArtifactPack>::decode_pack(binary(&payload)).expect("pack");
+    let bytes = semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("calamine opens the workbook");
     assert_eq!(reference.sheet_names(), ["Vcs"]);
     let range = reference.worksheet_range("Vcs").expect("the Vcs sheet");

@@ -4,8 +4,10 @@
 //! at a node and nothing in `Fem3dSnapshot` points back at it, so there is no referrer to protect.
 //! Same for `delete-combination`.
 use super::DeleteSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportRemoval, Fem3dSupportsDelta};
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportRemoval;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSupportsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

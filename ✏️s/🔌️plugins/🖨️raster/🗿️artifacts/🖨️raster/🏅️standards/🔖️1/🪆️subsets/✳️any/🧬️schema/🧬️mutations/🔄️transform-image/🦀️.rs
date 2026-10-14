@@ -7,9 +7,12 @@
 //! A history edit of the operation or its extent replays on whatever base it lands on. Design §17.2, ticket
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
-use crate::mutations::paint_stroke::{canvas, painted_diff, painted_inverse, refused, reshaped, Painted, Refusal, Reshape};
-use crate::diff::RasterDiff;
-use crate::{RasterMutation, RasterSnapshot, RasterTransform};
+use semio_s_artifact_raster_raster_diff::{canvas, painted_diff, reshaped, Painted, Refusal, Reshape};
+use crate::paint_stroke::{painted_inverse, refused};
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::RasterTransform;
 use semio_framework_pixels::editing::{validate_extent, PixelEditJob, PixelOperation};
 use semio_framework_pixels::RasterImage;
 
@@ -34,19 +37,19 @@ pub struct TransformImage {
 }
 
 /// 🏗️ Builder — a quarter turn of `layer_id`'s image (`clockwise` or not).
-pub fn rotate_image(layer_id: impl Into<String>, clockwise: bool) -> RasterMutation {
+pub fn rotate_image<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion>>(layer_id: impl Into<String>, clockwise: bool) -> Op {
     let operation = if clockwise { "rotateClockwise" } else { "rotateCounterclockwise" };
-    RasterMutation::TransformImage(TransformImage { layer_id: layer_id.into(), operation: operation.to_string(), x: 0, y: 0, width: 0, height: 0, bilinear: false })
+    Op::from(TransformImage { layer_id: layer_id.into(), operation: operation.to_string(), x: 0, y: 0, width: 0, height: 0, bilinear: false })
 }
 
 /// 🏗️ Builder — `layer_id`'s image resized to `width × height`.
-pub fn resize_image(layer_id: impl Into<String>, width: u32, height: u32, bilinear: bool) -> RasterMutation {
-    RasterMutation::TransformImage(TransformImage { layer_id: layer_id.into(), operation: "resize".to_string(), x: 0, y: 0, width, height, bilinear })
+pub fn resize_image<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion>>(layer_id: impl Into<String>, width: u32, height: u32, bilinear: bool) -> Op {
+    Op::from(TransformImage { layer_id: layer_id.into(), operation: "resize".to_string(), x: 0, y: 0, width, height, bilinear })
 }
 
 /// 🏗️ Builder — `layer_id`'s image cropped to the `width × height` window at `(x, y)`.
-pub fn crop_image(layer_id: impl Into<String>, x: u32, y: u32, width: u32, height: u32) -> RasterMutation {
-    RasterMutation::TransformImage(TransformImage { layer_id: layer_id.into(), operation: "crop".to_string(), x, y, width, height, bilinear: false })
+pub fn crop_image<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion>>(layer_id: impl Into<String>, x: u32, y: u32, width: u32, height: u32) -> Op {
+    Op::from(TransformImage { layer_id: layer_id.into(), operation: "crop".to_string(), x, y, width, height, bilinear: false })
 }
 //#endregion 🔖️Payload
 
@@ -54,7 +57,7 @@ pub fn crop_image(layer_id: impl Into<String>, x: u32, y: u32, width: u32, heigh
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary; a quarter turn carries no window, extent or sampling; a
 /// resize no origin; a crop no sampling; every extent within 1..=16384), checked again before any pixel moves; the first
 /// one broken, as the field it names.
-pub(crate) fn invariant(payload: &TransformImage) -> Result<(), (&'static str, String)> {
+pub fn invariant(payload: &TransformImage) -> Result<(), (&'static str, String)> {
     if !RASTER_IMAGE_TRANSFORMS.contains(&payload.operation.as_str()) {
         return Err(("operation", format!("\"{}\" is not an image transform.", payload.operation)));
     }
@@ -133,7 +136,7 @@ pub fn diff(payload: &TransformImage, base: &RasterSnapshot) -> protocol::Mutati
 //#region 🔖️Inverse
 /// ↩️ The steps that undo the transform on `base`: the prior image back in the pool and the layer back on it at its prior
 /// extent and placement.
-pub fn inverse(payload: &TransformImage, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion>>(payload: &TransformImage, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
     if invariant(payload).is_err() {
         return Ok(Vec::new());
@@ -146,14 +149,14 @@ pub fn inverse(payload: &TransformImage, base: &RasterSnapshot) -> Result<Vec<Ra
 //#endregion 🔖️Inverse
 
 //#region 🔖️Kind
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for TransformImage {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for TransformImage where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::transform_image::TransformImage> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "image", kind: "transform-image", record: "TransformedImage" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse(self, base)?
     

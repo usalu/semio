@@ -6,22 +6,10 @@ pub use value::*;
 pub use serde;
 pub use serde_json;
 pub use semio_framework_io_base64::{base64_standard_encode,base64_standard_decode};
-pub use semio_framework_value_derive::{CanonicalJsonTree, FactoryPayloadRetirement, FromValue, RetainedClone, RetireOwned, ToValue};
+pub use semio_framework_value_derive::{CanonicalJsonTree, FromValue, RetainedClone, RetireOwned, ToValue};
 
-#[path = "../../♻️retirement/🧬️contract/🦀️.rs"]
-mod retirement_contract;
-pub use retirement_contract::*;
-#[path = "../../♻️retirement/🦀️.rs"]
-pub mod retirement;
-pub use retirement::aliases::OriginalAliasBatch;
-pub use retirement::turn::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
-pub use retirement::{owned_retirement_birth_bytes, admit_owned_retirement};
-pub use retirement::shared::{shared_retirement_birth_bytes, shared_retirement_allocation_bytes, admit_shared_retirement};
-#[path = "../../♻️retirement/🏭️factory/🦀️.rs"]
-mod factory_retirement;
-pub use factory_retirement::{FactoryPayloadRetirement, FactoryRetirement, FactoryAuthority, FactoryChildTickets, FactoryChildSlot, FactoryRetirementTicket, FactoryRetirementAdmissionError, factory_arc_birth_bytes, factory_retirement_frame_bytes, factory_constructor_birth_bytes, factory_ticket_demands, close_factory_ticket};
-pub use factory_retirement::owned::FactoryOwnedRetirement;
-pub use factory_retirement::boxed::{FactoryBoxedValue,FactoryBoxedPublication};
+pub use semio_framework_value_retirement::retirement;
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetirementDemand,factory_ticket_demands,close_factory_ticket,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct};
 #[path = "../../🧬️retained-clone/🦀️.rs"]
 pub mod retained_clone;
 pub use retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -36,3 +24,28 @@ pub use types::{ValueKind, ValueType};
 #[cfg(any(test, feature="testkit"))]
 #[path="../../🧪️testing/🧾️wire/🦀️.rs"]
 pub mod testing;
+
+#[cfg(test)]
+#[path="../../🧪️testing/💾️allocator/🦀️.rs"]
+mod allocation_testing;
+#[cfg(test)]
+pub(crate) use allocation_testing::observe_retirement_allocations;
+
+
+#[cfg(test)]
+#[path="../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs"]
+mod original_retirement_integration_tests;
+
+pub use semio_framework_value_retirement::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
+pub use semio_framework_value_original_aliases::OriginalAliasBatch;
+
+pub use semio_framework_value_factory as factory;
+pub use semio_framework_value_factory::{SnapshotRetirementFactory,ArtifactOwnedValueRetirementFactory,FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
+pub use semio_framework_value_shared_issuance as shared_issuance;
+
+pub use semio_framework_value_retirement_queue as retirement_queue;
+
+
+
+pub use semio_framework_value_factory::owned::FactoryOwnedRetirement;
+pub use semio_framework_value_factory::boxed::{FactoryBoxedValue,FactoryBoxedPublication};

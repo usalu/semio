@@ -1,6 +1,6 @@
-use super::ChangeLayerPhiPrime;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997LayersRows, En1997LayersPatch};
+use crate::change_layer_phi_prime::ChangeLayerPhiPrime;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997LayersRows, En1997LayersPatch};
 
 pub fn diff(payload: &ChangeLayerPhiPrime, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_phi_prime_deg.is_finite() || payload.new_phi_prime_deg < 0.0 || payload.new_phi_prime_deg > 50.0 {

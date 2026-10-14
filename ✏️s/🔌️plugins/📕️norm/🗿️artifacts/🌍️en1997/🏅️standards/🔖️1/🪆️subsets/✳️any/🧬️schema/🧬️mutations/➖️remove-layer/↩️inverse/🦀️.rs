@@ -1,10 +1,10 @@
-use super::RemoveLayer;
-use crate::mutations::{insert_layer::InsertLayer, En1997Mutation};
-use crate::En1997Snapshot;
-pub fn inverse(payload: &RemoveLayer, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+use crate::remove_layer::RemoveLayer;
+use crate::insert_layer::InsertLayer;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+pub fn inverse<Op>(payload: &RemoveLayer, base: &En1997Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_layer::InsertLayer> {
     Ok((|| {
     let layer = base.layers.get(payload.index).cloned().unwrap_or_else(|| base.layers[0].clone());
-    vec![En1997Mutation::InsertLayer(InsertLayer { index: payload.index, layer })]
+    vec![Op::from(InsertLayer { index: payload.index, layer })]
 
     })())
 }

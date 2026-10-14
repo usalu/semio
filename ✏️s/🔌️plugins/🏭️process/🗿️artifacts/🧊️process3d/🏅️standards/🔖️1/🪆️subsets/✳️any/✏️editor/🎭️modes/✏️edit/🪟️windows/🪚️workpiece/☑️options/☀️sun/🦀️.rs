@@ -6,7 +6,7 @@ use semio_framework_plugin::{world3d_sun_measures, ActionDescriptor, WindowMeasu
 
 //#region 🔖️Measure
 pub fn measure(sun: &WorldSunConfig, is_de: bool) -> WindowMeasure {
-    world3d_sun_measures("process3d", sun, is_de, |action, args| ActionDescriptor { controller_id: crate::editor::process3d::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args })
+    world3d_sun_measures("process3d", sun, is_de, |action, args| ActionDescriptor { controller_id: semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args })
 }
 //#endregion 🔖️Measure
 

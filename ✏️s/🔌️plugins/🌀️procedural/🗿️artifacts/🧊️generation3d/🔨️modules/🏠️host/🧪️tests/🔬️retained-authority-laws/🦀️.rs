@@ -1,7 +1,12 @@
 use semio_s_artifact_procedural_3d_host::*;
-use semio_s_artifact_procedural_3d_host_envelope::*;
-use semio_s_artifact_procedural_3d_host_initialization::*;
-use crate::retirement_driver::{drive_erased_released, exact_grant, retire_owned_for_test, retire_shared_for_test, Stepped, STEP_GRANT};
+use semio_s_artifact_procedural_3d_envelope::*;
+use semio_s_artifact_procedural_3d_initialization::*;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::exact_grant;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::Stepped;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT;
 use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
 use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
 
@@ -126,7 +131,7 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
     generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
         .expect("P3 initializer law publication authority");
-    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
@@ -160,7 +165,7 @@ fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fu
 #[test]
 fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
-    let _serial = crate::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
     let operation = semio_framework_job::OperationId(u64::MAX - 301);
     let generation = semio_framework_job::Generation(301);
     let mut authority = initializer(operation, generation);
@@ -177,7 +182,7 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
 #[test]
 fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
-    let _serial = crate::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
     let cancelled_operation = semio_framework_job::OperationId(u64::MAX - 302);
     let cancelled_generation = semio_framework_job::Generation(302);
     let mut cancelled = initializer(cancelled_operation, cancelled_generation);
@@ -341,12 +346,12 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_gran
 /// params state each declared input's default literal.
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
-    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
-    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
-    use semio_s_artifact_procedural_3d_mutations::generation3d_number_value;
-    use semio_s_artifact_procedural_3d_mutations::generation3d_param_number;
-    use semio_s_artifact_procedural_3d_mutations::generation3d_param_vector;
-    use semio_s_artifact_procedural_3d_mutations::generation3d_vector_value;
+    use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputPlane;
+    use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
+    use semio_s_artifact_procedural_3d_mut_transforms::generation3d_number_value;
+    use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_number;
+    use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_vector;
+    use semio_s_artifact_procedural_3d_mut_transforms::generation3d_vector_value;
 
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
     let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_artifact_flow_flow::neural::Value)>| Widget::Neuron {

@@ -1,11 +1,11 @@
 //! 🎛️ Process 3d play app commands — the engagement command-line input (a separate system from the
 //! utility bar switcher): submit / edit / abort.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetEngagementInput};
-use crate::editor::process3d::set_active_utility_effect;
-use crate::editor::process3d::commands::cursor::{process3d_cursor, process3d_cursor_moves};
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Process3dSnapshot};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetEngagementInput};
+use semio_s_artifact_process_process3d_modes::windows::workpiece::set_active_utility_effect;
+use crate::{cursor::process3d_cursor, cursor::process3d_cursor_moves};
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,7 +21,7 @@ pub mod engagement_submit {
         _payload: &EngagementSubmit,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
@@ -56,7 +56,7 @@ pub mod engagement_input {
         payload: &EngagementInput,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit::config(vec![Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: payload.value.clone() })]))
     }
@@ -75,7 +75,7 @@ pub mod engagement_abort {
         _payload: &EngagementAbort,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(Emit { config_mutations: vec![Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: String::new() })], effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }

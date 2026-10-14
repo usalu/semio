@@ -1,11 +1,11 @@
 //! 💬️ Lowpoly play app commands — the engagement text input (`engagementInput`) and its typed-token
 //! resolution into a real mesh-edit command (`engagementSubmit`).
 
-use crate::editor::lowpoly::commands::mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, triangulate};
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation, SetEngagementInputEdit};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use crate::{mesh_edit::bevel, mesh_edit::decimate, mesh_edit::dissolve, mesh_edit::extrude, mesh_edit::flip_faces, mesh_edit::inset, mesh_edit::loop_cut, mesh_edit::merge, mesh_edit::mirror, mesh_edit::snap, mesh_edit::subdivide, mesh_edit::triangulate};
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation, SetEngagementInputEdit};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -103,7 +103,4 @@ pub mod engagement_submit {
 //#endregion 🔖️EngagementSubmit
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,6 +1,6 @@
 //! 🖌️ Concrete Block3d world-window brush preview state.
 
-pub const WINDOW_KIND_ID: &str = crate::editor::block3d::modes::edit::windows::world::BLOCK3D_WINDOW_WORLD;
+pub const WINDOW_KIND_ID: &str = crate::edit::windows::world::BLOCK3D_WINDOW_WORLD;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -75,7 +75,6 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 semio_s_plugin_block::block_optional!(test; /// 🖌️ The optional brush preview set to a value or cleared.
     Block3dBrushPreviewSet(Block3dBrushPreview));
 
-
 /// 🔺️ Field-sparse diff of [`Block3dWorldWindowTransient`]: each field is an optional absolute value.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -112,7 +111,7 @@ impl protocol::MutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowT
 }
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::*;
+pub use crate::edit::windows::world::transient::mutations::*;
 
 pub struct Block3dWorldWindowTransientOwner;
 

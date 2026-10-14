@@ -1,5 +1,7 @@
 use super::*;
-use crate::editor::generation3d::modes::edit::windows::flow::{graph_outline, GENERATION_3D_PLAY_OUTLINE_NODES, GENERATION_3D_PLAY_OUTLINE_WIRES};
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_NODES;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_WIRES;
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
@@ -41,10 +43,10 @@ fn law_rows(section: &serde_json::Value) -> Vec<(String, Option<String>, Vec<Str
 /// 26/09/09/PROCEDURAL-3D-END-TO-END, and left the Inspection panel on its "no selection" branch).
 #[test]
 fn document_rows_are_domain_pick_targets_without_a_per_row_binding() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
     let projection = law_document_projection();
-    assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN));
+    assert_eq!(projection["component"]["interactionDomain"].as_str(), Some(semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN));
     let root_activate = projection["bindings"].as_array().cloned().unwrap_or_default().iter().filter(|binding| binding["trigger"].as_str() == Some("activate")).count();
     assert_eq!(root_activate, 1, "the tree root carries exactly one interactionSelect binding: {projection}");
     let sections = projection["children"].as_array().cloned().unwrap_or_default();
@@ -142,7 +144,7 @@ fn window_view(requests: Vec<TreeWindowRequest>) -> ViewModel {
 /// entries.len()`, so the host's scrollbar spans the whole graph rather than a page of it.
 #[test]
 fn an_oversized_document_stamps_every_containers_total() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let projection = outline_projection(&TreeWindows::unhosted(), &nodes, &edges);
     let (node_total, _, node_rows) = window_of(&container(&projection, GENERATION_3D_PLAY_OUTLINE_NODES));
@@ -161,7 +163,7 @@ fn an_oversized_document_stamps_every_containers_total() {
 /// `+n` label anywhere in the body.
 #[test]
 fn an_oversized_document_renders_no_continuation_row() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let json = outline_projection(&TreeWindows::unhosted(), &nodes, &edges).to_string();
     assert!(!json.contains(".more\""), "a windowed outline has no continuation row");
@@ -172,7 +174,7 @@ fn an_oversized_document_renders_no_continuation_row() {
 /// children, which is what makes the first paint bounded no matter how large the document is.
 #[test]
 fn a_closed_document_section_stamps_its_total_with_no_children() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let view = window_view(vec![TreeWindowRequest {
         body_key: GENERATION_3D_PLAY_BODY_ARTIFACT.into(),
@@ -192,7 +194,7 @@ fn a_closed_document_section_stamps_its_total_with_no_children() {
 /// raw widget id — the guest answers the viewport, it does not re-derive a page.
 #[test]
 fn a_document_window_request_materialises_exactly_its_slice() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let (nodes, edges) = oversized_graph();
     let view = window_view(vec![TreeWindowRequest {
         body_key: GENERATION_3D_PLAY_BODY_ARTIFACT.into(),
@@ -218,7 +220,7 @@ fn a_document_window_request_materialises_exactly_its_slice() {
 /// where a document could collide with the panel's own namespace.
 #[test]
 fn every_windowed_container_carries_a_distinct_node_key() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     fn collect(node: &serde_json::Value, out: &mut Vec<String>) {
         if node["component"]["window"].is_object() {
             out.push(node["key"].as_str().unwrap_or_default().to_string());

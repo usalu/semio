@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `CreateRepresentation`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateRepresentation, _base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::create_representation::CreateRepresentation, _base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::delete_representation::DeleteRepresentation> {
     Ok((|| {
-    vec![super::super::delete_representation::delete_representation(payload.representation.id.clone())]
+    vec![crate::delete_representation::delete_representation(payload.representation.id.clone())]
 
     })())
 }

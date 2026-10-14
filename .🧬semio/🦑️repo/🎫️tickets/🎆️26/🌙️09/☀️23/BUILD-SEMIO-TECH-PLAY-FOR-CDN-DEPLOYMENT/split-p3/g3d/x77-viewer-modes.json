@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-viewer-modes",
+ "description": "Procedural generation3d viewer view mode and its preview window",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes",
+ "moves": [
+  {
+   "from": "viewer::generation3d::modes",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": "monolith",
+ "doc": "🎭️ Generation3d viewer modes: the view mode and its preview window."
+}

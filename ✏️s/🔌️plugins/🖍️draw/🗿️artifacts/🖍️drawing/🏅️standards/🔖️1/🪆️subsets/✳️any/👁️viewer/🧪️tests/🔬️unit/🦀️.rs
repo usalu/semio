@@ -17,8 +17,10 @@ async fn restore_archive(app: &mut impl semio_framework_plugin::PluginApp, opera
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
-    use semio_s_artifact_draw_drawing_editor::{create_drawing_app, DrawingCommand, DrawingPlayApp};
-    use semio_s_artifact_draw_drawing_editor::commands::add_layer::AddLayer;
+    use semio_s_artifact_draw_drawing_editor::create_drawing_app;
+    use semio_s_artifact_draw_drawing_editor::DrawingCommand;
+    use semio_s_artifact_draw_drawing_editor::DrawingPlayApp;
+    use semio_s_artifact_draw_drawing_editor_commands::add_layer::AddLayer;
     use semio_framework_plugin::{artifact_app_laws as laws, App, EditorApp, PluginApp};
     let mut editor = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     let mut viewer = Box::new(laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(|| App { definition: create_drawing_viewer(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
@@ -33,7 +35,7 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
         editor.dispatch_typed(DrawingCommand::AddLayer(AddLayer { kind: fixture["kind"].as_str().unwrap().into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         let created_id = semio_s_artifact_draw_drawing_model::layer_id(editor.snapshot().map_err(|error| format!("{error:?}"))?.layers.last().ok_or("created rectangle is missing")?).to_string();
-        editor.dispatch_typed(DrawingCommand::PatchLayers(semio_s_artifact_draw_drawing_editor::commands::patch_layers::PatchLayers { index:None, layer_ids: vec![created_id.clone()], field: "name".into(), value: fixture["after"].as_str().unwrap().into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        editor.dispatch_typed(DrawingCommand::PatchLayers(semio_s_artifact_draw_drawing_editor_commands::patch_layers::PatchLayers { index:None, layer_ids: vec![created_id.clone()], field: "name".into(), value: fixture["after"].as_str().unwrap().into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         let expected = editor.document_archive().await.map_err(|error| format!("{error:?}"))?;
         restore_archive(&mut *viewer, 91, expected.clone()).await?;

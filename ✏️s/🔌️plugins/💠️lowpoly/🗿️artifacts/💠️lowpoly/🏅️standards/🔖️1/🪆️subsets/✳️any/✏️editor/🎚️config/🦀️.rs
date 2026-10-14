@@ -8,6 +8,16 @@
 //! fields rather than embedded as DSL blocks — `LowpolySelection`/`WorldSunConfig` aren't
 //! `dsl::DslField`-capable today and flattening avoids widening that surface just for this migration.
 
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+//#region 🧩️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🧩️Modules
+
 use protocol::Mutation;
 use semio_framework_plugin::WorldSunConfig;
 #[cfg(test)]

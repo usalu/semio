@@ -451,7 +451,7 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
 
 #[test]
 fn member_envelope_phased_birth_cancel_cuts_conserve_original_catalog_allocations() {
-    use semio_framework_value::retirement::OwnedValueRetirementFactory;
+    use semio_framework_value::factory::OwnedValueRetirementFactory;
     use crate::os_store::{document_materialize::empty_document_envelope_from_genesis_owners, ArtifactOwnedValueRetirementFactory};
     use super::super::ArtifactStoreEnvelopeRetirement;
     use crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;

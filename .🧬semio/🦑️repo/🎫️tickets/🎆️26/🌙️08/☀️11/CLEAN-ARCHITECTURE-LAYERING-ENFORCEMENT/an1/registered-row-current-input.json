@@ -1,0 +1,26 @@
+{
+  "kind": "current-registered-row-readiness-input-not-issued-caller-or-capture",
+  "row": {
+    "name": "🏛️Actor · General Context Native",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-actor-rs:test-original-context-native",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:original-context:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":600000},\"network\":{\"offline\":true}},\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-actor-rs:test-original-context-native\"]]}",
+      "SEMIO_BUILD_MODE": "prototype",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+      "CARGO_NET_OFFLINE": "true",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-context"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.8276
+    }
+  },
+  "seedMirrorEqual": true,
+  "missingRequiredAuthoringFields": [],
+  "changeFromPriorReadiness": "Root added only launches:[arguments] to the defining initial row; no execution"
+}

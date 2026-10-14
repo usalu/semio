@@ -1,7 +1,7 @@
 //! Diff for `change-column-action-force-n`.
-use super::ChangeColumnActionForceN;
-use crate::{En1994Snapshot};
-use crate::diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsPatch, En1994ColumnsActionsRows, En1994ColumnsActionsPatch};
+use crate::change_column_action_force_n::ChangeColumnActionForceN;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsPatch, En1994ColumnsActionsRows, En1994ColumnsActionsPatch};
 
 pub fn diff(payload: &ChangeColumnActionForceN, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_n_k_n.is_finite() {

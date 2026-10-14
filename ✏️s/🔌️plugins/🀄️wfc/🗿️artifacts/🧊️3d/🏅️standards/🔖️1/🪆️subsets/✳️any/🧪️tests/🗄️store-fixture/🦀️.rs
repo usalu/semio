@@ -9,8 +9,8 @@ use crate::Wfc3dSnapshot;
 /// 🏪️ Opens the fixture store. A bare store carries no owner catalog and refuses its first edit, so
 /// this installs the exact bounded owners production installs.
 async fn open_store(document: Wfc3dSnapshot) -> store::ArtifactStore<Wfc3dSnapshot, Wfc3dMutation> {
-    let envelope = store::os_store::document_materialize::create_document_envelope("s.wfc.wfc3d/v1", "wfc3d", document, None);
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid wfc3d artifact store fixture");
+    let envelope = store::os_store::document_materialize::create_document_envelope("s.wfc.wfc3d/v1", "wfc3d", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid wfc3d artifact store fixture");
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc3dSnapshot, Wfc3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     store
 }

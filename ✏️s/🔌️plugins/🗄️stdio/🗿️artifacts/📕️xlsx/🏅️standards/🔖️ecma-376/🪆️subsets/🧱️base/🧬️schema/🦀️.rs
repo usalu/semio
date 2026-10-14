@@ -1,7 +1,7 @@
 //! 🧬️ XlsxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{XlsxWorkbook, XlsxXmlPart};
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxWorkbook, XlsxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
@@ -45,35 +45,6 @@ impl XlsxArtifact {
 //#endregion Conversions
 
 //#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.xlsx`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn xlsx_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.stdio.xlsx",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 
@@ -97,7 +68,7 @@ pub fn empty_xlsx_snapshot() -> XlsxSnapshot {
 /// output, asserted by `fixture_honesty_law`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
-    use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
     use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
     const STYLES_PART: &str = "xl/styles.xml";
@@ -124,7 +95,7 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
     snap.xml_parts.push(XlsxXmlPart {
         path: STYLES_PART.into(),
         content_type: STYLES_CONTENT_TYPE.into(),
-        document: XmlDocument { root: Some(XmlNode::Element { name: "styleSheet".into(), attrs: vec![crate::schema::vocabulary::attr("xmlns", crate::schema::vocabulary::SML_NS)], children: Vec::new() }), ..XmlDocument::default() },
+        document: XmlDocument { root: Some(XmlNode::Element { name: "styleSheet".into(), attrs: vec![crate::standards::v_ecma_376::subsets::base::schema::vocabulary::attr("xmlns", crate::standards::v_ecma_376::subsets::base::schema::vocabulary::SML_NS)], children: Vec::new() }), ..XmlDocument::default() },
     });
     snap.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
     snap
@@ -136,7 +107,4 @@ pub fn demo_xlsx_snapshot() -> XlsxSnapshot {
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

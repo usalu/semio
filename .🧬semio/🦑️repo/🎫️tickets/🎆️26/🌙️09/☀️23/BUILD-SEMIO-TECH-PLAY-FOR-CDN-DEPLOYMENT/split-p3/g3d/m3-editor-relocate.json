@@ -1,0 +1,51 @@
+{
+ "base": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "steps": [
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "start": "pub const GENERATION_3D_PLAY_APP_ID: &str",
+   "end": "    ActionDescriptor { controller_id: GENERATION_3D_PLAY_APP_ID.into(), action: action.into(), args }\n}",
+   "before": "//#region 🔁️Re-exports"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "after": "use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};\n",
+   "text": "use semio_framework_plugin::ActionDescriptor;\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+   "start": "//#region 🔖️PreviewPipeline",
+   "end": "//#endregion 🔖️PreviewPipeline",
+   "carry_uses": true
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "start": "/// 🗂️ The context-menu group the two artifact round-trips",
+   "end": "const CONTEXT_MENU_TRANSFER_CATEGORY: &str = \"transfer\";",
+   "before": "//#region 🔖️Manifest"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🦀️.rs",
+   "start": "//#region 🔖️MeshBridge",
+   "end": "//#endregion 🔖️MeshBridge",
+   "carry_uses": true
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+   "start": "/// 🧬️ The whole-document replacement that picking an example or importing a file emits",
+   "end": "    Effect::LoadDocument { pack, spr }\n}",
+   "carry_uses": true
+  }
+ ]
+}

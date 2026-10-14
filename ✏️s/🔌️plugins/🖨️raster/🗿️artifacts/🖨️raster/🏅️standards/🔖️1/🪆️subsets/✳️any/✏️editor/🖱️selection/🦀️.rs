@@ -3,12 +3,12 @@ use super::{RASTER_INTERACTION_DOMAIN,RASTER_INTERACTION_GRANULARITY};
 use semio_framework_plugin::{Fault,RequestId,INTERACTION_SELECT_ACTION_ID};
 
 /// 🌳️ Gives framework selection validation the current layer membership and nesting.
-pub fn layer_topology(layers:&[crate::RasterLayerNode])->semio_framework_plugin::DomainTopology {
-    fn visit(layers:&[crate::RasterLayerNode],parent:Option<&str>,ordered:&mut Vec<semio_framework_plugin::TopologyNode>) {
+pub fn layer_topology(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode])->semio_framework_plugin::DomainTopology {
+    fn visit(layers:&[semio_s_artifact_raster_raster_model::RasterLayerNode],parent:Option<&str>,ordered:&mut Vec<semio_framework_plugin::TopologyNode>) {
         for layer in layers {
-            let id=crate::standards::v1::subsets::any::schema::layer_node_id(layer);
+            let id=semio_s_artifact_raster_raster_model::layer_node_id(layer);
             ordered.push(semio_framework_plugin::TopologyNode {id:id.into(),granularity:RASTER_INTERACTION_GRANULARITY.into(),parent:parent.map(str::to_owned)});
-            if let crate::RasterLayerNode::Group {children,..}=layer {visit(children,Some(id),ordered);}
+            if let semio_s_artifact_raster_raster_model::RasterLayerNode::Group {children,..}=layer {visit(children,Some(id),ordered);}
         }
     }
     let mut ordered=Vec::new();visit(layers,None,&mut ordered);

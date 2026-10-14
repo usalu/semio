@@ -1,8 +1,7 @@
 //! ☕️ Energy model mutation — `ChangePlantLoopSupplyTemperature`: Sets the temperature the loop supplies at, in °C.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePlantLoopSupplyTemperature {
     pub new_supply_temperature_c: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_plant_loop_supply_temperature(id: crate::model::EntityId, new_supply_temperature_c: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePlantLoopSupplyTemperature(ChangePlantLoopSupplyTemperature { id, new_supply_temperature_c })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_plant_loop_supply_temperature<Op: From<ChangePlantLoopSupplyTemperature>>(id: crate::model::EntityId, new_supply_temperature_c: f64) -> Op {
+    ChangePlantLoopSupplyTemperature { id, new_supply_temperature_c }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePlantLoopSupplyTemperature {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePlantLoopSupplyTemperature
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePlantLoopSupplyTemperature>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "plant-loop", kind: "change-plant-loop-supply-temperature", record: "ChangedPlantLoopSupplyTemperature" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

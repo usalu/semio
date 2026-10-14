@@ -51,13 +51,13 @@ use crate::app_emission::Emit;
 use crate::app_emission::EphemeralEmit;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::artifact_instance::VcsArtifactApp;
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::history_view::CommandLogEntry;
 use crate::history_view::ShellHistoryReplay;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::store_publication::MountedTypedCommandFullOperationStage;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -73,7 +73,7 @@ use crate::tool_contract::TypedOperationResultLane;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::typed_operation::MountedTypedCommandFullOperation;
 #[cfg(test)]
-use crate::bounded_ownership::DOCUMENT_ARCHIVE_LOAD_SLOTS;
+use semio_framework_plugin_ownership::bounded_ownership::DOCUMENT_ARCHIVE_LOAD_SLOTS;
 #[cfg(test)]
 use crate::command_history::CommandLogAppend;
 #[cfg(test)]
@@ -1155,4 +1155,4 @@ impl<M> Drop for ChildMemberRetirement<M> {
     }
 }
 
-use crate::bounded_ownership::plugin_grant_funds;
+use semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds;

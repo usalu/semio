@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `UpdatePart2d`.
 
-use crate::standards::v1::subsets::any::schema::diff::{Block5dDiff, Block5dPart2dPatch};
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::{Block5dDiff, Block5dPart2dPatch};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use semio_s_plugin_block::{BlockOptionalNumber, BlockOptionalText};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::UpdatePart2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+pub fn diff(payload: &crate::update_part_2d::UpdatePart2d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
     let part_2d = &base.part_2d;
     if part_2d.shape == payload.new_shape
         && part_2d.radius == payload.new_radius

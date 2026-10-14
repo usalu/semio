@@ -37,7 +37,4 @@ pub fn handle(payload: &PatchNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: 
 //#endregion 🔖️PatchNode
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

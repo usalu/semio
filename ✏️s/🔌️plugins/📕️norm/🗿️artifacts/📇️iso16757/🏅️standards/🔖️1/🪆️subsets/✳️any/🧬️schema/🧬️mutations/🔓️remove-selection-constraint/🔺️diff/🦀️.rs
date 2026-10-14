@@ -1,9 +1,9 @@
 //! 🔺️ `remove-selection-constraint` — sparse diff construction; an out-of-range BASE index is
 //! `mutation.target-missing`.
 
-use super::mutation::RemoveSelectionConstraint;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757SelectionConstraintsRows};
+use crate::remove_selection_constraint::mutation::RemoveSelectionConstraint;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757SelectionConstraintsRows};
 
 //#region 🔖️Diff
 

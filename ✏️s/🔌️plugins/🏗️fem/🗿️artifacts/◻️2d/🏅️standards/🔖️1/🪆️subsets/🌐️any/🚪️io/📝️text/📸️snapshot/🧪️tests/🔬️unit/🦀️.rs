@@ -1,16 +1,16 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use crate::standards::v1::subsets::any::schema::structure::FemCombination;
+use crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
+use crate::standards::v1::subsets::any::schema::structure::FemDof;
+use crate::standards::v1::subsets::any::schema::structure::FemElement;
+use crate::standards::v1::subsets::any::schema::structure::FemLoad;
+use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
+use crate::standards::v1::subsets::any::schema::structure::FemNode;
+use crate::standards::v1::subsets::any::schema::structure::FemRegion;
+use crate::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 
 // #region 🔖️Fixtures
 fn simply_supported_beam_doc() -> Fem2dSnapshot {

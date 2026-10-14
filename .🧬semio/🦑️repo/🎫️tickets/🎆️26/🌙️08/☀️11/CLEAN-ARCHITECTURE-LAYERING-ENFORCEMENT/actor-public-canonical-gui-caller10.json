@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🏛️Actor · Canonical Architecture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.828
+    }
+  },
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/ap-gui10"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1",
+  "reason": "Canonical Actor codec domain/API move with semantic and portable leaf probes; genuine protocol2 generation6b627e published",
+  "sourceFrontier": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "sha256": "315c6c9ce009a2b04ff76794503d63e79c2cbe615be91038ee011ca8477d7576",
+      "bytes": 467
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "5c53d9b8108ae0e50a4df39ffd9173e637483b5d39bc119ff5ad4d23d2e5171b",
+      "bytes": 4844
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "sha256": "6876e7877b6a8d9c33ac8a431ede2179f96ebadba34976aecf29bc1d977d9e27",
+      "bytes": 191656
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "4d2692380bfad7a71db82a9923d8091ca643997a82c441bbbd7b3f500b1cf63f",
+      "bytes": 6854
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+      "sha256": "db14ccbc1dcba4dd94fca2a21ce6f7b1b8c7735e32ad2fd091533fb605a49abf",
+      "bytes": 7917
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "2a8f64c9987266bd04773a74e4db340168c3ce61e86b3316b59dd017039a2118",
+      "bytes": 15077
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "sha256": "98d3e4113675210ba3c84f3ec1cf7b43e0a387b09b64c51f3a4bfed504991b69",
+      "bytes": 9525
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🧬️.json",
+      "sha256": "7a47df219aca92cef4eb2010366fe0b334b3bb29bafedfc57df28a27103520d4",
+      "bytes": 3250
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🔣️.json",
+      "sha256": "d4388b2ac014edd9dcb18d146dcb1c39c7f9da79c2dd8fb331c0c9dfed8f7f7e",
+      "bytes": 2445
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "sha256": "d8f5e1f99e3fefb94f6e4428000732abcaeecc8358610b1e01a7b4be51756c3c",
+      "bytes": 5561
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "sha256": "715a70aaa3a41204d99b8a89bd676c46aa6494afcabe13ae0e21be6bfc0fa180",
+      "bytes": 4395
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "f32f8fbad834049ae1ee382e254042e97bbb6aabe17b406780facc7b6014402b",
+      "bytes": 3966046
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "c77555ce2a83cae587497730fbe194d193151c7db859917fc89ec583e6b9cd9e",
+      "bytes": 1130911
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "16b8286bd69764057ee80be81fedccd88e5a2206f6064bdc9f93946a674ad566",
+      "bytes": 1553825
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "sha256": "b734a601c4cc36099491324ef045959e0ec713311f07c92be969b94ad21087fd",
+      "bytes": 102874
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "c4a419c4d27b783e1fbf2f5cd65194359fbef9ef7d83b0e834ef016c42f524c0",
+      "bytes": 50788
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "sha256": "f8e89691832850978223373e2cac8da1fc6479d8af0af2b64146fbd645add681",
+      "bytes": 134296
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "sha256": "f512c4d76ef4b8bd088af39da0914cde61792207973f278c8c16ef9e0b9dd509",
+      "bytes": 11754
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+      "sha256": "393de920df8588eca9030138eb35eee3b1af86b0914da19a1a86f65c92129520",
+      "bytes": 1330524
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d6b81c69588dbdca9d5a63ca2c965f335823a549958084587ab7690c501297a6",
+      "bytes": 7345
+    }
+  ]
+}

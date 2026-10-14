@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `ChangePartKindDescription`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ChangePartKindDescription, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::change_part_kind_description::ChangePartKindDescription, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_part_kind_description::ChangePartKindDescription> {
     Ok((|| {
-    vec![super::super::change_part_kind_description::change_part_kind_description(base.part_kind.description.clone())]
+    vec![crate::change_part_kind_description::change_part_kind_description(base.part_kind.description.clone())]
 
     })())
 }

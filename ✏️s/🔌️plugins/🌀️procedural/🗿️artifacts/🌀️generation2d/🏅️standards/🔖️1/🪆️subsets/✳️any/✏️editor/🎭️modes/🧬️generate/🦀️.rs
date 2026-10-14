@@ -1,6 +1,10 @@
 //! 🧬️ Generation2d play app — the `generate` mode: generations list + input form + output preview.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as store;
 
-use crate::editor::generation2d::modes::generate::windows::{form, generations, preview};
+use crate::windows::form;
+use crate::windows::generations;
+use crate::windows::preview;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::create_named_layout;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -19,7 +23,7 @@ pub fn definition() -> ModeDefinition {
         id: GENERATION2D_PLAY_MODE_GENERATE.into(),
         label: LocalizedLabel::native("Generate", "Generieren"),
         icon_id: "sparkles".into(),
-        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::preview_eval::PREVIEW_EVAL_TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_procedural_2d_preview_eval::PREVIEW_EVAL_TOOL_ID))],
         layout_id: Some(GENERATION2D_PLAY_LAYOUT_GENERATE.into()),
         commands: Vec::new(),
     }
@@ -47,3 +51,13 @@ pub fn layout() -> NamedLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📝️form/🦀️.rs"]
+    pub mod form;
+    #[path = "🪟️windows/🗂️generations/🦀️.rs"]
+    pub mod generations;
+    #[path = "🪟️windows/👁️preview/🦀️.rs"]
+    pub mod preview;
+}

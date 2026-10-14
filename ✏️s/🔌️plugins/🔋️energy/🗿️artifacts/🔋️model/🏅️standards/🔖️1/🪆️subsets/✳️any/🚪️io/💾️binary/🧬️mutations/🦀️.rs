@@ -8,7 +8,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::EnergyModelMutation;
+use crate::EnergyModelMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `EnergyModelMutation` to its binary state-patch form.
@@ -28,8 +28,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use super::*;
-pub use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelMutation;
 
 impl protocol::OpBinary for EnergyModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

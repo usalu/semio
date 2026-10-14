@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::block2d::terminology::block2d_labels;
-use crate::editor::block2d::unit_tests::context::{new_app, render as render_body};
+use crate::panels::document::*;
+use crate::terminology::block2d_labels;
+use crate::unit_tests::context::{new_app, render as render_body};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 fn oversized_document() -> Block2dSnapshot {
     let mut document = Block2dSnapshot::default();
     document.handle_kinds = (0..40)
-        .map(|index| crate::Block2dHandleKind {
+        .map(|index| semio_s_artifact_block_2d_model::Block2dHandleKind {
             id: format!("kind-{index:03}"),
             name: format!("kind-{index:03}"),
             label: format!("Kind {index}"),
@@ -51,7 +51,7 @@ fn oversized_document() -> Block2dSnapshot {
         })
         .collect();
     document.handles = (0..160)
-        .map(|index| crate::Block2dHandleTemplate { id: format!("handle-{index:03}"), handle_kind: format!("kind-{:03}", index % 40), angle: index as f64 * 0.01, radius: 1.0 })
+        .map(|index| semio_s_artifact_block_2d_model::Block2dHandleTemplate { id: format!("handle-{index:03}"), handle_kind: format!("kind-{:03}", index % 40), angle: index as f64 * 0.01, radius: 1.0 })
         .collect();
     document
 }

@@ -1,11 +1,11 @@
 //! 🧪️ `field_meta_coverage` — moved out of `🏷️field-meta/🦀️.rs` into its canonical test implementation.
-use super::*;
-use crate::Din18599Snapshot;
+use crate::modes::edit::field_meta::*;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 #[test]
 fn every_default_leaf_has_en_de_label() {
     let doc = Din18599Snapshot::default();
-    let json = crate::standards::v1::subsets::any::io::text::snapshot::encode_din18599_snapshot_json(&doc);
+    let json = semio_s_artifact_norm_din18599_io::text::snapshot::encode_din18599_snapshot_json(&doc);
     let value: serde_json::Value = serde_json::from_str(&json).expect("json");
     let mut missing = Vec::new();
     walk("", &value, &mut missing);

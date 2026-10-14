@@ -1,5 +1,5 @@
 use super::*;
-use crate::value::observe_retirement_allocations as observe;
+use crate::allocation_testing::observe_retirement_allocations as observe;
 use crate::retirement::controlled::ControlledRetirement;
 
 #[test]

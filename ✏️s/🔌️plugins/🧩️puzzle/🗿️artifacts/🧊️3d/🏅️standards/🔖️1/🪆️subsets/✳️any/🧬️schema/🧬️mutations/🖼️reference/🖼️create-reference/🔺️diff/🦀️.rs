@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateReference` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dReferencesDelta};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::CreateReference, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

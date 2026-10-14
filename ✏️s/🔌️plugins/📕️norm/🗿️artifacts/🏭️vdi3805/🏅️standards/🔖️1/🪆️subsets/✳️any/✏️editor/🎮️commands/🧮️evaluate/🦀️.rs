@@ -7,8 +7,8 @@
 //! fix is to emit zero mutations (`Emit::default()`) rather than inventing a fake semantic edit.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
-use crate::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

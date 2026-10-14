@@ -1,9 +1,12 @@
 use super::*;
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
 use semio_framework_plugin::app::DocumentWindowKit;
 
 fn deck(shapes: Vec<PptxShape>) -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
+    semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides: vec![PptxSlide { shapes }] })
 }
 
 #[semio_framework_async_macros::async_test]

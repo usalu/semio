@@ -1,8 +1,11 @@
 //! 📑 `update-text-frame` — sets a text frame's story, thread, and inset.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,12 +26,12 @@ pub struct UpdateTextFrame {
     pub inset_height: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateTextFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateTextFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_text_frame::UpdateTextFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "text-frame", kind: "update-text-frame", record: "UpdatedTextFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_text_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_text_frame(self, base)?
     
@@ -89,11 +92,11 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
     })
 }
 
-pub fn inverse_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_text_frame<Op: From<crate::update_text_frame::UpdateTextFrame>>(payload: &UpdateTextFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(Frame::Text { story_id, thread_next, inset, .. }) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateTextFrame(UpdateTextFrame {
+    vec![Op::from(UpdateTextFrame {
         page_id: payload.page_id.clone(),
         frame_id: payload.frame_id.clone(),
         story_id: story_id.clone(),

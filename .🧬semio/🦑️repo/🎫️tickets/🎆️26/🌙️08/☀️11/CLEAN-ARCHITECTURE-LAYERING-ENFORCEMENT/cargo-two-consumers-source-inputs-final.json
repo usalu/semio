@@ -1,0 +1,50 @@
+{
+  "kind": "two-consumer-current-source-freeze-observation-not-admission",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a2ab7c35998b3609267e7d7171b5793855e8dfb4e24cd90adde24cd87cc4f8bb",
+      "bytes": 1277
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "518f0c7f9baecbfc62999a5cb6b5f9b8e026ba64673e9035f6608df50461037e",
+      "bytes": 1044
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "154b162c92a8d9b729706c257db41350c57633c4b9fcb29b9f654002903f7373",
+      "bytes": 647
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "393df6e1574120edc6aa3f5d7f566039f9b697111d4e7d1c4fe00db8337b26d5",
+      "bytes": 1288
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "46b3d18950250dacca5d72a26f68b379d50b54c406db151fb607563ebac9f3ad",
+      "bytes": 1026
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "1a9ec2e446f1785688191c7e55daa1c75391a36e8bd21be681ed30ca8fbf6d74",
+      "bytes": 706
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+      "sha256": "6400099966c3a901914b108495f79a14329dd4af0fd9b5c8178e44c4ebc07417",
+      "bytes": 18826
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6f0860139b0b1aace7c216e4f1648e4342ae6da07f45025d370e4612bc60d89e",
+      "bytes": 7544
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "sha256": "e18915079c5b9d2713daaee0958748d5c1312bb206fdc1e3ec1d4e3c70d8ba45",
+      "bytes": 32463
+    }
+  ]
+}

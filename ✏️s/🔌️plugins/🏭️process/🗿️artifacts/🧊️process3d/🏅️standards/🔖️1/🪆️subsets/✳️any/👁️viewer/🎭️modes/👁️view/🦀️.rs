@@ -1,7 +1,7 @@
 //! 👁️ Process 3D viewer — the `view` mode: a single full-pane Workpiece window, the read-only
 //! counterpart of the editor's single-window `edit` mode.
 
-use crate::viewer::process3d::modes::view::windows::workpiece;
+use crate::modes::view::windows::workpiece;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;

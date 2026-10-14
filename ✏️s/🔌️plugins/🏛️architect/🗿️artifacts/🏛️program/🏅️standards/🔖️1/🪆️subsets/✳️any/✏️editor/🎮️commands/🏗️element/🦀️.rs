@@ -5,6 +5,7 @@ pub mod add_element {
     use crate::editor::architect::catalog::default_element;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::registers::{RegisterKey, RegisterRow};
     use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
@@ -22,7 +23,7 @@ pub mod add_element {
     /// command's `Emit` (mirrors note's `add-block`).
     pub fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let element = default_element(payload.name.clone());
-        Ok(Emit::mutations(vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element, index: None })]))
+        Ok(Emit::mutations(vec![ProgramMutation::CreateRegisterRow(leaves::create_register_row::CreateRegisterRow { row: RegisterRow::ProgramElement(element), index: None })]))
     }
 }
 
@@ -49,7 +50,7 @@ pub mod remove_element {
         if !program.elements.iter().any(|element| &element.header.id.0 == element_id) {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("removeElement found no program element \"{element_id}\"")));
         }
-        let mut operations = vec![ProgramMutation::DeleteProgramElement(leaves::delete_program_element::DeleteProgramElement { id: EntityId(element_id.clone()) })];
+        let mut operations = vec![ProgramMutation::DeleteRegisterRow(leaves::delete_register_row::DeleteRegisterRow { register: RegisterKey::ProgramElement, id: EntityId(element_id.clone()) })];
         for adjacency in program.adjacencies.iter().filter(|row| &row.element_a_id.0 == element_id || &row.element_b_id.0 == element_id) {
             operations.push(ProgramMutation::DisconnectAdjacency(leaves::disconnect_adjacency::DisconnectAdjacency { id: adjacency.header.id.clone() }));
         }

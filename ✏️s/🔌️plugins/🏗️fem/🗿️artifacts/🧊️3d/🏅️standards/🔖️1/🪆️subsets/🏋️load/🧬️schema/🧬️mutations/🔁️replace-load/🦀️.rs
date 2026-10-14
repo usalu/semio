@@ -1,7 +1,7 @@
 //! 🔁️ Fem3d mutation — `ReplaceLoad` payload + `MutationKind` impl.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{Fem3dSnapshot, FemLoad};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,13 +23,16 @@ pub struct ReplaceLoad {
     pub new_load: Box<FemLoad>,
 }
 
-impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ReplaceLoad {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for ReplaceLoad
+where
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<replace_load::ReplaceLoad>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "load", kind: "replace-load", record: "ReplacedLoad" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

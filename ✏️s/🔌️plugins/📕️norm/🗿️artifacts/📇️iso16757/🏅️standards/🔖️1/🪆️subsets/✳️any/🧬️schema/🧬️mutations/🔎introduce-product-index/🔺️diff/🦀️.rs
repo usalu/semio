@@ -1,8 +1,8 @@
 //! Diff for `introduce-product-index`.
 
-use super::mutation::IntroduceProductIndex;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductIndexesRows};
+use crate::introduce_product_index::mutation::IntroduceProductIndex;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductIndexesRows};
 
 pub fn diff(payload: &IntroduceProductIndex, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     if base.catalogue.product_indexes.iter().any(|item| item.id == payload.product_index.id) {

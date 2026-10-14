@@ -11,14 +11,14 @@ fn committed_history_intents_match_independent_part21_reader_and_class_edits() {
     let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🏅️standards/🔖️ap214/🪆️subsets");
     let seed=part21::read(&fixture()).unwrap();
     for (class,count,apply) in classes {
-        let path=root.join(class).join("🧫️fixtures/🎛️history-inputs");
+        let path=root.join(class).join("🧪️tests/🧫️fixtures/🎛️history-inputs");
         let mut cases=std::fs::read_dir(&path).unwrap().map(|entry|entry.unwrap().path()).collect::<Vec<_>>();cases.sort();assert_eq!(cases.len(),count);
         for case in cases {
             let record=semio_repo_test_host::parse_json(&std::fs::read_to_string(case.join("🦠️mutation/🔣️.json")).unwrap()).unwrap();
             let before=record.get("before").unwrap();let after=record.get("after").unwrap();let oracle=record.get("oracle").unwrap();
-            let mut input=seed.clone();part21::replace_with_snapshot(&mut input,before).unwrap();
-            let bytes=part21::write(&input);let independently_read=part21::read(&bytes).unwrap();assert_eq!(part21::snapshot_payload(&independently_read).unwrap().get("snapshot"),Some(before));
-            let output=apply(&bytes,oracle).unwrap();let independent_after=part21::read(&output).unwrap();assert_eq!(part21::snapshot_payload(&independent_after).unwrap().get("snapshot"),Some(after),"{class} {}",oracle.str("kind"));
+            let mut input=seed.clone();part21::load_snapshot(&mut input,before).unwrap();
+            let bytes=part21::write(&input);let independently_read=part21::read(&bytes).unwrap();assert_eq!(&part21::snapshot_of(&independently_read).unwrap(),before);
+            let output=apply(&bytes,oracle).unwrap();let independent_after=part21::read(&output).unwrap();assert_eq!(&part21::snapshot_of(&independent_after).unwrap(),after,"{class} {}",oracle.str("kind"));
             assert_ne!(before,after);println!("[DEBUG] STEP {class} {} literal before/after verified by independent ruststep",oracle.str("kind"));
         }
     }
@@ -27,7 +27,7 @@ fn committed_history_intents_match_independent_part21_reader_and_class_edits() {
 /// 🧫️ The real committed AP214 fixture — a real Rhino 8.31 / ST-Developer v19.2 export whose
 /// entire DATA section is untouched real data.
 fn fixture() -> Vec<u8> {
-    include_bytes!("../../../🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
+    crate::committed("../../../🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp")
 }
 
 /// 🧪️ Every ISO 10303-21 §6.4.2 control directive this projection has to survive, read off a

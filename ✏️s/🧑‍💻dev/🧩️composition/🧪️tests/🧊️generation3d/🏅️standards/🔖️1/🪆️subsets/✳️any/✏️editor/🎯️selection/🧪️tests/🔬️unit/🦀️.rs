@@ -35,7 +35,7 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
             assert!(validate_cached_components(&snapshot.host_snapshot, session, &[format!("extrude@meshOut#0.{mode}.999999")], None).is_err());
         }
         semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, |host, session| {
-            let (id, _, _) = semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::ensure_component_node(host, &ids, "translate").unwrap();
+            let (id, _, _) = semio_s_artifact_procedural_3d_transforms::ensure_component_node(host, &ids, "translate").unwrap();
             validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).unwrap();
             host.set_neuron_params("extrude", r#"{"distance":{"$schema":"number","value":0.7}}"#).unwrap();
             assert!(validate_cached_components(&host.host_snapshot, session, &ids, None).is_err());

@@ -1,11 +1,11 @@
 //! ⚖️ Numeric worked examples + path/remedy/perturb laws for EN 1996 masonry checks.
 
-use crate::app_surface::{get_value_at_path, parse_path, set_value_at_path};
-use crate::artifact_schema::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
-use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
-use crate::document::{AnnexChoice, CheckReport, CheckStatus};
-use crate::{En1996Snapshot, MasonryClass, UnitMaterial};
-use crate::field_meta::en1996_field_meta;
+use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_at_path};
+use semio_s_artifact_norm_en1996_schema::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
+use semio_s_artifact_norm_en1996_io::text::snapshot::parse_dsl;
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus};
+use semio_s_artifact_norm_en1996_model::{En1996Snapshot, MasonryClass, UnitMaterial};
+use semio_s_artifact_norm_en1996_editor::field_meta::en1996_field_meta;
 
 #[test]
 fn de_na_fk_clay_group1_m10() {
@@ -490,7 +490,6 @@ fn rho_n_four_sided_less_than_two() {
     assert!(rho_n(4, 2.75, 5.0) < rho_n(2, 2.75, 5.0));
 }
 
-
 #[test]
 fn duplicate_wall_id_fails_integrity() {
     let mut doc = En1996Snapshot::compliant_clay_wall();
@@ -523,13 +522,13 @@ fn duplicate_load_case_opening_and_concentrated_ids_fail_integrity() {
     dup_op.id = wall.openings[0].id.clone();
     wall.openings.push(dup_op);
     wall.load_cases[0].concentrated = vec![
-        crate::ConcentratedLoad {
+        semio_s_artifact_norm_en1996_model::ConcentratedLoad {
             id: "point-a".into(),
             force_n: 10_000.0,
             bearing_area_m2: 0.04,
             bearing_length_m: 0.20,
         },
-        crate::ConcentratedLoad {
+        semio_s_artifact_norm_en1996_model::ConcentratedLoad {
             id: "point-a".into(),
             force_n: 5_000.0,
             bearing_area_m2: 0.02,

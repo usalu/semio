@@ -1,6 +1,6 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `duplicate-layer`.
 
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
@@ -17,6 +17,6 @@ pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, DrawingSnapshot>,
         return Ok(Emit::default());
     }
     let admission=doc.operation()?;
-    let mutations=session.with_identity_control(|control|crate::commands::edit_selection::plan(doc.snapshot,&[payload.layer_id.clone()],"duplicate",admission,control))?;
+    let mutations=session.with_identity_control(|control|crate::edit_selection::plan(doc.snapshot,&[payload.layer_id.clone()],"duplicate",admission,control))?;
     Ok(Emit::mutations(mutations))
 }

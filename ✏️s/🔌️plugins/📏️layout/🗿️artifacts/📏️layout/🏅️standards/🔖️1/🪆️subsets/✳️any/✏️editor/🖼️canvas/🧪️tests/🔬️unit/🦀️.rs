@@ -1,9 +1,9 @@
 use super::*;
-use crate::editor::layout::LayoutInteractionSnapshot;
+use crate::LayoutInteractionSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let config = LayoutWindowConfig { active_page_id: "no-such-page".into(), ..LayoutWindowConfig::default() };
     let page = active_page(&doc, &config).expect("falls back to first page");
     assert_eq!(page.id, doc.pages[0].id);
@@ -11,7 +11,7 @@ async fn active_page_falls_back_to_first_page_when_config_id_unresolved() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_renders_story_text_not_glyph_bars() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let config = LayoutWindowConfig::default();
     let transient = LayoutWindowTransient::default();
     let interaction = LayoutInteractionSnapshot::default();
@@ -22,9 +22,9 @@ async fn canvas_layers_renders_story_text_not_glyph_bars() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_splits_a_styled_story_into_spans() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    doc.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: Some(10.0) });
-    doc.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.character_styles.push(semio_s_artifact_layout_layout_model::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: Some(10.0) });
+    doc.stories[0].style_runs.push(semio_s_artifact_layout_layout_model::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
     assert!(json.contains("frame-text-1.span.0.text"), "{json}");
     assert!(json.contains("frame-text-1.span.1.text"), "{json}");
@@ -40,7 +40,7 @@ async fn canvas_layers_splits_a_styled_story_into_spans() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_renders_the_page_background() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let config = LayoutWindowConfig::default();
     let transient = LayoutWindowTransient::default();
     let interaction = LayoutInteractionSnapshot::default();
@@ -50,7 +50,7 @@ async fn canvas_layers_renders_the_page_background() {
 
 #[semio_framework_async_macros::async_test]
 async fn selected_and_hovered_frames_get_chrome_strokes() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let config = LayoutWindowConfig::default();
     let transient = LayoutWindowTransient::default();
     let selected = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], hovered_ids: vec!["frame-text-1".into()] };
@@ -61,10 +61,10 @@ async fn selected_and_hovered_frames_get_chrome_strokes() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_draw_a_rotated_frame() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("frame");
-    let crate::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
-    *bounds = crate::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
+    let semio_s_artifact_layout_layout_model::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
+    *bounds = semio_s_artifact_layout_layout_model::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
     let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
     assert!(json.contains("frame-1"), "the rotated frame is still painted: {json}");
     assert!(json.contains("\"to\":[40.0,60.0]") || json.contains("\"to\":[60.0,-40.0]") || json.contains("40.0"), "rotation moves a corner off the axis-aligned box: {json}");
@@ -72,11 +72,11 @@ async fn canvas_layers_draw_a_rotated_frame() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_rotated_proxy_is_not_painted_as_an_upright_image() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     doc.links[0].state = Some("ready".into());
     doc.links[0].proxy_data_url = Some("data:image/png;base64,AA==".into());
     let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
-    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
     let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
     assert!(!json.contains("data:image/png;base64,AA=="), "a rotated proxy is not an upright bitmap: {json}");
@@ -85,7 +85,7 @@ async fn a_rotated_proxy_is_not_painted_as_an_upright_image() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_paints_a_ready_proxy_as_an_image() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     doc.links[0].state = Some("ready".into());
     doc.links[0].proxy_data_url = Some("data:image/png;base64,AA==".into());
     let config = LayoutWindowConfig::default();
@@ -95,7 +95,7 @@ async fn canvas_layers_paints_a_ready_proxy_as_an_image() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_omits_story_text_when_zoomed_out() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mut config = LayoutWindowConfig::default();
     config.camera.zoom = 0.1;
     let json = canvas_layers(&doc, &config, &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
@@ -107,7 +107,7 @@ async fn canvas_layers_omits_story_text_when_zoomed_out() {
 /// draft-07 validator; select, or an empty selection, arms none.
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_arms_a_world_gumball_for_the_selection() {
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let selected = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], hovered_ids: Vec::new() };
     let mut transform = LayoutWindowConfig::default();
     transform.active_utility = "transform".into();
@@ -126,7 +126,7 @@ async fn canvas_layers_arms_a_world_gumball_for_the_selection() {
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_labels_a_linked_pdf_when_it_has_no_proxy() {
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     doc.links[0].artifact_kind = "s.stdio.pdf".into();
     doc.links[0].artifact_ref = "sheet".into();
     let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
@@ -144,11 +144,11 @@ async fn canvas_layers_turns_a_rotated_proxy() {
     image.height = 1;
     image.pixels = vec![255, 0, 0, 255, 0, 0, 255, 255];
     let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&image).expect("png");
-    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     doc.links[0].state = Some("ready".into());
     doc.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
     let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
-    let crate::Frame::Image { bounds, .. } = frame else { panic!("image") };
+    let semio_s_artifact_layout_layout_model::Frame::Image { bounds, .. } = frame else { panic!("image") };
     bounds.rotation = std::f64::consts::FRAC_PI_2;
     let json = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);
     let layers: serde_json::Value = serde_json::from_str(&json).expect("layers");
@@ -193,9 +193,9 @@ fn canvas_layers_emits_an_embedded_drawing_png() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
-    document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
+    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &content));
     let json = canvas_layers(&document, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
     assert!(json.contains("data:image/png;base64,"), "{json}");
     assert!(json.contains("\"x\":146.0") || json.contains("\"x\":146"), "{json}");

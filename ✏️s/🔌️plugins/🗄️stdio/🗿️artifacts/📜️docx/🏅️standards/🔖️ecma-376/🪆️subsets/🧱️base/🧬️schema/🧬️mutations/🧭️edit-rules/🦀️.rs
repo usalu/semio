@@ -269,7 +269,3 @@ pub fn special(event: &SnapshotEditEvent, snapshot: &DocxSnapshot) -> Result<Opt
         _ => Ok(None),
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

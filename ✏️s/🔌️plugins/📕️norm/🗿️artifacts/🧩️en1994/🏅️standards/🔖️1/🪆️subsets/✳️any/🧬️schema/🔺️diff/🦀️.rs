@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::En1994Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
@@ -21,7 +29,7 @@ pub struct En1994BeamsActionsPatch {
 }
 
 impl En1994BeamsActionsPatch {
-    fn apply_to_row(&self, row: &mut crate::CharacteristicAction) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::CharacteristicAction) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.q_area_pa {
             row.q_area_pa = value.clone();
         }
@@ -34,7 +42,7 @@ impl En1994BeamsActionsPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CharacteristicAction, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::CharacteristicAction, index: usize) -> Self {
         Self {
             index,
             q_area_pa: self.q_area_pa.as_ref().map(|_| row.q_area_pa.clone()),
@@ -67,7 +75,7 @@ impl En1994BeamsActionsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::CharacteristicAction]) -> Result<Vec<crate::CharacteristicAction>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CharacteristicAction]) -> Result<Vec<semio_s_artifact_norm_en1994_model::CharacteristicAction>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -86,7 +94,7 @@ impl En1994BeamsActionsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::CharacteristicAction]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CharacteristicAction]) -> Self {
         Self {
             modified: self.modified.iter().filter_map(|patch| base.get(patch.index).map(|row| patch.inverse_from_row(row, patch.index))).collect(),
         }
@@ -123,7 +131,7 @@ pub struct En1994BeamsPatch {
 }
 
 impl En1994BeamsPatch {
-    fn apply_to_row(&self, row: &mut crate::CompositeBeam) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::CompositeBeam) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.span_m {
             row.span_m = value.clone();
         }
@@ -188,7 +196,7 @@ impl En1994BeamsPatch {
         self.actions = self.actions.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse_from_row(&self, row: &crate::CompositeBeam, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::CompositeBeam, index: usize) -> Self {
         Self {
             index,
             span_m: self.span_m.as_ref().map(|_| row.span_m.clone()),
@@ -211,7 +219,7 @@ impl En1994BeamsPatch {
 #[value(rename_all = "camelCase", default)]
 pub struct En1994BeamsInserted {
     pub index: usize,
-    pub row: crate::CompositeBeam,
+    pub row: semio_s_artifact_norm_en1994_model::CompositeBeam,
 }
 
 /// 🔺️ Positional diff of `beams` rows: removed base positions, inserted rows at final positions and modified base-position patches, each strictly ascending.
@@ -241,7 +249,7 @@ impl En1994BeamsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::CompositeBeam]) -> Result<Vec<crate::CompositeBeam>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeBeam]) -> Result<Vec<semio_s_artifact_norm_en1994_model::CompositeBeam>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -275,7 +283,7 @@ impl En1994BeamsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::CompositeBeam]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeBeam]) -> Self {
         let final_index = |index: usize| {
             let mut position = index - self.removed.iter().filter(|removed| **removed < index).count();
             for inserted in &self.inserted {
@@ -370,7 +378,7 @@ pub struct En1994ColumnsActionsPatch {
 }
 
 impl En1994ColumnsActionsPatch {
-    fn apply_to_row(&self, row: &mut crate::ColumnAction) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::ColumnAction) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.n_k_n {
             row.n_k_n = value.clone();
         }
@@ -383,7 +391,7 @@ impl En1994ColumnsActionsPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::ColumnAction, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::ColumnAction, index: usize) -> Self {
         Self {
             index,
             n_k_n: self.n_k_n.as_ref().map(|_| row.n_k_n.clone()),
@@ -416,7 +424,7 @@ impl En1994ColumnsActionsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::ColumnAction]) -> Result<Vec<crate::ColumnAction>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::ColumnAction]) -> Result<Vec<semio_s_artifact_norm_en1994_model::ColumnAction>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -435,7 +443,7 @@ impl En1994ColumnsActionsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::ColumnAction]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::ColumnAction]) -> Self {
         Self {
             modified: self.modified.iter().filter_map(|patch| base.get(patch.index).map(|row| patch.inverse_from_row(row, patch.index))).collect(),
         }
@@ -465,7 +473,7 @@ pub struct En1994ColumnsPatch {
 }
 
 impl En1994ColumnsPatch {
-    fn apply_to_row(&self, row: &mut crate::CompositeColumn) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::CompositeColumn) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.kind {
             row.kind = value.clone();
         }
@@ -488,7 +496,7 @@ impl En1994ColumnsPatch {
         self.actions = self.actions.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse_from_row(&self, row: &crate::CompositeColumn, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::CompositeColumn, index: usize) -> Self {
         Self {
             index,
             kind: self.kind.as_ref().map(|_| row.kind.clone()),
@@ -504,7 +512,7 @@ impl En1994ColumnsPatch {
 #[value(rename_all = "camelCase", default)]
 pub struct En1994ColumnsInserted {
     pub index: usize,
-    pub row: crate::CompositeColumn,
+    pub row: semio_s_artifact_norm_en1994_model::CompositeColumn,
 }
 
 /// 🔺️ Positional diff of `columns` rows: removed base positions, inserted rows at final positions and modified base-position patches, each strictly ascending.
@@ -534,7 +542,7 @@ impl En1994ColumnsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::CompositeColumn]) -> Result<Vec<crate::CompositeColumn>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeColumn]) -> Result<Vec<semio_s_artifact_norm_en1994_model::CompositeColumn>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -568,7 +576,7 @@ impl En1994ColumnsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::CompositeColumn]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeColumn]) -> Self {
         let final_index = |index: usize| {
             let mut position = index - self.removed.iter().filter(|removed| **removed < index).count();
             for inserted in &self.inserted {
@@ -663,7 +671,7 @@ pub struct En1994SlabsActionsPatch {
 }
 
 impl En1994SlabsActionsPatch {
-    fn apply_to_row(&self, row: &mut crate::CharacteristicAction) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::CharacteristicAction) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.q_area_pa {
             row.q_area_pa = value.clone();
         }
@@ -676,7 +684,7 @@ impl En1994SlabsActionsPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CharacteristicAction, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::CharacteristicAction, index: usize) -> Self {
         Self {
             index,
             q_area_pa: self.q_area_pa.as_ref().map(|_| row.q_area_pa.clone()),
@@ -709,7 +717,7 @@ impl En1994SlabsActionsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::CharacteristicAction]) -> Result<Vec<crate::CharacteristicAction>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CharacteristicAction]) -> Result<Vec<semio_s_artifact_norm_en1994_model::CharacteristicAction>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -728,7 +736,7 @@ impl En1994SlabsActionsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::CharacteristicAction]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CharacteristicAction]) -> Self {
         Self {
             modified: self.modified.iter().filter_map(|patch| base.get(patch.index).map(|row| patch.inverse_from_row(row, patch.index))).collect(),
         }
@@ -758,7 +766,7 @@ pub struct En1994SlabsPatch {
 }
 
 impl En1994SlabsPatch {
-    fn apply_to_row(&self, row: &mut crate::CompositeSlab) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_en1994_model::CompositeSlab) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.concrete_thickness_m {
             row.concrete_thickness_m = value.clone();
         }
@@ -781,7 +789,7 @@ impl En1994SlabsPatch {
         self.actions = self.actions.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse_from_row(&self, row: &crate::CompositeSlab, index: usize) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_en1994_model::CompositeSlab, index: usize) -> Self {
         Self {
             index,
             concrete_thickness_m: self.concrete_thickness_m.as_ref().map(|_| row.concrete_thickness_m.clone()),
@@ -797,7 +805,7 @@ impl En1994SlabsPatch {
 #[value(rename_all = "camelCase", default)]
 pub struct En1994SlabsInserted {
     pub index: usize,
-    pub row: crate::CompositeSlab,
+    pub row: semio_s_artifact_norm_en1994_model::CompositeSlab,
 }
 
 /// 🔺️ Positional diff of `slabs` rows: removed base positions, inserted rows at final positions and modified base-position patches, each strictly ascending.
@@ -827,7 +835,7 @@ impl En1994SlabsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::CompositeSlab]) -> Result<Vec<crate::CompositeSlab>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeSlab]) -> Result<Vec<semio_s_artifact_norm_en1994_model::CompositeSlab>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index)) && Self::strictly_ascending(self.modified.iter().map(|patch| patch.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -861,7 +869,7 @@ impl En1994SlabsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::CompositeSlab]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_en1994_model::CompositeSlab]) -> Self {
         let final_index = |index: usize| {
             let mut position = index - self.removed.iter().filter(|removed| **removed < index).count();
             for inserted in &self.inserted {
@@ -953,7 +961,7 @@ impl En1994SlabsRows {
 #[artifact_schema(id = "s.norm.en1994")]
 pub struct En1994Diff {
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub structure_kind: Option<String>,
     #[state(artifact)]
@@ -1068,6 +1076,7 @@ impl protocol::DiffAlgebra<En1994Snapshot> for En1994Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

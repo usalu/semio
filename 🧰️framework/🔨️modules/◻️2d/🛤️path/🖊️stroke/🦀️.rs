@@ -1,5 +1,5 @@
 //! 🖊️ Stroke regions for https://www.w3.org/TR/SVG11/painting.html#StrokeProperties.
-use crate::Vec2;
+use semio_framework_2d_engine::Vec2;
 use std::collections::VecDeque;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum StrokeGeometryCap {Butt,Round,Square}
@@ -162,7 +162,7 @@ impl StrokeOutlineJob {
  pub fn into_result(self)->Result<Vec<Vec<Vec2>>,StrokeOutlineError> {self.result()?;Ok(self.polygons)}
 }
 semio_framework_value::artifact_retire_leaf!(StrokeGeometryCap,StrokeGeometryJoin,StrokeOutlinePhase,ArcNode,Stage);
-crate::physical_work_retirement!(StrokeOutlineRetirement,StrokeOutlineJob,StrokeOutlineError,|_:&str|StrokeOutlineError::Invalid("Stroke retirement refused its physical grant"));
+semio_framework_2d_retire::physical_work_retirement!(StrokeOutlineRetirement,StrokeOutlineJob,StrokeOutlineError,|_:&str|StrokeOutlineError::Invalid("Stroke retirement refused its physical grant"));
 impl StrokeOutlineJob{
  /// 🧹️ Moves complete output unchanged and retains interrupted owners for work-granted cleanup.
  pub fn into_retirement(mut self)->(StrokeOutlineRetirement,Option<Vec<Vec<Vec2>>>){let output=if self.stage==Stage::Done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.polygons))}else{None};self.cancelled=true;self.active=None;(StrokeOutlineRetirement::new(self),output)}

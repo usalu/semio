@@ -10,9 +10,10 @@
 //! "Attach a set-like member … inverse: remove").
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::{SemioImageSnapshot, RasterSnapshot};
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️AddLayerAsset
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -24,15 +25,15 @@ pub mod mutation {
         pub asset: SemioImageSnapshot,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for AddLayerAsset {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for AddLayerAsset where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "asset", kind: "add-layer-asset", record: "AddedLayerAsset" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::add_layer_asset::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::add_layer_asset::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,3 +48,13 @@ pub mod mutation {
 }
 
 pub use mutation::AddLayerAsset;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/🖼️declines/🦀️.rs"]
+mod tests_declines_to_reattach_an_asset_already_on_the_document;
+//#endregion 🪢️TaxonomyMounts

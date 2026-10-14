@@ -1,6 +1,6 @@
-use super::*;
-use crate::editor::block3d::terminology::block3d_labels;
-use crate::editor::block3d::unit_tests::context::{new_app, render as render_body};
+use crate::panels::document::*;
+use semio_s_artifact_block_3d_editor_terminology::block3d_labels;
+use crate::unit_tests::context::{new_app, render as render_body};
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ fn window_view(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> Vi
 fn oversized_document() -> Block3dSnapshot {
     let mut document = Block3dSnapshot::default();
     document.representations = (0..40)
-        .map(|index| crate::BlockRepresentation {
+        .map(|index| semio_s_plugin_block::BlockRepresentation {
             id: format!("rep-{index:03}"),
             name: format!("Representation {index}"),
             mesh_url: Some(format!("mesh://rep-{index:03}")),
@@ -53,7 +53,7 @@ fn oversized_document() -> Block3dSnapshot {
         })
         .collect();
     document.vortices = (0..160)
-        .map(|index| crate::Block3dVortexTemplate {
+        .map(|index| semio_s_artifact_block_3d_model::Block3dVortexTemplate {
             id: format!("vortex-{index:03}"),
             vortex_kind: format!("kind-{:03}", index % 40),
             position: [0.0, 0.0, 0.0],

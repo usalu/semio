@@ -1,7 +1,15 @@
 //! 🧬️ Din4108 snapshot schema — complete building-envelope subject.
 
-use crate::document::ClimateZoneDe;
-use crate::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::ClimateZoneDe;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -37,7 +45,6 @@ pub struct Din4108Snapshot {
     #[state(artifact)]
     pub thermal_bridges: Vec<ThermalBridge>,
 }
-
 
 impl Default for Din4108Snapshot {
     fn default() -> Self {
@@ -113,7 +120,6 @@ impl Din4108Snapshot {
                         LayerDocument { id: "concrete".into(), material_id: "concrete".into(), thickness_m: 0.16, lambda: 2.1, mu: 80.0, density: 2300.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
                     ],
                 },
-
 
                 EnvelopeElement {
                     id: "floor-ground".into(),
@@ -206,16 +212,142 @@ impl Din4108Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+/// 🧩 Parallel fraction of an inhomogeneous ISO 6946 §6.7 layer (area share of one material).
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct LayerSegment {
+    pub id: String,
+    pub material_id: String,
+    pub fraction: f64,
+    pub lambda: f64,
+    pub mu: f64,
+    pub density: f64,
+}
 
+/// 🧱 One layer in an envelope build-up (interior → exterior), SI base units.
+/// Empty `segments` = homogeneous; non-empty = ISO 6946 §6.7 upper/lower-bound method.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct LayerDocument {
+    pub id: String,
+    pub material_id: String,
+    #[dsl(unit = "m")]
+    pub thickness_m: f64,
+    pub lambda: f64,
+    pub mu: f64,
+    pub density: f64,
+    /// DIN 4108-10 Table 1 application-type code (DAD, WAB, …).
+    #[cfg_attr(test, serde(default))]
+    pub application_type: String,
+    /// DIN 4108-10 compressive / mechanical property class (dh/ds/dm/dk/dx).
+    #[cfg_attr(test, serde(default))]
+    pub compressive_class: String,
+    /// DIN 4108-10 water-absorption class (wk/wf/wd).
+    #[cfg_attr(test, serde(default))]
+    pub water_class: String,
+    /// DIN 4108-10 tensile class (tk/tf).
+    #[cfg_attr(test, serde(default))]
+    pub tensile_class: String,
+    /// DIN 4108-10 acoustic class (sh/sm/sg).
+    #[cfg_attr(test, serde(default))]
+    pub acoustic_class: String,
+    #[dsl(table)]
+    #[cfg_attr(test, serde(default))]
+    pub segments: Vec<LayerSegment>,
+}
 
+/// 🪟 Transparent opening contribution for DIN 4108-2 §8 summer heat protection.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ZoneWindow {
+    pub id: String,
+    pub orientation: String,
+    #[dsl(unit = "deg")]
+    pub inclination_deg: f64,
+    #[dsl(unit = "m2")]
+    pub area_m2: f64,
+    pub g_value: f64,
+    pub shading_fc: f64,
+}
 
+/// 🚪 Thermal zone / room used for summer heat protection aggregation.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ThermalZone {
+    pub id: String,
+    #[dsl(unit = "m2")]
+    pub floor_area_m2: f64,
+    pub heaviness: String,
+    pub night_ventilation: String,
+    #[dsl(table)]
+    pub windows: Vec<ZoneWindow>,
+}
 
+/// 🏛️ Opaque or transparent envelope element with ISO 6946 layer stack (incl. ΔU_g/ΔU_f/ΔU_r corrections).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct EnvelopeElement {
+    pub id: String,
+    pub kind: String,
+    pub zone_id: String,
+    pub orientation_deg: f64,
+    pub inclination_deg: f64,
+    pub adjacent: String,
+    #[dsl(unit = "m2")]
+    pub area_m2: f64,
+    pub delta_u_g: f64,
+    pub delta_u_f: f64,
+    pub delta_u_r: f64,
+    #[dsl(table)]
+    pub layers: Vec<LayerDocument>,
+}
 
+/// 🌉️ Linear thermal bridge (DIN 4108 Beiblatt 2).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ThermalBridge {
+    pub id: String,
+    pub psi: f64,
+    #[dsl(unit = "m")]
+    pub length_m: f64,
+    pub bb2_type: String,
+}
 
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
+/// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
+/// artifact node, not the app, owns its own kind declaration.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("din4108", "DIN 4108", DIN4108_DOCUMENT_SCHEMA)
+}
 
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const DIN4108_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.din4108", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
-
-//#endregion 🌉️ExternalCodecBridge
+pub const DIN4108_DOCUMENT_SCHEMA: &str = "semio.norm.din4108/v1";

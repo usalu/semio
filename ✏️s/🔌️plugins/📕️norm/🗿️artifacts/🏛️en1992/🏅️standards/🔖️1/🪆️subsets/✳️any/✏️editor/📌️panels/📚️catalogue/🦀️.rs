@@ -6,7 +6,7 @@ use semio_framework_plugin::PanelTabDefinition;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use crate::{ConcreteGrade, ReinforcementGrade};
+use semio_s_artifact_norm_en1992_model::{ConcreteGrade, ReinforcementGrade};
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1992.play.catalogue";
@@ -14,7 +14,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1992.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -79,11 +79,10 @@ pub fn catalogue_markdown() -> String {
 }
 //#endregion 📚️Materials
 
-
 /// 📚️ Normative materials tables (EN 1992-1-1 Table 3.1 + B500).
-pub fn reference_tables() -> Vec<crate::app_surface::CatalogueTable> {
-    use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-    use crate::document::ClauseId;
+pub fn reference_tables() -> Vec<semio_s_plugin_norm_app_surface::CatalogueTable> {
+    use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+    use semio_s_plugin_norm_compliance::ClauseId;
     let concrete_cols = vec![
         CatalogueColumn { id: "class", label_en: "Class", label_de: "Klasse", unit: None },
         CatalogueColumn { id: "fck", label_en: "f_ck", label_de: "f_ck", unit: Some("MPa") },
@@ -149,7 +148,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

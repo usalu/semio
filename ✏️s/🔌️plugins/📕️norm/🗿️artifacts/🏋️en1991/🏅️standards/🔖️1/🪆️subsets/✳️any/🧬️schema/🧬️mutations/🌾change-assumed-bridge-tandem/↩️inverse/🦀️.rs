@@ -1,9 +1,9 @@
 //! Inverse for `change-assumed-bridge-tandem`.
-use super::ChangeAssumedBridgeTandem;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAssumedBridgeTandem, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_assumed_bridge_tandem::ChangeAssumedBridgeTandem;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAssumedBridgeTandem, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_assumed_bridge_tandem::ChangeAssumedBridgeTandem> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAssumedBridgeTandem(ChangeAssumedBridgeTandem { new_assumed_bridge_tandem: base.assumed_bridge_tandem })]
+    vec![Op::from(ChangeAssumedBridgeTandem { new_assumed_bridge_tandem: base.assumed_bridge_tandem })]
 
     })())
 }

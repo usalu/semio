@@ -1,8 +1,8 @@
 //! 🔺️ `replace-zones` sparse diff.
 
-use crate::mutations::replace_zones::ReplaceZones;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599ZonesRows};
+use crate::replace_zones::ReplaceZones;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599ZonesRows};
 
 pub fn diff(payload: &ReplaceZones, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
     if base.zones == payload.new_zones {

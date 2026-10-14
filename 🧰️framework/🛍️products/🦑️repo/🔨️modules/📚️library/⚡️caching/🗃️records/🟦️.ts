@@ -67,24 +67,17 @@ function packName(): string {
 }
 
 /** ✍️ Publishes one pack: the bytes first, then the index by rename, so a reader that sees the index sees the whole pack. */
-function writePack(directory: string, records: Iterable<readonly [string, Uint8Array]>): RecordStoreIndex {
-  const name = packName(), packPath = join(directory, `${name}.pack`), temporary = `${packPath}.${randomBytes(4).toString("hex")}.tmp`;
-  const rows: [string, number, number, string][] = [];
-  const fd = openSync(temporary, "w");
-  let offset = 0;
-  try {
-    for (const [key, value] of records) {
-      for (let written = 0; written < value.byteLength;) written += writeSync(fd, value, written, value.byteLength - written);
-      rows.push([key, offset, value.byteLength, valueDigest(value)]);
-      offset += value.byteLength;
-    }
-  } finally { closeSync(fd); }
-  renameSync(temporary, packPath);
-  const index: RecordStoreIndex = { format: RECORD_STORE_FORMAT, pack: name, packBytes: offset, records: rows };
-  const indexPath = join(directory, `${name}.idx`), indexTemporary = `${indexPath}.${randomBytes(4).toString("hex")}.tmp`;
-  writeFileSync(indexTemporary, JSON.stringify(index));
-  renameSync(indexTemporary, indexPath);
-  return index;
+/** 🎚️ Admits complete optional pack peaks before any bytes are published. */
+export interface RecordStorePublicationV1 {readonly peakBytes:number;readonly retainedDeltaBytes:number}
+export interface RecordStoreOptionsV1 {readonly publication?:(plan:RecordStorePublicationV1,write:()=>void)=>boolean}
+
+function writePack(directory:string,records:Iterable<readonly[string,Uint8Array]>,options:RecordStoreOptionsV1,retiredBytes=0,retire=()=>{}):RecordStoreIndex|undefined {
+ const values=[...records],name=packName(),packPath=join(directory,`${name}.pack`),temporary=`${packPath}.${randomBytes(4).toString("hex")}.tmp`,rows:[string,number,number,string][]=[];let offset=0;
+ for(const[key,value]of values){rows.push([key,offset,value.byteLength,valueDigest(value)]);offset+=value.byteLength;}
+ const index:RecordStoreIndex={format:RECORD_STORE_FORMAT,pack:name,packBytes:offset,records:rows},image=JSON.stringify(index),indexPath=join(directory,`${name}.idx`),indexTemporary=`${indexPath}.${randomBytes(4).toString("hex")}.tmp`,bytes=offset+Buffer.byteLength(image);
+ const write=()=>{const fd=openSync(temporary,"wx");try{for(const[,value]of values)for(let written=0;written<value.byteLength;)written+=writeSync(fd,value,written,value.byteLength-written);}finally{closeSync(fd);}renameSync(temporary,packPath);writeFileSync(indexTemporary,image,{flag:"wx"});renameSync(indexTemporary,indexPath);retire();};
+ if(options.publication?!options.publication({peakBytes:bytes,retainedDeltaBytes:bytes-retiredBytes},write):(write(),false))return undefined;
+ return index;
 }
 
 /** 🧹️ Removes one file, tolerating it being gone or held open (a later compaction retries). */
@@ -93,7 +86,7 @@ function removeQuietly(path: string): void {
 }
 
 /** 📂️ Opens the store rooted at `directory` (created on demand), loading every complete pack index present. */
-export function openRecordStore(directory: string): RecordStore {
+export function openRecordStore(directory: string, options:RecordStoreOptionsV1={}): RecordStore {
   const root = resolve(directory);
   mkdirSync(root, { recursive: true });
   const locations = new Map<string, Location>(), packs = new Set<string>(), descriptors = new Map<string, number | null>();
@@ -152,7 +145,8 @@ export function openRecordStore(directory: string): RecordStore {
     },
     flush() {
       if (pending.size === 0) return;
-      const index = writePack(root, [...pending]);
+      const index = writePack(root, [...pending],options);
+      if(!index){pending.clear();pendingBytes=0;return;}
       packs.add(index.pack);
       for (const [key, offset, length, digest] of index.records) { locations.set(key, { pack: index.pack, offset, length, digest }); damaged.delete(key); }
       pending.clear();
@@ -161,23 +155,17 @@ export function openRecordStore(directory: string): RecordStore {
     retainAccessed() {
       store.flush();
       const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of [...accessed].sort()) { const value = read(key); if (value !== undefined) yield [key, value]; } };
-      const index = writePack(root, live()), retired = [...packs].filter((pack) => pack !== index.pack);
-      for (const pack of retired) {
-        const fd = descriptors.get(pack);
-        if (typeof fd === "number") closeSync(fd);
-        descriptors.delete(pack);
-        removeQuietly(join(root, `${pack}.idx`));
-        removeQuietly(join(root, `${pack}.pack`));
-        packs.delete(pack);
-      }
+      const retired=[...packs],retiredBytes=retired.reduce((sum,pack)=>sum+statSync(join(root,`${pack}.idx`)).size+statSync(join(root,`${pack}.pack`)).size,0);
+      const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){const fd=descriptors.get(pack);if(typeof fd==="number")closeSync(fd);descriptors.delete(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
+      if(!index)return;
       locations.clear();
       for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: index.pack, offset, length, digest });
       packs.add(index.pack);
     },
     close() {
-      store.flush();
+      try{store.flush();}finally{
       for (const fd of descriptors.values()) if (typeof fd === "number") closeSync(fd);
-      descriptors.clear();
+      descriptors.clear();}
     },
     get stats() { return { hits, misses, puts, packs: packs.size, records: locations.size + pending.size, accessed: accessed.size }; },
   };

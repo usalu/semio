@@ -3,7 +3,7 @@
 //! windows, which only differ in which pane id they bind it to.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{puzzle2d_action, PUZZLE2D_LOD_MODE_AUTOMATIC};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use semio_framework_pack_json::Value;
 

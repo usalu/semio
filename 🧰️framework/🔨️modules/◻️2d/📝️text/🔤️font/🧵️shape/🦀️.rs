@@ -1,5 +1,5 @@
 //! 🪄️ Bounded actual OpenType feature records select borrowed lookup authority in original table order.
-use super::{FontFace,FontProgress,FontReader,reserve_slot};
+use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,reserve_slot};
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct FontLookup{pub index:u16,pub kind:u16,pub flags:u16,pub offset:usize,pub subtables:usize}
@@ -29,8 +29,6 @@ impl FontLookupPlanCursor{
 pub mod ligature;
 #[path="📍️mark/🦀️.rs"]
 pub mod mark;
-#[path="🌐️unicode/🦀️.rs"]
-pub mod unicode;
 #[path="📇️face/🦀️.rs"]
 pub mod face;
 #[path="🪄️substitute/🦀️.rs"]
@@ -41,3 +39,6 @@ pub mod class;
 pub mod layout;
 #[path="🧩️context/🦀️.rs"]
 pub mod context;
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-2d-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d viewer: the read-only viewer app, its view mode and preview window"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-procedural-core-semantic-ui = { workspace = true }
+semio-s-artifact-procedural-2d-io-text = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

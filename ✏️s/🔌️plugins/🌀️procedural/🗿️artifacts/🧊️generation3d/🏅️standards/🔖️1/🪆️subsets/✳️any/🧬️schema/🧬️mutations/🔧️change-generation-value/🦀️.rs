@@ -2,7 +2,6 @@
 //! map (single-field setter on a nested-addressed target, per `📓️taxonomy.md`'s `change` row).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ChangeGenerationValue
@@ -15,14 +14,17 @@ pub struct ChangeGenerationValue {
     pub new_value: semio_framework_value::DslValue,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeGenerationValue {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ChangeGenerationValue
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<ChangeGenerationValue>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_generation_value::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_generation_value::inverse::inverse(self, base)?
     

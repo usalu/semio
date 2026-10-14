@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🦑️repo 🗂️Bun workspace ownership",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run repo:test-workspace-ownership",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "🧹clean🛡️gates",
+      "order": 900.057071
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:workspace-ownership:caller\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "4ee7fa27ad7550970fce1a80876358c7bd33b9fe74d4fab96c0215ce9a0ba3b9",
+  "reason": "Genuine lock2 and frozen sync3 published fresh e85585d generation; original selected ownership laws now include explicit deletion and final Source drift",
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bso-gui3"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

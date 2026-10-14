@@ -1,6 +1,7 @@
-use super::*;
-use crate::standards::v1::subsets::any::io::{apply_iso16757_mutation};
-use crate::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
+use crate::*;
+use crate::mutation_bridge::apply_iso16757_mutation;
+use semio_s_artifact_norm_iso16757_model::{part_1, part_4, part_5, Cardinality, Names};
+use semio_s_plugin_norm_compliance::LocalizedText;
 use protocol::{Mutation, SemanticMutation};
 
 /// ↩️ Applies `operation` to `base`, then replays its inverse ON TOP OF the forward document —
@@ -37,9 +38,9 @@ async fn change_script_limits_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn change_and_remove_part_number_input_round_trip() {
     let base = Iso16757Snapshot::reference_fixture();
-    let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "new-key".into(), new_value: crate::CatalogueValue::Decimal { value: 7.0 } });
+    let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "new-key".into(), new_value: semio_s_artifact_norm_iso16757_model::CatalogueValue::Decimal { value: 7.0 } });
     let after_change = round_trip(&base, &change);
-    assert_eq!(after_change.part_number_inputs.get("new-key"), Some(&crate::CatalogueValue::Decimal { value: 7.0 }));
+    assert_eq!(after_change.part_number_inputs.get("new-key"), Some(&semio_s_artifact_norm_iso16757_model::CatalogueValue::Decimal { value: 7.0 }));
 
     let remove = Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "dn".into() });
     let after_remove = round_trip(&base, &remove);
@@ -49,7 +50,7 @@ async fn change_and_remove_part_number_input_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn change_part_number_input_undo_of_a_fresh_key_is_remove() {
     let base = Iso16757Snapshot::reference_fixture();
-    let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: crate::CatalogueValue::Boolean { value: true } });
+    let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: semio_s_artifact_norm_iso16757_model::CatalogueValue::Boolean { value: true } });
     let undo = change.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "fresh".into() })]);
 }
@@ -61,7 +62,7 @@ async fn selection_class_and_constraints_round_trip() {
     let after = round_trip(&base, &change_class);
     assert_eq!(after.selection.class_id, "class-other");
 
-    let constraint = part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::CatalogueValue::Text { value: "x".into() } };
+    let constraint = part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-other".into(), operator: part_1::ConstraintOperator::NotEqual, value: semio_s_artifact_norm_iso16757_model::CatalogueValue::Text { value: "x".into() } };
     let add = Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint, index: None });
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.selection.constraints.len(), base.selection.constraints.len() + 1);
@@ -187,38 +188,37 @@ async fn semantic_kinds_cover_every_variant() {
     assert_eq!(mutation.semantics().record, "RenamedCatalogue");
 }
 
-
 #[test]
 fn create_and_retire_product_class_roundtrip() {
-    let base = crate::Iso16757Snapshot::default();
-    let class = crate::part_1::ProductClass {
+    let base = semio_s_artifact_norm_iso16757_model::Iso16757Snapshot::default();
+    let class = semio_s_artifact_norm_iso16757_model::part_1::ProductClass {
         id: "class-test".into(),
         group_id: base.catalogue.product_groups[0].id.clone(),
         parent_id: None,
-        names: crate::Names {
-            preferred: crate::LocalizedText { locale: "en".into(), text: "Test".into() },
+        names: semio_s_artifact_norm_iso16757_model::Names {
+            preferred: semio_s_plugin_norm_compliance::LocalizedText { locale: "en".into(), text: "Test".into() },
             short_name: None,
-            alternatives: vec![crate::LocalizedText { locale: "de".into(), text: "Test".into() }],
+            alternatives: vec![semio_s_plugin_norm_compliance::LocalizedText { locale: "de".into(), text: "Test".into() }],
         },
         required_property_ids: Vec::new(),
         optional_property_ids: Vec::new(),
     };
-    let create = crate::Iso16757Mutation::IntroduceProductClass(crate::mutations::introduce_product_class::mutation::IntroduceProductClass {
+    let create = crate::Iso16757Mutation::IntroduceProductClass(semio_s_artifact_norm_iso16757_mut_products::introduce_product_class::mutation::IntroduceProductClass {
         product_class: class.clone(),
         index: None,
     });
-    let (after, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&base, &create).expect("create class");
+    let (after, _) = crate::mutation_bridge::apply_iso16757_mutation(&base, &create).expect("create class");
     assert!(after.catalogue.product_classes.iter().any(|c| c.id == "class-test"));
-    let delete = crate::Iso16757Mutation::RetireProductClass(crate::mutations::retire_product_class::mutation::RetireProductClass { id: "class-test".into() });
-    let (restored, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&after, &delete).expect("delete class");
+    let delete = crate::Iso16757Mutation::RetireProductClass(semio_s_artifact_norm_iso16757_mut_products::retire_product_class::mutation::RetireProductClass { id: "class-test".into() });
+    let (restored, _) = crate::mutation_bridge::apply_iso16757_mutation(&after, &delete).expect("delete class");
     assert!(restored.catalogue.product_classes.iter().all(|c| c.id != "class-test"));
 }
 
 #[test]
 fn create_and_retire_geometry_object_roundtrip() {
-    use crate::part_2::{GeometryNode, GeometryObject};
+    use semio_s_artifact_norm_iso16757_model::part_2::{GeometryNode, GeometryObject};
     use std::collections::BTreeMap;
-    let base = crate::Iso16757Snapshot::default();
+    let base = semio_s_artifact_norm_iso16757_model::Iso16757Snapshot::default();
     let obj = GeometryObject {
         id: "geom-test".into(),
         shape: Some(GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.1), ("height".into(), 0.1), ("depth".into(), 0.1)]) }),
@@ -228,12 +228,11 @@ fn create_and_retire_geometry_object_roundtrip() {
         ports: Vec::new(),
         parameter_bindings: BTreeMap::new(),
     };
-    let create = crate::Iso16757Mutation::IntroduceGeometryObject(crate::mutations::introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj });
-    let (after, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&base, &create).expect("create geom");
+    let create = crate::Iso16757Mutation::IntroduceGeometryObject(semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj });
+    let (after, _) = crate::mutation_bridge::apply_iso16757_mutation(&base, &create).expect("create geom");
     assert!(after.geometry.objects.contains_key("geom-test"));
-    let delete = crate::Iso16757Mutation::RetireGeometryObject(crate::mutations::retire_geometry_object::mutation::RetireGeometryObject { id: "geom-test".into() });
-    let (restored, _) = crate::standards::v1::subsets::any::io::apply_iso16757_mutation(&after, &delete).expect("delete geom");
+    let delete = crate::Iso16757Mutation::RetireGeometryObject(semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object::mutation::RetireGeometryObject { id: "geom-test".into() });
+    let (restored, _) = crate::mutation_bridge::apply_iso16757_mutation(&after, &delete).expect("delete geom");
     assert!(!restored.geometry.objects.contains_key("geom-test"));
 }
-
 

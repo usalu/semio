@@ -1,7 +1,7 @@
 {
  "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
  "monolith": "semio_s_artifact_procedural_generation3d",
- "package": "semio-s-artifact-procedural-3d-host-initialization",
+ "package": "semio-s-artifact-procedural-3d-initialization",
  "description": "Procedural generation3d retained store initialization: the snapshot copy cursor and the store initialization authority",
  "owner": "🔨️modules/🏠️host/🌱️initialization",
  "moves": [

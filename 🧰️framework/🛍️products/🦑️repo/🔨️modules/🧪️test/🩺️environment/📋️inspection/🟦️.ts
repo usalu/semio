@@ -39,6 +39,6 @@ export class DoctorScript extends Script {
       if (!ok && required) missing += 1;
     }
     console.log(`[doctor] cache root: ${relative(this.repoRoot, testCacheDir(this.repoRoot, taxonomy.testOutputChildDirs[0]!)).split(sep).join("/")}`);
-    if (missing > 0) process.exit(1);
+    if (missing > 0) {process.exitCode=1;return;}
   }
 }

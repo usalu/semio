@@ -1,16 +1,16 @@
 use super::*;
 
-pub(super) fn funded_normal_grant(job:&MeshTessellationJob)->protocol::value::retained_clone::RetainedCloneGrant{protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:job.next_normal_capacity_byte_demand(128).unwrap(),maximum_release_bytes:job.next_normal_release_byte_demand().unwrap(),maximum_depth:job.next_normal_depth_demand().unwrap()}}
+pub(super) fn funded_normal_grant(job:&MeshTessellationJob)->semio_framework_value::retained_clone::RetainedCloneGrant{semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:job.next_normal_capacity_byte_demand(128).unwrap(),maximum_release_bytes:job.next_normal_release_byte_demand().unwrap(),maximum_depth:job.next_normal_depth_demand().unwrap()}}
 
 pub(super) fn authored_source(law:&serde_json::Value)->HalfedgeMesh{
-    let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();let mut mesh=HalfedgeMesh::from_faces(&positions,&faces).unwrap();for record in law["metadataCapture"]["attributes"].as_array().unwrap(){let semantic=match record["semantic"].as_str().unwrap(){"normal"=>MeshAttributeSemantic::Normal,"uv"=>MeshAttributeSemantic::Uv,"color"=>MeshAttributeSemantic::Color,_=>panic!("unknown neutral semantic")};mesh.set_attribute(record["name"].as_str().unwrap().into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic,interpolation:semio_framework_mesh_engine::MeshAttributeInterpolation::Linear,values:record["values"].as_array().unwrap().iter().cloned().map(protocol::value::DslValue::from).collect(),indices:None}).unwrap();}mesh
+    let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();let mut mesh=HalfedgeMesh::from_faces(&positions,&faces).unwrap();for record in law["metadataCapture"]["attributes"].as_array().unwrap(){let semantic=match record["semantic"].as_str().unwrap(){"normal"=>MeshAttributeSemantic::Normal,"uv"=>MeshAttributeSemantic::Uv,"color"=>MeshAttributeSemantic::Color,_=>panic!("unknown neutral semantic")};mesh.set_attribute(record["name"].as_str().unwrap().into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic,interpolation:semio_framework_mesh_engine::MeshAttributeInterpolation::Linear,values:record["values"].as_array().unwrap().iter().cloned().map(semio_framework_value::DslValue::from).collect(),indices:None}).unwrap();}mesh
 }
 
 /// 🎨️ One original metadata slot captures an inline identity while original keys and sample allocations remain unchanged.
 #[test]
 fn original_mesh_tessellation_metadata_capture_borrows_exact_source_rows(){
     use crate::test_support::observe_tessellation_system as observe;
-    use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
+    use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
         let(mut job,source)=observe(||MeshTessellationJob::new(super::tessellation_metadata_tests::authored_source(&law)));

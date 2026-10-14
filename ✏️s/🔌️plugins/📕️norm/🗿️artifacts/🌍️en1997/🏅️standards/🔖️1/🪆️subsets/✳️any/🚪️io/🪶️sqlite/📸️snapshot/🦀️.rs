@@ -1,7 +1,8 @@
 //! 🌍️ Handwritten geotechnical entities and exact native binary64 states.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1997Snapshot;
-use crate::{SoilLayer,SpreadFoundation,FoundationLoadCase,Pile,PileTestProfile,RetainingWall,Slope,UpliftCase,document::AnnexChoice};
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_model::{SoilLayer, SpreadFoundation, FoundationLoadCase, Pile, PileTestProfile, RetainingWall, Slope, UpliftCase};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -75,8 +76,5 @@ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Res
 fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1997 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

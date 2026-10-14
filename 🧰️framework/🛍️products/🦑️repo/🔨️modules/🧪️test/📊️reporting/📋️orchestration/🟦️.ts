@@ -77,7 +77,7 @@ export class MetricsScript extends Script {
     const metricsPath = join(reportsDir(this.repoRoot), "📈️metrics.json");
     if (!existsSync(metricsPath)) {
       console.error(`[metrics] no run to report on — run \`bun ./📜️script.ts parity <level>\` first`);
-      process.exit(1);
+      {process.exitCode=1;return;}
     }
     const metrics = JSON.parse(readFileSync(metricsPath, "utf8")) as CoverageMetrics;
     const perImplementation = readImplementationCoverage(this.repoRoot);
@@ -86,6 +86,6 @@ export class MetricsScript extends Script {
     const threshold = Number(segments[segments.indexOf("--threshold") + 1] ?? 95);
     const failures = enforceMetricGates(metrics, perImplementation, Number.isFinite(threshold) ? threshold : 95);
     for (const failure of failures) console.error(`[metrics] ${failure}`);
-    if (failures.length > 0) process.exit(1);
+    if (failures.length > 0) {process.exitCode=1;return;}
   }
 }

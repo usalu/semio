@@ -102,6 +102,49 @@
    "files": [
     "✳️any/🧬️schema/🧬️mutations/",
     "✳️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/"
+   ],
+   "tests": [
+    {
+     "name": "scenes-object",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-pose",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-vortex",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-volume",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-reference",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-catalog",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🧪️tests/🦀️.rs"
+    },
+    {
+     "name": "scenes-selection",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🧪️tests/🦀️.rs"
+    }
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-host",
+   "module": "host::owned",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "files": [],
+   "description": "Puzzle 3d document-store authority",
+   "tests": [
+    {
+     "name": "store",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🦀️.rs"
+    }
    ]
   },
   {
@@ -212,9 +255,19 @@
   {
    "package": "semio-s-artifact-puzzle-3d-editor-session",
    "module": "editor::puzzle3d::session",
-   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎟️session/🦀️.rs",
    "files": [
-    "✏️editor/🧵️session/"
+    "✏️editor/🎟️session/"
+   ],
+   "tests": [
+    {
+     "name": "precompute-brush",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🧪️tests/🔬️unit/🦀️.rs"
+    },
+    {
+     "name": "precompute-fill",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs"
+    }
    ]
   },
   {
@@ -279,6 +332,24 @@
    "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
    "files": [
     "✳️any/✏️editor/"
+   ],
+   "tests": [
+    {
+     "name": "editor-surface",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"
+    },
+    {
+     "name": "editor-panels",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️panels/🦀️.rs"
+    },
+    {
+     "name": "editor-budgets",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️budgets/🦀️.rs"
+    },
+    {
+     "name": "editor-gestures",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️gestures/🦀️.rs"
+    }
    ]
   },
   {
@@ -287,6 +358,19 @@
    "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
    "files": [
     "✳️any/👁️viewer/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d",
+   "module": "",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+   "files": [],
+   "description": "Puzzle 3d artifact",
+   "tests": [
+    {
+     "name": "snapshot-sqlite",
+     "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🧪️tests/🗃️snapshot-sqlite/🦀️.rs"
+    }
    ]
   }
  ],
@@ -299,7 +383,8 @@
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-6-editor-dispatch.json",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-7-world-lane.json",
   ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-8-retained.json",
-  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-9-snapshot-fixes.json"
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-9-snapshot-fixes.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-10-artifact-kind.json"
  ],
  "facade_files": [
   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
@@ -323,5 +408,15 @@
   "🌎️hub/🧩️compositions/🎪️demonstrator",
   "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge",
   "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "workspace": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+ "plugin_workspace": "✏️s/🔌️plugins/🧩️puzzle",
+ "consumer_manifests": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+  "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+  "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.toml",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/Cargo.toml"
  ]
 }

@@ -42,6 +42,7 @@ exclude = [
     "🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d",
     "🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
     "🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+    "🔌️plugins/🌀️procedural/🫀️core",
     "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow",
     "🔌️plugins/🌊️flow/🧩️extensions/🏗️bim",
     "🔌️plugins/🌊️flow/🧩️extensions/📃️list",
@@ -237,6 +238,7 @@ exclude = [
     "🔌️plugins/🗒️note/🗿️artifacts/🗒️note",
     "🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust",
     "🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust",
+    "🔌️plugins/🧩️puzzle",
     "🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d",
     "🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
     "🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
@@ -277,6 +279,12 @@ member-manifests = [ "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml" 
   version = "0.1.0"
   edition = "2021"
   rust-version = "1.95"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-job]
 path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"

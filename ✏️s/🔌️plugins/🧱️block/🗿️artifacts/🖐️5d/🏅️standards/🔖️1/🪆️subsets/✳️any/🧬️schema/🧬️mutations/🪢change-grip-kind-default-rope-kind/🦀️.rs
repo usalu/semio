@@ -1,8 +1,7 @@
 //! 🪢 Block5d mutation — `ChangeGripKindDefaultRopeKind`: a grip-kind catalog row's `defaultRopeKind`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🪢 `change-grip-kind-default-rope-kind` payload.
@@ -19,19 +18,19 @@ pub struct ChangeGripKindDefaultRopeKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_grip_kind_default_rope_kind(id: String, new_default_rope_kind: String) -> Block5dMutation {
-    Block5dMutation::ChangeGripKindDefaultRopeKind(ChangeGripKindDefaultRopeKind { id, new_default_rope_kind })
+pub fn change_grip_kind_default_rope_kind<Op: From<crate::change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind>>(id: String, new_default_rope_kind: String) -> Op {
+    Op::from(ChangeGripKindDefaultRopeKind { id, new_default_rope_kind })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKindDefaultRopeKind {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for ChangeGripKindDefaultRopeKind where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "grip-kind", kind: "change-grip-kind-default-rope-kind", record: "ChangedGripKindDefaultRopeKind" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::change_grip_kind_default_rope_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_grip_kind_default_rope_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

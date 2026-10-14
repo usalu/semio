@@ -1,8 +1,8 @@
 //! 🔧 `change-step-enabled` payload — sets an id-keyed [`ProcessStep`]'s `enabled` flag to an
 //! explicit new value.
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ChangeStepEnabled
@@ -17,7 +17,7 @@ pub struct ChangeStepEnabled {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ChangeStepEnabled
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_step_enabled::ChangeStepEnabled>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::change_step_enabled::ChangeStepEnabled>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-enabled", record: "ChangedStepEnabled" };
 

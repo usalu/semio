@@ -1,13 +1,14 @@
 //! 🌋️ EN 1998 snapshot — complete scoped seismic subject (buildings + parts 2–6).
 
-use crate::{
-    DeGroundCombo, DeSeismicZone, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo,
-    En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998Member,
-};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
-
-
-
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 project snapshot.
@@ -48,8 +49,6 @@ pub struct En1998Snapshot {
     pub towers: Vec<En1998Tower>,
 }
 //#endregion 🔖️Snapshot
-
-
 
 impl Default for En1998Snapshot {
     fn default() -> Self {
@@ -369,16 +368,411 @@ impl En1998Snapshot {
     }
 
 }
-//#region 🌉️ExternalCodecBridge
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1998", "EN 1998", EN1998_DOCUMENT_SCHEMA)
+}
 
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1998_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1998", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
+pub const EN1998_DOCUMENT_SCHEMA: &str = "semio.norm.en1998/v1";
 
+/// 🌩 DE seismic zone per DIN EN 1998-1/NA (zones 0–3 only; schema-restricted).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum DeSeismicZone {
+    #[dsl(key = "zone0")]
+    Zone0,
+    #[dsl(key = "zone1")]
+    Zone1,
+    #[dsl(key = "zone2")]
+    Zone2,
+    #[dsl(key = "zone3")]
+    Zone3,
+}
 
+impl DeSeismicZone {
+    /// 📐️ Reference PGA a_gR [m/s²] per DIN EN 1998-1/NA Table NA.1 (2011).
+    pub fn a_gr(self) -> f64 {
+        match self {
+            Self::Zone0 => 0.0,
+            Self::Zone1 => 0.4,
+            Self::Zone2 => 0.6,
+            Self::Zone3 => 0.8,
+        }
+    }
 
+    pub fn as_u8(self) -> u8 {
+        match self {
+            Self::Zone0 => 0,
+            Self::Zone1 => 1,
+            Self::Zone2 => 2,
+            Self::Zone3 => 3,
+        }
+    }
+}
 
+/// 🪨 DE-NA ground/subsoil combination (DIN EN 1998-1/NA Table NA.4) — sole DE ground subject field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub enum DeGroundCombo {
+    #[dsl(key = "A-R")]
+    #[value(rename = "A-R")]
+    #[cfg_attr(test, serde(rename = "A-R"))]
+    AR,
+    #[dsl(key = "B-R")]
+    #[value(rename = "B-R")]
+    #[cfg_attr(test, serde(rename = "B-R"))]
+    BR,
+    #[dsl(key = "C-R")]
+    #[value(rename = "C-R")]
+    #[cfg_attr(test, serde(rename = "C-R"))]
+    CR,
+    #[dsl(key = "B-T")]
+    #[value(rename = "B-T")]
+    #[cfg_attr(test, serde(rename = "B-T"))]
+    BT,
+    #[dsl(key = "C-T")]
+    #[value(rename = "C-T")]
+    #[cfg_attr(test, serde(rename = "C-T"))]
+    CT,
+    #[dsl(key = "C-S")]
+    #[value(rename = "C-S")]
+    #[cfg_attr(test, serde(rename = "C-S"))]
+    CS,
+}
 
+impl DeGroundCombo {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::AR => "A-R",
+            Self::BR => "B-R",
+            Self::CR => "C-R",
+            Self::BT => "B-T",
+            Self::CT => "C-T",
+            Self::CS => "C-S",
+        }
+    }
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🌚️ Seismic site parameters (DE zones 0–3 + DE-NA ground/subsoil, or EN A–E spectrum).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Site {
+    pub seismic_zone: DeSeismicZone,
+    /// EN annex reference PGA [m/s²]. For DE annex, evaluate derives a_gR from `seismic_zone` (Table NA.1).
+    #[dsl(unit = "m/s2")]
+    pub a_gr: f64,
+    pub de_ground_combo: DeGroundCombo,
+    /// EN annex ground type A–E (EN 1998-1 Table 3.1). Empty under DE annex.
+    #[cfg_attr(test, serde(default, skip_serializing_if = "String::is_empty"))]
+    #[value(default, skip_serializing_if = "String::is_empty")]
+    pub en_ground_type: String,
+    /// EN annex spectrum type (`type1` | `type2`). Empty under DE annex.
+    #[cfg_attr(test, serde(default, skip_serializing_if = "String::is_empty"))]
+    #[value(default, skip_serializing_if = "String::is_empty")]
+    pub en_spectrum_type: String,
+    pub importance_class: String,
+}
+
+/// 🏗️ Lateral-force-resisting system for one horizontal direction.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998System {
+    pub id: String,
+    pub direction: String,
+    pub system_type: String,
+    pub material: String,
+    pub ductility_class: String,
+    pub q0: f64,
+    pub alpha_u_over_alpha_1: f64,
+    pub k_w: f64,
+    #[dsl(unit = "N")]
+    pub base_shear_resistance_n: f64,
+}
+
+/// 🏋️ Variable action Q_k,i — category selects ψ₂ (EN 1990 DE NA); φ from EN 1998-1 Table 4.2.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998VariableAction {
+    pub id: String,
+    /// Imposed-load category (A–H / snow / wind) for ψ₂.
+    pub category: String,
+    #[dsl(unit = "N")]
+    pub qk_n: f64,
+}
+
+/// 🏬 Storey — seismic mass from ΣG_k + Σψ_E,i·Q_k,i (EN 1998-1 §3.2.4 / EN 1990 6.12b).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Storey {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    /// Characteristic permanent action ΣG_k [N] on the storey.
+    #[dsl(unit = "N")]
+    pub permanent_gk_n: f64,
+    /// EN 1998-1 Table 4.2 correlated occupancies (φ = 0.8 storeys / 1.0 roof).
+    pub correlated_occupancy: bool,
+    #[dsl(table)]
+    pub variables: Vec<En1998VariableAction>,
+    pub stiffness_x: f64,
+    pub stiffness_y: f64,
+    #[dsl(unit = "m")]
+    pub centre_of_mass_x_m: f64,
+    #[dsl(unit = "m")]
+    pub centre_of_mass_y_m: f64,
+    #[dsl(unit = "m")]
+    pub centre_of_stiffness_x_m: f64,
+    #[dsl(unit = "m")]
+    pub centre_of_stiffness_y_m: f64,
+    #[dsl(unit = "m")]
+    pub drift_x_m: f64,
+    #[dsl(unit = "m")]
+    pub drift_y_m: f64,
+    /// Per-storey shear resistance V_Rd,i [N] for storey-force verification.
+    #[dsl(unit = "N")]
+    pub shear_resistance_n: f64,
+}
+
+/// 🧱 Member summary where material ductility rules apply.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Member {
+    pub id: String,
+    pub material: String,
+    pub role: String,
+    pub detailing_compatible_with_q: bool,
+    /// RC column min cross-section dimension b [m] (§5.4.3 / §5.5.3).
+    #[dsl(unit = "m")]
+    pub min_dimension_m: f64,
+    /// RC longitudinal reinforcement ratio ρ.
+    pub rho: f64,
+    /// RC compression reinforcement ratio ρ′ (beams).
+    pub rho_prime: f64,
+    /// RC confinement mechanical volumetric ratio ω_wd.
+    pub omega_wd: f64,
+    /// Steel cross-section class (1–4) for q-compatibility (§6.5 / §6.6).
+    pub steel_section_class: u8,
+}
+
+/// 🏢 Building subject for EN 1998-1.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Building {
+    pub id: String,
+    pub name: String,
+    /// Plan dimension Lx [m] for accidental eccentricity (§4.3.2).
+    #[dsl(unit = "m")]
+    pub plan_width_m: f64,
+    /// Plan dimension Ly [m] for accidental eccentricity (§4.3.2).
+    #[dsl(unit = "m")]
+    pub plan_length_m: f64,
+    #[dsl(table)]
+    pub systems: Vec<En1998System>,
+    #[dsl(table)]
+    pub storeys: Vec<En1998Storey>,
+    #[dsl(table)]
+    pub members: Vec<En1998Member>,
+    pub plan_regular: bool,
+    pub elevation_regular: bool,
+    pub t1_method: String,
+    pub t1_given_s: f64,
+    pub ct: f64,
+    pub drift_limit_class: String,
+    pub nu: f64,
+    pub multiple_resisting_systems: bool,
+    pub claims_simple_masonry: bool,
+    pub masonry_wall_area_ratio: f64,
+    pub accidental_eccentricity_ratio: f64,
+}
+
+/// 🌉 Bridge subject for EN 1998-2.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Bridge {
+    pub id: String,
+    /// Isolation period ratio T_isol/T_fixed (EN 1998-2).
+    pub period_ratio: f64,
+    /// Fundamental period T [s] for displacement / shear (EN 1998-2 §4.2).
+    #[dsl(unit = "s")]
+    pub fundamental_period_s: f64,
+    #[dsl(unit = "N")]
+    pub v_rd_n: f64,
+    #[dsl(unit = "m")]
+    pub bearing_d_rd_m: f64,
+    /// Characteristic permanent action ΣG_k [N] (deck + self-weight).
+    #[dsl(unit = "N")]
+    pub permanent_gk_n: f64,
+    /// EN 1998-1 Table 4.2 correlated occupancy flag for φ on variable actions.
+    pub correlated_occupancy: bool,
+    #[dsl(table)]
+    pub variables: Vec<En1998VariableAction>,
+}
+
+/// 🔧 Retrofit assessment for EN 1998-3.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Assessment {
+    pub id: String,
+    pub knowledge_level: String,
+    /// EN 1998-3 limit state: nc | sd | dl (Table 2.1 + DE NA).
+    pub limit_state: String,
+    /// Building id providing seismic demand (spectrum × mass model).
+    pub supported_building_id: String,
+    #[dsl(unit = "N")]
+    pub r_k_n: f64,
+    pub gamma_el: f64,
+}
+
+/// 🫙 Silo for EN 1998-4.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Silo {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    #[dsl(unit = "m")]
+    pub radius_m: f64,
+    /// Structure permanent action ΣG_k [N].
+    #[dsl(unit = "N")]
+    pub permanent_gk_n: f64,
+    /// Characteristic content action Q_k [N] at full fill.
+    #[dsl(unit = "N")]
+    pub content_qk_n: f64,
+    /// Content category for ψ₂ (typically E storage).
+    pub content_category: String,
+    /// Design filling ratio 0…1 (EN 1998-4).
+    pub filling_ratio: f64,
+    #[dsl(unit = "N")]
+    pub n_rd_n: f64,
+    #[dsl(unit = "N")]
+    pub v_rd_n: f64,
+    pub q_nominal: f64,
+}
+
+/// 🛢️ Tank for EN 1998-4.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Tank {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    #[dsl(unit = "m")]
+    pub radius_m: f64,
+    /// Structure permanent action ΣG_k [N].
+    #[dsl(unit = "N")]
+    pub permanent_gk_n: f64,
+    /// Characteristic content action Q_k [N] at full fill.
+    #[dsl(unit = "N")]
+    pub content_qk_n: f64,
+    /// Content category for ψ₂ (typically E storage / liquid).
+    pub content_category: String,
+    /// Design filling ratio 0…1 (EN 1998-4).
+    pub filling_ratio: f64,
+    #[dsl(unit = "N")]
+    pub v_rd_n: f64,
+}
+
+/// 🪨 Foundation for EN 1998-5.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Foundation {
+    pub id: String,
+    /// Building id whose seismic base shear drives foundation demand (EN 1998-5 §5.3).
+    pub supported_building_id: String,
+    #[dsl(unit = "m2")]
+    pub area_m2: f64,
+    #[dsl(unit = "Pa")]
+    pub p_rd_pa: f64,
+    #[dsl(unit = "N")]
+    pub h_rd_n: f64,
+    pub k_foundation: f64,
+    pub k_soil: f64,
+}
+
+/// 🧱 Retaining wall for EN 1998-5.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998RetainingWall {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    pub phi_deg: f64,
+    pub soil_gamma: f64,
+    pub r: f64,
+    pub h_rd_n_per_m: f64,
+}
+
+/// 🗼 Tower / mast / chimney for EN 1998-6.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct En1998Tower {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height_m: f64,
+    pub m_rd_nm: f64,
+    pub is_chimney: bool,
+    pub q_nominal: f64,
+    /// Characteristic permanent action ΣG_k [N].
+    #[dsl(unit = "N")]
+    pub permanent_gk_n: f64,
+    pub correlated_occupancy: bool,
+    #[dsl(table)]
+    pub variables: Vec<En1998VariableAction>,
+}

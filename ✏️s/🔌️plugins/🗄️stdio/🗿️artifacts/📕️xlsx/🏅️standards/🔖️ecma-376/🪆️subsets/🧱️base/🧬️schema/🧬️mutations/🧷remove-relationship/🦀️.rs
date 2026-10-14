@@ -33,7 +33,3 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveRelationship {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

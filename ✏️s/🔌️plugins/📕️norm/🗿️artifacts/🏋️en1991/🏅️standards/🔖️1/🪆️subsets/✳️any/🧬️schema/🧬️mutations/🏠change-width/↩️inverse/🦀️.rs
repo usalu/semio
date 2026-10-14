@@ -1,9 +1,9 @@
 //! Inverse for `change-width`.
-use super::ChangeWidth;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeWidth, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_width::ChangeWidth;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeWidth, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_width::ChangeWidth> {
     Ok((|| {
-    vec![En1991Mutation::ChangeWidth(ChangeWidth { new_width: base.width })]
+    vec![Op::from(ChangeWidth { new_width: base.width })]
 
     })())
 }

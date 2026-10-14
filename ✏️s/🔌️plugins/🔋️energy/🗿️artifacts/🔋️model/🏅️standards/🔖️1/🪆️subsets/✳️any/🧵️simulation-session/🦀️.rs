@@ -5,7 +5,26 @@
 //! The run is read-only: it holds no provisional document ops, so finalize publishes nothing.
 //! Source of record: `✏️editor/🧵️simulation-session/🔣️.json`.
 
-use crate::{EnergyAdmissionRejected, EnergyJob, EnergyJobCursor, EnergyJobStage, EnergyModelCloseCursor, EnergyModelSnapshot, EnergyNumericalBounds, EnergyQualityTier, Model, SimulationConfig};
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_s_plugin_energy_engine_kernel as kernel;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_plugin_energy_engine_sim as sim;
+extern crate semio_s_plugin_energy_engine_sim_retirement as sim_retirement;
+extern crate semio_s_plugin_energy_engine_sim_wire as sim_wire;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+#[cfg(test)]
+extern crate semio_s_artifact_energy_model_examples as examples;
+
+use crate::kernel::{SimulationConfig};
+use crate::model::{Model};
+use crate::sim::{EnergyAdmissionRejected, EnergyJob};
+use crate::sim_retirement::{EnergyModelCloseCursor};
+use crate::sim_wire::{EnergyJobCursor, EnergyJobStage, EnergyNumericalBounds, EnergyQualityTier};
+use crate::snapshot::{EnergyModelSnapshot};
 use semio_framework_job::{
     Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload,
     RetainedJobPublication, StepBudget, StepContext,
@@ -26,10 +45,11 @@ pub const ENERGY_SIMULATION_RUN_SETTINGS: [&str; 3] = ["/zoneTimestepMinutes", "
 
 /// 🪟️ Window kind ids whose bodies every tick of this run marks dirty (`ToolRunDefinition::windows`
 /// → `ToolRunLedger::dirty_scope`). Spelled as literals here rather than imported from
-/// `crate::editor::model::modes::edit::windows::*`: this module is the artifact-root run contract and
-/// the editor mounts THROUGH it (the simulation window reads `ENERGY_SIMULATION_RUN_SCHEMA`), so an
+/// `semio_s_artifact_energy_model_editor_edit::windows::*`: this crate is the run contract and
+/// the editor builds ON it (the simulation window reads `ENERGY_SIMULATION_RUN_SCHEMA`), so an
 /// import the other way would make the layering circular for a pair of string constants. The two
-/// laws in this file's test module assert both literals still equal the windows' own constants.
+/// `semio_s_artifact_energy_model_editor_edit` simulation window laws assert the simulation literal still equals the
+/// window's own kind id and body key.
 pub const ENERGY_MODEL_3D_WINDOW_KIND_ID: &str = "energy.model.3d";
 pub const ENERGY_SIMULATION_WINDOW_KIND_ID: &str = "energy.simulation";
 const MAXIMUM_CAPTURE_ITEMS: usize = 4_194_304;

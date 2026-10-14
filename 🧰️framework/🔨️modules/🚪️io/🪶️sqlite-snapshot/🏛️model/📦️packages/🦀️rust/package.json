@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-io-sqlite-model-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/framework-io-sqlite-model-rs:test-source"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
+  }
+}

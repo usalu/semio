@@ -37,14 +37,10 @@ pub use entity_column_receiving::ToolRunEntityColumnReceiving;
 mod progress_receiving;
 pub use progress_receiving::{ToolRunProgressReceiving,ToolRunReceivedProgressSource};
 
-#[path="👥️entities/🦀️.rs"]
-pub mod entities;
 #[path="📊️progress/📸️clone/🦀️.rs"]
 pub mod progress_clone;
 #[path="📊️progress/💍️steps/➕️insert/🦀️.rs"]
 pub mod step_ring_insert;
-#[path="📊️progress/🪟️presentation/🦀️.rs"]
-pub mod presentation;
 #[path="📽️tick/🔐️source/🦀️.rs"]
 pub mod tick_source;
 //#region 🔖️Limits

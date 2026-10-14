@@ -7,17 +7,15 @@ use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
 use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use std::collections::{BTreeMap,BTreeSet};
 pub const SCHEMA:&str="drawing.clipboard.v1";
-const MAX_BYTES:usize=semio_framework_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES;
-const MAX_NODES:usize=1024;
-const MAX_DEPTH:usize=32;
-const MAX_ID_BYTES:usize=4096;
-const MAX_TASKS:usize=MAX_NODES*17+3;
+pub const MAX_BYTES:usize=semio_framework_plugin::kernel::CLIPBOARD_TEXT_MAX_BYTES;
+pub const MAX_NODES:usize=1024;
+pub const MAX_DEPTH:usize=32;
+pub const MAX_ID_BYTES:usize=4096;
+pub const MAX_TASKS:usize=MAX_NODES*17+3;
 #[path="🛫️encode/🦀️.rs"]
-mod encode;
+pub mod encode;
 #[path="🛬️decode/🦀️.rs"]
-mod decode;
-#[path="🧵️job/🦀️.rs"]
-pub mod job;
+pub mod decode;
 #[path="🖼️assets/🦀️.rs"]
 mod assets;
 pub use assets::DrawingClipboardAssets;
@@ -173,7 +171,7 @@ fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&
     }
     Ok((mutations,packet.selected.iter().map(|id|identity_map[id].clone()).collect()))
 }
-fn invert(matrix:[f64;6])->Result<[f64;6],ClipboardError>{
+pub fn invert(matrix:[f64;6])->Result<[f64;6],ClipboardError>{
     let [a,b,c,d,x,y]=matrix;let determinant=a*d-b*c;
     if determinant==0.0 || !matrix.iter().all(|n|n.is_finite()){return Err(invalid("Clipboard transform is singular or nonfinite / Zwischenablagetransformation ist singulär oder nicht endlich"));}
     Ok([d/determinant,-b/determinant,-c/determinant,a/determinant,(c*y-d*x)/determinant,(b*x-a*y)/determinant])

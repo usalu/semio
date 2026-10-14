@@ -4,9 +4,9 @@
 //! that ends at once (a stepper press, a typed step): ONE plain config edit, never an amend (design §20.1). Every move
 //! clamps to the timeline: `0` shows the bare stock, the step count (or `None`) every step.
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetCursor};
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Process3dSnapshot};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, Process3dConfigSetCursor};
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -40,7 +40,7 @@ pub mod set_cursor {
         pub value: Option<u64>,
     }
 
-    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &SetCursor, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(cursor_emit(doc, cfg, payload.value.map(|value| usize::try_from(value).unwrap_or(usize::MAX))))
     }
 }
@@ -56,7 +56,7 @@ pub mod step_cursor {
         pub delta: i64,
     }
 
-    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+    pub fn handle(payload: &StepCursor, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let current = process3d_cursor(doc.snapshot, cfg.snapshot) as i64;
         Ok(cursor_emit(doc, cfg, Some(current.saturating_add(payload.delta).max(0) as usize)))
     }
@@ -75,7 +75,7 @@ pub mod step_cursor_back {
         _payload: &StepCursorBack,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(cursor_emit(doc, cfg, Some(process3d_cursor(doc.snapshot, cfg.snapshot).saturating_sub(1))))
     }
@@ -94,7 +94,7 @@ pub mod step_cursor_forward {
         _payload: &StepCursorForward,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         Ok(cursor_emit(doc, cfg, Some(process3d_cursor(doc.snapshot, cfg.snapshot) + 1)))
     }

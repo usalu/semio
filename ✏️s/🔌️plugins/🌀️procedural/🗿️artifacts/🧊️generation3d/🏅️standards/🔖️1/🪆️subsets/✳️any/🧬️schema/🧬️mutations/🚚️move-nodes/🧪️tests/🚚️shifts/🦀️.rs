@@ -8,12 +8,12 @@
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiffRead;
-use crate::inverse_generation3d_mutation;
-use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use crate::central_apply::apply_generation3d_mutation;
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚚️move-nodes/🚚️shifts/📸️snapshot/➡️after/🔣️.json");

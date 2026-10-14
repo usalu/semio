@@ -9,6 +9,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region ✏️Editor
 /// ✏️ Surface re-export so bundling crates (🎪️demonstrator) can name `gis::editor::gis2d::…`
@@ -34,7 +35,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
     let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency()?;
     let catalog = semio_hub_stdio_catalog::native_artifact_catalog_contribution()?;
-    Plugin::<GisApps>::builder("gis")
+    PluginBuilder::<_, GisApps>::new("gis")
         .label("GIS")
         .version("0.1.0")
         .package_id("semio:gis")

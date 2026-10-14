@@ -8,10 +8,10 @@ use semio_framework_ui_locale::Terminology;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
-use crate::artifact_schema::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};
-use crate::document::ClauseId;
-use crate::{TimberConnection, TimberProduct};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
+use semio_s_artifact_norm_en1995_schema::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};
+use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_artifact_norm_en1995_model::{TimberConnection, TimberProduct};
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1995.play.catalogue";
@@ -19,7 +19,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1995.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -212,7 +212,7 @@ pub fn reference_tables(locale: Locale) -> Vec<CatalogueTable> {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(locale), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(locale), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

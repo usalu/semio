@@ -1,6 +1,6 @@
 //! process3d <- json
-use crate::Process3dSnapshot;
-use crate::PROCESS_3D_SCHEMA;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub fn register() {}

@@ -3,8 +3,16 @@
 //! exactly like document content, with a true `backwards` per operation. Nothing here is document
 //! state — the object kind's identity/representations/vortices live in `crate`.
 
-use crate::BlockCamera3d;
-use crate::Block3dWindowView;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_block::BlockCamera3d;
+use semio_s_artifact_block_3d_model::Block3dWindowView;
 use protocol::Mutation;
 use semio_s_plugin_block::{BlockOptionalText, BlockPatch};
 
@@ -215,7 +223,6 @@ impl protocol::DiffAlgebra<Block3dConfig> for Block3dConfigDiff {
     }
 }
 //#endregion 🔖️ConfigDiff
-
 
 //#region 🔖️Accessors
 pub fn block3d_window_view(config: &Block3dConfig, window_id: &str) -> Block3dWindowView {
@@ -576,3 +583,8 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️Mounts

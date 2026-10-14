@@ -1,5 +1,5 @@
-use super::super::*;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use crate::demo::*;
+use semio_s_artifact_norm_iso16757_inferences::evaluate;
 use pack::snapshot::ArtifactDsl;
 
 #[test]
@@ -11,7 +11,7 @@ fn example_id_is_stable() {
 
 #[test]
 fn demo_dsl_decodes_and_complies() {
-    let document = <crate::Iso16757Snapshot as ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("decode demo DSL");
+    let document = <semio_s_artifact_norm_iso16757_model::Iso16757Snapshot as ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("decode demo DSL");
     let report = evaluate(&document);
     assert!(report.complies(), "demo must comply: {:?}", report.failing().map(|c| c.id.as_str()).collect::<Vec<_>>());
 }

@@ -1,6 +1,10 @@
-use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::*;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::context::{dispatch, fem3d_app};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchCombination) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let history = semio_framework_plugin::HistoryView::empty();

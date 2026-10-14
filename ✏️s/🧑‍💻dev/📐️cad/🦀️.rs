@@ -7,7 +7,7 @@ mod browser {
     #[wasm_bindgen]
     impl BrowserSession {
         #[wasm_bindgen(constructor)]
-        pub fn new() -> Self { Self { session: semio_s_artifact_stdio_step::geometry::session::geometry_session() } }
+        pub fn new() -> Self { Self { session: semio_s_artifact_stdio_step_geometry::geometry::session::geometry_session() } }
         pub fn brep_invoke(&self, method: &str, arguments: &str) -> String { self.session.brep_invoke_json(method, arguments) }
         pub fn tessellate(&self, handle: &str, tolerance: f64) -> String { self.session.tessellate_geometry_json_for_wasm(handle, tolerance) }
         pub fn dispose(&self, handle: &str) -> Result<(), JsValue> { self.session.dispose_geometry(handle).map_err(|error| JsValue::from_str(&error)) }

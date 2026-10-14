@@ -29,6 +29,7 @@
         "inheritedEnvironment": "SEMIO_COMPILER_CAPACITY_HELD",
         "parallelismEnvironment": "SEMIO_COMPILER_PARALLELISM",
         "coreResourcePrefix": "semio.compiler.cpu/v1/",
+        "pickerResource": "semio.compiler.cpu-picker/v1",
         "pollMs": 40
       }
     },
@@ -37,7 +38,8 @@
       "additionalProperties": false,
       "properties": {
         "requestedParallelism": {
-          "const": 1
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

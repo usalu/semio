@@ -1,15 +1,15 @@
 //! ↩️ `remove-geometry` — undo re-`create`s the geometry from BASE state; missing id ⇒
 //! `Vec::new()`.
 
-use super::RemoveGeometry;
-use crate::mutations::add_geometry;
-use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::remove_geometry::RemoveGeometry;
+use crate::add_geometry;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemoveGeometry, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RemoveGeometry, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::add_geometry::AddGeometry> {
     Ok((|| {
     match base.geometry.get(&payload.id) {
-        Some(geometry) => vec![Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() })],
+        Some(geometry) => vec![Op::from(add_geometry::AddGeometry { geometry: geometry.clone() })],
         None => Vec::new(),
     }
 

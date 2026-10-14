@@ -26,14 +26,14 @@ export type WasmPackageOwnerV1=Readonly<{version:1;sourceOwner:string;mode:Build
 export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; workspaceRoot: string; sourceBoundary: CargoSourceBoundaryPolicyV1; compilerConfiguration?: string; sourceOwner: string; mode: BuildMode; artifactDirectory: string; buildDirectory: string; leaseDirectory: string; budgetMs: number; packageName: string; searchPath: string; bindgen: Readonly<{ command: string; args: readonly string[] }>; wasmPack: Readonly<{ command: string; args: readonly string[] }> }>;
 /** 📦️ Selects one owned browser package publication without discovering repository policy: `rsDir` owns the published package,
  * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
-export type WasmPackWebBuildOptions = Readonly<{ control: CompilerAdmissionControl; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; outputDirectory?: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; prototypeOptimizedCrates?: readonly string[] }>;
+export type WasmPackWebBuildOptions = Readonly<{ storage?:import("../🏗️native-build/💾️storage/🟦️.ts").NativeStorageReservationV1; control: CompilerAdmissionControl; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; outputDirectory?: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; prototypeOptimizedCrates?: readonly string[] }>;
 /** 🔌️ Executes an explicitly selected compiler with bounded cancellation; `admit` refuses the exact Cargo selection before it compiles. */
-export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; control: CompilerAdmissionControl }>) => Promise<void> }>;
+export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage?:import("../🏗️native-build/💾️storage/🟦️.ts").NativeStorageReservationV1; control: CompilerAdmissionControl }>) => Promise<void> }>;
 
 /** 📏️ Admits one wasm-bindgen Cargo selection through the one Source admission owner, keyed by the policy's repository root.
  * @see ../🏗️native-build/📥️source/🎟️admission/🟦️.ts */
-export function admitWasmCargoSourcesV1(args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; control: CompilerAdmissionControl }>): Promise<void> {
-  return admitCargoSelectionV1({ workspaceRoot: options.policy.workspaceRoot, cwd: options.cwd, args, environment: options.environment, sourceBoundary: options.policy.sourceBoundary }, options.control);
+export function admitWasmCargoSourcesV1(args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage?:import("../🏗️native-build/💾️storage/🟦️.ts").NativeStorageReservationV1; control: CompilerAdmissionControl }>): Promise<void> {
+  if(!options.storage)throw Error("Original enforcing WASM compiler store required");return admitCargoSelectionV1({ workspaceRoot: options.policy.workspaceRoot, cwd: options.cwd, args, environment: options.environment, sourceBoundary: options.policy.sourceBoundary,storage:options.storage }, options.control);
 }
 const wasmPolicySchema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
 function admitWasmPolicy(value: unknown): WasmBuildPolicyV1 {
@@ -95,7 +95,7 @@ export function prototypeOptimizedCargoConfigArgs(crates: readonly string[]): st
 
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: WasmBuildPolicyV1, port: WasmBuildExecutionPortV1 = { run: async (command, args, options) => { await runOwnedCommand(command, [...args], options.cwd, options.label, options.budgetMs, { env: options.environment, signal: options.signal }); }, admit: admitWasmCargoSourcesV1 }): Promise<void> {
-  policy = admitWasmPolicy(policy);
+  if(port.admit===admitWasmCargoSourcesV1&&!opts.storage)throw Error("Original enforcing WASM compiler store required");policy = admitWasmPolicy(policy);
   const control = requestedCompilerAdmissionControlV1(opts.control, policy.budgetMs), signal = control.signal;
   if (resolve(policy.cwd) !== resolve(opts.rsDir)) throw Error("WASM policy belongs to a different owner");
   const { rsDir, componentDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, prototypeOptimizedCrates = [] } = opts;
@@ -121,7 +121,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
     const featureArgs = [...(policy.compilerConfiguration?["--config",policy.compilerConfiguration]:[]),...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature]), ...(policy.mode === "prototype" ? prototypeOptimizedCargoConfigArgs(prototypeOptimizedCrates) : [])];
-    await port.admit(threads ? ["build", "--locked", "--manifest-path", join(componentDir, "Cargo.toml"), ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs] : ["build", "--locked", "--lib", "--manifest-path", join(componentDir, "Cargo.toml"), ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", ...featureArgs], { cwd: componentDir, environment: buildEnv, policy, control });
+    await port.admit(threads ? ["build", "--locked", "--manifest-path", join(componentDir, "Cargo.toml"), ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs] : ["build", "--locked", "--lib", "--manifest-path", join(componentDir, "Cargo.toml"), ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", ...featureArgs], { cwd: componentDir, environment: buildEnv, policy, storage:opts.storage, control });
     if (threads) {
       const crateName = readFileSync(join(componentDir, "Cargo.toml"), "utf8").match(/^name\s*=\s*"([^"]+)"/m)?.[1];
       if (!crateName) {

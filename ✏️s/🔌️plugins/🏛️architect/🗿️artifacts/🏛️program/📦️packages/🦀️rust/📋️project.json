@@ -151,6 +151,22 @@
         "forwardAllArgs": false
       }
     },
+    "generate-register-catalog": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generate-register-catalog"
+      }
+    },
+    "check-register-catalog": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generate-register-catalog --check"
+      }
+    },
     "verify-physical-codecs": {
       "executor": "repo:script",
       "cache": false,

@@ -2,17 +2,18 @@
 //! and is a diagnosed no-op when the rectangle already holds the samples.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::{flatten_raster_layers, raster_image_test_snapshot};
-use crate::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::flatten_raster_layers;
+use semio_s_artifact_raster_raster_model::testing::raster_image_test_snapshot;
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use protocol::Mutation;
 
-fn shown_pixels(snapshot: &RasterSnapshot) -> (String, String, crate::SemioImageSnapshot) {
+fn shown_pixels(snapshot: &RasterSnapshot) -> (String, String, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot) {
     let layer = flatten_raster_layers(&snapshot.layers).into_iter().find_map(|layer| match layer {
         RasterLayerNode::Pixel { id, image_key: Some(key), .. } => Some((id.clone(), key.clone())),
         _ => None,
     });
     let (layer_id, key) = layer.expect("the test document shows an image");
-    let image = crate::raster_image(&snapshot.assets, &key).expect("the shown image materializes");
+    let image = semio_s_artifact_raster_raster_model::raster_image(&snapshot.assets, &key).expect("the shown image materializes");
     (layer_id, key, image)
 }
 
@@ -24,7 +25,7 @@ fn mutation(snapshot: &RasterSnapshot, invert: bool) -> WritePixelRegion {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -50,7 +51,7 @@ async fn it_writes_exactly_its_rectangle_and_inverts_with_the_base_samples() {
 async fn it_obeys_the_cold_inverse_sum_law() {
     let base = raster_image_test_snapshot();
     let write = RasterMutation::WritePixelRegion(mutation(&base, true));
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&write, &base, <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection, <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law_cold(&write, &base, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection, <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold).await;
     retire(base);
 }
 

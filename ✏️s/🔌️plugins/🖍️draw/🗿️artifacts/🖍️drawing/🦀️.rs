@@ -3,11 +3,6 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 
-
-use semio_s_artifact_draw_drawing_io::binary;
-use semio_s_artifact_draw_drawing_io::text;
-#[path = "🤖️generated/📇️registry/🦀️.rs"]
-pub mod graph_manifest;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -23,14 +18,7 @@ extern crate semio_framework_schema as framework_schema;
 // conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
 // unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
-
-//#region 🔖️Domain
-
-
-//#endregion 🔖️Domain
-
 //#region 🔖️ArtifactKind
-
 
 /// 🔖️ This artifact's OLD capability-row definition (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) — kept per debt D1 (`📌️important.md`), not
@@ -106,14 +94,6 @@ impl<A> DrawingApplication for A where
 
 //#endregion 🔖️ArtifactKind
 
-
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
-
-
-//#region 📚️Examples
-
-//#endregion 📚️Examples
-
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_s_artifact_draw_drawing_write::serializers::artifacts as export;
     use semio_s_artifact_draw_drawing_read::deserializers::artifacts as import;
@@ -161,6 +141,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 
 //#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛂️manifest/🦀️.rs"]
+pub mod editor_manifest;
 #[path = "🤖️generated/📇️registry/🦀️.rs"]
 pub mod graph_manifest;
 #[path = "."]

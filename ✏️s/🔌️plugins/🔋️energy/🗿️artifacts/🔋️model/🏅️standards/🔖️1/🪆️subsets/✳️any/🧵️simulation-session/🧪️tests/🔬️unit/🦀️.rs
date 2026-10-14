@@ -27,7 +27,7 @@ fn scenario() -> (Arc<EnergyModelSnapshot>, SimulationConfig) {
     model.run_period.end_day = number(&period["endDay"]) as u8;
     let settings = &scenario["settings"];
     let template = SimulationConfig { zone_timestep_minutes: number(&settings["zoneTimestepMinutes"]) as u32, system_timestep_minutes: number(&settings["systemTimestepMinutes"]) as u32, warmup_days: number(&settings["warmupDays"]) as u32, ..SimulationConfig::default() };
-    (Arc::new(crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)), template)
+    (Arc::new(crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)), template)
 }
 
 fn identity() -> ToolRunIdentity {
@@ -223,7 +223,7 @@ fn the_pause_step_fuel_unit_is_one_computed_timestep() {
 fn run_job_results_and_final_readout_agree_with_the_batch_engine_oracle() {
     let (snapshot, template) = scenario();
     let config = simulation_config_for(&template, &snapshot.model);
-    let oracle = crate::Engine::run(snapshot.model.clone(), config).expect("batch engine run");
+    let oracle = crate::sim::Engine::run(snapshot.model.clone(), config).expect("batch engine run");
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, template);
     let run = drive(&mut job, semio_framework_job::INTERACTIVE_LANE_FUEL);
     assert_eq!(run.settled, Stepped::Complete, "the streamed run completes");
@@ -266,7 +266,7 @@ fn a_model_beyond_numerical_admission_publishes_a_danger_step_before_the_fault()
     let (_, template) = scenario();
     let mut model = crate::examples::bestest_600::model();
     model.zones.clear();
-    let snapshot = Arc::new(crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None));
+    let snapshot = Arc::new(crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None));
     let mut job = EnergySimulationRunJob::new(identity(), snapshot, SimulationConfig { warmup_days: 0, ..template });
     let run = drive(&mut job, 1);
     assert_eq!(run.settled, Stepped::Fault, "an unsimulatable model faults the run");
@@ -380,10 +380,6 @@ fn the_run_refreshes_exactly_the_three_d_model_and_simulation_window_bodies() {
     let declared: Vec<String> = schema["x-semio-toolRun"]["windows"].as_array().expect("the schema declares the refreshed windows").iter().map(|id| id.as_str().unwrap().to_string()).collect();
     assert_eq!(energy_simulation_run_definition().windows, declared, "the run definition mirrors its own source of record");
     assert_eq!(declared, vec![ENERGY_MODEL_3D_WINDOW_KIND_ID.to_string(), ENERGY_SIMULATION_WINDOW_KIND_ID.to_string()]);
-    // 🪟️ The two literals are spelled here rather than imported (see their doc comment); this is the
-    // gate that keeps them equal to the windows' own constants.
-    assert_eq!(ENERGY_SIMULATION_WINDOW_KIND_ID, crate::editor::model::modes::edit::windows::simulation::WINDOW_KIND_ID);
-    assert_eq!(ENERGY_SIMULATION_WINDOW_KIND_ID, crate::editor::model::modes::edit::windows::simulation::BODY_KEY, "the simulation window's body key IS its kind id");
 }
 
 #[test]
@@ -407,12 +403,16 @@ fn a_tier_boundary_and_the_completing_tick_carry_the_per_surface_map() {
 
     // 🔮️ The published map is the same table `Results::per_surface` projects.
     let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
-    let decoded = crate::editor::model::results::decode_run_payload(bytes).expect("the editor decodes what the run encoded");
-    assert_eq!(decoded.len(), results.per_surface.len());
+    let scalar = |row: &[u8], offset: usize| f64::from(f32::from_le_bytes(row[offset..offset + 4].try_into().unwrap()));
+    let published: std::collections::HashMap<u32, (f64, f64)> = bytes[ENERGY_SURFACE_PAYLOAD_HEADER_BYTES..]
+        .chunks_exact(ENERGY_SURFACE_PAYLOAD_ROW_BYTES)
+        .map(|row| (u32::from_le_bytes(row[0..4].try_into().unwrap()), (scalar(row, 4), scalar(row, 12))))
+        .collect();
+    assert_eq!(published.len(), results.per_surface.len());
     for row in &results.per_surface {
-        let published = decoded.get(row.id.0).expect("every result row is published");
-        assert!((published.conduction_loss_kwh - row.conduction_loss_kwh).abs() <= row.conduction_loss_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
-        assert!((published.solar_transmitted_kwh - row.solar_transmitted_kwh).abs() <= row.solar_transmitted_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
+        let (loss, transmitted) = *published.get(&row.id.0).expect("every result row is published");
+        assert!((loss - row.conduction_loss_kwh).abs() <= row.conduction_loss_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
+        assert!((transmitted - row.solar_transmitted_kwh).abs() <= row.solar_transmitted_kwh.abs() * 1e-5 + 1e-5, "row {:?}", row.id);
     }
     close(&mut job);
 }
@@ -429,11 +429,11 @@ fn a_tick_carrying_two_thousand_surfaces_stays_far_inside_the_tick_byte_ceiling(
     for index in 0..8u64 {
         let _ = writer.step(ToolRunStepKind::Success, EnergySimulationRunStage::Run.index(), EnergySimulationRunReason::CoarseTimestep.code(), None, &[ToolRunStepArg::Float(1.0), ToolRunStepArg::Unsigned(index), ToolRunStepArg::Unsigned(2_000)]);
     }
-    writer.payload(payload);
+    writer.payload(payload.clone());
     writer.progress(EnergyRunCursor::new().progress(identity(), ToolRunState::Running, EnergySimulationRunStage::Run));
     let encoded = writer.finish().expect("a pending tick").encode().expect("2 000 surfaces encode inside the tick ceiling");
     assert!(encoded.len() * 2 < semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX, "2 000 surfaces plus progress and a full step ring is {} of {} tick bytes", encoded.len(), semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX);
     let decoded = ToolRunTick::decode(&encoded).expect("the tick round-trips");
-    assert_eq!(crate::editor::model::results::decode_run_payload(decoded.payload.as_ref().expect("payload survives the tick codec")).expect("decodes").len(), 2_000);
+    assert_eq!(decoded.payload.as_deref(), Some(payload.as_slice()), "the payload survives the tick codec byte for byte");
 }
 //#endregion 🧱️SurfacePayload

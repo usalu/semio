@@ -28,7 +28,7 @@ mod editor {
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_lowpoly_lowpoly::viewer::*;
+    pub use semio_s_artifact_lowpoly_lowpoly_viewer::viewer::*;
 }
 //#endregion 👁️Viewer
 

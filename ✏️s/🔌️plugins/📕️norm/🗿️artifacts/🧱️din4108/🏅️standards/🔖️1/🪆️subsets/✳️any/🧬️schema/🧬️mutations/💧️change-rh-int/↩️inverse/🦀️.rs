@@ -1,11 +1,11 @@
 //! ↩️ `change-rh-int` inverse.
 
-use super::ChangeRhInt;
-use crate::{Din4108Mutation, Din4108Snapshot};
+use crate::change_rh_int::ChangeRhInt;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
-pub fn inverse(_payload: &ChangeRhInt, base: &Din4108Snapshot) -> Result<Vec<Din4108Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeRhInt, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_rh_int::ChangeRhInt> {
     Ok((|| {
-    vec![Din4108Mutation::ChangeRhInt(ChangeRhInt { new_rh_int: base.rh_int })]
+    vec![Op::from(ChangeRhInt { new_rh_int: base.rh_int })]
 
     })())
 }

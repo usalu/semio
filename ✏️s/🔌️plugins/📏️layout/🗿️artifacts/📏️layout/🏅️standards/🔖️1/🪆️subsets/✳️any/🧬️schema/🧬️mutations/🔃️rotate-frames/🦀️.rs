@@ -2,8 +2,13 @@
 //! orbits the pivot by the angle and every frame's rotation grows by it, so editing the turn in history re-derives every
 //! pose from whatever base it replays on.
 
-use crate::mutations::{layout_frame_centre, layout_frame_selection_diff, layout_frame_selection_targets, layout_frame_targets_invariant, layout_label_frames, layout_label_number, move_frame::MoveFrame, rotate_frame::RotateFrame, LayoutMutation};
-use crate::{FramePatch, LayoutBounds, LayoutDiff, LayoutSnapshot};
+use semio_s_artifact_layout_layout_diff::{layout_frame_centre, layout_frame_selection_diff, layout_frame_selection_targets, layout_frame_targets_invariant};
+use semio_s_artifact_layout_layout_model::{layout_label_frames, layout_label_number};
+use crate::move_frame::MoveFrame;
+use crate::rotate_frame::RotateFrame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::LayoutBounds;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,12 +40,12 @@ impl RotateFrames {
     }
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for RotateFrames {
+impl<Op> MutationKind<LayoutSnapshot, Op> for RotateFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> + From<crate::rotate_frame::RotateFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "frames", kind: "rotate-frames", record: "RotatedFrames" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_rotate_frames(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         inverse_rotate_frames(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -66,7 +71,7 @@ pub fn diff_rotate_frames(payload: &RotateFrames, base: &LayoutSnapshot) -> prot
 
 //#region ↩️Inverse
 /// ↩️ Per frame the turn moves, the absolute origin and rotation setters restoring the BASE pose.
-pub fn inverse_rotate_frames(payload: &RotateFrames, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_rotate_frames<Op: From<crate::move_frame::MoveFrame> + From<crate::rotate_frame::RotateFrame>>(payload: &RotateFrames, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     if !(payload.pivot_x.is_finite() && payload.pivot_y.is_finite() && payload.angle.is_finite()) || layout_frame_targets_invariant(&payload.targets).is_err() {
         return Ok(Vec::new());
     }
@@ -76,10 +81,31 @@ pub fn inverse_rotate_frames(payload: &RotateFrames, base: &LayoutSnapshot) -> R
         .flat_map(|frame| {
             let bounds = frame.bounds();
             [
-                LayoutMutation::MoveFrame(MoveFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_x: bounds.x, new_y: bounds.y }),
-                LayoutMutation::RotateFrame(RotateFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_rotation: bounds.rotation }),
+                Op::from(MoveFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_x: bounds.x, new_y: bounds.y }),
+                Op::from(RotateFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_rotation: bounds.rotation }),
             ]
         })
         .collect())
 }
 //#endregion ↩️Inverse
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+mod tests_keeps_a_zero_angle;
+#[cfg(test)]
+#[path = "🧪️tests/🔃️orbits/🦀️.rs"]
+mod tests_orbits_both_frames_a_quarter_turn;
+#[cfg(test)]
+#[path = "🧪️tests/🔁️refuses/🦀️.rs"]
+mod tests_refuses_a_repeated_frame;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️rejects/🦀️.rs"]
+mod tests_rejects_a_missing_page;
+#[cfg(test)]
+#[path = "🧪️tests/⚠️skips/🦀️.rs"]
+mod tests_skips_a_locked_and_a_missing_frame;
+#[cfg(test)]
+#[path = "🧪️tests/🌀️turns/🦀️.rs"]
+mod tests_turns_the_rect_about_its_centre;
+//#endregion 🪢️TaxonomyMounts

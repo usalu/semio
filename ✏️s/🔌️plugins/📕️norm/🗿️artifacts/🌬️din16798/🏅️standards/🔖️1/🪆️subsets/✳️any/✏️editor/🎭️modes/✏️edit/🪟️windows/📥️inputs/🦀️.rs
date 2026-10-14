@@ -1,6 +1,6 @@
 //! 📥️ DIN EN 16798 play app — the inputs window: structured SI document editor (B2 NormFieldMeta).
 
-use crate::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::WindowKindDefinition;
@@ -13,13 +13,13 @@ pub const BODY_INPUTS: &str = "norm.din16798.play.inputs";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::din16798::create_din16798_app`.
 pub fn definition() -> WindowKindDefinition {
-    crate::app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
+    semio_s_plugin_norm_app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(document: &Din16798Snapshot, locale: semio_framework_ui_locale::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::din16798_field_meta), windows)
+    semio_s_plugin_norm_app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::din16798_field_meta), windows)
 }
 //#endregion 🔖️Render
 

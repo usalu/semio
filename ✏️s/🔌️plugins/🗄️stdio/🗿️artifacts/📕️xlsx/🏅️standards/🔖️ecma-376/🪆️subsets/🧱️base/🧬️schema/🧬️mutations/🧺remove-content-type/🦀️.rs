@@ -34,7 +34,3 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveContentType {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

@@ -297,7 +297,7 @@ impl ArtifactOwnedToolJobFactory for TxnFixtureFactory {
     fn latest_wins_target(_command: &TxnCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<TxnCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<TxnCommand>>> {
         None
     }
 }
@@ -395,19 +395,19 @@ impl ArtifactApp for TxnApp {
         Some(crate::app_testing::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained", grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(crate::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
         Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -441,7 +441,7 @@ async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying(
 /// 🔁️ One dispatch as the host drives it: a mounted app answers with an ADMISSION receipt and hands
 /// the reducer to a worker, so the store only advances once the operation settles. Every law below
 /// reads `snapshot()`/the history right after its dispatch, which is only true after this.
-async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::bounded_ownership::PluginLifecycleFailure> {
+async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let action_meta = meta(actor);
     let admitted = app.dispatch_typed(command, &action_meta, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
     settle_registered_typed_operation(app, action_meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await?;

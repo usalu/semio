@@ -1,8 +1,8 @@
 //! 🛑️ `change-bridge-v-rd-n` diff — patches the one field of the row at the index; a missing row is a `mutation.target-missing`.
 
-use super::ChangeBridgeVRdN;
-use crate::diff::{En1998Diff, En1998BridgeDelta, En1998BridgePatch};
-use crate::En1998Snapshot;
+use crate::change_bridge_v_rd_n::ChangeBridgeVRdN;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998BridgeDelta, En1998BridgePatch};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeBridgeVRdN, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     let Some(row) = base.bridges.get(payload.index) else {

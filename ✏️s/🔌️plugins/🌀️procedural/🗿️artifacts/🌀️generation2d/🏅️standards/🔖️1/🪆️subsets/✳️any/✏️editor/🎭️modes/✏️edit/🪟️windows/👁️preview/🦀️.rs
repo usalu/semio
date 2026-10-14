@@ -1,10 +1,10 @@
 //! 👁️ Generation2d play app — the preview window: the evaluated 2D canvas.
 
-use crate::editor::generation2d::config::Generation2dConfig;
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::io::text::snapshot::{scene_layers_from_drawing_handle};
-use crate::standards::v1::subsets::any::io::text::snapshot::{collect_drawing_handles_from_eval};
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_io_text::snapshot::scene_layers_from_drawing_handle;
+use semio_s_artifact_procedural_2d_io_text::snapshot::collect_drawing_handles_from_eval;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
@@ -66,7 +66,7 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
     // selected" fallback), rather than filtering to a selection it can no longer read.
     if app_config.show_mode == "wire" {
         for widget in &fixture.widgets {
-            let id = crate::widget_id(widget).to_string();
+            let id = semio_s_artifact_procedural_2d_model::widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
             layers.push(semio_framework_pack_json::Value::Object(
                 [
@@ -93,7 +93,4 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,6 @@
 //! ⚡️ Puzzle2d artifact — OpText/OpBinary codecs + grammar for `Puzzle2dMutation`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 
 //#region 📖️SemioGrammar
@@ -79,21 +78,6 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::{ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_node::{scale_node, ScaleNode};
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::{scale_selection, ScaleSelection};
 
-impl pack::snapshot::ArtifactDsl for Puzzle2dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle2d-play";
-
-    fn envelope_id() -> &'static str {
-        <Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id()
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(self.typed())
-    }
-}
 }
 
 #[allow(unused_imports)]

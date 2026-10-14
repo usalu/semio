@@ -1,6 +1,6 @@
 //! 🧪️ `set-content-type` satisfies the inverse sum law for a new default and override at the first, a middle and the last position.
 
-use super::super::*;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 
 #[semio_framework_async_macros::async_test]
 async fn set_content_type_inverts_to_the_exact_previous_state() {

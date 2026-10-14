@@ -10,14 +10,16 @@
 //! tool, the layer refusals and the session colour and selection readers are shared with the bucket (`🪣️fill-region`).
 #![allow(unexpected_cfgs)]
 
-use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::editor::raster::modes::edit::windows::composite::transient::{self, RasterCompositeWindowTransient, RasterStrokeToolState};
-use crate::editor::raster::{RasterCommand, RasterPlayApp};
-use crate::mutations::paint_stroke::{PaintStroke as PaintStrokeLeaf, RasterBrush, RasterSelectionSpan, RasterStrokePoint, RASTER_STROKE_MAXIMUM_POINTS};
-use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::{find_layer, layer_protection, layer_visible};
-use crate::{RasterLayerNode, RasterSnapshot};
-use machine::Command;
+use crate::config::{RasterConfig, RasterConfigMutation};
+use crate::modes::edit::windows::composite::transient;
+use crate::modes::edit::windows::composite::transient::{RasterCompositeWindowTransient, RasterStrokeToolState};
+use crate::{RasterCommand, RasterPlayApp};
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::{PaintStroke as PaintStrokeLeaf, RasterBrush, RasterSelectionSpan, RasterStrokePoint, RASTER_STROKE_MAXIMUM_POINTS};
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{find_layer, layer_protection, layer_visible};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use crate::commands::paint_stroke::machine::Command;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
@@ -48,7 +50,7 @@ pub struct PaintStroke {
 
 //#region 🎨️Leaf
 /// 🏷️ A raster tool refusal under its named code `raster.<area>.<name>`, localized through [`raster_fault_notices`].
-pub(crate) fn raster_fault(code: &'static str) -> Fault {
+pub fn raster_fault(code: &'static str) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), code)
 }
 
@@ -80,7 +82,7 @@ pub fn raster_fault_notices() -> &'static [(&'static str, semio_framework_ui_loc
 
 /// 🚫️ Why `layer_id` cannot take a repaint of the session's paint target on `document`: no such layer, a hidden or
 /// locked one, a layer without pixels or, painting the mask, without a mask; `None` when it can.
-pub(crate) fn paint_target_refusal(layer_id: &str, document: &RasterSnapshot, config: &RasterConfig) -> Option<Fault> {
+pub fn paint_target_refusal(layer_id: &str, document: &RasterSnapshot, config: &RasterConfig) -> Option<Fault> {
     let Some(layer) = find_layer(&document.layers, layer_id) else { return Some(Fault::from("raster-layer-not-found")) };
     if !layer_visible(layer) {
         return Some(raster_fault("raster.paint.layer-hidden"));
@@ -97,18 +99,18 @@ pub(crate) fn paint_target_refusal(layer_id: &str, document: &RasterSnapshot, co
 }
 
 /// 🎨️ `#rrggbb` as four unit channels, opaque.
-pub(crate) fn hex_color(value: &str) -> Option<Vec<f64>> {
-    crate::editor::raster::config::valid_brush_color(value).then(|| {
+pub fn hex_color(value: &str) -> Option<Vec<f64>> {
+    crate::config::valid_brush_color(value).then(|| {
         let rgb = u32::from_str_radix(&value[1..], 16).unwrap_or(0);
         vec![f64::from((rgb >> 16) & 0xff) / 255.0, f64::from((rgb >> 8) & 0xff) / 255.0, f64::from(rgb & 0xff) / 255.0, 1.0]
     })
 }
 
 /// ✂️ The session's pixel selection as the leaf's runs, when it selects THIS layer's target.
-pub(crate) fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
+pub fn selection(config: &RasterConfig, layer_id: &str) -> Result<Option<Vec<RasterSelectionSpan>>, Fault> {
     let Some(selection) = config.pixel_selection.as_ref().filter(|selection| selection.layer_id == layer_id && selection.target == config.paint_target) else { return Ok(None) };
     let count = selection.validate()?;
-    crate::editor::raster::selection::selection_spans(&selection.spans, count)?;
+    crate::selection::selection_spans(&selection.spans, count)?;
     Ok(Some(selection.spans.clone()))
 }
 
@@ -340,7 +342,7 @@ pub fn raster_tool_commit(tool: &str, authoring_seed: &str, stroke: RasterMutati
 /// does not apply. The caller retires the preview it renders.
 pub fn raster_stroke_preview(document: &RasterSnapshot, transient: &RasterCompositeWindowTransient) -> Option<RasterSnapshot> {
     let leaf: RasterMutation = semio_framework_value::FromValue::from_value(transient.stroke.as_ref()?.stroke.clone()).ok()?;
-    crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation(document, &leaf).ok()
+    semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation(document, &leaf).ok()
 }
 //#endregion 🛠️PaintTool
 

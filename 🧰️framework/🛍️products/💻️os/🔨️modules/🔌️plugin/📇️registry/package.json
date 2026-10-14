@@ -10,9 +10,9 @@
     "./catalog": "./🟦️.ts"
   },
   "scripts": {
-    "generate": "bun repo run @semio-tech/plugin-registry:generate",
-    "check": "bun repo run @semio-tech/plugin-registry:check",
-    "new": "bun repo run @semio-tech/plugin-registry:new"
+    "generate": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:generate",
+    "check": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:check",
+    "new": "bun --cwd \"../../../../../..\" repo run @semio-tech/plugin-registry:new"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

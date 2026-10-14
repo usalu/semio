@@ -3,12 +3,12 @@ import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️m
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import {nativeCallerPhaseV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {nativeCallerPhaseV1,type NativeCallerPhaseV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {OwnedCommandFailure} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { Script, ScriptRouter,type ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {repositoryCargoPreparationStorageV1,withRepositoryCargoPreparationV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
 import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
@@ -17,11 +17,11 @@ import {runNativeDependencyToolV1,runPreparedCargoDependencyPairV1,type NativeDe
 export type DependencyToolRunner=NativeDependencyToolRunnerV1;
 
 /** 🛠️ Synchronizes one native environment; Nx schedules every cross-environment prerequisite. */
-export async function prepareDependencies(kind: string, workspace: string, invocation:ScriptInvocation, storage:CargoPreparationStorageV1,runner: DependencyToolRunner = runNativeDependencyToolV1): Promise<void> {
-  const phase=nativeCallerPhaseV1(invocation,workspace),signal=invocation.control.signal;await phase.advance("native-dependencies:"+kind);
+export async function prepareDependencies(kind: string, workspace: string, invocation:ScriptInvocation, storage:CargoPreparationStorageV1,runner: DependencyToolRunner = runNativeDependencyToolV1,environment:NodeJS.ProcessEnv=process.env,admittedPhase?:NativeCallerPhaseV1): Promise<void> {
+  const boundedEnvironment=environment,phase=admittedPhase??nativeCallerPhaseV1(invocation,workspace),signal=invocation.control.signal;await phase.advance("native-dependencies:"+kind);
   const run = async (command: string, args: string[], capture = false, environment?: NodeJS.ProcessEnv): Promise<string> => {
     await phase.advance(command+":"+args[0]);
-    const result = await runner(command, args, workspace, signal, capture, environment??process.env,storage,phase);
+    const result = await runner(command, args, workspace, signal, capture, environment??boundedEnvironment,storage,phase);
     phase.budget();
     return result;
   };
@@ -60,8 +60,8 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
 /** 🔌️ Receives the original native caller for the selected dependency environment. */
 export class NativeDependenciesScript extends Script {
  async run(args:string[]):Promise<void>{
-  if(!(args.length===1||args.length===3&&args[1]==="--storage"))throw Error("Native dependency synchronization requires one environment and accepts no installer overrides");
-  try{await prepareDependencies(args[0]!,this.root,this.invocation,args.length===3?parseCargoPreparationStorageV1({version:1,directory:args[2],program:repositoryCargoPreparationStorageV1(process.cwd()).program}):repositoryCargoPreparationStorageV1(this.root));}
+  if(args.length!==1)throw Error("Native dependency synchronization requires one environment and accepts no installer overrides");
+  try{await withRepositoryCargoPreparationV1(this.repoRoot,this.root,this.invocation,process.env,async(environment,phase)=>prepareDependencies(args[0]!,this.root,this.invocation,parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE!)),runNativeDependencyToolV1,{...environment},phase));}
   catch(error){this.invocation.control.signal.throwIfAborted();throw error;}
  }
 }

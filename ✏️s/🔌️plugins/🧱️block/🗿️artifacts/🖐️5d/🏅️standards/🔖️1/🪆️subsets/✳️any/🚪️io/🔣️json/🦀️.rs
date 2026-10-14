@@ -66,7 +66,7 @@ fn camera3d(v: &mut DslValue, decode: bool) -> Result<(), String> {
     field(v, "target", vector, decode)?;
     field(v, "zoom", word, decode)
 }
-pub(crate) fn convert(mut v: DslValue, decode: bool) -> Result<DslValue, String> {
+pub fn convert(mut v: DslValue, decode: bool) -> Result<DslValue, String> {
     field(&mut v, "part2d", part2d, decode)?;
     field(&mut v, "part3d", part3d, decode)?;
     field(&mut v, "grips", grips, decode)?;

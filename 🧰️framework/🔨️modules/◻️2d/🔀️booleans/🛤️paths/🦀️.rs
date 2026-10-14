@@ -1,8 +1,8 @@
 //! 🛤️ Curved transformed fill operands enter work-granted planar booleans.
 use super::{BooleanError,BooleanFillRule,BooleanInput,BooleanJob,BooleanOperand,BooleanOperation,BooleanProgress,BooleanRetirement};
-use crate::{PathSegment,Vec2};
-use crate::flatten::{FlatContour,PathFlattenError,PathFlattenInput,PathFlattenJob,PathFlattenProgress,PathFlattenRetirement};
-use crate::retirement::WorkRetirementProgress;
+use semio_framework_2d_engine::{PathSegment,Vec2};
+use semio_framework_2d_path_flatten::{FlatContour,PathFlattenError,PathFlattenInput,PathFlattenJob,PathFlattenProgress,PathFlattenRetirement};
+use semio_framework_2d_retire::WorkRetirementProgress;
 use std::collections::VecDeque;
 pub type PathBooleanRetirementProgress=WorkRetirementProgress;
 #[derive(Clone,Debug)]
@@ -83,7 +83,7 @@ impl PathBooleanJob{
  }
  pub fn cancel(&mut self){self.cancelled=true;}
 }
-crate::physical_work_retirement!(PathBooleanRetirement,PathBooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean path physical close refused"));
+semio_framework_2d_retire::physical_work_retirement!(PathBooleanRetirement,PathBooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean path physical close refused"));
 semio_framework_value::artifact_retire_leaf!(PathBooleanPhase,PathBooleanProgress);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

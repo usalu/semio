@@ -1,5 +1,5 @@
 //! 🕸️ Complete managed topology and intrinsic owners use the caller's admitted backing.
-use crate::{LowpolyMeshState,LowpolyMeshVertex,LowpolyMeshHalfedge,LowpolyMeshFace,LowpolyMeshAttribute,LowpolyMeshMaterial,LowpolyMeshTexture,LowpolyMeshAttributeDomain as Domain,LowpolyMeshAttributeSemantic as Semantic,LowpolyMeshAttributeInterpolation as Interpolation};
+use crate::{managed_mesh::LowpolyMeshState, managed_mesh::LowpolyMeshVertex, managed_mesh::LowpolyMeshHalfedge, managed_mesh::LowpolyMeshFace, managed_mesh::LowpolyMeshAttribute, managed_mesh::LowpolyMeshMaterial, managed_mesh::LowpolyMeshTexture, managed_mesh::LowpolyMeshAttributeDomain as Domain, managed_mesh::LowpolyMeshAttributeSemantic as Semantic, managed_mesh::LowpolyMeshAttributeInterpolation as Interpolation};
 use semio_framework_value::{DecodedValue,DslValue as Value,FromValue,NativeDecodeControl,Number,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteRow,SqliteValue,artifact::{FloatColumn,FloatRow}};
 use super::rows::{Rows,sort};
@@ -11,7 +11,7 @@ fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidVa
 fn index(row:&SqliteRow,column:usize)->Result<u32>{u32::try_from(row.integer(column)?).map_err(|_|invalid("managed mesh UInt32 range differs"))}
 fn optional_index(row:&SqliteRow,column:usize)->Result<Option<u32>>{if row.values.get(column)==Some(&SqliteValue::Null){Ok(None)}else{index(row,column).map(Some)}}
 fn flag(row:&SqliteRow,column:usize)->Result<bool>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("managed mesh boolean range differs"))}}
-fn empty()->LowpolyMeshState{LowpolyMeshState{vertices:Vec::new(),halfedges:Vec::new(),faces:Vec::new(),uv_seams:Vec::new(),attributes:Vec::new(),materials:Vec::new(),textures:Vec::new()}}
+pub fn empty()->LowpolyMeshState{LowpolyMeshState{vertices:Vec::new(),halfedges:Vec::new(),faces:Vec::new(),uv_seams:Vec::new(),attributes:Vec::new(),materials:Vec::new(),textures:Vec::new()}}
 struct Build(LowpolyMeshState);
 impl Drop for Build{fn drop(&mut self){for attribute in&mut self.0.attributes{for value in attribute.values.drain(..){value.retire_decoded();}}for material in self.0.materials.drain(..){material.value.retire_decoded();}}}
 fn compare_text(left:&str,right:&str,control:&mut NativeDecodeControl<'_>)->Result<std::cmp::Ordering>{control.scoped_stage(|control|{let count=left.len().min(right.len());control.begin_stage(count)?;for(a,b)in left.bytes().zip(right.bytes()){control.step()?;let order=a.cmp(&b);if !order.is_eq(){return Ok(order)}}Ok(left.len().cmp(&right.len()))})}

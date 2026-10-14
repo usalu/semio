@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -21,7 +22,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
 pub fn plugin() -> Result<Plugin<ReasoningApps>, PluginAssemblyError> {
-    Plugin::<ReasoningApps>::builder("reasoning")
+    PluginBuilder::<_, ReasoningApps>::new("reasoning")
         .label("Mindmap")
         .version("0.1.0")
         .package_id("semio:reasoning")

@@ -1,6 +1,6 @@
-use super::ChangePileCount;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997PilesRows, En1997PilesPatch};
+use crate::change_pile_count::ChangePileCount;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997PilesRows, En1997PilesPatch};
 
 pub fn diff(payload: &ChangePileCount, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if payload.new_count == 0 {

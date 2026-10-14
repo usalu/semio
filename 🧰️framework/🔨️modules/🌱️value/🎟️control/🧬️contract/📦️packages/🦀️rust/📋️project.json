@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/value-control-contract-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

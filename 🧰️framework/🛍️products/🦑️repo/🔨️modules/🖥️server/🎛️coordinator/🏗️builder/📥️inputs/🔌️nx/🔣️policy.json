@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "project": "@semio-tech/repo-coordinator",
+  "target": "build",
+  "packageRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
+  "command": "bun ../../🏗️builder/🏃️execution/📜️script.ts build",
+  "output": "{workspaceRoot}/.cache/b/p/m/next/{options.env.SEMIO_BUILD_MODE}/out",
+  "enabled": false
+}

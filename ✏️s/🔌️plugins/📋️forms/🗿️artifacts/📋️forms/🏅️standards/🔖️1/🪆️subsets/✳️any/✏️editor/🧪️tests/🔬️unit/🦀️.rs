@@ -82,7 +82,7 @@ pub(crate) mod context {
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
         let files = app.config_pack().await.expect("config pack");
-        store::os_store::text_format::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr).await.expect("config projection").snapshot
+        store::os_store::text_format::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("config projection").snapshot
     }
     
     pub fn action_args(value: &serde_json::Value) -> semio_framework_value::DslValue {

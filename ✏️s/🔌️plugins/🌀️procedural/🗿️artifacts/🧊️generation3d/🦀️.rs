@@ -5,7 +5,6 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate self as semio_s_artifact_procedural_generation3d;
 
 
 
@@ -61,336 +60,522 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([semio_s_artifact_procedural_3d_inferences::generation3d_artifact_inference_descriptor()])
         .inference_services([semio_s_artifact_procedural_3d_geometry_service::geometry_inference_service()])
         .composers(semio_s_artifact_procedural_3d_io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
 
-//#region 🧪️Tests
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "🧪️tests/📈️guest-memory/🦀️.rs"]
-mod guest_memory_tests;
+//#region 🔖️Manifest
+/// 🗂️ The generation3d editor's app definition: the composition of its actions, commands, windows, modes and panels.
+pub mod manifest {
+    use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+    use semio_s_artifact_procedural_3d_add_widget as add_widget;
+    use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+    use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+    use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+    use semio_s_artifact_procedural_3d_export_document as export_document;
+    use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+    use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+    use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+    use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+    use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+    use semio_s_artifact_procedural_3d_import_document as import_document;
+    use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+    use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+    use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+    use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+    use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+    use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+    use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+    use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+    use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+    use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+    use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+    use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+    use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+    use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+    use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+    use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+    use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+    use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+    use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+    use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+    use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+    use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+    use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+    use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+    use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+    use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+    use semio_s_artifact_procedural_3d_mode_edit as edit;
+    use semio_s_artifact_procedural_3d_mode_generate as generate;
+    use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+    use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+    use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
+    use semio_s_artifact_procedural_3d_model::artifact_kind;
+    use semio_framework_plugin::ActionArgDef;
+    use semio_framework_plugin::ActionArgOption;
+    use semio_framework_plugin::ActionDefinition;
+    use semio_framework_plugin::ActionKind;
+    use semio_framework_plugin::CommandDefinition;
+    use semio_framework_plugin::Editor;
+    use semio_framework_plugin::GranularityDefinition;
+    use semio_framework_plugin::HierarchyProvider;
+    use semio_framework_plugin::HoverSpec;
+    use semio_framework_plugin::InteractionDefinition;
+    use semio_framework_plugin::InteractionRef;
+    use semio_framework_plugin::InteractiveJobClassification;
+    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework_plugin::MergeMode;
+    use semio_framework_plugin::SelectionMethod;
+    use semio_framework_plugin::SelectionMode;
+    use semio_framework_plugin::SelectionSpec;
+    use semio_framework_plugin::UtilityDefinition;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
+    use semio_s_artifact_procedural_3d_editor::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️app-fixture/🦀️.rs"]
-pub(crate) mod app_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️serial/🦀️.rs"]
-pub(crate) mod test_serial;
-
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
-pub(crate) mod store_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retirement-driver/🦀️.rs"]
-pub(crate) mod retirement_driver;
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️publication-authority/🦀️.rs"]
-pub(crate) mod publication_authority;
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧭️graph-editor/🦀️.rs"]
-mod graph_editor_tests;
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🗺️touched-regions/🦀️.rs"]
-mod touched_regions_tests;
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
-mod mutation_unit_tests;
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🦀️.rs"]
-mod gesture_leaves_tests;
-
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/📄️document-restoration/🦀️.rs"]
-mod document_restoration_tests;
-
-#[cfg(test)]
-#[path = "🔨️modules/🏠️host/🧪️tests/🔬️retained-authority-laws/🦀️.rs"]
-mod retained_authority_laws;
-
-//#endregion 🧪️Tests
-
-
-
-
-
-
-
-
-/// 🧵️ The surface-neutral `flowEvalTick` chain BOTH surfaces run. Mounted at the artifact level,
-/// beside `editor`/`viewer` rather than inside either, so the viewer can reach it without ever
-/// importing through the sibling `editor` module (`policyViewerPurityBreaches`) — the same reason
-/// [`GENERATION3D_DIALECT`] lives here (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod generation3d {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod examples {
-            #[path = "."]
-            pub mod demo_session {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-                mod tests;
-            }
-        }
-
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
-        pub mod transient;
-
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
-        pub mod wasm;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🦀️.rs"]
-            pub mod add_generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️.rs"]
-            pub mod add_widget;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/🦀️.rs"]
-            pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🦀️.rs"]
-            pub mod flow_eval_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🦀️.rs"]
-            pub mod flow_eval_tick;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
-            pub mod flow_tessellate_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🦀️.rs"]
-            pub mod flow_eval_release;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
-            pub mod flow_tessellate_cancel_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
-            pub mod set_contributions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️generation/🦀️.rs"]
-            pub mod generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🦀️.rs"]
-            pub mod export_document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📂️import-document-request/🦀️.rs"]
-            pub mod import_document_request;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-document/🦀️.rs"]
-            pub mod import_document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"]
-            pub mod node_graph_edit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs"]
-            pub mod node_graph_viewport;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🦀️.rs"]
-            pub mod navigate_graph;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-flow-widgets/🦀️.rs"]
-            pub mod patch_flow_widgets;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🦀️.rs"]
-            pub mod set_widget_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️remove-generation/🦀️.rs"]
-            pub mod remove_generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🦀️.rs"]
-            pub mod remove_widget;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-generation/🦀️.rs"]
-            pub mod rename_generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🦀️.rs"]
-            pub mod reorganize;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🦀️.rs"]
-            pub mod rotate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🦀️.rs"]
-            pub mod scale_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-generation/🦀️.rs"]
-            pub mod select_generation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
-            pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🦀️.rs"]
-            pub mod cycle_lod_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🦀️.rs"]
-            pub mod cycle_show_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
-            pub mod set_lod_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️.rs"]
-            pub mod set_show_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-sun-azimuth/🦀️.rs"]
-            pub mod set_sun_azimuth;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌄️set-sun-elevation/🦀️.rs"]
-            pub mod set_sun_elevation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔆️set-sun-intensity/🦀️.rs"]
-            pub mod set_sun_intensity;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🦀️.rs"]
-            pub mod toggle_sun;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🦀️.rs"]
-            pub mod translate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️update-generation-values/🦀️.rs"]
-            pub mod update_generation_values;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️.rs"]
-                    pub mod flow;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs"]
-                    pub mod preview;
-                }
-            }
-
-            #[path = "."]
-            pub mod generate {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🦀️.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️.rs"]
-                    pub mod form;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️.rs"]
-                    pub mod generations;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️.rs"]
-                    pub mod preview;
-                }
-            }
-        }
-
-        #[path = "."]
-        pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
-        }
+    fn categorized_action(id: &str, label: LocalizedLabel, kind: ActionKind, category: &str) -> ActionDefinition {
+        ActionDefinition::bounded_catalog(id, label, kind).with_category(category)
     }
-}
-
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod generation3d {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🦀️.rs"]
-        pub mod transient;
-
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/✅️flow-eval-resolve/🦀️.rs"]
-            pub mod flow_eval_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/⏱️flow-eval-tick/🦀️.rs"]
-            pub mod flow_eval_tick;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔺️flow-tessellate-resolve/🦀️.rs"]
-            pub mod flow_tessellate_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔓️flow-eval-release/🦀️.rs"]
-            pub mod flow_eval_release;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧯️flow-tessellate-cancel-resolve/🦀️.rs"]
-            pub mod flow_tessellate_cancel_resolve;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🦀️.rs"]
-            pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🦀️.rs"]
-            pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
-            pub mod set_lod_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🦀️.rs"]
-            pub mod set_show_mode;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧭️set-sun-azimuth/🦀️.rs"]
-            pub mod set_sun_azimuth;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌄️set-sun-elevation/🦀️.rs"]
-            pub mod set_sun_elevation;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔆️set-sun-intensity/🦀️.rs"]
-            pub mod set_sun_intensity;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌞️toggle-sun/🦀️.rs"]
-            pub mod toggle_sun;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📤️export-document/🦀️.rs"]
-            pub mod export_document;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧩️set-contributions/🦀️.rs"]
-            pub mod set_contributions;
-        }
-
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod preview {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🫧️transient/🦀️.rs"]
-                        pub mod transient;
-                    }
-                }
-            }
-        }
+    /// 🧵️ Classifies the internal flow continuation as backed by its bounded first-step factory.
+    fn migrated_command(mut definition: CommandDefinition) -> CommandDefinition {
+        definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        definition
     }
+    pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
+        Editor::builder(semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalRelease", LocalizedLabel::native("Release Preview Kernel Work", "Vorschau-Kernelarbeit freigeben"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateCancelResolve", LocalizedLabel::native("Resolve Preview Cancellation", "Vorschauabbruch aufnehmen"), "runtime", ActionKind::View) }))
+                .command(migrated_command(CommandDefinition {
+                    in_palette: false,
+                    ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                        ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                        ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                        ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+                    ])
+                }))
+                .artifact_kind(artifact_kind())
+                .icon_id("workflow")
+                .terminology("reuse")
+                .terminology_document("reuse", ["Entwerfen mit Bestand", "Generator"])
+                .mode_def(edit::definition())
+                .mode_def(generate::definition())
+                .default_mode_id(edit::GENERATION_3D_PLAY_MODE_EDIT)
+                .mode_layout(generate::GENERATION_3D_PLAY_MODE_GENERATE, generate::GENERATION_3D_PLAY_LAYOUT_GENERATE)
+                .window_kind_def(flow_window::definition())
+                .window_kind_def(edit_preview::definition())
+                .window_kind_def(generations::definition())
+                .window_kind_def(form::definition())
+                .window_kind_def(generate_preview::definition())
+                // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
+                // injects its reserved actions. Both modes reference it (`🎭️modes/✏️edit`, `🎭️modes/🧬️generate`)
+                // because both mount a preview window that starts it — a declared tool no mode references is
+                // refused by `build_definition` (`app-definition.invalid: … not referenced by any mode`).
+                .tool(semio_s_artifact_procedural_3d_preview_eval::preview_eval_tool_definition())
+                .default_layout(edit::layout())
+                .named_layout(generate::layout())
+                .panel_tab_def(artifact_panel::definition())
+                .panel_tab_def(catalogue_panel::definition())
+                .panel_tab_def(inspection_panel::definition())
+                // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
+                .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+                .action_with(categorized_action("editMeshSelection", LocalizedLabel::native("Edit Mesh Selection", "Netzauswahl bearbeiten"), ActionKind::Mutation, "methods"))
+                .action_with(categorized_action("knifeMeshSelection", LocalizedLabel::native("Knife Cut Selected Face", "Ausgewählte Fläche schneiden"), ActionKind::Mutation, "methods"))
+                .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
+                .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+                .action_destructive("deleteSelection")
+                .action_with(categorized_action("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Mutation, "targets"))
+                .action_destructive("removeWidget")
+                .action_with(categorized_action("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation, "create"))
+                .action_with(categorized_action("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Mutation, "methods"))
+                .action_with(categorized_action("setWidgetInput", LocalizedLabel::native("Edit Widget Input", "Elementeingabe bearbeiten"), ActionKind::Mutation, "methods"))
+                .action_with(categorized_action("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "transform"))
+                .action_with(categorized_action("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation, "transform"))
+                .action_with(categorized_action("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation, "transform"))
+                .action_with(categorized_action("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation, "transform"))
+                .action_with(categorized_action("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation, "create"))
+                .action_with(categorized_action("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Mutation, "targets"))
+                .action_destructive("removeGeneration")
+                .action_with(categorized_action("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation, "methods"))
+                .action_with(categorized_action("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation, "methods"))
+                // 📄️ Palette-visible host round-trips — the artifact's whole IO surface. `Shell` because
+                // neither authors a document row by itself: one asks the shell for a file, the other
+                // hands it a download (`🎮️commands/📂️import-document-request`, `📤️export-document`).
+                .shell_action("importDocumentRequest", LocalizedLabel::native("Import Artifact…", "Artefakt importieren…"))
+                .shell_action("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"))
+                // 📥️ Not palette-worthy: the shell dispatches it with the picked file, args no human
+                // types (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`).
+                .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importDocument", LocalizedLabel::native("Import Artifact File", "Artefaktdatei importieren"), ActionKind::Mutation) })
+                // 👁️ Ephemeral view actions — world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
+                // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
+                // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
+                // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
+                .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
+                .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
+                .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
+                // 🔁️ The keyboard halves of the two display pickers. `AppDefinition.keybinding` carries a
+                // chord and an action id and NOTHING else, so `setShowMode`/`setLodMode` — both of which
+                // require a `value` — can never be bound to one: a chord that opened a staged arg form
+                // would be slower than the picker it replaces. These two read their own next value off the
+                // config ladder instead (`config::next_show_mode`/`next_lod_mode`), which is the same
+                // ladder the pickers build their rows from.
+                .action_with(ActionDefinition::new("cycleShowMode", LocalizedLabel::native("Cycle Show Mode", "Anzeigemodus wechseln"), ActionKind::View, "eye"))
+                .action_with(ActionDefinition::new("cycleLodMode", LocalizedLabel::native("Cycle Lod Mode", "LOD-Modus wechseln"), ActionKind::View, "layers"))
+                // 🧭️ Node-by-node keyboard traversal of the graph canvas — the five verbs
+                // `📓️react-i18n-a11y-customization-2026-09-13.md` §4.1 named as missing. All five are
+                // ARG-FREE by construction (a chord carries a key and an action id and nothing else) and
+                // read their next target off the document's own wires and layout
+                // (`🎮️commands/🧭️navigate-graph`). `ActionKind::View`, never `Mutation`: a traversal moves
+                // the framework's selection lane and authors no document op.
+                .action_with(ActionDefinition::new("selectNextNode", LocalizedLabel::native("Select Next Node", "Nächsten Knoten auswählen"), ActionKind::View, "arrow-down"))
+                .action_with(ActionDefinition::new("selectPreviousNode", LocalizedLabel::native("Select Previous Node", "Vorherigen Knoten auswählen"), ActionKind::View, "arrow-up"))
+                .action_with(ActionDefinition::new("selectUpstreamNode", LocalizedLabel::native("Select Upstream Node", "Vorgelagerten Knoten auswählen"), ActionKind::View, "arrow-left"))
+                .action_with(ActionDefinition::new("selectDownstreamNode", LocalizedLabel::native("Select Downstream Node", "Nachgelagerten Knoten auswählen"), ActionKind::View, "arrow-right"))
+                .action_with(ActionDefinition::new("activateSelection", LocalizedLabel::native("Open Node Ports", "Knotenanschlüsse öffnen"), ActionKind::View, "circle"))
+                .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
+                .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
+                .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
+                .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
+                .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
+                .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
+                .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+                .action_destructive("setActiveExample")
+                .action_interactive_job("editMeshSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("knifeMeshSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
+                .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("removeWidget", InteractiveJobClassification::Migrated)
+                .action_interactive_job("addWidget", InteractiveJobClassification::Migrated)
+                .action_interactive_job("patchFlowWidgets", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setWidgetInput", InteractiveJobClassification::Migrated)
+                .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
+                .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("addGeneration", InteractiveJobClassification::Migrated)
+                .action_interactive_job("removeGeneration", InteractiveJobClassification::Migrated)
+                .action_interactive_job("renameGeneration", InteractiveJobClassification::Migrated)
+                .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
+                .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("cycleShowMode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("cycleLodMode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("selectNextNode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("selectPreviousNode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("selectUpstreamNode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("selectDownstreamNode", InteractiveJobClassification::Migrated)
+                .action_interactive_job("activateSelection", InteractiveJobClassification::Migrated)
+                .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+                .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
+                .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
+                .action_interactive_job("flowEvalResolve", InteractiveJobClassification::Migrated)
+                .action_interactive_job("flowTessellateResolve", InteractiveJobClassification::Migrated)
+                .action_interactive_job("flowTessellateCancelResolve", InteractiveJobClassification::Migrated)
+                .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
+                .action_interactive_job("importDocumentRequest", InteractiveJobClassification::Migrated)
+                .action_interactive_job("importDocument", InteractiveJobClassification::Migrated)
+                .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
+                .action_destructive("exportDocument")
+                .action_args("editMeshSelection", vec![
+                    ActionArgDef::select("operation", LocalizedLabel::native("Operation", "Operation"), vec![
+                        ActionArgOption::new("extrude", LocalizedLabel::native("Extrude Faces", "Flächen extrudieren")),
+                        ActionArgOption::new("inset", LocalizedLabel::native("Inset Faces", "Flächen einziehen")),
+                        ActionArgOption::new("subdivide", LocalizedLabel::native("Subdivide Faces", "Flächen unterteilen")),
+                        ActionArgOption::new("flip", LocalizedLabel::native("Flip Faces", "Flächen umkehren")),
+                        ActionArgOption::new("deleteFaces", LocalizedLabel::native("Delete Faces", "Flächen löschen")),
+                        ActionArgOption::new("moveVertices", LocalizedLabel::native("Move Vertices", "Eckpunkte verschieben")),
+                        ActionArgOption::new("loopCut", LocalizedLabel::native("Cut Edge Loops", "Kantenschleifen schneiden")),
+                        ActionArgOption::new("bevel", LocalizedLabel::native("Bevel Edges", "Kanten abschrägen")),
+                        ActionArgOption::new("dissolveEdges", LocalizedLabel::native("Dissolve Edges", "Kanten auflösen")),
+                        ActionArgOption::new("dissolveVertices", LocalizedLabel::native("Dissolve Vertices", "Eckpunkte auflösen")),
+                        ActionArgOption::new("mergeVertices", LocalizedLabel::native("Merge Vertices", "Eckpunkte zusammenführen")),
+                        ActionArgOption::new("moveProportional", LocalizedLabel::native("Move Proportionally", "Proportional verschieben")),
+                        ActionArgOption::new("snapVertices", LocalizedLabel::native("Snap Vertices to Grid", "Eckpunkte am Raster ausrichten")),
+                        ActionArgOption::new("filletEdges",LocalizedLabel::native("Fillet B-Rep Edges","B-Rep-Kanten verrunden")),
+                        ActionArgOption::new("chamferEdges",LocalizedLabel::native("Chamfer B-Rep Edges","B-Rep-Kanten fasen")),
+                        ActionArgOption::new("shell",LocalizedLabel::native("Shell B-Rep Faces","B-Rep-Flächen aushöhlen")),
+                        ActionArgOption::new("draft",LocalizedLabel::native("Draft B-Rep Faces","B-Rep-Flächen mit Formschräge versehen")),
+                        ActionArgOption::new("defeature",LocalizedLabel::native("Remove B-Rep Features","B-Rep-Formelemente entfernen")),
+                    ]).required().default_value(&"extrude"),
+                    ActionArgDef::number("amount", LocalizedLabel::native("Distance / Inset", "Abstand / Einzug")).default_value(&0.1),
+                    ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(256.0), Some(1.0), true), ..ActionArgDef::number("cuts", LocalizedLabel::native("Loop Cuts", "Schleifenschnitte")).default_value(&1) },
+                    ActionArgDef::number("dx", LocalizedLabel::native("Move X", "Verschieben X")).default_value(&0.0),
+                    ActionArgDef::number("dy", LocalizedLabel::native("Move Y", "Verschieben Y")).default_value(&0.0),
+                    ActionArgDef::number("dz", LocalizedLabel::native("Move Z", "Verschieben Z")).default_value(&0.0),
+                    ActionArgDef::number("width", LocalizedLabel::native("Bevel Width", "Fasenbreite")).default_value(&0.1),
+                    ActionArgDef { schema: semio_framework::ArgSchema::number(Some(1.0), Some(64.0), Some(1.0), true), ..ActionArgDef::number("segments", LocalizedLabel::native("Bevel Segments", "Fasensegmente")).default_value(&1) },
+                    ActionArgDef::select("mergeMode", LocalizedLabel::native("Merge Mode", "Zusammenführungsmodus"), vec![
+                        ActionArgOption::new("first", LocalizedLabel::native("First Vertex", "Erster Eckpunkt")),
+                        ActionArgOption::new("center", LocalizedLabel::native("Center", "Mittelpunkt")),
+                        ActionArgOption::new("distance", LocalizedLabel::native("By Distance", "Nach Abstand")),
+                    ]).default_value(&"center"),
+                    ActionArgDef::number("tolerance", LocalizedLabel::native("Merge Tolerance", "Zusammenführungstoleranz")).default_value(&0.0001),
+                    ActionArgDef::number("radius", LocalizedLabel::native("Proportional Radius", "Proportionaler Radius")).default_value(&1.0),
+                    ActionArgDef::number("grid", LocalizedLabel::native("Grid Spacing", "Rasterabstand")).default_value(&1.0),
+                    ActionArgDef::vector("center", LocalizedLabel::native("Proportional Center", "Proportionaler Mittelpunkt"), 3).default_value(&[0.0, 0.0, 0.0]),
+                    ActionArgDef::number("angle",LocalizedLabel::native("Draft Angle (rad)","Formschrägenwinkel (rad)")).default_value(&0.1),
+                    ActionArgDef::vector("pullDirection",LocalizedLabel::native("Pull Direction","Entformungsrichtung"),3).default_value(&[0.0,0.0,1.0]),
+                    ActionArgDef::vector("neutralPoint",LocalizedLabel::native("Neutral Point","Neutralpunkt"),3).default_value(&[0.0,0.0,0.0]),
+                ])
+                .action_args("knifeMeshSelection", vec![
+                    ActionArgDef::vector("start", LocalizedLabel::native("Cut Start", "Schnittanfang"), 3).required().default_value(&[0.0, -1.0, 0.0]),
+                    ActionArgDef::vector("end", LocalizedLabel::native("Cut End", "Schnittende"), 3).required().default_value(&[0.0, 1.0, 0.0]),
+                ])
+                .action_args("addWidget", vec![
+                    ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
+                        ActionArgOption::new("neuron", LocalizedLabel::native("Neuron", "Neuron")),
+                        ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
+                        ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
+                        ActionArgOption::new("outputPreview", LocalizedLabel::native("Preview", "Vorschau")),
+                    ]).default_value(&"inputSlider"),
+                    ActionArgDef::text("neuronKind", LocalizedLabel::native("Operator", "Operator")),
+                    ActionArgDef::text("format", LocalizedLabel::native("Export Format", "Exportformat")),
+                    ActionArgDef::text("action", LocalizedLabel::native("Action", "Aktion")),
+                ])
+                .action_args("setWidgetInput", vec![
+                    ActionArgDef::select("facet", LocalizedLabel::native("Widget field", "Elementfeld"), vec![ActionArgOption::new("port", LocalizedLabel::native("Operator input", "Operatoreingang")), ActionArgOption::new("variableName", LocalizedLabel::native("Variable name", "Variablenname")), ActionArgOption::new("variableSchema", LocalizedLabel::native("Variable type", "Variablentyp")), ActionArgOption::new("exportFormat", LocalizedLabel::native("Export format", "Exportformat")), ActionArgOption::new("meshSource", LocalizedLabel::native("Mesh source", "Netzquelle"))]),
+                    ActionArgDef::text("widgetId", LocalizedLabel::native("Widget", "Element")).required(),
+                    ActionArgDef::text("channel", LocalizedLabel::native("Input", "Eingabe")).required(),
+                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).required(),
+                    ActionArgDef::text("component", LocalizedLabel::native("Coordinate", "Koordinate")),
+                    ActionArgDef::select("operation", LocalizedLabel::native("List Operation", "Listenoperation"), vec![ActionArgOption::new("set",LocalizedLabel::native("Edit Item","Eintrag bearbeiten")),ActionArgOption::new("add",LocalizedLabel::native("Add Item","Eintrag hinzufügen")),ActionArgOption::new("remove",LocalizedLabel::native("Remove Item","Eintrag entfernen")),ActionArgOption::new("move",LocalizedLabel::native("Move Item","Eintrag verschieben"))]),
+                    ActionArgDef::number("index", LocalizedLabel::native("Item Index", "Eintragsindex")),
+                    ActionArgDef::number("destination", LocalizedLabel::native("Destination Index", "Zielindex")),
+                    ActionArgDef::text_list("path", LocalizedLabel::native("Mesh field", "Netzfeld")),
+                ])
+                // 📤️ One option per `document_io::EXPORT_FORMATS` row, in that table's order — asserted
+                // equal to it by `export_document_action_offers_every_declared_format`, so a format this
+                // artifact stops claiming cannot linger in the picker.
+                .action_args("exportDocument", vec![
+                    ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl"),
+                    ActionArgDef::text("widgetId", LocalizedLabel::native("Export output", "Exportausgabe")),
+                ])
+                .action_args("setActiveExample", vec![
+                    ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH, LocalizedLabel::native("Mesh Workbench", "Netzwerkstatt")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
+                        ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
+                    ]).required(),
+                ])
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
+                .window_kind_utilities(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
+                // 🕹️ The generate preview is the SAME World3d surface as the edit preview, over the same
+                // `graph` interaction domain and the same `preview_selection_json` (whose `transformMode`/
+                // `gumballActive` pair is what `World3dHost` gates the gumball on) — it was simply never
+                // handed the transform utility rail, so `ViewModel.active_utility_id` stayed empty there and
+                // the gumball could never appear. A user could select a generated instance in generate mode
+                // and then had no way to move it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #5).
+                .window_kind_utilities(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
+                // 📇️ Window-scoped action ownership (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Each list is
+                // exactly what THAT window's own surface dispatches — the node-graph host's verbs and the LOD
+                // measure on the flow window, the world host's camera/gumball verbs and the show/sun measures on
+                // the two 3D previews, the generation tree's four row verbs on the Generations window, the form's
+                // one change verb on the Form window. Asserted by
+                // `every_emitted_action_is_declared_on_its_window_kind`.
+                //
+                // Everything NOT listed here stays deliberately unowned and is therefore copied onto every window
+                // by `build_definition` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`) —
+                // that is the correct home for the app-scoped verbs no single window emits: the navbar's
+                // `setActiveExample`, the catalogue palette's `addWidget`, the inspector's `patchFlowWidgets`, the
+                // context menu's `reorganize`/`removeWidget`/`deleteSelection`, and the
+                // framework's own history/clipboard/tutorial ids.
+                // 🧭️ The five keyboard-traversal verbs are OWNED by the flow window, and that ownership is
+                // their whole scope: `ShellHost`'s keybinding loop resolves a chord against the FOCUSED
+                // window kind's own actions, so the bare arrow chords below are live exactly while the node
+                // graph has focus and are inert in every other window — which is what lets them be bare
+                // arrows at all. `activateSelection` is owned here for the same reason and because the flow
+                // canvas's own `Trigger::Activate` binding dispatches it (`declaredAction` gate).
+                .window_kind_action_refs(
+                    flow_window::GENERATION_3D_PLAY_WINDOW_MAIN,
+                    vec![
+                        "nodeGraphEdit".into(),
+                        "nodeGraphViewport".into(),
+                        "setLodMode".into(),
+                        "selectNextNode".into(),
+                        "selectPreviousNode".into(),
+                        "selectUpstreamNode".into(),
+                        "selectDownstreamNode".into(),
+                        "activateSelection".into(),
+                    ],
+                )
+                .window_kind_action_refs(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec![
+                    "editMeshSelection".into(),
+                    "knifeMeshSelection".into(),
+                    "setCamera".into(),
+                    "setShowMode".into(),
+                    "toggleSun".into(),
+                    "setSunAzimuth".into(),
+                    "setSunElevation".into(),
+                    "setSunIntensity".into(),
+                    "translateSelection".into(),
+                    "rotateSelection".into(),
+                    "scaleSelection".into(),
+                ])
+                .window_kind_action_refs(generations::GENERATION_3D_PLAY_WINDOW_GENERATIONS, vec!["addGeneration".into(), "selectGeneration".into(), "renameGeneration".into(), "removeGeneration".into()])
+                .window_kind_action_refs(form::GENERATION_3D_PLAY_WINDOW_GENERATE_FORM, vec!["updateGenerationValues".into()])
+                .window_kind_action_refs(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec![
+                    "setCamera".into(),
+                    "setShowMode".into(),
+                    "toggleSun".into(),
+                    "setSunAzimuth".into(),
+                    "setSunElevation".into(),
+                    "setSunIntensity".into(),
+                    "translateSelection".into(),
+                    "rotateSelection".into(),
+                    "scaleSelection".into(),
+                ])
+                // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
+                // one domain over the flow-graph widget DAG, node/edge/handle granularities,
+                // `HierarchyProvider::Topology` (see `Generation3dPlayApp::interaction_topology` below) —
+                // transitive hover is the headline feature: hovering a Cluster group node highlights every
+                // widget nested in its tree.
+                .interaction(InteractionDefinition {
+                    id: "graph".into(),
+                    label: LocalizedLabel::native("Graph", "Graph"),
+                    granularities: vec![
+                        GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                        GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                        GranularityDefinition { id: "handle".into(), label: LocalizedLabel::native("Handle", "Griff"), icon_id: "move".into() },
+                    ],
+                    hierarchy: HierarchyProvider::Topology,
+                    hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+                    selection: SelectionSpec {
+                        modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                        methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                        merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                        transitive: false,
+                        broadcast: true,
+                    },
+                })
+                .interaction(InteractionDefinition {
+                    id: selection::DOMAIN.into(),
+                    label: LocalizedLabel::native("Geometry", "Geometrie"),
+                    granularities: vec![
+                        GranularityDefinition { id: "object".into(), label: LocalizedLabel::native("Object", "Objekt"), icon_id: "box".into() },
+                        GranularityDefinition { id: "vertex".into(), label: LocalizedLabel::native("Vertex", "Eckpunkt"), icon_id: "circle".into() },
+                        GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                        GranularityDefinition { id: "face".into(), label: LocalizedLabel::native("Face", "Fläche"), icon_id: "square".into() },
+                    ],
+                    hierarchy: HierarchyProvider::Flat,
+                    hover: HoverSpec::default(),
+                    selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle], merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive], transitive: false, broadcast: true },
+                })
+                .window_kind_interactions(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("graph")])
+                .window_kind_interactions(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec![InteractionRef::new("graph"), InteractionRef::new(selection::DOMAIN)])
+                .window_kind_interactions(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
+                .keybinding("mod+shift+m", "editMeshSelection")
+                .keybinding("mod+shift+k", "knifeMeshSelection")
+                .keybinding("mod+z", "undo")
+                .keybinding("mod+shift+z", "redo")
+                // 🗺️ `reorganize` had exactly ONE reachable trigger, the flow canvas's right-click menu —
+                // mouse-only, and therefore unreachable by keyboard (`📓️audit-user-journey-gaps-2026-09-13.md`
+                // §3 "every other one of the 30 editor commands"). `mod+alt+l` ("layout") is arg-free, so
+                // `ShellHost`'s keybinding loop fires it straight through `onAction` with no staged form.
+                .keybinding("mod+alt+l", "reorganize")
+                // 📄️ The two IO verbs get the chords every application in the world uses for them.
+                // `importDocumentRequest` is arg-free, so `ShellHost`'s keybinding loop fires it straight
+                // through `onAction`; `exportDocument` carries a required `format`, so the same loop opens
+                // its staged arg form rather than exporting a format nobody picked.
+                .keybinding("mod+o", "importDocumentRequest")
+                .keybinding("mod+shift+e", "exportDocument")
+                // ⌨️ The graph / preview / generate verbs a user repeats, each on the chord its own verb
+                // class already uses elsewhere in this repo: `delete,backspace` is the deleteSelection
+                // chord three sibling artifacts declare, `mod+shift+g` follows the `mod+shift+<initial>` create
+                // chords. Stopping a preview evaluation is the framework's `toolRunAbort` chord, injected with
+                // the `previewEval` run, never a plugin binding. All four are ARG-FREE actions, which is what `ShellHost`'s keybinding loop requires to fire
+                // an action straight through `onAction` instead of opening a staged form
+                // (`📓️audit-user-journey-gaps-2026-09-13.md` §3, "every other one of the 30 editor
+                // commands: MISSING keyboard path"). Framing the flow graph is the app action `zoomToFlow`,
+                // not shell overlay chrome — declare it here once the command lands.
+                .keybinding("delete,backspace", "deleteSelection")
+                .keybinding("mod+shift+g", "addGeneration")
+                .keybinding("mod+alt+d", "cycleShowMode")
+                .keybinding("mod+alt+k", "cycleLodMode")
+                // 🧭️ Node-by-node traversal of the graph canvas. BARE arrows, with no modifier, because
+                // `role="application"` — which `accessibility_role` already implies for every
+                // `Component::Surface` and which the React shell now paints on the canvas — is the ARIA
+                // contract for "this widget handles its own arrow keys"; a modifier would break the promise
+                // the canvas makes to a screen reader. They are safe as bare chords for two measured
+                // reasons: all five verbs are owned by the flow window above, and `ShellHost`'s keybinding
+                // loop resolves a chord against the FOCUSED window kind's actions only, so they are inert
+                // anywhere else; and that loop returns early on `event.defaultPrevented` and on any
+                // editable target, so a tree row or a text field that handles its own arrows keeps them.
+                // ⌨️ The key token is the DOM `event.key` lowercased (`arrowdown`), never a shorthand:
+                // `keyboardEventMatchesChord` compares the last `+` segment against `event.key` verbatim,
+                // which is the same rule that made `mod+period` a silently dead chord.
+                .keybinding("arrowdown", "selectNextNode")
+                .keybinding("arrowup", "selectPreviousNode")
+                .keybinding("arrowleft", "selectUpstreamNode")
+                .keybinding("arrowright", "selectDownstreamNode")
+                .config(Generation3dPlayApp::config_spec())
+                .io(::semio_framework_async::poll::resolve_ready(generation3d_io()))
+                .action_describe("addGeneration", LocalizedLabel::native("Adds a new generation, a named set of input values for the 3D generator, to the generation list and selects it.", "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 3D-Generator, und wählt sie aus."))
+                .action_describe("selectGeneration", LocalizedLabel::native("Selects the generation with the given id, whose input values the generator then evaluates and shows.", "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."))
+                .action_describe("renameGeneration", LocalizedLabel::native("Renames one generation of the generation list.", "Benennt eine Generation der Generationsliste um."))
+                .action_describe("removeGeneration", LocalizedLabel::native("Removes one generation by id from the generation list, with its input values.", "Entfernt eine Generation anhand ihrer Id samt ihrer Eingabewerte aus der Generationsliste."))
+                .action_describe("updateGenerationValues", LocalizedLabel::native("Sets the value one input question takes in a generation (the selected one when no id is given) and re-evaluates the result.", "Setzt den Wert, den eine Eingabefrage in einer Generation annimmt (ohne Id in der ausgewählten), und wertet das Ergebnis neu aus."))
+                .action_describe("addWidget", LocalizedLabel::native("Adds a new widget of the given kind (an input or an operator of the 3D generator graph) to the canvas.", "Fügt der Fläche ein neues Widget der angegebenen Art hinzu (eine Eingabe oder einen Operator des 3D-Generatorgraphen)."))
+                .action_describe("removeWidget", LocalizedLabel::native("Removes one widget by id from the generator graph together with its connections.", "Entfernt ein Widget anhand seiner Id samt seiner Verbindungen aus dem Generatorgraphen."))
+                .action_describe("reorganize", LocalizedLabel::native("Lays out every widget of the generator graph automatically from left to right, overwriting their manual positions.", "Ordnet alle Widgets des Generatorgraphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."))
+                .action_describe("setShowMode", LocalizedLabel::native("Sets what the editor shows, such as the generator graph or the generated result; only the view changes.", "Legt fest, was der Editor zeigt, etwa den Generatorgraphen oder das erzeugte Ergebnis; nur die Ansicht ändert sich."))
+                .action_describe("editMeshSelection", LocalizedLabel::native("Edits the faces, edges, or vertices selected in the preview by inserting an adjustable mesh widget; downstream geometry and analysis follow the edit.", "Bearbeitet die in der Vorschau ausgewählten Flächen, Kanten oder Eckpunkte mit einem einstellbaren Netz-Widget; nachgelagerte Geometrie und Analyse folgen der Änderung."))
+                .action_describe("knifeMeshSelection", LocalizedLabel::native("Cuts one selected mesh face along the line through two points. The cut remains editable and downstream measurements update.", "Schneidet eine ausgewählte Netzfläche entlang der Geraden durch zwei Punkte. Der Schnitt bleibt einstellbar und nachgelagerte Messungen werden aktualisiert."))
+                .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 3D generator with one of the plugin's bundled examples, by example id.", "Ersetzt den gesamten 3D-Generator durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+                .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the 3D preview draws the generated result with; only the view changes.", "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."))
+                .action_describe("selectNextNode", LocalizedLabel::native("Moves the graph selection to the next widget in the generator graph.", "Bewegt die Auswahl im Generatorgraphen zum nächsten Widget."))
+                .action_describe("selectPreviousNode", LocalizedLabel::native("Moves the graph selection to the previous widget in the generator graph.", "Bewegt die Auswahl im Generatorgraphen zum vorherigen Widget."))
+                .action_describe("selectUpstreamNode", LocalizedLabel::native("Moves the graph selection to a widget feeding the selected one.", "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das das ausgewählte speist."))
+                .action_describe("selectDownstreamNode", LocalizedLabel::native("Moves the graph selection to a widget fed by the selected one.", "Bewegt die Auswahl im Generatorgraphen zu einem Widget, das vom ausgewählten gespeist wird."))
+                .action_describe("activateSelection", LocalizedLabel::native("Opens the ports of the selected widget in the graph window, as pressing Enter on it does; only the view changes.", "Öffnet die Ports des ausgewählten Widgets im Graphfenster, wie ein Druck auf die Eingabetaste; nur die Ansicht ändert sich."))
+                .action_describe("toggleSun", LocalizedLabel::native("Switches the sun light of the 3D preview on or off; only the view changes.", "Schaltet das Sonnenlicht der 3D-Vorschau ein oder aus; nur die Ansicht ändert sich."))
+                .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction the 3D preview's sun shines from; only the view changes.", "Legt die Himmelsrichtung fest, aus der die Sonne der 3D-Vorschau scheint; nur die Ansicht ändert sich."))
+                .action_describe("setSunElevation", LocalizedLabel::native("Sets how high the 3D preview's sun stands above the horizon; only the view changes.", "Legt fest, wie hoch die Sonne der 3D-Vorschau über dem Horizont steht; nur die Ansicht ändert sich."))
+                .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D preview's sun; only the view changes.", "Legt die Helligkeit der Sonne der 3D-Vorschau fest; nur die Ansicht ändert sich."))
+                .action_describe("translateSelection", LocalizedLabel::native("Moves the given or selected generated objects by dx, dy and dz through a translate transform in the generator graph; one gumball drag is one undo step.", "Verschiebt die angegebenen oder ausgewählten erzeugten Objekte über eine Verschiebe-Transformation im Generatorgraphen um dx, dy und dz; ein Gumball-Zug ist ein Rückgängig-Schritt."))
+                .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given or selected generated objects around an axis by an angle through a rotate transform in the generator graph.", "Dreht die angegebenen oder ausgewählten erzeugten Objekte über eine Dreh-Transformation im Generatorgraphen um eine Achse und einen Winkel."))
+                .action_describe("scaleSelection", LocalizedLabel::native("Scales the given or selected generated objects by per-axis factors through a scale transform in the generator graph.", "Skaliert die angegebenen oder ausgewählten erzeugten Objekte über eine Skalier-Transformation im Generatorgraphen um Faktoren je Achse."))
+                .action_describe("deleteSelection", LocalizedLabel::native("Deletes every selected widget from the generator graph together with its connections.", "Löscht alle ausgewählten Widgets samt ihrer Verbindungen aus dem Generatorgraphen."))
+                .action_describe("patchFlowWidgets", LocalizedLabel::native("Sets one numeric field (such as a slider value) on several widgets at once; one drag of the control is one undo step.", "Setzt ein Zahlenfeld (etwa einen Schiebereglerwert) auf mehreren Widgets zugleich; ein Zug des Bedienelements ist ein Rückgängig-Schritt."))
+                .action_describe("importDocumentRequest", LocalizedLabel::native("Opens the host's file picker for a 3D artifact file; the chosen file is then imported as the generator document.", "Öffnet die Dateiauswahl des Hosts für eine 3D-Artefaktdatei; die gewählte Datei wird dann als Generatordokument importiert."))
+                .action_describe("exportDocument", LocalizedLabel::native("Writes the generated 3D result in the chosen format to a downloaded file on the user's machine.", "Schreibt das erzeugte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
+                .action_describe("importDocument", LocalizedLabel::native("Replaces the generator document with one read from an imported 3D artifact file.", "Ersetzt das Generatordokument durch eines aus einer importierten 3D-Artefaktdatei."))
+                .action_describe("cycleShowMode", LocalizedLabel::native("Switches the editor to the next show mode in turn (such as graph, result or wireframe); only the view changes.", "Wechselt den Editor reihum in den nächsten Anzeigemodus (etwa Graph, Ergebnis oder Drahtgitter); nur die Ansicht ändert sich."))
+                .action_describe("cycleLodMode", LocalizedLabel::native("Switches the 3D preview to the next level of detail in turn; only the view changes.", "Wechselt die 3D-Vorschau reihum zur nächsten Detailstufe; nur die Ansicht ändert sich."))
+                .action_audience("nodeGraphEdit", semio_framework_plugin::CapabilityAudience::Input)
+                .action_audience("nodeGraphViewport", semio_framework_plugin::CapabilityAudience::Chrome)
+                .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+                .action_destructive("reorganize")
+                .action_destructive("importDocument")
+                .build_definition()
+    }
+
+
 }
+//#endregion 🔖️Manifest
+
+
+
+
+
+
+
+
+

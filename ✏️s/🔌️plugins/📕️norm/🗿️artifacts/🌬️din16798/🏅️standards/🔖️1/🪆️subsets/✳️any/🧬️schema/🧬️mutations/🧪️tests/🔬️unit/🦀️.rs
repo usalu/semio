@@ -1,7 +1,8 @@
 //! 🧪 Every DIN EN 16798 mutation changes its intended leaf; inverse restores the fixture.
 
-use crate::mutations::*;
-use crate::{Din16798Mutation, Din16798Snapshot};
+use crate::*;
+use crate::Din16798Mutation;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 fn apply(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Din16798Snapshot {
     let outcome = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
@@ -22,7 +23,7 @@ fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: D
 
 fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798Mutation)> {
     vec![
-        ("change-annex", Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: if base.annex == crate::document::AnnexChoice::De { crate::document::AnnexChoice::En } else { crate::document::AnnexChoice::De } })),
+        ("change-annex", Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: if base.annex == semio_s_plugin_norm_compliance::AnnexChoice::De { semio_s_plugin_norm_compliance::AnnexChoice::En } else { semio_s_plugin_norm_compliance::AnnexChoice::De } })),
         ("change-theta-rm", Din16798Mutation::ChangeThetaRm(change_theta_rm::ChangeThetaRm { new_theta_rm_c: base.theta_rm_c + 1.0 })),
         ("change-outdoor-co2", Din16798Mutation::ChangeOutdoorCo2(change_outdoor_co2::ChangeOutdoorCo2 { new_outdoor_co2_ppm: base.outdoor_co2_ppm + 10.0 })),
         ("change-envelope-n50", Din16798Mutation::ChangeEnvelopeN50(change_envelope_n50::ChangeEnvelopeN50 { new_envelope_n50_h_inv: base.envelope_n50_h_inv + 0.1 })),
@@ -30,7 +31,7 @@ fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798M
         ("change-cellar-area", Din16798Mutation::ChangeCellarArea(change_cellar_area::ChangeCellarArea { new_cellar_area_m2: base.cellar_area_m2 + 1.0 })),
         ("change-cellar-ventilation", Din16798Mutation::ChangeCellarVentilation(change_cellar_ventilation::ChangeCellarVentilation { new_cellar_ventilation_m3_h: base.cellar_ventilation_m3_h + 1.0 })),
         ("change-night-setback", Din16798Mutation::ChangeNightSetback(change_night_setback::ChangeNightSetback { new_night_setback_k: base.night_setback_k + 0.5 })),
-        ("insert-zone", Din16798Mutation::InsertZone(insert_zone::InsertZone { index: Some(base.zones.len()), zone: { let mut z = crate::ZoneDocument::default(); z.id = "zone-inserted".into(); z } })),
+        ("insert-zone", Din16798Mutation::InsertZone(insert_zone::InsertZone { index: Some(base.zones.len()), zone: { let mut z = semio_s_artifact_norm_din16798_model::ZoneDocument::default(); z.id = "zone-inserted".into(); z } })),
         ("remove-zone", Din16798Mutation::RemoveZone(remove_zone::RemoveZone { zone_id: base.zones[0].id.clone() })),
         ("change-zone-usage-type", Din16798Mutation::ChangeZoneUsageType(change_zone_usage_type::ChangeZoneUsageType { zone_id: base.zones[0].id.clone(), new_usage_type: "classroom".into() })),
         ("change-zone-floor-area", Din16798Mutation::ChangeZoneFloorArea(change_zone_floor_area::ChangeZoneFloorArea { zone_id: base.zones[0].id.clone(), new_floor_area_m2: base.zones[0].floor_area_m2 + 1.0 })),
@@ -49,7 +50,7 @@ fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798M
         ("change-zone-illuminance", Din16798Mutation::ChangeZoneIlluminance(change_zone_illuminance::ChangeZoneIlluminance { zone_id: base.zones[0].id.clone(), new_illuminance_lx: base.zones[0].illuminance_lx + 10.0 })),
         ("change-zone-noise", Din16798Mutation::ChangeZoneNoise(change_zone_noise::ChangeZoneNoise { zone_id: base.zones[0].id.clone(), new_noise_db: base.zones[0].noise_db + 1.0 })),
         ("change-zone-vent-system-id", Din16798Mutation::ChangeZoneVentSystemId(change_zone_vent_system_id::ChangeZoneVentSystemId { zone_id: base.zones[0].id.clone(), new_vent_system_id: "vent-other".into() })),
-        ("insert-vent-system", Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: Some(base.vent_systems.len()), vent: { let mut v = crate::VentSystemDocument::default(); v.id = "vent-inserted".into(); v } })),
+        ("insert-vent-system", Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: Some(base.vent_systems.len()), vent: { let mut v = semio_s_artifact_norm_din16798_model::VentSystemDocument::default(); v.id = "vent-inserted".into(); v } })),
         ("remove-vent-system", Din16798Mutation::RemoveVentSystem(remove_vent_system::RemoveVentSystem { vent_id: base.vent_systems[0].id.clone() })),
         ("change-vent-system-type", Din16798Mutation::ChangeVentSystemType(change_vent_system_type::ChangeVentSystemType { vent_id: base.vent_systems[0].id.clone(), new_system_type: "decentral_mech".into() })),
         ("change-vent-sfp", Din16798Mutation::ChangeVentSfp(change_vent_sfp::ChangeVentSfp { vent_id: base.vent_systems[0].id.clone(), new_sfp_w_m3_s: base.vent_systems[0].sfp_w_m3_s + 50.0 })),
@@ -68,7 +69,7 @@ fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798M
 
 #[semio_framework_async_macros::async_test]
 async fn kinds_nonempty() {
-    assert!(crate::artifact_schema::mutations::KINDS.len() >= 41);
+    assert!(crate::KINDS.len() >= 41);
 }
 
 #[semio_framework_async_macros::async_test]

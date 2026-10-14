@@ -1,7 +1,7 @@
 //! 🚦️ Borrowed SQLite row admission and relational ordering.
 use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::SqliteRow;
-use semio_s_artifact_cad_cad_model::{references::invalid, references::frontiers::order};
+use crate::{references::invalid, references::frontiers::order};
 pub(crate) fn keyed<'a>(rows: &'a [SqliteRow], columns: usize, parent: Option<i64>, control: &mut NativeDecodeControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(rows.len())?;

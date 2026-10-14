@@ -1,9 +1,11 @@
 //! 🔀 `reorder-pages` — repositions a page within the display-ordered `pages` list (document page
 //! sequence, unlike `stories`/`links` which have no display order).
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPageRelocation};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutPageRelocation;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +21,12 @@ pub struct ReorderPages {
     pub to_index: usize,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderPages where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_pages::ReorderPages> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "pages", kind: "reorder-pages", record: "ReorderedPages" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_reorder_pages(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_reorder_pages(self, base)?
     
@@ -53,13 +55,22 @@ pub fn diff_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> prot
 //#endregion 🔀ReorderPages
 
 //#region 🔀ReorderPages
-pub fn inverse_reorder_pages(payload: &ReorderPages, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_reorder_pages<Op: From<crate::reorder_pages::ReorderPages>>(payload: &ReorderPages, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().position(|page| page.id == payload.id) {
-        Some(original_index) => vec![LayoutMutation::ReorderPages(ReorderPages { id: payload.id.clone(), to_index: original_index })],
+        Some(original_index) => vec![Op::from(ReorderPages { id: payload.id.clone(), to_index: original_index })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🔀ReorderPages
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️moves-a-middle-row/🦀️.rs"]
+mod tests_moves_a_middle_row;
+#[cfg(test)]
+#[path = "🧪️tests/🔀️moves/🦀️.rs"]
+mod tests_moves_page_1_behind_page_2;
+//#endregion 🪢️TaxonomyMounts

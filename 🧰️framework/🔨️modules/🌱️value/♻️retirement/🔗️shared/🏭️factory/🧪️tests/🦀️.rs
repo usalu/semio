@@ -1,6 +1,6 @@
 //! 🧪️ Full shared factory grants preserve original aliases and every physical allocation.
 use super::*;
-use crate::{close_factory_ticket,factory_ticket_demands,retirement::OwnedValueRetirementFactory,value::observe_retirement_allocations};
+use crate::{close_factory_ticket,factory_ticket_demands,OwnedValueRetirementFactory,allocation_testing::observe_retirement_allocations};
 
 fn turn(owner:&mut Option<Box<dyn ErasedSnapshotRetirement>>,copy:usize)->(usize,usize) {
     let demand=factory_ticket_demands(owner.as_ref().unwrap(),copy).unwrap();

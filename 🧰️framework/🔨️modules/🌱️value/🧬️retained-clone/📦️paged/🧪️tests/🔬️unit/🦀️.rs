@@ -1,3 +1,4 @@
+use crate::retained_clone::FixtureSourceBirth;
 use super::*;
 use crate::{DslValue, FromValue, ToValue, retained_clone::RetainedCloneSource, retirement::controlled::ControlledRetirement};
 

@@ -7,6 +7,7 @@ extern crate semio_framework_os_kernel as store;
 pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store};
 #[path = "🧵️retained/🦀️.rs"]
 mod retained;
+pub use retained::DagMemberStoreProducer;
 #[path = "🖼️assets/🎬️demo/🦀️.rs"]
 mod demo;
 pub use demo::dag_demo_host_snapshot;

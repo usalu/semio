@@ -1,6 +1,6 @@
 //! 🛡️ Logical SpreadsheetML subset conformance diagnostics.
 
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_framework_diagnostic::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 

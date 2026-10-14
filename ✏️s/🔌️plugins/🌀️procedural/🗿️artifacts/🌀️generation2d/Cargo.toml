@@ -3,10 +3,34 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+    "🧪️tests/🧰️support/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -15,7 +39,6 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
   "**/🏭️bridge/**"
@@ -134,6 +157,81 @@ path = "../../🫀️core/🖼️semantic-ui/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-procedural-core-generation-sqlite]
 path = "../../🫀️core/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-terminology]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-testkit]
+path = "🧪️tests/🧰️support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-io-text]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-io-binary]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-io-sqlite]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-preview-eval]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-host]
+path = "🔨️modules/🏠️host/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor-config]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor-transient]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor-presence]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mode-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mode-generate]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-node-graph-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mut-widgets]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️widgets/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mut-synapses]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️synapses/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mut-generations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️generations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-mut-document]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️document/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

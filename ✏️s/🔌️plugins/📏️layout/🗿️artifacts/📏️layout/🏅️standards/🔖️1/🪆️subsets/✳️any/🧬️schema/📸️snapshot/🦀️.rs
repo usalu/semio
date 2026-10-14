@@ -1,9 +1,9 @@
 //! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
 #[cfg(test)]
-use crate::Frame;
+#[cfg(test)] use crate::Frame;
 use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory};
-#[cfg(test)] use crate::{LAYOUT_DOCUMENT_SCHEMA};
+#[cfg(test)] #[cfg(test)] use crate::LAYOUT_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -48,7 +48,7 @@ pub struct LayoutSnapshot {
     pub print_target: Option<String>,
     #[state(artifact)]
     #[value(rename = "dataFields", default, skip_serializing_if = "Option::is_none")]
-    pub data_fields: Option<crate::FormDictionary>,
+    pub data_fields: Option<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
@@ -62,7 +62,7 @@ pub struct LayoutSnapshot {
 /// 🧷️ Real "empty" constructor used as the parse/decode starting point (mirrors cad's
 /// `empty_cad_snapshot`) — `default_document()` at `crate::schema` seeds a full
 /// demo document instead, so this can't reuse a `Default` impl (this type has none).
-pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
+pub fn empty_layout_snapshot() -> LayoutSnapshot {
     LayoutSnapshot {
         schema: String::new(),
         name: String::new(),
@@ -85,7 +85,6 @@ pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 
 
-
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
@@ -95,13 +94,12 @@ mod round_trip_tests;
 //#endregion 🧪️Tests
 
 
-
 #[path="🧩️component/🦀️.rs"]
 pub mod drawing_child;
 
 /// 🧹️ Releases recursive child and dictionary owners before the plain snapshot fields.
 pub fn retire(mut value: LayoutSnapshot) {
     if let Some(child) = value.background_drawing.take() { drawing_child::retire(child); }
-    if let Some(dictionary) = value.data_fields.take() { <crate::FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
+    if let Some(dictionary) = value.data_fields.take() { <semio_s_artifact_forms_forms::schema::dictionary::FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
     drop(value);
 }

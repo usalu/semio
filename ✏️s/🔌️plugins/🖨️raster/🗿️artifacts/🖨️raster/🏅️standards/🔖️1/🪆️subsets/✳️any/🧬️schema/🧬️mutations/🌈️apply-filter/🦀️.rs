@@ -6,9 +6,11 @@
 //! released once nothing else shows it). Geometry that changes the image's extent (rotate, resize, crop) is not a filter.
 //! Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
-use crate::mutations::paint_stroke::{canvas, painted, painted_diff, painted_inverse, refused, selection_invariant, selection_mask, Painted, RasterSelectionSpan, Refusal};
-use crate::diff::RasterDiff;
-use crate::{RasterMutation, RasterSnapshot};
+use semio_s_artifact_raster_raster_diff::{canvas, painted, painted_diff, Painted, Refusal};
+use crate::paint_stroke::{painted_inverse, refused, selection_invariant, selection_mask, RasterSelectionSpan};
+use semio_s_artifact_raster_raster_diff::RasterDiff;
+#[cfg(test)] use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_pixels::editing::{PixelEditJob, PixelOperation};
 use semio_framework_pixels::RasterImage;
 
@@ -43,8 +45,8 @@ pub struct ApplyFilter {
 }
 
 /// 🏗️ Builder — wraps an unclipped filter in its dispatch variant.
-pub fn apply_filter(layer_id: impl Into<String>, filter: &str, amount: f64) -> RasterMutation {
-    RasterMutation::ApplyFilter(ApplyFilter { layer_id: layer_id.into(), filter: filter.to_string(), amount, selection: None })
+pub fn apply_filter<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::apply_filter::ApplyFilter> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion>>(layer_id: impl Into<String>, filter: &str, amount: f64) -> Op {
+    Op::from(ApplyFilter { layer_id: layer_id.into(), filter: filter.to_string(), amount, selection: None })
 }
 
 /// 🎯️ The target every filter repaints: the layer's own pixels.
@@ -54,7 +56,7 @@ const FILTER_TARGET: &str = "pixels";
 //#region 🌈️Filter
 /// 🧯️ The payload-intrinsic laws the schema states (vocabulary, per-filter bounds, a flip takes no selection, ordered
 /// selection runs), checked again before any pixel moves; the first one broken, as the field it names.
-pub(crate) fn invariant(payload: &ApplyFilter) -> Result<(), (&'static str, String)> {
+pub fn invariant(payload: &ApplyFilter) -> Result<(), (&'static str, String)> {
     let Some((_, range)) = RASTER_FILTERS.iter().find(|(filter, _)| *filter == payload.filter) else {
         return Err(("filter", format!("\"{}\" is not a filter.", payload.filter)));
     };
@@ -149,7 +151,7 @@ pub fn diff(payload: &ApplyFilter, base: &RasterSnapshot) -> protocol::MutationO
 //#region 🔖️Inverse
 /// ↩️ The steps that undo the filter on `base` — the same restoration a painted stroke's inverse runs. Nothing when the
 /// filter changed nothing.
-pub fn inverse(payload: &ApplyFilter, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::apply_filter::ApplyFilter> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion>>(payload: &ApplyFilter, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
     if invariant(payload).is_err() {
         return Ok(Vec::new());
@@ -162,14 +164,14 @@ pub fn inverse(payload: &ApplyFilter, base: &RasterSnapshot) -> Result<Vec<Raste
 //#endregion 🔖️Inverse
 
 //#region 🔖️Kind
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ApplyFilter {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ApplyFilter where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::apply_filter::ApplyFilter> + From<crate::change_layer_mask::ChangeLayerMask> + From<crate::change_layer_pixels::ChangeLayerPixels> + From<crate::paint_stroke::PaintStroke> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset> + From<crate::write_pixel_region::WritePixelRegion> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "apply", entity: "filter", kind: "apply-filter", record: "FilteredImage" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
         diff(self, base)
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse(self, base)?
     

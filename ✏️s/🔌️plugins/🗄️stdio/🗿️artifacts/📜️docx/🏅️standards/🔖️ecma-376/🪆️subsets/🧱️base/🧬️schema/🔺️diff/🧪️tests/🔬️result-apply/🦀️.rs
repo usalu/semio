@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::*;
 
 #[test]
 fn xml_part_reorder_round_trip_is_exact() {

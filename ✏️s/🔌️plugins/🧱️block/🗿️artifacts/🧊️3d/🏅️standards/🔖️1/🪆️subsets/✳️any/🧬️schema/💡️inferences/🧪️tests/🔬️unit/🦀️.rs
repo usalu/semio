@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::io::puzzle_catalog::*;
+use semio_s_artifact_block_3d_io_write::puzzle_catalog::*;
 
-use super::*;
-use crate::{BLOCK_3D_SCHEMA, Block3dVortexTemplate};
-use crate::{BlockKindIdentity, BlockRepresentation};
+use semio_s_artifact_block_3d_inferences::*;
+use semio_s_artifact_block_3d_model::{BLOCK_3D_SCHEMA, Block3dVortexTemplate};
+use semio_s_plugin_block::{BlockKindIdentity, BlockRepresentation};
 use protocol::Inference;
 
 //#region 🧸️Fixtures

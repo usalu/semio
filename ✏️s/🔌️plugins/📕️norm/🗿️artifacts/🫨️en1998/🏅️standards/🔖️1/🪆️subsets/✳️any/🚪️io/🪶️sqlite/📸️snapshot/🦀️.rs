@@ -1,7 +1,7 @@
 //! 🫨️ Complete handwritten seismic site, building and parts-two-through-six relational ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1998Snapshot;
-use crate::{DeSeismicZone,DeGroundCombo,En1998Site,En1998Building,En1998System,En1998Storey,En1998Member,En1998VariableAction,En1998Bridge,En1998Assessment,En1998Silo,En1998Tank,En1998Foundation,En1998RetainingWall,En1998Tower};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use semio_s_artifact_norm_en1998_model::{DeSeismicZone, DeGroundCombo, En1998Site, En1998Building, En1998System, En1998Storey, En1998Member, En1998VariableAction, En1998Bridge, En1998Assessment, En1998Silo, En1998Tank, En1998Foundation, En1998RetainingWall, En1998Tower};
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -101,6 +101,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 }
 pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1998Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

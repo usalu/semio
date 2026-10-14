@@ -8,9 +8,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
-/// 🗄️ The Semio emblem example fixture, handcrafted in `drawing`'s DSL (`pack::snapshot::ArtifactDsl`).
-pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ P6 handcrafted `ArtifactDsl` (derive no longer emits this trait) — relocated from
 /// `🧬️schema/📸️snapshot/🦀️.rs` (design.md §1 CORRECTION: the native codec is one
@@ -58,8 +55,6 @@ mod mutations_codec {
 use super::*;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
 /// `{"printed": …, "snapshot": …, "reparsed": …}` so a caller can weigh the identity law's two
@@ -76,33 +71,3 @@ pub fn round_trip_drawing_dsl(text: &str) -> Result<String, String> {
 }
 pub use mutations_codec::*;
 
-
-#[allow(unused_imports)]
-mod snapshot_codec {
-use super::*;
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_s_artifact_draw_drawing_model::empty_drawing_snapshot;
-use pack::snapshot::ArtifactDsl;
-use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
-use std::hash::{Hash, Hasher};
-
-
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-
-
-pub fn semio_drawing_example_document() -> DrawingSnapshot {
-    DrawingSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_drawing_snapshot())
-}
-
-/// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsArtifactApp::render` override,
-/// which hardcode `serde_json::from_str` on their `document_json`/`projection_override_json`
-/// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
-/// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
-pub fn semio_drawing_example_json() -> String {
-    semio_framework_pack_json::to_json_string(&semio_drawing_example_document())
-}
-
-}
-pub use snapshot_codec::*;

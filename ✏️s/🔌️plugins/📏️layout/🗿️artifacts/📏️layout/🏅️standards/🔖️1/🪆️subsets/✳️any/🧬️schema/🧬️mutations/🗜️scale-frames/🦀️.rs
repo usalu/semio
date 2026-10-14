@@ -2,8 +2,13 @@
 //! moves away from the pivot by the per-axis factors and every frame's extent grows by them, so editing the scaling in
 //! history re-derives every frame from whatever base it replays on. Extents scale along each frame's own axes.
 
-use crate::mutations::{layout_frame_centre, layout_frame_selection_diff, layout_frame_selection_targets, layout_frame_targets_invariant, layout_label_frames, layout_label_number, move_frame::MoveFrame, resize_frame::ResizeFrame, LayoutMutation};
-use crate::{FramePatch, LayoutBounds, LayoutDiff, LayoutSnapshot};
+use semio_s_artifact_layout_layout_diff::{layout_frame_centre, layout_frame_selection_diff, layout_frame_selection_targets, layout_frame_targets_invariant};
+use semio_s_artifact_layout_layout_model::{layout_label_frames, layout_label_number};
+use crate::move_frame::MoveFrame;
+use crate::resize_frame::ResizeFrame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::LayoutBounds;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,12 +39,12 @@ impl ScaleFrames {
     }
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ScaleFrames {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ScaleFrames where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> + From<crate::resize_frame::ResizeFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "scale", entity: "frames", kind: "scale-frames", record: "ScaledFrames" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_scale_frames(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         inverse_scale_frames(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -65,7 +70,7 @@ pub fn diff_scale_frames(payload: &ScaleFrames, base: &LayoutSnapshot) -> protoc
 
 //#region ↩️Inverse
 /// ↩️ Per frame the scaling moves, the absolute origin and extent setters restoring the BASE box.
-pub fn inverse_scale_frames(payload: &ScaleFrames, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_scale_frames<Op: From<crate::move_frame::MoveFrame> + From<crate::resize_frame::ResizeFrame>>(payload: &ScaleFrames, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let finite = payload.pivot_x.is_finite() && payload.pivot_y.is_finite() && payload.sx.is_finite() && payload.sy.is_finite() && payload.sx > 0.0 && payload.sy > 0.0;
     if !finite || layout_frame_targets_invariant(&payload.targets).is_err() {
         return Ok(Vec::new());
@@ -76,10 +81,31 @@ pub fn inverse_scale_frames(payload: &ScaleFrames, base: &LayoutSnapshot) -> Res
         .flat_map(|frame| {
             let bounds = frame.bounds();
             [
-                LayoutMutation::MoveFrame(MoveFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_x: bounds.x, new_y: bounds.y }),
-                LayoutMutation::ResizeFrame(ResizeFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_width: bounds.width, new_height: bounds.height }),
+                Op::from(MoveFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_x: bounds.x, new_y: bounds.y }),
+                Op::from(ResizeFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_width: bounds.width, new_height: bounds.height }),
             ]
         })
         .collect())
 }
 //#endregion ↩️Inverse
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🗜️doubles/🦀️.rs"]
+mod tests_doubles_both_frames_about_their_centroid;
+#[cfg(test)]
+#[path = "🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
+mod tests_keeps_unit_factors;
+#[cfg(test)]
+#[path = "🧪️tests/🫓️refuses/🦀️.rs"]
+mod tests_refuses_a_zero_factor;
+#[cfg(test)]
+#[path = "🧪️tests/🚫️rejects/🦀️.rs"]
+mod tests_rejects_missing_frames;
+#[cfg(test)]
+#[path = "🧪️tests/⚠️skips/🦀️.rs"]
+mod tests_skips_a_locked_and_a_missing_frame;
+#[cfg(test)]
+#[path = "🧪️tests/↔️stretches/🦀️.rs"]
+mod tests_stretches_the_rect_sideways;
+//#endregion 🪢️TaxonomyMounts

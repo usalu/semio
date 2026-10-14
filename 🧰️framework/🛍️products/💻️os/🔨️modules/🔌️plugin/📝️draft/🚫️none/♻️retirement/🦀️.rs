@@ -1,7 +1,7 @@
 //! 📝️ Exact store owners for the zero-payload draft lane, and the zero-payload retirement every
 //! statically empty lane (`NoDraft`, `NoConfig`) shares.
 
-use crate::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
+use semio_framework_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
 use crate::app_views::{NoDraft, NoDraftMutation};
 use crate::store;
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};

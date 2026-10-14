@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ norm artifact Rust package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-norm-en1999", {snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-norm-en1999", {packages:["semio-s-artifact-norm-en1999-checks","semio-s-artifact-norm-en1999-diff","semio-s-artifact-norm-en1999-editor","semio-s-artifact-norm-en1999-examples","semio-s-artifact-norm-en1999-inferences","semio-s-artifact-norm-en1999-io","semio-s-artifact-norm-en1999-model","semio-s-artifact-norm-en1999-mut-inputs","semio-s-artifact-norm-en1999-mut-members","semio-s-artifact-norm-en1999-mutations","semio-s-artifact-norm-en1999-schema","semio-s-artifact-norm-en1999-viewer","semio-s-artifact-norm-en1999"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

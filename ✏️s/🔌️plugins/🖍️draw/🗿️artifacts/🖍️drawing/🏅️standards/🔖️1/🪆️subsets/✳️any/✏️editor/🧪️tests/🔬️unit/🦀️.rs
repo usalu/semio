@@ -1,5 +1,16 @@
 pub mod context {
-    use super::super::*;
+    use crate::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, create_drawing_app, drawing_active_utility};
+    use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY, geometry_session};
+    use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
+    use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
+    use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
+    use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
+    use crate::image_job::DrawingImageCommandJobFactory;
+    use crate::path_job::DrawingPathCommandJobFactory;
+    use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, set_snapshot, toggle_layer_visible};
+    use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
+    use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
+    use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
@@ -52,7 +63,18 @@ pub mod context {
     }
 }
 
-use super::*;
+use crate::{DRAWING_BOUNDED_TOOL_IDS, DRAWING_GESTURE_TOOL_IDS, DRAWING_IMAGE_TOOL_IDS, DRAWING_PATH_TOOL_IDS, DrawingBoundedCommandJobFactory, DrawingCommand, DrawingGestureOperationJobFactory, DrawingPlayApp, args_bridge, create_drawing_app, drawing_active_utility};
+use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_DEFAULT_UTILITY, DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY, geometry_session};
+use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
+use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
+use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
+use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
+use crate::image_job::DrawingImageCommandJobFactory;
+use crate::path_job::DrawingPathCommandJobFactory;
+use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, set_snapshot, toggle_layer_visible};
+use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
+use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
+use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
 #[path="../../📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs"]
 mod clipboard_runtime;
 use semio_s_artifact_draw_drawing_model::layer_id;
@@ -126,8 +148,8 @@ fn drawing_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first Drawing fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None);
-    let mut retirement = semio_s_artifact_draw_drawing_host::owned::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let envelope = store::os_store::document_materialize::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut retirement = semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         let copy_bytes = retirement.next_copy_byte_demand().expect("Drawing fixture envelope copy demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant {
@@ -582,7 +604,7 @@ async fn inline_selection_app() -> (DrawingAppFixture, semio_framework_plugin::A
     use semio_framework_plugin::{ViewWindowInstance, WindowConfigOwner};
     let app = drawing_app().await;
     let view = ViewModel {
-        window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: crate::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
+        window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance")), ..artifact_laws::meta("local") };
@@ -1785,7 +1807,7 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
             let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
-            let mut producer=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(&before,crate::geometry_session::limits(),crate::geometry_session::algorithms()).unwrap();
+            let mut producer=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(&before,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();
             while !producer.advance(4096).unwrap().done{}let(mut cleanup,plan)=producer.into_retirement();while !cleanup.advance(4096).unwrap().done{}
             let mut producer=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_scene::paint::scene::PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000});
             while !producer.advance(4096).unwrap().done{}let(mut cleanup,prepared)=producer.into_retirement();while !cleanup.advance(4096).unwrap().done{}let prepared=prepared.unwrap();

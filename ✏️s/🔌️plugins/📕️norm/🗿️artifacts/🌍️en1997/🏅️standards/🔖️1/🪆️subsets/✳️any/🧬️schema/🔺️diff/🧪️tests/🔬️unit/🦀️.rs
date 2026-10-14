@@ -1,12 +1,12 @@
 //! 🧪️ Keyed-diff algebra of En1997: same-key coalescing, position tracking and the negative diff.
 
-use super::En1997Diff;
-use crate::mutations::change_footing_embedment::ChangeFootingEmbedment;
-use crate::mutations::change_footing_width::ChangeFootingWidth;
-use crate::mutations::insert_footing::InsertFooting;
-use crate::mutations::remove_footing::RemoveFooting;
-use crate::mutations::En1997Mutation;
-use crate::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_embedment::ChangeFootingEmbedment;
+use semio_s_artifact_norm_en1997_mut_foundations::change_footing_width::ChangeFootingWidth;
+use semio_s_artifact_norm_en1997_mut_foundations::insert_footing::InsertFooting;
+use semio_s_artifact_norm_en1997_mut_foundations::remove_footing::RemoveFooting;
+use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn base() -> En1997Snapshot {
@@ -23,7 +23,7 @@ fn diff_of(mutation: &En1997Mutation, base: &En1997Snapshot) -> En1997Diff {
     raised.diff().clone()
 }
 
-fn fresh(base: &En1997Snapshot) -> crate::SpreadFoundation {
+fn fresh(base: &En1997Snapshot) -> semio_s_artifact_norm_en1997_model::SpreadFoundation {
     let mut footing = base.footings[0].clone();
     footing.id = "footing-created".into();
     footing

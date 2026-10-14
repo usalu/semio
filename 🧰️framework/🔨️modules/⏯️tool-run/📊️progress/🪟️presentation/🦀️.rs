@@ -1,7 +1,8 @@
 //! 🪟️ Captures the original joint presentation under its concrete strong-only issuer.
-use super::{ToolRunProgress,ToolRunIdentity,ToolRunState};
-use super::entities::provenance::ToolRunEntityProvenance;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::shared::sealed::{SealedShared,SharedIssuer}};
+use semio_framework_tool_run::{ToolRunProgress,ToolRunIdentity,ToolRunState};
+use semio_framework_tool_run_entities::provenance::ToolRunEntityProvenance;
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value_shared_issuance::{SealedShared,SharedIssuer};
 use std::mem::size_of;
 #[path="🧬️update/🦀️.rs"]
 pub mod update;
@@ -15,7 +16,7 @@ pub struct ToolRunPresentationBody{pub tool_id:SealedShared<String>,pub progress
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ToolRunPresentation{body:SealedShared<ToolRunPresentationBody>}
 #[derive(Clone,Copy)]
-pub struct ToolRunView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState,pub provisional_entities:&'a super::entities::EntityMap,pub progress:&'a ToolRunProgress,pub payload:Option<&'a [u8]>}
+pub struct ToolRunView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState,pub provisional_entities:&'a semio_framework_tool_run_entities::EntityMap,pub progress:&'a ToolRunProgress,pub payload:Option<&'a [u8]>}
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ToolRunCapturedView{presentation:ToolRunPresentation,identity:ToolRunIdentity,state:ToolRunState}
 impl ToolRunCapturedView{
@@ -34,3 +35,11 @@ impl ToolRunPresentation{
  pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->ToolRunView<'_>{let body=self.body();ToolRunView{tool_id:body.tool_id.get(),identity,state,provisional_entities:body.provenance.entities(),progress:&body.progress,payload:body.payload.as_ref().map(|payload|payload.get().as_slice())}}
  pub fn capture_view(&self,identity:ToolRunIdentity,state:ToolRunState,grant:RetainedCloneGrant)->Result<(ToolRunCapturedView,RetainedCloneProgress),ValueError>{if grant.maximum_copy_bytes<ToolRunCapturedView::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"captured presentation and scalar envelope handoff is not funded"));}let(presentation,mut receipt)=self.capture(grant)?;receipt.copied_bytes=ToolRunCapturedView::capture_copy_bytes();Ok((ToolRunCapturedView{presentation,identity,state},receipt))}
 }
+
+#[cfg(test)]
+#[global_allocator]
+static TOOL_RUN_PRESENTATION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,6 +1,6 @@
 use super::*;
-use crate::primitives::{make_box, make_cylinder, make_sphere};
-use crate::transform::transform_solid;
+use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_sphere};
+use semio_framework_3d_brep_construction::transform::transform_solid;
 use semio_framework_3d_brep_vector::matrix::Affine3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -302,9 +302,9 @@ async fn analytic_primitives_are_structurally_valid() {
         let mut rec = OpRecorder::new();
         let solid = match name {
             "sphere" => make_sphere(&mut body, 1.0, &mut rec),
-            "torus" => crate::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec),
+            "torus" => semio_framework_3d_brep_construction::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec),
             "cylinder" => make_cylinder(&mut body, 1.0, 2.0, &mut rec),
-            "cone" => crate::primitives::make_cone(&mut body, 1.0, 2.0, &mut rec),
+            "cone" => semio_framework_3d_brep_construction::primitives::make_cone(&mut body, 1.0, 2.0, &mut rec),
             _ => make_box(&mut body, 1.0, 1.0, 1.0, &mut rec),
         }
         .unwrap();

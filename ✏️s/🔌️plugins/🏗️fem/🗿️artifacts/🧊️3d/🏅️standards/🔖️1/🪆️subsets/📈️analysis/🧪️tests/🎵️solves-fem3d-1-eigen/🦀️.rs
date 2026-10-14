@@ -4,9 +4,9 @@
 //! assembles from the textbook Euler-Bernoulli matrices, plus the closed forms both implementations
 //! are held to. This adapter registers the SUBJECT half only.
 //!
-//! **What this file puts under test.** `semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_modal` and
+//! **What this file puts under test.** `semio_s_artifact_fem_3d_engine::fem3d_engine::modal_buckling::fem3d_modal` and
 //! `fem3d_buckling` — and behind them this repository's own hand-rolled subspace iteration
-//! (`semio_s_artifact_fem_3d::sparse::subspace_iteration`), which until this case had no external reference of any
+//! (`semio_s_fem_sparse_subspace::subspace_iteration`), which until this case had no external reference of any
 //! kind. The kernel's own benchmarks compared it with a closed form at a TEN-percent tolerance; this
 //! case demands two, on an eight-element discretisation where the reference itself lands inside
 //! 0.3 %.
@@ -95,7 +95,9 @@ fn significant(value: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use crate::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
+    use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -205,7 +207,7 @@ mod decode {
                     layers: number(solid, "layers").max(1.0) as usize,
                     mesh_size: number(solid, "meshSize"),
                     material_id: solid.str("materialId"),
-                    axis: crate::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
+                    axis: crate::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&solid.str("axis")).expect("solid axis"),
                 })
                 .collect(),
             supports,
@@ -274,7 +276,7 @@ mod subject {
     pub fn modal(needle: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
-            let solved = semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
+            let solved = semio_s_artifact_fem_3d_engine::fem3d_engine::modal_buckling::fem3d_modal(&document).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let length = document.nodes[document.nodes.len() - 1].x;
             let mut closed: Vec<f64> = Vec::new();
@@ -308,7 +310,7 @@ mod subject {
         move |ctx: &Context| {
             let document = decode::snapshot(&fixture(ctx, needle)?)?;
             let case_id = document.load_cases[0].id.clone();
-            let solved = semio_s_artifact_fem_3d::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
+            let solved = semio_s_artifact_fem_3d_engine::fem3d_engine::modal_buckling::fem3d_buckling(&document, &case_id).map_err(|error| error.to_string())?;
             let (material, section) = (&document.materials[0], &document.sections[0]);
             let height = document.nodes[document.nodes.len() - 1].z;
             let critical = std::f64::consts::PI * std::f64::consts::PI * material.e * section.iz / (effective_length_factor * height).powi(2);

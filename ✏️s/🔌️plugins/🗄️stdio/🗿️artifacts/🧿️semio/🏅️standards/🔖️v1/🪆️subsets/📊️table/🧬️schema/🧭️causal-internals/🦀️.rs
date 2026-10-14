@@ -103,7 +103,7 @@ pub struct CausalDag {
 
 impl CausalDag {
     /// 🧭️ Builds a DAG from index edges, validating acyclicity via
-    /// `semio_framework_graph::algorithms::topo_sort`.
+    /// `semio_framework_graph_algorithms::topo_sort`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(names: Vec<String>, edges: &[(usize, usize)]) -> Result<Self, CausalError> {
         let n = names.len();
@@ -115,8 +115,8 @@ impl CausalDag {
                 return Err(CausalError::VariableNotFound(format!("index {b}")));
             }
         }
-        let adj = semio_framework_graph::algorithms::adjacency(n, edges, true);
-        let topo = semio_framework_graph::algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
+        let adj = semio_framework_graph_algorithms::adjacency(n, edges, true);
+        let topo = semio_framework_graph_algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
         let mut parents = vec![Vec::new(); n];
         let mut children = vec![Vec::new(); n];
         for &(a, b) in edges {
@@ -514,8 +514,8 @@ pub fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bo
         }
     }
     let filtered_edges: Vec<(usize, usize)> = moral_edges.into_iter().filter(|&(a, b)| !z.contains(&a) && !z.contains(&b)).collect();
-    let adj = semio_framework_graph::algorithms::adjacency(dag.n(), &filtered_edges, false);
-    let labels = semio_framework_graph::algorithms::connected_components(&adj);
+    let adj = semio_framework_graph_algorithms::adjacency(dag.n(), &filtered_edges, false);
+    let labels = semio_framework_graph_algorithms::connected_components(&adj);
     x.iter().all(|&xi| y.iter().all(|&yi| z.contains(&xi) || z.contains(&yi) || labels[xi] != labels[yi]))
 }
 

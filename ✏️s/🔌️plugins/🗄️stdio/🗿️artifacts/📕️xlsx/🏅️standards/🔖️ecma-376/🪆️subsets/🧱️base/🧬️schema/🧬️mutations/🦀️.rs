@@ -1,16 +1,16 @@
 //! 🧬️ XlsxMutation — document mutation dispatch. Every variant's `diff()` is handcrafted (never
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, key/index-aware.
 
-use crate::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
 
-
 #[cfg(test)]
-use crate::schema::snapshot::XlsxCell;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
 #[cfg(test)]
-use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxCellValue, XlsxSheet};
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 #[cfg(test)]
@@ -177,7 +177,7 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
 /// `override_index` (appended when `None`). `None` when a part of that name already exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn insert_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<XlsxDiff> {
-    use crate::schema::diff::XlsxXmlPartsDelta;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartsDelta;
     use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let key = path.trim_start_matches('/');
     if base.xml_part(key).is_some() || base.opc.part(key).is_some() {
@@ -191,14 +191,14 @@ pub(crate) fn insert_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type
     };
     Some(XlsxDiff {
         opc: overrides.map(|overrides| OpcDiff { content_types: Some(OpcContentTypesDiff { defaults: None, overrides: Some(overrides) }), ..Default::default() }),
-        xml_parts: Some(XlsxXmlPartsDelta::insertion(insertion_index(base.xml_parts.len(), index), crate::schema::snapshot::XlsxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() })),
+        xml_parts: Some(XlsxXmlPartsDelta::insertion(insertion_index(base.xml_parts.len(), index), semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart { path: key.to_string(), content_type: content_type.to_string(), document: document.clone() })),
     })
 }
 
 /// 🧩️ The diff that removes XML part `path` and its content-type override; `None` when no such part exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_xml_part_diff(base: &XlsxSnapshot, path: &str) -> Option<XlsxDiff> {
-    use crate::schema::diff::XlsxXmlPartsDelta;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartsDelta;
     let key = path.trim_start_matches('/');
     let at = base.xml_parts.iter().position(|part| part.path == key)?;
     let name = format!("/{key}");
@@ -212,7 +212,8 @@ pub(crate) fn remove_xml_part_diff(base: &XlsxSnapshot, path: &str) -> Option<Xl
 /// absent or already carries `content_type` in both places.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn retype_xml_part_diff(base: &XlsxSnapshot, path: &str, content_type: &str, override_index: Option<usize>) -> XlsxDiff {
-    use crate::schema::diff::{XlsxXmlPartDiff, XlsxXmlPartsDelta};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartDiff;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxXmlPartsDelta;
     use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let Some(part) = base.xml_part(path) else { return XlsxDiff::default() };
     let name = format!("/{}", path.trim_start_matches('/'));
@@ -249,7 +250,7 @@ pub(crate) fn xml_part_positions(base: &XlsxSnapshot, path: &str) -> Option<(usi
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> XlsxSnapshot {
-    opc_layer::with_demo_entries(crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    opc_layer::with_demo_entries(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
         shared_strings: vec!["hello".into()],
     }))
@@ -270,7 +271,7 @@ const SWEEP_BINARY_CONTENT_TYPE: &str = "application/octet-stream";
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_a() -> XlsxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "toModify".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }, XlsxCell { row: 2, col: 0, value: XlsxCellValue::Boolean(false) }] },
             XlsxSheet { name: "stay".into(), cells: vec![] },
@@ -296,7 +297,7 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_b() -> XlsxSnapshot {
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
+    let mut snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
                 name: "toModify".into(),
@@ -352,9 +353,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests
@@ -363,7 +361,4 @@ mod tests;
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
 //#endregion 🧪️FixtureTests

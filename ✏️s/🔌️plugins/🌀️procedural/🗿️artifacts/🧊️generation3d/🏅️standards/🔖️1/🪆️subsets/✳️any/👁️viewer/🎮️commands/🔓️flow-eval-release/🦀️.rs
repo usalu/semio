@@ -2,7 +2,8 @@
 //! release hop in `🧵️preview-eval`. It retires EPHEMERAL runtime work in the geometry extension and
 //! touches no store lane, so a viewer owns it exactly as the editor does.
 
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 

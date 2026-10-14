@@ -5,7 +5,7 @@
 //! This leaf exists so `🪆️subsets/🔒️strict/🧬️schema/` is present per `🔣️taxonomy.json`'s
 //! `subsetChildDirs`, without duplicating the schema definition.
 
-pub use crate::standards::v_ecma_376::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::*;
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the

@@ -1,8 +1,8 @@
 //! ⚓️ `change-permanents` diff — replaces the whole collection: every base row leaves from its base index, every new row enters at its index.
 
-use super::ChangePermanents;
-use crate::diff::{En1990Diff, En1990PermanentDelta, En1990PermanentInsertion, En1990PermanentRemoval};
-use crate::En1990Snapshot;
+use crate::change_permanents::ChangePermanents;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990PermanentDelta, En1990PermanentInsertion, En1990PermanentRemoval};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangePermanents, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

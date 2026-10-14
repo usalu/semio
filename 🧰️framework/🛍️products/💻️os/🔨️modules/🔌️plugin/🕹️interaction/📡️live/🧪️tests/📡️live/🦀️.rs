@@ -16,8 +16,8 @@ async fn stores() -> ([TestStore; 3],crate::io::control::NativeSnapshotBodyWalle
     let state: protocol::InteractionState = serde_json::from_value(state).unwrap();
     let mut result = Vec::new();let mut recipient=original_receiving_recipient();
     for id in ["document", "config", "interaction"] {
-        let envelope = store::os_store::document_materialize::create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", id, state.clone(), None);
-        let mut store = TestStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
+        let envelope = store::os_store::document_materialize::create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", id, state.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut store = TestStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
         install_original_interaction_owners(&mut store,&mut recipient);
         result.push(store);
     }

@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-puzzle-retained"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fixed-capacity retained command session shared by Puzzle 2d, 3d, and 5d"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-pack-json = { workspace = true, optional = true }
+semio-s-plugin-puzzle-jobs = { workspace = true, optional = true }
+
+[features]
+testing = ["dep:semio-framework-pack-json", "dep:semio-s-plugin-puzzle-jobs"]
+
+[dev-dependencies]
+semio-framework-pack-json = { workspace = true }
+semio-s-plugin-puzzle-jobs = { workspace = true }

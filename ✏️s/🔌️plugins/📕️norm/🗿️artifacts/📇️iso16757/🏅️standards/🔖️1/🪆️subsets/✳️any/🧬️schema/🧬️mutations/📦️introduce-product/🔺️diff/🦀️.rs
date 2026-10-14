@@ -1,8 +1,8 @@
 //! 🔺️ `introduce-product` — sparse diff construction.
 
-use super::mutation::IntroduceProduct;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757ProductsRows};
+use crate::introduce_product::mutation::IntroduceProduct;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757ProductsRows};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is `mutation.duplicate-id`; an explicit index past the end is

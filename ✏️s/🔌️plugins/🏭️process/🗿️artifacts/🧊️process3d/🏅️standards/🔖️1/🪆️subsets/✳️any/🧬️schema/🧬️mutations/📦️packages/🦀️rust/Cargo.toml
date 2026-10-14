@@ -1,0 +1,68 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-process-process3d-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d mutation vocabulary: the dispatch enum and every leaf's fixture laws"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "process3d_create_machine"
+path = "../../🏭create-machine/🧪️tests/🪛️adds/🦀️.rs"
+
+[[test]]
+name = "process3d_delete_machine"
+path = "../../❌delete-machine/🧪️tests/➖️empties/🦀️.rs"
+
+[[test]]
+name = "process3d_rename_machine"
+path = "../../🔖rename-machine/🧪️tests/🏷️retitles-the-saw/🦀️.rs"
+
+[[test]]
+name = "process3d_change_machine_icon"
+path = "../../🎨change-machine-icon/🧪️tests/🪚️swaps/🦀️.rs"
+
+[[test]]
+name = "process3d_replace_machine"
+path = "../../🔁replace-machine/🧪️tests/🕳️trades/🦀️.rs"
+
+[[test]]
+name = "process3d_move_stock"
+path = "../../📍move-stock/🧪️tests/🎈️lifts/🦀️.rs"
+
+[[test]]
+name = "process3d_change_stock_label"
+path = "../../🔤change-stock-label/🧪️tests/🔤️relabels/🦀️.rs"
+
+[[test]]
+name = "process3d_replace_stock_solid"
+path = "../../🧊replace-stock-solid/🧪️tests/🧊️reissues/🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-process-process3d-model-diff = { workspace = true }
+semio-s-artifact-process-process3d-mut-machines = { workspace = true }
+semio-s-artifact-process-process3d-mut-steps = { workspace = true }
+semio-s-artifact-process-process3d-mut-stock = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -1,5 +1,5 @@
 //! 🧩️ Puzzle catalog physical projection.
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use semio_framework_pack_json::{array,Value};
 /// 🌉️ Maps this `PartKind` definition into the `s/plugin/puzzle` 5d catalog shape
 /// (`Puzzle5dKindCatalogs`: `parts`/`grips`/`fasteners`/`ropes`), the seam puzzle imports through its

@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -22,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<ShootingApps>, PluginAssemblyError> {
-    Plugin::<ShootingApps>::builder("shooting")
+    PluginBuilder::<_, ShootingApps>::new("shooting")
         .label("Shooting")
         .version("0.1.0")
         .package_id("semio:shooting")

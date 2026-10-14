@@ -35,7 +35,7 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  let policy=&fixture["grant"];let n=|axis:&str|policy[axis].as_u64().unwrap()as usize;
  let grant=ArtifactStoreOneItemGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")};
  let before=fixture["before"].as_i64().unwrap()as i32;let after=fixture["after"].as_i64().unwrap()as i32;
- let mut store=ArtifactStore::new(create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1","original-group-receipts",DemoSnapshot{n:Some(before)},None)).await;
+ let mut store=ArtifactStore::new(create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1","original-group-receipts",DemoSnapshot{n:Some(before)},None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
  let mutation=DemoMutation::SetN(SetN{n:after});
  let mut publication=store.begin_member_apply_batch(semio_framework_job::OperationId(919),store.generation(),store.content_revision_now(),fixture["actor"].as_str().unwrap().into(),vec![mutation.clone()]).unwrap_or_else(|_|panic!("original installed member factory admits its typed fixture"));
  let authority=publication.authority.as_ref().unwrap();
@@ -1470,23 +1470,20 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self
-    where
-        P: MemberStoreOwner<Mutation>,
+    async fn new<C:MemberStoreProducer<P,Mutation>>(envelope: ArtifactEnvelope<P, Mutation>,producer:&C) -> Self
     {
-        Self::new_with_actor(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await
+        Self::new_with_actor(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()),producer).await
     }
 
-    async fn new_with_actor(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId) -> Self
-    where P: MemberStoreOwner<Mutation>,
+    async fn new_with_actor<C:MemberStoreProducer<P,Mutation>>(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId,producer:&C) -> Self
     {
-        let mut store = super::ArtifactStore::new(envelope, actor).await.expect("test fixture history is valid");
-        store.install_document_store_owners_exact(complete_test_catalog(P::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+        let mut store = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await.expect("test fixture history is valid");
+        store.install_document_store_owners_exact(complete_test_catalog(producer.member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         Self(store, Some(close_test_store::<P, Mutation>))
     }
 
     async fn bare(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
-        Self(super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid"), None)
+        Self(super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid"), None)
     }
 
     /// 🧹️ Arms the drop-close on a `bare` store once the test has installed its OWN owner catalog:
@@ -1799,13 +1796,13 @@ macro_rules! fixture_member_factory {
                 if dialect != &demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack, actor).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack, actor, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
             async fn open(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<Self, VcsError> {
                 if expected.dialect != demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack, actor).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
+                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack, actor, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<$mutation>::new()).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
         }
 
@@ -1946,10 +1943,10 @@ struct DemoSnapshotRetirementFactory;
 
 impl SnapshotRetirementFactory<DemoSnapshot> for DemoSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, snapshot: &Arc<DemoSnapshot>) -> usize {
-        semio_framework_value::retirement::SharedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(snapshot)
+        semio_framework_value::factory::SharedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(snapshot)
     }
     fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
-        semio_framework_value::retirement::SharedValueRetirementFactory::<DemoSnapshot>::default().retire(snapshot, grant)
+        semio_framework_value::factory::SharedValueRetirementFactory::<DemoSnapshot>::default().retire(snapshot, grant)
     }
 }
 
@@ -2040,10 +2037,10 @@ struct DemoInitialSnapshotRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, value: &DemoSnapshot) -> usize {
-        semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
+        semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
     }
     fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
-        semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
+        semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
     }
 }
 
@@ -2052,10 +2049,10 @@ struct DemoMutationRetirementFactory;
 
 impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<Mutation> for DemoMutationRetirementFactory {
     fn retirement_birth_bytes(&self, value: &Mutation) -> usize {
-        semio_framework_value::retirement::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
+        semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
     }
     fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> {
-        semio_framework_value::retirement::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
+        semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
     }
 }
 
@@ -2087,9 +2084,9 @@ fn drive_retirement_terminal(retirement: Box<dyn ErasedSnapshotRetirement>) {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_close_order() {
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None);
-    let mut store = super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
-    store.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
+    store.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
     let original = store.tail_undo_cache.as_ref().unwrap().0.as_ptr();
     let phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(5);
@@ -2282,14 +2279,19 @@ macro_rules! fixture_canonical_json {
 }
 fixture_canonical_json!(SeverityMutation, ValidatedMutation, TimestampedMutation);
 
-impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+pub struct DemoMemberStoreProducer<M>(::std::marker::PhantomData<fn()->(M)>);
+impl<M> Copy for DemoMemberStoreProducer<M> {}
+impl<M> Clone for DemoMemberStoreProducer<M> {fn clone(&self)->Self{*self}}
+impl<M> DemoMemberStoreProducer<M> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+impl MemberStoreProducer<DemoSnapshot,DemoMutation> for crate::os_store::tests::DemoMemberStoreProducer<DemoMutation> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
+
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<DemoMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, DemoMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, DemoMutation>> {
         fixture_authoring_member_owners::<DemoMutation>(grant)
     }
 }
@@ -2435,11 +2437,12 @@ impl OpBinary for DemoMutation {
 //#region 📬️OneItemPublicationLaws
 //#region 🧩️RetainedMemberPublicationLaws
 crate::space_members! {
+    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum RetainedTestMembers, RetainedTestMembersOpen {
-        First("s.test.member", "v1", "first", "demo/v1") => (DemoSnapshot, DemoMutation),
-        Second("s.test.member", "v1", "second", "demo/v1") => (DemoSnapshot, DemoMutation),
+        First("s.test.member", "v1", "first", "demo/v1") => (DemoSnapshot, DemoMutation, crate::os_store::tests::DemoMemberStoreProducer<DemoMutation>, crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()),
+        Second("s.test.member", "v1", "second", "demo/v1") => (DemoSnapshot, DemoMutation, crate::os_store::tests::DemoMemberStoreProducer<DemoMutation>, crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()),
     }
 }
 
@@ -2483,7 +2486,7 @@ async fn member_factory_closed_dialect_matches_neutral_admission_corpus() {
         let result = if row["operation"] == "create" {
             RetainedTestMembers::create(&expected.artifact_id, &expected.dialect, &seed.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await
         } else {
-            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None);
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(row["persisted"]["schema"].as_str().unwrap(), "child-1", seed.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             envelope.dialect = serde_json::from_value(row["persisted"]["dialect"].clone()).unwrap();
             let files = print_document_pack(&envelope).await.unwrap();
             let packed = encode_document_pack_bytes(&files.pack, &files.spr).await;
@@ -2523,7 +2526,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-1".into(), dialect: serde_json::from_value(fixture["bindings"][0]["dialect"].clone()).unwrap() };
     let owner = OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect::parse_coordinate("s.test.parent@v1/*").unwrap() }, slot: "content".into(), child_id: "child-1".into() };
     for row in fixture["identityCases"].as_array().unwrap() {
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None);
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["persistedId"].as_str().unwrap(), DemoSnapshot { n: Some(7) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(expected.dialect.clone());
         if !row["persistedOwner"].is_null() {
             let persisted = &row["persistedOwner"];
@@ -2586,7 +2589,7 @@ fn retained_demo_member_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutati
 async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_revision_and_metadata_refusal() {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "owned-batch", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "owned-batch", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
     let make_request = |mutations| MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(715), expected_generation: member.generation_now(), expected_revision: member.content_revision_now(), actor: fixture["metadata"]["actor"].as_str().unwrap().into(), group_id: Some(fixture["metadata"]["groupId"].as_str().unwrap().into()), transaction: None, mutations };
@@ -2664,7 +2667,7 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
     for count in fixture["census"]["rowCounts"].as_array().unwrap() {
         let count = count.as_u64().unwrap() as usize;
         let preflights = Arc::new(AtomicUsize::new(0));
-        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "bounded-source", DemoSnapshot { n: Some(0) }, None)).await;
+        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "bounded-source", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         let owners = complete_test_catalog(demo_base_store_owners().with_one_item_preparation(Arc::new(CountingOwnedPreparationFactory { inner: DemoOneItemPreparationFactory::admissible(), preflights: Arc::clone(&preflights) }),physical_test_close_grant()));
         member.install_document_store_owners_exact(owners).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let values = (0..count).map(|index| DemoMutation::SetN(SetN { n: fixture["values"][index % 3].as_i64().unwrap() as i32 })).collect::<Vec<_>>();
@@ -2798,7 +2801,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let packed = DemoSnapshot { n: Some(7) }.encode_pack();
             let initial = DemoSnapshot::decode_pack(&packed).unwrap();
             if matches!(stage, "envelope" | "initialization") {
-                let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-retained", initial, None).into_owners();
+                let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-retained", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
                 retained.stage_envelope(envelope).unwrap_or_else(|_| panic!("unique parsed owner slot"));
                 if stage == "initialization" {
                     let current = DemoSnapshot::decode_pack(&packed).unwrap();
@@ -3103,8 +3106,8 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
 async fn retained_member_publication_preserves_order_group_identity_and_exact_maximum_grant_progress() {
     let fixture = member_publication_fixture();
     let grant = ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize, ..one_item_test_policy() };
-    let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut second = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut first = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "first", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut second = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "second", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     first.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     second.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut members = [RetainedTestMembers::First(Box::new(first.into_inner())), RetainedTestMembers::Second(Box::new(second.into_inner()))];
@@ -3174,8 +3177,8 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
 #[semio_framework_async_macros::async_test]
 async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit() {
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() };
-    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     wrong.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     member.closes_on_drop();
@@ -3224,8 +3227,8 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
 async fn retained_member_group_preparation_reserves_real_history_without_partial_visibility_and_aborts_stale_owners() {
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() };
     let mut members = [
-        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None)).await,
-        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
     ];
     for member in &mut members {
         member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -3310,9 +3313,9 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
         for commit in [false, true] {
             let history = row["historyEntries"].as_u64().unwrap() as usize;
             let mut members = [
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-parent", DemoSnapshot { n: Some(0) }, None)).await,
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-child", DemoSnapshot { n: Some(10) }, None)).await,
-                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-existing", DemoSnapshot { n: Some(100) }, None)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-parent", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-child", DemoSnapshot { n: Some(10) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
+                ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-existing", DemoSnapshot { n: Some(100) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await,
             ];
             for (lane, member) in members.iter_mut().enumerate() {
                 member.install_document_store_owners_exact(retained_demo_member_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
@@ -4133,12 +4136,13 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪆️derived-read/🔣️.json")).expect("closed language-neutral origin corpus");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-source", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut foreign = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "derived-foreign", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     foreign.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let base = store.derived_snapshot_head();
-    assert!(Arc::ptr_eq(base.snapshot_owner(), &store.snapshot_owner()));
+    let(snapshot_owner,supplier)=original_snapshot_ports_without_representation_bounds(&store);
+    assert!(Arc::ptr_eq(base.snapshot_owner(),&snapshot_owner));assert!(Arc::ptr_eq(supplier.unwrap(),store.owned_snapshot_retirement_factory().unwrap()));drop(snapshot_owner);
     let operation = DemoMutation::SetN(SetN { n: 9 });
     let derived = store.derive_provisional_snapshot(&base, &operation).expect("genuine source").expect("applicable operation");
     <DemoMutation as Mutation<DemoSnapshot>>::retire_cold(operation);
@@ -4214,7 +4218,7 @@ async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_ow
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "exact-tail-transfer", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory, ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
@@ -4268,7 +4272,7 @@ async fn a_store_without_a_catalog_cannot_author_and_a_catalog_alone_gives_it_th
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity: crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "catalog-wire", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "catalog-wire", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     assert!(store.operation_wire().is_none(), "a bare store holds no wire");
     let refusal = store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect_err("a store that received neither a catalog nor a wire cannot author");
     assert!(format!("{refusal:?}").contains("authoring requires an installed canonical operation wire or an original domain codec"), "{refusal:?}");
@@ -4288,7 +4292,7 @@ async fn a_store_with_no_preparation_factory_authors_apply_undo_redo_and_its_row
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity: crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "canonical-wire", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "canonical-wire", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_operation_wire(super::ArtifactOperationWire::semantic::<DemoSnapshot>());
     store.install_document_store_owners_exact(demo_base_store_owners()).unwrap_or_else(|(error, _)| panic!("funded base catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }, &mut identity).await.expect("apply authors through the canonical wire");
@@ -4312,7 +4316,7 @@ async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_ow
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
     let read = store.snapshot_read().expect("exact live snapshot read");
@@ -4372,7 +4376,7 @@ where M: super::Mutation<P> + OpBinary,
 async fn store_close_releases_a_returned_read_before_its_displaced_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "returned-before-displaced", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let read = store.snapshot_read().expect("read captures the pre-edit root");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }).await.expect("apply displaces the captured root");
@@ -4386,7 +4390,7 @@ async fn store_close_releases_a_returned_read_before_its_displaced_root() {
 async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_root() {
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "erased-live-reader", DemoSnapshot { n: Some(3) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&completed)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let grant = physical_test_close_grant();
     let mut read = Some(SpaceMember::snapshot_read_erased_now(&store).expect("erased member read"));
@@ -4411,7 +4415,7 @@ async fn retained_genesis_aliases_retire_each_decoded_allocation_once() {
     for case in fixture["cases"].as_array().unwrap() {
         let snapshots = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let genesis = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", case["name"].as_str().unwrap(), DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(fixture_authoring_catalog(physical_test_close_grant(), ExactDemoSnapshotRetirementFactory(Arc::clone(&snapshots)), ExactDemoInitialSnapshotRetirementFactory(Arc::clone(&genesis)), DemoMutationRetirementFactory)).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let commands = case["commands"].as_array().unwrap();
         let mut tail = None;
@@ -4999,7 +5003,7 @@ async fn retained_clone_preparation_store_lifecycle_matches_neutral_oracle() {
             "overBudget" => DemoRetainedCloneEditMode::OverBudget,
             _ => DemoRetainedCloneEditMode::Apply,
         };
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", row["id"].as_str().expect("case id"), DemoSnapshot { n: Some(initial) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         let generation = store.generation_now();
         let revision = store.content_revision_now();
@@ -5153,7 +5157,7 @@ async fn interrupted_retained_clone_publication_handoffs_to_store_maintenance() 
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> =
         Arc::new(ProbedRetainedClonePreparationFactory { inner: retained_clone_preparation_factory(DemoRetainedCloneEditMode::Apply), dropped: Arc::clone(&dropped) });
     let initial = DemoSnapshot { n: Some(31) };
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-driver-loss", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let mut publication = Some(
         store
@@ -5206,13 +5210,13 @@ async fn retained_clone_preparation_refuses_contiguous_capacity_larger_than_one_
     let text_bytes = fixture["largeCapacity"]["stringByteLength"].as_u64().expect("large string byte length") as usize;
     let expected_code = fixture["largeCapacity"]["expectedCode"].as_str().expect("large capacity refusal code");
     let initial = RetainedTextSnapshot { text: "x".repeat(text_bytes) };
-    let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None)).await;
-    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let mut store = ArtifactStore::bare(create_document_envelope::<RetainedTextSnapshot, RetainedTextMutation>("retained.text/v1", "retained-text-capacity", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    store.install_document_store_owners_exact(complete_test_catalog(DocumentStoreOwners::admit_source_constructor(physical_test_close_grant(), || (semio_framework_value::factory::SharedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::factory::OwnedValueRetirementFactory::<RetainedTextSnapshot>::default(), semio_framework_value::factory::OwnedValueRetirementFactory::<RetainedTextMutation>::default(), ArtifactStoreCursorDisposer::<RetainedTextSnapshot, RetainedTextMutation>::new())))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<RetainedTextSnapshot, RetainedTextMutation>> = Arc::new(
         RetainedClonePreparationFactory::new(
             Arc::new(RetainedTextEdit),
-            Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
-            Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
+            Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<RetainedTextMutation>::default()),
+            Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<RetainedTextSnapshot>::default()),
             64,
         )
         .expect("retained text preparation factory"),
@@ -5278,7 +5282,7 @@ fn close_ephemeral_publication(publication: &mut ArtifactEphemeralOneItemPublica
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_single_retry_ack_and_move_only_root_preserve_generation_revision_and_history() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-single", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
@@ -5357,7 +5361,7 @@ async fn artifact_store_reset_preserves_capacity_for_retained_batch_publication(
     for row in fixture["cases"].as_array().unwrap() {
         let initial = row["initial"].as_i64().unwrap() as i32;
         let after = row["after"].as_i64().unwrap() as i32;
-        let fresh = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "reset-publication", DemoSnapshot { n: Some(initial) }, None);
+        let fresh = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "reset-publication", DemoSnapshot { n: Some(initial) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let mut store = ArtifactStore::bare(fresh()).await;
         store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         store.reset(fresh()).await.expect("empty-history reset");
@@ -5384,7 +5388,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     const ITEMS: usize = 200;
     const { assert!(ITEMS > crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY, "the fixture must exceed the fixed edit ledger capacity to prove the ceiling is gone") };
     let mutations = (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-gesture", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-gesture", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let (mut publication, receipt) = publish_demo_batch(&mut store, 1, mutations.clone()).await;
@@ -5401,7 +5405,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
 
-    let mut oracle = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut oracle = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     oracle.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     test_support::dispatch_test_command(&mut oracle, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("the batched command oracle applies the same list");
     let expected = oracle.envelope.vcs.edits.last().expect("oracle edit");
@@ -5435,7 +5439,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
 /// mutation is named after its edit, so a remote replica's one-forward edit resolves every transition naming it.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_case() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-single", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-single", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch(&mut store, 2, vec![DemoMutation::SetN(SetN { n: 7 })]).await;
     receipt.expect("a single-item gesture publishes");
@@ -5469,7 +5473,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     assert_eq!(ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 1 }), 512), ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 512 });
     assert_eq!(ArtifactStoreOneItemFootprint::for_ephemeral_item(512), ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 });
 
-    let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-under-declared", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     under.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 7, vec![DemoMutation::SetN(SetN { n: 9 })], DemoOneItemPreparationFactory::under_declared()).await;
@@ -5481,7 +5485,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut under);
 
-    let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-invertible", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-invertible", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     exact.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 8, vec![DemoMutation::SetN(SetN { n: 9 })], DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same item");
@@ -5508,7 +5512,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     let mutations = || (0..ITEMS).map(|index| DemoMutation::SetN(SetN { n: index as i32 + 1 })).collect::<Vec<_>>();
     assert_eq!(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }.merged(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 512 }).work_items, 2, "a merged declaration sums the items' rows");
 
-    let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut under = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-under-declared", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     under.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = under.generation_now();
     let (mut publication, receipt) = publish_demo_batch_with(&mut under, 9, mutations(), DemoOneItemPreparationFactory::under_declared()).await;
@@ -5525,7 +5529,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut under);
 
-    let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-invertible", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut exact = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "fold-batch-invertible", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     exact.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 10, mutations(), DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same gesture");
@@ -5544,7 +5548,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
 /// half-staged edit still closes to its exact terminal-empty witness.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_still_retires_exactly() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-rejection", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-rejection", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
@@ -5568,7 +5572,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
 /// running post root one owner per bounded turn, and never publishes.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_without_publishing() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-cancel", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-cancel", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let root = store.snapshot_root();
@@ -5593,7 +5597,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
 #[semio_framework_async_macros::async_test]
 async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for_next_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], transaction: None }).await.unwrap();
@@ -5618,7 +5622,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_forged_cursor_history() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-digest-authority", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
@@ -5659,7 +5663,7 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-rejections", DemoSnapshot { n: Some(3) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-rejections", DemoSnapshot { n: Some(3) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
@@ -5691,7 +5695,7 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
 /// of the Store's own clock is refused before any owner is reserved.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_behind() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-clock", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-clock", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
@@ -5746,7 +5750,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
 /// the document never saw.
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behind_its_construction_seed() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-genesis-clock", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-genesis-clock", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
@@ -5785,7 +5789,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
 /// after it, audit W1G-8).
 #[semio_framework_async_macros::async_test]
 async fn artifact_store_stamped_publication_carries_its_committed_identity_into_the_published_edit() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1,maximum_copy_bytes: 4096,maximum_capacity_bytes: 4096,maximum_release_bytes: 262144,maximum_depth: 4096 };
@@ -6033,7 +6037,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "terminal-empty witness")]
 async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
-    let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None)).await));
+    let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await));
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let publication = store
         .begin_apply_batch(
@@ -6058,7 +6062,7 @@ async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
 /// proves the witness stays strict when nothing is unwinding.
 #[semio_framework_async_macros::async_test]
 async fn a_panicking_body_holding_a_live_store_unwinds_instead_of_aborting_the_process() {
-    let store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "unwind-witness", DemoSnapshot { n: Some(0) }, None)).await;
+    let store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "unwind-witness", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let previous = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
@@ -6307,7 +6311,7 @@ async fn canonical_runtime_seed_retains_duplicate_owners_and_preflights_before_b
 
 #[semio_framework_async_macros::async_test]
 async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
-    let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut original = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "revision-aba", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     original.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     for n in [1, 2, 3] {
         test_support::dispatch_test_command(&mut original, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("seed revision edit");
@@ -6333,7 +6337,7 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
 
 /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
 async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crate::os_spr::MutationEnvelope {
-    let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut peer, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("peer apply");
     let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
     let document_id = ArtifactId(peer.envelope().id.clone());
@@ -6346,7 +6350,7 @@ async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> crat
 
 #[semio_framework_async_macros::async_test]
 async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let valid = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 7 })).await;
     let mut malformed = valid.clone();
     malformed.diff.payload = vec![0xff];
@@ -6363,7 +6367,7 @@ async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
 
 #[semio_framework_async_macros::async_test]
 async fn remote_ingest_requires_duplicate_mutation_payload_equivalence() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let accepted = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await;
     store.ingest_remote(accepted.clone()).await.expect("first remote envelope");
     let before = owned_test_envelope(&store).await;
@@ -6455,7 +6459,7 @@ fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation,
 }
 
 async fn fresh_demo_store() -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn owned_test_envelope<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> ArtifactEnvelope<P, Mutation>
@@ -6464,7 +6468,7 @@ where
     Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
 {
     let files = print_document_pack(store.envelope()).await.expect("print owned test envelope");
-    parse_document_pack::<P, Mutation>(&files.pack, &files.spr).await.expect("parse owned test envelope").envelope
+    parse_document_pack::<P, Mutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse owned test envelope").envelope
 }
 
 /// 🛰️ A `DeleteN` at an earlier HLC and a `SetN` at a later HLC — replayed in HLC order, the
@@ -6556,7 +6560,7 @@ async fn empty_store_replays_a_remote_event_log_in_hlc_order_and_keeps_its_local
 
 #[semio_framework_async_macros::async_test]
 async fn a_backbone_genesis_of_another_document_is_refused_without_mutation() {
-    let foreign = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(5) }, None)).await;
+    let foreign = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(5) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let (channel, remote) = ChannelBackbone::pair("genesis").await;
     remote.push(BackboneMessage::Genesis { pack: foreign.envelope().vcs.genesis.pack().to_vec() }).await.expect("push foreign genesis");
     let mut target = fresh_demo_store().await;
@@ -6778,14 +6782,14 @@ async fn testkit_law_conflict_spr_round_trip_via_real_store() {
 
     let pack_bytes = DemoSnapshot { n: Some(0) }.encode_pack();
     let encode = async |conflict: &crate::os_spr::Conflict| -> Vec<u8> {
-        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+        let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.conflicts = vec![conflict.clone()];
         let bytes = print_document_spr(&envelope).await.expect("encode conflict via the real .spr codec");
         retire_demo_envelope(envelope);
         bytes
     };
     let decode = async |bytes: &[u8]| -> crate::os_spr::Conflict {
-        let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes).await.expect("decode conflict via the real .spr codec");
+        let parsed = parse_document_spr::<DemoSnapshot, DemoMutation>(&pack_bytes, bytes, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("decode conflict via the real .spr codec");
         let conflict = parsed.envelope.conflicts.first().cloned().expect("one conflict round-tripped");
         retire_demo_envelope(parsed.envelope);
         conflict
@@ -6971,7 +6975,7 @@ async fn quarantine_message_clearing_is_correct_for_a_mixed_new_and_retroactive_
 
 #[semio_framework_async_macros::async_test]
 async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }).await.expect("checkpoint");
     let original_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -6986,16 +6990,16 @@ async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation(
     let rederived = &store.envelope().vcs.checkpoints[0];
     assert_ne!(rederived.id, original_checkpoint_id);
     assert_eq!(rederived.composition_pins.len(), 1);
-    let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
-    revalidated.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(owned_test_envelope(&store).await, store.local_actor_id().clone()).await.expect("a persisted pinned checkpoint must validate its rederived identity");
+    revalidated.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     close_test_store(&mut revalidated);
     retire_demo_envelope(before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn materialize_replays_forward_mutations() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
     assert_eq!(store.envelope().vcs.edits.len(), 1);
@@ -7003,8 +7007,8 @@ async fn materialize_replays_forward_mutations() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(0));
@@ -7032,8 +7036,8 @@ async fn history_lane_defaults_to_document() {
 /// back at its own HLC position in the applied order.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc1");
     let doc1_id = store.applied_edit_ids()[0].clone();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 100 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
@@ -7074,8 +7078,8 @@ async fn history_lane_default_undo_and_redo_skip_interaction_entries() {
 /// cursor moved, proving the two lanes' redo stacks are independent, not one shared position.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
     let doc_id = store.applied_edit_ids()[0].clone();
@@ -7100,8 +7104,8 @@ async fn history_lane_undo_in_lane_and_redo_in_lane_walk_only_the_requested_lane
 /// The explicit lane-scoped API can still walk them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lane() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction1");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction2");
     assert_eq!(store.applied_edit_ids().len(), 2);
@@ -7119,8 +7123,8 @@ async fn history_lane_default_undo_is_a_no_op_when_every_edit_is_interaction_lan
 /// owned pack+SPR round trip, and a reloaded store's default undo still skips them.
 #[semio_framework_async_macros::async_test]
 async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply doc");
     let doc_id = store.applied_edit_ids()[0].clone();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::ApplyInLane { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], lane: HistoryLane::Interaction, transaction: None }).await.expect("apply interaction");
@@ -7128,10 +7132,10 @@ async fn history_lane_interaction_entries_survive_owned_document_round_trip() {
     assert_eq!(store.envelope().lanes.get(&interaction_id), Some(&HistoryLane::Interaction));
 
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
-    let reloaded_envelope = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned document decode").envelope;
+    let reloaded_envelope = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope;
     assert_eq!(reloaded_envelope.lanes.get(&interaction_id), Some(&HistoryLane::Interaction), "lane tag must survive the owned document round trip");
 
-    let mut reloaded = ArtifactStore::new(reloaded_envelope).await;
+    let mut reloaded = ArtifactStore::new(reloaded_envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "reload seeds applied_edit_ids from the persisted cursor, same as any other edit");
     test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Undo).await.expect("undo on the reloaded store still skips the interaction edit");
     assert_eq!(reloaded.applied_edit_ids(), std::slice::from_ref(&interaction_id), "the document edit was removed; the interaction edit is the only one left applied");
@@ -7183,8 +7187,8 @@ async fn interaction_store_default_seeds_from_hover_default() {
 //#region 🔖️ImmutableOperationRoots
 #[semio_framework_async_macros::async_test]
 async fn artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let generation = store.generation_now();
     let before = store.snapshot_root();
     let same = store.snapshot_root();
@@ -7238,8 +7242,8 @@ async fn transient_root_is_o1_and_retains_the_exact_pre_reset_value() {
 
 #[semio_framework_async_macros::async_test]
 async fn apply_computes_backwards_from_pre_state() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
     assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
@@ -7247,8 +7251,8 @@ async fn apply_computes_backwards_from_pre_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn commit_checkpoint_wraps_edits_into_change() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("init".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     assert_eq!(store.envelope().vcs.changes.len(), 1);
@@ -7258,8 +7262,8 @@ async fn commit_checkpoint_wraps_edits_into_change() {
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_checkpoint_restores_applied_edits() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit");
     let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -7271,8 +7275,8 @@ async fn checkout_checkpoint_restores_applied_edits() {
 
 #[semio_framework_async_macros::async_test]
 async fn alternatives_switch_restores_checkpoint_chain() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
@@ -7291,8 +7295,8 @@ async fn alternatives_switch_restores_checkpoint_chain() {
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
     let c1 = store.envelope().vcs.checkpoints[0].id.clone();
@@ -7316,8 +7320,8 @@ async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CreateAlternative { name: "feature-a".into() }).await.expect("create alternative");
@@ -7330,8 +7334,8 @@ async fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
 
 #[semio_framework_async_macros::async_test]
 async fn history_columns_orders_newest_first_and_labels_trunk_root() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }).await.expect("commit c1");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply");
@@ -7348,8 +7352,8 @@ async fn history_columns_orders_newest_first_and_labels_trunk_root() {
 
 #[semio_framework_async_macros::async_test]
 async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).await.expect("commit root");
     let root = store.envelope().vcs.checkpoints[0].id.clone();
@@ -7433,19 +7437,19 @@ async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope 
 
 #[semio_framework_async_macros::async_test]
 async fn no_backbone_by_default() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
-    let store = ArtifactStore::new(envelope).await;
+    let store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert!(store.backbone_ref().is_none());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn memory_backbone_pair_propagates_edits_bidirectionally() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
-    let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store_a = ArtifactStore::new(envelope_a).await;
-    let mut store_b = ArtifactStore::new(envelope_b).await;
+    let envelope_a: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope_b: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store_a = ArtifactStore::new(envelope_a, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_b = ArtifactStore::new(envelope_b, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
 
@@ -7497,8 +7501,8 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
 #[semio_framework_async_macros::async_test]
 async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
     let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b").await;
-    let mut store_a = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store_a = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_b: ArtifactStore<DemoSnapshot, DemoMutation> = ArtifactStore::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     store_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
     store_a.detach_backbone().expect("detach source backbone");
@@ -7512,8 +7516,8 @@ async fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
 
 #[semio_framework_async_macros::async_test]
 async fn loaded_envelope_with_stale_backbone_ref_never_auto_attaches() {
-    let stale = || create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, Some(ArtifactBackboneRef { uri: "folder:///nonexistent/path".into() }));
-    let mut store = ArtifactStore::new(stale()).await;
+    let stale = || create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, Some(ArtifactBackboneRef { uri: "folder:///nonexistent/path".into() }), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(stale(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert!(!store.tick().await.expect("tick with no live backbone is a no-operation"), "no backbone was ever attached, so there is nothing to pump");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply works purely against the in-memory graph");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
@@ -7572,7 +7576,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     assert_eq!(codec.schema, "test.document-codec-roundtrip/v1");
     assert_eq!(codec.extension, "demo");
 
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: Some(4) }, None);
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-roundtrip/v1", "demo", DemoSnapshot { n: Some(4) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let text_files = print_document_text(&envelope).await;
     drop(envelope.into_owners());
     let text_files = text_files.expect("print document text");
@@ -7606,7 +7610,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     assert_eq!(lines[1], "  set-n n=9", "forward op line: {edit_text:?}");
     assert!(lines[2].starts_with("inverse ") && lines[2].contains("set-n n=4"), "inverse record carries the edit's inverse: {edit_text:?}");
     assert!(lines[3].starts_with("metadata "), "one metadata record per forward: {edit_text:?}");
-    let replayed = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &format!("{}{edit_text}", text_files.ops)).await.expect("strict replay accepts the codec's append unit appended to the document's ops");
+    let replayed = parse_document_text::<DemoSnapshot, DemoMutation>(&text_files.dsl, &format!("{}{edit_text}", text_files.ops), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("strict replay accepts the codec's append unit appended to the document's ops");
     assert_eq!(replayed.into_snapshot().n, Some(9), "the appended edit replays forward");
 
     preflight_document_codecs(std::slice::from_ref(&codec)).await.expect("preflight accepts an unclaimed full descriptor without publishing it");
@@ -7643,7 +7647,7 @@ async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], sp
 #[semio_framework_async_macros::async_test]
 async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its_store() {
     let codec = artifact_codec::<DemoSnapshot, DemoMutation>("test.document-codec-apply-ops/v1");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-apply-ops/v1", "demo-apply-ops", DemoSnapshot { n: Some(4) }, None);
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-apply-ops/v1", "demo-apply-ops", DemoSnapshot { n: Some(4) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let baseline = print_document_pack(&envelope).await;
     drop(envelope.into_owners());
     let baseline = baseline.expect("print document pack");
@@ -7674,7 +7678,7 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
 #[semio_framework_async_macros::async_test]
 async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledger() {
     let codec = artifact_codec::<DemoSnapshot, DemoMutation>("demo/v1");
-    let genesis = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let genesis = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let genesis_pair = print_document_pack(&genesis).await;
     drop(genesis.into_owners());
     let genesis_pair = genesis_pair.expect("genesis pair");
@@ -7767,8 +7771,8 @@ async fn assert_projection_is_stale(store: &ArtifactStore<DemoSnapshot, DemoMuta
 
 #[semio_framework_async_macros::async_test]
 async fn projection_result_gate_rejects_results_after_every_invalidating_store_transition() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let before_apply = projection_probe(&store, ArtifactProjectionCause::Apply).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
@@ -7800,8 +7804,8 @@ async fn projection_result_gate_rejects_results_after_every_invalidating_store_t
 
 #[semio_framework_async_macros::async_test]
 async fn projection_result_gate_rejects_results_after_dependency_and_checkpoint_transitions() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection-dependencies", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "projection-dependencies", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let before_replay = projection_probe(&store, ArtifactProjectionCause::Replay).await;
     assert_eq!(store.invalidate_after_replay().expect("replay invalidation").cause, ArtifactProjectionCause::Replay);
@@ -7832,26 +7836,26 @@ async fn projection_result_gate_rejects_results_after_dependency_and_checkpoint_
 // rejecting `n < 0` before persisting) is gone — `Mutation::validate` is deleted (§C4/C10); the
 // real outcome-messages/`MergePolicy` rejection this replaces is lane 1-A's C6 work.
 async fn reset_and_apply_reject_malformed_history_before_persisting() {
-    let fresh = || create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: Some(0) }, None);
+    let fresh = || create_document_envelope("demo/v1", "reset-invalid", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut malformed_constructor = fresh();
     malformed_constructor.cursor = Some(ArtifactCursor::new(vec!["missing".into()], Vec::new(), None));
-    assert!(matches!(super::ArtifactStore::new(malformed_constructor, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
+    assert!(matches!(super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(malformed_constructor, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
-    let mut legacy_seed = ArtifactStore::new(fresh()).await;
+    let mut legacy_seed = ArtifactStore::new(fresh(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut legacy_seed, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("seed edit");
     let files = print_document_pack(legacy_seed.envelope()).await.expect("owned history encode");
-    let mut cursorless = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned history decode").into_envelope();
+    let mut cursorless = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned history decode").into_envelope();
     cursorless.cursor = None;
-    let cursorless_store = ArtifactStore::new(cursorless).await;
+    let cursorless_store = ArtifactStore::new(cursorless, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(cursorless_store.snapshot().expect("cursorless snapshot"), DemoSnapshot { n: Some(3) });
     drop(cursorless_store);
-    let mut duplicate_history = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("second owned history decode").into_envelope();
+    let mut duplicate_history = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("second owned history decode").into_envelope();
     duplicate_history.cursor = None;
     let duplicate_edit = duplicate_history.vcs.edits[0].clone();
     duplicate_history.vcs.edits.try_push(duplicate_edit).expect("duplicate test edit fits the fixed history ledger");
-    assert!(matches!(super::ArtifactStore::new(duplicate_history, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
+    assert!(matches!(super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(duplicate_history, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::ValidationFailed(message)) if message.contains("repeats authoritative edit")), "duplicate authoritative edits cannot be hidden by first-match replay");
 
-    let mut store = ArtifactStore::new(fresh()).await;
+    let mut store = ArtifactStore::new(fresh(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let generation = store.generation();
     let mut dangling = fresh();
     dangling.transitions.push(crate::os_spr::history_transition_envelope(
@@ -7883,8 +7887,8 @@ async fn attach_folds_a_pushed_event_log() {
 #[semio_framework_async_macros::async_test]
 async fn channel_backbone_round_trips_between_store_and_actor() {
     let (channel, remote) = ChannelBackbone::pair("chan").await;
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
     let attach_flush = drain_channel_for_test(&remote).expect("drain attach");
     assert!(matches!(attach_flush.as_slice(), [BackboneMessage::Genesis { .. }]), "attach announces the genesis of an event-free document and nothing else: {attach_flush:?}");
@@ -7915,8 +7919,8 @@ async fn channel_backbone_remote_pops_one_exact_owner_in_fifo_order_and_preserve
 #[semio_framework_async_macros::async_test]
 async fn pump_acks_ingested_operations() {
     let (channel, remote) = ChannelBackbone::pair("chan").await;
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
     let _ = drain_channel_for_test(&remote).expect("drain attach snapshot");
 
@@ -7932,8 +7936,8 @@ async fn pump_acks_ingested_operations() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_base_only_undo_refuses_a_foreign_tail() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::IngestRemote { envelope: foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await }).await.expect("ingest foreign");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "foreign edit sits at the tail");
@@ -7945,8 +7949,8 @@ async fn exact_base_only_undo_refuses_a_foreign_tail() {
 
 #[semio_framework_async_macros::async_test]
 async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local apply");
     let local_edit_id = store.applied_edit_ids()[0].clone();
     let foreign = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 2 })).await;
@@ -7969,7 +7973,7 @@ async fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
 /// reinstates this author's entry from the shared redo stack.
 #[semio_framework_async_macros::async_test]
 async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("local a1");
     let local_a1 = store.applied_edit_ids()[0].clone();
     let author = store.local_actor_id().0.clone();
@@ -7984,8 +7988,8 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
     assert_eq!(store.redo_edit_ids(), std::slice::from_ref(&local_a2));
 
     let files = print_document_pack(store.envelope()).await.expect("print pack");
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("parse pack");
-    let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author)).await;
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse pack");
+    let mut reloaded = ArtifactStore::new_with_actor(parsed.envelope, ActorId(author), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.applied_edit_ids(), &[local_a1.clone(), foreign_id.clone()], "reload preserves selective undo projection");
     assert_eq!(reloaded.redo_edit_ids(), std::slice::from_ref(&local_a2), "durable collaborative redo stack survives reload");
     test_support::dispatch_test_command(&mut reloaded, ArtifactCommand::Redo).await.expect("redo after reload reinstates the local edit");
@@ -7995,8 +7999,8 @@ async fn plain_undo_is_selective_and_durable_across_event_log_reload() {
 
 #[semio_framework_async_macros::async_test]
 async fn compensating_undo_dispatches_semantic_command() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let undo_apply = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 0 })], transaction: None };
     test_support::dispatch_test_command(&mut store, ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: Some(Box::new(undo_apply)) }).await.expect("compensating undo");
@@ -8005,8 +8009,8 @@ async fn compensating_undo_dispatches_semantic_command() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_mutations_exposes_the_latest_edit() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert!(store.edit_mutations().is_none(), "no edits yet");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
@@ -8019,8 +8023,8 @@ async fn edit_mutations_exposes_the_latest_edit() {
 /// and the commit the edit carries every forward, inverse and metadata row, and one undo reverts the whole gesture.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d1".into(), tool: "s.demo@1/*#editor#drag".into() };
     for n in 1..=50 {
         test_support::dispatch_test_command(&mut store, ArtifactCommand::AppendTransaction { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: transaction.clone() }).await.expect("tick");
@@ -8039,8 +8043,8 @@ async fn a_streamed_transaction_grows_one_edit_over_many_ticks() {
 /// store loaded from the same envelope derives from scratch, and every tick still moves the revision.
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000d2".into(), tool: "s.demo@1/*#editor#type".into() };
     let mut revisions = std::collections::HashSet::new();
     for n in 1..=256 {
@@ -8050,7 +8054,7 @@ async fn a_streamed_edit_revision_is_its_own_from_scratch_digest() {
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitTransaction { transaction_id: transaction.id.clone() }).await.expect("commit");
     assert_eq!(store.envelope().vcs.edits.len(), 1, "the run is one edit");
     let files = print_document_pack(store.envelope()).await.expect("owned document encode");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned document decode").envelope).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("owned document decode").envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.content_revision_now(), store.content_revision_now(), "the incrementally extended revision equals the from-scratch one");
 }
 
@@ -8168,8 +8172,8 @@ async fn demo_op_binary_rejects_unknown_format_and_ordinal() {
 
 #[semio_framework_async_macros::async_test]
 async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply");
     let edit = store.envelope().vcs.edits.last().expect("edit");
     let printed = print_edit_lines(edit).await.expect("print edit lines");
@@ -8179,8 +8183,8 @@ async fn print_edit_lines_emits_one_indented_line_per_forward_op() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_after_apply_and_checkpoint() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut store, ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     test_support::assert_document_text_round_trip(&store).await;
@@ -8190,7 +8194,7 @@ async fn document_text_round_trips_after_apply_and_checkpoint() {
 #[semio_framework_async_macros::async_test]
 async fn parse_document_text_rejects_invalid_op_line_with_span() {
     let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 sequence=1 started=\"1\" line=[]\n  not-an-op\n".to_string() };
-    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
+    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_err();
     assert_eq!(error.span.line, 3);
 }
 
@@ -8211,8 +8215,8 @@ async fn parse_document_text_rejects_invalid_op_line_with_span() {
 /// itself, but a following apply + a second, older undo still must agree with replay).
 #[semio_framework_async_macros::async_test]
 async fn stateful_current_matches_full_replay_across_interleaved_commands() {
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 }), DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply multi-op edit");
     test_support::assert_live_equals_replay(&store).await;
@@ -8313,16 +8317,16 @@ async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + 'static, M: Sp
 /// already-clean ones just need a prior checkpoint).
 #[semio_framework_async_macros::async_test]
 async fn register_space_documents_registers_manifest_collections_and_artifacts_together() {
-    let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut manifest = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "space-manifest", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut manifest, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }).await.expect("apply manifest edit");
-    let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut collection_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut collection_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }).await.expect("apply collection a edit");
-    let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut collection_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "collection-b", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut collection_b, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }).await.expect("apply collection b edit");
-    let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut artifact_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "artifact-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut artifact_a, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("apply artifact edit");
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_space_documents(manifest, vec![collection_a, collection_b], vec![artifact_a]).await;
 
     assert!(host.member("space-manifest").await.is_some(), "manifest registered");
@@ -8350,15 +8354,15 @@ async fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply a");
 
-    let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-b", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }, &mut identity).await.expect("apply b");
     member_b.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b-init".into()), authors: Vec::new() }, &mut identity).await.expect("commit b upfront, so it starts clean");
     let member_b_checkpoint = member_b.current_checkpoint_id().await.expect("b checkpoint").to_string();
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
     host.register_member(member_b).await;
 
@@ -8382,15 +8386,15 @@ async fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b").await;
-    let mut host_a = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid first space host history");
-    let mut host_b = SpaceHost::<ArtifactStore<DemoSnapshot, DemoMutation>>::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid second space host history");
+    let mut host_a = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid first space host history");
+    let mut host_b = SpaceHost::<ArtifactStore<DemoSnapshot, DemoMutation>>::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid second space host history");
     assert!(host_a.backbone_ref().await.is_none(), "default is unattached, like any other ArtifactStore");
 
     host_a.attach_backbone(Backbones::Memory(backbone_a)).await.expect("attach a");
     host_b.attach_backbone(Backbones::Memory(backbone_b)).await.expect("attach b");
     assert!(host_a.backbone_ref().await.is_some());
 
-    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply on member, so it's dirty and can be committed");
     host_a.register_member(member).await;
     host_a.commit_space_checkpoint("studio init".into(), Vec::new(), &mut identity).await.expect("commit space checkpoint on a");
@@ -8412,8 +8416,8 @@ async fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
+    let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
     demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply 1");
@@ -8434,8 +8438,8 @@ async fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
+    let member_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "member-a", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_a).await;
 
     demo_member::<DemoMutation, _>(&mut host, "member-a").await.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply 1");
@@ -8457,13 +8461,13 @@ async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_b
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 1, physical_ms: 1_000 })], transaction: None }, &mut identity).await.expect("apply early");
 
-    let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 9, physical_ms: 2_000 })], transaction: None }, &mut identity).await.expect("apply late");
 
-    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
+    let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid space host history");
     host.register_member(member_early).await;
     host.register_member(member_late).await;
 
@@ -8485,8 +8489,8 @@ async fn snapshot_matches_materialize_and_conflicts_stay_empty_absent_remote_ing
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply");
     let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");
     assert_eq!(replayed.n, Some(3));
@@ -8626,14 +8630,14 @@ impl OpBinary for SeverityMutation {
     }
 }
 
-impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,SeverityMutation> for crate::os_store::tests::DemoMemberStoreProducer<SeverityMutation> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<SeverityMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, SeverityMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, SeverityMutation>> {
         fixture_authoring_member_owners::<SeverityMutation>(grant)
     }
 }
@@ -8661,7 +8665,7 @@ async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity-text", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity-text", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
     let edit = store.envelope().vcs.edits.last().expect("one durable edit").clone();
     let messages = store.envelope().edit_messages.last().expect("durable outcome ledger").messages.clone();
@@ -8681,7 +8685,7 @@ async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and
     for record in ["inverse ", "metadata ", "message ", "conflict "] {
         assert!(files.ops.lines().any(|line| line.starts_with(record)), "missing {record:?} record: {}", files.ops);
     }
-    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse full-fidelity text");
+    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse full-fidelity text");
     assert_eq!(&parsed.envelope, store.envelope());
     assert_eq!(parsed.snapshot, store.snapshot().expect("live snapshot"));
     test_support::retire_parsed_document(parsed);
@@ -8766,11 +8770,11 @@ async fn document_text_rejects_missing_metadata_and_dangling_transitions_without
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-text", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
     let files = print_document_text(store.envelope()).await.expect("print strict text");
     let missing_metadata = files.ops.lines().filter(|line| !line.starts_with("metadata ")).collect::<Vec<_>>().join("\n");
-    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata).await, Err(error) if error.message.contains("no metadata records")));
+    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &missing_metadata, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("no metadata records")));
 
     let dangling = crate::os_spr::history_transition_envelope(
         &crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("unknown-edit".into())] },
@@ -8780,7 +8784,7 @@ async fn document_text_rejects_missing_metadata_and_dangling_transitions_without
         HybridLogicalTimestamp::new(0, 1),
     );
     let dangling_text = format!("{}\n{}", files.ops.trim_end(), ops_line_from_transition(&dangling).expect("transition line").print_op());
-    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &dangling_text).await, Err(error) if error.message.contains("unknown operation unknown-edit")));
+    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &dangling_text, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("unknown operation unknown-edit")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -8790,7 +8794,7 @@ async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_inval
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "strict-sequence", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 1 })], transaction: None }, &mut identity).await.expect("first edit");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n: 2 })], transaction: None }, &mut identity).await.expect("second edit");
     let mut renumbered = owned_test_envelope(&store).await;
@@ -8799,12 +8803,12 @@ async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_inval
 
     let files = print_document_text(&renumbered).await.expect("print strict text");
     retire_demo_envelope(renumbered);
-    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse strict text").into_envelope();
+    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse strict text").into_envelope();
     assert_eq!(parsed.vcs.edits.iter().map(|edit| edit.sequence_number).collect::<Vec<_>>(), vec![4, 17]);
     retire_demo_envelope(parsed);
 
     let invalid = files.ops.replacen("sequence=4", "sequence=-1", 1);
-    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid).await, Err(error) if error.message.contains("invalid edit sequence -1")));
+    assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("invalid edit sequence -1")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -8814,7 +8818,7 @@ async fn persisted_conflict_requires_a_global_owned_operation_index() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "conflict-index", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "conflict-index", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 3 })], transaction: None }, &mut identity).await.expect("apply warning");
     let edit = store.envelope().vcs.edits.last().expect("one edit").clone();
     let kind = crate::os_spr::ConflictKind::Degraded { edit_ids: vec![edit.id.clone()] };
@@ -8839,7 +8843,7 @@ async fn persisted_conflict_requires_a_global_owned_operation_index() {
 #[semio_framework_async_macros::async_test]
 async fn conflict_generation_and_validation_canonicalize_repeated_actors() {
     let document_id = "repeated-conflict-actor";
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let clean = severity_mutation_envelope_at(document_id, "same-peer", "same-clean", SeverityMutation::SetN(SeveritySetN { n: 1 }), HybridLogicalTimestamp::new(1, 100));
     let mut fatal = severity_mutation_envelope_at(document_id, "same-peer", "same-fatal", SeverityMutation::SetFatalN(SetFatalN { n: 2 }), HybridLogicalTimestamp::new(2, 200));
     fatal.dependencies = vec![clean.mutation_id.clone()];
@@ -8861,7 +8865,7 @@ async fn conflict_generation_and_validation_canonicalize_repeated_actors() {
 #[semio_framework_async_macros::async_test]
 async fn quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal() {
     let document_id = "severity-atomic";
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let clean = severity_mutation_envelope_at(document_id, "clean-peer", "clean-op", SeverityMutation::SetN(SeveritySetN { n: 1 }), HybridLogicalTimestamp::new(1, 100));
     let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::SetFatalN(SetFatalN { n: 2 }), HybridLogicalTimestamp::new(2, 200));
     let kind = crate::os_spr::ConflictKind::Quarantined { envelopes: vec![clean.clone(), fatal.clone()] };
@@ -8901,7 +8905,7 @@ async fn quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal() {
 async fn a_remote_event_rejected_by_policy_stays_quarantined_out_of_history() {
     let document_id = "severity-events";
     let fatal = severity_mutation_envelope_at(document_id, "fatal-peer", "fatal-op", SeverityMutation::SetFatalN(SetFatalN { n: 2 }), HybridLogicalTimestamp::new(2, 200));
-    let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut local = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", document_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let report = local.ingest_remote(fatal).await.expect("a policy rejection is a report");
     assert!(!report.accepted);
     assert_eq!(local.snapshot().expect("local content remains unchanged"), DemoSnapshot { n: Some(0) });
@@ -8923,8 +8927,8 @@ async fn a_remote_event_rejected_by_policy_stays_quarantined_out_of_history() {
 /// C6 work, see `📓️w1-e-report.md`), so this recomputation is the closest available proof.
 #[semio_framework_async_macros::async_test]
 async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and_changes_nothing() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: Some(0) }, None);
-    let store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let before = owned_test_envelope(&store).await;
 
     let ops: Vec<Vec<u8>> = vec![
@@ -8962,8 +8966,8 @@ async fn preview_wire_reports_the_same_messages_the_real_apply_would_produce_and
 
 #[semio_framework_async_macros::async_test]
 async fn preview_wire_reports_a_fatal_message_for_undecodable_op_bytes_and_stops_there() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-malformed", DemoSnapshot { n: Some(0) }, None);
-    let store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, SeverityMutation> = create_document_envelope("demo/v1", "preview-malformed", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let ops: Vec<Vec<u8>> = vec![SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode"), vec![0xff, 0xff, 0xff]];
 
     let messages = store.preview_wire(&ops).await;
@@ -8980,7 +8984,7 @@ async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let initial = DemoSnapshot { n: Some(0) };
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "durable-outcomes", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
     let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, &mut identity).await.expect("warning is accepted");
     let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
@@ -8996,11 +9000,11 @@ async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
 
     let pack = initial.encode_pack();
     let spr = print_document_spr(store.envelope()).await.expect("outcome history encodes");
-    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).await.expect("outcome history decodes");
+    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("outcome history decodes");
     assert_eq!(parsed.envelope.edit_messages, store.envelope().edit_messages);
     assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
 
-    let restored = ArtifactStore::new(parsed.envelope).await;
+    let restored = ArtifactStore::new(parsed.envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(restored.messages_for_edit(&edit_id), messages);
     assert_eq!(restored.conflicts(), store.conflicts());
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9016,7 +9020,7 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let initial = DemoSnapshot { n: Some(0) };
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "state-dependent-codes", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
     let receipt = store.dispatch(ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetWarningN(SetWarningN { n: 2 })], transaction: None }, &mut identity).await.expect("warning is accepted");
     let edit_id = receipt.edit_ids.first().expect("one durable edit").clone();
@@ -9031,9 +9035,9 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
 
     let pack = initial.encode_pack();
     let spr = print_document_spr(store.envelope()).await.expect("state-dependent codes encode");
-    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr).await.expect("state-dependent codes decode");
+    let parsed = parse_document_spr::<DemoSnapshot, SeverityMutation>(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("state-dependent codes decode");
     assert_eq!(parsed.envelope.conflicts, store.envelope().conflicts);
-    let restored = ArtifactStore::new(parsed.envelope).await;
+    let restored = ArtifactStore::new(parsed.envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(restored.conflicts(), store.conflicts());
     let codes: Vec<&str> = restored.conflicts().last().expect("the conflict survives").messages.iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.target-referenced", "mutation.target-mismatch"]);
@@ -9098,7 +9102,7 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
         ..Default::default()
     };
     let spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions::default()).await.expect("encode fixture");
-    let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr).await.expect_err("authoritative history must never synthesize operation identity");
+    let error = parse_document_spr::<DemoSnapshot, SeverityMutation>(&initial.encode_pack(), &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect_err("authoritative history must never synthesize operation identity");
     assert!(error.message.contains("authoritative operation metadata"));
 }
 //#endregion 🔖️PreviewWireTests
@@ -9164,7 +9168,7 @@ async fn ops_header_line_parse_op_rejects_a_line_with_no_known_keyword() {
 #[semio_framework_async_macros::async_test]
 async fn parse_document_text_rejects_a_header_line_missing_its_required_positional_id() {
     let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "checkout\n".to_string() };
-    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
+    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_err();
     assert!(error.message.contains("expected Text"), "got {error:?}");
     assert_eq!(error.span.line, 1);
 }
@@ -9172,7 +9176,7 @@ async fn parse_document_text_rejects_a_header_line_missing_its_required_position
 #[semio_framework_async_macros::async_test]
 async fn parse_document_text_rejects_an_unknown_header_line_keyword() {
     let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string() };
-    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
+    let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_err();
     assert!(error.message.contains("unknown operation line"), "got {error:?}");
     assert_eq!(error.span.line, 2);
 }
@@ -9182,15 +9186,15 @@ async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_descr
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "branch \"a\"".into() }, &mut identity).await.expect("create alternative (auto-commits and activates it)");
     assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("branch ")), "an alternative must print as a `branch` transition line: {}", files.ops);
     test_support::assert_document_pack_round_trip(&store).await;
-    let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.expect("parse document text");
+    let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse document text");
     assert!(parsed.envelope.active_alternative_id.is_none(), "the ops text is the shared log and hydrates to the trunk");
     assert_eq!(parsed.snapshot.n, store.snapshot().expect("snapshot").n);
     test_support::retire_parsed_document(parsed);
@@ -9205,15 +9209,15 @@ async fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving()
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply e1");
     store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply e2");
     assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("revert ")), "the undo must print as a `revert` transition line: {}", files.ops);
-    let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+    let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document text failed: {error}"));
     assert_eq!(parsed.envelope.cursor, store.envelope().cursor.clone(), "cursor diverged across a print/parse round trip");
     assert_eq!(parsed.snapshot.n, Some(2), "restored snapshot must reflect only the applied edit (e2), not both");
     test_support::retire_parsed_document(parsed);
@@ -9237,8 +9241,8 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1 snapshot");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply e2");
@@ -9250,9 +9254,9 @@ async fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position()
     let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
     assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
 
-    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack_files.pack, &pack_files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
     assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1, proving undo position survived the save");
-    let mut reloaded = ArtifactStore::new(parsed.envelope).await;
+    let mut reloaded = ArtifactStore::new(parsed.envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(reloaded.snapshot().expect("reloaded snapshot"), post_e1, "ArtifactStore::new must seed live state from the persisted cursor");
     assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
     test_support::assert_live_equals_replay(&reloaded).await;
@@ -9274,20 +9278,20 @@ async fn document_codecs_share_complete_authoritative_history_validation() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope = create_document_envelope("demo/v1", "codec-validation", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope = create_document_envelope("demo/v1", "codec-validation", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity).await.expect("commit");
     let text = print_document_text(store.envelope()).await.expect("text fixture");
     let duplicate_commit = text.ops.lines().find(|line| line.starts_with("commit ")).expect("one persisted commit transition");
     let malformed_text = format!("{}\n{duplicate_commit}", text.ops);
-    assert!(matches!(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &malformed_text).await, Err(error) if error.message.contains("repeats transition")));
+    assert!(matches!(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &malformed_text, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("repeats transition")));
 
     let pack = print_document_pack(store.envelope()).await.expect("binary fixture");
     let mut history = crate::os_spr::decode_history(&pack.spr, &crate::os_spr::DecodeOptions::default()).await.expect("decode history");
     history.transitions.push(history.transitions.first().expect("one persisted commit transition").clone());
     let malformed_spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() }).await.expect("encode malformed history");
-    assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr).await, Err(error) if error.message.contains("repeats transition")));
+    assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("repeats transition")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -9300,8 +9304,8 @@ async fn apply_with_no_mutations_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let error = store.dispatch(ArtifactCommand::Apply { mutations: Vec::new(), transaction: None }, &mut identity).await.unwrap_err();
     assert_eq!(error, VcsError::EmptyApply);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9313,8 +9317,8 @@ async fn undo_with_nothing_applied_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(store.dispatch(ArtifactCommand::Undo, &mut identity).await.unwrap_err(), VcsError::NothingToUndo);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
@@ -9325,8 +9329,8 @@ async fn redo_with_nothing_undone_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(store.dispatch(ArtifactCommand::Redo, &mut identity).await.unwrap_err(), VcsError::NothingToRedo);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
@@ -9337,8 +9341,8 @@ async fn checkout_of_an_unknown_checkpoint_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let error = store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() }, &mut identity).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownChange("nope".into()));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9350,8 +9354,8 @@ async fn switch_to_an_unknown_alternative_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let error = store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: "nope".into() }, &mut identity).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9360,9 +9364,9 @@ async fn switch_to_an_unknown_alternative_is_rejected() {
 
 #[semio_framework_async_macros::async_test]
 async fn malformed_alternative_checkpoint_pin_is_rejected_at_construction() {
-    let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.vcs.alternatives.try_push(Alternative { id: "alt-dangling".into(), name: "dangling".into(), checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()] }).expect("test alternative fits the fixed history ledger");
-    let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await {
+    let error = match super::ArtifactStore::<DemoSnapshot, DemoMutation>::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await {
         Ok(_) => panic!("the alternative's pinned checkpoint id must actually exist"),
         Err(error) => error,
     };
@@ -9374,8 +9378,8 @@ async fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let error = store.dispatch(ArtifactCommand::CreateAlternative { name: "x".into() }, &mut identity).await.unwrap_err();
     assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9387,8 +9391,8 @@ async fn compensating_undo_without_a_semantic_command_is_rejected() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     let error = store.dispatch(ArtifactCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None }, &mut identity).await.unwrap_err();
     assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
@@ -9398,7 +9402,7 @@ async fn compensating_undo_without_a_semantic_command_is_rejected() {
 
 #[semio_framework_async_macros::async_test]
 async fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
     retire_demo_envelope(envelope);
@@ -9409,8 +9413,8 @@ async fn dispatch_text_applies_a_command_block_and_snapshot_json_reflects_it() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let command_text = print_command(&ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }).await.expect("print command");
     store.dispatch_text(&command_text, &mut identity).await.expect("dispatch text");
     assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: Some(7) }).unwrap());
@@ -9426,8 +9430,8 @@ async fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let command_bytes = ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], transaction: None }.encode_command().expect("encode command");
     store.dispatch_binary(&command_bytes, &mut identity).await.expect("dispatch binary");
     assert_eq!(store.snapshot_json().expect("snapshot json"), serde_json::to_string(&DemoSnapshot { n: Some(7) }).unwrap());
@@ -9473,7 +9477,7 @@ async fn reconcile_alternative_requires_an_existing_checkpoint() {
     const CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(CEILING,&mut observer).unwrap();
-    let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
+    let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new(), &mut identity).await.unwrap_err();
     assert_eq!(error, VcsError::NoCheckpoint);
     retire_demo_envelope(envelope);
@@ -9484,8 +9488,8 @@ async fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() }, &mut identity).await.expect("commit");
     let base_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -9516,8 +9520,8 @@ async fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_com
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply 1");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }, &mut identity).await.expect("commit 1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply 2");
@@ -9536,8 +9540,8 @@ async fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply root");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }, &mut identity).await.expect("commit root");
     let root_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -9565,8 +9569,8 @@ async fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }, &mut identity).await.expect("commit");
     let root_id = store.envelope().vcs.checkpoints[0].id.clone();
@@ -9718,11 +9722,11 @@ async fn reload_replays_the_event_log_into_the_same_positions() {
     }
     let expected = history_position(&store).await;
     let files = print_document_pack(store.envelope()).await.expect("print pack");
-    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("parse pack").envelope).await;
+    let reloaded = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse pack").envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(history_position(&reloaded).await, expected, ".pack+.spr reload restores every position by folding events");
     let text = print_document_text(store.envelope()).await.expect("print text");
     assert!(text.ops.contains("\ncommit ") && text.ops.contains("\nbranch ") && text.ops.contains("\nrevert "), "the text mirror states the semantic transitions: {}", text.ops);
-    let from_text = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("parse text").envelope).await;
+    let from_text = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("parse text").envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(from_text.snapshot().expect("text snapshot"), expected.0, "the ops text folds the shared events");
     assert!(from_text.envelope().active_alternative_id.is_none(), "the ops text has no viewer head and hydrates to the trunk");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
@@ -9737,8 +9741,8 @@ async fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
-    let mut store = ArtifactStore::new(envelope).await;
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "feature".into() }, &mut identity).await.expect("create alternative (auto-commits since no checkpoint existed yet)");
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative").id.clone();
@@ -10016,26 +10020,26 @@ impl OpBinary for ValidatedMutation {
 /// 🛂️ The composition fixture's negative value is a fatal outcome, so the dry-run
 /// rejects it before group dispatch can alter either member's history.
 
-impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,ValidatedMutation> for crate::os_store::tests::DemoMemberStoreProducer<ValidatedMutation> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<ValidatedMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, ValidatedMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, ValidatedMutation>> {
         fixture_authoring_member_owners::<ValidatedMutation>(grant)
     }
 }
 
-impl MemberStoreOwner<TimestampedMutation> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,TimestampedMutation> for crate::os_store::tests::DemoMemberStoreProducer<TimestampedMutation> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<TimestampedMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, TimestampedMutation>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, TimestampedMutation>> {
         fixture_authoring_member_owners::<TimestampedMutation>(grant)
     }
 }
@@ -10121,7 +10125,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let dialect = demo_child_dialect();
 
-    let mut child = create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("create");
+    let mut child = create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("create");
     assert!(child.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
     assert!(child.owned_disposer_installed(), "generated member creation must install the exact whole-store bounded disposer before returning ownership");
     child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
@@ -10131,7 +10135,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     let files = print_document_pack(child.envelope()).await.expect("print");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
-    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone()).await.expect("open");
+    let mut reopened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone(), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open");
 
     assert!(reopened.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
     assert!(reopened.owned_disposer_installed(), "generated member reopen must install the exact whole-store bounded disposer before returning ownership");
@@ -10154,7 +10158,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     let owner = OwnerRef { parent: parent.clone(), slot: "slot".into(), child_id: "genesis-child".into() };
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "genesis-child".into(), dialect: dialect.clone() };
     let envelope_pack = genesis_member_envelope_pack("demo/v1", &expected, &owner, &DemoSnapshot { n: Some(5) }.encode_pack()).await.expect("genesis envelope");
-    let mut opened = open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&owner), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("open genesis member");
+    let mut opened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&owner), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open genesis member");
     assert_eq!(opened.envelope().id, "genesis-child");
     assert_eq!(opened.envelope().owner.as_ref(), Some(&owner));
     assert_eq!(opened.envelope().dialect.as_ref(), Some(&dialect));
@@ -10162,7 +10166,7 @@ async fn genesis_member_envelope_pack_opens_as_the_owned_child_without_a_live_st
     assert!(opened.envelope().vcs.edits.is_empty(), "a genesis member carries no history");
     close_member_dialect_fixture(&mut opened);
     let other = OwnerRef { parent, slot: "other".into(), child_id: "genesis-child".into() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, Some(&other), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, Some(&other), &envelope_pack, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "the stamped owner must match the requested one");
     assert!(matches!(genesis_member_envelope_pack("demo/v1", &expected, &owner, &[]).await, Err(VcsError::Deserialize(_))), "an empty initial pack is rejected, never substituted");
 }
 
@@ -10189,17 +10193,17 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
 
 #[semio_framework_async_macros::async_test]
 async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
-    let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
+    let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let refused = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
     assert!(matches!(&refused, Err(reason) if reason.kind == semio_framework_value::ValueRefusalKind::InvariantViolated && reason.message.contains("no installed owner disposer")), "{refused:?}");
 
-    missing.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    missing.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     missing.closes_on_drop();
     let first = SpaceMember::close_owned_step(&mut missing, physical_test_close_grant());
     assert!(matches!(&first, Ok(RetainedCloneStep::Progress(progress)) if progress.fits(physical_test_close_grant())), "{first:?}");
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
     assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));
-    let replacement=complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()));
+    let replacement=complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()));
     let(error,mut returned)=missing.install_document_store_owners_exact(replacement).expect_err("the original catalog cannot be replaced");
     assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
     for _ in 0..10_000 { if returned.uninstalled_owners_terminal_is_empty(){break;}let step=returned.close_uninstalled_owners_step(physical_test_close_grant()).expect("returned original catalog closes under the supplied grant");assert!(step.progress().fits(physical_test_close_grant())); }
@@ -10211,14 +10215,14 @@ async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer
 /// typed by its parent, so `open` must fail closed rather than hand back an untypable member.
 #[semio_framework_async_macros::async_test]
 async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child() {
-    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation>("demo/v1", "child-empty", &demo_child_dialect(), &[], ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
+    assert!(matches!(create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-empty", &demo_child_dialect(), &[], ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an empty genesis pack must never silently default");
 
-    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None);
+    let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "child-no-dialect", DemoSnapshot { n: Some(1) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.owner = Some(OwnerRef { parent: semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent".into(), dialect: demo_child_dialect() }, slot: "mesh".into(), child_id: "child-no-dialect".into() });
     let files = print_document_pack(&envelope).await.expect("print");
     let orphan = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
-    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, envelope.owner.as_ref(), &orphan, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+    assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, envelope.owner.as_ref(), &orphan, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
     retire_demo_envelope(envelope);
 }
 
@@ -10227,7 +10231,7 @@ async fn pack_at_checkpoint_reads_history_without_moving_the_live_cursor() {
     const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: Some(1) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "pinned-target", DemoSnapshot { n: Some(1) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply");
     let checkpoint = SpaceMember::commit_checkpoint(&mut store, "v1".into(), Vec::new(), &mut identity).await.expect("checkpoint");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply after checkpoint");
@@ -10258,7 +10262,7 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
         }
     }
 
-    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: Some(1) }, None)).await;
+    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "linked-doc", DemoSnapshot { n: Some(1) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 42 })], transaction: None }, &mut identity).await.expect("apply");
     let pinned = SpaceMember::commit_checkpoint(&mut member, "pinned".into(), Vec::new(), &mut identity).await.expect("checkpoint");
     member.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 99 })], transaction: None }, &mut identity).await.expect("apply after pin");
@@ -10566,8 +10570,8 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-atomic-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
@@ -10607,8 +10611,8 @@ async fn dispatch_group_rejects_a_child_the_graph_does_not_track_as_owned() {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-unowned-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, ValidatedMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let coordinator = CompositionCoordinator::new();
 
     let op = ValidatedMutation::SetN(ValidatedSetN { n: 1 }).encode_op().expect("encode");
@@ -10640,15 +10644,15 @@ async fn compensate_undoes_applied_members_in_reverse_order() {
     let child_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let child_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
     let parent_edit_id = parent_store.envelope().vcs.edits.last().expect("parent edit").id.clone();
 
-    let mut child_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     child_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply a");
     let child_a_edit_id = child_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
-    let mut child_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     child_b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply b");
     let child_b_edit_id = child_b.envelope().vcs.edits.last().expect("b edit").id.clone();
 
@@ -10687,8 +10691,8 @@ async fn compensate_reports_skipped_when_a_members_own_undo_fails_and_folds_to_c
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-comp-fail-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], transaction: None }, &mut identity).await.expect("apply child");
     let child_edit_id = child_store.envelope().vcs.edits.last().expect("child edit").id.clone();
 
@@ -10727,12 +10731,12 @@ async fn dispatch_group_mints_genesis_child_ids_deterministically_across_replica
     let genesis = vec![ChildGenesis { slot: "mesh-slot".into(), dialect: demo_child_dialect(), initial_pack: DemoSnapshot { n: Some(0) }.encode_pack() }];
     let parent_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode")];
 
-    let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_1 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator_1 = CompositionCoordinator::new().await;
     let mut children_1: [(&mut ArtifactStore<DemoSnapshot, DemoMutation>, ChildDispatch); 0] = [];
     let receipt_1 = coordinator_1.dispatch_group(&parent_ref, &mut parent_1, &mut children_1, parent_ops.clone(), genesis.clone(), GroupMeta::default(), &mut identity).await.expect("replica 1 dispatch");
 
-    let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_2 = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let coordinator_2 = CompositionCoordinator::new();
     let mut children_2: [(&mut ArtifactStore<DemoSnapshot, DemoMutation>, ChildDispatch); 0] = [];
     let receipt_2 = coordinator_2.await.dispatch_group(&parent_ref, &mut parent_2, &mut children_2, parent_ops, genesis, GroupMeta::default(), &mut identity).await.expect("replica 2 dispatch");
@@ -10762,15 +10766,15 @@ async fn undo_group_skips_a_foreign_tail_member_but_still_undoes_the_rest() {
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-undo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
     parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
 
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     child_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply child");
     child_store.stamp_tail_group_id(group_id).await.expect("stamp child");
 
-    let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], transaction: None }, &mut identity).await.expect("apply foreign");
     foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
 
@@ -10801,12 +10805,12 @@ async fn redo_group_skips_a_foreign_tail_member_but_still_redoes_the_rest() {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let foreign_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "foreign-redo-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply parent");
     parent_store.stamp_tail_group_id(group_id).await.expect("stamp parent");
     parent_store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo parent, seeding its redo stack");
 
-    let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut foreign_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &foreign_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     foreign_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply foreign");
     foreign_store.stamp_tail_group_id("some-other-group").await.expect("stamp foreign");
     foreign_store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo foreign, seeding its redo stack");
@@ -10841,8 +10845,8 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
     let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-initiator-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-member-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let coordinator = TransactionCoordinator::new();
 
     let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode initiator op")];
@@ -10890,15 +10894,15 @@ async fn compensate_undoes_applied_peer_members_in_reverse_order() {
     let peer_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
     let peer_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-comp-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     initiator_store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.expect("apply initiator");
     let initiator_edit_id = initiator_store.envelope().vcs.edits.last().expect("initiator edit").id.clone();
 
-    let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut peer_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     peer_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], transaction: None }, &mut identity).await.expect("apply peer a — the member the transaction already reached");
     let peer_a_edit_id = peer_a.envelope().vcs.edits.last().expect("a edit").id.clone();
 
-    let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut peer_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let dispatch_a = ChildDispatch { child: peer_a_ref.clone(), ops: &[], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
     let dispatch_b = ChildDispatch { child: peer_b_ref.clone(), ops: &[], op_schema: &SchemaId("demo/v1".into()), labels: &[] };
@@ -10930,8 +10934,8 @@ async fn undo_group_reverses_both_members_of_a_real_peer_transaction() {
     let initiator_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-initiator".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let peer_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-undo-member".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut initiator_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &initiator_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut peer_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &peer_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let coordinator = TransactionCoordinator::new();
 
     let initiator_ops = vec![DemoMutation::SetN(SetN { n: 5 }).encode_op().expect("encode initiator op")];
@@ -10969,8 +10973,8 @@ async fn dispatch_peer_group_rejects_a_transaction_that_would_close_a_peer_link_
     let artifact_a_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let artifact_b_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "peer-cycle-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store_a = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_a_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut store_b = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &artifact_b_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator = TransactionCoordinator::new().await;
 
     let op_ab = DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode a->b op");
@@ -11011,8 +11015,8 @@ async fn dispatch_group_owned_path_never_stamps_a_transaction_origin() {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-owned-origin-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
@@ -11043,8 +11047,8 @@ async fn dispatch_group_stamps_one_tool_transaction_on_parent_and_owned_child() 
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "parent-transaction-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-transaction-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
     let parent_ops = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode parent op")];
@@ -11104,10 +11108,10 @@ async fn dispatch_group_phase1_rejects_under_normal_when_a_member_yields_an_erro
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-normal".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-normal".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Normal);
     assert_eq!(parent_store.merge_policy().await, crate::os_spr::MergePolicy::Normal, "Normal is also the default, but set it explicitly so this test does not rely on that");
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
@@ -11161,9 +11165,9 @@ async fn dispatch_group_phase1_accepts_the_same_error_scenario_under_laissez_fai
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-lf".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-lf".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     child_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
 
     let mut coordinator = CompositionCoordinator::new().await;
@@ -11203,9 +11207,9 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-vigilant".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-vigilant".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::Vigilant);
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
@@ -11251,9 +11255,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let parent_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-parent-union".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demoparent".into(), standard: "1".into(), subset: "*".into() } };
     let child_ref = semio_framework_artifact_reference::ArtifactRef { artifact_id: "policy-child-union".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.demochild".into(), standard: "1".into(), subset: "*".into() } };
 
-    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut parent_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &parent_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     parent_store.set_merge_policy(crate::os_spr::MergePolicy::LaissezFaire);
-    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut child_store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", &child_ref.artifact_id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
 
     let mut coordinator = CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id, "slot-1", &child_ref.artifact_id).await.expect("seed ownership");
@@ -11288,9 +11292,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// unchanged, and it still closes to terminal-empty afterwards.
 #[semio_framework_async_macros::async_test]
 async fn a_refused_reload_returns_its_error_and_retires_the_candidate_it_consumed() {
-    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None)).await;
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None);
+    let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let orphan = vec![crate::os_spr::EditMessages { edit_id: "edit-that-never-existed".to_string(), messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "orphan")] }];
     rejected.edit_messages = ArtifactEditMessageLedger::try_from_entries(orphan).unwrap_or_else(|_| panic!("one exact orphan message entry is admitted by the fixed ledger"));
     let error = store.reset(rejected).await.expect_err("a message ledger naming an edit the history never recorded must be refused");
@@ -11413,7 +11417,7 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
     let mut operation_ids = std::collections::HashSet::new();
     for _ in 0..fixture["replicas"].as_u64().expect("replica count") {
         let genesis = DemoSnapshot { n: Some(fixture["genesisN"].as_i64().expect("genesis n") as i32) };
-        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None)).await;
+        let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["artifactSchema"].as_str().expect("schema"), fixture["documentId"].as_str().expect("document"), genesis, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         for gesture in fixture["gestures"].as_array().expect("gestures") {
             let mutations = gesture["ops"]
@@ -11454,8 +11458,8 @@ async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫳️child-dispatch/🔣️.json")).expect("neutral borrowed child declaration");
     let parent_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["parent"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demoparent".into(),standard:"1".into(),subset:"*".into()}};
     let child_ref=semio_framework_artifact_reference::ArtifactRef{artifact_id:fixture["child"].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.demochild".into(),standard:"1".into(),subset:"*".into()}};
-    let mut parent=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&parent_ref.artifact_id,DemoSnapshot{n:Some(0)},None)).await;
-    let mut child=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&child_ref.artifact_id,DemoSnapshot{n:Some(0)},None)).await;
+    let mut parent=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&parent_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
+    let mut child=ArtifactStore::new(create_document_envelope::<DemoSnapshot,ValidatedMutation>("demo/v1",&child_ref.artifact_id,DemoSnapshot{n:Some(0)},None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let mut coordinator=CompositionCoordinator::new().await;
     coordinator.graph_mut().await.insert_owns(&parent_ref.artifact_id,fixture["slot"].as_str().unwrap(),&child_ref.artifact_id).await.unwrap();
     let source=vec![ValidatedMutation::SetN(ValidatedSetN{n:fixture["invalidN"].as_i64().unwrap() as i32}).encode_op().unwrap()];
@@ -11490,18 +11494,19 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     struct GenesisLawSnapshot { n: i64 }
     static ENCODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     static DECODED: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-    impl ArtifactGenesisCodec for GenesisLawSnapshot {
-        fn encode_genesis_pack(&self) -> Result<Vec<u8>, ValueError> { ENCODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(format!("{{\"n\":{}}}", self.n).into_bytes()) }
-        fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> { DECODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); let value: serde_json::Value = serde_json::from_slice(pack).unwrap(); Ok(Self { n: value["n"].as_i64().unwrap() }) }
+    struct GenesisLawProducer;
+    impl crate::os_vcs::io::binary::genesis::ArtifactGenesisProducer<GenesisLawSnapshot> for GenesisLawProducer {
+        fn encode_genesis_pack(&self,snapshot:&GenesisLawSnapshot) -> Result<Vec<u8>, ValueError> { ENCODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); Ok(format!("{{\"n\":{}}}", snapshot.n).into_bytes()) }
+        fn decode_genesis_pack(&self,pack: &[u8]) -> Result<GenesisLawSnapshot, ValueError> { DECODED.fetch_add(1, std::sync::atomic::Ordering::SeqCst); let value: serde_json::Value = serde_json::from_slice(pack).unwrap(); Ok(GenesisLawSnapshot { n: value["n"].as_i64().unwrap() }) }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
-    let born = AdmittedArtifactGenesis::born(GenesisLawSnapshot { n: 0 }).unwrap();
+    let born = AdmittedArtifactGenesis::born(GenesisLawSnapshot { n: 0 },&GenesisLawProducer).unwrap();
     assert_eq!(ENCODED.load(std::sync::atomic::Ordering::SeqCst), 1);
     let mut digests = Vec::new();
     for row in fixture["packs"].as_array().unwrap() {
         let raw = row["hex"].as_str().unwrap();
         let bytes: Vec<u8> = raw.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
-        let stored = AdmittedArtifactGenesis::<GenesisLawSnapshot>::from_stored_pack(bytes.clone()).unwrap();
+        let stored:AdmittedArtifactGenesis<GenesisLawSnapshot> = crate::os_vcs::io::text::genesis::native_genesis_from_value(DslValue::String(raw.into()),&GenesisLawProducer).unwrap();
         assert_eq!(stored.facts().snapshot().n, row["decoded"]["n"].as_i64().unwrap());
         assert_eq!(stored.pack(), bytes);
         assert_eq!(stored.to_value(), DslValue::String(raw.into()));
@@ -11517,7 +11522,7 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     assert_eq!(DECODED.load(std::sync::atomic::Ordering::SeqCst), 2);
     assert_eq!(born.facts().digest(), digests[0]);
     assert_ne!(digests[0], digests[1]);
-    assert!(AdmittedArtifactGenesis::<GenesisLawSnapshot>::from_value(DslValue::String("7B".into())).is_err());
+    assert!(crate::os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
     eprintln!("[DEBUG] Immutable genesis law preserves exact stored bytes, cached identity and shared decoded owners; birth1 encode, reload2 decodes0 encode");
 }
 
@@ -11529,9 +11534,9 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
     let actors = &fixture["actors"];
     let actor = ActorId(actors["opened"].as_str().unwrap().into());
-    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None);
-    let mut real = super::ArtifactStore::new(envelope, actor.clone()).await.unwrap();
-    real.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut real = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor.clone()).await.unwrap();
+    real.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert!(Arc::ptr_eq(&*real.current, &real.envelope().vcs.genesis.facts().share_snapshot()));
     let mut live = ArtifactStore(real, Some(close_test_store::<DemoSnapshot, DemoMutation>));
     live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.unwrap();
@@ -11546,15 +11551,15 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     live.dispatch(ArtifactCommand::Undo, &mut identity).await.unwrap();
     assert_eq!(live.envelope().transitions.last().unwrap().actor.0.as_str(), actors["transitionAuthor"].as_str().unwrap());
     let files = print_document_pack(live.envelope()).await.unwrap();
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
-    let mut reopened = super::ArtifactStore::new(parsed.into_envelope(), actor.clone()).await.unwrap();
-    reopened.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
+    let mut reopened = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(parsed.into_envelope(), actor.clone()).await.unwrap();
+    reopened.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     assert_eq!(reopened.local_actor_id().0.as_str(), actors["reopened"].as_str().unwrap());
     close_test_store(&mut reopened);
-    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.unwrap();
+    let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();
     let mut candidate = parsed.into_envelope();
     candidate.vcs.edits.iter_mut().next().unwrap().actor = None;
-    assert!(super::ArtifactStore::new(candidate, actor).await.is_err());
+    assert!(super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(candidate, actor).await.is_err());
     eprintln!("[DEBUG] Opened actor law preserves construction identity, explicit peer author, bare local author, transition author and reopen; actorless durable edit refused");
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
@@ -11600,7 +11605,7 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
             assert!(capture.step(&cursor, &mut cancelled).is_err());
             assert_eq!(capture.bytes.len(), before);
             let grant=physical_test_close_grant();
-            let(retirement,receipt)=semio_framework_value::retirement::OwnedValueRetirementFactory::<Vec<u8>>::default().retire_owned(capture.bytes,grant).unwrap_or_else(|(error,_)|panic!("original captured bytes admission refused: {error}"));
+            let(retirement,receipt)=semio_framework_value::factory::OwnedValueRetirementFactory::<Vec<u8>>::default().retire_owned(capture.bytes,grant).unwrap_or_else(|(error,_)|panic!("original captured bytes admission refused: {error}"));
             assert!(receipt.fits(grant));drive_retirement_terminal(retirement);
             let grant=schema_test_close_grant();
             for _ in 0..8 { if cursor.terminal_is_empty() { break; }let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes)); }
@@ -11620,10 +11625,10 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
         for row in fixture["retainedAdmissions"].as_array().unwrap() {
             eprintln!("[DEBUG] Retained admission begins config={config}, authors={row}");
             let initial = DemoSnapshot { n: Some(0) };
-            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None);
+            let mut envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actorless-hydration", initial.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             if config { envelope.history_shape = crate::os_spr::HistoryShape::Config; }
             else { envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.member".into(), standard: "1".into(), subset: "*".into() }); }
-            let mut live = ArtifactStore::new(envelope).await;
+            let mut live = ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
             live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.unwrap();
             let files = print_document_pack(live.envelope()).await.unwrap();
             let mut history = crate::os_spr::decode_history(&files.spr, &crate::os_spr::DecodeOptions::default()).await.unwrap();
@@ -11632,7 +11637,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             let actor = ActorId(fixture["actors"]["opened"].as_str().unwrap().into());
             let mut rejected = false;
             if config {
-                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(physical_test_close_grant())), 0, 65536, actor);
+                let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), 0, 65536, actor);
                 for _ in 0..1_000_000 { match hydration.advance(physical_test_close_grant()) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => { eprintln!("[DEBUG] Retained config author admission refused: {diagnostic:?}"); rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
                 eprintln!("[DEBUG] Retained admission cleanup config={config}, rejected={rejected}");
                 let mut closed = false;
@@ -11641,7 +11646,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
             } else {
                 let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
                 let (operation, generation) = (semio_framework_job::OperationId(801), semio_framework_job::Generation(1));
-                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
+                let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_decoded_pack(initial, files.pack, live.envelope().vcs.genesis.facts().digest(), history, expected, None, "demo/v1".into(), complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), operation, generation, u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, actor);
                 let mut sequence = 0;
                 for _ in 0..1_000_000 {
                     let mut original_retained_progress_13=semio_framework_value::RetainedCloneProgress::default();
@@ -11991,9 +11996,9 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     }
     async fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(usize, usize, usize, usize)>) {
-        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "terminal-disposer", DemoSnapshot { n: Some(0) }, None);
-        let mut store = super::ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
-        store.install_document_store_owners_exact(complete_test_catalog(DemoSnapshot::member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
+        let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "terminal-disposer", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+        let mut store = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
+        store.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
         close_test_store(&mut store);
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
         let expected = row["releasedBytes"].as_u64().unwrap() as usize;
@@ -12038,7 +12043,7 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rows"].as_array().unwrap() {
-        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "birth-refusal", DemoSnapshot { n: Some(0) }, None)).await;
+        let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "birth-refusal", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
         member.envelope.active_alternative_id = row["line"].as_str().map(str::to_owned);
         let mut factory = DemoOneItemPreparationFactory::admissible();
         factory.stamped_mutation_id = row["stampedId"].as_str().map(|id| MutationId(id.into()));
@@ -12433,7 +12438,7 @@ fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() 
     let grant = RetainedCloneGrant { maximum_items: policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes: policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes: policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes: policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth: policy["maximumDepth"].as_u64().unwrap() as usize };
     let mut registry = Some(crate::os_store::SnapshotReadRegistryHandle::new());
     let original = Arc::new(17i32);
-    let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<i32>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<i32>::default());
+    let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<i32>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<i32>::default());
     let lease = registry.as_ref().unwrap().try_issue(Arc::clone(&original)).unwrap();
     let index = lease.index;let generation = lease.generation;
     let mut read = ErasedSnapshotRead::new(Arc::clone(&original),lease);
@@ -12621,3 +12626,8 @@ fn decode_fault_descriptor_borrows_original_payload_until_paid_nested_close() {
     retire_original_envelope_cancel(cancel,original_grant);
     eprintln!("[DEBUG] Store fault descriptor borrows same in-place payload and paid admission twice with zero heap, then original nested close preserves refusal custody and physical receipts");
 }
+
+
+fn original_snapshot_ports_without_representation_bounds<P,M>(store:&super::ArtifactStore<P,M>)->(Arc<P>,Result<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,ValueError>)
+where P:Clone+ToValue+FromValue+Send+Sync+'static,M:Clone+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static,
+{(store.snapshot_owner(),store.owned_snapshot_retirement_factory())}

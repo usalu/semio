@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { orchestratorBudgetOpts, runCmd } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import {withRepositoryTestArtifactsV1} from "./💾️storage/🟦️.ts";
 import { OracleScript, ParityScript, SubjectScript } from "./⚖️parity/📋️orchestration/🟦️.ts";
 import { ContractScript, DiscoverScript, RunScript } from "./🧾️contracts/📋️orchestration/🟦️.ts";
 import { FixtureScript } from "./🧾️provenance/📋️orchestration/🟦️.ts";
@@ -33,7 +34,7 @@ import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦�
 class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
-    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-cache", "--", level, ...rest], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
   }
 }
 
@@ -104,4 +105,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("manifest", ManifestScript)
   .register("acceptance", AcceptanceScript);
 
-await runRepoScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url,{beforeDispatch:async(argv,invocation)=>{await withRepositoryTestArtifactsV1(router.repoRoot,invocation,()=>router.run([...argv],invocation),argv[0]==="clean"||argv[0]==="gc"?"exclusive":"shared");return true;}});

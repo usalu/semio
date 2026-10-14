@@ -531,7 +531,7 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     let snapshot_json = semio_framework_pack_json::to_json_string(host_snapshot);
     let patched = apply_generation_values_to_host_snapshot_json(&snapshot_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
-    let mut host = FlowHost::from_host_snapshot(patched_fixture);
+    let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();

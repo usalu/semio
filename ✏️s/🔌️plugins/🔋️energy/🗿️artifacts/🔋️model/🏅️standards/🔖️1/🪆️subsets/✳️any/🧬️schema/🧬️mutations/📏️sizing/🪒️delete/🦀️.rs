@@ -1,8 +1,7 @@
 //! 🪒️ Energy model mutation — `DeleteSizingObject`: Drops one zone's sizing declaration. Refused when no sizing object carries the id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteSizingObject {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_sizing_object(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteSizingObject(DeleteSizingObject { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_sizing_object<Op: From<DeleteSizingObject>>(id: crate::model::EntityId) -> Op {
+    DeleteSizingObject { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteSizingObject {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteSizingObject
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteSizingObject> + From<crate::CreateSizingObject>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "sizing-object", kind: "delete-sizing-object", record: "DeletedSizingObject" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

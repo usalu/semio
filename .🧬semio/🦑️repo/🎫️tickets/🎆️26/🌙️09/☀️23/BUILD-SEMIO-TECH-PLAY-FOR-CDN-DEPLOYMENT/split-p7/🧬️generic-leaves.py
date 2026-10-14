@@ -61,7 +61,7 @@ def main():
     union, snapshot, diff, umod = config["union"], config["snapshot"], config["diff"], config["union_module"]
     enum = open(os.path.join(root, "🦀️.rs"), encoding="utf-8").read()
     body = re.search(r"pub enum " + union + r"\s*\{(.*?)\n\}", enum, re.S).group(1)
-    variants = {v: umod + "::" + t.strip() for v, t in re.findall(r"(?m)^\s*(" + IDENT + r")\s*\(\s*([^)]*?)\s*\)\s*,", body)}
+    variants = {v: umod + "::" + re.sub(r"^(?:super|self)\s*::\s*", "", t.strip()) for v, t in re.findall(r"(?m)^\s*(" + IDENT + r")\s*\(\s*([^)]*?)\s*\)\s*,", body)}
     changed = {}
     for leaf in sorted(os.listdir(root)):
         leaf_rs = os.path.join(root, leaf, "🦀️.rs")
@@ -84,6 +84,7 @@ def main():
         text = drop_union(text, union)
         text = text.replace(head.group(0), f"impl<Op> {head.group(1)}<{snapshot}, Op> for {own}\nwhere\n    Op: protocol::Mutation<{snapshot}, Diff = {diff}>{bounds},\n{{", 1)
         text = re.sub(r"Result<\s*Vec<\s*" + union + r"\s*>", "Result<Vec<Op>", text)
+        text = re.sub(r"<\s*" + union + r"\s+as\s+", "<Op as ", text)
         text = re.sub(union + r"\s*::\s*" + IDENT + r"\s*\(", "Op::from(", text)
         leftover = [line for line in text.split("\n") if re.search(r"\b" + union + r"\b", line) and not line.lstrip().startswith("//")]
         if leftover:
@@ -96,6 +97,7 @@ def main():
             if n != 1:
                 raise SystemExit(f"{leaf}: inverse fn not found")
             inv = re.sub(r"Result<\s*Vec<\s*" + union + r"\s*>", "Result<Vec<Op>", inv)
+            inv = re.sub(r"<\s*" + union + r"\s+as\s+", "<Op as ", inv)
             inv = re.sub(union + r"\s*::\s*" + IDENT + r"\s*\(", "Op::from(", inv)
             leftover = [line for line in inv.split("\n") if re.search(r"\b" + union + r"\b", line) and not line.lstrip().startswith("//")]
             if leftover:

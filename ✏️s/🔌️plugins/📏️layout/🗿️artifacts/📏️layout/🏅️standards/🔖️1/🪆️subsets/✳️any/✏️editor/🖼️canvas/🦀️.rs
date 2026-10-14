@@ -4,12 +4,13 @@
 //! an exact window-state type (`LayoutWindowConfig`) as a parameter stays at this shared renderer no matter how many
 //! consumers it has, because artifacts must never depend on apps.
 
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
-use crate::editor::layout::modes::edit::windows::blueprint::{select, transform};
-use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
-use crate::editor::layout::LayoutInteractionSnapshot;
-use crate::editor::layout::engine::scene::build_interactive_display_list;
-use crate::{LayoutSnapshot, Page};
+use crate::modes::edit::windows::blueprint::config::LayoutWindowConfig;
+use crate::modes::edit::windows::blueprint::{select, transform};
+use crate::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
+use crate::LayoutInteractionSnapshot;
+use semio_s_artifact_layout_layout_engine::scene::build_interactive_display_list;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::Page;
 use serde_json::{json, Value};
 
 //#region 🔖️ActivePage
@@ -69,7 +70,7 @@ fn rotate_mark_points(mark: &mut Value, cx: f64, cy: f64, rotation: f64) {
 }
 
 
-fn rotated_proxy_layer(image: &crate::editor::layout::engine::scene::DisplayImage) -> Option<Value> {
+fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::DisplayImage) -> Option<Value> {
     let data_url = image.proxy_data_url.as_deref()?;
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
@@ -198,7 +199,7 @@ fn stroke_segments(points: &[(f32, f32)], closed: bool) -> Value {
     Value::Array(segments)
 }
 
-fn push_plan_stroke(layers: &mut Vec<Value>, stroke: &crate::editor::layout::engine::scene::DisplayStroke, id: String) {
+fn push_plan_stroke(layers: &mut Vec<Value>, stroke: &semio_s_artifact_layout_layout_engine::scene::DisplayStroke, id: String) {
     if stroke.points.len() < 2 {
         return;
     }
@@ -248,7 +249,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::DisplayList, blueprint: bool, drop_preview: &crate::LayoutDropPreviewState) -> Vec<Value> {
+fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::scene::DisplayList, blueprint: bool, drop_preview: &semio_s_artifact_layout_layout_model::LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -264,17 +265,17 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
 
     let mut plan_index = 0usize;
     let mut frame_index = 0usize;
-    for piece in crate::editor::layout::engine::scene::stack_pieces(list) {
+    for piece in semio_s_artifact_layout_layout_engine::scene::stack_pieces(list) {
         match piece {
-            crate::editor::layout::engine::scene::StackPiece::Stroke(stroke) => {
+            semio_s_artifact_layout_layout_engine::scene::StackPiece::Stroke(stroke) => {
                 push_plan_stroke(&mut layers, stroke, format!("drawing.plan.{plan_index}"));
                 plan_index += 1;
             }
-            crate::editor::layout::engine::scene::StackPiece::FrameStroke(stroke) => {
+            semio_s_artifact_layout_layout_engine::scene::StackPiece::FrameStroke(stroke) => {
                 push_plan_stroke(&mut layers, stroke, format!("drawing.frame.{frame_index}"));
                 frame_index += 1;
             }
-            crate::editor::layout::engine::scene::StackPiece::Rect(rect) => {
+            semio_s_artifact_layout_layout_engine::scene::StackPiece::Rect(rect) => {
                 let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
                 let fill = rect.fill.as_ref().map(|color| color.0);
                 let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
@@ -290,7 +291,7 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
                 };
                 layers.push(host_layer(rect.object_id.clone(), &segments, fill, stroke));
             }
-            crate::editor::layout::engine::scene::StackPiece::Image(image) => {
+            semio_s_artifact_layout_layout_engine::scene::StackPiece::Image(image) => {
                 let rotation = image.rotation as f64;
                 let upright = rotation.abs() < 1.0e-6;
                 if let Some(data_url) = &image.proxy_data_url {
@@ -327,7 +328,7 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
                     layers.push(host_layer(format!("{}.preview", image.object_id), &mark, None, Some(([0.25, 0.25, 0.28, 0.9], 1.0, None))));
                 }
             }
-            crate::editor::layout::engine::scene::StackPiece::Text(run) => {
+            semio_s_artifact_layout_layout_engine::scene::StackPiece::Text(run) => {
                 if run.content.is_empty() {
                     continue;
                 }
@@ -361,7 +362,7 @@ fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction
     }
     let options = transform::options();
     let Some(page) = active_page(doc, config) else { return layers };
-    let Some((pivot_x, pivot_y)) = crate::mutations::layout_frame_selection_pivot(page, &interaction.ids) else { return layers };
+    let Some((pivot_x, pivot_y)) = semio_s_artifact_layout_layout_diff::layout_frame_selection_pivot(page, &interaction.ids) else { return layers };
     let pivot = [pivot_x, pivot_y];
     layers.push(json!({
         "id": "meta:gumball",

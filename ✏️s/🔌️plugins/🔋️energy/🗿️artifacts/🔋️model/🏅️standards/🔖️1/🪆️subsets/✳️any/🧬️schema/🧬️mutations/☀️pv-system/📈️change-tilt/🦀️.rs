@@ -1,8 +1,7 @@
 //! 📈️ Energy model mutation — `ChangePvSystemTilt`: Sets tilt on one pv system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePvSystemTilt {
     pub new_tilt_deg: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_pv_system_tilt(id: crate::model::EntityId, new_tilt_deg: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePvSystemTilt(ChangePvSystemTilt { id, new_tilt_deg })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_pv_system_tilt<Op: From<ChangePvSystemTilt>>(id: crate::model::EntityId, new_tilt_deg: f64) -> Op {
+    ChangePvSystemTilt { id, new_tilt_deg }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePvSystemTilt {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePvSystemTilt
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePvSystemTilt>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "pv-system", kind: "change-pv-system-tilt", record: "ChangedPvSystemTilt" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

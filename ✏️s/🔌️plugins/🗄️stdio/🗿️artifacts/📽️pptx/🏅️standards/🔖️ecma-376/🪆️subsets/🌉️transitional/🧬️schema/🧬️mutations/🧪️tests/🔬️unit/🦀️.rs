@@ -58,7 +58,7 @@ fn stampable() -> PptxSnapshot {
     }
     let xml_parts = parts
         .drain(..)
-        .map(|(path, content_type, xml)| crate::schema::snapshot::PptxXmlPart {
+        .map(|(path, content_type, xml)| semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart {
             path: path.into(),
             content_type: content_type.into(),
             document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&xml).expect("valid XML"),

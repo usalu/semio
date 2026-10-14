@@ -1064,3 +1064,13 @@ pub fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: Dra
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod io {
+    #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+    pub mod binary;
+    #[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+    pub mod text;
+}
+//#endregion 🪢️TaxonomyMounts

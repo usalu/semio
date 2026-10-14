@@ -1,10 +1,10 @@
-use super::InsertConcentrated;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-use crate::mutations::remove_concentrated;
-pub fn inverse(payload: &InsertConcentrated, _base: &En1996Snapshot) -> Result<Vec<En1996Mutation>, semio_framework_value::ValueError> {
+use crate::insert_concentrated::InsertConcentrated;
+
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use crate::remove_concentrated;
+pub fn inverse<Op>(payload: &InsertConcentrated, _base: &En1996Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_concentrated::RemoveConcentrated> {
     Ok((|| {
-    vec![En1996Mutation::RemoveConcentrated(remove_concentrated::RemoveConcentrated { wall_index: payload.wall_index, load_case_index: payload.load_case_index, index: payload.index })]
+    vec![Op::from(remove_concentrated::RemoveConcentrated { wall_index: payload.wall_index, load_case_index: payload.load_case_index, index: payload.index })]
 
     })())
 }

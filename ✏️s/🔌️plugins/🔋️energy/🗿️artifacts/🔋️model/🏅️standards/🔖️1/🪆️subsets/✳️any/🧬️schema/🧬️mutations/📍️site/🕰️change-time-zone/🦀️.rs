@@ -1,8 +1,7 @@
 //! 🕰️ Energy model mutation — `ChangeSiteTimeZone`: Sets the site's standard time zone as an offset from UTC.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeSiteTimeZone {
     pub new_time_zone_hours: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_site_time_zone(new_time_zone_hours: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSiteTimeZone(ChangeSiteTimeZone { new_time_zone_hours })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_site_time_zone<Op: From<ChangeSiteTimeZone>>(new_time_zone_hours: f64) -> Op {
+    ChangeSiteTimeZone { new_time_zone_hours }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSiteTimeZone {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSiteTimeZone
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSiteTimeZone>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "site", kind: "change-site-time-zone", record: "ChangedSiteTimeZone" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

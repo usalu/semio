@@ -1,12 +1,12 @@
 //! 🧪️ Positional-diff algebra of En1994: index translation through absorb, coalescing, and the negative diff.
 
-use super::En1994Diff;
-use crate::mutations::change_beam_action_q_area_pa::ChangeBeamActionQAreaPa;
-use crate::mutations::change_beam_span_m::ChangeBeamSpanM;
-use crate::mutations::insert_beam::InsertBeam;
-use crate::mutations::remove_beam::RemoveBeam;
-use crate::mutations::En1994Mutation;
-use crate::En1994Snapshot;
+use semio_s_artifact_norm_en1994_diff::En1994Diff;
+use semio_s_artifact_norm_en1994_mut_beams::change_beam_action_q_area_pa::ChangeBeamActionQAreaPa;
+use semio_s_artifact_norm_en1994_mut_beams::change_beam_span_m::ChangeBeamSpanM;
+use semio_s_artifact_norm_en1994_mut_beams::insert_beam::InsertBeam;
+use semio_s_artifact_norm_en1994_mut_beams::remove_beam::RemoveBeam;
+use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn base() -> En1994Snapshot {
@@ -27,7 +27,7 @@ fn span(index: usize, value: f64) -> En1994Mutation {
     En1994Mutation::ChangeBeamSpanM(ChangeBeamSpanM { index, new_span_m: value })
 }
 
-fn fresh(base: &En1994Snapshot) -> crate::CompositeBeam {
+fn fresh(base: &En1994Snapshot) -> semio_s_artifact_norm_en1994_model::CompositeBeam {
     let mut beam = base.beams[0].clone();
     beam.id = "beam-created".into();
     beam

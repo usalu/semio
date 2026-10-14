@@ -1,7 +1,7 @@
 //! Norm command — `set-field`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Din4108Mutation;
-use crate::Din4108Snapshot;
+use semio_s_artifact_norm_din4108_mutations::Din4108Mutation;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,6 +16,6 @@ pub struct SetField {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetField, doc: &ArtifactView<'_, Din4108Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din4108Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_set_field(doc.snapshot, &payload.path, &payload.value_json, |document, edit| crate::mutations::EDIT_RULES.resolve(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_set_field(doc.snapshot, &payload.path, &payload.value_json, |document, edit| semio_s_artifact_norm_din4108_mutations::EDIT_RULES.resolve(document, edit))
 }
 //#endregion 🔖️Handler

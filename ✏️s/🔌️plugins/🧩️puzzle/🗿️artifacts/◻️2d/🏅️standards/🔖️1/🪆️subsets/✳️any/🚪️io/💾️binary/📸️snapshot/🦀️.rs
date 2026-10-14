@@ -30,7 +30,7 @@ mod tests;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTargetRegion, PUZZLE_2D_SCHEMA};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for Puzzle2dSnapshot {

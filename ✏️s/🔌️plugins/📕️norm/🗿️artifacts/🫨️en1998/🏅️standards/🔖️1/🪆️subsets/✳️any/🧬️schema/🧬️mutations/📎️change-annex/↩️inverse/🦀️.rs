@@ -1,10 +1,10 @@
 //! Inverse for `change-annex`.
-use super::ChangeAnnex;
-use crate::{En1998Mutation, En1998Snapshot};
+use crate::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
-pub fn inverse(_payload: &ChangeAnnex, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeAnnex, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_annex::ChangeAnnex> {
     Ok((|| {
-    vec![En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex.clone() })]
+    vec![Op::from(ChangeAnnex { new_annex: base.annex.clone() })]
 
     })())
 }

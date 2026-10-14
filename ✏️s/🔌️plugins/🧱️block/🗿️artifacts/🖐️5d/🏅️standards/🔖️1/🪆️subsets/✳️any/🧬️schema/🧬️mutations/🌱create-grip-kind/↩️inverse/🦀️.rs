@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `CreateGripKind`.
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::CreateGripKind, _base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &crate::create_grip_kind::CreateGripKind, _base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::delete_grip_kind::DeleteGripKind> {
     Ok((|| {
-    vec![super::super::delete_grip_kind::delete_grip_kind(payload.grip_kind.id.clone())]
+    vec![crate::delete_grip_kind::delete_grip_kind(payload.grip_kind.id.clone())]
 
     })())
 }

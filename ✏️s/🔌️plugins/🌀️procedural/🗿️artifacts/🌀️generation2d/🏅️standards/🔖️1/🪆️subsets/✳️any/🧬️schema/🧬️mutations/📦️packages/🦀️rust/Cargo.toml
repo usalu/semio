@@ -1,0 +1,64 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-2d-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d mutations: the mutation union, every mutation kind with its diff and inverse, the host gesture recorders and the central apply"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-mut-document = { workspace = true }
+semio-s-artifact-procedural-2d-mut-generations = { workspace = true }
+semio-s-artifact-procedural-2d-mut-synapses = { workspace = true }
+semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+serde_json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-procedural-2d-testkit = { workspace = true }
+
+[[test]]
+name = "widget-kinds"
+path = "../../🧪️tests/🔬️widget-kinds/🦀️.rs"
+
+[[test]]
+name = "synapse-kinds"
+path = "../../🧪️tests/🔬️synapse-kinds/🦀️.rs"
+
+[[test]]
+name = "generation-kinds"
+path = "../../🧪️tests/🔬️generation-kinds/🦀️.rs"
+
+[[test]]
+name = "input-kinds"
+path = "../../🧪️tests/🔬️input-kinds/🦀️.rs"
+
+[[test]]
+name = "document-kinds"
+path = "../../🧪️tests/🔬️document-kinds/🦀️.rs"
+
+[[test]]
+name = "mutation-laws"
+path = "../../🧪️tests/🔬️mutation-laws/🦀️.rs"

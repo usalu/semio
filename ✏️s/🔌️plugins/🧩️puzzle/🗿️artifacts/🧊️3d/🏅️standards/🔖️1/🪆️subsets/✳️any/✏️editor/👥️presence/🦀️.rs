@@ -1,5 +1,13 @@
 //! 👥️ Puzzle3dPresence — shareable live ephemeral state + mutations.
 
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
 use protocol::Mutation;
 use pack::snapshot::ArtifactPack;
 
@@ -278,3 +286,8 @@ pub fn puzzle3d_presence_store_disposer() -> Box<dyn semio_framework_plugin::Art
     Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Puzzle3dPresence::default()), puzzle3d_presence_is_terminal_empty).expect("the default puzzle3d presence root holds no active tool identifier"))
 }
 //#endregion 🧹️Retirement
+
+//#region 🌳️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🌳️Modules

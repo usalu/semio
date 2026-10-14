@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::Din4108Snapshot;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 /// 📜️ Bundled default example document (`.semio` envelope + DSL body).
 pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -34,10 +34,10 @@ pub type Din4108SnapshotText = String;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::ClimateZoneDe;
-use crate::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_din4108_model::*;
+use semio_s_plugin_norm_compliance::ClimateZoneDe;
+use semio_s_artifact_norm_din4108_model::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
 use framework_schema::ArtifactSchema;
 
 /// 📤️ Canonical JSON projection of a [`Din4108Snapshot`].
@@ -60,20 +60,17 @@ pub fn encode_din4108_dsl(snapshot: &Din4108Snapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(snapshot)
 }
 }
-pub use snapshot_codec::*;
+pub use crate::text::snapshot::snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::ClimateZoneDe;
-use crate::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
+use crate::text::snapshot::*;
+use semio_s_artifact_norm_din4108_model::*;
+use semio_s_plugin_norm_compliance::ClimateZoneDe;
+use semio_s_artifact_norm_din4108_model::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
 use framework_schema::ArtifactSchema;
 
-
-
-
 }
-#[cfg(test)] pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text Din4108Snapshot, extension="din4108", envelope_id="norm.din4108");
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text Din4108Snapshot, extension="din4108", envelope_id="norm.din4108");

@@ -1,8 +1,7 @@
 //! 🧷 Block3d mutation — `ChangeVortexVortexKind`: a vortex's `vortexKind` catalog reference (rebind).
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🧷 `change-vortex-vortex-kind` payload.
@@ -19,19 +18,19 @@ pub struct ChangeVortexVortexKind {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_vortex_vortex_kind(id: String, new_vortex_kind: String) -> Block3dMutation {
-    Block3dMutation::ChangeVortexVortexKind(ChangeVortexVortexKind { id, new_vortex_kind })
+pub fn change_vortex_vortex_kind<Op: From<crate::change_vortex_vortex_kind::ChangeVortexVortexKind>>(id: String, new_vortex_kind: String) -> Op {
+    Op::from(ChangeVortexVortexKind { id, new_vortex_kind })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexVortexKind {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexVortexKind where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_vortex_kind::ChangeVortexVortexKind> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex", kind: "change-vortex-vortex-kind", record: "ChangedVortexVortexKind" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_vortex_vortex_kind::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_vortex_vortex_kind::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexVo
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,8 +1,7 @@
 //! 🔁️ Energy model mutation — `ChangeSurfaceMultiplier`: Sets how many identical instances of the surface the heat balance is scaled by.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSurfaceMultiplier {
     pub new_multiplier: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_surface_multiplier(id: crate::model::EntityId, new_multiplier: u32) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSurfaceMultiplier(ChangeSurfaceMultiplier { id, new_multiplier })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_surface_multiplier<Op: From<ChangeSurfaceMultiplier>>(id: crate::model::EntityId, new_multiplier: u32) -> Op {
+    ChangeSurfaceMultiplier { id, new_multiplier }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSurfaceMultiplier {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceMultiplier
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceMultiplier>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-multiplier", record: "ChangedSurfaceMultiplier" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

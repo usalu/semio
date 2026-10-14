@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun repo run @semio-tech/imperative-procedure:build",
-    "check": "bun repo run @semio-tech/imperative-procedure:check",
-    "test": "bun repo run @semio-tech/imperative-procedure:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/imperative-procedure:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/imperative-procedure:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/imperative-procedure:test"
   },
   "exports": {
     ".": {

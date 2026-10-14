@@ -1,0 +1,33 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "monolith": "semio_s_artifact_procedural_3d_mutations",
+ "package": "semio-s-artifact-procedural-3d-mut-transforms",
+ "description": "Procedural generation3d transform mutation leaves: drag, rotate and scale transforms",
+ "owner": "🧭️transforms",
+ "moves": [
+  {
+   "from": "drag_transforms",
+   "to": "drag_transforms"
+  },
+  {
+   "from": "rotate_transforms",
+   "to": "rotate_transforms"
+  },
+  {
+   "from": "scale_transforms",
+   "to": "scale_transforms"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "doc": "🧭️ Generation3d transform mutation leaves: drag, rotate and scale transforms. Every leaf is generic over the dispatch enum."
+}

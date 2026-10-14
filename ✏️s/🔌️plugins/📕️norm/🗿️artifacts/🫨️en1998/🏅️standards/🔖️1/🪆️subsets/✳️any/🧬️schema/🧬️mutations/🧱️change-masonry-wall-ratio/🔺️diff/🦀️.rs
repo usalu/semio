@@ -1,8 +1,8 @@
 //! 🧱️ `change-masonry-wall-ratio` diff — patches the one field of the building at the index; a missing building is a `mutation.target-missing`.
 
-use super::ChangeMasonryWallRatio;
-use crate::diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff};
-use crate::En1998Snapshot;
+use crate::change_masonry_wall_ratio::ChangeMasonryWallRatio;
+use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeMasonryWallRatio, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     let Some(building) = base.buildings.get(payload.building_index) else {

@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `UpdatePresentation`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::UpdatePresentation, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::update_presentation::UpdatePresentation, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_presentation::UpdatePresentation> {
     Ok((|| {
-    vec![super::super::update_presentation::update_presentation(
+    vec![crate::update_presentation::update_presentation(
         base.presentation.shape.clone(),
         base.presentation.radius,
         base.presentation.width,

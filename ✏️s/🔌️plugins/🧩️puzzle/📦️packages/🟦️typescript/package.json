@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/puzzle-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/puzzle-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-renderer-react": "workspace:*",

@@ -1,8 +1,8 @@
 //! 🔺️ `remove-product` — sparse diff construction; the derived `catalog.index` follows in `Vdi3805Diff::apply`.
 
-use super::RemoveProduct;
-use crate::{Vdi3805Snapshot};
-use crate::diff::{Vdi3805Diff, Vdi3805ProductsRows};
+use crate::remove_product::RemoveProduct;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_diff::{Vdi3805Diff, Vdi3805ProductsRows};
 
 //#region 🔖️Diff
 

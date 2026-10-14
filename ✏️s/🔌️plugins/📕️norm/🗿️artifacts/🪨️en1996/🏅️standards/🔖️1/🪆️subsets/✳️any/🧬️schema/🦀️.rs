@@ -1,7 +1,15 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
-use crate::document::AnnexChoice;
-use crate::En1996Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -15,13 +23,13 @@ pub struct En1996Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
     #[state(artifact)]
-    pub masonry_class: crate::MasonryClass,
+    pub masonry_class: semio_s_artifact_norm_en1996_model::MasonryClass,
     #[state(artifact)]
-    pub design_situation: crate::document::DesignSituation,
+    pub design_situation: semio_s_plugin_norm_compliance::DesignSituation,
     #[state(artifact)]
     pub storeys: u32,
     #[state(artifact)]
-    pub walls: Vec<crate::MasonryWall>,
+    pub walls: Vec<semio_s_artifact_norm_en1996_model::MasonryWall>,
 }
 //#endregion 🔖️Artifact
 
@@ -67,55 +75,20 @@ pub fn en1996_artifact_schema_descriptor() -> semio_framework_schema_registry::A
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.norm.en1996",
         artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
+        snapshot: semio_s_artifact_norm_en1996_model::SNAPSHOT_LEAVES,
+        diff: semio_s_artifact_norm_en1996_diff::DIFF_LEAVES,
+        mutations: semio_s_artifact_norm_en1996_mutations::MUTATION_LEAVES,
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
 
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
-
-//#region 🔖️ComplianceHelpers
-#[path = "⚖️masonry/🦀️.rs"]
-mod masonry;
-pub use masonry::*;
-//#endregion 🔖️ComplianceHelpers
-
-//#region 🧪️ComplianceTests
-#[cfg(test)]
-#[path = "🧪️tests/⚖️compliance/🦀️.rs"]
-mod compliance_tests;
-//#endregion 🧪️ComplianceTests
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️oracle/🦀️.rs"]
-mod oracle_tests;
-
+//#region 🪢️Mounts
+#[path = "."]
+pub mod checks {
+    #[path = "⚖️masonry/🦀️.rs"]
+    mod masonry;
+    #[cfg(test)]
+    #[path = "🧪️tests/🔬️oracle/🦀️.rs"]
+    mod oracle_tests;
+}
+//#endregion 🪢️Mounts

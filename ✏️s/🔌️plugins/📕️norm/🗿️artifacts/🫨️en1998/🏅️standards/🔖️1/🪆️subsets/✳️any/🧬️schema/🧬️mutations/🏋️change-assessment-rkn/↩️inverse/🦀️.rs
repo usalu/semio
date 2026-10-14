@@ -1,11 +1,11 @@
 //! Inverse for `change-assessment-r-k-n`.
-use super::ChangeAssessmentRKN;
-use crate::{En1998Mutation, En1998Snapshot};
+use crate::change_assessment_rkn::ChangeAssessmentRKN;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
-pub fn inverse(payload: &ChangeAssessmentRKN, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &ChangeAssessmentRKN, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_assessment_rkn::ChangeAssessmentRKN> {
     Ok((|| {
     match base.assessments.get(payload.index) {
-        Some(a) => vec![En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: payload.index, new_r_k_n: a.r_k_n })],
+        Some(a) => vec![Op::from(ChangeAssessmentRKN { index: payload.index, new_r_k_n: a.r_k_n })],
         None => Vec::new(),
     }
 

@@ -19,7 +19,7 @@ NS = {}
 exec(compile(src, "module-graph", "exec"), NS)
 Crate = NS["Crate"]
 EXTERNAL = {"serde_json", "serde", "csv", "blake3"}
-IDENT = re.compile(r"(?<![\w])(semio_[a-z0-9_]+|serde_json|serde|csv|blake3|protocol|store|dsl|vcs|replication|pack|machine)\s*::|owner\s*=\s*(semio_[a-z0-9_]+)")
+IDENT = re.compile(r"(?<![\w])(?<!\w::)(semio_[a-z0-9_]+|serde_json|serde|csv|blake3|protocol|store|dsl|vcs|replication|pack|machine)\s*::|owner\s*=\s*(semio_[a-z0-9_]+)")
 EXTERN = re.compile(r"extern\s+crate\s+(\w+)(?:\s+as\s+(\w+))?\s*;")
 
 def registry(roots):

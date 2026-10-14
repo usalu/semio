@@ -17,7 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   ]);
   const { createElement } = React;
   const { cleanup, fireEvent, render, waitFor } = testing;
-  const { default: fixture } = await import("../../🧫️fixtures/♻️lifecycle/🔣️.json");
+  const { default: fixture } = await import("../🧫️fixtures/♻️lifecycle/🔣️.json");
   void source;
 
   const handle = {

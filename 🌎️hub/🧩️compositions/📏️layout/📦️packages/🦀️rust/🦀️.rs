@@ -18,13 +18,26 @@ mod artifacts {
 
 //#region ✏️Editor
 mod editor {
-    pub use semio_s_artifact_layout_layout::editor::*;
+    pub use semio_s_artifact_layout_layout_editor::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::document::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::catalogue::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::inspection::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::preflight::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::terminology::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::*;
+    pub use semio_s_artifact_layout_layout_editor_panels::*;
+    pub use semio_s_artifact_layout_layout_editor_commands::modes::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_layout_layout::viewer::*;
+    pub use semio_s_artifact_layout_layout_viewer::*;
 }
 //#endregion 👁️Viewer
 

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Closed Build Owner Admission V1",
+  "$defs": {
+    "ownerInputs": {
+      "type": "object",
+      "maxProperties": 65536,
+      "additionalProperties": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}
+    },
+    "ownerFacts": {
+      "type": "object",
+      "required": ["project", "files", "dependencies"],
+      "additionalProperties": false,
+      "properties": {
+        "project": {"type":"object","required":["name","targets"],"additionalProperties":true,"properties":{"name":{"type":"string","minLength":1},"targets":{"type":"object","additionalProperties":{"type":"object"}}}},
+        "files": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":256}},
+        "dependencies": {"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},
+        "dependencyInputs": {"$ref":"#/$defs/ownerInputs"}
+      }
+    }
+  },
+  "type": "object",
+  "required": [
+    "owners",
+    "files",
+    "targets",
+    "catalogProviders",
+    "inputs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "owners": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "maxItems": 65536
+    },
+    "files": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "maxItems": 1048576
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "maxProperties": 65536
+    },
+    "catalogProviders": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "ownerRoot",
+          "sourcePath"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ownerRoot": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourcePath": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "inputs": {
+      "$ref": "#/$defs/ownerInputs"
+    }
+  }
+}

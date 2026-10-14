@@ -1,7 +1,8 @@
 //! 🌱️ Fem3d mutation — `CreateSection` payload + `MutationKind` impl.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{Fem3dSnapshot, FemSection};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use crate::standards::v1::subsets::any::schema::mutations::delete_section;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,13 +19,16 @@ pub struct CreateSection {
     pub index: Option<usize>,
 }
 
-impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateSection {
+impl<Op> MutationKind<Fem3dSnapshot, Op> for CreateSection
+where
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<delete_section::DeleteSection>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "section", kind: "create-section", record: "CreatedSection" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

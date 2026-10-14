@@ -1,0 +1,24 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "monolith": "semio_s_artifact_procedural_generation2d",
+ "package": "semio-s-artifact-procedural-2d-examples",
+ "description": "Procedural generation2d bundled examples",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+ "moves": [
+  {
+   "from": "examples",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": "monolith",
+ "doc": "📚️ Generation2d bundled examples: one module per authored example document."
+}

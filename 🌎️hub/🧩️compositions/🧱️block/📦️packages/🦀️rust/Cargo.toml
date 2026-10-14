@@ -26,6 +26,15 @@ storyGlobs = ["../../../✏️s/🔌️plugins/🧱️block/📖️stories/**/�
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-block-2d-viewer = { workspace = true }
+semio-s-artifact-block-2d-model = { workspace = true }
+semio-s-artifact-block-2d-editor = { workspace = true }
+semio-s-artifact-block-5d-viewer = { workspace = true }
+semio-s-artifact-block-5d-model = { workspace = true }
+semio-s-artifact-block-5d-editor = { workspace = true }
+semio-s-artifact-block-3d-viewer = { workspace = true }
+semio-s-artifact-block-3d-model = { workspace = true }
+semio-s-artifact-block-3d-editor = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-native": "bun repo run @semio-tech/framework-compiler-rs:test-native"
+    "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-compiler-rs:test-native"
   },
   "bundleKind": "library",
   "devDependencies": {

@@ -9,7 +9,17 @@
 //! (`🧵️simulation-session/🦀️.rs`): the run reads the three timestep/warmup pointers only, so
 //! recolouring the finished result never restarts a live run.
 
-use crate::SimulationConfig;
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_s_plugin_energy_engine_kernel as kernel;
+#[cfg(test)]
+extern crate semio_s_artifact_energy_model_session as session;
+
+use crate::kernel::SimulationConfig;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Config
@@ -31,7 +41,7 @@ pub struct EnergyModelConfig {
     pub warmup_days: u32,
     /// 🎨️ Wire id of the published per-surface field the 3d model window colours by — one of
     /// `conductionLoss` | `conductionGain` | `solarTransmitted` | `solarAbsorbed`
-    /// (`crate::editor::model::results::ResultField`). An unrecognized string reads as the default.
+    /// ([`ResultField`]). An unrecognized string reads as the default.
     pub result_field: String,
 }
 
@@ -48,7 +58,7 @@ impl EnergyModelConfig {
     /// 🎛️ Accepts settings only inside the engine's own admissible ranges, and a `result_field` this
     /// build actually knows how to colour by.
     pub fn is_valid(&self) -> bool {
-        (1..=60).contains(&self.zone_timestep_minutes) && (1..=60).contains(&self.system_timestep_minutes) && self.warmup_days <= 365 && crate::editor::model::results::ResultField::from_id(&self.result_field).is_some()
+        (1..=60).contains(&self.zone_timestep_minutes) && (1..=60).contains(&self.system_timestep_minutes) && self.warmup_days <= 365 && crate::ResultField::from_id(&self.result_field).is_some()
     }
 
     /// ⚙️ The engine configuration template a run folds the captured model's run period and schedules into.
@@ -168,6 +178,53 @@ impl protocol::DiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
     }
 }
 //#endregion 🔖️Config
+
+//#region 🔖️Field
+/// 🔖️ Which published quantity the 3d model window colours by. The wire ids are the values the
+/// `set-result-field` action carries and the `resultField` config string stores.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ResultField {
+    #[default]
+    ConductionLoss,
+    ConductionGain,
+    SolarTransmitted,
+    SolarAbsorbed,
+}
+
+impl ResultField {
+    pub const ALL: [Self; 4] = [Self::ConductionLoss, Self::ConductionGain, Self::SolarTransmitted, Self::SolarAbsorbed];
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::ConductionLoss => "conductionLoss",
+            Self::ConductionGain => "conductionGain",
+            Self::SolarTransmitted => "solarTransmitted",
+            Self::SolarAbsorbed => "solarAbsorbed",
+        }
+    }
+
+    /// 🔖️ The field a wire id names; unknown ids fall back to the default rather than refusing.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|field| field.id() == id)
+    }
+
+    /// 🏷️ English caption stem, used by `semio_s_artifact_energy_model_editor_results::legend_caption`.
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::ConductionLoss => "Conduction loss",
+            Self::ConductionGain => "Conduction gain",
+            Self::SolarTransmitted => "Solar transmitted",
+            Self::SolarAbsorbed => "Solar absorbed",
+        }
+    }
+}
+
+/// 🎚️ The field the editor config currently selects. An unrecognized stored string (an older
+/// document, a hand-edited config) reads as the default rather than blanking the window.
+pub fn result_field(cfg: &EnergyModelConfig) -> ResultField {
+    ResultField::from_id(&cfg.result_field).unwrap_or_default()
+}
+//#endregion 🔖️Field
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 pub mod mutations;

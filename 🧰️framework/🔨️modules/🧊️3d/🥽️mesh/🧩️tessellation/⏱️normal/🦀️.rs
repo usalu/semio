@@ -1,5 +1,5 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub(super) enum TriangleFinish{Last,Clip,Fan}
@@ -7,7 +7,7 @@ pub(super) enum TriangleFinish{Last,Clip,Fan}
 pub(super) struct TriangleFrame{locals:[usize;3],base:u32,emitted:u8,indices_done:bool,finish:TriangleFinish}
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshNormalReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(TriangleFinish,TriangleFrame,MeshNormalReceipt);
+semio_framework_value::artifact_retire_leaf!(TriangleFinish,TriangleFrame,MeshNormalReceipt);
 
 #[derive(Clone,Copy)]
 enum Frontier{Buffer,Metadata,Face,Corner(usize),TriangleSetup(TriangleFinish),TriangleIndices,TriangleFinish,Ear,Edge(usize),Attribute,Materials,Textures,Mark,Transfer}

@@ -1,8 +1,8 @@
 //! 🧹 `insert-pile` payload.
 
-use crate::diff::En1997Diff;
-use crate::mutations::En1997Mutation;
-use crate::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::En1997Diff;
+
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -12,19 +12,19 @@ use crate::En1997Snapshot;
 #[value(rename_all = "camelCase")]
 pub struct InsertPile {
     pub index: usize,
-    pub pile: crate::Pile,
+    pub pile: semio_s_artifact_norm_en1997_model::Pile,
 }
 
-impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for InsertPile {
+impl<Op> protocol::MutationKind<En1997Snapshot, Op> for InsertPile where Op: protocol::Mutation<En1997Snapshot, Diff = semio_s_artifact_norm_en1997_diff::En1997Diff> + From<crate::remove_pile::RemovePile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "insert", entity: "pile", kind: "insert-pile", record: "InsertedPile",
     };
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
-        super::diff::diff(self, base)
+        crate::insert_pile::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1997Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::insert_pile::inverse::inverse(self, base)?
     
     })
 }
@@ -32,3 +32,10 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for InsertPile {
         semio_framework_ui_locale::LocalizedLabel::native("Insert pile", "Pfahl einfügen")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

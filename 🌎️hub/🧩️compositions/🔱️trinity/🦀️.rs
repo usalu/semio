@@ -8,6 +8,7 @@ use semio_s_dev_trinity_jack::SemioJackComposition;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -34,7 +35,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
 /// own `artifact_kind().id`, `Isolated` execution, one `artifacts.write` ask covering both editors.
 pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
-    Plugin::<TrinityApps>::builder("trinity")
+    PluginBuilder::<_, TrinityApps>::new("trinity")
         .label("Trinity")
         .version("0.1.0")
         .package_id("semio:trinity")

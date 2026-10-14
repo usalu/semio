@@ -3,10 +3,28 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪜️ladder/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -16,7 +34,6 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
   "**/🏭️bridge/**"
@@ -101,6 +118,63 @@ path = "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️sem
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-artifact-stdio-step-snapshot]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-geometry]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-ladder]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪜️ladder/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-mutations]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-inferences]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-base]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-base-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc1]
+path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc1-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc2]
+path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc2-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc3]
+path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc3-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc4]
+path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc4-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc5]
+path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc5-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc6]
+path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-step-cc6-editor]
+path = "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

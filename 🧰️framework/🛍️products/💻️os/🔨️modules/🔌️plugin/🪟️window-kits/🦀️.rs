@@ -11,7 +11,7 @@ use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_value::DslValue;
 use semio_framework::ActionDefinition;
 #[cfg(any(test, feature = "artifact-app-testing"))]

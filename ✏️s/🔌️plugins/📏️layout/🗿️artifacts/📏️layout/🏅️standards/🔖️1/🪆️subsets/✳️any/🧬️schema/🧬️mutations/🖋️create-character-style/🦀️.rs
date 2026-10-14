@@ -1,8 +1,12 @@
 //! 🖋 `create-character-style` — adds a character style.
 
-use crate::mutations::{delete_character_style, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutCharacterStylesDelta, LayoutCharacterStyleInsertion};
-use crate::{CharacterStyle, LayoutDiff, LayoutSnapshot};
+use crate::delete_character_style;
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::LayoutCharacterStylesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutCharacterStyleInsertion;
+use semio_s_artifact_layout_layout_model::CharacterStyle;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,10 +22,10 @@ pub struct CreateCharacterStyle {
     pub index: Option<usize>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateCharacterStyle {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreateCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_character_style::DeleteCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "character-style", kind: "create-character-style", record: "CreatedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_character_style(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_create_character_style(self, base)? 
     })
 }
@@ -43,9 +47,9 @@ pub fn diff_create_character_style(payload: &CreateCharacterStyle, base: &Layout
     protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { inserted: vec![LayoutCharacterStyleInsertion { index: payload.index.unwrap_or(base.character_styles.len()), row: style }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_create_character_style(payload: &CreateCharacterStyle, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_character_style<Op: From<crate::delete_character_style::DeleteCharacterStyle>>(payload: &CreateCharacterStyle, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::DeleteCharacterStyle(delete_character_style::DeleteCharacterStyle { id: payload.id.clone() })]
+    vec![Op::from(delete_character_style::DeleteCharacterStyle { id: payload.id.clone() })]
 
     })())
 }

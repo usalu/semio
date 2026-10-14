@@ -2,7 +2,24 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📦️packages/🦀️rust" ]
+members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handles/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️node-kind/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
+]
 exclude = [
   "**/🏅️standards/**",
   "**/👽️guest/**",
@@ -69,6 +86,90 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-inferences]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-mut-handles]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handles/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-mut-meta]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️meta/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-mut-node-kind]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️node-kind/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-mutation-vectors]
+path = "../../../../🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-block]
+path = "../../📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-block-catalog]
+path = "../../🗂️catalog/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-io-read]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-io-sqlite]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-io-write]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

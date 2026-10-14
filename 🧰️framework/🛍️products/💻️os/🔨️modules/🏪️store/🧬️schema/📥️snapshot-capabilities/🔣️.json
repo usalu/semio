@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/store/snapshot-capabilities/schema.json",
+  "title": "Original Store Snapshot Capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "snapshotOwner",
+    "supplier",
+    "initialization",
+    "representation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "snapshotOwner": {
+      "const": "exact-original-current-arc"
+    },
+    "supplier": {
+      "const": "installed-owned-snapshot-retirement-factory"
+    },
+    "initialization": {
+      "const": "admitted-original-genesis-and-history"
+    },
+    "representation": {
+      "const": "selected-publication-and-pack-operations-only"
+    }
+  }
+}

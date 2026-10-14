@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-procedural-2d-mut-generations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation2d generation mutation leaves: create, delete, select and rename generations and change their answers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+

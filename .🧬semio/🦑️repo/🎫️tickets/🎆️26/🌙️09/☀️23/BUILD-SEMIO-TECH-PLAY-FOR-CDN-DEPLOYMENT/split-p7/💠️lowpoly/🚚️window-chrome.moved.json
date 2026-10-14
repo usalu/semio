@@ -1,0 +1,11 @@
+[
+ {
+  "from": "crate::editor::lowpoly::kit",
+  "to": "crate::editor::lowpoly::modes::edit",
+  "items": [
+   "lowpoly_window_engagement",
+   "lowpoly_window_engagement_with_selection",
+   "lowpoly_window_measures"
+  ]
+ }
+]

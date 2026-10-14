@@ -3,10 +3,29 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -15,7 +34,6 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
   "**/🏭️bridge/**"
@@ -103,6 +121,153 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-framework-pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-composition]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-state]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+package = "semio-framework-os-kernel"
+
+[workspace.dependencies.semio-framework-3d]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+package = "semio-framework-plugin"
+
+[workspace.dependencies.semio-framework-dispatch-macros]
+path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust"
+package = "semio-framework-dispatch-macros"
+
+[workspace.dependencies.semio-framework-schema]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+package = "semio-framework-schema"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+package = "semio-framework-value-derive"
+
+[workspace.dependencies.base64_codec]
+path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"
+package = "semio-framework-io-base64"
+
+[workspace.dependencies.semio-framework-pixels]
+path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"
+package = "semio-framework-pixels"
+
+[workspace.dependencies.machine]
+path = "../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust"
+package = "semio-framework-machine"
+
+[workspace.dependencies.base64]
+version = "0.22.1"
+
+[workspace.dependencies.semio-framework-async-macros]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+
+[workspace.dependencies.gltf]
+version = "1.4.1"
+default-features = false
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-model-diff]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-mut-objects]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-mut-geometry]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-mut-paint]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-inferences]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-engine]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-config]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-presence]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-view]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-kit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-options]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-modes]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

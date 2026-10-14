@@ -1,6 +1,6 @@
 //! ⚙️ `set-brush-placement-contact-tolerance` command.
 
-use {crate::editor::puzzle3d::snapshot::puzzle3d_absolute_or_delta, crate::editor::puzzle3d::session::sync_precompute_session, crate::editor::puzzle3d::session::Puzzle3dActionCtx};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_absolute_or_delta, semio_s_artifact_puzzle_3d_editor_session::sync_precompute_session, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx};
 use semio_framework_pack_json::Value;
 
 /// 🖌️ The collision budget every brush/fill placement is tested against — re-syncs the precompute

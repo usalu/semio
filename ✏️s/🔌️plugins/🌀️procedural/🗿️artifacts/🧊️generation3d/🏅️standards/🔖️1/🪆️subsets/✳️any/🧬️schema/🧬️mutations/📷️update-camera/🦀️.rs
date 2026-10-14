@@ -3,7 +3,6 @@
 //! (`📓️derivation-rules.md` rule 1's `update-<facet>` exception).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
 //#region 🔖️UpdateCamera
@@ -14,14 +13,17 @@ pub struct UpdateCamera {
     pub camera: CameraJson,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for UpdateCamera {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for UpdateCamera
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<UpdateCamera>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::update_camera::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::update_camera::inverse::inverse(self, base)?
     

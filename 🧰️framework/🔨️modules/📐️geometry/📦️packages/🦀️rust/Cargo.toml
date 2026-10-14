@@ -11,6 +11,11 @@ description = "First-party 2D geometry (Point/Vec2/Affine/shapes/BezPath, select
 role = "framework"
 id = "geometry"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
@@ -31,6 +36,11 @@ name = "collision_oracles"
 path = "../../🧪️tests/💥️collision-oracles/🦀️.rs"
 
 [dependencies]
+semio-framework-geometry-solids = { path="../../🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-geometry-skeleton = { path="../../🦴️skeleton/📦️packages/🦀️rust" }
+semio-framework-geometry-bulge = { path="../../🌙️bulge/📦️packages/🦀️rust" }
+semio-framework-geometry-vector = { path="../../➗️vector/📦️packages/🦀️rust" }
+semio-framework-geometry-primitives = { path="../../⚙️engine/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 kurbo = "0.13.1"

@@ -4,6 +4,14 @@
 //! display, tool input, suggestion, and candidate state belong to `🪟️window`; fill progress and
 //! checkpoints remain in the retained operation that owns their frozen input.
 
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
 use std::collections::HashMap;
 
@@ -51,19 +59,19 @@ fn default_voxel_dims() -> [u32; 3] {
 }
 
 fn default_vortex_show() -> String {
-    crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_SELECTED.into()
+    crate::PUZZLE3D_VORTEX_SHOW_SELECTED.into()
 }
 
 fn default_vortex_direction() -> String {
-    crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
+    crate::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
 }
 
 fn default_selection_method() -> String {
-    crate::editor::puzzle3d::config::PUZZLE3D_SELECTION_METHOD_PICK.into()
+    crate::PUZZLE3D_SELECTION_METHOD_PICK.into()
 }
 
 fn default_window_ids() -> Vec<String> {
-    vec![crate::editor::puzzle3d::config::WINDOW_KIND_ID.to_string()]
+    vec![crate::WINDOW_KIND_ID.to_string()]
 }
 
 /// 🏷️ The example a freshly created document was seeded from. `ArtifactApp::initial_snapshot` builds
@@ -74,7 +82,7 @@ fn default_window_ids() -> Vec<String> {
 /// `puzzle-3d.json` until the user switched examples at least once. `set_active_example("")` still
 /// writes the empty id explicitly, so a deliberately blanked document keeps the generic name.
 fn default_active_example_id() -> String {
-    crate::editor::puzzle3d::config::PUZZLE3D_EXAMPLE_CONCRETE_FOREST.into()
+    crate::PUZZLE3D_EXAMPLE_CONCRETE_FOREST.into()
 }
 //#endregion 🔖️Defaults
 
@@ -569,3 +577,8 @@ pub const PUZZLE3D_SELECTION_METHOD_RECTANGLE: &str = "rectangle";
 pub const PUZZLE3D_SELECTION_METHOD_LASSO: &str = "lasso";
 
 pub const WINDOW_KIND_ID: &str = "puzzle3d-main";
+
+//#region 🌳️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🌳️Modules

@@ -35,14 +35,3 @@ pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutati
     }
 }
 
-/// 🎚️ The slider fields after `target` lands on it (the range widened exactly like the canvas knob), computed on a probe copy; `None` when no range can hold the value.
-pub(crate) fn generation3d_slider_landing(value: f64, min: f64, max: f64, step: f64, target: f64) -> Option<(f64, f64, f64, f64)> {
-    let mut landing = semio_framework_artifact_flow_flow::Widget::InputSlider { id: String::new(), label: String::new(), value, min, max, step };
-    if !semio_framework_artifact_flow_flow::set_widget_slider_value(&mut landing, target) {
-        return None;
-    }
-    match landing {
-        semio_framework_artifact_flow_flow::Widget::InputSlider { value, min, max, step, .. } => Some((value, min, max, step)),
-        _ => None,
-    }
-}

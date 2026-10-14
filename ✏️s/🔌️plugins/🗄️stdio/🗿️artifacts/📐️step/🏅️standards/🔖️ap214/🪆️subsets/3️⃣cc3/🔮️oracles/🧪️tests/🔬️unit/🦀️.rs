@@ -2,7 +2,7 @@
 use super::*;
 
 fn fixture() -> Vec<u8> {
-    include_bytes!("../../../🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp").to_vec()
+    crate::committed("../../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp")
 }
 
 fn object(entries: Vec<(&str, Json)>) -> Json {
@@ -49,7 +49,7 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
 /// 📇️ One spec per declared kind — the case's own `Examples` rows, read from its feature file so the unit law and
 /// the scenario run the same leaf wire payloads.
 fn exercised_specs() -> Vec<Json> {
-    semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🔬️3-mutate-step-ap214-cc3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
+    semio_repo_test_host::law::feature_rows(&crate::committed_text("../../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🔬️3-mutate-step-ap214-cc3/🥒️.feature")).into_iter().map(|(kind, params)| spec(&kind, params)).collect()
 }
 
 #[test]
@@ -75,9 +75,9 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 /// parses Rust, so this reads both files as text and fails the moment they drift apart.
 #[test]
 fn kinds_match_the_catalog_and_the_vocabulary() {
-    let manifest = include_str!("../../🔣️.json");
-    let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
-    let feature = include_str!("../../../🧪️tests/🔬️3-mutate-step-ap214-cc3/🥒️.feature");
+    let manifest = crate::committed_text("../../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🔮️oracles/🔣️.json");
+    let vocabulary = crate::committed_text("../../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🧬️mutations/🦀️.rs");
+    let feature = crate::committed_text("../../../🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧪️tests/🔬️3-mutate-step-ap214-cc3/🥒️.feature");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "the catalog is missing kind {kind:?}");
         assert!(vocabulary.contains(&format!("\"{kind}\"")), "StepCc3Mutation::KINDS is missing {kind:?}");

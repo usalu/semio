@@ -1,6 +1,6 @@
 //! 🧪️ `remove-relationship` satisfies the inverse sum law for a removed first, middle and last relationship and for the last relationship of an owner.
 
-use super::super::*;
+use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_s_artifact_stdio_zip::opc::{OpcRelationship, OpcTargetMode};
 
 #[semio_framework_async_macros::async_test]

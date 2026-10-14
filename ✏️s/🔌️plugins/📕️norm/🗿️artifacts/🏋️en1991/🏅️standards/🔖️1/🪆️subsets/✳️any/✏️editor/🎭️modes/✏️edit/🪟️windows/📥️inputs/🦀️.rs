@@ -1,6 +1,6 @@
 //! 📥️ EN 1991 play app — structured inputs editor over the design-load subject.
 
-use crate::En1991Snapshot;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::WindowKindDefinition;
 
@@ -12,7 +12,7 @@ pub const BODY_INPUTS: &str = "norm.en1991.play.inputs";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::en1991::create_en1991_app`.
 pub fn definition() -> WindowKindDefinition {
-    crate::app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
+    semio_s_plugin_norm_app_surface::window_definition(WINDOW_INPUTS, LocalizedLabel::native("Inputs", "Eingaben"), BODY_INPUTS, "download")
 }
 //#endregion 🔖️Definition
 
@@ -25,13 +25,13 @@ pub fn render(
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let grouped = grouped_editor_value(document);
-    crate::app_surface::render_document_editor(&grouped, locale, controller_id, Some(crate::field_meta::en1991_field_meta), windows)
+    semio_s_plugin_norm_app_surface::render_document_editor(&grouped, locale, controller_id, Some(crate::field_meta::en1991_field_meta), windows)
 }
 
 #[derive(Clone, Debug, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct GroupedEditor {
-    annex: crate::document::AnnexChoice,
+    annex: semio_s_plugin_norm_compliance::AnnexChoice,
     site: SiteGroup,
     building: BuildingGroup,
     thermal: ThermalGroup,
@@ -40,11 +40,11 @@ struct GroupedEditor {
     bridge: BridgeGroup,
     crane: CraneGroup,
     silo: SiloGroup,
-    floors: Vec<crate::FloorArea>,
-    self_weight_elements: Vec<crate::SelfWeightElement>,
-    roofs: Vec<crate::RoofArea>,
-    wind_faces: Vec<crate::WindFace>,
-    accidental_cases: Vec<crate::AccidentalCase>,
+    floors: Vec<semio_s_artifact_norm_en1991_model::FloorArea>,
+    self_weight_elements: Vec<semio_s_artifact_norm_en1991_model::SelfWeightElement>,
+    roofs: Vec<semio_s_artifact_norm_en1991_model::RoofArea>,
+    wind_faces: Vec<semio_s_artifact_norm_en1991_model::WindFace>,
+    accidental_cases: Vec<semio_s_artifact_norm_en1991_model::AccidentalCase>,
 }
 
 #[derive(Clone, Debug, value_derive::ToValue)]
@@ -88,8 +88,8 @@ struct ThermalGroup {
 #[derive(Clone, Debug, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct FireGroup {
-    fire_mode: crate::FireMode,
-    fire_curve: crate::part_1_2::FireCurve,
+    fire_mode: semio_s_artifact_norm_en1991_model::FireMode,
+    fire_curve: semio_s_artifact_norm_en1991_model::part_1_2::FireCurve,
     fire_duration: f64,
     assumed_gas_temperature: f64,
     assumed_h_net: f64,
@@ -112,7 +112,7 @@ struct ExecutionGroup {
 #[derive(Clone, Debug, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct BridgeGroup {
-    structure_kind: crate::StructureKind,
+    structure_kind: semio_s_artifact_norm_en1991_model::StructureKind,
     bridge_lane: u8,
     bridge_span: f64,
     bridge_lane_width: f64,

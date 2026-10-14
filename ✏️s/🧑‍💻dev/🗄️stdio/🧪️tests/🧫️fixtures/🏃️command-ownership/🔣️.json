@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "packageRouting":[{"platform":"posix","root":"/work/repo","package":"/work/repo/space dir/a/b","script":"bun --cwd \"../../..\" repo run fixture:test","target":"fixture:test","accepted":true},{"platform":"win32","root":"C:/work/repo","package":"C:/work/repo/space dir/a/b","script":"bun --cwd \"../../..\" repo run fixture:test","target":"fixture:test","accepted":true},{"platform":"posix","root":"/work/repo","package":"/work/repo/a/b","script":"bun --cwd \"..\" repo run fixture:test","target":"fixture:test","accepted":false},{"platform":"posix","root":"/work/repo","package":"/work/repo/a/b","script":"bun --cwd \"../..\" repo run fixture:other","target":"fixture:test","accepted":false}],
   "owners": [
     {
       "id": "artifact-inventory",
@@ -31,6 +32,7 @@
       "exports": [
         "assertStdioArtifactCargoMetadata",
         "assertStdioArtifactBuildGraph",
+        "readStdioArtifactBuildGraphPin",
         "stdioCargoMetadata"
       ]
     },
@@ -73,6 +75,7 @@
       "exports": [
         "testStdioArtifactPackageContract",
         "testStdioArtifactPackageGraph",
+        "verifyStdioBuildGraphPinFixtures",
         "verifyStdioCommandOwnership"
       ]
     },
@@ -235,6 +238,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph/📌️pin.json",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",

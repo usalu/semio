@@ -105,12 +105,12 @@ mod quick {
             let emitted = if plugin_id == "gis" {
                 let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
                 semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().unwrap());
-                let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
+                let _foreign = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             } else {
                 let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
                 semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_vcs::plugin().unwrap());
-                let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
+                let _foreign = semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             };
             let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(directory::os_pack::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();

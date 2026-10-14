@@ -4,8 +4,8 @@
 
 use crate::editor::step_any::modes::edit;
 use crate::editor::step_any::modes::edit::windows::main;
-use crate::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -42,7 +42,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v_ap214::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::edit_rules;
 
 //#region 🔖️Dialect
 pub const STEP_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId::ANY };

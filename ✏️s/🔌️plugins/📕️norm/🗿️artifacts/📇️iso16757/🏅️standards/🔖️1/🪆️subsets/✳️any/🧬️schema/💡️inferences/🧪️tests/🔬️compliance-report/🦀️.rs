@@ -1,8 +1,8 @@
-use super::*;
-use crate::document::{CheckStatus, QuantityKind};
-use crate::part_2::{BoundingBox, SpaceKind};
-use crate::CatalogueValue;
-use crate::LocalizedText;
+use semio_s_artifact_norm_iso16757_inferences::*;
+use semio_s_plugin_norm_compliance::{CheckStatus, QuantityKind};
+use semio_s_artifact_norm_iso16757_model::part_2::{BoundingBox, SpaceKind};
+use semio_s_artifact_norm_iso16757_model::CatalogueValue;
+use semio_s_plugin_norm_compliance::LocalizedText;
 use std::collections::HashSet;
 use std::path::PathBuf;
 
@@ -98,13 +98,12 @@ async fn emitted_subject_and_remedy_paths_parse_and_resolve() {
                 if path.is_empty() {
                     continue;
                 }
-                crate::app_surface::parse_path(path).unwrap_or_else(|error| panic!("path parse failed for {path:?} on check {}: {error}", check.id));
-                crate::app_surface::get_value_at_path(&tree, path).unwrap_or_else(|error| panic!("path resolve failed for {path:?} on check {}: {error}", check.id));
+                semio_s_plugin_norm_app_surface::parse_path(path).unwrap_or_else(|error| panic!("path parse failed for {path:?} on check {}: {error}", check.id));
+                semio_s_plugin_norm_app_surface::get_value_at_path(&tree, path).unwrap_or_else(|error| panic!("path resolve failed for {path:?} on check {}: {error}", check.id));
             }
         }
     }
 }
-
 
 fn family_any_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
@@ -293,7 +292,7 @@ fn check_sources_contain_no_fingerprint_gaming_patterns() {
 fn cucumber_mutate_feature_covers_every_rust_kind() {
     let feature = family_any_dir().join("🧪️tests/📇️mutate-iso16757-1/🥒️.feature");
     let text = std::fs::read_to_string(&feature).expect("read feature");
-    let rust_kinds: Vec<&str> = crate::mutations::KINDS.to_vec();
+    let rust_kinds: Vec<&str> = semio_s_artifact_norm_iso16757_mutations::KINDS.to_vec();
     let mut feature_kinds = Vec::new();
     for line in text.lines() {
         let t = line.trim();
@@ -318,7 +317,7 @@ fn cucumber_mutate_feature_covers_every_rust_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn python_mutate_kinds_mirror_rust_kinds_exactly() {
-    let rust_kinds: Vec<&str> = crate::mutations::KINDS.to_vec();
+    let rust_kinds: Vec<&str> = semio_s_artifact_norm_iso16757_mutations::KINDS.to_vec();
     let py_path = {
         let mut found = None;
         let tests = family_any_dir().join("🧪️tests");
@@ -362,15 +361,15 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
         let mut tree = semio_framework_value::ToValue::to_value(&doc);
         for axis in 0..3usize {
             let path = format!("geometry.objects.{gid}.spaces[id=installation].bounds.max[{axis}]");
-            let _ = crate::app_surface::set_value_at_path(&mut tree, &path, semio_framework_value::DslValue::float(1.0));
+            let _ = semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, &path, semio_framework_value::DslValue::float(1.0));
         }
         if let Ok(updated) = <Iso16757Snapshot as semio_framework_value::FromValue>::from_value(tree) {
             doc = updated;
         }
     }
 
-    doc.exchange_process = crate::part_5::ExchangeProcess::DetermineProduct;
-    doc.script_limits = crate::part_5::ScriptLimits { max_steps: 100_000, max_recursion: 64, timeout_ms: 1_000 };
+    doc.exchange_process = semio_s_artifact_norm_iso16757_model::part_5::ExchangeProcess::DetermineProduct;
+    doc.script_limits = semio_s_artifact_norm_iso16757_model::part_5::ScriptLimits { max_steps: 100_000, max_recursion: 64, timeout_ms: 1_000 };
     if let Some(rel) = doc.dictionary.relationships.iter_mut().find(|r| r.id == "rel-dangling") {
         if let Some(ok) = doc.dictionary.subjects.first().cloned() {
             rel.target_id = ok.id;
@@ -385,7 +384,7 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
             // Restore required property values cleared by the broken fixture.
             if variant.property_values.is_empty() {
                 if let Some(def) = doc.catalogue.property_definitions.iter().find(|d| d.id == "prop-dn") {
-                    variant.property_values.push(crate::part_1::PropertyValue {
+                    variant.property_values.push(semio_s_artifact_norm_iso16757_model::part_1::PropertyValue {
                         definition_id: def.id.clone(),
                         value: CatalogueValue::Decimal { value: 50.0 },
                         function_id: None,
@@ -406,9 +405,6 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
         assert!(check.remedies.iter().any(|r| r.applicable), "remaining fail {} lacks applicable remedy", check.id);
     }
 }
-
-
-
 
 fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit: &mut dyn FnMut(&str, &semio_framework_value::DslValue)) {
     match value {
@@ -460,7 +456,7 @@ fn is_descriptive_name_or_title_leaf(path: &str) -> bool {
 
 #[semio_framework_async_macros::async_test]
 async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
-    use crate::field_meta::iso16757_field_meta;
+    use semio_s_artifact_norm_iso16757_editor::field_meta::iso16757_field_meta;
     let snap = Iso16757Snapshot::default();
     let value = semio_framework_value::ToValue::to_value(&snap);
     let mut missing = Vec::new();
@@ -490,7 +486,7 @@ async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
     assert!(missing.is_empty(), "missing field meta for: {missing:?}");
 }
 
-fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
+fn report_signature(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
     report
         .checks
         .iter()
@@ -521,7 +517,7 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
         }
         semio_framework_value::DslValue::Bool(b) => Some(semio_framework_value::DslValue::Bool(!*b)),
         semio_framework_value::DslValue::String(s) => {
-            use crate::field_meta::iso16757_field_meta;
+            use semio_s_artifact_norm_iso16757_editor::field_meta::iso16757_field_meta;
             if let Some(choices) = iso16757_field_meta(path).and_then(|m| m.choices) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
                 return Some(semio_framework_value::DslValue::String(alt.to_string()));
@@ -562,7 +558,7 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
         for (path, leaf) in leaves {
             let Some(next) = perturb_dsl_leaf(&path, &leaf) else { continue };
             let mut tree = semio_framework_value::ToValue::to_value(&base);
-            if crate::app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
+            if semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, &path, next).is_err() {
                 inert.push(format!("{label}:{path} (set failed)"));
                 continue;
             }
@@ -582,6 +578,4 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
         inert.join("\n")
     );
 }
-
-
 

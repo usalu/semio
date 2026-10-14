@@ -1,8 +1,8 @@
 //! 🔺️ `add-selection-constraint` — sparse diff construction; an explicit index past the end is `mutation.target-missing`.
 
-use super::mutation::AddSelectionConstraint;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757SelectionConstraintsRows, Iso16757SelectionConstraintsInserted};
+use crate::add_selection_constraint::mutation::AddSelectionConstraint;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757SelectionConstraintsRows, Iso16757SelectionConstraintsInserted};
 
 //#region 🔖️Diff
 

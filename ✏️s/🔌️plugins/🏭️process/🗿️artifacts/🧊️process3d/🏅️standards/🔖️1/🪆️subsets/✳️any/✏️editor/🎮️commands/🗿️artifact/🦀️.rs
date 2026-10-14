@@ -1,11 +1,11 @@
 //! 📄️ Process 3d play app commands — wholesale document swaps (load example / set document).
 
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::standards::v1::subsets::any::io::text::snapshot::{concrete_forest_document};
-use crate::standards::v1::subsets::any::io::text::snapshot::{plate_document};
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Process3dSnapshot};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::concrete_forest_document;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::plate_document;
+use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,10 +33,10 @@ pub mod set_snapshot {
         payload: &SetDocument,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| Fault::from(e.to_string()))?;
-        Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
+        Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }
 //#endregion 🔖️SetDocument
@@ -58,15 +58,15 @@ pub mod set_active_example {
         payload: &SetActiveExample,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = match payload.example_id.as_str() {
-            crate::editor::process3d::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
-            crate::editor::process3d::PROCESS3D_EXAMPLE_CONCRETE_FOREST => concrete_forest_document(),
+            semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_PLATE | "plate" => plate_document(),
+            semio_s_artifact_process_process3d_kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST => concrete_forest_document(),
             "" => Process3dSnapshot::default(),
             _ => default_document(),
         };
-        Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
+        Ok(Emit { effects: vec![semio_s_artifact_process_process3d_kit::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }
 //#endregion 🔖️SetActiveExample

@@ -9,7 +9,7 @@ async fn puzzle5d_document_vcs_replays_granular_operations() {
     use crate::{PUZZLE_5D_SCHEMA, Puzzle5dPart};
     use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 
-    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
+    let mut store = (puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], transaction: None }, &mut identity).await).expect("apply");
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.parts.len(), 1);

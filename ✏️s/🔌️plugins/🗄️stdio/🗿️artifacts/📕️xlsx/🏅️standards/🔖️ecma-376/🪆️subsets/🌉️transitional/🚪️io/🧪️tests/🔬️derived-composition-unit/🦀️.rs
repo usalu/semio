@@ -1,8 +1,8 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
-    use crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+    use semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
     use crate::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder as _};

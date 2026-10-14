@@ -1,15 +1,15 @@
 //! Inverse for `introduce-geometry-object`.
 
-use crate::mutations::retire_geometry_object;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
-use super::mutation::IntroduceGeometryObject;
+use crate::retire_geometry_object;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use crate::introduce_geometry_object::mutation::IntroduceGeometryObject;
 
-pub fn inverse(payload: &IntroduceGeometryObject, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &IntroduceGeometryObject, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::retire_geometry_object::mutation::RetireGeometryObject> {
     Ok((|| {
     if base.geometry.objects.contains_key(&payload.geometry_object.id) {
         return Vec::new();
     }
-    vec![Iso16757Mutation::RetireGeometryObject(retire_geometry_object::mutation::RetireGeometryObject {
+    vec![Op::from(retire_geometry_object::mutation::RetireGeometryObject {
         id: payload.geometry_object.id.clone(),
     })]
 

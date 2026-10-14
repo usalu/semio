@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-fem-3d-editor-results-window"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d results window, playback transient and results cache"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d-editor-results-window = { workspace = true }
+semio-s-artifact-fem-3d-editor-interaction = { workspace = true }
+semio-s-artifact-fem-3d-editor-terminology = { workspace = true }
+semio-s-artifact-fem-3d-engine = { workspace = true }
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-scene = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+semio-s-fem-model = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

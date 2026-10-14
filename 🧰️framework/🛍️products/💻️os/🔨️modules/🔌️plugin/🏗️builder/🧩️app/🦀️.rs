@@ -64,7 +64,7 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework::surface_app_id;
 use semio_framework::AppRole;
 use crate::app_contract::viewer_rejects_action;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
 use crate::app_views::cancellation_action_definition;
 use crate::window_surface::contract_surface_kind;

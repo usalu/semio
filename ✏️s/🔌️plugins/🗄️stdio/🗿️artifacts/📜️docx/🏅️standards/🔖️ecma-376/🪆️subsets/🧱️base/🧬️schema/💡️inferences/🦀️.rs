@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -52,10 +52,7 @@ pub fn docx_artifact_inference_descriptor() -> semio_framework_schema_registry::
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
 //#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
@@ -63,5 +60,3 @@ mod tests;
 pub use super::outline::DocxOutline;
 //#endregion 🔁️Re-exports
 
-#[path="📰️document/🦀️.rs"]
-pub mod document;

@@ -1,5 +1,5 @@
 //! 📚️ Example `residential-method3`.
-use crate::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

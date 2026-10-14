@@ -1,9 +1,12 @@
 //! 🎨 `change-frame-fill` — sets a `Frame::Rect`'s `fill` color (`None` clears it). A no-op on
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `fill` handling.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,12 +23,12 @@ pub struct ChangeFrameFill {
     pub new_fill: Option<[f32; 4]>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameFill where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_fill::ChangeFrameFill> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-fill", kind: "change-frame-fill", record: "ChangedFrameFill" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_fill(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_frame_fill(self, base)?
     
@@ -67,7 +70,7 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
 //#endregion 🎨ChangeFrameFill
 
 //#region 🎨ChangeFrameFill
-pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_frame_fill<Op: From<crate::change_frame_fill::ChangeFrameFill>>(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -78,8 +81,14 @@ pub fn inverse_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapsho
     let Frame::Rect { fill, .. } = frame else {
         return Vec::new();
     };
-    vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_fill: *fill })]
+    vec![Op::from(ChangeFrameFill { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_fill: *fill })]
 
     })())
 }
 //#endregion 🎨ChangeFrameFill
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🎨️repaints/🦀️.rs"]
+mod tests_repaints_the_rect_frame_fill;
+//#endregion 🪢️TaxonomyMounts

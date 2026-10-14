@@ -1,13 +1,12 @@
 //! ⚡️ EN 1990 — hand-rolled `OpText` for `En1990Mutation`; `OpBinary` is the protocol-tagged payload frame.
 
-use crate::artifact_schema::mutations::En1990Mutation;
+use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 
-use crate::artifact_schema::mutations::{
-    change_accidentals, change_annex, change_beta_computed, change_consequence_class, change_design_working_life_category, change_design_working_life_years, change_effects,
-    change_inspection_level, change_members, change_bridge_sls, change_permanents, change_project_id, change_altitude_m, change_reference_period_years, change_reliability_class, change_seismics, change_supervision_level,
-    change_variables, insert_accidental, insert_effect, insert_member, insert_permanent, insert_seismic, insert_variable, remove_accidental, remove_effect, remove_member, remove_permanent,
-    remove_seismic, remove_variable,
-};
+use semio_s_artifact_norm_en1990_mut_accidental::{change_accidentals, change_seismics, insert_accidental, insert_seismic, remove_accidental, remove_seismic};
+use semio_s_artifact_norm_en1990_mut_design_basis::{change_annex, change_design_working_life_category, change_design_working_life_years, change_project_id, change_altitude_m, change_reference_period_years};
+use semio_s_artifact_norm_en1990_mut_reliability::{change_beta_computed, change_consequence_class, change_inspection_level, change_reliability_class, change_supervision_level};
+use semio_s_artifact_norm_en1990_mut_members::{change_effects, change_members, change_bridge_sls, insert_effect, insert_member, remove_effect, remove_member};
+use semio_s_artifact_norm_en1990_mut_actions::{change_permanents, change_variables, insert_permanent, insert_variable, remove_permanent, remove_variable};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -194,16 +193,12 @@ impl protocol::OpText for En1990Mutation {
 }
 //#endregion 🔖️OpTextCodec
 
-//#region 🔖️OpBinaryCodec
-
-//#endregion 🔖️OpBinaryCodec
-
 //#region 🔖️DemoCases
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<En1990Mutation> {
-    let base = crate::En1990Snapshot::default();
+    let base = semio_s_artifact_norm_en1990_model::En1990Snapshot::default();
     vec![
-        En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En }),
         En1990Mutation::ChangeProjectId(change_project_id::ChangeProjectId { new_project_id: "x".into() }),
         En1990Mutation::ChangeAltitudeM(change_altitude_m::ChangeAltitudeM { new_altitude_m: 1200.0 }),
         En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 3 }),
@@ -233,47 +228,47 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::diff::En1990Diff;
-use crate::En1990Snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::change_project_id;
-use crate::standards::v1::subsets::any::schema::mutations::change_altitude_m;
-use crate::standards::v1::subsets::any::schema::mutations::change_consequence_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_reliability_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_design_working_life_category;
-use crate::standards::v1::subsets::any::schema::mutations::change_design_working_life_years;
-use crate::standards::v1::subsets::any::schema::mutations::change_reference_period_years;
-use crate::standards::v1::subsets::any::schema::mutations::change_supervision_level;
-use crate::standards::v1::subsets::any::schema::mutations::change_inspection_level;
-use crate::standards::v1::subsets::any::schema::mutations::change_beta_computed;
-use crate::standards::v1::subsets::any::schema::mutations::change_permanents;
-use crate::standards::v1::subsets::any::schema::mutations::change_variables;
-use crate::standards::v1::subsets::any::schema::mutations::change_accidentals;
-use crate::standards::v1::subsets::any::schema::mutations::change_seismics;
-use crate::standards::v1::subsets::any::schema::mutations::change_members;
-use crate::standards::v1::subsets::any::schema::mutations::change_bridge_sls;
-use crate::standards::v1::subsets::any::schema::mutations::change_effects;
-use crate::standards::v1::subsets::any::schema::mutations::insert_permanent;
-use crate::standards::v1::subsets::any::schema::mutations::insert_variable;
-use crate::standards::v1::subsets::any::schema::mutations::insert_accidental;
-use crate::standards::v1::subsets::any::schema::mutations::insert_seismic;
-use crate::standards::v1::subsets::any::schema::mutations::insert_member;
-use crate::standards::v1::subsets::any::schema::mutations::insert_effect;
-use crate::standards::v1::subsets::any::schema::mutations::remove_permanent;
-use crate::standards::v1::subsets::any::schema::mutations::remove_variable;
-use crate::standards::v1::subsets::any::schema::mutations::remove_accidental;
-use crate::standards::v1::subsets::any::schema::mutations::remove_seismic;
-use crate::standards::v1::subsets::any::schema::mutations::remove_member;
-use crate::standards::v1::subsets::any::schema::mutations::remove_effect;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1990_mutations::*;
+use semio_s_artifact_norm_en1990_diff::En1990Diff;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_annex;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_project_id;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_altitude_m;
+use semio_s_artifact_norm_en1990_mut_reliability::change_consequence_class;
+use semio_s_artifact_norm_en1990_mut_reliability::change_reliability_class;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_design_working_life_category;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_design_working_life_years;
+use semio_s_artifact_norm_en1990_mut_design_basis::change_reference_period_years;
+use semio_s_artifact_norm_en1990_mut_reliability::change_supervision_level;
+use semio_s_artifact_norm_en1990_mut_reliability::change_inspection_level;
+use semio_s_artifact_norm_en1990_mut_reliability::change_beta_computed;
+use semio_s_artifact_norm_en1990_mut_actions::change_permanents;
+use semio_s_artifact_norm_en1990_mut_actions::change_variables;
+use semio_s_artifact_norm_en1990_mut_accidental::change_accidentals;
+use semio_s_artifact_norm_en1990_mut_accidental::change_seismics;
+use semio_s_artifact_norm_en1990_mut_members::change_members;
+use semio_s_artifact_norm_en1990_mut_members::change_bridge_sls;
+use semio_s_artifact_norm_en1990_mut_members::change_effects;
+use semio_s_artifact_norm_en1990_mut_actions::insert_permanent;
+use semio_s_artifact_norm_en1990_mut_actions::insert_variable;
+use semio_s_artifact_norm_en1990_mut_accidental::insert_accidental;
+use semio_s_artifact_norm_en1990_mut_accidental::insert_seismic;
+use semio_s_artifact_norm_en1990_mut_members::insert_member;
+use semio_s_artifact_norm_en1990_mut_members::insert_effect;
+use semio_s_artifact_norm_en1990_mut_actions::remove_permanent;
+use semio_s_artifact_norm_en1990_mut_actions::remove_variable;
+use semio_s_artifact_norm_en1990_mut_accidental::remove_accidental;
+use semio_s_artifact_norm_en1990_mut_accidental::remove_seismic;
+use semio_s_artifact_norm_en1990_mut_members::remove_member;
+use semio_s_artifact_norm_en1990_mut_members::remove_effect;
 
 /// 📥️ Decodes one committed mutation JSON document into [`En1990Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1990_mutation_json(text: &str) -> Result<En1990Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

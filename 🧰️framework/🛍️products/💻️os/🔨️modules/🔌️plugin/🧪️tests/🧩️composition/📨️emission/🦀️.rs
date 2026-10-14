@@ -381,7 +381,7 @@ fn child_emission_owned_refusal_keeps_prefix_rejected_and_remaining_until_actual
     let mut returned_provider=None;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
-        let grant=original_close_grant;assert!(crate::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted retained close"),grant));
+        let grant=original_close_grant;assert!(semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted retained close"),grant));
         let step=preparation.close_step(grant).expect("actual retained owned close");
         if let PluginLifecycleStep::Progress(progress)=step{assert!(progress.fits(grant));}
         else if let PluginLifecycleStep::AwaitingInput{reason}=step{
@@ -431,7 +431,7 @@ fn child_emission_accepted_owner_retirement_refusal_retains_exact_prefix_and_pro
     let mut provider_returned=false;
     for _ in 0..demand["maximumCloseSteps"].as_u64().unwrap(){
         if preparation.terminal_is_empty(){break;}
-        let grant=original_close_grant;assert!(crate::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted accepted owner close"),grant));
+        let grant=original_close_grant;assert!(semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(preparation.retirement_demands(grant.maximum_copy_bytes).expect("quoted accepted owner close"),grant));
         match preparation.close_step(grant).expect("retained accepted owner close"){
             PluginLifecycleStep::AwaitingInput{..}=>{let provider=preparation.take_retirement_provider::<TrackedChildOperation>().expect("original retained provider handback");assert!(std::sync::Arc::ptr_eq(&provider,&factory));provider_returned=true;},
             PluginLifecycleStep::Progress(progress)=>{assert!(progress.fits(grant));},

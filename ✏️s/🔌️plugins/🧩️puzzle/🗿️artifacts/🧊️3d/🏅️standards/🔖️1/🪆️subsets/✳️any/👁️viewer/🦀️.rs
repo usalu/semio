@@ -4,9 +4,17 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use {crate::Puzzle3dMutation, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
-use crate::viewer::puzzle3d::modes::view;
-use crate::viewer::puzzle3d::modes::view::windows::main;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use {semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT, semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA};
+use crate::modes::view;
+use crate::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -64,8 +72,6 @@ impl ArtifactViewer for Puzzle3dViewer {
 
     const DIALECT: Dialect = PUZZLE3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE_3D_SCHEMA;
-
-
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
@@ -131,3 +137,34 @@ pub fn create_puzzle3d_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod view {
+        #[path = "🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod windows {
+            #[path = "."]
+            pub mod main {
+                #[path = "🎭️modes/👁️view/🪟️windows/🧊️main/🦀️.rs"]
+                mod component;
+                pub use component::*;
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🌳️Modules

@@ -1,5 +1,5 @@
 use super::*;
-use crate::value::observe_retirement_allocations;
+use crate::observe_retirement_allocations;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

@@ -1,11 +1,12 @@
 //! ↩️ Inverse for `MoveNodes` — every moved widget back at its BASE position: absolute `move-widget` rows, never a negated
 //! offset.
 
-use crate::standards::v1::subsets::any::schema::mutations::{move_widget,widget_index,Generation2dMutation};
+use crate::move_widget;
+use semio_s_artifact_procedural_2d_model::widget_index;
 
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
-pub fn inverse(payload: &super::MoveNodes, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::move_widget::MoveWidget>>(payload: &super::MoveNodes, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     if (payload.dx, payload.dy) == (0.0, 0.0) {
         return Vec::new();

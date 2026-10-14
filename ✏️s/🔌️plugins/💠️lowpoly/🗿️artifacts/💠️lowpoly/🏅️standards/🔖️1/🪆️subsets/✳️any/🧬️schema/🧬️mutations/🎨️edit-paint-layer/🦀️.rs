@@ -6,8 +6,8 @@
 //! out of this ticket's writable scope — see this report's `notes`), so `edit` is used instead; a
 //! future framework spine change could register `paint-stroke` and this triad would rename to match.
 
-use crate::schema::PixelRun;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::PixelRun;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -24,13 +24,16 @@ pub struct EditPaintLayer {
     pub runs: Vec<PixelRun>,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for EditPaintLayer {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for EditPaintLayer
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::edit_paint_layer::EditPaintLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "paint-layer", kind: "edit-paint-layer", record: "EditedPaintLayer" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,8 @@
 mod tests {
     use super::*;
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -58,7 +59,7 @@ mod tests {
     /// 🗂️ A VML drawing named `.xml` lives in the XML authority lane — the Strict ban reads both lanes.
     #[semio_framework_async_macros::async_test]
     async fn vml_drawing_in_the_xml_lane_is_hard() {
-        use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
+        use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
         use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
         let mut snapshot = snapshot_with_workbook(STRICT_SML_NS, STRICT_R_NS, Some("strict"));
         snapshot.opc.content_types.set_override("xl/drawings/vmlDrawing1.xml", VML_CONTENT_TYPE);

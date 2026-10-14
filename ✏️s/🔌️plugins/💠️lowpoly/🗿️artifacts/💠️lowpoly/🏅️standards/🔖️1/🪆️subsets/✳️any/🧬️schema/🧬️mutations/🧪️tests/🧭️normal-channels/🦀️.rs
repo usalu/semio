@@ -3,12 +3,13 @@
 //! implementation), the central applier writes them before it recomputes the vertex normals, and the position-and-channel undo
 //! restores the base.
 
-use crate::mutations::{lowpoly_selection_motion_diff, lowpoly_selection_normal_channels, LowpolyMutation, LowpolySelectionMotion};
-use crate::{LowpolyMeshAttribute, LowpolyMeshAttributeDomain, LowpolyMeshAttributeSemantic, LowpolyMeshState, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::{lowpoly_selection_motion_diff, lowpoly_selection_normal_channels, LowpolySelectionMotion};
+use crate::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::{managed_mesh::LowpolyMeshAttribute, managed_mesh::LowpolyMeshAttributeDomain, managed_mesh::LowpolyMeshAttributeSemantic, managed_mesh::LowpolyMeshState, snapshot::LowpolySnapshot};
 use semio_framework_3d::mesh::{Vec3, VertexId};
 use semio_framework_value::DslValue;
 
-const BEFORE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️rotate-selection/📐️lifts/📸️snapshot/⬅️before/🔣️.json").leak());
 const SELECTED: [u32; 3] = [0, 1, 2];
 
 fn authored_channel(state: &LowpolyMeshState) -> LowpolyMeshAttribute {
@@ -17,14 +18,14 @@ fn authored_channel(state: &LowpolyMeshState) -> LowpolyMeshAttribute {
         name: "authored".into(),
         domain: LowpolyMeshAttributeDomain::Corner,
         semantic: LowpolyMeshAttributeSemantic::Normal,
-        interpolation: crate::LowpolyMeshAttributeInterpolation::Linear,
+        interpolation: semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshAttributeInterpolation::Linear,
         values: (0..state.halfedges.len()).map(|corner| if corner % 2 == 0 { normal(0.0, 1.0, 0.0) } else { normal(0.6, 0.0, 0.8) }).collect(),
         indices: None,
     }
 }
 
 fn base() -> LowpolySnapshot {
-    let mut snapshot: LowpolySnapshot = crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(BEFORE).expect("fixture decodes");
+    let mut snapshot: LowpolySnapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(*BEFORE).expect("fixture decodes");
     let object = snapshot.objects.iter_mut().find(|object| object.mesh_state.is_some()).expect("a meshed object");
     let state = object.mesh_state.as_mut().expect("mesh state");
     let channel = authored_channel(state);
@@ -86,8 +87,8 @@ fn an_offset_leaves_the_normal_channels_alone() {
 async fn the_inverse_restores_the_normal_channels_and_sums_to_the_negative_diff() {
     let snapshot = base();
     let (id, _) = meshed(&snapshot);
-    let rotate = LowpolyMutation::RotateSelection(crate::mutations::rotate_selection::RotateSelection { object_id: id.into(), vertex_ids: SELECTED.to_vec(), pivot: [0.0; 3], axis: [1.0, 0.0, 0.0], angle: 0.7 });
-    let scale = LowpolyMutation::ScaleSelection(crate::mutations::scale_selection::ScaleSelection { object_id: id.into(), vertex_ids: SELECTED.to_vec(), pivot: [0.0; 3], factor: [2.0, 1.0, 0.5] });
+    let rotate = LowpolyMutation::RotateSelection(semio_s_artifact_lowpoly_lowpoly_mut_geometry::rotate_selection::RotateSelection { object_id: id.into(), vertex_ids: SELECTED.to_vec(), pivot: [0.0; 3], axis: [1.0, 0.0, 0.0], angle: 0.7 });
+    let scale = LowpolyMutation::ScaleSelection(semio_s_artifact_lowpoly_lowpoly_mut_geometry::scale_selection::ScaleSelection { object_id: id.into(), vertex_ids: SELECTED.to_vec(), pivot: [0.0; 3], factor: [2.0, 1.0, 0.5] });
     for mutation in [rotate, scale] {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &snapshot).await;
         let forward = protocol::apply_diff(<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &snapshot).diff(), &snapshot).expect("forward applies");

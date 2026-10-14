@@ -1,9 +1,9 @@
 //! 🔧 `change-annex` — national annex selection.
 
-use crate::diff::En1992Diff;
-use crate::document::AnnexChoice;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::En1992Diff;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,14 +15,21 @@ pub struct ChangeAnnex {
     pub new_annex: AnnexChoice,
 }
 
-impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnnex {
+impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeAnnex where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_annex::ChangeAnnex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
-    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
-    Ok({ super::inverse::inverse(self, base)? 
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> { crate::change_annex::diff::diff(self, base) }
+    fn inverse(&self, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    Ok({ crate::change_annex::inverse::inverse(self, base)? 
     })
 }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change national annex to {:?}", self.new_annex), &format!("Nationalen Anhang auf {:?} ändern", self.new_annex))
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

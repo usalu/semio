@@ -1,8 +1,11 @@
 //! 🗑️ `delete-character-style` — removes a character style that no story run uses.
 
-use crate::mutations::{create_character_style, update_character_style, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutCharacterStylesDelta, LayoutCharacterStyleRemoval};
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::{create_character_style, update_character_style};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::LayoutCharacterStylesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutCharacterStyleRemoval;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,10 +19,10 @@ pub struct DeleteCharacterStyle {
     pub id: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteCharacterStyle {
+impl<Op> MutationKind<LayoutSnapshot, Op> for DeleteCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_character_style::CreateCharacterStyle> + From<crate::update_character_style::UpdateCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "character-style", kind: "delete-character-style", record: "DeletedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_delete_character_style(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_delete_character_style(self, base)? 
     })
 }
@@ -37,13 +40,13 @@ pub fn diff_delete_character_style(payload: &DeleteCharacterStyle, base: &Layout
     protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { removed: vec![LayoutCharacterStyleRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_delete_character_style(payload: &DeleteCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_delete_character_style<Op: From<crate::create_character_style::CreateCharacterStyle> + From<crate::update_character_style::UpdateCharacterStyle>>(payload: &DeleteCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(at) = base.character_styles.iter().position(|style| style.id == payload.id) else { return Vec::new() };
     let style = &base.character_styles[at];
     vec![
-        LayoutMutation::UpdateCharacterStyle(update_character_style::UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking }),
-        LayoutMutation::CreateCharacterStyle(create_character_style::CreateCharacterStyle { id: style.id.clone(), name: style.name.clone(), index: Some(at) }),
+        Op::from(update_character_style::UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking }),
+        Op::from(create_character_style::CreateCharacterStyle { id: style.id.clone(), name: style.name.clone(), index: Some(at) }),
     ]
 
     })())
@@ -52,3 +55,9 @@ pub fn inverse_delete_character_style(payload: &DeleteCharacterStyle, base: &Lay
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+mod tests_removes_a_middle_row;
+//#endregion 🪢️TaxonomyMounts

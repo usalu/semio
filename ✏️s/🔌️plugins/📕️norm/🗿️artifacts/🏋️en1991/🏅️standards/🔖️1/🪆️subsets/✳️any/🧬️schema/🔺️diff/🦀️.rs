@@ -1,79 +1,87 @@
 //! 🧬️ EN1991 diff schema — sparse scalar fields plus positional row deltas for every list the document owns.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 
-use crate::En1991Snapshot;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 //#region 🔖️Rows
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `FloorArea`.
-    pub En1991FloorPatch of crate::FloorArea { set { category: String, area: f64, assumed_qk: f64, assumed_qk_concentrated: f64, assumed_partitions: f64 } }
+    pub En1991FloorPatch of semio_s_artifact_norm_en1991_model::FloorArea { set { category: String, area: f64, assumed_qk: f64, assumed_qk_concentrated: f64, assumed_partitions: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of one `FloorArea` list.
-    pub En1991FloorDelta { removal: En1991FloorRemoval, insertion: En1991FloorInsertion, relocation: En1991FloorRelocation, modification: En1991FloorModification, row: crate::FloorArea, patch: En1991FloorPatch, key: id }
+    pub En1991FloorDelta { removal: En1991FloorRemoval, insertion: En1991FloorInsertion, relocation: En1991FloorRelocation, modification: En1991FloorModification, row: semio_s_artifact_norm_en1991_model::FloorArea, patch: En1991FloorPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SelfWeightElement`.
-    pub En1991SelfWeightElementPatch of crate::SelfWeightElement { set { material: String, thickness: f64, assumed_gk: f64 } }
+    pub En1991SelfWeightElementPatch of semio_s_artifact_norm_en1991_model::SelfWeightElement { set { material: String, thickness: f64, assumed_gk: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of one `SelfWeightElement` list.
-    pub En1991SelfWeightElementDelta { removal: En1991SelfWeightElementRemoval, insertion: En1991SelfWeightElementInsertion, relocation: En1991SelfWeightElementRelocation, modification: En1991SelfWeightElementModification, row: crate::SelfWeightElement, patch: En1991SelfWeightElementPatch, key: id }
+    pub En1991SelfWeightElementDelta { removal: En1991SelfWeightElementRemoval, insertion: En1991SelfWeightElementInsertion, relocation: En1991SelfWeightElementRelocation, modification: En1991SelfWeightElementModification, row: semio_s_artifact_norm_en1991_model::SelfWeightElement, patch: En1991SelfWeightElementPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `RoofArea`.
-    pub En1991RoofPatch of crate::RoofArea { set { roof_type: String, pitch_deg: f64, c_e: f64, c_t: f64, has_parapet: bool, parapet_height: f64, drift_obstruction_height: f64, multi_span: bool, assumed_sk: f64 } }
+    pub En1991RoofPatch of semio_s_artifact_norm_en1991_model::RoofArea { set { roof_type: String, pitch_deg: f64, c_e: f64, c_t: f64, has_parapet: bool, parapet_height: f64, drift_obstruction_height: f64, multi_span: bool, assumed_sk: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of one `RoofArea` list.
-    pub En1991RoofDelta { removal: En1991RoofRemoval, insertion: En1991RoofInsertion, relocation: En1991RoofRelocation, modification: En1991RoofModification, row: crate::RoofArea, patch: En1991RoofPatch, key: id }
+    pub En1991RoofDelta { removal: En1991RoofRemoval, insertion: En1991RoofInsertion, relocation: En1991RoofRelocation, modification: En1991RoofModification, row: semio_s_artifact_norm_en1991_model::RoofArea, patch: En1991RoofPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `WindFace`.
-    pub En1991WindFacePatch of crate::WindFace { set { zone: String, z: f64, c_pe10: f64, c_pe1: f64, c_pi: f64, c_s: f64, c_d: f64, loaded_area: f64, assumed_wp: f64 } }
+    pub En1991WindFacePatch of semio_s_artifact_norm_en1991_model::WindFace { set { zone: String, z: f64, c_pe10: f64, c_pe1: f64, c_pi: f64, c_s: f64, c_d: f64, loaded_area: f64, assumed_wp: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of one `WindFace` list.
-    pub En1991WindFaceDelta { removal: En1991WindFaceRemoval, insertion: En1991WindFaceInsertion, relocation: En1991WindFaceRelocation, modification: En1991WindFaceModification, row: crate::WindFace, patch: En1991WindFacePatch, key: id }
+    pub En1991WindFaceDelta { removal: En1991WindFaceRemoval, insertion: En1991WindFaceInsertion, relocation: En1991WindFaceRelocation, modification: En1991WindFaceModification, row: semio_s_artifact_norm_en1991_model::WindFace, patch: En1991WindFacePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `AccidentalCase`.
-    pub En1991AccidentalCasePatch of crate::AccidentalCase { set { impact: Vec<crate::AccidentalImpact>, explosion: Vec<crate::AccidentalExplosion> } }
+    pub En1991AccidentalCasePatch of semio_s_artifact_norm_en1991_model::AccidentalCase { set { impact: Vec<semio_s_artifact_norm_en1991_model::AccidentalImpact>, explosion: Vec<semio_s_artifact_norm_en1991_model::AccidentalExplosion> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of one `AccidentalCase` list.
-    pub En1991AccidentalCaseDelta { removal: En1991AccidentalCaseRemoval, insertion: En1991AccidentalCaseInsertion, relocation: En1991AccidentalCaseRelocation, modification: En1991AccidentalCaseModification, row: crate::AccidentalCase, patch: En1991AccidentalCasePatch, key: id }
+    pub En1991AccidentalCaseDelta { removal: En1991AccidentalCaseRemoval, insertion: En1991AccidentalCaseInsertion, relocation: En1991AccidentalCaseRelocation, modification: En1991AccidentalCaseModification, row: semio_s_artifact_norm_en1991_model::AccidentalCase, patch: En1991AccidentalCasePatch, key: id }
 }
 
 //#endregion 🔖️Rows
@@ -87,7 +95,7 @@ protocol::list_delta! {
 #[artifact_schema(id = "s.norm.en1991")]
 pub struct En1991Diff {
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub snow_zone: Option<String>,
     #[state(artifact)]
@@ -135,9 +143,9 @@ pub struct En1991Diff {
     #[state(artifact)]
     pub storey_count: Option<u8>,
     #[state(artifact)]
-    pub fire_mode: Option<crate::FireMode>,
+    pub fire_mode: Option<semio_s_artifact_norm_en1991_model::FireMode>,
     #[state(artifact)]
-    pub fire_curve: Option<crate::part_1_2::FireCurve>,
+    pub fire_curve: Option<semio_s_artifact_norm_en1991_model::part_1_2::FireCurve>,
     #[state(artifact)]
     pub fire_duration: Option<f64>,
     #[state(artifact)]
@@ -163,7 +171,7 @@ pub struct En1991Diff {
     #[state(artifact)]
     pub assumed_construction_qk: Option<f64>,
     #[state(artifact)]
-    pub structure_kind: Option<crate::StructureKind>,
+    pub structure_kind: Option<semio_s_artifact_norm_en1991_model::StructureKind>,
     #[state(artifact)]
     pub bridge_lane: Option<u8>,
     #[state(artifact)]
@@ -659,6 +667,7 @@ impl DiffAlgebra<En1991Snapshot> for En1991Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

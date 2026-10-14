@@ -6,13 +6,21 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::document::NormHost;
-use crate::editor::vdi3805::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
-use crate::editor::vdi3805::modes::edit as edit_mode;
-use crate::editor::vdi3805::modes::edit::windows::{inputs, results};
-use crate::editor::vdi3805::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
-use crate::Vdi3805Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::NormHost;
+use crate::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
+use crate::modes::edit as edit_mode;
+use crate::modes::edit::windows::{inputs, results};
+use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_plugin::AppIo;
@@ -73,28 +81,28 @@ impl ArtifactEditor for Vdi3805PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
         vec![
-            crate::examples::demo::source(),
-            crate::examples::nonconforming::source(),
-            crate::examples::blatt_3::source(),
-            crate::examples::blatt_3_fail::source(),
-            crate::examples::blatt_4::source(),
-            crate::examples::blatt_4_fail::source(),
-            crate::examples::blatt_5::source(),
-            crate::examples::blatt_5_fail::source(),
-            crate::examples::blatt_6::source(),
-            crate::examples::blatt_6_fail::source(),
-            crate::examples::blatt_7::source(),
-            crate::examples::blatt_7_fail::source(),
-            crate::examples::blatt_8::source(),
-            crate::examples::blatt_8_fail::source(),
-            crate::examples::blatt_16::source(),
-            crate::examples::blatt_16_fail::source(),
-            crate::examples::blatt_19::source(),
-            crate::examples::blatt_19_fail::source(),
-            crate::examples::blatt_53::source(),
-            crate::examples::blatt_53_fail::source(),
-            crate::examples::blatt_60::source(),
-            crate::examples::blatt_60_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::demo::source(),
+            semio_s_artifact_norm_vdi3805_examples::nonconforming::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_3::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_3_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_4::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_4_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_5::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_5_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_6::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_6_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_7::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_7_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_8::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_8_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_16::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_16_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_19::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_19_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_53::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_53_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_60::source(),
+            semio_s_artifact_norm_vdi3805_examples_failing::blatt_60_fail::source(),
         ]
     }
     type Snapshot = Vdi3805Snapshot;
@@ -110,11 +118,11 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
     type Command = Vdi3805Command;
 
-    const DIALECT: Dialect = crate::VDI3805_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_norm_vdi3805_model::VDI3805_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.vdi3805/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        crate::app_surface::norm_artifact_store_preparation::<Self>()
+        semio_s_plugin_norm_app_surface::norm_artifact_store_preparation::<Self>()
     }
 
     semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
@@ -124,7 +132,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        crate::app_surface::build_norm_tool_job::<Self>(request)
+        semio_s_plugin_norm_app_surface::build_norm_tool_job::<Self>(request)
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -134,13 +142,13 @@ impl ArtifactEditor for Vdi3805PlayApp {
         artifact_schema: "semio.norm.vdi3805/v1",
         factory: "Vdi3805BoundedCommandJobFactory",
         factory_type: Vdi3805BoundedCommandJobFactory,
-        contract: crate::app_surface::norm_bounded_contract(),
+        contract: semio_s_plugin_norm_app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::app_surface::app_schema_descriptor())
+        Some(semio_s_plugin_norm_app_surface::app_schema_descriptor())
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -152,14 +160,14 @@ impl ArtifactEditor for Vdi3805PlayApp {
     }
 
     fn io() -> Option<AppIo> {
-        Some(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+        Some(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
     }
 
     fn command_id(command: &Vdi3805Command) -> &'static str {
         command.command_id()
     }
 
-    semio_s_plugin_norm_app_surface::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(Vdi3805Command, semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_snapshot_json);
 
     fn handle(
         command: &Vdi3805Command,
@@ -170,7 +178,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        crate::app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
+        semio_s_plugin_norm_app_surface::dispatch_norm_command::<Self>(command, doc, cfg, view_state)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -180,8 +188,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
             results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
             document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
             catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
-            _ => crate::app_surface::render_unknown_body(body_key, view_state.locale),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, semio_s_plugin_norm_results_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
+            _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
@@ -191,13 +199,13 @@ impl ArtifactEditor for Vdi3805PlayApp {
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Media, MediaError> {
-        crate::app_surface::export_media::<Vdi3805Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
+        semio_s_plugin_norm_app_surface::export_media::<Vdi3805Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let _base = doc.snapshot.clone();
-        crate::app_surface::import_media(port, media)
+        semio_s_plugin_norm_app_surface::import_media(port, media)
     }
     //#endregion ðï¸MediaPorts
 }
@@ -205,11 +213,11 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
 //#region 🧵️RetainedCommands
 /// ⏱️ Local factory wrapping the shared `NormBoundedCommandJobFactory` (same contract as `norm_owned_tool_job_factory!`).
-pub struct Vdi3805BoundedCommandJobFactory(crate::app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp>);
+pub struct Vdi3805BoundedCommandJobFactory(semio_s_plugin_norm_app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp>);
 
 impl Vdi3805BoundedCommandJobFactory {
     pub fn new(controller_id: &str) -> Self {
-        Self(crate::app_surface::NormBoundedCommandJobFactory::<Vdi3805PlayApp>::new(controller_id))
+        Self(semio_s_plugin_norm_app_surface::NormBoundedCommandJobFactory::<Vdi3805PlayApp>::new(controller_id))
     }
 
     pub fn register(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Vdi3805PlayApp>>) -> Result<(), Fault> {
@@ -219,8 +227,8 @@ impl Vdi3805BoundedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
-    type Payload = <crate::app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp> as semio_framework::ToolJobFactory>::Payload;
-    type Job = <crate::app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp> as semio_framework::ToolJobFactory>::Job;
+    type Payload = <semio_s_plugin_norm_app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp> as semio_framework::ToolJobFactory>::Payload;
+    type Job = <semio_s_plugin_norm_app_surface::NormBoundedCommandJobFactory<Vdi3805PlayApp> as semio_framework::ToolJobFactory>::Job;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         semio_framework::ToolJobFactory::keys(&self.0)
@@ -235,7 +243,7 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
     }
 
     fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
-        crate::app_surface::norm_bounded_contract()
+        semio_s_plugin_norm_app_surface::norm_bounded_contract()
     }
 
     fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
@@ -255,17 +263,17 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Vdi3805BoundedCommandJobFactory {
     type Owner = semio_framework_plugin::EditorApp<Vdi3805PlayApp>;
-    const TOOL_IDS: &'static [&'static str] = crate::app_surface::NORM_RETAINED_TOOL_IDS;
+    const TOOL_IDS: &'static [&'static str] = semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as ArtifactEditor>::DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = crate::app_surface::NORM_PUBLICATION_CONTRACTS;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = semio_s_plugin_norm_app_surface::NORM_PUBLICATION_CONTRACTS;
 }
 
-impl crate::app_surface::NormRetainedEditor for Vdi3805PlayApp {
+impl semio_s_plugin_norm_app_surface::NormRetainedEditor for Vdi3805PlayApp {
     type Family = Vdi3805Family;
 
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
 
-    fn selected_check_window_mutation(command: &Vdi3805Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
+    fn selected_check_window_mutation(command: &Vdi3805Command) -> Option<semio_s_plugin_norm_results_config::NormResultsWindowConfigMutation> {
         match command {
             Vdi3805Command::SetSelectedCheckIndex(payload) => Some(selected_check::window_mutation(payload)),
             _ => None,
@@ -284,16 +292,16 @@ impl crate::app_surface::NormRetainedEditor for Vdi3805PlayApp {
 /// belongs to the app that edits the artifact, not the artifact's own `🧬️schema`.
 pub struct Vdi3805Family;
 
-impl crate::document::NormFamily for Vdi3805Family {
+impl semio_s_plugin_norm_compliance::NormFamily for Vdi3805Family {
     type Document = Vdi3805Snapshot;
     type Mutation = Vdi3805Mutation;
 
-    fn family_id() -> crate::document::NormFamilyId {
-        crate::document::NormFamilyId::Vdi3805
+    fn family_id() -> semio_s_plugin_norm_compliance::NormFamilyId {
+        semio_s_plugin_norm_compliance::NormFamilyId::Vdi3805
     }
 
-    fn evaluate(document: &Vdi3805Snapshot) -> crate::document::CheckReport {
-        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
+    fn evaluate(document: &Vdi3805Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
+        semio_s_artifact_norm_vdi3805_inferences::evaluate(document)
     }
 }
 
@@ -302,12 +310,12 @@ pub type Host = NormHost<Vdi3805Family>;
 
 //#region ðï¸Manifest
 pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::VDI3805_DIALECT)
+    Editor::builder(semio_s_artifact_norm_vdi3805_model::VDI3805_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifact_kind())
-            .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
+            .artifact_kind(semio_s_artifact_norm_vdi3805_model::artifact_kind())
+            .io(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
-            .default_mode_id(crate::app_surface::MODE_EDIT)
+            .default_mode_id(semio_s_plugin_norm_app_surface::MODE_EDIT)
             .window_kind_def(inputs::definition())
             .window_kind_def(results::definition())
             .default_layout(edit_mode::layout())
@@ -378,3 +386,47 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🪢️Mounts
+#[path = "🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]
+    pub mod apply_remedy;
+    #[path = "🎮️commands/🧮️evaluate/🦀️.rs"]
+    pub mod evaluate;
+    #[path = "🎮️commands/➕insert-item/🦀️.rs"]
+    pub mod insert_item;
+    #[path = "🎮️commands/➖remove-item/🦀️.rs"]
+    pub mod remove_item;
+    #[path = "🎮️commands/☑️selected-check/🦀️.rs"]
+    pub mod selected_check;
+    #[path = "🎮️commands/✏️set-field/🦀️.rs"]
+    pub mod set_field;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/📚️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🗿️artifact/🦀️.rs"]
+    pub mod document;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️Mounts

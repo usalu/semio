@@ -1,5 +1,5 @@
 //! 📏️ Original retained turns intersect every borrowed incoming native ceiling.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+use crate::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
 use std::panic::{catch_unwind,AssertUnwindSafe};
 macro_rules! maximum_law{
  ($name:ident,$control:ident)=>{
@@ -66,5 +66,5 @@ macro_rules! detached_receiving_law{
  }
  };
 }
-detached_receiving_law!(native_decode_scoped_maximum_detached_receiving_preserves_original_recipient,NativeDecodeControl,semio_framework_value::native_decoding::NativeForwardedDecodeControl,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient);
-detached_receiving_law!(native_encode_scoped_maximum_detached_receiving_preserves_original_recipient,NativeEncodeControl,semio_framework_value::native_encoding::NativeForwardedEncodeControl,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient);
+detached_receiving_law!(native_decode_scoped_maximum_detached_receiving_preserves_original_recipient,NativeDecodeControl,crate::native_decoding::NativeForwardedDecodeControl,crate::native_decoding::NativeDecodeRetirementRecipient);
+detached_receiving_law!(native_encode_scoped_maximum_detached_receiving_preserves_original_recipient,NativeEncodeControl,crate::native_encoding::NativeForwardedEncodeControl,crate::native_encoding::NativeEncodeRetirementRecipient);

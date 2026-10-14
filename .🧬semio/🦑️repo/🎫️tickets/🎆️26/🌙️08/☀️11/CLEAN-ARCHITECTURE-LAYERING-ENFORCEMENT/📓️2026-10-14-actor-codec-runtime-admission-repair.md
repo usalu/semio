@@ -1,0 +1,42 @@
+# Actor Codec Runtime Admission and Direct Renderer Receiving
+
+Read the input `actor-codec-current-boundary-readonly.md` before this repair. Root Actor GUI9 was active when edits began and subsequently ended at the original600s deadline before assertions; it cannot qualify this changed source. No duplicate frontend/initializer or native capture was launched by this owner. Root's original30/60/30k consumer phases and600000 parent remain unchanged. Ticket and goal remain open.
+
+## Defining Boundary
+
+The closed schema now correlates each operation with exactly its matching success projection or fault. A separate constant owner rule declares exact own data answer arms, exact pack/spr pair fields and exact two-string tuple keys; no coercion or replacement is admitted. The language-neutral runtime corpus has23 valid/malformed/mismatched cases in addition to the original7 component cases and8 projection negatives.
+
+The General zero-import codec leaf defines `admitActorCodecAnswerV1(operation,unknown)`. It uses ArrayBuffer.isView plus the intrinsic TypedArray Symbol.toStringTag getter to admit genuine Uint8Array views across realms. Signed/clamped/DataView/array/tag-spoof values refuse. Exactly one own data `ok` or `fault` arm is required; genesis requires exactly own pack/spr unsigned-byte views; mirror requires the original exact2-string array with no extra own keys. Accessor answer fields refuse without invoking them. Validation returns the same answer owner. Success, pair, pack, spr, mirror and fault views are preserved without reconstruction. No32-byte hash rule is invented; empty genuine views remain valid under the existing schema.
+
+`actorCodecAnswer` now validates every actual guest success before wrapping it and recognizes valid original guest fault views through the same cross-realm boundary. Invalid fault payloads and host traps rethrow the original error. Missing selected exports refuse as unexported; unknown operations remain explicit refusals. Existing success/answer type names now carry optional operation parameters while their default ClosedAnswer union is unchanged. The new admission and defining source serializer exports are explicitly published through ./codec and both exact public-facet schema/fixture rosters.
+
+The narrow ShardClient.codec method receives transport unknown and admits it for the original request operation before returning the same owner. No private transport state/chain/settlement refactor was made. Product materialization calls actorCodecRuntimeSourceV1, which embeds the complete self-contained defining lexical factory with both admission and the existing codec arm. Product renderer's handle codec is operation-correlated; ProgramBridge consumes those defining hash/mirror results directly. The competing realm-local byte predicate and tuple reconstruction functions are removed.
+
+## Authored Qualification Laws
+
+The existing General codec suite compares23 operation-correlated runtime cases against independent Ajv and SQLite, retains Node Buffer byte projection comparisons, tests original input-pair identity, genuine VM foreign-realm bytes/pairs/mirrors/faults, inlined zero-import parity, host-trap identity, missing export refusal, wrong byte brands, accessor/extra/symbol arms and the actual narrow ShardClient receiving method with an explicit test transport. These are boundary/method laws, not a whole Worker/native proof.
+
+The existing Product lifetime suite evaluates admission and codec arms extracted with the independent TypeScript AST from the actual generated component bridge. It tests foreign-realm hash/pair/mirror/fault owners and wrong-operation refusal. An additional General law checks identifier-minified factory serialization. Worker relay and renderer direct receiving are source guards in that law; they do not establish a complete production component or worker execution. Its existing owner is `bun repo run @semio-tech/framework-plugin-host:test-original-actor-boundary-source`, original30/30k source phases. The General law remains mounted in `bun repo run @semio-tech/framework-actor:canonical-architecture`, with unchanged original phases. No new executable command or GUI registration was needed.
+
+## Executed Probes and Limits
+
+Current esbuild syntax transforms accepted six edited TS source/test owners. A semantic TypeScript API probe found two generic return-correlation errors in the leaf; explicit original-request generic arguments fixed them. A subsequent General codec-test/transitive ShardClient semantic probe reported zero diagnostics, including the exact Root Equal<ShardCodecAnswer,ClosedAnswer> assertion. This was a compiler API probe, not the registered strict phase or a Bun-erased type claim.
+
+A current defining-leaf Node/esbuild VM probe ran all23 portable cases against independent Ajv/Buffer and actual foreign-realm owner identities. It confirmed the expected admission decisions and original success/input ownership. This was a scoped leaf probe; no registered test body or whole source/consumer/native acceptance is claimed.
+
+Earlier Product semantic probes reported no diagnostics in the edited renderer/lifetime law but found a transitive Repo cache opening TS2554. The concurrent storage owner repaired the canonical two-argument receiving port. A fresh final Product compiler API probe of the renderer and actual generated lifetime law traversed1146 sources and returned zero diagnostics. Its exact inputs and result are retained in `🗑️generated/actor-codec-current/product-semantic-probe.json`. This owner did not change storage code; this probe does not qualify the actual Product route's registered strict and runtime law corpus.
+
+Every registered General/Product test, generated full bridge/worker integration, Root source and native acceptance remains unqualified for this source frontier. Exact12-file SHA/byte roster and new public symbol are retained in `actor-codec-runtime-admission-inputs.json`. No external runtime library, codec forwarding alias, result coerce/clone/default, cache/resource bypass or source authority reset was introduced. Root-owned Bun scope schemas/publication/SyncScript and launch entries are untouched.
+
+## Concurrent TOML Evidence
+
+Flow supplied a fresh presentation source route terminal before discovery/TOML: graph-store lease cleanup EFAULT at process leases/🟦️.ts:231, log `🗑️generated/presentation-source.log`. It provides no new exact TOML input. The earlier path/digest diagnostic remains ready; do not infer a historical offending source or qualify this codec from unrelated queue/lease receipts.
+
+
+## Confirmed Generated Linkage Repair
+
+A current identifier-minified esbuild probe demonstrated the initially authored separate function.toString embedding was unsound: the actor arm referred to a minified binding `s` while the generated helper retained its long name, causing ReferenceError. The final defining leaf encloses admission, brand/data predicates and guest answering in one private lexical factory. Predicates/intrinsic brand getter are created once per boundary, avoiding per-call helper allocation. actorCodecRuntimeSourceV1 serializes that entire factory; identifier-renamed internal bindings remain together. The generated public bindings retain their exact contract names. This serializer is the second necessary new runtime export; both actual facet roster assets were updated. No old embedding compatibility path remains.
+
+Current normal and identifier-minified factory probes succeed with original owner identity. The final retained probe runs23 cases against independent Ajv, Node Buffer and actual Node24 SQLite (zero mismatches), and verifies genuine VM foreign hash/pair/mirror/fault ownership through the minified serializer. Exact current leaf SHA and outcomes are retained in `🗑️generated/actor-codec-current/probes.json`. This is a leaf/serializer probe, not registered General/Product/worker/native acceptance. A final General codec-test/transitive ShardClient semantic probe again reported zero diagnostics including the default ClosedAnswer equality. No Bun-only type proof is asserted.
+
+Read-only source measurement: the private defining factory is3409UTF8 bytes/Unicode scalar characters; its normal generated serialization is3075bytes/scalars. This records current size without changing any caller Source bounds. Final source frontier is stable; original registered tests remain necessary and uncollected.

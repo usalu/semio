@@ -2,8 +2,8 @@
 //! replaced from `base`, never a snapshot clone. The document has exactly one stock (no target to
 //! be missing); Warning `no-op` when the label is unchanged.
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStockLabel, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

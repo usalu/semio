@@ -1,6 +1,7 @@
-use super::ChangeConcentratedForce;
-use crate::{En1996Diff, En1996Snapshot};
-use crate::diff::{En1996ConcentratedDelta, En1996ConcentratedPatch, En1996LoadCaseDelta, En1996LoadCasePatch, En1996WallDelta, En1996WallPatch};
+use crate::change_concentrated_force::ChangeConcentratedForce;
+use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
+use semio_s_artifact_norm_en1996_diff::{En1996ConcentratedDelta, En1996ConcentratedPatch, En1996LoadCaseDelta, En1996LoadCasePatch, En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeConcentratedForce, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.wall_index >= base.walls.len() || payload.load_case_index >= base.walls[payload.wall_index].load_cases.len() || payload.index >= base.walls[payload.wall_index].load_cases[payload.load_case_index].concentrated.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid concentrated index."), Vec::<String>::new());

@@ -4,10 +4,52 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::{LowpolySnapshot, LowpolyTransform};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod bounds {
+    #[path = "📦bounds/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
+                            pub mod inferences;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolySnapshot, snapshot::LowpolyTransform};
 use framework_schema::ArtifactSchema;
 
-use super::bounds::scene_bounds;
+use crate::bounds::scene_bounds;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a lowpoly snapshot. Today: object count and the 3d bounding box
 /// across every object's `transform.position` (see `📦bounds/🦀️.rs`). A simple
@@ -63,7 +105,7 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::bounds::LowpolyBounds;
+pub use crate::bounds::LowpolyBounds;
 //#endregion 🔁️Re-exports
 
 /// 🔄️ Semantic XYZ Euler degrees → quaternion `[x,y,z,w]`.

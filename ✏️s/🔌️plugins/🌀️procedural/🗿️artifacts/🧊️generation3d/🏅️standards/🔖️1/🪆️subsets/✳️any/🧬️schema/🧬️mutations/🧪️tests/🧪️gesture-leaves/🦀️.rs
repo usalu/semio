@@ -5,14 +5,15 @@
 
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 use semio_s_artifact_procedural_3d_mutations::*;
+use semio_s_artifact_procedural_3d_mut_transforms::{generation3d_number_value, generation3d_param_number, generation3d_param_vector, generation3d_vector_value};
 use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
-use semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
-use semio_s_artifact_procedural_3d_mutations::drag_transforms::drag_transforms;
-use semio_s_artifact_procedural_3d_mutations::move_nodes::move_nodes;
-use semio_s_artifact_procedural_3d_mutations::rotate_transforms::rotate_transforms;
-use semio_s_artifact_procedural_3d_mutations::scale_transforms::scale_transforms;
+use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::change_slider_value;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::drag_transforms;
+use semio_s_artifact_procedural_3d_mut_widgets::move_nodes::move_nodes;
+use semio_s_artifact_procedural_3d_mut_transforms::rotate_transforms::rotate_transforms;
+use semio_s_artifact_procedural_3d_mut_transforms::scale_transforms::scale_transforms;
 use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
 
@@ -324,7 +325,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
     for (edited_at, edited) in [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5)), (5, change_widget_input(ROTATE, "angle", WidgetInputValue::Number(1.5)))] {
         {
             let base = base([1.0, 1.0, 1.0]);
-            let mut store = crate::store_fixture::document_store(base.clone()).await;
+            let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(base.clone()).await;
             for mutation in &log {
                 store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
             }
@@ -351,7 +352,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
             for state in [preview, before, fresh, base] {
                 state.retire_cold();
             }
-            crate::store_fixture::close(store);
+            semio_s_artifact_procedural_3d_testkit::store_fixture::close(store);
         }
     }
 }
@@ -364,7 +365,7 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
     use protocol::OpBinary;
     {
         let base = base([0.0; 3]);
-        let mut store = crate::store_fixture::document_store(base.clone()).await;
+        let mut store = semio_s_artifact_procedural_3d_testkit::store_fixture::document_store(base.clone()).await;
         for mutation in [change_slider_value("height", 7.5), drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0])] {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
@@ -379,7 +380,7 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
         assert!(edited.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == semio_framework_diagnostic::Severity::Error), "{edited:?}");
         drop(result);
         base.retire_cold();
-        crate::store_fixture::close(store);
+        semio_s_artifact_procedural_3d_testkit::store_fixture::close(store);
     }
 }
 //#endregion ⏪️TimeTravel

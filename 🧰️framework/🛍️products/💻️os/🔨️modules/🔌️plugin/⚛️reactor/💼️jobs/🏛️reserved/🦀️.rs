@@ -9,7 +9,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
 
 /// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry: a genuine original admission under a

@@ -1,193 +1,52 @@
-pub(crate) mod context {
-    use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
-    pub type Generation2dApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
-    
-    /// 🧪️ The ONE app fixture. This app publishes `bounded_first_step_tool_proofs!` factories, so the
-    /// registryless `context::new_app` cannot satisfy the framework's tool-proof catalog: `migrated_tool_ids`
-    /// reads an EMPTY `AppActionRegistry` while the generated catalog lists all 21 rows, and every bounded
-    /// proof is rejected with `interactive-job.catalog-authority` before the app is even constructed. Every
-    /// fixture therefore goes through the registry variant, exactly as the `🧊️generation3d` sibling does
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.3).
-    pub async fn app() -> Generation2dApp {
-        app_with_registry().await
-    }
-    
-    pub async fn app_with_registry() -> Generation2dApp {
-        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-        app.bind_instance_id(1).await;
-        app
-    }
-    
-    /// 📸️ `PluginApp::snapshot` hands back an OWNED projection whose `fixture.layout` is a live
-    /// `OrderedMap` root — the bundled 2d default document carries layout entries, so a bare
-    /// `app.snapshot().expect(..)` temporary panics on drop. Every read goes through this closing read.
-    pub fn snapshot_read(app: &Generation2dApp) -> crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead {
-        crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(app.snapshot().expect("Generation2d fixture app snapshot"))
-    }
-    
-    /// 🕹️ Dispatch AND settle. Every generation2d action is `InteractiveJobClassification::Migrated`, so
-    /// `dispatch_typed` only ENQUEUES a retained job — the document, config and transient lanes are
-    /// published when the host drives the ladder. `settle_registered_typed_operation` is that host loop.
-    pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("Generation2d dispatched operation settles");
-        result
-    }
-    
-    /// 🧹️ Walks the fixture app to its terminal-empty ownership witness — a registered app owns an
-    /// `ArtifactStore` and a fixed owner registry, both of which reject a bare drop.
-    pub fn close(mut app: Generation2dApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-    }
-    
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_editor_commands::add_generation;
+use semio_s_artifact_procedural_2d_editor_commands::add_widget;
+use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_down;
+use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_move;
+use semio_s_artifact_procedural_2d_editor_commands::canvas_pointer_up;
+use semio_s_artifact_procedural_2d_editor_commands::canvas_wheel;
+use semio_s_artifact_procedural_2d_editor_commands::connect_media_ports;
+use semio_s_artifact_procedural_2d_editor_commands::enter_generate;
+use semio_s_artifact_procedural_2d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick;
+use semio_s_artifact_procedural_2d_editor_commands::generation;
+use semio_s_artifact_procedural_2d_editor_commands::move_media_node;
+use semio_s_artifact_procedural_2d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_2d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_2d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_2d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_2d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_2d_editor_commands::reorganize;
+use semio_s_artifact_procedural_2d_editor_commands::select_generation;
+use semio_s_artifact_procedural_2d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_2d_editor_commands::set_contributions;
+use semio_s_artifact_procedural_2d_editor_commands::set_eval_outputs;
+use semio_s_artifact_procedural_2d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_2d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_mode_edit::windows::flow;
+use semio_s_artifact_procedural_2d_mode_edit::windows::preview;
+use semio_s_artifact_procedural_2d_mode_edit as edit;
+use semio_s_artifact_procedural_2d_mode_generate::windows::form;
+use semio_s_artifact_procedural_2d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_2d_mode_generate as generate;
+use semio_s_artifact_procedural_2d_editor_panels::document;
+use semio_s_artifact_procedural_2d_terminology::generation2d_labels;
+use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalTarget;
+use semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Effect;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaType;
 
-    /// 🎯️ Selects `ids` in the framework-owned `graph` domain — the twin of generation3d's helper.
-    /// `interactionSelect` is a `FrameworkInteractionSelectJob`, so a bare `handle_action` only
-    /// admits; settle the reserved tool job before any selection-fed read (context menu, delete).
-    pub async fn select_graph(app: &mut Generation2dApp, granularity: &str, ids: &[&str]) -> InvocationResult {
-        let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
-        let targets_json = serde_json::to_string(&targets).expect("selection targets");
-        let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
-        let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interaction selection admitted");
-        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
-    }
-
-    pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
-        render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
-    }
-    
-    /// 🌍️ The localized twin of [`render`] — labels resolve off `ViewModel::locale`, so a translation
-    /// law has to hand the renderer the locale it is asserting.
-    pub async fn render_with_view(app: &mut Generation2dApp, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
-    }
-    
-    /// ✏️ Adapts `create_generation2d_app`'s `AppDefinition` (contract §2.4) into the `App {
-    /// definition, examples }` shape `context::assert_declared_actions_bridge_to_commands` still
-    /// expects — framework test context gap, not modifiable here (`🧰️framework/**` is outside this
-    /// packet's lease).
-    pub fn generation2d_manifest_for_tests() -> App {
-        App { definition: create_generation2d_app(), examples: Vec::new() }
-    }
-
-    semio_framework_plugin::history_edit_acceptance_law!("procedural", Generation2dPlayApp, generation2d_manifest_for_tests, "../..");
-    
-    /// 🧹️ `FlowEvalSession` rejects a live drop, so a test that owns one must walk it across the close
-    /// boundary itself — the same `begin_close` + granted `close_step` loop
-    /// `Generation2dInstanceOperationOwner::maintenance_step` runs in production.
-    pub fn retire_flow_eval_session(mut session: FlowEvalSession) {
-        close_flow_session(&mut session);
-    }
-    
-    /// 🏛️ The edit layout's shell roster — flow window current, edit preview attached — and the preview's own view.
-    pub fn edit_shell_views() -> (ViewModel, ViewModel) {
-        let roster = vec![
-            semio_framework::ViewWindowInstance { id: "flow-1".into(), window_kind_id: flow_window::GENERATION2D_PLAY_WINDOW_MAIN.into() },
-            semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into() },
-        ];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        (view.for_window_instance("flow-1").expect("flow window instance"), view.for_window_instance("preview-1").expect("preview window instance"))
-    }
-
-    /// 🏛️ The generate layout's shell roster with TWO generate previews — generations window current —
-    /// and each preview's own view.
-    pub fn generate_shell_views() -> (ViewModel, Vec<ViewModel>) {
-        let roster = vec![
-            semio_framework::ViewWindowInstance { id: "generations-1".into(), window_kind_id: generations::GENERATION2D_PLAY_WINDOW_GENERATIONS.into() },
-            semio_framework::ViewWindowInstance { id: "preview-a".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
-            semio_framework::ViewWindowInstance { id: "preview-b".into(), window_kind_id: generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into() },
-        ];
-        let view = ViewModel { window_instances: roster, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-        (view.for_window_instance("generations-1").expect("generations window instance"), ["preview-a", "preview-b"].iter().map(|id| view.for_window_instance(id).expect("generate preview window instance")).collect())
-    }
-
-    /// 🧾️ What one driven `previewEval` run did: its hops and their windows, the run actions fed back and
-    /// the state it rests in.
-    #[derive(Clone, Debug, Default)]
-    pub struct PreviewRunReceipt {
-        pub hops: usize,
-        pub hop_windows: Vec<String>,
-        pub run_actions: Vec<String>,
-        pub state: Option<String>,
-    }
-
-    /// 🚦️ The framework run actions an effect list carries.
-    pub fn run_actions(effects: &[semio_framework_plugin::Effect]) -> Vec<String> {
-        effects.iter().filter_map(|effect| match effect {
-            semio_framework_plugin::Effect::DispatchAction { action, .. } if semio_framework_plugin::is_tool_run_action_id(action) => Some(action.clone()),
-            _ => None,
-        }).collect()
-    }
-
-    /// 🔁️ The served `previewEval` loop, nothing hand-addressed: `pending_effects` off the shell roster,
-    /// every run action fed back through `PluginApp::handle_action`, every hop the run's port hands the
-    /// host redispatched as the typed command the shell sends. The demo operators are uncontributed in a
-    /// test binary, so no hop parks an extension invocation. Stops once nothing is owed or pending and
-    /// the run rests. `action_meta` names the shell view the roster is read off and the bound instance.
-    pub async fn drive_preview_run(app: &mut Generation2dApp, action_meta: &semio_framework_plugin::ActionMeta, initial: &[semio_framework_plugin::Effect]) -> PreviewRunReceipt {
-        use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
-        use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
-        let shell_view = action_meta.view_state.as_ref();
-        let mut receipt = PreviewRunReceipt::default();
-        let mut effects: Vec<semio_framework_plugin::Effect> = initial.to_vec();
-        for _ in 0..100_000 {
-            effects.extend(Box::pin(app.pending_effects(shell_view)).await);
-            if app.has_pending_typed_operations() {
-                effects.extend(Box::pin(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.expect("the run's driver turns settle").effects);
-            }
-            let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
-                semio_framework_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
-                _ => None,
-            }).collect();
-            receipt.state = app.tool_run_presence().map(|presence| presence.state.wire_name().to_string());
-            if dispatches.is_empty() && !app.has_pending_typed_operations() && receipt.state.as_deref().is_none_or(|state| matches!(state, "complete" | "aborted" | "faulted" | "finalized")) {
-                return receipt;
-            }
-            for (action, args) in dispatches {
-                if semio_framework_plugin::is_tool_run_action_id(&action) {
-                    receipt.run_actions.push(action.clone());
-                    Box::pin(app.handle_action(&action, args.as_ref(), action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
-                    continue;
-                }
-                if action == "flowEvalTick" {
-                    receipt.hops += 1;
-                    receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string());
-                }
-                let arguments = match args.as_ref() {
-                    Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().cloned().collect(),
-                    _ => std::collections::BTreeMap::new(),
-                };
-                let app_id = app.app_id().await.to_string();
-                let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action.clone() }, arguments };
-                Box::pin(app.handle_command(&invocation, None, action_meta)).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
-                let hop = Box::pin(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.expect("retained publication");
-                assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted: args={args:?}");
-                effects.extend(hop.effects);
-            }
-        }
-        panic!("the previewEval run did not settle within 100 000 host turns; last state {:?}", receipt.state);
-    }
-
-    /// 📜️ The empty `HistoryView` a command-handler unit test hands `ArtifactView::new` — built here once
-    /// because `HistoryView` (`🧰️framework/…/🔌️plugin/🦀️.rs`) derives no `Default`.
-    pub fn empty_history_view() -> semio_framework_plugin::HistoryView {
-        semio_framework_plugin::HistoryView {
-            columns: Vec::new(),
-            can_undo: false,
-            can_redo: false,
-            active_alternative_id: None, alternatives: Vec::new(),
-            current_checkpoint_id: None,
-            commands: Vec::new(),
-            command_filter: semio_framework_plugin::app::HistoryCommandFilter::default(),
-        }
-    }
-}
-
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, app_with_registry, close, snapshot_read};
+use semio_s_artifact_procedural_2d_editor::*;
+use crate::app_fixture::{app, app_with_registry, close, snapshot_read};
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip;
 use semio_framework_plugin::PluginApp;
@@ -210,7 +69,7 @@ fn production_initial_snapshot(label: &str) -> Generation2dSnapshot {
 }
 
 fn production_mutations() -> Vec<Generation2dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::*;
+    use semio_s_artifact_procedural_2d_mutations::*;
     let params = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7))).insert(
         "nested",
         semio_framework_artifact_flow_flow::neural::Value::Dictionary(
@@ -248,13 +107,13 @@ fn production_hex(bytes: &[u8]) -> String {
 
 /// 📸️ Every owned production projection this law holds is a CLOSING read — `fixture.layout` is a
 /// live `OrderedMap` root that aborts the process on a bare drop.
-fn production_read(snapshot: Generation2dSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead {
-    crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(snapshot)
+fn production_read(snapshot: Generation2dSnapshot) -> semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead {
+    semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(snapshot)
 }
 
 fn production_semantic_digest(snapshot: &Generation2dSnapshot) -> [u8; 32] {
     let mut digest = store::ArtifactStoreInitializationDigest::new(b"generation2d.production-law.semantic");
-    digest.observe(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(snapshot));
+    digest.observe(&semio_s_artifact_procedural_2d_io_binary::snapshot::encode(snapshot));
     digest.finish()
 }
 
@@ -265,17 +124,17 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
     let mut mutation_hex = Vec::new();
     mutation_hex.try_reserve_exact(mutations.len()).expect("P2 production mutation owner preflight");
     for mutation in &mutations {
-        mutation_hex.push(production_hex(&crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("P2 production mutation encoding")));
+        mutation_hex.push(production_hex(&semio_s_artifact_procedural_2d_io_binary::mutations::encode_op(mutation).expect("P2 production mutation encoding")));
     }
     let mut expected = production_initial_snapshot(label);
-    crate::central_apply::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
+    semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_apply_retained_mutations_for_test(&mut expected, &mutations);
     let expected_digest = production_semantic_digest(&expected);
-    crate::central_apply::generation2d_retire_mutations_cold(mutations);
+    semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire_mutations_cold(mutations);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": GENERATION_2D_SCHEMA,
         "id": "generation2d-production-mounted-law",
         "vcs": {
-            "initialPack": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(&snapshot)),
+            "initialPack": production_hex(&semio_s_artifact_procedural_2d_io_binary::snapshot::encode(&snapshot)),
             "edits": [{
                 "id": "generation2d-production-all14-edit",
                 "actor": "generation2d-production-law",
@@ -305,14 +164,14 @@ struct ProductionLease(semio_framework_plugin::ArtifactEnvelopeDecodeOperationHa
 
 impl Drop for ProductionLease {
     fn drop(&mut self) {
-        crate::host::owned::generation2d_release_publication_authority(self.0.operation, self.0.generation);
+        semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(self.0.operation, self.0.generation);
     }
 }
 
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
-    crate::host::owned::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::host::owned::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::host::owned::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::owned::GENERATION2D_MOUNTED_CONTROL_CREDITS })
+    semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_CONTROL_CREDITS })
     .expect("P2 production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -326,7 +185,7 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        crate::host::owned::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
+        semio_s_artifact_procedural_2d_host::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P2 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P2 production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("P2 production load advancement");
@@ -345,7 +204,7 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     // 🧹️ Registry-backed, never `VcsArtifactApp::new` — this app publishes
     // `bounded_first_step_tool_proofs!`, so a registryless instance faults at construction with
     // `interactive-job.catalog-authority` and its unwind aborts the binary.
-    let _serial = crate::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
     let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
@@ -360,11 +219,15 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     assert!(snapshot.host_snapshot.layout.contains_key("move-target"));
     assert!(!snapshot.host_snapshot.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
-    assert!(crate::host::owned::generation2d_release_publication_authority(handle.operation, handle.generation));
+    assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(handle.operation, handle.generation));
     drop(lease);
     close(accepted);
 
-    use crate::host::owned::Generation2dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::Missing;
+    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongBase;
+    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongGeneration;
+    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongOperation;
+    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongParent;
     for (hostile, expected_code) in [
         (Missing, "generation2d-publication.authority-missing"),
         (WrongOperation, "generation2d-publication.wrong-operation"),
@@ -380,15 +243,15 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         candidate.retire_cold();
         let handle = admit_production_envelope(&mut app, &wire);
         let lease = ProductionLease(handle);
-        crate::host::owned::generation2d_arm_publication_hostile(handle.operation, hostile);
+        semio_s_artifact_procedural_2d_host::generation2d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::host::owned::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = production_read(app.snapshot().expect("last-valid P2 snapshot after rejected candidate"));
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);
         assert_eq!(&*retained, &*last_valid);
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
-        assert!(crate::host::owned::generation2d_release_publication_authority(handle.operation, handle.generation));
+        assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(handle.operation, handle.generation));
         drop(lease);
         close(app);
     }
@@ -584,7 +447,7 @@ fn demo_owner(window: (&str, &'static str)) -> semio_framework_plugin::ArtifactI
         .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let (sessions, link) = owner.parts()?;
             let windows = [(window.0, window.1, PreviewEvalTarget::Document)];
-            crate::preview_eval::preview_eval_run_effects(sessions, link, &windows, &Default::default(), None, true);
+            semio_s_artifact_procedural_2d_preview_eval::preview_eval_run_effects(sessions, link, &windows, &Default::default(), None, true);
             Ok(())
         })
         .expect("the demo owner attaches its preview");
@@ -592,7 +455,7 @@ fn demo_owner(window: (&str, &'static str)) -> semio_framework_plugin::ArtifactI
 }
 
 fn retire_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {
-    crate::retirement_driver::close_instance_owner::<Generation2dInstanceOperationOwner>(handle, "the demo owner");
+    semio_s_artifact_procedural_2d_testkit::retirement_driver::close_instance_owner::<Generation2dInstanceOperationOwner>(handle, "the demo owner");
 }
 
 /// ⚖️ LAW (`⏯️preview-eval-run.json` `demoRun`): the run job over the bundled demo — every hop performed by
@@ -601,7 +464,9 @@ fn retire_owner(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerH
 /// overruns the interactive ceiling.
 #[test]
 fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ceiling() {
-    use crate::retirement_driver::{close_job, step_once, Stepped};
+    use semio_s_artifact_procedural_2d_testkit::retirement_driver::close_job;
+    use semio_s_artifact_procedural_2d_testkit::retirement_driver::step_once;
+    use semio_s_artifact_procedural_2d_testkit::retirement_driver::Stepped;
     use semio_framework_job::{Generation, OperationId};
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTick, ToolRunTraceOp};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⏯️preview-eval-run.json")).expect("run fixture");
@@ -612,8 +477,8 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     let handle = demo_owner((window_id, kind));
     let port = semio_framework_plugin::ToolRunJobPort::default();
     let identity = ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32]);
-    let mut job = crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port.clone(), identity).expect("the run job attaches");
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot());
+    let mut job = semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port.clone(), identity).expect("the run job attaches");
+    let snapshot = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot());
     let history = context::empty_history_view();
     let config = Generation2dConfig::default();
     let tick = Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.into(), window_kind_id: kind.into() });
@@ -644,12 +509,12 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     for op in ticks.iter().flat_map(|tick| tick.trace.iter()).flat_map(|page| page.ops.iter()) {
         if let ToolRunTraceOp::Upsert { key, verdict, reason, .. } = op {
             verdicts.insert(format!("{verdict:?}"));
-            final_nodes.insert(*key, crate::preview_eval::PreviewEvalRunReason::ALL[usize::from(*reason)].id());
+            final_nodes.insert(*key, semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunReason::ALL[usize::from(*reason)].id());
         }
     }
-    let expected_nodes: std::collections::BTreeMap<u64, &str> = expected["finalNodes"].as_object().unwrap().iter().map(|(node, reason)| (crate::preview_eval::preview_eval_node_entity(node), reason.as_str().unwrap())).collect();
-    let settle_reasons: Vec<&str> = ticks.iter().flat_map(|tick| tick.steps.iter()).map(|step| crate::preview_eval::PreviewEvalRunReason::ALL[usize::from(step.reason)].id()).collect();
-    let hops_counted = ticks.last().and_then(|tick| tick.progress.as_ref()).and_then(|progress| progress.counters.iter().find(|counter| counter.counter == crate::preview_eval::PreviewEvalRunCounter::Hops.index())).map_or(0, |counter| counter.value);
+    let expected_nodes: std::collections::BTreeMap<u64, &str> = expected["finalNodes"].as_object().unwrap().iter().map(|(node, reason)| (semio_s_artifact_procedural_2d_preview_eval::preview_eval_node_entity(node), reason.as_str().unwrap())).collect();
+    let settle_reasons: Vec<&str> = ticks.iter().flat_map(|tick| tick.steps.iter()).map(|step| semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunReason::ALL[usize::from(step.reason)].id()).collect();
+    let hops_counted = ticks.last().and_then(|tick| tick.progress.as_ref()).and_then(|progress| progress.counters.iter().find(|counter| counter.counter == semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunCounter::Hops.index())).map_or(0, |counter| counter.value);
     println!("[STATS] demoRun ticks={} hops_performed={hops_performed} hops_counted={hops_counted} worst_drive_step_us={worst_us} verdicts={verdicts:?} steps={settle_reasons:?}", ticks.len());
     assert_eq!(settled, Stepped::Complete, "the run completes");
     assert_eq!(final_nodes, expected_nodes, "every node's final traced verdict");
@@ -665,13 +530,14 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
 /// armed window owes nothing afterwards, so no poll restarts what the user stopped.
 #[test]
 fn closing_an_unsettled_run_job_quiesces_its_window() {
-    use crate::retirement_driver::{close_job, step_once};
+    use semio_s_artifact_procedural_2d_testkit::retirement_driver::close_job;
+    use semio_s_artifact_procedural_2d_testkit::retirement_driver::step_once;
     use semio_framework_job::{Generation, OperationId};
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity};
     let window_id = "preview-1";
     let handle = demo_owner((window_id, edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW));
     let port = semio_framework_plugin::ToolRunJobPort::default();
-    let mut job = crate::preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32])).expect("the run job attaches");
+    let mut job = semio_s_artifact_procedural_2d_preview_eval::PreviewEvalRunJob::<Generation2dInstanceOperationOwner>::new(handle.clone(), port, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 1 }, [0; 32])).expect("the run job attaches");
     let mut sequence = 0;
     let started = semio_framework_job::default_now_us().expect("clock");
     let _ = step_once(&mut job, 1, started + semio_framework_job::INTERACTIVE_LANE_WALL_US * 8, &semio_framework_job::root_cancel_token(), OperationId(1), Generation(0), &mut sequence);
@@ -757,7 +623,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d::default() }),
         Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
-        Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
+        Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_2d_examples::demo::ID.into() }),
         Generation2dCommand::Generate(enter_generate::Generate {}),
         Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: "{}".into() }),
         Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
@@ -881,7 +747,7 @@ async fn add_widget_undo_redo_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_widget_moves() {
     let fixture = app().await;
-    let widgets: Vec<String> = snapshot_read(&fixture).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let widgets: Vec<String> = snapshot_read(&fixture).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
@@ -890,7 +756,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
     // `interactive-job.catalog-authority` and its unwind aborts the binary.
     semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation2d-convergence",
-        || async { crate::editor::generation2d::unit_tests::context::generation2d_manifest_for_tests() },
+        || async { crate::app_fixture::generation2d_manifest_for_tests() },
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w0.clone(), x: 111.0, y: 5.0 }),
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: w1.clone(), x: 222.0, y: 6.0 }),
         move |app| {
@@ -903,7 +769,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::generation2d::unit_tests::context::render;
+    use crate::app_fixture::render;
     let mut app = app().await;
     let rendered = render(&mut app, "generation2d.play.nope").await;
     close(app);
@@ -932,7 +798,7 @@ const GENERATION2D_BODY_KEYS: [&str; 8] = [
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
 #[semio_framework_async_macros::async_test]
 async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
-    use crate::editor::generation2d::unit_tests::context::render;
+    use crate::app_fixture::render;
     let bound = semio_framework_ui_contract::UI_RESIDENT_SURFACE_BYTES;
     let mut app = app_with_registry().await;
     for body_key in GENERATION2D_BODY_KEYS {
@@ -1003,7 +869,7 @@ async fn export_document_out_returns_flow_media() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_in_patches_matching_input_slider() {
     let mut app = app().await;
-    crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
+    crate::app_fixture::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
     let slider_id = snapshot_read(&app)
         .host_snapshot
         .widgets
@@ -1033,7 +899,7 @@ async fn import_intrinsic_params_borrows_the_canonical_numeric_rows_and_retires_
         let oracle = case["input"].as_object().unwrap().get("slider").and_then(serde_json::Value::as_f64).unwrap_or(fixture["initialValue"].as_f64().unwrap());
         assert_eq!(oracle, case["expected"].as_f64().unwrap());
         let mut app = app().await;
-        crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
+        crate::app_fixture::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
         let slider_id = snapshot_read(&app).host_snapshot.widgets.iter().rev().find_map(|widget| match widget { Widget::InputSlider { id, .. } => Some(id.clone()), _ => None }).unwrap();
         assert!(snapshot_read(&app).host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == &slider_id && *value == fixture["initialValue"].as_f64().unwrap())));
         let source = semio_framework_value::DslValue::Object(case["input"].as_object().unwrap().iter().map(|(key, value)| (if key == "slider" { slider_id.clone() } else { key.clone() }, semio_framework_value::DslValue::from(value))).collect());
@@ -1084,13 +950,13 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_skips_unmatched_keys_and_non_numeric_values() {
     let mut app = app().await;
-    let before: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let before: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     let media = semio_framework_plugin::Media {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ "no-such-widget": 1.0, "another": "text" }).to_string() },
     };
     app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
-    let after: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let after: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     close(app);
     assert_eq!(after, before);
 }
@@ -1142,11 +1008,11 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     assert_eq!(windows.len(), 5, "generation2d declares five window kinds");
     let mut app = app_with_registry().await;
     for _ in 0..2 {
-        crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await;
+        crate::app_fixture::dispatch(&mut app, Generation2dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     }
     let mut emitted: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = Default::default();
     for (kind_id, body_key, _) in &windows {
-        let projection = crate::editor::generation2d::unit_tests::context::render(&mut app, body_key).await;
+        let projection = crate::app_fixture::render(&mut app, body_key).await;
         emitted.insert(kind_id.clone(), semio_framework_plugin::ui_action_laws::emitted_action_ids(&projection));
     }
     close(app);
@@ -1175,11 +1041,11 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 /// replay (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {
-    let _serial = crate::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
     let mut source = app_with_registry().await;
     context::dispatch(&mut source, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
     let archive = PluginApp::document_archive(&source).await.expect("the open document exports as a framework archive");
-    let expected: Vec<String> = context::snapshot_read(&source).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let expected: Vec<String> = context::snapshot_read(&source).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     assert!(!expected.is_empty(), "the exported document carries widgets to compare");
     let mut target = app_with_registry().await;
     PluginApp::begin_document_archive_load(&mut target, 91, archive).expect("archive admission");
@@ -1195,7 +1061,7 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     }
     let status = status.expect("the archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    let loaded: Vec<String> = context::snapshot_read(&target).host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = context::snapshot_read(&target).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the fresh instance holds exactly the archived document");
     context::close(target);
     context::close(source);
@@ -1211,12 +1077,12 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
 async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
     let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation2dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
-    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot, crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation>(&pair.pack, &pair.spr)
+    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot, semio_s_artifact_procedural_2d_mutations::Generation2dMutation>(&pair.pack, &pair.spr)
         .await
         .expect("the genesis pair parses back");
     let initial = <Generation2dPlayApp as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
-    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
-    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
+    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");
     initial.retire_cold();
     snapshot.retire_cold();

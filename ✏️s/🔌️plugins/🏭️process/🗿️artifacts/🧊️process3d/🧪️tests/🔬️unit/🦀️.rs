@@ -1,10 +1,15 @@
-use super::*;
+use semio_framework_os_kernel::Patchable;
+use semio_s_artifact_process_process3d_config::Process3dConfigSetCursor;
+use semio_s_artifact_process_process3d_model::snapshot::{artifact_kind, brep_snapshot_for_working_solid, empty_process3d_snapshot, flow_node_from_process_step, flow_snapshot_for_steps, process_step_from_flow_node, process_steps_from_flow_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, StepOrigin, StockQuantity, WorkingSolid, Workshop, WorkshopMachine, WorkshopMachinePatch, PROCESS_3D_SCHEMA};
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 
 /// ⏩️ Insertion advances the viewer on the resulting timeline, preserving the unlimited cursor.
 #[test]
 fn inserted_step_cursor_matches_neutral_json_oracle() {
-    use crate::editor::process3d::{commands::step::insert_step_emit, config::{Process3dConfig, Process3dConfigMutation}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    use semio_s_artifact_process_process3d_commands::step::insert_step_emit;
+    use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json").leak()).unwrap();
     for case in fixture["cursorInsertions"].as_array().unwrap() {
         let count = case["stepCount"].as_u64().unwrap() as usize;
         let cursor = case["cursor"].as_u64().map(|value| value as usize);
@@ -28,8 +33,8 @@ fn inserted_step_cursor_matches_neutral_json_oracle() {
 #[test]
 fn tagged_field_borrowed_schema_matches_neutral_cases() {
     use semio_framework_dsl_record::{BorrowedDslField, BorrowedShape, DslField, Shape};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("neutral fixture");
-    let first_party = semio_framework_pack_json::parse(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json").leak()).expect("neutral fixture");
+    let first_party = semio_framework_pack_json::parse(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json").leak(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party fixture");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&first_party)).unwrap(), fixture);
     for (key, borrowed, owned) in [
         ("measureRecipe", <MeasureRecipe as BorrowedDslField>::SHAPE, <MeasureRecipe as DslField>::shape()),
@@ -50,8 +55,9 @@ fn tagged_field_borrowed_schema_matches_neutral_cases() {
 /// 📦️ The current binary mutation frame agrees with independently encoded LEB128 UTF-8 lengths.
 #[test]
 fn delete_step_binary_matches_neutral_leb128_oracle() {
-    use crate::standards::v1::subsets::any::{io::binary::mutations::{decode_op, encode_op}, schema::mutations::delete_step::DeleteStep};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::decode_op, standards::v1::subsets::any::io::binary::mutations::encode_op};
+    use semio_s_artifact_process_process3d_mut_steps::delete_step::DeleteStep;
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json")).expect("../../🧪️tests/🔬️unit/🧫️fixtures/🔣️.json").leak()).unwrap();
     for case in fixture["deleteSteps"].as_array().unwrap() {
         let id = case["id"].as_str().unwrap();
         let mutation = Process3dMutation::DeleteStep(DeleteStep { id: id.into() });
@@ -103,7 +109,7 @@ fn sample_workshop() -> Workshop {
 #[semio_framework_async_macros::async_test]
 async fn workshop_dsl_round_trips_through_document() {
     let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
-    store::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
 }
 
 /// 🔤️ `ToValue`/`FromValue` (`semio_framework_value_derive`) over `semio_framework_os_kernel::

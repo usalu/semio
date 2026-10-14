@@ -1,8 +1,7 @@
 //! ➖️ Block2d mutation — `RemoveCompatibilityRule`: a handle-kind compatibility rule attachment.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// ➖️ `remove-compatibility-rule` payload.
@@ -18,19 +17,19 @@ pub struct RemoveCompatibilityRule {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_compatibility_rule(id: String) -> Block2dMutation {
-    Block2dMutation::RemoveCompatibilityRule(RemoveCompatibilityRule { id })
+pub fn remove_compatibility_rule<Op: From<crate::remove_compatibility_rule::RemoveCompatibilityRule>>(id: String) -> Op {
+    Op::from(RemoveCompatibilityRule { id })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveCompatibilityRule {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for RemoveCompatibilityRule where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::add_compatibility_rule::AddCompatibilityRule> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "compatibility-rule", kind: "remove-compatibility-rule", record: "RemovedCompatibilityRule" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::remove_compatibility_rule::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_compatibility_rule::inverse::inverse(self, base)?
     
     })
 }
@@ -42,3 +41,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RemoveCompatib
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

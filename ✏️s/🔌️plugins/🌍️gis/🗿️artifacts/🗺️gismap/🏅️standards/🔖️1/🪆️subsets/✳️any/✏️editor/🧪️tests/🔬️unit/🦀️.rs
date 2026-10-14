@@ -159,8 +159,8 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let snapshot = empty_gis_map_snapshot();
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
@@ -263,7 +263,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first GIS fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut retirement = crate::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {

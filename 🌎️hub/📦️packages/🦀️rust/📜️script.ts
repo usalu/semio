@@ -84,7 +84,7 @@ class RuntimeFixtureGraphScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const {verifyRuntimeFixtureGraphV1}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
     const {hubRuntimeActorPublicationPortV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts");
-    await verifyRuntimeFixtureGraphV1(this.repoRoot,segments,hubRuntimeActorPublicationPortV1(this.repoRoot),["🧰️framework","✏️s","🌎️hub"]);
+    await verifyRuntimeFixtureGraphV1(this.repoRoot,segments,hubRuntimeActorPublicationPortV1(this.repoRoot),["🧰️framework","✏️s","🌎️hub"],this.invocation);
   }
 }
 

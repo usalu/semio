@@ -1,7 +1,7 @@
 //! 🖌️ `open-vortex-suggestions` command.
 
-use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 💡️ Opens the suggestion menu over `fullId` WITHOUT switching the host-owned utility/tool into brush

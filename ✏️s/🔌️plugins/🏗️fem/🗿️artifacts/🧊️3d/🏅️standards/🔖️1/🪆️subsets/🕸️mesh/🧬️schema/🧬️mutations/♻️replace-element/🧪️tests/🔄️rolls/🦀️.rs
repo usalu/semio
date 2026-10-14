@@ -7,26 +7,26 @@
 //!
 //! Only `roll` changes — the 3D-only local-axis angle that has no counterpart in the fem2d element at all.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/♻️replace-element/🔄️rolls/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `replace-element` rolls frame `f1` in place and carries `before` to exactly the committed `after`.
@@ -36,8 +36,8 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("replace-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "replace-element/rolls-the-column-50f732: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 1, "replace-element/rolls-the-column-50f732: a replacement must not change the element count");
-    assert!(matches!(snapshot.elements[0], crate::FemElement::Frame { roll, .. } if roll == 1.5), "replace-element/rolls-the-column-50f732: the new roll angle must survive the round trip exactly");
-    assert_eq!(crate::element_id(&snapshot.elements[0]), "f1", "replace-element/rolls-the-column-50f732: the identity must survive the whole-value swap");
+    assert!(matches!(snapshot.elements[0], semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement::Frame { roll, .. } if roll == 1.5), "replace-element/rolls-the-column-50f732: the new roll angle must survive the round trip exactly");
+    assert_eq!(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id(&snapshot.elements[0]), "f1", "replace-element/rolls-the-column-50f732: the identity must survive the whole-value swap");
 }
 
 /// ↩️ The inverse is a `replace-element` carrying the un-rolled frame recovered from `base`.
@@ -57,7 +57,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -65,7 +65,7 @@ fn committed_json_is_canonical() {
     }
     let decoded_mutation = mutation();
     let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-element/rolls-the-column-50f732: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +76,7 @@ fn committed_json_is_canonical() {
 /// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_value::DslValue::as_str).expect("outcome carries a status");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let refused = produced.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
@@ -86,7 +86,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "replace-element/rolls-the-column-50f732: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "replace-element/rolls-the-column-50f732: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-element/rolls-the-column-50f732: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "replace-element/rolls-the-column-50f732: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "replace-element/rolls-the-column-50f732: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("replace-element/rolls-the-column-50f732: unknown outcome status {other:?}"),
@@ -101,23 +101,23 @@ fn produces_committed_diff() {
     assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").modified.len(), 1, "replace-element/rolls-the-column-50f732: exactly one element may be patched");
     assert!(outcome.diff().elements.as_ref().expect("elements delta").removed.is_empty(), "replace-element/rolls-the-column-50f732: a replacement must never be encoded as a remove-then-add");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
-    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-element/rolls-the-column-50f732: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-element/rolls-the-column-50f732: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `elements.modified` entry on `before` must leave the rolled frame in `f1`'s slot.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-element/rolls-the-column-50f732: committed diff did not carry before to after");
 }

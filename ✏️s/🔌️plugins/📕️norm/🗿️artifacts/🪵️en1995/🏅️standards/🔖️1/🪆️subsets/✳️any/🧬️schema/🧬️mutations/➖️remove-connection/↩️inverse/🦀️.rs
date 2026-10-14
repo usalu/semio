@@ -1,10 +1,10 @@
-use super::RemoveConnection;
-use crate::mutations::{insert_connection, En1995Mutation};
-use crate::En1995Snapshot;
-pub fn inverse(payload: &RemoveConnection, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+use crate::remove_connection::RemoveConnection;
+use crate::insert_connection;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+pub fn inverse<Op>(payload: &RemoveConnection, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_connection::InsertConnection> {
     Ok((|| {
     if payload.index >= base.connections.len() { return Vec::new(); }
-    vec![En1995Mutation::InsertConnection(insert_connection::InsertConnection { index: payload.index, connection: base.connections[payload.index].clone() })]
+    vec![Op::from(insert_connection::InsertConnection { index: payload.index, connection: base.connections[payload.index].clone() })]
 
     })())
 }

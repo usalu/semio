@@ -139,7 +139,7 @@ fn a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds() {
 
 #[test]
 fn the_transform_chart_obeys_the_shared_phase_fixture() {
-    let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛠️transform-gesture/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let values = case.get("offset").unwrap().as_array().unwrap();
         let offset = [values[0].as_f64().unwrap(), values[1].as_f64().unwrap(), values[2].as_f64().unwrap()];

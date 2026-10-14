@@ -1,8 +1,7 @@
 //! 🖼️ Block3d mutation — `ChangeObjectKindIcon`: the object kind's optional `icon`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🖼️ `change-object-kind-icon` payload.
@@ -18,19 +17,19 @@ pub struct ChangeObjectKindIcon {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_object_kind_icon(new_icon: Option<String>) -> Block3dMutation {
-    Block3dMutation::ChangeObjectKindIcon(ChangeObjectKindIcon { new_icon })
+pub fn change_object_kind_icon<Op: From<crate::change_object_kind_icon::ChangeObjectKindIcon>>(new_icon: Option<String>) -> Op {
+    Op::from(ChangeObjectKindIcon { new_icon })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeObjectKindIcon {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeObjectKindIcon where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_object_kind_icon::ChangeObjectKindIcon> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object-kind", kind: "change-object-kind-icon", record: "ChangedObjectKindIcon" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_object_kind_icon::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_object_kind_icon::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeObjectKi
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

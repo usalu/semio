@@ -1,8 +1,7 @@
 //! ✂️ Energy model mutation — `DisconnectReferencedModel`: Removes the relationship to the geometry model. Refused when no relationship exists.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -14,19 +13,22 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 #[dsl(keyword = "disconnect-referenced-model")]
 pub struct DisconnectReferencedModel {}
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn disconnect_referenced_model() -> EnergyModelMutation {
-    EnergyModelMutation::DisconnectReferencedModel(DisconnectReferencedModel {})
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn disconnect_referenced_model<Op: From<DisconnectReferencedModel>>() -> Op {
+    DisconnectReferencedModel {}.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DisconnectReferencedModel {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DisconnectReferencedModel
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DisconnectReferencedModel> + From<crate::ConnectReferencedModel>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "referenced-model", kind: "disconnect-referenced-model", record: "DisconnectedReferencedModel" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

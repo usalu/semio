@@ -1,6 +1,6 @@
 //! 💾️ XLSX snapshot pack facet over complete literal native fields.
 
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use native::{encode_standalone, decode_binary, pack_limits};
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

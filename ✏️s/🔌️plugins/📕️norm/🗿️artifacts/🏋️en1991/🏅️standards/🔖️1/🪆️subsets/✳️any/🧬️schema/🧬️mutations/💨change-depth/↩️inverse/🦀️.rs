@@ -1,9 +1,9 @@
 //! Inverse for `change-depth`.
-use super::ChangeDepth;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeDepth, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_depth::ChangeDepth;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeDepth, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_depth::ChangeDepth> {
     Ok((|| {
-    vec![En1991Mutation::ChangeDepth(ChangeDepth { new_depth: base.depth })]
+    vec![Op::from(ChangeDepth { new_depth: base.depth })]
 
     })())
 }

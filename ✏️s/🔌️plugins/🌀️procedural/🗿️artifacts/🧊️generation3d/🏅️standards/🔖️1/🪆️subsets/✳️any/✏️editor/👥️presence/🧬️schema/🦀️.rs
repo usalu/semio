@@ -17,5 +17,5 @@ pub struct Generation3dPresence {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::editor::generation3d::config::Generation3dPreviewCamera;
+
 //#endregion 🔁️Re-exports

@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -37,7 +38,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// broker for document write access because `EquationPlayApp` persists graph edits back to
 /// the open document.
 pub fn plugin() -> Result<Plugin<MathematicalApps>, PluginAssemblyError> {
-    Plugin::<MathematicalApps>::builder("mathematical")
+    PluginBuilder::<_, MathematicalApps>::new("mathematical")
         .label("Mathematical")
         .version("0.1.0")
         .package_id("semio:mathematical")

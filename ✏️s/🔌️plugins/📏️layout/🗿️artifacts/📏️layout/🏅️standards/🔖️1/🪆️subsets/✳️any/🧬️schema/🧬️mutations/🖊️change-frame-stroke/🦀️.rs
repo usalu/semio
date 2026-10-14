@@ -1,9 +1,12 @@
 //! 🖊️ `change-frame-stroke` — sets a `Frame::Rect`'s `stroke` color (`None` clears it). A no-op on
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `stroke` handling.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,12 +23,12 @@ pub struct ChangeFrameStroke {
     pub new_stroke: Option<[f32; 4]>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameStroke {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameStroke where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_stroke::ChangeFrameStroke> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-stroke", kind: "change-frame-stroke", record: "ChangedFrameStroke" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_stroke(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_frame_stroke(self, base)?
     
@@ -67,7 +70,7 @@ pub fn diff_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapsh
 //#endregion 🖊️ChangeFrameStroke
 
 //#region 🖊️ChangeFrameStroke
-pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_frame_stroke<Op: From<crate::change_frame_stroke::ChangeFrameStroke>>(payload: &ChangeFrameStroke, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -78,8 +81,14 @@ pub fn inverse_change_frame_stroke(payload: &ChangeFrameStroke, base: &LayoutSna
     let Frame::Rect { stroke, .. } = frame else {
         return Vec::new();
     };
-    vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_stroke: *stroke })]
+    vec![Op::from(ChangeFrameStroke { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_stroke: *stroke })]
 
     })())
 }
 //#endregion 🖊️ChangeFrameStroke
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🖊️adds/🦀️.rs"]
+mod tests_adds_a_stroke_to_the_rect_frame;
+//#endregion 🪢️TaxonomyMounts

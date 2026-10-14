@@ -10,12 +10,90 @@
       "x-semio-state": "artifact"
     },
     "subset": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/snapshot.json#/definitions/SemioSubsetSnapshot",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/snapshot.json#/$defs/SemioSubsetSnapshot",
       "x-semio-state": "artifact"
     }
   },
   "required": [
     "schema",
     "subset"
-  ]
+  ],
+  "$defs": {
+    "SemioMemberStoreProducerSourceDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "producerType",
+        "producerMacro",
+        "membersMacro",
+        "roles"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "s/stdio/semio/v1"
+        },
+        "producerType": {
+          "const": "SemioMemberStoreProducer"
+        },
+        "producerMacro": {
+          "const": "semio_member_owner"
+        },
+        "membersMacro": {
+          "const": "space_members"
+        },
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "members"
+          ],
+          "properties": {
+            "producer": {
+              "allOf": [
+                {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/os/store/member-producer/source/schema.json#/$defs/ModuleReference"
+                },
+                {
+                  "const": {
+                    "language": "rust",
+                    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🦀️.rs",
+                    "symbols": [
+                      "SemioMemberStoreProducer",
+                      "semio_member_owner"
+                    ]
+                  }
+                }
+              ]
+            },
+            "members": {
+              "allOf": [
+                {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/os/store/member-producer/source/schema.json#/$defs/ModuleReference"
+                },
+                {
+                  "const": {
+                    "language": "rust",
+                    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+                    "symbols": [
+                      "SemioMembers",
+                      "SemioMembersOpen"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  }
 }

@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1997Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -67,8 +75,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::CheckReport;
-use crate::standards::v1::subsets::any::schema::check_project;
+use semio_s_plugin_norm_compliance::CheckReport;
+use semio_s_artifact_norm_en1997_checks::check_project;
 
 /// 🧮️ Headless per-document evaluation for EN 1997.
 pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
@@ -89,5 +97,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1997Outline;
+pub use crate::outline::En1997Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

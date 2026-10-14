@@ -1,6 +1,14 @@
 //! 💡️ Din4108 inference schema — outline + compliance evaluate.
 
-use crate::Din4108Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -74,12 +82,11 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::CheckReport;
-use crate::standards::v1::subsets::any::schema::{bb_2, opaque_envelope_area, part_2, part_3, part_4, part_6, part_7, part_10};
+use semio_s_plugin_norm_compliance::CheckReport;
+use semio_s_artifact_norm_din4108_checks::{bb_2, opaque_envelope_area, part_2, part_3, part_4, part_6, part_7, part_10};
 
-
-fn loc(en: impl Into<String>, de: impl Into<String>) -> crate::document::LocalizedCopy {
-    crate::document::LocalizedCopy::new(en, de)
+fn loc(en: impl Into<String>, de: impl Into<String>) -> semio_s_plugin_norm_compliance::LocalizedCopy {
+    semio_s_plugin_norm_compliance::LocalizedCopy::new(en, de)
 }
 
 fn push_duplicate_ids(report: &mut CheckReport, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
@@ -92,22 +99,22 @@ fn push_duplicate_ids(report: &mut CheckReport, table: &str, ids: &[String], pat
             continue;
         }
         let path = path_for(&id);
-        let subject = crate::document::SubjectRef::new(id.clone(), &path, loc(format!("Duplicate {table} id"), format!("Doppelte {table}-Id")));
+        let subject = semio_s_plugin_norm_compliance::SubjectRef::new(id.clone(), &path, loc(format!("Duplicate {table} id"), format!("Doppelte {table}-Id")));
         let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
-        let mut builder = crate::document::CheckResult::assess(
+        let mut builder = semio_s_plugin_norm_compliance::CheckResult::assess(
             format!("din4108.integrity.duplicate.{table}.{id}"),
             "DIN 4108 integrity",
-            crate::document::ClauseId::new("DIN 4108", "§1", "id"),
+            semio_s_plugin_norm_compliance::ClauseId::new("DIN 4108", "§1", "id"),
             subject.clone(),
             loc(format!("Unique {table} id"), format!("Eindeutige {table}-Id")),
         )
-        .annex(crate::document::AnnexChoice::De)
+        .annex(semio_s_plugin_norm_compliance::AnnexChoice::De)
         .explanation(loc(
             format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
             format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
         ))
-        .status(crate::document::CheckStatus::Fail);
-        builder = builder.remedy(crate::document::Remedy::one_of(
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail);
+        builder = builder.remedy(semio_s_plugin_norm_compliance::Remedy::one_of(
             subject,
             if options.is_empty() { vec![format!("{id}-unique")] } else { options },
             loc(
@@ -120,23 +127,23 @@ fn push_duplicate_ids(report: &mut CheckReport, table: &str, ids: &[String], pat
 }
 
 fn push_dangling_ref(report: &mut CheckReport, check_id: String, path: String, subject_id: &str, label_en: &str, label_de: &str, current: &str, options: Vec<String>) {
-    let subject = crate::document::SubjectRef::new(subject_id, &path, loc(label_en, label_de));
+    let subject = semio_s_plugin_norm_compliance::SubjectRef::new(subject_id, &path, loc(label_en, label_de));
     let opts = if options.is_empty() { vec![format!("{current}-fix")] } else { options };
     report.push(
-        crate::document::CheckResult::assess(
+        semio_s_plugin_norm_compliance::CheckResult::assess(
             check_id,
             "DIN 4108 integrity",
-            crate::document::ClauseId::new("DIN 4108", "§1", "reference"),
+            semio_s_plugin_norm_compliance::ClauseId::new("DIN 4108", "§1", "reference"),
             subject.clone(),
             loc(format!("Referential integrity — {label_en}"), format!("Referenzintegrität — {label_de}")),
         )
-        .annex(crate::document::AnnexChoice::De)
+        .annex(semio_s_plugin_norm_compliance::AnnexChoice::De)
         .explanation(loc(
             format!("'{current}' does not reference a valid target."),
             format!("'{current}' verweist auf kein gültiges Ziel."),
         ))
-        .status(crate::document::CheckStatus::Fail)
-        .remedy(crate::document::Remedy::one_of(
+        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+        .remedy(semio_s_plugin_norm_compliance::Remedy::one_of(
             subject,
             opts,
             loc(
@@ -240,28 +247,28 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     }
     if document.zones.is_empty() {
         report.push(
-            crate::document::CheckResult::assess(
+            semio_s_plugin_norm_compliance::CheckResult::assess(
                 "din4108-2.summer.none",
                 "DIN 4108-2",
-                crate::document::ClauseId::new("DIN 4108-2", "§8", "8.3"),
-                crate::document::SubjectRef::whole(crate::document::LocalizedCopy::new("Building", "Gebäude")),
-                crate::document::LocalizedCopy::new("Summer heat protection S_vorh", "Sommerlicher Wärmeschutz S_vorh"),
+                semio_s_plugin_norm_compliance::ClauseId::new("DIN 4108-2", "§8", "8.3"),
+                semio_s_plugin_norm_compliance::SubjectRef::whole(semio_s_plugin_norm_compliance::LocalizedCopy::new("Building", "Gebäude")),
+                semio_s_plugin_norm_compliance::LocalizedCopy::new("Summer heat protection S_vorh", "Sommerlicher Wärmeschutz S_vorh"),
             )
-            .status(crate::document::CheckStatus::Fail)
-            .explanation(crate::document::LocalizedCopy::new(
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(semio_s_plugin_norm_compliance::LocalizedCopy::new(
                 "No thermal zones defined — summer heat protection cannot be demonstrated.",
                 "Keine thermischen Zonen definiert — sommerlicher Wärmeschutz ist nicht nachweisbar.",
             ))
             .remedy({
-                let mut remedy = crate::document::Remedy::at_least(
-                    crate::document::SubjectRef::new(
+                let mut remedy = semio_s_plugin_norm_compliance::Remedy::at_least(
+                    semio_s_plugin_norm_compliance::SubjectRef::new(
                         "",
                         "zones",
-                        crate::document::LocalizedCopy::new("Thermal zones", "Thermische Zonen"),
+                        semio_s_plugin_norm_compliance::LocalizedCopy::new("Thermal zones", "Thermische Zonen"),
                     ),
-                    crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.0),
-                    crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
-                    crate::document::LocalizedCopy::new(
+                    semio_s_plugin_norm_compliance::Quantity::new(semio_s_plugin_norm_compliance::QuantityKind::Dimensionless, 0.0),
+                    semio_s_plugin_norm_compliance::Quantity::new(semio_s_plugin_norm_compliance::QuantityKind::Dimensionless, 1.0),
+                    semio_s_plugin_norm_compliance::LocalizedCopy::new(
                         "Insert at least one thermal zone (use insertItem on `zones`).",
                         "Mindestens eine thermische Zone einfügen (insertItem auf `zones`).",
                     ),
@@ -269,7 +276,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
                 remedy.applicable = false;
                 remedy
             })
-            .annex(crate::document::AnnexChoice::De)
+            .annex(semio_s_plugin_norm_compliance::AnnexChoice::De)
             .build(),
         );
     }
@@ -292,28 +299,28 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     }
     if document.elements.is_empty() {
         report.push(
-            crate::document::CheckResult::assess(
+            semio_s_plugin_norm_compliance::CheckResult::assess(
                 "din4108-2.table3.none",
                 "DIN 4108-2",
-                crate::document::ClauseId::new("DIN 4108-2", "Table 3", "R_min"),
-                crate::document::SubjectRef::whole(crate::document::LocalizedCopy::new("Building", "Gebäude")),
-                crate::document::LocalizedCopy::new("Minimum thermal resistance (Table 3)", "Mindestwärmedurchlasswiderstand (Tabelle 3)"),
+                semio_s_plugin_norm_compliance::ClauseId::new("DIN 4108-2", "Table 3", "R_min"),
+                semio_s_plugin_norm_compliance::SubjectRef::whole(semio_s_plugin_norm_compliance::LocalizedCopy::new("Building", "Gebäude")),
+                semio_s_plugin_norm_compliance::LocalizedCopy::new("Minimum thermal resistance (Table 3)", "Mindestwärmedurchlasswiderstand (Tabelle 3)"),
             )
-            .status(crate::document::CheckStatus::Fail)
-            .explanation(crate::document::LocalizedCopy::new(
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(semio_s_plugin_norm_compliance::LocalizedCopy::new(
                 "No envelope elements defined — Table 3 minimum R cannot be demonstrated.",
                 "Keine Hüllflächenbauteile definiert — Mindest-R nach Tabelle 3 ist nicht nachweisbar.",
             ))
             .remedy({
-                let mut remedy = crate::document::Remedy::at_least(
-                    crate::document::SubjectRef::new(
+                let mut remedy = semio_s_plugin_norm_compliance::Remedy::at_least(
+                    semio_s_plugin_norm_compliance::SubjectRef::new(
                         "",
                         "elements",
-                        crate::document::LocalizedCopy::new("Envelope elements", "Hüllflächen"),
+                        semio_s_plugin_norm_compliance::LocalizedCopy::new("Envelope elements", "Hüllflächen"),
                     ),
-                    crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 0.0),
-                    crate::document::Quantity::new(crate::document::QuantityKind::Dimensionless, 1.0),
-                    crate::document::LocalizedCopy::new(
+                    semio_s_plugin_norm_compliance::Quantity::new(semio_s_plugin_norm_compliance::QuantityKind::Dimensionless, 0.0),
+                    semio_s_plugin_norm_compliance::Quantity::new(semio_s_plugin_norm_compliance::QuantityKind::Dimensionless, 1.0),
+                    semio_s_plugin_norm_compliance::LocalizedCopy::new(
                         "Insert at least one opaque envelope element (use insertItem on `elements`).",
                         "Mindestens ein opakes Hüllflächenbauteil einfügen (insertItem auf `elements`).",
                     ),
@@ -321,7 +328,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
                 remedy.applicable = false;
                 remedy
             })
-            .annex(crate::document::AnnexChoice::De)
+            .annex(semio_s_plugin_norm_compliance::AnnexChoice::De)
             .build(),
         );
     }
@@ -342,5 +349,10 @@ mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
 
 //#region 🔁️Re-exports
-pub use super::outline::Din4108Outline;
+pub use crate::outline::Din4108Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

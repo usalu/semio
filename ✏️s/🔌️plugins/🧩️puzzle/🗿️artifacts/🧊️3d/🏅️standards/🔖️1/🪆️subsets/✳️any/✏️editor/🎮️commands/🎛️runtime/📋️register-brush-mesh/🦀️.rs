@@ -1,7 +1,7 @@
 //! 🖌️ `register-brush-mesh` command.
 
-use crate::editor::puzzle3d::precompute::{decode_brush_mesh_page_values, Puzzle3dMeshUploadFault, PUZZLE3D_MESH_PAGE_VALUES};
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_precompute::{decode_brush_mesh_page_values, Puzzle3dMeshUploadFault, PUZZLE3D_MESH_PAGE_VALUES};
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 
@@ -95,7 +95,7 @@ fn fault(ctx: &mut Puzzle3dActionCtx<'_>, url: &str, rejection: Puzzle3dMeshUplo
 /// [`Puzzle3dScopeClass::Quiet`]: crate::editor::puzzle3d::Puzzle3dScopeClass::Quiet
 fn request_reupload(ctx: &mut Puzzle3dActionCtx<'_>, url: &str) {
     if ctx.session.precompute.borrow_mut().request_mesh_reupload(url) {
-        *ctx.ui_scope = crate::editor::puzzle3d::modes::edit::windows::main::puzzle3d_viewport_scope();
+        *ctx.ui_scope = semio_s_artifact_puzzle_3d_editor_modes::windows::main::puzzle3d_viewport_scope();
     }
 }
 

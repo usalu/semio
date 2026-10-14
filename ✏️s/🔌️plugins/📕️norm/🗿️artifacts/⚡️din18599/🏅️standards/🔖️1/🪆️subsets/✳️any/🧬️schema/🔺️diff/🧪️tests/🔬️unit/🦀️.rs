@@ -1,11 +1,11 @@
 //! 🧪️ Keyed-diff algebra of Din18599: section-patch merging, row patches, list-setter rows and the negative diff.
 
-use super::Din18599Diff;
-use crate::mutations::change_element_u::ChangeElementU;
-use crate::mutations::replace_zones::ReplaceZones;
-use crate::mutations::update_renewables::UpdateRenewables;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use semio_s_artifact_norm_din18599_mut_zoning::change_element_u::ChangeElementU;
+use semio_s_artifact_norm_din18599_mut_zoning::replace_zones::ReplaceZones;
+use semio_s_artifact_norm_din18599_mut_systems::update_renewables::UpdateRenewables;
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn diff_of(mutation: &Din18599Mutation, base: &Din18599Snapshot) -> Din18599Diff {

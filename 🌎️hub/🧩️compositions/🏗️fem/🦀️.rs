@@ -7,15 +7,16 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
     pub enum FemApps: PluginApp {
-        Fem2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp>>),
+        Fem2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp>>),
         Fem2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>>),
-        Fem3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_3d::editor::fem3d::Fem3dPlayApp>>),
-        Fem3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_3d::viewer::fem3d::Fem3dViewer>>),
+        Fem3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>>),
+        Fem3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -35,22 +36,22 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `computation_artifact_kind().id` (never hardcoded), `Isolated` execution (nothing here justifies a
 /// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
 pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
-    semio_s_artifact_fem_2d::editor::fem2d::session::initialize();
-    semio_s_artifact_fem_3d::live_visual::initialize();
-    Plugin::<FemApps>::builder("fem")
+    semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::initialize();
+    semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::initialize();
+    PluginBuilder::<_, FemApps>::new("fem")
         .label("FEM")
         .version("0.1.0")
         .package_id("semio:fem")
         .declare_artifact(semio_s_artifact_fem_2d::artifact::<FemApps>())
         .declare_artifact(semio_s_artifact_fem_3d::artifact::<FemApps>())
-        .editor_mutation_roster::<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp>()
+        .editor_mutation_roster::<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>()
-        .editor_mutation_roster::<semio_s_artifact_fem_3d::editor::fem3d::Fem3dPlayApp>()
-        .viewer_mutation_roster::<semio_s_artifact_fem_3d::viewer::fem3d::Fem3dViewer>()
+        .editor_mutation_roster::<semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp>()
+        .viewer_mutation_roster::<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::computation_artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::computation_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::computation_artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::document_artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::document_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::document_artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })
         .try_build()

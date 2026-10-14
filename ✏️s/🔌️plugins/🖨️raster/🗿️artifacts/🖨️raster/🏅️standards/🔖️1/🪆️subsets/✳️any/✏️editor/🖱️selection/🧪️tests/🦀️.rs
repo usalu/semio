@@ -15,8 +15,11 @@ fn layer_selection_matches_neutral_wire_arguments() {
 
 #[semio_framework_async_macros::async_test]
 async fn created_and_duplicated_layers_are_selected_and_deleted_targets_are_pruned() {
-    use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,drop_layer_kind,duplicate_layer,delete_layer}};
-    use crate::standards::v1::subsets::any::schema::{layer_node_id,snapshot::retire_raster_snapshot};
+    use crate::unit_tests::context;
+    use crate::RasterCommand;
+    use crate::commands::{add_layer, drop_layer_kind, duplicate_layer, delete_layer};
+    use semio_s_artifact_raster_raster_model::layer_node_id;
+    use semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot;
     let mut app=context::app().await;
     for command in [RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()}),RasterCommand::DropLayerKind(drop_layer_kind::DropLayerKind {kind:"adjustment".into()})] {
         let result=context::dispatch(&mut app,command).await;

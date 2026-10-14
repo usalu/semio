@@ -1,10 +1,10 @@
 use super::*;
-use crate::WorkshopMachine;
+use semio_s_artifact_process_process3d_model::snapshot::WorkshopMachine;
 use protocol::MutationDiff as _;
 
 #[semio_framework_async_macros::async_test]
 async fn absorbing_coalesces_same_key_entries_and_later_scalars_win() {
-    let base = crate::empty_process3d_snapshot();
+    let base = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let machine = base.workshop.machines[0].clone();
     let at = base.workshop.machines.len();
     let extra = WorkshopMachine { id: "extra".into(), ..machine.clone() };
@@ -19,9 +19,9 @@ async fn absorbing_coalesces_same_key_entries_and_later_scalars_win() {
 
 #[semio_framework_async_macros::async_test]
 async fn stock_solid_handle_swap_applies() {
-    let base = crate::empty_process3d_snapshot();
-    let new_content = crate::brep_snapshot_for_working_solid(&crate::WorkingSolid::Sphere { radius: 0.5 });
-    let new_handle = crate::brep_child_handle("stock", &new_content);
+    let base = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
+    let new_content = semio_s_artifact_process_process3d_model::snapshot::brep_snapshot_for_working_solid(&semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Sphere { radius: 0.5 });
+    let new_handle = semio_s_artifact_process_process3d_model::snapshot::brep_child_handle("stock", &new_content);
     let diff = Process3dDiff { stock_solid: Some(new_handle.clone()), ..Default::default() };
     let next = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
     assert_eq!(next.stock_solid, new_handle);
@@ -29,7 +29,7 @@ async fn stock_solid_handle_swap_applies() {
 
 #[semio_framework_async_macros::async_test]
 async fn positional_machine_delta_moves_and_inverts_row_by_row() {
-    let mut base = crate::empty_process3d_snapshot();
+    let mut base = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let machine = base.workshop.machines[0].clone();
     base.workshop.machines = ["a", "b", "c", "d"].iter().map(|id| WorkshopMachine { id: (*id).into(), ..machine.clone() }).collect();
     let diff = |delta: Process3dMachinesDelta| Process3dDiff { workshop: Some(delta), ..Default::default() };

@@ -1,8 +1,8 @@
 //! 🏷️ `change-layer-compressive-class` diff — patches the layer's `compressive_class` inside its element; a missing element or layer is a `mutation.invariant`.
 
-use super::ChangeLayerCompressiveClass;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
-use crate::Din4108Snapshot;
+use crate::change_layer_compressive_class::ChangeLayerCompressiveClass;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta, Din4108LayerPatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeLayerCompressiveClass, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

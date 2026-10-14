@@ -1,8 +1,7 @@
 //! 🔻️ Energy model mutation — `DeleteElectricalLoadCenter`: Removes one electrical load centre. Nothing in the document references a load centre — it is the referencing end of every generation edge — so this never has to refuse for use and never cascades.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteElectricalLoadCenter {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_electrical_load_center(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteElectricalLoadCenter(DeleteElectricalLoadCenter { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_electrical_load_center<Op: From<DeleteElectricalLoadCenter>>(id: crate::model::EntityId) -> Op {
+    DeleteElectricalLoadCenter { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteElectricalLoadCenter {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteElectricalLoadCenter
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteElectricalLoadCenter> + From<crate::CreateElectricalLoadCenter>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "electrical-load-center", kind: "delete-electrical-load-center", record: "DeletedElectricalLoadCenter" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

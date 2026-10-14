@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `RemoveRepresentationTag`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 use semio_s_plugin_block::{BlockRepresentationsDelta, BlockRepresentationsPatchEntry, BlockRepresentationPatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::RemoveRepresentationTag, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::remove_representation_tag::RemoveRepresentationTag, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "representation-tag", payload.id), vec![payload.id.clone()]);
     };

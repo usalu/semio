@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "knowledgeRecord",
+  "id": "knowledge-record-a"
+}

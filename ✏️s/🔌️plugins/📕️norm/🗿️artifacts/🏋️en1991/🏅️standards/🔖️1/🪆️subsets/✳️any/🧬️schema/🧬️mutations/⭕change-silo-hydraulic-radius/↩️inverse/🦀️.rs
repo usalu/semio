@@ -1,9 +1,9 @@
 //! Inverse for `change-silo-hydraulic-radius`.
-use super::ChangeSiloHydraulicRadius;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeSiloHydraulicRadius, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_silo_hydraulic_radius::ChangeSiloHydraulicRadius;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeSiloHydraulicRadius, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_silo_hydraulic_radius::ChangeSiloHydraulicRadius> {
     Ok((|| {
-    vec![En1991Mutation::ChangeSiloHydraulicRadius(ChangeSiloHydraulicRadius { new_silo_hydraulic_radius: base.silo_hydraulic_radius })]
+    vec![Op::from(ChangeSiloHydraulicRadius { new_silo_hydraulic_radius: base.silo_hydraulic_radius })]
 
     })())
 }

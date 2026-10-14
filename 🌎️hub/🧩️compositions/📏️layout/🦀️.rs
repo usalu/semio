@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -32,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// (`DispatchAction`/`DownloadMediaExport`) are per-turn UI/export effects with no evidence of
 /// long-running computation, large held buffers, or high-frequency timers.
 pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
-    Plugin::<LayoutApps>::builder("layout")
+    PluginBuilder::<_, LayoutApps>::new("layout")
         .label("Layout")
         .version("0.1.0")
         .package_id("semio:layout")

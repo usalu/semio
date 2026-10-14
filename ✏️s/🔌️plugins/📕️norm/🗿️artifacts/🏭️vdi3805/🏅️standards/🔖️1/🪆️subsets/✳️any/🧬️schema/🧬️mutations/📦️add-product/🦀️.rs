@@ -1,7 +1,7 @@
 //! 📦️ `add-product` — brings a new id-keyed catalogue product into existence, addressed by its
 //! article number (`identity.article_number`, the format's native product key).
 
-use crate::{CatalogueProduct, Vdi3805Mutation, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_model::{CatalogueProduct, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -15,15 +15,15 @@ pub struct AddProduct {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for AddProduct {
+impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for AddProduct where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::remove_product::RemoveProduct> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "product", kind: "add-product", record: "AddedProduct" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+        crate::add_product::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_product::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for AddProduct {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

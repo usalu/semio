@@ -1,9 +1,9 @@
 //! ➕️ `insert-zone` diff — inserts the row at its position; a position past the list's end inserts it last as a
 //! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertZone;
-use crate::diff::{Din4108Diff, Din4108ZoneDelta};
-use crate::Din4108Snapshot;
+use crate::insert_zone::InsertZone;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ZoneDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &InsertZone, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if base.zones.iter().any(|existing| existing.id == payload.zone.id) {

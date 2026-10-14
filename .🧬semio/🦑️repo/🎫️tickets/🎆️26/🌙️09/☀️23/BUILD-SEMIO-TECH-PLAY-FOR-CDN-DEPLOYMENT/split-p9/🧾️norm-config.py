@@ -32,7 +32,7 @@ def config(art):
     mroot = open(os.path.join(REPO, S, "🧬️schema/🧬️mutations/🦀️.rs"), encoding="utf-8").read()
     enum = re.search(r"pub enum (\w+Mutation)\b", mroot).group(1)
     cap = enum[:-len("Mutation")]
-    leafdir = {m.group(1): m.group(2) for m in re.finditer(r'pub mod (\w+)\s*\{\s*#\[path\s*=\s*"[^"]*🧬️mutations/([^/"]+)/🦀️\.rs"\]', root_src)}
+    leafdir = {m.group(1): m.group(2) for m in re.finditer(r'pub mod (\w+)\s*\{\s*#\[path\s*=\s*"[^"]*🧬️mutations/([^/"]+)/', root_src) if m.group(2) not in ("🧭️edit-rules", "🧪️tests")}
     groups = json.load(open(os.path.join(HERE, "🧾️configs", "norm-mutation-groups.json"), encoding="utf-8"))[art]
     pkg = f"semio-s-artifact-norm-{n}"
     crates = {
@@ -43,14 +43,14 @@ def config(art):
         "checks": {"package": f"{pkg}-checks", "owner": f"{S}/🧬️schema/💡️inferences/⚖️checks", "prefix": f"{LOGICAL}::schema::checks", "description": f"{title} compliance checks"},
         "inferences": {"package": f"{pkg}-inferences", "owner": f"{S}/🧬️schema/💡️inferences", "prefix": f"{LOGICAL}::schema::inferences", "description": f"{title} inferences"},
         "io": {"package": f"{pkg}-io", "owner": f"{S}/🚪️io", "prefix": f"{LOGICAL}::io", "description": f"{title} io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"},
-        "examples": {"package": f"{pkg}-examples", "owner": f"{S}/📚️examples", "prefix": "", "description": f"{title} example documents"},
+        "examples": {"package": f"{pkg}-examples", "owner": f"{S}/📚️examples", "prefix": "examples" if "pub mod examples {" in root_src else "", "description": f"{title} example documents"},
         "editor": {"package": f"{pkg}-editor", "owner": f"{S}/✏️editor", "prefix": None, "description": f"{title} editor"},
         "viewer": {"package": f"{pkg}-viewer", "owner": f"{S}/👁️viewer", "prefix": None, "description": f"{title} viewer"},
         "agg": {"package": pkg, "owner": A, "prefix": "", "description": f"Norm {n} artifact", "role": "artifact"},
     }
     crates["editor"]["prefix"] = f"editor::{n}"
     crates["viewer"]["prefix"] = f"viewer::{n}"
-    rules = [["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/", "agg", "sqlite_snapshot_tests"], ["✏️editor/🏷️field-meta/", "editor", "field_meta"], ["✏️editor/", "editor"], ["👁️viewer/", "viewer"], ["📚️examples/", "examples"],
+    rules = [["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/", "agg", "sqlite_snapshot_tests"], ["✏️editor/🏷️field-meta/", "editor", "field_meta"], ["✳️any/🏷️field-meta/", "editor", "field_meta"], ["✏️editor/", "editor"], ["👁️viewer/", "viewer"], ["📚️examples/", "examples"],
              ["🧬️schema/📸️snapshot/", "model"], ["🧬️schema/🔺️diff/", "diff"], ["🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)", "mutations"]]
     create = []
     for gname, leaves in groups.items():
@@ -67,14 +67,14 @@ def config(art):
     create.append({"path": f"{S}/📚️examples/🦀️.rs", "text": f"//! 📚️ {title} example documents.\n"})
     create.append({"path": f"{S}/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs", "text": (
         f"//! 🧫️ {title}'s committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n"
-        f"//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n"
+        f"//! the shared `semio_s_mutation_vectors`.\n\n"
         f"#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {{\n"
         f"    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n"
-        f"    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<{pkg.replace('-', '_')}_model::{cap}Snapshot, {pkg.replace('-', '_')}_mutations::{enum}>(&root).await;\n}}\n")})
+        f"    semio_s_mutation_vectors::assert_committed_vectors::<{pkg.replace('-', '_')}_model::{cap}Snapshot, {pkg.replace('-', '_')}_mutations::{enum}>(&root, || {{}}).await;\n}}\n")})
     cfg = {
         "root": f"{A}/🦀️.rs", "crate": pkg.replace("-", "_"), "header": HEADER, "crates": crates, "rules": rules, "create": create,
         "transforms": [{"path": f"{S}/🧬️schema/🧬️mutations/🦀️.rs", "sub": [
-            [r"(?:#\[cfg\(test\)\]\s*)?#\[path = \"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\.rs\"\]\s*(?:#\[cfg\(test\)\]\s*)?(?:pub\s+)?mod \w+;\n?", ""]]}],
+            [r"(?:#\[cfg\(test\)\]\s*)?#\[path = \"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\.rs\"\]\s*(?:#\[cfg\(test\)\]\s*)?(?:pub(?:\([^)]*\))?\s+)?mod \w+;\n?", ""]]}],
         "generic_leaves": {"enum": enum, "snapshot": f"{cap}Snapshot", "diff_path": f"crate::{LOGICAL}::schema::diff::{cap}Diff",
                            "mutations_dir": f"{S}/🧬️schema/🧬️mutations", "mutations_path": f"crate::{LOGICAL}::schema::mutations", "leaves": [leafdir[l] for g in groups.values() for l in g]},
         "facet_leaves": {"schema_file": f"{S}/🧬️schema/🦀️.rs", "facets": {
@@ -86,14 +86,38 @@ def config(art):
         "move_mods": [{"file": f"{S}/🚪️io/🦀️.rs", "name": "mutation_bridge", "to": f"{S}/🧬️schema/🧬️mutations/🦀️.rs",
                        "source_reexport": f"pub use crate::{LOGICAL}::schema::mutations::mutation_bridge;\npub use mutation_bridge::*;",
                        "drop_in_target": [r"^pub use crate::standards::v1::subsets::any::io::mutation_bridge::\{[^}]*\};\n"]}],
+        "extra_candidates": ["semio-s-plugin-norm-compliance", "semio-s-plugin-norm-app-surface", "semio-s-plugin-norm-results-config"],
+        "dev_features": {"semio-s-plugin-norm-compliance": ["compliance-testing"], "semio-s-plugin-norm-app-surface": ["compliance-testing"], "semio-s-artifact-norm-contract": []},
         "root_to": "model", "delete_unmounted": True,
         "consumers": [A, f"{NORM}/🏭️bridge", "🌎️hub/🧩️compositions/📕️norm", "✏️s/🧑‍💻dev/🧹️fixture-sweep"],
         "test_targets": {"mutations": [{"name": "mutation_vectors", "path": f"{S}/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
-                                        "dev": ["semio-s-plugin-norm-mutation-vectors", "semio-framework-async-macros", f"{pkg}-model"]}]},
+                                        "dev": ["semio-s-mutation-vectors", "semio-framework-async-macros", f"{pkg}-model"]}]},
     }
     if not has_compliance and not has_checks_dir:
         del crates["checks"]
+    if n == "iso16757":
+        iso_checks(cfg, S, pkg, title)
     return cfg
+
+
+def iso_checks(cfg, S, pkg, title):
+    """📇️ ISO 16757 checks exceed one unit: the part files become taxonomy folders, part 1 and the shared builders (with the
+    schema's compliance helpers) become their own crates below the check catalogue."""
+    C = f"{S}/🧬️schema/💡️inferences/⚖️checks"
+    moves = {"🧰common.rs": "🧰️common/🦀️.rs", "📈️part1.rs": "📈️part1/🦀️.rs", "📐️part2.rs": "📐️part2/🦀️.rs", "📚️part4.rs": "📚️part4/🦀️.rs", "🔄part5.rs": "🔄️part5/🦀️.rs"}
+    for old, new in moves.items():
+        text = open(os.path.join(REPO, C, old), encoding="utf-8").read()
+        cfg["create"].append({"path": f"{C}/{new}", "text": text.replace('use crate::standards::v1::subsets::any::schema::', 'use crate::standards::v1::subsets::any::schema::')})
+        cfg.setdefault("delete", []).append(f"{C}/{old}")
+    cfg["transforms"].append({"path": f"{C}/🦀️.rs", "sub": [[re.escape(f'#[path = "{old}"]'), f'#[path = "{new}"]'] for old, new in moves.items()]})
+    cfg["regions"][0].update({"to": f"{C}/🧰️common/🧩️helpers/🦀️.rs", "mount": "compliance_helpers",
+                              "doc": f"//! 🧩️ {title} compliance helpers: pure part 1, 2, 4 and 5 libraries over the document types."})
+    L = "standards::v1::subsets::any::schema"
+    cfg["crates"]["checks"]["prefix"] = f"{L}::inferences::checks"
+    cfg["crates"]["checks-common"] = {"package": f"{pkg}-checks-common", "owner": f"{C}/🧰️common", "prefix": f"{L}::inferences::checks::common", "description": f"{title} compliance builders and helpers"}
+    cfg["crates"]["checks-part1"] = {"package": f"{pkg}-checks-part1", "owner": f"{C}/📈️part1", "prefix": f"{L}::inferences::checks::part1", "description": f"{title} part 1 compliance checks"}
+    cfg["rules"] = [["🧬️schema/🧪️tests/⚖️compliance/", "checks-common", "helpers::compliance_tests"], ["⚖️checks/🧰️common/🧩️helpers/", "checks-common", "helpers"], ["⚖️checks/🧰️common/", "checks-common"], ["⚖️checks/📈️part1/", "checks-part1"]] + cfg["rules"]
+
 
 
 def main():

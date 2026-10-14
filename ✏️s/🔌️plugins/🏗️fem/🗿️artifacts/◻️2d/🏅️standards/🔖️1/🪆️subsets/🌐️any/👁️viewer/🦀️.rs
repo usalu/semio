@@ -67,7 +67,7 @@ impl ArtifactViewer for Fem2dViewer {
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
     /// too — no editor import, this is `crate::standards::v1::subsets::any::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config

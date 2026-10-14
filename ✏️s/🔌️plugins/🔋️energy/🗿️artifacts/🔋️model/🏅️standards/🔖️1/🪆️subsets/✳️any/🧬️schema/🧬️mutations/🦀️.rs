@@ -2,323 +2,72 @@
 //! wrapping a handcrafted `protocol::MutationKind` payload (the `🧬️mutations/<slug>/` leaves);
 //! `#[derive(dsl::Mutations)]` generates the `protocol::Mutation`/`protocol::SemanticMutation`
 //! dispatch and `#[derive(dsl::DslEnum)]` generates the `dsl::DslVariants` binding that
-//! `📝️text/🦀️.rs`'s op codecs are written against — so a new kind costs one enum variant and one
-//! re-export line here, never a hand-written match arm, an opcode constant or a tag registry
+//! `📝️text/🦀️.rs`'s op codecs are written against — so a new kind costs one enum variant here, never a hand-written match arm, an opcode constant or a tag registry
 //! (ticket 26/09/06/ENERGY-PLUGIN-END-TO-END, adopting `📸️remodel`'s architecture).
 //!
 //! There is deliberately NO whole-document replace in this enum: `📓️derivation-rules.md` rule 6
 //! routes file-open / import / load-example through `store::ArtifactStore::reset`, outside history.
 
+#![allow(async_fn_in_trait)]
+#![allow(clippy::too_many_arguments)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_battery as battery_mutations;
+extern crate semio_s_artifact_energy_model_mut_boundary as boundary_mutations;
+extern crate semio_s_artifact_energy_model_mut_construction as construction_mutations;
+extern crate semio_s_artifact_energy_model_mut_day_schedule as day_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_daylight_zone as daylight_zone_mutations;
+extern crate semio_s_artifact_energy_model_diff as diff;
+extern crate semio_s_artifact_energy_model_mut_enclosure as enclosure_mutations;
+extern crate semio_s_artifact_energy_model_mut_equipment_gain as equipment_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_fault as fault_mutations;
+extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_mutations;
+extern crate semio_s_artifact_energy_model_mut_finish as finish_mutations;
+extern crate semio_s_artifact_energy_model_mut_fixed_schedule as fixed_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_glazing as glazing_mutations;
+extern crate semio_s_artifact_energy_model_mut_humidistat as humidistat_mutations;
+extern crate semio_s_artifact_energy_model_mut_ideal_loads as ideal_loads_mutations;
+extern crate semio_s_artifact_energy_model_mut_infiltration as infiltration_mutations;
+extern crate semio_s_artifact_energy_model_mut_leakage as leakage_mutations;
+extern crate semio_s_artifact_energy_model_mut_lighting_gain as lighting_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_load_center as load_center_mutations;
+extern crate semio_s_artifact_energy_model_mut_material as material_mutations;
+extern crate semio_s_artifact_energy_model_mut_model as model_mutations;
+extern crate semio_s_artifact_energy_model_mut_outdoor_air as outdoor_air_mutations;
+extern crate semio_s_artifact_energy_model_mut_people_gain as people_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_plant_loop as plant_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_pv_system as pv_system_mutations;
+extern crate semio_s_artifact_energy_model_mut_refrigeration as refrigeration_mutations;
+extern crate semio_s_artifact_energy_model_mut_room_air as room_air_mutations;
+extern crate semio_s_artifact_energy_model_mut_run as run_mutations;
+extern crate semio_s_artifact_energy_model_mut_setpoint as setpoint_mutations;
+extern crate semio_s_artifact_energy_model_mut_shading_device as shading_device_mutations;
+extern crate semio_s_artifact_energy_model_mut_shading as shading_mutations;
+extern crate semio_s_artifact_energy_model_mut_shw_system as shw_system_mutations;
+extern crate semio_s_artifact_energy_model_mut_site as site_mutations;
+extern crate semio_s_artifact_energy_model_mut_sizing as sizing_mutations;
+extern crate semio_s_artifact_energy_model_snapshot as snapshot;
+extern crate semio_s_artifact_energy_model_mut_solar_thermal as solar_thermal_mutations;
+extern crate semio_s_artifact_energy_model_mut_space_list as space_list_mutations;
+extern crate semio_s_artifact_energy_model_mut_space as space_mutations;
+extern crate semio_s_artifact_energy_model_mut_surface as surface_mutations;
+extern crate semio_s_artifact_energy_model_mut_thermostat as thermostat_mutations;
+extern crate semio_s_artifact_energy_model_mut_time_series as time_series_mutations;
+extern crate semio_s_artifact_energy_model_mut_ventilation as ventilation_mutations;
+extern crate semio_s_artifact_energy_model_mut_water_system as water_system_mutations;
+extern crate semio_s_artifact_energy_model_mut_week_schedule as week_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_mutations;
+extern crate semio_s_artifact_energy_model_mut_year_schedule as year_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_zone_equipment as zone_equipment_mutations;
+extern crate semio_s_artifact_energy_model_mut_zone as zone_mutations;
+
 use crate::diff::EnergyModelDiff;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-//#region 🔖️LinkRoles
-/// 🌦️ The `weather_link` slot's role name — one constant shared by the bind/unbind pair.
-pub const WEATHER_LINK_ROLE: &str = "weather";
-/// 🪢️ The `referenced_model` slot's role name — one constant shared by the connect/disconnect pair.
-pub const REFERENCED_MODEL_LINK_ROLE: &str = "model";
-//#endregion 🔖️LinkRoles
 
-//#region 🔖️Reexports
-pub use super::add_air_loop_terminal_zone::{add_air_loop_terminal_zone, AddAirLoopTerminalZone};
-pub use super::add_annual_schedule_holiday::{add_annual_schedule_holiday, AddAnnualScheduleHoliday};
-pub use super::add_construction_layer::{add_construction_layer, AddConstructionLayer};
-pub use super::add_electrical_load_center_battery::{add_electrical_load_center_battery, AddElectricalLoadCenterBattery};
-pub use super::add_electrical_load_center_pv::{add_electrical_load_center_pv, AddElectricalLoadCenterPv};
-pub use super::add_output_variable::{add_output_variable, AddOutputVariable};
-pub use super::add_plant_loop_equipment::{add_plant_loop_equipment, AddPlantLoopEquipment};
-pub use super::add_space_list_member::{add_space_list_member, AddSpaceListMember};
-pub use super::add_thermal_enclosure_zone::{add_thermal_enclosure_zone, AddThermalEnclosureZone};
-pub use super::bind_fenestration_glazing_construction::{bind_fenestration_glazing_construction, BindFenestrationGlazingConstruction};
-pub use super::bind_weather_file::{bind_weather_file, BindWeatherFile};
-pub use super::change_air_loop_design_supply_air_flow::{change_air_loop_design_supply_air_flow, ChangeAirLoopDesignSupplyAirFlow};
-pub use super::change_air_loop_return_node::{change_air_loop_return_node, ChangeAirLoopReturnNode};
-pub use super::change_air_loop_supply_node::{change_air_loop_supply_node, ChangeAirLoopSupplyNode};
-pub use super::change_annual_schedule_default_daily_schedule::{change_annual_schedule_default_daily_schedule, ChangeAnnualScheduleDefaultDailySchedule};
-pub use super::change_annual_schedule_holiday_daily_schedule::{change_annual_schedule_holiday_daily_schedule, ChangeAnnualScheduleHolidayDailySchedule};
-pub use super::change_battery_capacity::{change_battery_capacity, ChangeBatteryCapacity};
-pub use super::change_battery_max_charge::{change_battery_max_charge, ChangeBatteryMaxCharge};
-pub use super::change_battery_max_discharge::{change_battery_max_discharge, ChangeBatteryMaxDischarge};
-pub use super::change_battery_round_trip_efficiency::{change_battery_round_trip_efficiency, ChangeBatteryRoundTripEfficiency};
-pub use super::change_constant_schedule_value::{change_constant_schedule_value, ChangeConstantScheduleValue};
-pub use super::change_daily_schedule_interpolation::{change_daily_schedule_interpolation, ChangeDailyScheduleInterpolation};
-pub use super::change_daily_schedule_limits::{change_daily_schedule_limits, ChangeDailyScheduleLimits};
-pub use super::change_daylight_zone_glare_limit::{change_daylight_zone_glare_limit, ChangeDaylightZoneGlareLimit};
-pub use super::change_daylight_zone_illuminance_target::{change_daylight_zone_illuminance_target, ChangeDaylightZoneIlluminanceTarget};
-pub use super::change_daylight_zone_window_transmittance::{change_daylight_zone_window_transmittance, ChangeDaylightZoneWindowTransmittance};
-pub use super::change_daylight_zone_zone::{change_daylight_zone_zone, ChangeDaylightZoneZone};
-pub use super::change_equipment_gain_latent_fraction::{change_equipment_gain_latent_fraction, ChangeEquipmentGainLatentFraction};
-pub use super::change_equipment_gain_radiant_fraction::{change_equipment_gain_radiant_fraction, ChangeEquipmentGainRadiantFraction};
-pub use super::change_equipment_gain_schedule::{change_equipment_gain_schedule, ChangeEquipmentGainSchedule};
-pub use super::change_equipment_gain_watts_per_area::{change_equipment_gain_watts_per_area, ChangeEquipmentGainWattsPerArea};
-pub use super::change_equipment_gain_zone::{change_equipment_gain_zone, ChangeEquipmentGainZone};
-pub use super::change_fault_severity::{change_fault_severity, ChangeFaultSeverity};
-pub use super::change_fault_start_schedule::{change_fault_start_schedule, ChangeFaultStartSchedule};
-pub use super::change_fault_target_equipment::{change_fault_target_equipment, ChangeFaultTargetEquipment};
-pub use super::change_fault_type::{change_fault_type, ChangeFaultType};
-pub use super::change_fenestration_area::{change_fenestration_area, ChangeFenestrationArea};
-pub use super::change_fenestration_divider_conductance::{change_fenestration_divider_conductance, ChangeFenestrationDividerConductance};
-pub use super::change_fenestration_fin_depth::{change_fenestration_fin_depth, ChangeFenestrationFinDepth};
-pub use super::change_fenestration_fin_offset::{change_fenestration_fin_offset, ChangeFenestrationFinOffset};
-pub use super::change_fenestration_frame_conductance::{change_fenestration_frame_conductance, ChangeFenestrationFrameConductance};
-pub use super::change_fenestration_height::{change_fenestration_height, ChangeFenestrationHeight};
-pub use super::change_fenestration_overhang_depth::{change_fenestration_overhang_depth, ChangeFenestrationOverhangDepth};
-pub use super::change_fenestration_overhang_offset::{change_fenestration_overhang_offset, ChangeFenestrationOverhangOffset};
-pub use super::change_fenestration_shgc::{change_fenestration_shgc, ChangeFenestrationShgc};
-pub use super::change_fenestration_sill_height::{change_fenestration_sill_height, ChangeFenestrationSillHeight};
-pub use super::change_fenestration_surface::{change_fenestration_surface, ChangeFenestrationSurface};
-pub use super::change_fenestration_u_value::{change_fenestration_u_value, ChangeFenestrationUValue};
-pub use super::change_fenestration_vlt::{change_fenestration_vlt, ChangeFenestrationVlt};
-pub use super::change_humidistat_dehumidifying_setpoint_schedule::{change_humidistat_dehumidifying_setpoint_schedule, ChangeHumidistatDehumidifyingSetpointSchedule};
-pub use super::change_humidistat_dehumidifying_throttle_range::{change_humidistat_dehumidifying_throttle_range, ChangeHumidistatDehumidifyingThrottleRange};
-pub use super::change_humidistat_humidifying_setpoint_schedule::{change_humidistat_humidifying_setpoint_schedule, ChangeHumidistatHumidifyingSetpointSchedule};
-pub use super::change_humidistat_humidifying_throttle_range::{change_humidistat_humidifying_throttle_range, ChangeHumidistatHumidifyingThrottleRange};
-pub use super::change_humidistat_zone::{change_humidistat_zone, ChangeHumidistatZone};
-pub use super::change_ideal_loads_system_max_cooling_capacity::{change_ideal_loads_system_max_cooling_capacity, ChangeIdealLoadsSystemMaxCoolingCapacity};
-pub use super::change_ideal_loads_system_max_heating_capacity::{change_ideal_loads_system_max_heating_capacity, ChangeIdealLoadsSystemMaxHeatingCapacity};
-pub use super::change_ideal_loads_system_max_heating_supply_air_temp::{change_ideal_loads_system_max_heating_supply_air_temp, ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp};
-pub use super::change_ideal_loads_system_min_cooling_supply_air_temp::{change_ideal_loads_system_min_cooling_supply_air_temp, ChangeIdealLoadsSystemMinCoolingSupplyAirTemp};
-pub use super::change_ideal_loads_system_outdoor_air_per_area::{change_ideal_loads_system_outdoor_air_per_area, ChangeIdealLoadsSystemOutdoorAirPerArea};
-pub use super::change_ideal_loads_system_outdoor_air_per_person::{change_ideal_loads_system_outdoor_air_per_person, ChangeIdealLoadsSystemOutdoorAirPerPerson};
-pub use super::change_ideal_loads_system_zone::{change_ideal_loads_system_zone, ChangeIdealLoadsSystemZone};
-pub use super::change_infiltration_constant_term_coefficient::{change_infiltration_constant_term_coefficient, ChangeInfiltrationConstantTermCoefficient};
-pub use super::change_infiltration_design_flow_ach::{change_infiltration_design_flow_ach, ChangeInfiltrationDesignFlowAch};
-pub use super::change_infiltration_discharge_coefficient::{change_infiltration_discharge_coefficient, ChangeInfiltrationDischargeCoefficient};
-pub use super::change_infiltration_effective_leakage_area::{change_infiltration_effective_leakage_area, ChangeInfiltrationEffectiveLeakageArea};
-pub use super::change_infiltration_flow_per_exterior_area::{change_infiltration_flow_per_exterior_area, ChangeInfiltrationFlowPerExteriorArea};
-pub use super::change_infiltration_method::{change_infiltration_method, ChangeInfiltrationMethod};
-pub use super::change_infiltration_schedule::{change_infiltration_schedule, ChangeInfiltrationSchedule};
-pub use super::change_infiltration_stack_height::{change_infiltration_stack_height, ChangeInfiltrationStackHeight};
-pub use super::change_infiltration_temperature_term_coefficient::{change_infiltration_temperature_term_coefficient, ChangeInfiltrationTemperatureTermCoefficient};
-pub use super::change_infiltration_velocity_squared_term_coefficient::{change_infiltration_velocity_squared_term_coefficient, ChangeInfiltrationVelocitySquaredTermCoefficient};
-pub use super::change_infiltration_velocity_term_coefficient::{change_infiltration_velocity_term_coefficient, ChangeInfiltrationVelocityTermCoefficient};
-pub use super::change_infiltration_zone::{change_infiltration_zone, ChangeInfiltrationZone};
-pub use super::change_lighting_gain_radiant_fraction::{change_lighting_gain_radiant_fraction, ChangeLightingGainRadiantFraction};
-pub use super::change_lighting_gain_return_air_fraction::{change_lighting_gain_return_air_fraction, ChangeLightingGainReturnAirFraction};
-pub use super::change_lighting_gain_schedule::{change_lighting_gain_schedule, ChangeLightingGainSchedule};
-pub use super::change_lighting_gain_visible_fraction::{change_lighting_gain_visible_fraction, ChangeLightingGainVisibleFraction};
-pub use super::change_lighting_gain_watts_per_area::{change_lighting_gain_watts_per_area, ChangeLightingGainWattsPerArea};
-pub use super::change_lighting_gain_zone::{change_lighting_gain_zone, ChangeLightingGainZone};
-pub use super::change_material_conductivity::{change_material_conductivity, ChangeMaterialConductivity};
-pub use super::change_material_density::{change_material_density, ChangeMaterialDensity};
-pub use super::change_material_solar_absorptance::{change_material_solar_absorptance, ChangeMaterialSolarAbsorptance};
-pub use super::change_material_specific_heat::{change_material_specific_heat, ChangeMaterialSpecificHeat};
-pub use super::change_material_thermal_absorptance::{change_material_thermal_absorptance, ChangeMaterialThermalAbsorptance};
-pub use super::change_material_thickness::{change_material_thickness, ChangeMaterialThickness};
-pub use super::change_material_visible_absorptance::{change_material_visible_absorptance, ChangeMaterialVisibleAbsorptance};
-pub use super::change_mechanical_ventilation_design_flow::{change_mechanical_ventilation_design_flow, ChangeMechanicalVentilationDesignFlow};
-pub use super::change_mechanical_ventilation_fan_delta_pressure::{change_mechanical_ventilation_fan_delta_pressure, ChangeMechanicalVentilationFanDeltaPressure};
-pub use super::change_mechanical_ventilation_fan_total_efficiency::{change_mechanical_ventilation_fan_total_efficiency, ChangeMechanicalVentilationFanTotalEfficiency};
-pub use super::change_mechanical_ventilation_schedule::{change_mechanical_ventilation_schedule, ChangeMechanicalVentilationSchedule};
-pub use super::change_mechanical_ventilation_zone::{change_mechanical_ventilation_zone, ChangeMechanicalVentilationZone};
-pub use super::change_model_version::{change_model_version, ChangeModelVersion};
-pub use super::change_outdoor_air_system_air_loop::{change_outdoor_air_system_air_loop, ChangeOutdoorAirSystemAirLoop};
-pub use super::change_outdoor_air_system_economizer_enabled::{change_outdoor_air_system_economizer_enabled, ChangeOutdoorAirSystemEconomizerEnabled};
-pub use super::change_outdoor_air_system_min_oa_flow::{change_outdoor_air_system_min_oa_flow, ChangeOutdoorAirSystemMinOaFlow};
-pub use super::change_people_gain_activity_schedule::{change_people_gain_activity_schedule, ChangePeopleGainActivitySchedule};
-pub use super::change_people_gain_latent_fraction::{change_people_gain_latent_fraction, ChangePeopleGainLatentFraction};
-pub use super::change_people_gain_people_per_area::{change_people_gain_people_per_area, ChangePeopleGainPeoplePerArea};
-pub use super::change_people_gain_radiant_fraction::{change_people_gain_radiant_fraction, ChangePeopleGainRadiantFraction};
-pub use super::change_people_gain_schedule::{change_people_gain_schedule, ChangePeopleGainSchedule};
-pub use super::change_people_gain_sensible_fraction::{change_people_gain_sensible_fraction, ChangePeopleGainSensibleFraction};
-pub use super::change_people_gain_zone::{change_people_gain_zone, ChangePeopleGainZone};
-pub use super::change_plant_loop_design_flow::{change_plant_loop_design_flow, ChangePlantLoopDesignFlow};
-pub use super::change_plant_loop_return_temperature::{change_plant_loop_return_temperature, ChangePlantLoopReturnTemperature};
-pub use super::change_plant_loop_supply_temperature::{change_plant_loop_supply_temperature, ChangePlantLoopSupplyTemperature};
-pub use super::change_plant_loop_type::{change_plant_loop_type, ChangePlantLoopType};
-pub use super::change_pv_system_area::{change_pv_system_area, ChangePvSystemArea};
-pub use super::change_pv_system_azimuth::{change_pv_system_azimuth, ChangePvSystemAzimuth};
-pub use super::change_pv_system_dc_capacity::{change_pv_system_dc_capacity, ChangePvSystemDcCapacity};
-pub use super::change_pv_system_inverter_efficiency::{change_pv_system_inverter_efficiency, ChangePvSystemInverterEfficiency};
-pub use super::change_pv_system_module_efficiency::{change_pv_system_module_efficiency, ChangePvSystemModuleEfficiency};
-pub use super::change_pv_system_tilt::{change_pv_system_tilt, ChangePvSystemTilt};
-pub use super::change_refrigeration_system_case_count::{change_refrigeration_system_case_count, ChangeRefrigerationSystemCaseCount};
-pub use super::change_refrigeration_system_defrost_schedule::{change_refrigeration_system_defrost_schedule, ChangeRefrigerationSystemDefrostSchedule};
-pub use super::change_refrigeration_system_design_load::{change_refrigeration_system_design_load, ChangeRefrigerationSystemDesignLoad};
-pub use super::change_room_air_model::{change_room_air_model, ChangeRoomAirModel};
-pub use super::change_setpoint_manager_schedule::{change_setpoint_manager_schedule, ChangeSetpointManagerSchedule};
-pub use super::change_shading_surface_transmittance_schedule::{change_shading_surface_transmittance_schedule, ChangeShadingSurfaceTransmittanceSchedule};
-pub use super::change_shw_system_heater_capacity::{change_shw_system_heater_capacity, ChangeShwSystemHeaterCapacity};
-pub use super::change_shw_system_schedule::{change_shw_system_schedule, ChangeShwSystemSchedule};
-pub use super::change_shw_system_setpoint::{change_shw_system_setpoint, ChangeShwSystemSetpoint};
-pub use super::change_shw_system_storage_volume::{change_shw_system_storage_volume, ChangeShwSystemStorageVolume};
-pub use super::change_sizing_object_design_day_type::{change_sizing_object_design_day_type, ChangeSizingObjectDesignDayType};
-pub use super::change_sizing_object_sizing_type::{change_sizing_object_sizing_type, ChangeSizingObjectSizingType};
-pub use super::change_sizing_object_zone::{change_sizing_object_zone, ChangeSizingObjectZone};
-pub use super::change_solar_thermal_system_azimuth::{change_solar_thermal_system_azimuth, ChangeSolarThermalSystemAzimuth};
-pub use super::change_solar_thermal_system_collector_area::{change_solar_thermal_system_collector_area, ChangeSolarThermalSystemCollectorArea};
-pub use super::change_solar_thermal_system_efficiency::{change_solar_thermal_system_efficiency, ChangeSolarThermalSystemEfficiency};
-pub use super::change_solar_thermal_system_storage_volume::{change_solar_thermal_system_storage_volume, ChangeSolarThermalSystemStorageVolume};
-pub use super::change_solar_thermal_system_tilt::{change_solar_thermal_system_tilt, ChangeSolarThermalSystemTilt};
-pub use super::change_space_floor_area::{change_space_floor_area, ChangeSpaceFloorArea};
-pub use super::change_space_zone::{change_space_zone, ChangeSpaceZone};
-pub use super::change_surface_boundary_condition::{change_surface_boundary_condition, ChangeSurfaceBoundaryCondition};
-pub use super::change_surface_class::{change_surface_class, ChangeSurfaceClass};
-pub use super::change_surface_construction::{change_surface_construction, ChangeSurfaceConstruction};
-pub use super::change_surface_multiplier::{change_surface_multiplier, ChangeSurfaceMultiplier};
-pub use super::change_surface_sun_exposed::{change_surface_sun_exposed, ChangeSurfaceSunExposed};
-pub use super::change_surface_wind_exposed::{change_surface_wind_exposed, ChangeSurfaceWindExposed};
-pub use super::change_surface_zone::{change_surface_zone, ChangeSurfaceZone};
-pub use super::change_thermostat_cooling_setpoint_schedule::{change_thermostat_cooling_setpoint_schedule, ChangeThermostatCoolingSetpointSchedule};
-pub use super::change_thermostat_cooling_throttle_range::{change_thermostat_cooling_throttle_range, ChangeThermostatCoolingThrottleRange};
-pub use super::change_thermostat_heating_setpoint_schedule::{change_thermostat_heating_setpoint_schedule, ChangeThermostatHeatingSetpointSchedule};
-pub use super::change_thermostat_heating_throttle_range::{change_thermostat_heating_throttle_range, ChangeThermostatHeatingThrottleRange};
-pub use super::change_thermostat_zone::{change_thermostat_zone, ChangeThermostatZone};
-pub use super::change_time_series_schedule_timestep::{change_time_series_schedule_timestep, ChangeTimeSeriesScheduleTimestep};
-pub use super::change_water_system_fixture_count::{change_water_system_fixture_count, ChangeWaterSystemFixtureCount};
-pub use super::change_water_system_peak_flow::{change_water_system_peak_flow, ChangeWaterSystemPeakFlow};
-pub use super::change_water_system_schedule::{change_water_system_schedule, ChangeWaterSystemSchedule};
-pub use super::change_weekly_schedule_day::{change_weekly_schedule_day, ChangeWeeklyScheduleDay};
-pub use super::change_zone_conditioned::{change_zone_conditioned, ChangeZoneConditioned};
-pub use super::change_zone_equipment_cooling_capacity::{change_zone_equipment_cooling_capacity, ChangeZoneEquipmentCoolingCapacity};
-pub use super::change_zone_equipment_heating_capacity::{change_zone_equipment_heating_capacity, ChangeZoneEquipmentHeatingCapacity};
-pub use super::change_zone_equipment_priority::{change_zone_equipment_priority, ChangeZoneEquipmentPriority};
-pub use super::change_zone_equipment_type::{change_zone_equipment_type, ChangeZoneEquipmentType};
-pub use super::change_zone_equipment_zone::{change_zone_equipment_zone, ChangeZoneEquipmentZone};
-pub use super::change_zone_floor_area_participation::{change_zone_floor_area_participation, ChangeZoneFloorAreaParticipation};
-pub use super::change_zone_multiplier::{change_zone_multiplier, ChangeZoneMultiplier};
-pub use super::change_zone_volume::{change_zone_volume, ChangeZoneVolume};
-pub use super::clear_fenestration_glazing_construction::{clear_fenestration_glazing_construction, ClearFenestrationGlazingConstruction};
-pub use super::connect_referenced_model::{connect_referenced_model, ConnectReferencedModel};
-pub use super::connect_surfaces::{connect_surfaces, ConnectSurfaces};
-pub use super::create_air_loop::{create_air_loop, CreateAirLoop};
-pub use super::create_annual_schedule::{create_annual_schedule, CreateAnnualSchedule};
-pub use super::create_battery::{create_battery, CreateBattery};
-pub use super::create_constant_schedule::{create_constant_schedule, CreateConstantSchedule};
-pub use super::create_construction::{create_construction, CreateConstruction};
-pub use super::create_daily_schedule::{create_daily_schedule, CreateDailySchedule};
-pub use super::create_daylight_zone::{create_daylight_zone, CreateDaylightZone};
-pub use super::create_electrical_load_center::{create_electrical_load_center, CreateElectricalLoadCenter};
-pub use super::create_equipment_gain::{create_equipment_gain, CreateEquipmentGain};
-pub use super::create_fault::{create_fault, CreateFault};
-pub use super::create_fenestration::{create_fenestration, CreateFenestration};
-pub use super::create_humidistat::{create_humidistat, CreateHumidistat};
-pub use super::create_ideal_loads_system::{create_ideal_loads_system, CreateIdealLoadsSystem};
-pub use super::create_infiltration::{create_infiltration, CreateInfiltration};
-pub use super::create_lighting_gain::{create_lighting_gain, CreateLightingGain};
-pub use super::create_material::{create_material, CreateMaterial};
-pub use super::create_mechanical_ventilation::{create_mechanical_ventilation, CreateMechanicalVentilation};
-pub use super::create_outdoor_air_system::{create_outdoor_air_system, CreateOutdoorAirSystem};
-pub use super::create_people_gain::{create_people_gain, CreatePeopleGain};
-pub use super::create_plant_loop::{create_plant_loop, CreatePlantLoop};
-pub use super::create_pv_system::{create_pv_system, CreatePvSystem};
-pub use super::create_refrigeration_system::{create_refrigeration_system, CreateRefrigerationSystem};
-pub use super::create_room_air_model_assignment::{create_room_air_model_assignment, CreateRoomAirModelAssignment};
-pub use super::create_setpoint_manager::{create_setpoint_manager, CreateSetpointManager};
-pub use super::create_shading_surface::{create_shading_surface, CreateShadingSurface};
-pub use super::create_shw_system::{create_shw_system, CreateShwSystem};
-pub use super::create_sizing_object::{create_sizing_object, CreateSizingObject};
-pub use super::create_solar_thermal_system::{create_solar_thermal_system, CreateSolarThermalSystem};
-pub use super::create_space::{create_space, CreateSpace};
-pub use super::create_space_list::{create_space_list, CreateSpaceList};
-pub use super::create_surface::{create_surface, CreateSurface};
-pub use super::create_thermal_enclosure::{create_thermal_enclosure, CreateThermalEnclosure};
-pub use super::create_thermostat::{create_thermostat, CreateThermostat};
-pub use super::create_time_series_schedule::{create_time_series_schedule, CreateTimeSeriesSchedule};
-pub use super::create_water_system::{create_water_system, CreateWaterSystem};
-pub use super::create_weekly_schedule::{create_weekly_schedule, CreateWeeklySchedule};
-pub use super::create_zone::{create_zone, CreateZone};
-pub use super::create_zone_equipment::{create_zone_equipment, CreateZoneEquipment};
-pub use super::delete_air_loop::{delete_air_loop, DeleteAirLoop};
-pub use super::delete_annual_schedule::{delete_annual_schedule, DeleteAnnualSchedule};
-pub use super::delete_battery::{delete_battery, DeleteBattery};
-pub use super::delete_constant_schedule::{delete_constant_schedule, DeleteConstantSchedule};
-pub use super::delete_construction::{delete_construction, DeleteConstruction};
-pub use super::delete_daily_schedule::{delete_daily_schedule, DeleteDailySchedule};
-pub use super::delete_daylight_zone::{delete_daylight_zone, DeleteDaylightZone};
-pub use super::delete_electrical_load_center::{delete_electrical_load_center, DeleteElectricalLoadCenter};
-pub use super::delete_equipment_gain::{delete_equipment_gain, DeleteEquipmentGain};
-pub use super::delete_fault::{delete_fault, DeleteFault};
-pub use super::delete_fenestration::{delete_fenestration, DeleteFenestration};
-pub use super::delete_humidistat::{delete_humidistat, DeleteHumidistat};
-pub use super::delete_ideal_loads_system::{delete_ideal_loads_system, DeleteIdealLoadsSystem};
-pub use super::delete_infiltration::{delete_infiltration, DeleteInfiltration};
-pub use super::delete_lighting_gain::{delete_lighting_gain, DeleteLightingGain};
-pub use super::delete_material::{delete_material, DeleteMaterial};
-pub use super::delete_mechanical_ventilation::{delete_mechanical_ventilation, DeleteMechanicalVentilation};
-pub use super::delete_outdoor_air_system::{delete_outdoor_air_system, DeleteOutdoorAirSystem};
-pub use super::delete_people_gain::{delete_people_gain, DeletePeopleGain};
-pub use super::delete_plant_loop::{delete_plant_loop, DeletePlantLoop};
-pub use super::delete_pv_system::{delete_pv_system, DeletePvSystem};
-pub use super::delete_refrigeration_system::{delete_refrigeration_system, DeleteRefrigerationSystem};
-pub use super::delete_room_air_model_assignment::{delete_room_air_model_assignment, DeleteRoomAirModelAssignment};
-pub use super::delete_setpoint_manager::{delete_setpoint_manager, DeleteSetpointManager};
-pub use super::delete_shading_surface::{delete_shading_surface, DeleteShadingSurface};
-pub use super::delete_shw_system::{delete_shw_system, DeleteShwSystem};
-pub use super::delete_sizing_object::{delete_sizing_object, DeleteSizingObject};
-pub use super::delete_solar_thermal_system::{delete_solar_thermal_system, DeleteSolarThermalSystem};
-pub use super::delete_space::{delete_space, DeleteSpace};
-pub use super::delete_space_list::{delete_space_list, DeleteSpaceList};
-pub use super::delete_surface::{delete_surface, DeleteSurface};
-pub use super::delete_thermal_enclosure::{delete_thermal_enclosure, DeleteThermalEnclosure};
-pub use super::delete_thermostat::{delete_thermostat, DeleteThermostat};
-pub use super::delete_time_series_schedule::{delete_time_series_schedule, DeleteTimeSeriesSchedule};
-pub use super::delete_water_system::{delete_water_system, DeleteWaterSystem};
-pub use super::delete_weekly_schedule::{delete_weekly_schedule, DeleteWeeklySchedule};
-pub use super::delete_zone::{delete_zone, DeleteZone};
-pub use super::delete_zone_equipment::{delete_zone_equipment, DeleteZoneEquipment};
-pub use super::disconnect_referenced_model::{disconnect_referenced_model, DisconnectReferencedModel};
-pub use super::disconnect_surfaces::{disconnect_surfaces, DisconnectSurfaces};
-pub use super::insert_annual_schedule_rule::{insert_annual_schedule_rule, InsertAnnualScheduleRule};
-pub use super::remove_air_loop_terminal_zone::{remove_air_loop_terminal_zone, RemoveAirLoopTerminalZone};
-pub use super::remove_annual_schedule_holiday::{remove_annual_schedule_holiday, RemoveAnnualScheduleHoliday};
-pub use super::remove_annual_schedule_rule::{remove_annual_schedule_rule, RemoveAnnualScheduleRule};
-pub use super::remove_construction_layer::{remove_construction_layer, RemoveConstructionLayer};
-pub use super::remove_electrical_load_center_battery::{remove_electrical_load_center_battery, RemoveElectricalLoadCenterBattery};
-pub use super::remove_electrical_load_center_pv::{remove_electrical_load_center_pv, RemoveElectricalLoadCenterPv};
-pub use super::remove_output_variable::{remove_output_variable, RemoveOutputVariable};
-pub use super::remove_plant_loop_equipment::{remove_plant_loop_equipment, RemovePlantLoopEquipment};
-pub use super::remove_space_list_member::{remove_space_list_member, RemoveSpaceListMember};
-pub use super::remove_thermal_enclosure_zone::{remove_thermal_enclosure_zone, RemoveThermalEnclosureZone};
-pub use super::rename_air_loop::{rename_air_loop, RenameAirLoop};
-pub use super::rename_construction::{rename_construction, RenameConstruction};
-pub use super::rename_electrical_load_center::{rename_electrical_load_center, RenameElectricalLoadCenter};
-pub use super::rename_fenestration::{rename_fenestration, RenameFenestration};
-pub use super::rename_material::{rename_material, RenameMaterial};
-pub use super::rename_model::{rename_model, RenameModel};
-pub use super::rename_plant_loop::{rename_plant_loop, RenamePlantLoop};
-pub use super::rename_setpoint_manager::{rename_setpoint_manager, RenameSetpointManager};
-pub use super::rename_shading_surface::{rename_shading_surface, RenameShadingSurface};
-pub use super::rename_space::{rename_space, RenameSpace};
-pub use super::rename_space_list::{rename_space_list, RenameSpaceList};
-pub use super::rename_surface::{rename_surface, RenameSurface};
-pub use super::rename_thermal_enclosure::{rename_thermal_enclosure, RenameThermalEnclosure};
-pub use super::rename_zone::{rename_zone, RenameZone};
-pub use super::reorder_annual_schedule_rules::{reorder_annual_schedule_rules, ReorderAnnualScheduleRules};
-pub use super::reorder_construction_layers::{reorder_construction_layers, ReorderConstructionLayers};
-pub use super::replace_airflow_network::{replace_airflow_network, ReplaceAirflowNetwork};
-pub use super::replace_daily_schedule_hourly_values::{replace_daily_schedule_hourly_values, ReplaceDailyScheduleHourlyValues};
-pub use super::replace_setpoint_manager_kind::{replace_setpoint_manager_kind, ReplaceSetpointManagerKind};
-pub use super::replace_shading_surface_vertices::{replace_shading_surface_vertices, ReplaceShadingSurfaceVertices};
-pub use super::replace_surface_vertices::{replace_surface_vertices, ReplaceSurfaceVertices};
-pub use super::replace_time_series_schedule_values::{replace_time_series_schedule_values, ReplaceTimeSeriesScheduleValues};
-pub use super::unbind_weather_file::{unbind_weather_file, UnbindWeatherFile};
-pub use super::change_site_latitude::{change_site_latitude, ChangeSiteLatitude};
-pub use super::change_site_longitude::{change_site_longitude, ChangeSiteLongitude};
-pub use super::change_site_elevation::{change_site_elevation, ChangeSiteElevation};
-pub use super::change_site_time_zone::{change_site_time_zone, ChangeSiteTimeZone};
-pub use super::change_site_north_axis::{change_site_north_axis, ChangeSiteNorthAxis};
-pub use super::change_ground_building::{change_ground_building, ChangeGroundBuilding};
-pub use super::change_ground_shallow::{change_ground_shallow, ChangeGroundShallow};
-pub use super::change_ground_deep::{change_ground_deep, ChangeGroundDeep};
-pub use super::change_run_start_month::{change_run_start_month, ChangeRunStartMonth};
-pub use super::change_run_start_day::{change_run_start_day, ChangeRunStartDay};
-pub use super::change_run_end_month::{change_run_end_month, ChangeRunEndMonth};
-pub use super::change_run_end_day::{change_run_end_day, ChangeRunEndDay};
-pub use super::change_run_year::{change_run_year, ChangeRunYear};
-pub use super::replace_fenestration_vertices::{replace_fenestration_vertices, ReplaceFenestrationVertices};
-pub use super::change_glazing_material_thickness::{change_glazing_material_thickness, ChangeGlazingMaterialThickness};
-pub use super::change_glazing_material_conductivity::{change_glazing_material_conductivity, ChangeGlazingMaterialConductivity};
-pub use super::change_glazing_material_solar_transmittance::{change_glazing_material_solar_transmittance, ChangeGlazingMaterialSolarTransmittance};
-pub use super::change_glazing_material_visible_transmittance::{change_glazing_material_visible_transmittance, ChangeGlazingMaterialVisibleTransmittance};
-pub use super::change_glazing_material_infrared_emissivity::{change_glazing_material_infrared_emissivity, ChangeGlazingMaterialInfraredEmissivity};
-pub use super::rename_glazing_material::{rename_glazing_material, RenameGlazingMaterial};
-pub use super::change_gas_material_thickness::{change_gas_material_thickness, ChangeGasMaterialThickness};
-pub use super::change_gas_material_gas::{change_gas_material_gas, ChangeGasMaterialGas};
-pub use super::change_material_roughness::{change_material_roughness, ChangeMaterialRoughness};
-pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
-//#endregion 🔖️Reexports
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for an energy model.
@@ -327,1251 +76,311 @@ pub use super::rename_gas_material::{rename_gas_material, RenameGasMaterial};
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model")]
 pub enum EnergyModelMutation {
-    RenameModel(RenameModel),
-    ChangeModelVersion(ChangeModelVersion),
-    ChangeSiteLatitude(ChangeSiteLatitude),
-    ChangeSiteLongitude(ChangeSiteLongitude),
-    ChangeSiteElevation(ChangeSiteElevation),
-    ChangeSiteTimeZone(ChangeSiteTimeZone),
-    ChangeSiteNorthAxis(ChangeSiteNorthAxis),
-    ChangeGroundBuilding(ChangeGroundBuilding),
-    ChangeGroundShallow(ChangeGroundShallow),
-    ChangeGroundDeep(ChangeGroundDeep),
-    ChangeRunStartMonth(ChangeRunStartMonth),
-    ChangeRunStartDay(ChangeRunStartDay),
-    ChangeRunEndMonth(ChangeRunEndMonth),
-    ChangeRunEndDay(ChangeRunEndDay),
-    ChangeRunYear(ChangeRunYear),
-    ReplaceAirflowNetwork(ReplaceAirflowNetwork),
-    AddOutputVariable(AddOutputVariable),
-    RemoveOutputVariable(RemoveOutputVariable),
-    BindWeatherFile(BindWeatherFile),
-    UnbindWeatherFile(UnbindWeatherFile),
-    ConnectReferencedModel(ConnectReferencedModel),
-    DisconnectReferencedModel(DisconnectReferencedModel),
-    RenameZone(RenameZone),
-    ChangeZoneVolume(ChangeZoneVolume),
-    ChangeZoneMultiplier(ChangeZoneMultiplier),
-    ChangeZoneConditioned(ChangeZoneConditioned),
-    ChangeZoneFloorAreaParticipation(ChangeZoneFloorAreaParticipation),
-    CreateZone(CreateZone),
-    DeleteZone(DeleteZone),
-    CreateSpace(CreateSpace),
-    DeleteSpace(DeleteSpace),
-    RenameSpace(RenameSpace),
-    ChangeSpaceFloorArea(ChangeSpaceFloorArea),
-    ChangeSpaceZone(ChangeSpaceZone),
-    CreateSurface(CreateSurface),
-    DeleteSurface(DeleteSurface),
-    RenameSurface(RenameSurface),
-    ChangeSurfaceZone(ChangeSurfaceZone),
-    ChangeSurfaceClass(ChangeSurfaceClass),
-    ReplaceSurfaceVertices(ReplaceSurfaceVertices),
-    ChangeSurfaceConstruction(ChangeSurfaceConstruction),
-    ChangeSurfaceBoundaryCondition(ChangeSurfaceBoundaryCondition),
-    ChangeSurfaceSunExposed(ChangeSurfaceSunExposed),
-    ChangeSurfaceWindExposed(ChangeSurfaceWindExposed),
-    ChangeSurfaceMultiplier(ChangeSurfaceMultiplier),
-    CreateFenestration(CreateFenestration),
-    DeleteFenestration(DeleteFenestration),
-    RenameFenestration(RenameFenestration),
-    ChangeFenestrationSurface(ChangeFenestrationSurface),
-    ChangeFenestrationUValue(ChangeFenestrationUValue),
-    ChangeFenestrationShgc(ChangeFenestrationShgc),
-    ChangeFenestrationVlt(ChangeFenestrationVlt),
-    ChangeFenestrationArea(ChangeFenestrationArea),
-    ChangeFenestrationFrameConductance(ChangeFenestrationFrameConductance),
-    ChangeFenestrationDividerConductance(ChangeFenestrationDividerConductance),
-    CreateShadingSurface(CreateShadingSurface),
-    DeleteShadingSurface(DeleteShadingSurface),
-    RenameShadingSurface(RenameShadingSurface),
-    ReplaceShadingSurfaceVertices(ReplaceShadingSurfaceVertices),
-    ChangeShadingSurfaceTransmittanceSchedule(ChangeShadingSurfaceTransmittanceSchedule),
-    ConnectSurfaces(ConnectSurfaces),
-    DisconnectSurfaces(DisconnectSurfaces),
-    BindFenestrationGlazingConstruction(BindFenestrationGlazingConstruction),
-    ClearFenestrationGlazingConstruction(ClearFenestrationGlazingConstruction),
-    ChangeFenestrationHeight(ChangeFenestrationHeight),
-    ChangeFenestrationSillHeight(ChangeFenestrationSillHeight),
-    ChangeFenestrationOverhangDepth(ChangeFenestrationOverhangDepth),
-    ChangeFenestrationOverhangOffset(ChangeFenestrationOverhangOffset),
-    ChangeFenestrationFinDepth(ChangeFenestrationFinDepth),
-    ChangeFenestrationFinOffset(ChangeFenestrationFinOffset),
-    CreateMaterial(CreateMaterial),
-    DeleteMaterial(DeleteMaterial),
-    RenameMaterial(RenameMaterial),
-    ChangeMaterialThickness(ChangeMaterialThickness),
-    ChangeMaterialConductivity(ChangeMaterialConductivity),
-    ChangeMaterialDensity(ChangeMaterialDensity),
-    ChangeMaterialSpecificHeat(ChangeMaterialSpecificHeat),
-    ChangeMaterialThermalAbsorptance(ChangeMaterialThermalAbsorptance),
-    ChangeMaterialSolarAbsorptance(ChangeMaterialSolarAbsorptance),
-    ChangeMaterialVisibleAbsorptance(ChangeMaterialVisibleAbsorptance),
-    CreateConstruction(CreateConstruction),
-    DeleteConstruction(DeleteConstruction),
-    RenameConstruction(RenameConstruction),
-    AddConstructionLayer(AddConstructionLayer),
-    RemoveConstructionLayer(RemoveConstructionLayer),
-    ReorderConstructionLayers(ReorderConstructionLayers),
-    CreatePeopleGain(CreatePeopleGain),
-    DeletePeopleGain(DeletePeopleGain),
-    ChangePeopleGainZone(ChangePeopleGainZone),
-    ChangePeopleGainSchedule(ChangePeopleGainSchedule),
-    ChangePeopleGainActivitySchedule(ChangePeopleGainActivitySchedule),
-    ChangePeopleGainPeoplePerArea(ChangePeopleGainPeoplePerArea),
-    ChangePeopleGainSensibleFraction(ChangePeopleGainSensibleFraction),
-    ChangePeopleGainLatentFraction(ChangePeopleGainLatentFraction),
-    ChangePeopleGainRadiantFraction(ChangePeopleGainRadiantFraction),
-    CreateLightingGain(CreateLightingGain),
-    DeleteLightingGain(DeleteLightingGain),
-    ChangeLightingGainZone(ChangeLightingGainZone),
-    ChangeLightingGainSchedule(ChangeLightingGainSchedule),
-    ChangeLightingGainWattsPerArea(ChangeLightingGainWattsPerArea),
-    ChangeLightingGainRadiantFraction(ChangeLightingGainRadiantFraction),
-    ChangeLightingGainVisibleFraction(ChangeLightingGainVisibleFraction),
-    ChangeLightingGainReturnAirFraction(ChangeLightingGainReturnAirFraction),
-    CreateEquipmentGain(CreateEquipmentGain),
-    DeleteEquipmentGain(DeleteEquipmentGain),
-    ChangeEquipmentGainZone(ChangeEquipmentGainZone),
-    ChangeEquipmentGainSchedule(ChangeEquipmentGainSchedule),
-    ChangeEquipmentGainWattsPerArea(ChangeEquipmentGainWattsPerArea),
-    ChangeEquipmentGainRadiantFraction(ChangeEquipmentGainRadiantFraction),
-    ChangeEquipmentGainLatentFraction(ChangeEquipmentGainLatentFraction),
-    CreateInfiltration(CreateInfiltration),
-    DeleteInfiltration(DeleteInfiltration),
-    ChangeInfiltrationZone(ChangeInfiltrationZone),
-    ChangeInfiltrationSchedule(ChangeInfiltrationSchedule),
-    ChangeInfiltrationFlowPerExteriorArea(ChangeInfiltrationFlowPerExteriorArea),
-    ChangeInfiltrationConstantTermCoefficient(ChangeInfiltrationConstantTermCoefficient),
-    ChangeInfiltrationTemperatureTermCoefficient(ChangeInfiltrationTemperatureTermCoefficient),
-    ChangeInfiltrationVelocityTermCoefficient(ChangeInfiltrationVelocityTermCoefficient),
-    ChangeInfiltrationVelocitySquaredTermCoefficient(ChangeInfiltrationVelocitySquaredTermCoefficient),
-    CreateMechanicalVentilation(CreateMechanicalVentilation),
-    DeleteMechanicalVentilation(DeleteMechanicalVentilation),
-    ChangeMechanicalVentilationZone(ChangeMechanicalVentilationZone),
-    ChangeMechanicalVentilationSchedule(ChangeMechanicalVentilationSchedule),
-    ChangeMechanicalVentilationDesignFlow(ChangeMechanicalVentilationDesignFlow),
-    ChangeMechanicalVentilationFanTotalEfficiency(ChangeMechanicalVentilationFanTotalEfficiency),
-    ChangeMechanicalVentilationFanDeltaPressure(ChangeMechanicalVentilationFanDeltaPressure),
-    ChangeInfiltrationMethod(ChangeInfiltrationMethod),
-    ChangeInfiltrationDesignFlowAch(ChangeInfiltrationDesignFlowAch),
-    ChangeInfiltrationEffectiveLeakageArea(ChangeInfiltrationEffectiveLeakageArea),
-    ChangeInfiltrationDischargeCoefficient(ChangeInfiltrationDischargeCoefficient),
-    ChangeInfiltrationStackHeight(ChangeInfiltrationStackHeight),
-    CreateThermostat(CreateThermostat),
-    DeleteThermostat(DeleteThermostat),
-    ChangeThermostatZone(ChangeThermostatZone),
-    ChangeThermostatHeatingSetpointSchedule(ChangeThermostatHeatingSetpointSchedule),
-    ChangeThermostatCoolingSetpointSchedule(ChangeThermostatCoolingSetpointSchedule),
-    ChangeThermostatHeatingThrottleRange(ChangeThermostatHeatingThrottleRange),
-    ChangeThermostatCoolingThrottleRange(ChangeThermostatCoolingThrottleRange),
-    CreateHumidistat(CreateHumidistat),
-    DeleteHumidistat(DeleteHumidistat),
-    ChangeHumidistatZone(ChangeHumidistatZone),
-    ChangeHumidistatHumidifyingSetpointSchedule(ChangeHumidistatHumidifyingSetpointSchedule),
-    ChangeHumidistatDehumidifyingSetpointSchedule(ChangeHumidistatDehumidifyingSetpointSchedule),
-    ChangeHumidistatHumidifyingThrottleRange(ChangeHumidistatHumidifyingThrottleRange),
-    ChangeHumidistatDehumidifyingThrottleRange(ChangeHumidistatDehumidifyingThrottleRange),
-    CreateIdealLoadsSystem(CreateIdealLoadsSystem),
-    DeleteIdealLoadsSystem(DeleteIdealLoadsSystem),
-    ChangeIdealLoadsSystemZone(ChangeIdealLoadsSystemZone),
-    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp(ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp),
-    ChangeIdealLoadsSystemMinCoolingSupplyAirTemp(ChangeIdealLoadsSystemMinCoolingSupplyAirTemp),
-    ChangeIdealLoadsSystemMaxHeatingCapacity(ChangeIdealLoadsSystemMaxHeatingCapacity),
-    ChangeIdealLoadsSystemMaxCoolingCapacity(ChangeIdealLoadsSystemMaxCoolingCapacity),
-    ChangeIdealLoadsSystemOutdoorAirPerPerson(ChangeIdealLoadsSystemOutdoorAirPerPerson),
-    ChangeIdealLoadsSystemOutdoorAirPerArea(ChangeIdealLoadsSystemOutdoorAirPerArea),
-    CreateZoneEquipment(CreateZoneEquipment),
-    DeleteZoneEquipment(DeleteZoneEquipment),
-    ChangeZoneEquipmentZone(ChangeZoneEquipmentZone),
-    ChangeZoneEquipmentType(ChangeZoneEquipmentType),
-    ChangeZoneEquipmentPriority(ChangeZoneEquipmentPriority),
-    ChangeZoneEquipmentHeatingCapacity(ChangeZoneEquipmentHeatingCapacity),
-    ChangeZoneEquipmentCoolingCapacity(ChangeZoneEquipmentCoolingCapacity),
-    CreateDaylightZone(CreateDaylightZone),
-    DeleteDaylightZone(DeleteDaylightZone),
-    ChangeDaylightZoneZone(ChangeDaylightZoneZone),
-    ChangeDaylightZoneIlluminanceTarget(ChangeDaylightZoneIlluminanceTarget),
-    ChangeDaylightZoneGlareLimit(ChangeDaylightZoneGlareLimit),
-    ChangeDaylightZoneWindowTransmittance(ChangeDaylightZoneWindowTransmittance),
-    CreateSizingObject(CreateSizingObject),
-    DeleteSizingObject(DeleteSizingObject),
-    ChangeSizingObjectZone(ChangeSizingObjectZone),
-    ChangeSizingObjectSizingType(ChangeSizingObjectSizingType),
-    ChangeSizingObjectDesignDayType(ChangeSizingObjectDesignDayType),
-    CreateRoomAirModelAssignment(CreateRoomAirModelAssignment),
-    DeleteRoomAirModelAssignment(DeleteRoomAirModelAssignment),
-    ChangeRoomAirModel(ChangeRoomAirModel),
-    CreateSetpointManager(CreateSetpointManager),
-    DeleteSetpointManager(DeleteSetpointManager),
-    RenameSetpointManager(RenameSetpointManager),
-    ReplaceSetpointManagerKind(ReplaceSetpointManagerKind),
-    ChangeSetpointManagerSchedule(ChangeSetpointManagerSchedule),
-    CreateAirLoop(CreateAirLoop),
-    DeleteAirLoop(DeleteAirLoop),
-    RenameAirLoop(RenameAirLoop),
-    ChangeAirLoopSupplyNode(ChangeAirLoopSupplyNode),
-    ChangeAirLoopReturnNode(ChangeAirLoopReturnNode),
-    ChangeAirLoopDesignSupplyAirFlow(ChangeAirLoopDesignSupplyAirFlow),
-    AddAirLoopTerminalZone(AddAirLoopTerminalZone),
-    RemoveAirLoopTerminalZone(RemoveAirLoopTerminalZone),
-    CreatePlantLoop(CreatePlantLoop),
-    DeletePlantLoop(DeletePlantLoop),
-    RenamePlantLoop(RenamePlantLoop),
-    ChangePlantLoopType(ChangePlantLoopType),
-    ChangePlantLoopSupplyTemperature(ChangePlantLoopSupplyTemperature),
-    ChangePlantLoopReturnTemperature(ChangePlantLoopReturnTemperature),
-    ChangePlantLoopDesignFlow(ChangePlantLoopDesignFlow),
-    AddPlantLoopEquipment(AddPlantLoopEquipment),
-    RemovePlantLoopEquipment(RemovePlantLoopEquipment),
-    CreateOutdoorAirSystem(CreateOutdoorAirSystem),
-    DeleteOutdoorAirSystem(DeleteOutdoorAirSystem),
-    ChangeOutdoorAirSystemAirLoop(ChangeOutdoorAirSystemAirLoop),
-    ChangeOutdoorAirSystemMinOaFlow(ChangeOutdoorAirSystemMinOaFlow),
-    ChangeOutdoorAirSystemEconomizerEnabled(ChangeOutdoorAirSystemEconomizerEnabled),
-    CreateElectricalLoadCenter(CreateElectricalLoadCenter),
-    DeleteElectricalLoadCenter(DeleteElectricalLoadCenter),
-    RenameElectricalLoadCenter(RenameElectricalLoadCenter),
-    AddElectricalLoadCenterPv(AddElectricalLoadCenterPv),
-    RemoveElectricalLoadCenterPv(RemoveElectricalLoadCenterPv),
-    AddElectricalLoadCenterBattery(AddElectricalLoadCenterBattery),
-    RemoveElectricalLoadCenterBattery(RemoveElectricalLoadCenterBattery),
-    CreatePvSystem(CreatePvSystem),
-    DeletePvSystem(DeletePvSystem),
-    ChangePvSystemDcCapacity(ChangePvSystemDcCapacity),
-    ChangePvSystemArea(ChangePvSystemArea),
-    ChangePvSystemTilt(ChangePvSystemTilt),
-    ChangePvSystemAzimuth(ChangePvSystemAzimuth),
-    ChangePvSystemModuleEfficiency(ChangePvSystemModuleEfficiency),
-    ChangePvSystemInverterEfficiency(ChangePvSystemInverterEfficiency),
-    CreateBattery(CreateBattery),
-    DeleteBattery(DeleteBattery),
-    ChangeBatteryCapacity(ChangeBatteryCapacity),
-    ChangeBatteryMaxCharge(ChangeBatteryMaxCharge),
-    ChangeBatteryMaxDischarge(ChangeBatteryMaxDischarge),
-    ChangeBatteryRoundTripEfficiency(ChangeBatteryRoundTripEfficiency),
-    CreateShwSystem(CreateShwSystem),
-    DeleteShwSystem(DeleteShwSystem),
-    ChangeShwSystemHeaterCapacity(ChangeShwSystemHeaterCapacity),
-    ChangeShwSystemStorageVolume(ChangeShwSystemStorageVolume),
-    ChangeShwSystemSetpoint(ChangeShwSystemSetpoint),
-    ChangeShwSystemSchedule(ChangeShwSystemSchedule),
-    CreateSolarThermalSystem(CreateSolarThermalSystem),
-    DeleteSolarThermalSystem(DeleteSolarThermalSystem),
-    ChangeSolarThermalSystemCollectorArea(ChangeSolarThermalSystemCollectorArea),
-    ChangeSolarThermalSystemEfficiency(ChangeSolarThermalSystemEfficiency),
-    ChangeSolarThermalSystemStorageVolume(ChangeSolarThermalSystemStorageVolume),
-    ChangeSolarThermalSystemTilt(ChangeSolarThermalSystemTilt),
-    ChangeSolarThermalSystemAzimuth(ChangeSolarThermalSystemAzimuth),
-    CreateRefrigerationSystem(CreateRefrigerationSystem),
-    DeleteRefrigerationSystem(DeleteRefrigerationSystem),
-    ChangeRefrigerationSystemCaseCount(ChangeRefrigerationSystemCaseCount),
-    ChangeRefrigerationSystemDesignLoad(ChangeRefrigerationSystemDesignLoad),
-    ChangeRefrigerationSystemDefrostSchedule(ChangeRefrigerationSystemDefrostSchedule),
-    CreateWaterSystem(CreateWaterSystem),
-    DeleteWaterSystem(DeleteWaterSystem),
-    ChangeWaterSystemFixtureCount(ChangeWaterSystemFixtureCount),
-    ChangeWaterSystemPeakFlow(ChangeWaterSystemPeakFlow),
-    ChangeWaterSystemSchedule(ChangeWaterSystemSchedule),
-    CreateFault(CreateFault),
-    DeleteFault(DeleteFault),
-    ChangeFaultTargetEquipment(ChangeFaultTargetEquipment),
-    ChangeFaultType(ChangeFaultType),
-    ChangeFaultSeverity(ChangeFaultSeverity),
-    ChangeFaultStartSchedule(ChangeFaultStartSchedule),
-    CreateSpaceList(CreateSpaceList),
-    DeleteSpaceList(DeleteSpaceList),
-    RenameSpaceList(RenameSpaceList),
-    AddSpaceListMember(AddSpaceListMember),
-    RemoveSpaceListMember(RemoveSpaceListMember),
-    CreateThermalEnclosure(CreateThermalEnclosure),
-    DeleteThermalEnclosure(DeleteThermalEnclosure),
-    RenameThermalEnclosure(RenameThermalEnclosure),
-    AddThermalEnclosureZone(AddThermalEnclosureZone),
-    RemoveThermalEnclosureZone(RemoveThermalEnclosureZone),
-    CreateConstantSchedule(CreateConstantSchedule),
-    DeleteConstantSchedule(DeleteConstantSchedule),
-    ChangeConstantScheduleValue(ChangeConstantScheduleValue),
-    CreateDailySchedule(CreateDailySchedule),
-    DeleteDailySchedule(DeleteDailySchedule),
-    ReplaceDailyScheduleHourlyValues(ReplaceDailyScheduleHourlyValues),
-    ChangeDailyScheduleInterpolation(ChangeDailyScheduleInterpolation),
-    ChangeDailyScheduleLimits(ChangeDailyScheduleLimits),
-    CreateWeeklySchedule(CreateWeeklySchedule),
-    DeleteWeeklySchedule(DeleteWeeklySchedule),
-    ChangeWeeklyScheduleDay(ChangeWeeklyScheduleDay),
-    CreateAnnualSchedule(CreateAnnualSchedule),
-    DeleteAnnualSchedule(DeleteAnnualSchedule),
-    InsertAnnualScheduleRule(InsertAnnualScheduleRule),
-    RemoveAnnualScheduleRule(RemoveAnnualScheduleRule),
-    ReorderAnnualScheduleRules(ReorderAnnualScheduleRules),
-    ChangeAnnualScheduleDefaultDailySchedule(ChangeAnnualScheduleDefaultDailySchedule),
-    ChangeAnnualScheduleHolidayDailySchedule(ChangeAnnualScheduleHolidayDailySchedule),
-    AddAnnualScheduleHoliday(AddAnnualScheduleHoliday),
-    RemoveAnnualScheduleHoliday(RemoveAnnualScheduleHoliday),
-    CreateTimeSeriesSchedule(CreateTimeSeriesSchedule),
-    DeleteTimeSeriesSchedule(DeleteTimeSeriesSchedule),
-    ReplaceTimeSeriesScheduleValues(ReplaceTimeSeriesScheduleValues),
-    ChangeTimeSeriesScheduleTimestep(ChangeTimeSeriesScheduleTimestep),
-    ReplaceFenestrationVertices(ReplaceFenestrationVertices),
-    ChangeGlazingMaterialThickness(ChangeGlazingMaterialThickness),
-    ChangeGlazingMaterialConductivity(ChangeGlazingMaterialConductivity),
-    ChangeGlazingMaterialSolarTransmittance(ChangeGlazingMaterialSolarTransmittance),
-    ChangeGlazingMaterialVisibleTransmittance(ChangeGlazingMaterialVisibleTransmittance),
-    ChangeGlazingMaterialInfraredEmissivity(ChangeGlazingMaterialInfraredEmissivity),
-    RenameGlazingMaterial(RenameGlazingMaterial),
-    ChangeGasMaterialThickness(ChangeGasMaterialThickness),
-    ChangeGasMaterialGas(ChangeGasMaterialGas),
-    RenameGasMaterial(RenameGasMaterial),
-    ChangeMaterialRoughness(ChangeMaterialRoughness),
+    RenameModel(crate::model_mutations::RenameModel),
+    ChangeModelVersion(crate::model_mutations::ChangeModelVersion),
+    ChangeSiteLatitude(crate::site_mutations::ChangeSiteLatitude),
+    ChangeSiteLongitude(crate::site_mutations::ChangeSiteLongitude),
+    ChangeSiteElevation(crate::site_mutations::ChangeSiteElevation),
+    ChangeSiteTimeZone(crate::site_mutations::ChangeSiteTimeZone),
+    ChangeSiteNorthAxis(crate::site_mutations::ChangeSiteNorthAxis),
+    ChangeGroundBuilding(crate::site_mutations::ChangeGroundBuilding),
+    ChangeGroundShallow(crate::site_mutations::ChangeGroundShallow),
+    ChangeGroundDeep(crate::site_mutations::ChangeGroundDeep),
+    ChangeRunStartMonth(crate::run_mutations::ChangeRunStartMonth),
+    ChangeRunStartDay(crate::run_mutations::ChangeRunStartDay),
+    ChangeRunEndMonth(crate::run_mutations::ChangeRunEndMonth),
+    ChangeRunEndDay(crate::run_mutations::ChangeRunEndDay),
+    ChangeRunYear(crate::run_mutations::ChangeRunYear),
+    ReplaceAirflowNetwork(crate::model_mutations::ReplaceAirflowNetwork),
+    AddOutputVariable(crate::model_mutations::AddOutputVariable),
+    RemoveOutputVariable(crate::model_mutations::RemoveOutputVariable),
+    BindWeatherFile(crate::model_mutations::BindWeatherFile),
+    UnbindWeatherFile(crate::model_mutations::UnbindWeatherFile),
+    ConnectReferencedModel(crate::model_mutations::ConnectReferencedModel),
+    DisconnectReferencedModel(crate::model_mutations::DisconnectReferencedModel),
+    RenameZone(crate::zone_mutations::RenameZone),
+    ChangeZoneVolume(crate::zone_mutations::ChangeZoneVolume),
+    ChangeZoneMultiplier(crate::zone_mutations::ChangeZoneMultiplier),
+    ChangeZoneConditioned(crate::zone_mutations::ChangeZoneConditioned),
+    ChangeZoneFloorAreaParticipation(crate::zone_mutations::ChangeZoneFloorAreaParticipation),
+    CreateZone(crate::zone_mutations::CreateZone),
+    DeleteZone(crate::zone_mutations::DeleteZone),
+    CreateSpace(crate::space_mutations::CreateSpace),
+    DeleteSpace(crate::space_mutations::DeleteSpace),
+    RenameSpace(crate::space_mutations::RenameSpace),
+    ChangeSpaceFloorArea(crate::space_mutations::ChangeSpaceFloorArea),
+    ChangeSpaceZone(crate::space_mutations::ChangeSpaceZone),
+    CreateSurface(crate::surface_mutations::CreateSurface),
+    DeleteSurface(crate::surface_mutations::DeleteSurface),
+    RenameSurface(crate::surface_mutations::RenameSurface),
+    ChangeSurfaceZone(crate::surface_mutations::ChangeSurfaceZone),
+    ChangeSurfaceClass(crate::surface_mutations::ChangeSurfaceClass),
+    ReplaceSurfaceVertices(crate::surface_mutations::ReplaceSurfaceVertices),
+    ChangeSurfaceConstruction(crate::surface_mutations::ChangeSurfaceConstruction),
+    ChangeSurfaceBoundaryCondition(crate::boundary_mutations::ChangeSurfaceBoundaryCondition),
+    ChangeSurfaceSunExposed(crate::boundary_mutations::ChangeSurfaceSunExposed),
+    ChangeSurfaceWindExposed(crate::boundary_mutations::ChangeSurfaceWindExposed),
+    ChangeSurfaceMultiplier(crate::surface_mutations::ChangeSurfaceMultiplier),
+    CreateFenestration(crate::fenestration_mutations::CreateFenestration),
+    DeleteFenestration(crate::fenestration_mutations::DeleteFenestration),
+    RenameFenestration(crate::fenestration_mutations::RenameFenestration),
+    ChangeFenestrationSurface(crate::fenestration_mutations::ChangeFenestrationSurface),
+    ChangeFenestrationUValue(crate::glazing_mutations::ChangeFenestrationUValue),
+    ChangeFenestrationShgc(crate::glazing_mutations::ChangeFenestrationShgc),
+    ChangeFenestrationVlt(crate::glazing_mutations::ChangeFenestrationVlt),
+    ChangeFenestrationArea(crate::fenestration_mutations::ChangeFenestrationArea),
+    ChangeFenestrationFrameConductance(crate::glazing_mutations::ChangeFenestrationFrameConductance),
+    ChangeFenestrationDividerConductance(crate::glazing_mutations::ChangeFenestrationDividerConductance),
+    CreateShadingSurface(crate::shading_mutations::CreateShadingSurface),
+    DeleteShadingSurface(crate::shading_mutations::DeleteShadingSurface),
+    RenameShadingSurface(crate::shading_mutations::RenameShadingSurface),
+    ReplaceShadingSurfaceVertices(crate::shading_mutations::ReplaceShadingSurfaceVertices),
+    ChangeShadingSurfaceTransmittanceSchedule(crate::shading_mutations::ChangeShadingSurfaceTransmittanceSchedule),
+    ConnectSurfaces(crate::boundary_mutations::ConnectSurfaces),
+    DisconnectSurfaces(crate::boundary_mutations::DisconnectSurfaces),
+    BindFenestrationGlazingConstruction(crate::glazing_mutations::BindFenestrationGlazingConstruction),
+    ClearFenestrationGlazingConstruction(crate::glazing_mutations::ClearFenestrationGlazingConstruction),
+    ChangeFenestrationHeight(crate::fenestration_mutations::ChangeFenestrationHeight),
+    ChangeFenestrationSillHeight(crate::fenestration_mutations::ChangeFenestrationSillHeight),
+    ChangeFenestrationOverhangDepth(crate::shading_device_mutations::ChangeFenestrationOverhangDepth),
+    ChangeFenestrationOverhangOffset(crate::shading_device_mutations::ChangeFenestrationOverhangOffset),
+    ChangeFenestrationFinDepth(crate::shading_device_mutations::ChangeFenestrationFinDepth),
+    ChangeFenestrationFinOffset(crate::shading_device_mutations::ChangeFenestrationFinOffset),
+    CreateMaterial(crate::material_mutations::CreateMaterial),
+    DeleteMaterial(crate::material_mutations::DeleteMaterial),
+    RenameMaterial(crate::material_mutations::RenameMaterial),
+    ChangeMaterialThickness(crate::material_mutations::ChangeMaterialThickness),
+    ChangeMaterialConductivity(crate::material_mutations::ChangeMaterialConductivity),
+    ChangeMaterialDensity(crate::material_mutations::ChangeMaterialDensity),
+    ChangeMaterialSpecificHeat(crate::material_mutations::ChangeMaterialSpecificHeat),
+    ChangeMaterialThermalAbsorptance(crate::finish_mutations::ChangeMaterialThermalAbsorptance),
+    ChangeMaterialSolarAbsorptance(crate::finish_mutations::ChangeMaterialSolarAbsorptance),
+    ChangeMaterialVisibleAbsorptance(crate::finish_mutations::ChangeMaterialVisibleAbsorptance),
+    CreateConstruction(crate::construction_mutations::CreateConstruction),
+    DeleteConstruction(crate::construction_mutations::DeleteConstruction),
+    RenameConstruction(crate::construction_mutations::RenameConstruction),
+    AddConstructionLayer(crate::construction_mutations::AddConstructionLayer),
+    RemoveConstructionLayer(crate::construction_mutations::RemoveConstructionLayer),
+    ReorderConstructionLayers(crate::construction_mutations::ReorderConstructionLayers),
+    CreatePeopleGain(crate::people_gain_mutations::CreatePeopleGain),
+    DeletePeopleGain(crate::people_gain_mutations::DeletePeopleGain),
+    ChangePeopleGainZone(crate::people_gain_mutations::ChangePeopleGainZone),
+    ChangePeopleGainSchedule(crate::people_gain_mutations::ChangePeopleGainSchedule),
+    ChangePeopleGainActivitySchedule(crate::people_gain_mutations::ChangePeopleGainActivitySchedule),
+    ChangePeopleGainPeoplePerArea(crate::people_gain_mutations::ChangePeopleGainPeoplePerArea),
+    ChangePeopleGainSensibleFraction(crate::people_gain_mutations::ChangePeopleGainSensibleFraction),
+    ChangePeopleGainLatentFraction(crate::people_gain_mutations::ChangePeopleGainLatentFraction),
+    ChangePeopleGainRadiantFraction(crate::people_gain_mutations::ChangePeopleGainRadiantFraction),
+    CreateLightingGain(crate::lighting_gain_mutations::CreateLightingGain),
+    DeleteLightingGain(crate::lighting_gain_mutations::DeleteLightingGain),
+    ChangeLightingGainZone(crate::lighting_gain_mutations::ChangeLightingGainZone),
+    ChangeLightingGainSchedule(crate::lighting_gain_mutations::ChangeLightingGainSchedule),
+    ChangeLightingGainWattsPerArea(crate::lighting_gain_mutations::ChangeLightingGainWattsPerArea),
+    ChangeLightingGainRadiantFraction(crate::lighting_gain_mutations::ChangeLightingGainRadiantFraction),
+    ChangeLightingGainVisibleFraction(crate::lighting_gain_mutations::ChangeLightingGainVisibleFraction),
+    ChangeLightingGainReturnAirFraction(crate::lighting_gain_mutations::ChangeLightingGainReturnAirFraction),
+    CreateEquipmentGain(crate::equipment_gain_mutations::CreateEquipmentGain),
+    DeleteEquipmentGain(crate::equipment_gain_mutations::DeleteEquipmentGain),
+    ChangeEquipmentGainZone(crate::equipment_gain_mutations::ChangeEquipmentGainZone),
+    ChangeEquipmentGainSchedule(crate::equipment_gain_mutations::ChangeEquipmentGainSchedule),
+    ChangeEquipmentGainWattsPerArea(crate::equipment_gain_mutations::ChangeEquipmentGainWattsPerArea),
+    ChangeEquipmentGainRadiantFraction(crate::equipment_gain_mutations::ChangeEquipmentGainRadiantFraction),
+    ChangeEquipmentGainLatentFraction(crate::equipment_gain_mutations::ChangeEquipmentGainLatentFraction),
+    CreateInfiltration(crate::infiltration_mutations::CreateInfiltration),
+    DeleteInfiltration(crate::infiltration_mutations::DeleteInfiltration),
+    ChangeInfiltrationZone(crate::infiltration_mutations::ChangeInfiltrationZone),
+    ChangeInfiltrationSchedule(crate::infiltration_mutations::ChangeInfiltrationSchedule),
+    ChangeInfiltrationFlowPerExteriorArea(crate::infiltration_mutations::ChangeInfiltrationFlowPerExteriorArea),
+    ChangeInfiltrationConstantTermCoefficient(crate::leakage_mutations::ChangeInfiltrationConstantTermCoefficient),
+    ChangeInfiltrationTemperatureTermCoefficient(crate::leakage_mutations::ChangeInfiltrationTemperatureTermCoefficient),
+    ChangeInfiltrationVelocityTermCoefficient(crate::leakage_mutations::ChangeInfiltrationVelocityTermCoefficient),
+    ChangeInfiltrationVelocitySquaredTermCoefficient(crate::leakage_mutations::ChangeInfiltrationVelocitySquaredTermCoefficient),
+    CreateMechanicalVentilation(crate::ventilation_mutations::CreateMechanicalVentilation),
+    DeleteMechanicalVentilation(crate::ventilation_mutations::DeleteMechanicalVentilation),
+    ChangeMechanicalVentilationZone(crate::ventilation_mutations::ChangeMechanicalVentilationZone),
+    ChangeMechanicalVentilationSchedule(crate::ventilation_mutations::ChangeMechanicalVentilationSchedule),
+    ChangeMechanicalVentilationDesignFlow(crate::ventilation_mutations::ChangeMechanicalVentilationDesignFlow),
+    ChangeMechanicalVentilationFanTotalEfficiency(crate::ventilation_mutations::ChangeMechanicalVentilationFanTotalEfficiency),
+    ChangeMechanicalVentilationFanDeltaPressure(crate::ventilation_mutations::ChangeMechanicalVentilationFanDeltaPressure),
+    ChangeInfiltrationMethod(crate::infiltration_mutations::ChangeInfiltrationMethod),
+    ChangeInfiltrationDesignFlowAch(crate::infiltration_mutations::ChangeInfiltrationDesignFlowAch),
+    ChangeInfiltrationEffectiveLeakageArea(crate::leakage_mutations::ChangeInfiltrationEffectiveLeakageArea),
+    ChangeInfiltrationDischargeCoefficient(crate::leakage_mutations::ChangeInfiltrationDischargeCoefficient),
+    ChangeInfiltrationStackHeight(crate::leakage_mutations::ChangeInfiltrationStackHeight),
+    CreateThermostat(crate::thermostat_mutations::CreateThermostat),
+    DeleteThermostat(crate::thermostat_mutations::DeleteThermostat),
+    ChangeThermostatZone(crate::thermostat_mutations::ChangeThermostatZone),
+    ChangeThermostatHeatingSetpointSchedule(crate::thermostat_mutations::ChangeThermostatHeatingSetpointSchedule),
+    ChangeThermostatCoolingSetpointSchedule(crate::thermostat_mutations::ChangeThermostatCoolingSetpointSchedule),
+    ChangeThermostatHeatingThrottleRange(crate::thermostat_mutations::ChangeThermostatHeatingThrottleRange),
+    ChangeThermostatCoolingThrottleRange(crate::thermostat_mutations::ChangeThermostatCoolingThrottleRange),
+    CreateHumidistat(crate::humidistat_mutations::CreateHumidistat),
+    DeleteHumidistat(crate::humidistat_mutations::DeleteHumidistat),
+    ChangeHumidistatZone(crate::humidistat_mutations::ChangeHumidistatZone),
+    ChangeHumidistatHumidifyingSetpointSchedule(crate::humidistat_mutations::ChangeHumidistatHumidifyingSetpointSchedule),
+    ChangeHumidistatDehumidifyingSetpointSchedule(crate::humidistat_mutations::ChangeHumidistatDehumidifyingSetpointSchedule),
+    ChangeHumidistatHumidifyingThrottleRange(crate::humidistat_mutations::ChangeHumidistatHumidifyingThrottleRange),
+    ChangeHumidistatDehumidifyingThrottleRange(crate::humidistat_mutations::ChangeHumidistatDehumidifyingThrottleRange),
+    CreateIdealLoadsSystem(crate::ideal_loads_mutations::CreateIdealLoadsSystem),
+    DeleteIdealLoadsSystem(crate::ideal_loads_mutations::DeleteIdealLoadsSystem),
+    ChangeIdealLoadsSystemZone(crate::ideal_loads_mutations::ChangeIdealLoadsSystemZone),
+    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp),
+    ChangeIdealLoadsSystemMinCoolingSupplyAirTemp(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMinCoolingSupplyAirTemp),
+    ChangeIdealLoadsSystemMaxHeatingCapacity(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxHeatingCapacity),
+    ChangeIdealLoadsSystemMaxCoolingCapacity(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxCoolingCapacity),
+    ChangeIdealLoadsSystemOutdoorAirPerPerson(crate::ideal_loads_mutations::ChangeIdealLoadsSystemOutdoorAirPerPerson),
+    ChangeIdealLoadsSystemOutdoorAirPerArea(crate::ideal_loads_mutations::ChangeIdealLoadsSystemOutdoorAirPerArea),
+    CreateZoneEquipment(crate::zone_equipment_mutations::CreateZoneEquipment),
+    DeleteZoneEquipment(crate::zone_equipment_mutations::DeleteZoneEquipment),
+    ChangeZoneEquipmentZone(crate::zone_equipment_mutations::ChangeZoneEquipmentZone),
+    ChangeZoneEquipmentType(crate::zone_equipment_mutations::ChangeZoneEquipmentType),
+    ChangeZoneEquipmentPriority(crate::zone_equipment_mutations::ChangeZoneEquipmentPriority),
+    ChangeZoneEquipmentHeatingCapacity(crate::zone_equipment_mutations::ChangeZoneEquipmentHeatingCapacity),
+    ChangeZoneEquipmentCoolingCapacity(crate::zone_equipment_mutations::ChangeZoneEquipmentCoolingCapacity),
+    CreateDaylightZone(crate::daylight_zone_mutations::CreateDaylightZone),
+    DeleteDaylightZone(crate::daylight_zone_mutations::DeleteDaylightZone),
+    ChangeDaylightZoneZone(crate::daylight_zone_mutations::ChangeDaylightZoneZone),
+    ChangeDaylightZoneIlluminanceTarget(crate::daylight_zone_mutations::ChangeDaylightZoneIlluminanceTarget),
+    ChangeDaylightZoneGlareLimit(crate::daylight_zone_mutations::ChangeDaylightZoneGlareLimit),
+    ChangeDaylightZoneWindowTransmittance(crate::daylight_zone_mutations::ChangeDaylightZoneWindowTransmittance),
+    CreateSizingObject(crate::sizing_mutations::CreateSizingObject),
+    DeleteSizingObject(crate::sizing_mutations::DeleteSizingObject),
+    ChangeSizingObjectZone(crate::sizing_mutations::ChangeSizingObjectZone),
+    ChangeSizingObjectSizingType(crate::sizing_mutations::ChangeSizingObjectSizingType),
+    ChangeSizingObjectDesignDayType(crate::sizing_mutations::ChangeSizingObjectDesignDayType),
+    CreateRoomAirModelAssignment(crate::room_air_mutations::CreateRoomAirModelAssignment),
+    DeleteRoomAirModelAssignment(crate::room_air_mutations::DeleteRoomAirModelAssignment),
+    ChangeRoomAirModel(crate::room_air_mutations::ChangeRoomAirModel),
+    CreateSetpointManager(crate::setpoint_mutations::CreateSetpointManager),
+    DeleteSetpointManager(crate::setpoint_mutations::DeleteSetpointManager),
+    RenameSetpointManager(crate::setpoint_mutations::RenameSetpointManager),
+    ReplaceSetpointManagerKind(crate::setpoint_mutations::ReplaceSetpointManagerKind),
+    ChangeSetpointManagerSchedule(crate::setpoint_mutations::ChangeSetpointManagerSchedule),
+    CreateAirLoop(crate::air_loop_mutations::CreateAirLoop),
+    DeleteAirLoop(crate::air_loop_mutations::DeleteAirLoop),
+    RenameAirLoop(crate::air_loop_mutations::RenameAirLoop),
+    ChangeAirLoopSupplyNode(crate::air_loop_mutations::ChangeAirLoopSupplyNode),
+    ChangeAirLoopReturnNode(crate::air_loop_mutations::ChangeAirLoopReturnNode),
+    ChangeAirLoopDesignSupplyAirFlow(crate::air_loop_mutations::ChangeAirLoopDesignSupplyAirFlow),
+    AddAirLoopTerminalZone(crate::air_loop_mutations::AddAirLoopTerminalZone),
+    RemoveAirLoopTerminalZone(crate::air_loop_mutations::RemoveAirLoopTerminalZone),
+    CreatePlantLoop(crate::plant_loop_mutations::CreatePlantLoop),
+    DeletePlantLoop(crate::plant_loop_mutations::DeletePlantLoop),
+    RenamePlantLoop(crate::plant_loop_mutations::RenamePlantLoop),
+    ChangePlantLoopType(crate::plant_loop_mutations::ChangePlantLoopType),
+    ChangePlantLoopSupplyTemperature(crate::plant_loop_mutations::ChangePlantLoopSupplyTemperature),
+    ChangePlantLoopReturnTemperature(crate::plant_loop_mutations::ChangePlantLoopReturnTemperature),
+    ChangePlantLoopDesignFlow(crate::plant_loop_mutations::ChangePlantLoopDesignFlow),
+    AddPlantLoopEquipment(crate::plant_loop_mutations::AddPlantLoopEquipment),
+    RemovePlantLoopEquipment(crate::plant_loop_mutations::RemovePlantLoopEquipment),
+    CreateOutdoorAirSystem(crate::outdoor_air_mutations::CreateOutdoorAirSystem),
+    DeleteOutdoorAirSystem(crate::outdoor_air_mutations::DeleteOutdoorAirSystem),
+    ChangeOutdoorAirSystemAirLoop(crate::outdoor_air_mutations::ChangeOutdoorAirSystemAirLoop),
+    ChangeOutdoorAirSystemMinOaFlow(crate::outdoor_air_mutations::ChangeOutdoorAirSystemMinOaFlow),
+    ChangeOutdoorAirSystemEconomizerEnabled(crate::outdoor_air_mutations::ChangeOutdoorAirSystemEconomizerEnabled),
+    CreateElectricalLoadCenter(crate::load_center_mutations::CreateElectricalLoadCenter),
+    DeleteElectricalLoadCenter(crate::load_center_mutations::DeleteElectricalLoadCenter),
+    RenameElectricalLoadCenter(crate::load_center_mutations::RenameElectricalLoadCenter),
+    AddElectricalLoadCenterPv(crate::load_center_mutations::AddElectricalLoadCenterPv),
+    RemoveElectricalLoadCenterPv(crate::load_center_mutations::RemoveElectricalLoadCenterPv),
+    AddElectricalLoadCenterBattery(crate::load_center_mutations::AddElectricalLoadCenterBattery),
+    RemoveElectricalLoadCenterBattery(crate::load_center_mutations::RemoveElectricalLoadCenterBattery),
+    CreatePvSystem(crate::pv_system_mutations::CreatePvSystem),
+    DeletePvSystem(crate::pv_system_mutations::DeletePvSystem),
+    ChangePvSystemDcCapacity(crate::pv_system_mutations::ChangePvSystemDcCapacity),
+    ChangePvSystemArea(crate::pv_system_mutations::ChangePvSystemArea),
+    ChangePvSystemTilt(crate::pv_system_mutations::ChangePvSystemTilt),
+    ChangePvSystemAzimuth(crate::pv_system_mutations::ChangePvSystemAzimuth),
+    ChangePvSystemModuleEfficiency(crate::pv_system_mutations::ChangePvSystemModuleEfficiency),
+    ChangePvSystemInverterEfficiency(crate::pv_system_mutations::ChangePvSystemInverterEfficiency),
+    CreateBattery(crate::battery_mutations::CreateBattery),
+    DeleteBattery(crate::battery_mutations::DeleteBattery),
+    ChangeBatteryCapacity(crate::battery_mutations::ChangeBatteryCapacity),
+    ChangeBatteryMaxCharge(crate::battery_mutations::ChangeBatteryMaxCharge),
+    ChangeBatteryMaxDischarge(crate::battery_mutations::ChangeBatteryMaxDischarge),
+    ChangeBatteryRoundTripEfficiency(crate::battery_mutations::ChangeBatteryRoundTripEfficiency),
+    CreateShwSystem(crate::shw_system_mutations::CreateShwSystem),
+    DeleteShwSystem(crate::shw_system_mutations::DeleteShwSystem),
+    ChangeShwSystemHeaterCapacity(crate::shw_system_mutations::ChangeShwSystemHeaterCapacity),
+    ChangeShwSystemStorageVolume(crate::shw_system_mutations::ChangeShwSystemStorageVolume),
+    ChangeShwSystemSetpoint(crate::shw_system_mutations::ChangeShwSystemSetpoint),
+    ChangeShwSystemSchedule(crate::shw_system_mutations::ChangeShwSystemSchedule),
+    CreateSolarThermalSystem(crate::solar_thermal_mutations::CreateSolarThermalSystem),
+    DeleteSolarThermalSystem(crate::solar_thermal_mutations::DeleteSolarThermalSystem),
+    ChangeSolarThermalSystemCollectorArea(crate::solar_thermal_mutations::ChangeSolarThermalSystemCollectorArea),
+    ChangeSolarThermalSystemEfficiency(crate::solar_thermal_mutations::ChangeSolarThermalSystemEfficiency),
+    ChangeSolarThermalSystemStorageVolume(crate::solar_thermal_mutations::ChangeSolarThermalSystemStorageVolume),
+    ChangeSolarThermalSystemTilt(crate::solar_thermal_mutations::ChangeSolarThermalSystemTilt),
+    ChangeSolarThermalSystemAzimuth(crate::solar_thermal_mutations::ChangeSolarThermalSystemAzimuth),
+    CreateRefrigerationSystem(crate::refrigeration_mutations::CreateRefrigerationSystem),
+    DeleteRefrigerationSystem(crate::refrigeration_mutations::DeleteRefrigerationSystem),
+    ChangeRefrigerationSystemCaseCount(crate::refrigeration_mutations::ChangeRefrigerationSystemCaseCount),
+    ChangeRefrigerationSystemDesignLoad(crate::refrigeration_mutations::ChangeRefrigerationSystemDesignLoad),
+    ChangeRefrigerationSystemDefrostSchedule(crate::refrigeration_mutations::ChangeRefrigerationSystemDefrostSchedule),
+    CreateWaterSystem(crate::water_system_mutations::CreateWaterSystem),
+    DeleteWaterSystem(crate::water_system_mutations::DeleteWaterSystem),
+    ChangeWaterSystemFixtureCount(crate::water_system_mutations::ChangeWaterSystemFixtureCount),
+    ChangeWaterSystemPeakFlow(crate::water_system_mutations::ChangeWaterSystemPeakFlow),
+    ChangeWaterSystemSchedule(crate::water_system_mutations::ChangeWaterSystemSchedule),
+    CreateFault(crate::fault_mutations::CreateFault),
+    DeleteFault(crate::fault_mutations::DeleteFault),
+    ChangeFaultTargetEquipment(crate::fault_mutations::ChangeFaultTargetEquipment),
+    ChangeFaultType(crate::fault_mutations::ChangeFaultType),
+    ChangeFaultSeverity(crate::fault_mutations::ChangeFaultSeverity),
+    ChangeFaultStartSchedule(crate::fault_mutations::ChangeFaultStartSchedule),
+    CreateSpaceList(crate::space_list_mutations::CreateSpaceList),
+    DeleteSpaceList(crate::space_list_mutations::DeleteSpaceList),
+    RenameSpaceList(crate::space_list_mutations::RenameSpaceList),
+    AddSpaceListMember(crate::space_list_mutations::AddSpaceListMember),
+    RemoveSpaceListMember(crate::space_list_mutations::RemoveSpaceListMember),
+    CreateThermalEnclosure(crate::enclosure_mutations::CreateThermalEnclosure),
+    DeleteThermalEnclosure(crate::enclosure_mutations::DeleteThermalEnclosure),
+    RenameThermalEnclosure(crate::enclosure_mutations::RenameThermalEnclosure),
+    AddThermalEnclosureZone(crate::enclosure_mutations::AddThermalEnclosureZone),
+    RemoveThermalEnclosureZone(crate::enclosure_mutations::RemoveThermalEnclosureZone),
+    CreateConstantSchedule(crate::fixed_schedule_mutations::CreateConstantSchedule),
+    DeleteConstantSchedule(crate::fixed_schedule_mutations::DeleteConstantSchedule),
+    ChangeConstantScheduleValue(crate::fixed_schedule_mutations::ChangeConstantScheduleValue),
+    CreateDailySchedule(crate::day_schedule_mutations::CreateDailySchedule),
+    DeleteDailySchedule(crate::day_schedule_mutations::DeleteDailySchedule),
+    ReplaceDailyScheduleHourlyValues(crate::day_schedule_mutations::ReplaceDailyScheduleHourlyValues),
+    ChangeDailyScheduleInterpolation(crate::day_schedule_mutations::ChangeDailyScheduleInterpolation),
+    ChangeDailyScheduleLimits(crate::day_schedule_mutations::ChangeDailyScheduleLimits),
+    CreateWeeklySchedule(crate::week_schedule_mutations::CreateWeeklySchedule),
+    DeleteWeeklySchedule(crate::week_schedule_mutations::DeleteWeeklySchedule),
+    ChangeWeeklyScheduleDay(crate::week_schedule_mutations::ChangeWeeklyScheduleDay),
+    CreateAnnualSchedule(crate::year_schedule_mutations::CreateAnnualSchedule),
+    DeleteAnnualSchedule(crate::year_schedule_mutations::DeleteAnnualSchedule),
+    InsertAnnualScheduleRule(crate::year_schedule_mutations::InsertAnnualScheduleRule),
+    RemoveAnnualScheduleRule(crate::year_schedule_mutations::RemoveAnnualScheduleRule),
+    ReorderAnnualScheduleRules(crate::year_schedule_mutations::ReorderAnnualScheduleRules),
+    ChangeAnnualScheduleDefaultDailySchedule(crate::year_schedule_mutations::ChangeAnnualScheduleDefaultDailySchedule),
+    ChangeAnnualScheduleHolidayDailySchedule(crate::year_schedule_mutations::ChangeAnnualScheduleHolidayDailySchedule),
+    AddAnnualScheduleHoliday(crate::year_schedule_mutations::AddAnnualScheduleHoliday),
+    RemoveAnnualScheduleHoliday(crate::year_schedule_mutations::RemoveAnnualScheduleHoliday),
+    CreateTimeSeriesSchedule(crate::time_series_mutations::CreateTimeSeriesSchedule),
+    DeleteTimeSeriesSchedule(crate::time_series_mutations::DeleteTimeSeriesSchedule),
+    ReplaceTimeSeriesScheduleValues(crate::time_series_mutations::ReplaceTimeSeriesScheduleValues),
+    ChangeTimeSeriesScheduleTimestep(crate::time_series_mutations::ChangeTimeSeriesScheduleTimestep),
+    ReplaceFenestrationVertices(crate::fenestration_mutations::ReplaceFenestrationVertices),
+    ChangeGlazingMaterialThickness(crate::window_layer_mutations::ChangeGlazingMaterialThickness),
+    ChangeGlazingMaterialConductivity(crate::window_layer_mutations::ChangeGlazingMaterialConductivity),
+    ChangeGlazingMaterialSolarTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialSolarTransmittance),
+    ChangeGlazingMaterialVisibleTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialVisibleTransmittance),
+    ChangeGlazingMaterialInfraredEmissivity(crate::window_layer_mutations::ChangeGlazingMaterialInfraredEmissivity),
+    RenameGlazingMaterial(crate::window_layer_mutations::RenameGlazingMaterial),
+    ChangeGasMaterialThickness(crate::window_layer_mutations::ChangeGasMaterialThickness),
+    ChangeGasMaterialGas(crate::window_layer_mutations::ChangeGasMaterialGas),
+    RenameGasMaterial(crate::window_layer_mutations::RenameGasMaterial),
+    ChangeMaterialRoughness(crate::finish_mutations::ChangeMaterialRoughness),
 }
 
-/// 🏷️ Direct semantic roster exported for the language-neutral test adapter, in aggregate
-/// declaration order — which is also the binary ordinal order `dsl::variants_binary` writes.
-pub const KINDS: &[&str] = &[
-    "rename-model",
-    "change-model-version",
-    "change-site-latitude",
-    "change-site-longitude",
-    "change-site-elevation",
-    "change-site-time-zone",
-    "change-site-north-axis",
-    "change-ground-building",
-    "change-ground-shallow",
-    "change-ground-deep",
-    "change-run-start-month",
-    "change-run-start-day",
-    "change-run-end-month",
-    "change-run-end-day",
-    "change-run-year",
-    "replace-airflow-network",
-    "add-output-variable",
-    "remove-output-variable",
-    "bind-weather-file",
-    "unbind-weather-file",
-    "connect-referenced-model",
-    "disconnect-referenced-model",
-    "rename-zone",
-    "change-zone-volume",
-    "change-zone-multiplier",
-    "change-zone-conditioned",
-    "change-zone-floor-area-participation",
-    "create-zone",
-    "delete-zone",
-    "create-space",
-    "delete-space",
-    "rename-space",
-    "change-space-floor-area",
-    "change-space-zone",
-    "create-surface",
-    "delete-surface",
-    "rename-surface",
-    "change-surface-zone",
-    "change-surface-class",
-    "replace-surface-vertices",
-    "change-surface-construction",
-    "change-surface-boundary-condition",
-    "change-surface-sun-exposed",
-    "change-surface-wind-exposed",
-    "change-surface-multiplier",
-    "create-fenestration",
-    "delete-fenestration",
-    "rename-fenestration",
-    "change-fenestration-surface",
-    "change-fenestration-u-value",
-    "change-fenestration-shgc",
-    "change-fenestration-vlt",
-    "change-fenestration-area",
-    "change-fenestration-frame-conductance",
-    "change-fenestration-divider-conductance",
-    "create-shading-surface",
-    "delete-shading-surface",
-    "rename-shading-surface",
-    "replace-shading-surface-vertices",
-    "change-shading-surface-transmittance-schedule",
-    "connect-surfaces",
-    "disconnect-surfaces",
-    "bind-fenestration-glazing-construction",
-    "clear-fenestration-glazing-construction",
-    "change-fenestration-height",
-    "change-fenestration-sill-height",
-    "change-fenestration-overhang-depth",
-    "change-fenestration-overhang-offset",
-    "change-fenestration-fin-depth",
-    "change-fenestration-fin-offset",
-    "create-material",
-    "delete-material",
-    "rename-material",
-    "change-material-thickness",
-    "change-material-conductivity",
-    "change-material-density",
-    "change-material-specific-heat",
-    "change-material-thermal-absorptance",
-    "change-material-solar-absorptance",
-    "change-material-visible-absorptance",
-    "create-construction",
-    "delete-construction",
-    "rename-construction",
-    "add-construction-layer",
-    "remove-construction-layer",
-    "reorder-construction-layers",
-    "create-people-gain",
-    "delete-people-gain",
-    "change-people-gain-zone",
-    "change-people-gain-schedule",
-    "change-people-gain-activity-schedule",
-    "change-people-gain-people-per-area",
-    "change-people-gain-sensible-fraction",
-    "change-people-gain-latent-fraction",
-    "change-people-gain-radiant-fraction",
-    "create-lighting-gain",
-    "delete-lighting-gain",
-    "change-lighting-gain-zone",
-    "change-lighting-gain-schedule",
-    "change-lighting-gain-watts-per-area",
-    "change-lighting-gain-radiant-fraction",
-    "change-lighting-gain-visible-fraction",
-    "change-lighting-gain-return-air-fraction",
-    "create-equipment-gain",
-    "delete-equipment-gain",
-    "change-equipment-gain-zone",
-    "change-equipment-gain-schedule",
-    "change-equipment-gain-watts-per-area",
-    "change-equipment-gain-radiant-fraction",
-    "change-equipment-gain-latent-fraction",
-    "create-infiltration",
-    "delete-infiltration",
-    "change-infiltration-zone",
-    "change-infiltration-schedule",
-    "change-infiltration-flow-per-exterior-area",
-    "change-infiltration-constant-term-coefficient",
-    "change-infiltration-temperature-term-coefficient",
-    "change-infiltration-velocity-term-coefficient",
-    "change-infiltration-velocity-squared-term-coefficient",
-    "create-mechanical-ventilation",
-    "delete-mechanical-ventilation",
-    "change-mechanical-ventilation-zone",
-    "change-mechanical-ventilation-schedule",
-    "change-mechanical-ventilation-design-flow",
-    "change-mechanical-ventilation-fan-total-efficiency",
-    "change-mechanical-ventilation-fan-delta-pressure",
-    "change-infiltration-method",
-    "change-infiltration-design-flow-ach",
-    "change-infiltration-effective-leakage-area",
-    "change-infiltration-discharge-coefficient",
-    "change-infiltration-stack-height",
-    "create-thermostat",
-    "delete-thermostat",
-    "change-thermostat-zone",
-    "change-thermostat-heating-setpoint-schedule",
-    "change-thermostat-cooling-setpoint-schedule",
-    "change-thermostat-heating-throttle-range",
-    "change-thermostat-cooling-throttle-range",
-    "create-humidistat",
-    "delete-humidistat",
-    "change-humidistat-zone",
-    "change-humidistat-humidifying-setpoint-schedule",
-    "change-humidistat-dehumidifying-setpoint-schedule",
-    "change-humidistat-humidifying-throttle-range",
-    "change-humidistat-dehumidifying-throttle-range",
-    "create-ideal-loads-system",
-    "delete-ideal-loads-system",
-    "change-ideal-loads-system-zone",
-    "change-ideal-loads-system-max-heating-supply-air-temp",
-    "change-ideal-loads-system-min-cooling-supply-air-temp",
-    "change-ideal-loads-system-max-heating-capacity",
-    "change-ideal-loads-system-max-cooling-capacity",
-    "change-ideal-loads-system-outdoor-air-per-person",
-    "change-ideal-loads-system-outdoor-air-per-area",
-    "create-zone-equipment",
-    "delete-zone-equipment",
-    "change-zone-equipment-zone",
-    "change-zone-equipment-type",
-    "change-zone-equipment-priority",
-    "change-zone-equipment-heating-capacity",
-    "change-zone-equipment-cooling-capacity",
-    "create-daylight-zone",
-    "delete-daylight-zone",
-    "change-daylight-zone-zone",
-    "change-daylight-zone-illuminance-target",
-    "change-daylight-zone-glare-limit",
-    "change-daylight-zone-window-transmittance",
-    "create-sizing-object",
-    "delete-sizing-object",
-    "change-sizing-object-zone",
-    "change-sizing-object-sizing-type",
-    "change-sizing-object-design-day-type",
-    "create-room-air-model-assignment",
-    "delete-room-air-model-assignment",
-    "change-room-air-model",
-    "create-setpoint-manager",
-    "delete-setpoint-manager",
-    "rename-setpoint-manager",
-    "replace-setpoint-manager-kind",
-    "change-setpoint-manager-schedule",
-    "create-air-loop",
-    "delete-air-loop",
-    "rename-air-loop",
-    "change-air-loop-supply-node",
-    "change-air-loop-return-node",
-    "change-air-loop-design-supply-air-flow",
-    "add-air-loop-terminal-zone",
-    "remove-air-loop-terminal-zone",
-    "create-plant-loop",
-    "delete-plant-loop",
-    "rename-plant-loop",
-    "change-plant-loop-type",
-    "change-plant-loop-supply-temperature",
-    "change-plant-loop-return-temperature",
-    "change-plant-loop-design-flow",
-    "add-plant-loop-equipment",
-    "remove-plant-loop-equipment",
-    "create-outdoor-air-system",
-    "delete-outdoor-air-system",
-    "change-outdoor-air-system-air-loop",
-    "change-outdoor-air-system-min-oa-flow",
-    "change-outdoor-air-system-economizer-enabled",
-    "create-electrical-load-center",
-    "delete-electrical-load-center",
-    "rename-electrical-load-center",
-    "add-electrical-load-center-pv",
-    "remove-electrical-load-center-pv",
-    "add-electrical-load-center-battery",
-    "remove-electrical-load-center-battery",
-    "create-pv-system",
-    "delete-pv-system",
-    "change-pv-system-dc-capacity",
-    "change-pv-system-area",
-    "change-pv-system-tilt",
-    "change-pv-system-azimuth",
-    "change-pv-system-module-efficiency",
-    "change-pv-system-inverter-efficiency",
-    "create-battery",
-    "delete-battery",
-    "change-battery-capacity",
-    "change-battery-max-charge",
-    "change-battery-max-discharge",
-    "change-battery-round-trip-efficiency",
-    "create-shw-system",
-    "delete-shw-system",
-    "change-shw-system-heater-capacity",
-    "change-shw-system-storage-volume",
-    "change-shw-system-setpoint",
-    "change-shw-system-schedule",
-    "create-solar-thermal-system",
-    "delete-solar-thermal-system",
-    "change-solar-thermal-system-collector-area",
-    "change-solar-thermal-system-efficiency",
-    "change-solar-thermal-system-storage-volume",
-    "change-solar-thermal-system-tilt",
-    "change-solar-thermal-system-azimuth",
-    "create-refrigeration-system",
-    "delete-refrigeration-system",
-    "change-refrigeration-system-case-count",
-    "change-refrigeration-system-design-load",
-    "change-refrigeration-system-defrost-schedule",
-    "create-water-system",
-    "delete-water-system",
-    "change-water-system-fixture-count",
-    "change-water-system-peak-flow",
-    "change-water-system-schedule",
-    "create-fault",
-    "delete-fault",
-    "change-fault-target-equipment",
-    "change-fault-type",
-    "change-fault-severity",
-    "change-fault-start-schedule",
-    "create-space-list",
-    "delete-space-list",
-    "rename-space-list",
-    "add-space-list-member",
-    "remove-space-list-member",
-    "create-thermal-enclosure",
-    "delete-thermal-enclosure",
-    "rename-thermal-enclosure",
-    "add-thermal-enclosure-zone",
-    "remove-thermal-enclosure-zone",
-    "create-constant-schedule",
-    "delete-constant-schedule",
-    "change-constant-schedule-value",
-    "create-daily-schedule",
-    "delete-daily-schedule",
-    "replace-daily-schedule-hourly-values",
-    "change-daily-schedule-interpolation",
-    "change-daily-schedule-limits",
-    "create-weekly-schedule",
-    "delete-weekly-schedule",
-    "change-weekly-schedule-day",
-    "create-annual-schedule",
-    "delete-annual-schedule",
-    "insert-annual-schedule-rule",
-    "remove-annual-schedule-rule",
-    "reorder-annual-schedule-rules",
-    "change-annual-schedule-default-daily-schedule",
-    "change-annual-schedule-holiday-daily-schedule",
-    "add-annual-schedule-holiday",
-    "remove-annual-schedule-holiday",
-    "create-time-series-schedule",
-    "delete-time-series-schedule",
-    "replace-time-series-schedule-values",
-    "change-time-series-schedule-timestep",
-    "replace-fenestration-vertices",
-    "change-glazing-material-thickness",
-    "change-glazing-material-conductivity",
-    "change-glazing-material-solar-transmittance",
-    "change-glazing-material-visible-transmittance",
-    "change-glazing-material-infrared-emissivity",
-    "rename-glazing-material",
-    "change-gas-material-thickness",
-    "change-gas-material-gas",
-    "rename-gas-material",
-    "change-material-roughness",
-];
 
-/// 🗂️ `(semanticKind, domain/operation owner directory)` for every declared kind — the single place the
-/// emoji-carrying directory names are stated in Rust.
-pub const DIRECTORIES: &[(&str, &str)] = &[
-    ("rename-model", "🔋️model/🏷️rename"),
-    ("change-model-version", "🔋️model/🔢️change-version"),
-    ("change-site-latitude", "📍️site/🌍️change-latitude"),
-    ("change-site-longitude", "📍️site/🌏️change-longitude"),
-    ("change-site-elevation", "📍️site/⛰️change-elevation"),
-    ("change-site-time-zone", "📍️site/🕰️change-time-zone"),
-    ("change-site-north-axis", "📍️site/🔝️change-north-axis"),
-    ("change-ground-building", "📍️site/🌡️change-ground-building"),
-    ("change-ground-shallow", "📍️site/🌱️change-ground-shallow"),
-    ("change-ground-deep", "📍️site/⛏️change-ground-deep"),
-    ("change-run-start-month", "⏯️run/🛫️change-start-month"),
-    ("change-run-start-day", "⏯️run/▶️change-start-day"),
-    ("change-run-end-month", "⏯️run/🛬️change-end-month"),
-    ("change-run-end-day", "⏯️run/⏹️change-end-day"),
-    ("change-run-year", "⏯️run/📅️change-year"),
-    ("replace-airflow-network", "🔋️model/🫧️replace-airflow-network"),
-    ("add-output-variable", "🔋️model/📊️add-output-variable"),
-    ("remove-output-variable", "🔋️model/📉️remove-output-variable"),
-    ("bind-weather-file", "🔋️model/🌦️bind-weather-file"),
-    ("unbind-weather-file", "🔋️model/🌤️unbind-weather-file"),
-    ("connect-referenced-model", "🔋️model/🪢️connect-referenced-model"),
-    ("disconnect-referenced-model", "🔋️model/✂️disconnect-referenced-model"),
-    ("rename-zone", "🏡️zone/🏠️rename"),
-    ("change-zone-volume", "🏡️zone/🧊️change-volume"),
-    ("change-zone-multiplier", "🏡️zone/✖️change-multiplier"),
-    ("change-zone-conditioned", "🏡️zone/🌬️change-conditioned"),
-    ("change-zone-floor-area-participation", "🏡️zone/📐️change-floor-area-participation"),
-    ("create-zone", "🏡️zone/🏘️create"),
-    ("delete-zone", "🏡️zone/🏚️delete"),
-    ("create-space", "🛋️space/🪑️create"),
-    ("delete-space", "🛋️space/🧹️delete"),
-    ("rename-space", "🛋️space/🔤️rename"),
-    ("change-space-floor-area", "🛋️space/🧮️change-floor-area"),
-    ("change-space-zone", "🛋️space/🚚️change-zone"),
-    ("create-surface", "🧱️surface/🟫️create"),
-    ("delete-surface", "🧱️surface/🪚️delete"),
-    ("rename-surface", "🧱️surface/🏳️rename"),
-    ("change-surface-zone", "🧱️surface/🗜️change-zone"),
-    ("change-surface-class", "🧱️surface/🧩️change-class"),
-    ("replace-surface-vertices", "🧱️surface/🔺️replace-vertices"),
-    ("change-surface-construction", "🧱️surface/🧰️change-construction"),
-    ("change-surface-boundary-condition", "🔲️boundary/🚧️change-boundary-condition"),
-    ("change-surface-sun-exposed", "🔲️boundary/🌅️change-sun-exposed"),
-    ("change-surface-wind-exposed", "🔲️boundary/🍃️change-wind-exposed"),
-    ("change-surface-multiplier", "🧱️surface/🔁️change-multiplier"),
-    ("create-fenestration", "🪟️fenestration/🪟️create"),
-    ("delete-fenestration", "🪟️fenestration/🚪️delete"),
-    ("rename-fenestration", "🪟️fenestration/🏁️rename"),
-    ("change-fenestration-surface", "🪟️fenestration/🧲️change-surface"),
-    ("change-fenestration-u-value", "🔍️glazing/🌐️change-u-value"),
-    ("change-fenestration-shgc", "🔍️glazing/🌇️change-shgc"),
-    ("change-fenestration-vlt", "🔍️glazing/🌈️change-vlt"),
-    ("change-fenestration-area", "🪟️fenestration/🟥️change-area"),
-    ("change-fenestration-frame-conductance", "🔍️glazing/🖼️change-frame-conductance"),
-    ("change-fenestration-divider-conductance", "🔍️glazing/🧷️change-divider-conductance"),
-    ("create-shading-surface", "🌳️shading/🌳️create"),
-    ("delete-shading-surface", "🌳️shading/🪵️delete"),
-    ("rename-shading-surface", "🌳️shading/🏕️rename"),
-    ("replace-shading-surface-vertices", "🌳️shading/🗺️replace-vertices"),
-    ("change-shading-surface-transmittance-schedule", "🌳️shading/⛱️change-transmittance-schedule"),
-    ("connect-surfaces", "🔲️boundary/🤝️connect"),
-    ("disconnect-surfaces", "🔲️boundary/💔️disconnect"),
-    ("bind-fenestration-glazing-construction", "🔍️glazing/🧊️bind-glazing-construction"),
-    ("clear-fenestration-glazing-construction", "🔍️glazing/🫗️clear-glazing-construction"),
-    ("change-fenestration-height", "🪟️fenestration/⬆️change-height"),
-    ("change-fenestration-sill-height", "🪟️fenestration/⬇️change-sill-height"),
-    ("change-fenestration-overhang-depth", "⛱️shading-device/🧢️change-overhang-depth"),
-    ("change-fenestration-overhang-offset", "⛱️shading-device/🎩️change-overhang-offset"),
-    ("change-fenestration-fin-depth", "⛱️shading-device/🐬️change-fin-depth"),
-    ("change-fenestration-fin-offset", "⛱️shading-device/🐋️change-fin-offset"),
-    ("create-material", "🪨️material/🧱️create"),
-    ("delete-material", "🪨️material/🪨️delete"),
-    ("rename-material", "🪨️material/🪧️rename"),
-    ("change-material-thickness", "🪨️material/📏️change-thickness"),
-    ("change-material-conductivity", "🪨️material/🔥️change-conductivity"),
-    ("change-material-density", "🪨️material/⚖️change-density"),
-    ("change-material-specific-heat", "🪨️material/♨️change-specific-heat"),
-    ("change-material-thermal-absorptance", "🎨️finish/🔆️change-thermal-absorptance"),
-    ("change-material-solar-absorptance", "🎨️finish/☀️change-solar-absorptance"),
-    ("change-material-visible-absorptance", "🎨️finish/👁️change-visible-absorptance"),
-    ("create-construction", "🏗️construction/🏗️create"),
-    ("delete-construction", "🏗️construction/🧨️delete"),
-    ("rename-construction", "🏗️construction/🪪️rename"),
-    ("add-construction-layer", "🏗️construction/➕️add-layer"),
-    ("remove-construction-layer", "🏗️construction/➖️remove-layer"),
-    ("reorder-construction-layers", "🏗️construction/🔀️reorder-layers"),
-    ("create-people-gain", "👥️people-gain/👤️create"),
-    ("delete-people-gain", "👥️people-gain/🚷️delete"),
-    ("change-people-gain-zone", "👥️people-gain/🚶️change-zone"),
-    ("change-people-gain-schedule", "👥️people-gain/⏰️change-schedule"),
-    ("change-people-gain-activity-schedule", "👥️people-gain/🏃️change-activity-schedule"),
-    ("change-people-gain-people-per-area", "👥️people-gain/👥️change-people-per-area"),
-    ("change-people-gain-sensible-fraction", "👥️people-gain/🌞️change-sensible-fraction"),
-    ("change-people-gain-latent-fraction", "👥️people-gain/💧️change-latent-fraction"),
-    ("change-people-gain-radiant-fraction", "👥️people-gain/📡️change-radiant-fraction"),
-    ("create-lighting-gain", "💡️lighting-gain/💡️create"),
-    ("delete-lighting-gain", "💡️lighting-gain/🕯️delete"),
-    ("change-lighting-gain-zone", "💡️lighting-gain/🔦️change-zone"),
-    ("change-lighting-gain-schedule", "💡️lighting-gain/⏱️change-schedule"),
-    ("change-lighting-gain-watts-per-area", "💡️lighting-gain/🔌️change-watts-per-area"),
-    ("change-lighting-gain-radiant-fraction", "💡️lighting-gain/🌟️change-radiant-fraction"),
-    ("change-lighting-gain-visible-fraction", "💡️lighting-gain/🔅️change-visible-fraction"),
-    ("change-lighting-gain-return-air-fraction", "💡️lighting-gain/🎐️change-return-air-fraction"),
-    ("create-equipment-gain", "🖥️equipment-gain/🖥️create"),
-    ("delete-equipment-gain", "🖥️equipment-gain/🧯️delete"),
-    ("change-equipment-gain-zone", "🖥️equipment-gain/🖨️change-zone"),
-    ("change-equipment-gain-schedule", "🖥️equipment-gain/⌛️change-schedule"),
-    ("change-equipment-gain-watts-per-area", "🖥️equipment-gain/⚡️change-watts-per-area"),
-    ("change-equipment-gain-radiant-fraction", "🖥️equipment-gain/🌠️change-radiant-fraction"),
-    ("change-equipment-gain-latent-fraction", "🖥️equipment-gain/💦️change-latent-fraction"),
-    ("create-infiltration", "💨️infiltration/💨️create"),
-    ("delete-infiltration", "💨️infiltration/🧽️delete"),
-    ("change-infiltration-zone", "💨️infiltration/🌀️change-zone"),
-    ("change-infiltration-schedule", "💨️infiltration/⏳️change-schedule"),
-    ("change-infiltration-flow-per-exterior-area", "💨️infiltration/🌫️change-flow-per-exterior-area"),
-    ("change-infiltration-constant-term-coefficient", "🕳️leakage/🅰️change-constant-term-coefficient"),
-    ("change-infiltration-temperature-term-coefficient", "🕳️leakage/🅱️change-temperature-term-coefficient"),
-    ("change-infiltration-velocity-term-coefficient", "🕳️leakage/🆎️change-velocity-term-coefficient"),
-    ("change-infiltration-velocity-squared-term-coefficient", "🕳️leakage/🆑️change-velocity-squared-term-coefficient"),
-    ("create-mechanical-ventilation", "🌪️ventilation/🌪️create"),
-    ("delete-mechanical-ventilation", "🌪️ventilation/🚫️delete"),
-    ("change-mechanical-ventilation-zone", "🌪️ventilation/🧭️change-zone"),
-    ("change-mechanical-ventilation-schedule", "🌪️ventilation/📆️change-schedule"),
-    ("change-mechanical-ventilation-design-flow", "🌪️ventilation/🚿️change-design-flow"),
-    ("change-mechanical-ventilation-fan-total-efficiency", "🌪️ventilation/💠️change-fan-total-efficiency"),
-    ("change-mechanical-ventilation-fan-delta-pressure", "🌪️ventilation/🎈️change-fan-delta-pressure"),
-    ("change-infiltration-method", "💨️infiltration/🔬️change-method"),
-    ("change-infiltration-design-flow-ach", "💨️infiltration/🔄️change-design-flow-ach"),
-    ("change-infiltration-effective-leakage-area", "🕳️leakage/🕳️change-effective-leakage-area"),
-    ("change-infiltration-discharge-coefficient", "🕳️leakage/🚰️change-discharge-coefficient"),
-    ("change-infiltration-stack-height", "🕳️leakage/🏭️change-stack-height"),
-    ("create-thermostat", "🌡️thermostat/🩺️create"),
-    ("delete-thermostat", "🌡️thermostat/🛑️delete"),
-    ("change-thermostat-zone", "🌡️thermostat/🛖️change-zone"),
-    ("change-thermostat-heating-setpoint-schedule", "🌡️thermostat/🥵️change-heating-setpoint-schedule"),
-    ("change-thermostat-cooling-setpoint-schedule", "🌡️thermostat/🐧️change-cooling-setpoint-schedule"),
-    ("change-thermostat-heating-throttle-range", "🌡️thermostat/🎚️change-heating-throttle-range"),
-    ("change-thermostat-cooling-throttle-range", "🌡️thermostat/🎛️change-cooling-throttle-range"),
-    ("create-humidistat", "💧️humidistat/🌂️create"),
-    ("delete-humidistat", "💧️humidistat/🏜️delete"),
-    ("change-humidistat-zone", "💧️humidistat/🏙️change-zone"),
-    ("change-humidistat-humidifying-setpoint-schedule", "💧️humidistat/☔️change-humidifying-setpoint-schedule"),
-    ("change-humidistat-dehumidifying-setpoint-schedule", "💧️humidistat/🏝️change-dehumidifying-setpoint-schedule"),
-    ("change-humidistat-humidifying-throttle-range", "💧️humidistat/🌧️change-humidifying-throttle-range"),
-    ("change-humidistat-dehumidifying-throttle-range", "💧️humidistat/🧻️change-dehumidifying-throttle-range"),
-    ("create-ideal-loads-system", "💯️ideal-loads/🫁️create"),
-    ("delete-ideal-loads-system", "💯️ideal-loads/🫥️delete"),
-    ("change-ideal-loads-system-zone", "💯️ideal-loads/🏢️change-zone"),
-    ("change-ideal-loads-system-max-heating-supply-air-temp", "💯️ideal-loads/🔴️change-max-heating-supply-air-temp"),
-    ("change-ideal-loads-system-min-cooling-supply-air-temp", "💯️ideal-loads/🔵️change-min-cooling-supply-air-temp"),
-    ("change-ideal-loads-system-max-heating-capacity", "💯️ideal-loads/⛽️change-max-heating-capacity"),
-    ("change-ideal-loads-system-max-cooling-capacity", "💯️ideal-loads/🟧️change-max-cooling-capacity"),
-    ("change-ideal-loads-system-outdoor-air-per-person", "💯️ideal-loads/🧍️change-outdoor-air-per-person"),
-    ("change-ideal-loads-system-outdoor-air-per-area", "💯️ideal-loads/🔳️change-outdoor-air-per-area"),
-    ("create-zone-equipment", "🔧️zone-equipment/🛠️create"),
-    ("delete-zone-equipment", "🔧️zone-equipment/🗑️delete"),
-    ("change-zone-equipment-zone", "🔧️zone-equipment/🏬️change-zone"),
-    ("change-zone-equipment-type", "🔧️zone-equipment/🔧️change-type"),
-    ("change-zone-equipment-priority", "🔧️zone-equipment/🎗️change-priority"),
-    ("change-zone-equipment-heating-capacity", "🔧️zone-equipment/🧇️change-heating-capacity"),
-    ("change-zone-equipment-cooling-capacity", "🔧️zone-equipment/🍧️change-cooling-capacity"),
-    ("create-daylight-zone", "🌞️daylight-zone/🔭️create"),
-    ("delete-daylight-zone", "🌞️daylight-zone/🌗️delete"),
-    ("change-daylight-zone-zone", "🌞️daylight-zone/🏫️change-zone"),
-    ("change-daylight-zone-illuminance-target", "🌞️daylight-zone/🪔️change-illuminance-target"),
-    ("change-daylight-zone-glare-limit", "🌞️daylight-zone/🕶️change-glare-limit"),
-    ("change-daylight-zone-window-transmittance", "🌞️daylight-zone/🥃️change-window-transmittance"),
-    ("create-sizing-object", "📏️sizing/📶️create"),
-    ("delete-sizing-object", "📏️sizing/🪒️delete"),
-    ("change-sizing-object-zone", "📏️sizing/🏨️change-zone"),
-    ("change-sizing-object-sizing-type", "📏️sizing/🧾️change-sizing-type"),
-    ("change-sizing-object-design-day-type", "📏️sizing/🌥️change-design-day-type"),
-    ("create-room-air-model-assignment", "🛏️room-air/🛏️create-assignment"),
-    ("delete-room-air-model-assignment", "🛏️room-air/🧺️delete-assignment"),
-    ("change-room-air-model", "🛏️room-air/🪭️change"),
-    ("create-setpoint-manager", "🎚️setpoint/📌️create"),
-    ("delete-setpoint-manager", "🎚️setpoint/🍄️delete"),
-    ("rename-setpoint-manager", "🎚️setpoint/🖇️rename"),
-    ("replace-setpoint-manager-kind", "🎚️setpoint/🔃️replace-kind"),
-    ("change-setpoint-manager-schedule", "🎚️setpoint/🎼️change-schedule"),
-    ("create-air-loop", "🌬️air-loop/🛞️create"),
-    ("delete-air-loop", "🌬️air-loop/🥀️delete"),
-    ("rename-air-loop", "🌬️air-loop/📇️rename"),
-    ("change-air-loop-supply-node", "🌬️air-loop/↗️change-supply-node"),
-    ("change-air-loop-return-node", "🌬️air-loop/↘️change-return-node"),
-    ("change-air-loop-design-supply-air-flow", "🌬️air-loop/🍥️change-design-supply-air-flow"),
-    ("add-air-loop-terminal-zone", "🌬️air-loop/🪺️add-terminal-zone"),
-    ("remove-air-loop-terminal-zone", "🌬️air-loop/🪹️remove-terminal-zone"),
-    ("create-plant-loop", "🏭️plant-loop/⚗️create"),
-    ("delete-plant-loop", "🏭️plant-loop/💣️delete"),
-    ("rename-plant-loop", "🏭️plant-loop/📛️rename"),
-    ("change-plant-loop-type", "🏭️plant-loop/♻️change-type"),
-    ("change-plant-loop-supply-temperature", "🏭️plant-loop/☕️change-supply-temperature"),
-    ("change-plant-loop-return-temperature", "🏭️plant-loop/🫖️change-return-temperature"),
-    ("change-plant-loop-design-flow", "🏭️plant-loop/🚤️change-design-flow"),
-    ("add-plant-loop-equipment", "🏭️plant-loop/🔩️add-equipment"),
-    ("remove-plant-loop-equipment", "🏭️plant-loop/⚙️remove-equipment"),
-    ("create-outdoor-air-system", "🍃️outdoor-air/🌲️create"),
-    ("delete-outdoor-air-system", "🍃️outdoor-air/🍂️delete"),
-    ("change-outdoor-air-system-air-loop", "🍃️outdoor-air/⛓️change-air-loop"),
-    ("change-outdoor-air-system-min-oa-flow", "🍃️outdoor-air/🦋️change-min-oa-flow"),
-    ("change-outdoor-air-system-economizer-enabled", "🍃️outdoor-air/💰️change-economizer-enabled"),
-    ("create-electrical-load-center", "🔌️load-center/🏦️create"),
-    ("delete-electrical-load-center", "🔌️load-center/🔻️delete"),
-    ("rename-electrical-load-center", "🔌️load-center/🖊️rename"),
-    ("add-electrical-load-center-pv", "🔌️load-center/☄️add-pv"),
-    ("remove-electrical-load-center-pv", "🔌️load-center/🌘️remove-pv"),
-    ("add-electrical-load-center-battery", "🔌️load-center/🔋️add-battery"),
-    ("remove-electrical-load-center-battery", "🔌️load-center/🪝️remove-battery"),
-    ("create-pv-system", "☀️pv-system/✨️create"),
-    ("delete-pv-system", "☀️pv-system/🌒️delete"),
-    ("change-pv-system-dc-capacity", "☀️pv-system/⚛️change-dc-capacity"),
-    ("change-pv-system-area", "☀️pv-system/🟨️change-area"),
-    ("change-pv-system-tilt", "☀️pv-system/📈️change-tilt"),
-    ("change-pv-system-azimuth", "☀️pv-system/🧿️change-azimuth"),
-    ("change-pv-system-module-efficiency", "☀️pv-system/🎖️change-module-efficiency"),
-    ("change-pv-system-inverter-efficiency", "☀️pv-system/♌️change-inverter-efficiency"),
-    ("create-battery", "🪫️battery/🪙️create"),
-    ("delete-battery", "🪫️battery/♒️delete"),
-    ("change-battery-capacity", "🪫️battery/🥫️change-capacity"),
-    ("change-battery-max-charge", "🪫️battery/⏫️change-max-charge"),
-    ("change-battery-max-discharge", "🪫️battery/⏬️change-max-discharge"),
-    ("change-battery-round-trip-efficiency", "🪫️battery/🥉️change-round-trip-efficiency"),
-    ("create-shw-system", "🚿️shw-system/🛀️create"),
-    ("delete-shw-system", "🚿️shw-system/🚱️delete"),
-    ("change-shw-system-heater-capacity", "🚿️shw-system/🍵️change-heater-capacity"),
-    ("change-shw-system-storage-volume", "🚿️shw-system/🛢️change-storage-volume"),
-    ("change-shw-system-setpoint", "🚿️shw-system/🏹️change-setpoint"),
-    ("change-shw-system-schedule", "🚿️shw-system/🕐️change-schedule"),
-    ("create-solar-thermal-system", "🔥️solar-thermal/🌄️create"),
-    ("delete-solar-thermal-system", "🔥️solar-thermal/🌆️delete"),
-    ("change-solar-thermal-system-collector-area", "🔥️solar-thermal/🟩️change-collector-area"),
-    ("change-solar-thermal-system-efficiency", "🔥️solar-thermal/🏅️change-efficiency"),
-    ("change-solar-thermal-system-storage-volume", "🔥️solar-thermal/🧃️change-storage-volume"),
-    ("change-solar-thermal-system-tilt", "🔥️solar-thermal/🔼️change-tilt"),
-    ("change-solar-thermal-system-azimuth", "🔥️solar-thermal/⛵️change-azimuth"),
-    ("create-refrigeration-system", "❄️refrigeration/❄️create"),
-    ("delete-refrigeration-system", "❄️refrigeration/🫠️delete"),
-    ("change-refrigeration-system-case-count", "❄️refrigeration/🗄️change-case-count"),
-    ("change-refrigeration-system-design-load", "❄️refrigeration/🏋️change-design-load"),
-    ("change-refrigeration-system-defrost-schedule", "❄️refrigeration/🕑️change-defrost-schedule"),
-    ("create-water-system", "🚰️water-system/🚽️create"),
-    ("delete-water-system", "🚰️water-system/🧼️delete"),
-    ("change-water-system-fixture-count", "🚰️water-system/🪣️change-fixture-count"),
-    ("change-water-system-peak-flow", "🚰️water-system/🚾️change-peak-flow"),
-    ("change-water-system-schedule", "🚰️water-system/🕒️change-schedule"),
-    ("create-fault", "⚠️fault/⚠️create"),
-    ("delete-fault", "⚠️fault/🩹️delete"),
-    ("change-fault-target-equipment", "⚠️fault/🎣️change-target-equipment"),
-    ("change-fault-type", "⚠️fault/🐛️change-type"),
-    ("change-fault-severity", "⚠️fault/🌶️change-severity"),
-    ("change-fault-start-schedule", "⚠️fault/🕓️change-start-schedule"),
-    ("create-space-list", "📋️space-list/📋️create"),
-    ("delete-space-list", "📋️space-list/🗒️delete"),
-    ("rename-space-list", "📋️space-list/🪶️rename"),
-    ("add-space-list-member", "📋️space-list/➡️add-member"),
-    ("remove-space-list-member", "📋️space-list/🪤️remove-member"),
-    ("create-thermal-enclosure", "🔒️enclosure/🏟️create"),
-    ("delete-thermal-enclosure", "🔒️enclosure/🏯️delete"),
-    ("rename-thermal-enclosure", "🔒️enclosure/🖋️rename"),
-    ("add-thermal-enclosure-zone", "🔒️enclosure/🔒️add-zone"),
-    ("remove-thermal-enclosure-zone", "🔒️enclosure/🔓️remove-zone"),
-    ("create-constant-schedule", "🕐️fixed-schedule/🕜️create"),
-    ("delete-constant-schedule", "🕐️fixed-schedule/📍️delete"),
-    ("change-constant-schedule-value", "🕐️fixed-schedule/🕝️change-value"),
-    ("create-daily-schedule", "🕒️day-schedule/🕞️create"),
-    ("delete-daily-schedule", "🕒️day-schedule/🌓️delete"),
-    ("replace-daily-schedule-hourly-values", "🕒️day-schedule/🕔️replace-hourly-values"),
-    ("change-daily-schedule-interpolation", "🕒️day-schedule/🕕️change-interpolation"),
-    ("change-daily-schedule-limits", "🕒️day-schedule/🕟️change-limits"),
-    ("create-weekly-schedule", "🗓️week-schedule/🗓️create"),
-    ("delete-weekly-schedule", "🗓️week-schedule/🕖️delete"),
-    ("change-weekly-schedule-day", "🗓️week-schedule/🕗️change-day"),
-    ("create-annual-schedule", "📆️year-schedule/📚️create"),
-    ("delete-annual-schedule", "📆️year-schedule/📕️delete"),
-    ("insert-annual-schedule-rule", "📆️year-schedule/📗️insert-rule"),
-    ("remove-annual-schedule-rule", "📆️year-schedule/📙️remove-rule"),
-    ("reorder-annual-schedule-rules", "📆️year-schedule/🗂️reorder-rules"),
-    ("change-annual-schedule-default-daily-schedule", "📆️year-schedule/🎌️change-default-daily-schedule"),
-    ("change-annual-schedule-holiday-daily-schedule", "📆️year-schedule/🎄️change-holiday-daily-schedule"),
-    ("add-annual-schedule-holiday", "📆️year-schedule/🎉️add-holiday"),
-    ("remove-annual-schedule-holiday", "📆️year-schedule/🎊️remove-holiday"),
-    ("create-time-series-schedule", "📈️time-series/🪗️create"),
-    ("delete-time-series-schedule", "📈️time-series/🎞️delete"),
-    ("replace-time-series-schedule-values", "📈️time-series/🕘️replace-values"),
-    ("change-time-series-schedule-timestep", "📈️time-series/🕙️change-timestep"),
-    ("replace-fenestration-vertices", "🪟️fenestration/🔶️replace-vertices"),
-    ("change-glazing-material-thickness", "🥂️window-layer/🔷️change-glazing-thickness"),
-    ("change-glazing-material-conductivity", "🥂️window-layer/🟠️change-glazing-conductivity"),
-    ("change-glazing-material-solar-transmittance", "🥂️window-layer/🟡️change-glazing-solar-transmittance"),
-    ("change-glazing-material-visible-transmittance", "🥂️window-layer/🥽️change-glazing-visible-transmittance"),
-    ("change-glazing-material-infrared-emissivity", "🥂️window-layer/🩻️change-glazing-infrared-emissivity"),
-    ("rename-glazing-material", "🥂️window-layer/🟢️rename-glazing"),
-    ("change-gas-material-thickness", "🥂️window-layer/🟣️change-gas-thickness"),
-    ("change-gas-material-gas", "🥂️window-layer/🟤️change-gas-type"),
-    ("rename-gas-material", "🥂️window-layer/🔘️rename-gas"),
-    ("change-material-roughness", "🎨️finish/🗻️change-roughness"),
-];
 //#endregion 🔖️Aggregate
 
-//#region 🌉️TestBridge
-
-//#endregion 🌉️TestBridge
-
-//#region 🧵️WireProbes
-/// 🧵️ One representative value per declared variant — the codec round-trip corpus, so wire coverage
-/// grows with the enum instead of with a hand-maintained list of tests.
-#[cfg(test)]
-pub fn wire_probes() -> Vec<EnergyModelMutation> {
-    vec![
-        rename_model("Probe".to_string()),
-        change_model_version("2".to_string()),
-        change_site_latitude(52.4),
-        change_site_longitude(9.7),
-        change_site_elevation(55.0),
-        change_site_time_zone(1.0),
-        change_site_north_axis(15.0),
-        change_ground_building(7, 21.5),
-        change_ground_shallow(7, 21.5),
-        change_ground_deep(8.0),
-        change_run_start_month(2),
-        change_run_start_day(3),
-        change_run_end_month(11),
-        change_run_end_day(30),
-        change_run_year(2027),
-        replace_airflow_network(true, vec![1], vec![1], 0, vec![7]),
-        add_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string(), crate::model::OutputReportFrequency::Hourly, None),
-        remove_output_variable("Zone Mean Air Temperature".to_string(), "ZONE ONE".to_string()),
-        bind_weather_file(semio_framework_artifact_reference::ArtifactRef { artifact_id: "hannover".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "epw".into() } }),
-        unbind_weather_file(),
-        connect_referenced_model(semio_framework_artifact_reference::ArtifactRef { artifact_id: "doc-2".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }),
-        disconnect_referenced_model(),
-        rename_zone(crate::model::EntityId(1), "ZONE 1".to_string()),
-        change_zone_volume(crate::model::EntityId(1), 129.6),
-        change_zone_multiplier(crate::model::EntityId(1), 4),
-        change_zone_conditioned(crate::model::EntityId(1), false),
-        change_zone_floor_area_participation(crate::model::EntityId(1), false),
-        create_zone(crate::model::EntityId(2), "ZONE TWO".to_string(), 129.6, 1, true, true, None),
-        delete_zone(crate::model::EntityId(2)),
-        create_space(crate::model::EntityId(2), "SPACE ONE".to_string(), crate::model::EntityId(1), 48.0, None),
-        delete_space(crate::model::EntityId(2)),
-        rename_space(crate::model::EntityId(2), "SPACE 1".to_string()),
-        change_space_floor_area(crate::model::EntityId(2), 48.0),
-        change_space_zone(crate::model::EntityId(2), crate::model::EntityId(3)),
-        create_surface(
-            crate::model::EntityId(3),
-            "WALL SOUTH".to_string(),
-            crate::model::EntityId(1),
-            crate::model::SurfaceClass::ExteriorWall,
-            vec![[0.0, 0.0, 0.0], [8.0, 0.0, 0.0], [8.0, 0.0, 2.7]],
-            crate::model::EntityId(2),
-            crate::model::OutsideBoundaryKind::OutdoorAir,
-            None,
-            true,
-            true,
-            1, None,
-        ),
-        delete_surface(crate::model::EntityId(3)),
-        rename_surface(crate::model::EntityId(3), "WALL S".to_string()),
-        change_surface_zone(crate::model::EntityId(3), crate::model::EntityId(7)),
-        change_surface_class(crate::model::EntityId(3), crate::model::SurfaceClass::Roof),
-        replace_surface_vertices(crate::model::EntityId(3), vec![[0.0, 0.0, 0.0], [6.0, 0.0, 0.0], [6.0, 0.0, 2.7]]),
-        change_surface_construction(crate::model::EntityId(3), crate::model::EntityId(8)),
-        change_surface_boundary_condition(crate::model::EntityId(3), crate::model::OutsideBoundaryKind::Ground, None),
-        change_surface_sun_exposed(crate::model::EntityId(3), false),
-        change_surface_wind_exposed(crate::model::EntityId(3), false),
-        change_surface_multiplier(crate::model::EntityId(3), 4),
-        create_fenestration(crate::model::EntityId(5), "WINDOW SOUTH".to_string(), crate::model::EntityId(3), 3.0, 0.787, 0.86, 6.0, 2.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None),
-        delete_fenestration(crate::model::EntityId(5)),
-        rename_fenestration(crate::model::EntityId(5), "WINDOW S".to_string()),
-        change_fenestration_surface(crate::model::EntityId(5), crate::model::EntityId(6)),
-        change_fenestration_u_value(crate::model::EntityId(5), 2.74),
-        change_fenestration_shgc(crate::model::EntityId(5), 0.76),
-        change_fenestration_vlt(crate::model::EntityId(5), 0.84),
-        change_fenestration_area(crate::model::EntityId(5), 12.0),
-        change_fenestration_frame_conductance(crate::model::EntityId(5), 1.2),
-        change_fenestration_divider_conductance(crate::model::EntityId(5), 0.4),
-        create_shading_surface(crate::model::EntityId(11), "SITE AWNING".to_string(), vec![[0.0, -2.0, 3.0], [8.0, -2.0, 3.0], [8.0, 0.0, 3.0]], None, None),
-        delete_shading_surface(crate::model::EntityId(11)),
-        rename_shading_surface(crate::model::EntityId(11), "AWNING".to_string()),
-        replace_shading_surface_vertices(crate::model::EntityId(11), vec![[0.0, -3.0, 3.0], [8.0, -3.0, 3.0], [8.0, 0.0, 3.0]]),
-        change_shading_surface_transmittance_schedule(crate::model::EntityId(11), Some(crate::schedule::ScheduleId(1))),
-        connect_surfaces(crate::model::EntityId(3), crate::model::EntityId(6), None),
-        disconnect_surfaces(crate::model::EntityId(3), crate::model::EntityId(6)),
-        bind_fenestration_glazing_construction(crate::model::EntityId(5), crate::model::EntityId(7)),
-        clear_fenestration_glazing_construction(crate::model::EntityId(5)),
-        change_fenestration_height(crate::model::EntityId(5), 2.4),
-        change_fenestration_sill_height(crate::model::EntityId(5), 0.9),
-        change_fenestration_overhang_depth(crate::model::EntityId(5), 1.0),
-        change_fenestration_overhang_offset(crate::model::EntityId(5), 0.5),
-        change_fenestration_fin_depth(crate::model::EntityId(5), 1.0),
-        change_fenestration_fin_offset(crate::model::EntityId(5), 0.2),
-        create_material(2, crate::model::EntityId(3), "CONCRETE SLAB".into(), crate::model::SurfaceRoughness::MediumRough, 0.08, 1.13, 1400.0, 1000.0, 0.9, 0.6, 0.6),
-        delete_material(crate::model::EntityId(1)),
-        rename_material(crate::model::EntityId(1), "TIMBER FLOORING".to_string()),
-        change_material_thickness(crate::model::EntityId(1), 0.02),
-        change_material_conductivity(crate::model::EntityId(1), 0.25),
-        change_material_density(crate::model::EntityId(1), 1200.0),
-        change_material_specific_heat(crate::model::EntityId(1), 1000.0),
-        change_material_thermal_absorptance(crate::model::EntityId(1), 0.85),
-        change_material_solar_absorptance(crate::model::EntityId(1), 0.7),
-        change_material_visible_absorptance(crate::model::EntityId(1), 0.75),
-        create_construction(2, crate::model::EntityId(12), "ROOF".into(), vec![crate::model::EntityId(2), crate::model::EntityId(1)]),
-        delete_construction(crate::model::EntityId(11)),
-        rename_construction(crate::model::EntityId(10), "LTWALL INSULATED".to_string()),
-        add_construction_layer(crate::model::EntityId(10), 2, crate::model::EntityId(1)),
-        remove_construction_layer(crate::model::EntityId(10), 1),
-        reorder_construction_layers(crate::model::EntityId(10), vec![crate::model::EntityId(2), crate::model::EntityId(1)]),
-        create_people_gain(1, crate::model::EntityId(21), crate::model::EntityId(2), crate::schedule::ScheduleId(1), crate::schedule::ScheduleId(2), 0.1, 0.6, 0.4, 0.3),
-        delete_people_gain(crate::model::EntityId(20)),
-        change_people_gain_zone(crate::model::EntityId(20), crate::model::EntityId(2)),
-        change_people_gain_schedule(crate::model::EntityId(20), crate::schedule::ScheduleId(3)),
-        change_people_gain_activity_schedule(crate::model::EntityId(20), crate::schedule::ScheduleId(3)),
-        change_people_gain_people_per_area(crate::model::EntityId(20), 0.1),
-        change_people_gain_sensible_fraction(crate::model::EntityId(20), 0.7),
-        change_people_gain_latent_fraction(crate::model::EntityId(20), 0.3),
-        change_people_gain_radiant_fraction(crate::model::EntityId(20), 0.5),
-        create_lighting_gain(1, crate::model::EntityId(31), crate::model::EntityId(2), crate::schedule::ScheduleId(1), 8.0, 0.6, 0.2, 0.0),
-        delete_lighting_gain(crate::model::EntityId(30)),
-        change_lighting_gain_zone(crate::model::EntityId(30), crate::model::EntityId(2)),
-        change_lighting_gain_schedule(crate::model::EntityId(30), crate::schedule::ScheduleId(3)),
-        change_lighting_gain_watts_per_area(crate::model::EntityId(30), 12.5),
-        change_lighting_gain_radiant_fraction(crate::model::EntityId(30), 0.7),
-        change_lighting_gain_visible_fraction(crate::model::EntityId(30), 0.25),
-        change_lighting_gain_return_air_fraction(crate::model::EntityId(30), 0.1),
-        create_equipment_gain(1, crate::model::EntityId(41), crate::model::EntityId(2), crate::schedule::ScheduleId(1), 2.5, 0.5, 0.0),
-        delete_equipment_gain(crate::model::EntityId(40)),
-        change_equipment_gain_zone(crate::model::EntityId(40), crate::model::EntityId(2)),
-        change_equipment_gain_schedule(crate::model::EntityId(40), crate::schedule::ScheduleId(3)),
-        change_equipment_gain_watts_per_area(crate::model::EntityId(40), 5.0),
-        change_equipment_gain_radiant_fraction(crate::model::EntityId(40), 0.4),
-        change_equipment_gain_latent_fraction(crate::model::EntityId(40), 0.2),
-        create_infiltration(1, crate::model::EntityId(51), crate::model::EntityId(2), crate::schedule::ScheduleId(1), crate::air_exchange::InfiltrationMethod::ScheduledAch, 0.5, 0.0, 0.0, 1.0, 2.7, 1.0, 0.0, 0.0, 0.0),
-        delete_infiltration(crate::model::EntityId(50)),
-        change_infiltration_zone(crate::model::EntityId(50), crate::model::EntityId(2)),
-        change_infiltration_schedule(crate::model::EntityId(50), crate::schedule::ScheduleId(3)),
-        change_infiltration_flow_per_exterior_area(crate::model::EntityId(50), 0.0003),
-        change_infiltration_constant_term_coefficient(crate::model::EntityId(50), 0.606),
-        change_infiltration_temperature_term_coefficient(crate::model::EntityId(50), 0.03636),
-        change_infiltration_velocity_term_coefficient(crate::model::EntityId(50), 0.1177),
-        change_infiltration_velocity_squared_term_coefficient(crate::model::EntityId(50), 0.000103),
-        create_mechanical_ventilation(1, crate::model::EntityId(61), crate::model::EntityId(2), crate::schedule::ScheduleId(1), 0.08, 0.65, 250.0),
-        delete_mechanical_ventilation(crate::model::EntityId(60)),
-        change_mechanical_ventilation_zone(crate::model::EntityId(60), crate::model::EntityId(2)),
-        change_mechanical_ventilation_schedule(crate::model::EntityId(60), crate::schedule::ScheduleId(3)),
-        change_mechanical_ventilation_design_flow(crate::model::EntityId(60), 0.12),
-        change_mechanical_ventilation_fan_total_efficiency(crate::model::EntityId(60), 0.8),
-        change_mechanical_ventilation_fan_delta_pressure(crate::model::EntityId(60), 500.0),
-        change_infiltration_method(crate::model::EntityId(50), crate::air_exchange::InfiltrationMethod::PerExteriorArea),
-        change_infiltration_design_flow_ach(crate::model::EntityId(50), 1.0),
-        change_infiltration_effective_leakage_area(crate::model::EntityId(50), 0.05),
-        change_infiltration_discharge_coefficient(crate::model::EntityId(50), 0.65),
-        change_infiltration_stack_height(crate::model::EntityId(50), 3.0),
-        create_thermostat(crate::model::EntityId(10), crate::model::EntityId(1), crate::schedule::ScheduleId(1), crate::schedule::ScheduleId(2), 1.0, 1.0, None),
-        delete_thermostat(crate::model::EntityId(10)),
-        change_thermostat_zone(crate::model::EntityId(10), crate::model::EntityId(2)),
-        change_thermostat_heating_setpoint_schedule(crate::model::EntityId(10), crate::schedule::ScheduleId(2)),
-        change_thermostat_cooling_setpoint_schedule(crate::model::EntityId(10), crate::schedule::ScheduleId(1)),
-        change_thermostat_heating_throttle_range(crate::model::EntityId(10), 2.0),
-        change_thermostat_cooling_throttle_range(crate::model::EntityId(10), 2.0),
-        create_humidistat(crate::model::EntityId(11), crate::model::EntityId(1), crate::schedule::ScheduleId(1), crate::schedule::ScheduleId(2), 5.0, 5.0, None),
-        delete_humidistat(crate::model::EntityId(11)),
-        change_humidistat_zone(crate::model::EntityId(11), crate::model::EntityId(2)),
-        change_humidistat_humidifying_setpoint_schedule(crate::model::EntityId(11), crate::schedule::ScheduleId(2)),
-        change_humidistat_dehumidifying_setpoint_schedule(crate::model::EntityId(11), crate::schedule::ScheduleId(1)),
-        change_humidistat_humidifying_throttle_range(crate::model::EntityId(11), 10.0),
-        change_humidistat_dehumidifying_throttle_range(crate::model::EntityId(11), 10.0),
-        create_ideal_loads_system(crate::model::EntityId(12), crate::model::EntityId(1), 50.0, 13.0, false, 0.0, false, 0.0, 0.0, 0.0, None),
-        delete_ideal_loads_system(crate::model::EntityId(12)),
-        change_ideal_loads_system_zone(crate::model::EntityId(12), crate::model::EntityId(2)),
-        change_ideal_loads_system_max_heating_supply_air_temp(crate::model::EntityId(12), 45.0),
-        change_ideal_loads_system_min_cooling_supply_air_temp(crate::model::EntityId(12), 12.0),
-        change_ideal_loads_system_max_heating_capacity(crate::model::EntityId(12), true, 4000.0),
-        change_ideal_loads_system_max_cooling_capacity(crate::model::EntityId(12), true, 5000.0),
-        change_ideal_loads_system_outdoor_air_per_person(crate::model::EntityId(12), 0.0025),
-        change_ideal_loads_system_outdoor_air_per_area(crate::model::EntityId(12), 0.0003),
-        create_zone_equipment(crate::model::EntityId(13), crate::model::EntityId(1), crate::model::ZoneEquipmentType::Baseboard, 1, 2000.0, 0.0, None),
-        delete_zone_equipment(crate::model::EntityId(13)),
-        change_zone_equipment_zone(crate::model::EntityId(13), crate::model::EntityId(2)),
-        change_zone_equipment_type(crate::model::EntityId(13), crate::model::ZoneEquipmentType::FanCoil),
-        change_zone_equipment_priority(crate::model::EntityId(13), 2),
-        change_zone_equipment_heating_capacity(crate::model::EntityId(13), 3000.0),
-        change_zone_equipment_cooling_capacity(crate::model::EntityId(13), 1500.0),
-        create_daylight_zone(crate::model::EntityId(14), crate::model::EntityId(1), 500.0, 22.0, 0.6, None),
-        delete_daylight_zone(crate::model::EntityId(14)),
-        change_daylight_zone_zone(crate::model::EntityId(14), crate::model::EntityId(2)),
-        change_daylight_zone_illuminance_target(crate::model::EntityId(14), 300.0),
-        change_daylight_zone_glare_limit(crate::model::EntityId(14), 20.0),
-        change_daylight_zone_window_transmittance(crate::model::EntityId(14), 0.5),
-        create_sizing_object(crate::model::EntityId(15), crate::model::EntityId(1), crate::model::SizingType::Heating, crate::model::DesignDayType::Heating, None),
-        delete_sizing_object(crate::model::EntityId(15)),
-        change_sizing_object_zone(crate::model::EntityId(15), crate::model::EntityId(2)),
-        change_sizing_object_sizing_type(crate::model::EntityId(15), crate::model::SizingType::Cooling),
-        change_sizing_object_design_day_type(crate::model::EntityId(15), crate::model::DesignDayType::Cooling),
-        create_room_air_model_assignment(crate::model::EntityId(1), crate::model::RoomAirModelType::WellMixed, None),
-        delete_room_air_model_assignment(crate::model::EntityId(1)),
-        change_room_air_model(crate::model::EntityId(1), crate::model::RoomAirModelType::TwoNodeBuoyancy),
-        create_setpoint_manager(crate::model::EntityId(16), "SUPPLY SPM".to_string(), "Scheduled".to_string(), 0.0, 0.0, 0.0, 0.0, true, crate::schedule::ScheduleId(1), None),
-        delete_setpoint_manager(crate::model::EntityId(16)),
-        rename_setpoint_manager(crate::model::EntityId(16), "RESET SPM".to_string()),
-        replace_setpoint_manager_kind(crate::model::EntityId(16), "OutdoorAirReset".to_string(), -10.0, 20.0, 16.0, 12.0),
-        change_setpoint_manager_schedule(crate::model::EntityId(16), true, crate::schedule::ScheduleId(2)),
-        create_air_loop(crate::model::EntityId(17), "MAIN AIR LOOP".to_string(), 1, 2, 1.2, vec![crate::model::EntityId(1)], None),
-        delete_air_loop(crate::model::EntityId(17)),
-        rename_air_loop(crate::model::EntityId(17), "PRIMARY AIR LOOP".to_string()),
-        change_air_loop_supply_node(crate::model::EntityId(17), 5),
-        change_air_loop_return_node(crate::model::EntityId(17), 6),
-        change_air_loop_design_supply_air_flow(crate::model::EntityId(17), 1.6),
-        add_air_loop_terminal_zone(crate::model::EntityId(17), crate::model::EntityId(2), None),
-        remove_air_loop_terminal_zone(crate::model::EntityId(17), crate::model::EntityId(1)),
-        create_plant_loop(crate::model::EntityId(18), "HOT WATER LOOP".to_string(), crate::model::PlantLoopType::Heating, 80.0, 60.0, 2.0, Vec::new(), None),
-        delete_plant_loop(crate::model::EntityId(18)),
-        rename_plant_loop(crate::model::EntityId(18), "BOILER LOOP".to_string()),
-        change_plant_loop_type(crate::model::EntityId(18), crate::model::PlantLoopType::Cooling),
-        change_plant_loop_supply_temperature(crate::model::EntityId(18), 70.0),
-        change_plant_loop_return_temperature(crate::model::EntityId(18), 55.0),
-        change_plant_loop_design_flow(crate::model::EntityId(18), 3.0),
-        add_plant_loop_equipment(crate::model::EntityId(18), crate::model::EntityId(50), None),
-        remove_plant_loop_equipment(crate::model::EntityId(18), crate::model::EntityId(50)),
-        create_outdoor_air_system(crate::model::EntityId(19), crate::model::EntityId(17), 0.2, false, None),
-        delete_outdoor_air_system(crate::model::EntityId(19)),
-        change_outdoor_air_system_air_loop(crate::model::EntityId(19), crate::model::EntityId(20)),
-        change_outdoor_air_system_min_oa_flow(crate::model::EntityId(19), 0.35),
-        change_outdoor_air_system_economizer_enabled(crate::model::EntityId(19), true),
-        create_electrical_load_center(2, crate::model::EntityId(322), "ROOF PANEL".into(), Vec::new(), vec![crate::model::EntityId(301)], Vec::new()),
-        delete_electrical_load_center(crate::model::EntityId(321)),
-        rename_electrical_load_center(crate::model::EntityId(320), "MAIN DISTRIBUTION".to_string()),
-        add_electrical_load_center_pv(crate::model::EntityId(320), 1, crate::model::EntityId(301)),
-        remove_electrical_load_center_pv(crate::model::EntityId(320), crate::model::EntityId(300)),
-        add_electrical_load_center_battery(crate::model::EntityId(320), 0, crate::model::EntityId(310)),
-        remove_electrical_load_center_battery(crate::model::EntityId(321), crate::model::EntityId(310)),
-        create_pv_system(2, crate::model::EntityId(302), 8000.0, 44.0, 25.0, 200.0, 0.19, 0.97),
-        delete_pv_system(crate::model::EntityId(300)),
-        change_pv_system_dc_capacity(crate::model::EntityId(300), 7000.0),
-        change_pv_system_area(crate::model::EntityId(300), 42.0),
-        change_pv_system_tilt(crate::model::EntityId(300), 35.0),
-        change_pv_system_azimuth(crate::model::EntityId(300), 170.0),
-        change_pv_system_module_efficiency(crate::model::EntityId(300), 0.21),
-        change_pv_system_inverter_efficiency(crate::model::EntityId(300), 0.98),
-        create_battery(1, crate::model::EntityId(311), 27.0, 7000.0, 7000.0, 0.92),
-        delete_battery(crate::model::EntityId(310)),
-        change_battery_capacity(crate::model::EntityId(310), 20.0),
-        change_battery_max_charge(crate::model::EntityId(310), 7000.0),
-        change_battery_max_discharge(crate::model::EntityId(310), 6000.0),
-        change_battery_round_trip_efficiency(crate::model::EntityId(310), 0.95),
-        create_shw_system(1, crate::model::EntityId(401), 6000.0, 0.2, 60.0, crate::schedule::ScheduleId(2)),
-        delete_shw_system(crate::model::EntityId(400)),
-        change_shw_system_heater_capacity(crate::model::EntityId(400), 6000.0),
-        change_shw_system_storage_volume(crate::model::EntityId(400), 0.2),
-        change_shw_system_setpoint(crate::model::EntityId(400), 60.0),
-        change_shw_system_schedule(crate::model::EntityId(400), crate::schedule::ScheduleId(2)),
-        create_solar_thermal_system(1, crate::model::EntityId(411), 6.0, 0.6, 0.4, 40.0, 190.0),
-        delete_solar_thermal_system(crate::model::EntityId(410)),
-        change_solar_thermal_system_collector_area(crate::model::EntityId(410), 6.0),
-        change_solar_thermal_system_efficiency(crate::model::EntityId(410), 0.62),
-        change_solar_thermal_system_storage_volume(crate::model::EntityId(410), 0.5),
-        change_solar_thermal_system_tilt(crate::model::EntityId(410), 35.0),
-        change_solar_thermal_system_azimuth(crate::model::EntityId(410), 200.0),
-        create_refrigeration_system(1, crate::model::EntityId(421), 2, 8000.0, crate::schedule::ScheduleId(2)),
-        delete_refrigeration_system(crate::model::EntityId(420)),
-        change_refrigeration_system_case_count(crate::model::EntityId(420), 6),
-        change_refrigeration_system_design_load(crate::model::EntityId(420), 15000.0),
-        change_refrigeration_system_defrost_schedule(crate::model::EntityId(420), crate::schedule::ScheduleId(2)),
-        create_water_system(1, crate::model::EntityId(431), 4, 0.15, crate::schedule::ScheduleId(2)),
-        delete_water_system(crate::model::EntityId(430)),
-        change_water_system_fixture_count(crate::model::EntityId(430), 9),
-        change_water_system_peak_flow(crate::model::EntityId(430), 0.4),
-        change_water_system_schedule(crate::model::EntityId(430), crate::schedule::ScheduleId(2)),
-        create_fault(1, crate::model::EntityId(441), crate::model::EntityId(501), crate::model::FaultType::SensorBias, 0.5, crate::schedule::ScheduleId(2)),
-        delete_fault(crate::model::EntityId(440)),
-        change_fault_target_equipment(crate::model::EntityId(440), crate::model::EntityId(501)),
-        change_fault_type(crate::model::EntityId(440), crate::model::FaultType::SensorBias),
-        change_fault_severity(crate::model::EntityId(440), 0.6),
-        change_fault_start_schedule(crate::model::EntityId(440), crate::schedule::ScheduleId(2)),
-        create_space_list(2, crate::model::EntityId(212), "ATRIUM".into(), vec![crate::model::EntityId(201)]),
-        delete_space_list(crate::model::EntityId(211)),
-        rename_space_list(crate::model::EntityId(210), "CORE SPACES".to_string()),
-        add_space_list_member(crate::model::EntityId(210), 1, crate::model::EntityId(201)),
-        remove_space_list_member(crate::model::EntityId(210), crate::model::EntityId(200)),
-        create_thermal_enclosure(2, crate::model::EntityId(222), "ROOF BLOCK".into(), vec![crate::model::EntityId(2)]),
-        delete_thermal_enclosure(crate::model::EntityId(221)),
-        rename_thermal_enclosure(crate::model::EntityId(220), "NORTH ENCLOSURE".to_string()),
-        add_thermal_enclosure_zone(crate::model::EntityId(220), 1, crate::model::EntityId(2)),
-        remove_thermal_enclosure_zone(crate::model::EntityId(220), crate::model::EntityId(1)),
-        create_constant_schedule(2, crate::schedule::ScheduleId(3), 0.75),
-        delete_constant_schedule(crate::schedule::ScheduleId(2)),
-        change_constant_schedule_value(crate::schedule::ScheduleId(1), 0.25),
-        create_daily_schedule(3, crate::schedule::ScheduleId(13), vec![21.0; 24], crate::schedule::ScheduleInterpolation::Continuous, None, None),
-        delete_daily_schedule(crate::schedule::ScheduleId(12)),
-        replace_daily_schedule_hourly_values(crate::schedule::ScheduleId(10), vec![22.0; 24]),
-        change_daily_schedule_interpolation(crate::schedule::ScheduleId(10), crate::schedule::ScheduleInterpolation::Discrete),
-        change_daily_schedule_limits(crate::schedule::ScheduleId(10), Some(0.0), Some(40.0)),
-        create_weekly_schedule(1, crate::schedule::ScheduleId(21), vec![crate::schedule::ScheduleId(11); 7]),
-        delete_weekly_schedule(crate::schedule::ScheduleId(20)),
-        change_weekly_schedule_day(crate::schedule::ScheduleId(20), 2, crate::schedule::ScheduleId(11)),
-        create_annual_schedule(1, crate::schedule::ScheduleId(31), crate::schedule::ScheduleId(10), None),
-        delete_annual_schedule(crate::schedule::ScheduleId(30)),
-        insert_annual_schedule_rule(crate::schedule::ScheduleId(30), 1, 7, 1, 8, 31, crate::schedule::ScheduleId(12)),
-        remove_annual_schedule_rule(crate::schedule::ScheduleId(30), 0),
-        reorder_annual_schedule_rules(crate::schedule::ScheduleId(30), 0, 1),
-        change_annual_schedule_default_daily_schedule(crate::schedule::ScheduleId(30), crate::schedule::ScheduleId(10)),
-        change_annual_schedule_holiday_daily_schedule(crate::schedule::ScheduleId(30), Some(crate::schedule::ScheduleId(11))),
-        add_annual_schedule_holiday(crate::schedule::ScheduleId(30), 1, 2026, 1, 1),
-        remove_annual_schedule_holiday(crate::schedule::ScheduleId(30), 2026, 12, 25),
-        create_time_series_schedule(1, crate::schedule::ScheduleId(41), vec![1.0, 0.9], 900),
-        delete_time_series_schedule(crate::schedule::ScheduleId(40)),
-        replace_time_series_schedule_values(crate::schedule::ScheduleId(40), vec![1.0, 0.8, 0.6, 0.4]),
-        change_time_series_schedule_timestep(crate::schedule::ScheduleId(40), 900),
-        replace_fenestration_vertices(crate::model::EntityId(4), vec![[1.0, 0.0, 0.5], [4.0, 0.0, 0.5], [4.0, 0.0, 2.0], [2.5, 0.0, 2.5], [1.0, 0.0, 2.0]]),
-        change_glazing_material_thickness(crate::model::EntityId(1), 0.004),
-        change_glazing_material_conductivity(crate::model::EntityId(1), 1.06),
-        change_glazing_material_solar_transmittance(crate::model::EntityId(1), 0.61),
-        change_glazing_material_visible_transmittance(crate::model::EntityId(1), 0.74),
-        change_glazing_material_infrared_emissivity(crate::model::EntityId(1), 0.84, 0.04),
-        rename_glazing_material(crate::model::EntityId(1), "LOW-E 3MM".to_string()),
-        change_gas_material_thickness(crate::model::EntityId(2), 0.016),
-        change_gas_material_gas(crate::model::EntityId(2), crate::model::GasKind::Argon),
-        rename_gas_material(crate::model::EntityId(2), "ARGON GAP 16MM".to_string()),
-        change_material_roughness(crate::model::EntityId(1), crate::model::SurfaceRoughness::VeryRough),
-    ]
-}
-//#endregion 🧵️WireProbes
-
-//#region 🧰️Fixtures
-/// 🧰️ Shared fixture-case machinery: the eight laws every committed `(before, mutation, after,
-/// diff, outcome)` vector is held to, plus the `SEMIO_ENERGY_WRITE_FIXTURES=1` generator that
-/// materializes those five JSON files from one typed scenario. Every `<kind>/🧪️tests/<case>/🦀️.rs`
-/// is a thin declaration over this module, so a new kind's fixture case is data, not code.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixtures/🦀️.rs"]
-pub mod fixtures;
-//#endregion 🧰️Fixtures
-
-//#region 🎯️MiddleRowLaws
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row-laws/🦀️.rs"]
-mod middle_row_law_tests;
-//#endregion 🎯️MiddleRowLaws
-
-//#region 🧪️StructuralCorrespondence
-#[cfg(test)]
-#[path = "🧪️tests/🔬️structural-correspondence/🦀️.rs"]
-mod structural_correspondence_tests;
-//#endregion 🧪️StructuralCorrespondence
+//#region 🚪️Representations
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;
+//#endregion 🚪️Representations

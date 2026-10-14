@@ -1,8 +1,10 @@
 //! 🕹️ `move-frame` — absolute spatial reposition of a frame's `bounds.x`/`bounds.y`.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,12 +22,12 @@ pub struct MoveFrame {
     pub new_y: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for MoveFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::move_frame::MoveFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "frame", kind: "move-frame", record: "MovedFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_move_frame(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_move_frame(self, base)?
     
@@ -65,7 +67,7 @@ pub fn diff_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> protocol::
 //#endregion 🕹️MoveFrame
 
 //#region 🕹️MoveFrame
-pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_move_frame<Op: From<crate::move_frame::MoveFrame>>(payload: &MoveFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -74,8 +76,14 @@ pub fn inverse_move_frame(payload: &MoveFrame, base: &LayoutSnapshot) -> Result<
         return Vec::new();
     };
     let bounds = frame.bounds();
-    vec![LayoutMutation::MoveFrame(MoveFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_x: bounds.x, new_y: bounds.y })]
+    vec![Op::from(MoveFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_x: bounds.x, new_y: bounds.y })]
 
     })())
 }
 //#endregion 🕹️MoveFrame
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📍️moves-the-rect-frame/🦀️.rs"]
+mod tests_moves_the_rect_frame;
+//#endregion 🪢️TaxonomyMounts

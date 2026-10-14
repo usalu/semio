@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "accessRule",
+  "id": "access-rule-a",
+  "newName": "Renamed Access Rule A"
+}

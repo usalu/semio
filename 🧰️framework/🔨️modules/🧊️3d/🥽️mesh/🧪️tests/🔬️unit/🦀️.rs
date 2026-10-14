@@ -7,8 +7,8 @@ use super::*;
 /// `vertices`/`halfedges`/`faces`/`uv_seams` are all actually exercised).
 #[test]
 fn value_round_trip_matches_serde_shape() {
-    fn check<T: dsl_core::value::ToValue + dsl_core::value::FromValue + std::fmt::Debug + PartialEq>(value: T) {
-        let round_tripped = <T as dsl_core::value::FromValue>::from_value(dsl_core::value::ToValue::to_value(&value)).expect("round-trip decode");
+    fn check<T: semio_framework_value::ToValue + semio_framework_value::FromValue + std::fmt::Debug + PartialEq>(value: T) {
+        let round_tripped = <T as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&value)).expect("round-trip decode");
         assert_eq!(round_tripped, value);
     }
 
@@ -17,21 +17,21 @@ fn value_round_trip_matches_serde_shape() {
     check(WeldMode::ByDistance);
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🌱️value/⚠️refusal/🔁️codec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let wire=&corpus["valid"][0]["wire"];
-    let error=MeshKernelError::Retained(protocol::value::ValueError::new(protocol::value::ValueRefusalKind::from_wire(wire["kind"].as_str().unwrap()).unwrap(),wire["message"].as_str().unwrap()).with_retained_progress(serde_json::from_value(wire["retainedProgress"].clone()).unwrap()));
+    let error=MeshKernelError::Retained(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::from_wire(wire["kind"].as_str().unwrap()).unwrap(),wire["message"].as_str().unwrap()).with_retained_progress(serde_json::from_value(wire["retainedProgress"].clone()).unwrap()));
     let MeshKernelError::Retained(cause)=error else{unreachable!()};let mut permit=|_|true;
-    let encoded=cause.to_value_controlled(&mut protocol::value::NativeEncodeControl::new(1_000_000,&mut permit)).unwrap();
+    let encoded=cause.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(1_000_000,&mut permit)).unwrap();
     assert_eq!(serde_json::Value::from(encoded.clone()),*wire);
     let mut decode_permit=|_|true;
-    assert_eq!(protocol::value::ValueError::from_value_controlled(&encoded,&mut protocol::value::NativeDecodeControl::new(1_000_000,&mut decode_permit)).unwrap(),cause);
+    assert_eq!(semio_framework_value::ValueError::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(1_000_000,&mut decode_permit)).unwrap(),cause);
 
     // `HalfedgeMesh` has no `PartialEq` (pre-existing — not added here), so round-trip fidelity
     // is checked by re-encoding the decoded mesh and comparing `DslValue`s, plus a direct
     // comparison against `serde_json`'s own encoding of the SAME mesh — the round-trip
     // contract's actual bar (byte-identical wire shape), not just "decodes to something".
     let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box_prim");
-    let encoded = dsl_core::value::ToValue::to_value(&mesh);
-    let decoded = <HalfedgeMesh as dsl_core::value::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
-    assert_eq!(dsl_core::value::ToValue::to_value(&decoded), encoded);
+    let encoded = semio_framework_value::ToValue::to_value(&mesh);
+    let decoded = <HalfedgeMesh as semio_framework_value::FromValue>::from_value(encoded.clone()).expect("round-trip decode");
+    assert_eq!(semio_framework_value::ToValue::to_value(&decoded), encoded);
 
     let via_serde: serde_json::Value = serde_json::to_value(&mesh).expect("serde encode");
     assert_eq!(serde_json::Value::from(encoded), via_serde);
@@ -754,7 +754,7 @@ async fn from_json_rejects_invalid_input() {
 }
 #[test]
 fn authored_corner_channels_have_owned_codecs_and_strict_cardinality() {
-    use protocol::value::{DslValue, FromValue, ToValue};
+    use semio_framework_value::{DslValue, FromValue, ToValue};
     let mut mesh = HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]], &[vec![0,1,2],vec![0,2,3]]).unwrap();
     let values = vec![DslValue::Array(vec![DslValue::float(0.0),DslValue::float(0.0),DslValue::float(1.0)]);6];
     let attribute = MeshAttribute { indices:None, domain:MeshAttributeDomain::Corner, semantic:MeshAttributeSemantic::Normal, interpolation:MeshAttributeInterpolation::Linear, values };
@@ -772,7 +772,7 @@ fn authored_corner_channels_have_owned_codecs_and_strict_cardinality() {
 
 #[test]
 fn indexed_corner_attributes_tessellate_with_seams_and_transform_once() {
-    use protocol::value::DslValue;
+    use semio_framework_value::DslValue;
     let mut mesh=HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],&[vec![0,1,2],vec![0,2,3]]).unwrap();
     let tuple=|values:&[f64]|DslValue::Array(values.iter().map(|value|DslValue::float(*value)).collect());
     mesh.set_attribute("normal".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:vec![tuple(&[2f64.sqrt().recip(),2f64.sqrt().recip(),0.0])],indices:Some(vec![0;6])}).unwrap();
@@ -780,7 +780,7 @@ fn indexed_corner_attributes_tessellate_with_seams_and_transform_once() {
     let transfer=mesh.tessellate().unwrap();assert_eq!(transfer.attributes["normal"].values.len(),1);assert_eq!(transfer.attributes["normal"].domain_len(),6);assert_ne!(&transfer.uvs[..2],&transfer.uvs[6..8]);
     let shared=transfer.edge_ids.iter().position(|id|mesh.halfedges[*id as usize].twin.is_some()).unwrap();assert_eq!(transfer.edge_is_seam[shared],1);assert_eq!(&transfer.edge_uvs[shared*4..shared*4+2],&[1.0,1.0]);
     let mut job=mesh.scale_job(Vec3([2.0,1.0,1.0]),true).unwrap();
-    let scaled=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let scaled=loop {match job.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     let normal=scaled.attributes()["normal"].value_at(0).unwrap().as_array().unwrap();
     assert!((normal[0].as_f64().unwrap()-1.0/5f64.sqrt()).abs()<1e-6);assert!((normal[1].as_f64().unwrap()-2.0/5f64.sqrt()).abs()<1e-6);assert_eq!(scaled.attributes()["normal"].values.len(),1);
     let mut component=mesh.clone();component.scale_vertices(&[VertexId(0)],Vec3([2.0,1.0,1.0]),Vec3::ZERO).unwrap();
@@ -791,11 +791,11 @@ fn indexed_corner_attributes_tessellate_with_seams_and_transform_once() {
 
 #[test]
 fn orientation_remaps_corner_and_directed_edge_attributes_without_copying_samples() {
-    use protocol::value::DslValue;
+    use semio_framework_value::DslValue;
     let mut mesh=HalfedgeMesh::from_faces(&[[0.0,0.0,0.0],[1.0,0.0,0.0],[1.0,1.0,0.0],[0.0,1.0,0.0]],&[vec![0,1,2],vec![0,3,2]]).unwrap();
     mesh.mark_uv_seam(&[EdgeId(3)],true);let original=mesh.clone();
     for (name,domain) in [("corners",MeshAttributeDomain::Corner),("edges",MeshAttributeDomain::Edge)] {mesh.set_attribute(name.into(),MeshAttribute {domain,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Nearest,values:(0..6).map(|id|DslValue::String(format!("sample-{id}"))).collect(),indices:None}).unwrap();}
-    let mut job=mesh.orient_faces_job().unwrap();let output=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let mut job=mesh.orient_faces_job().unwrap();let output=loop {match job.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     assert_eq!(output.face_vertex_ids(FaceId(1)).unwrap().iter().map(|vertex|vertex.0).collect::<Vec<_>>(),vec![2,3,0]);
     for (id,edge) in output.halfedges.iter().enumerate() {
         let source=original.halfedges.iter().position(|source|source.face==edge.face && source.vertex==edge.vertex).unwrap();
@@ -810,12 +810,12 @@ fn orientation_remaps_corner_and_directed_edge_attributes_without_copying_sample
 
 #[test]
 fn mirror_remaps_owned_channels_and_reflects_corner_capable_normals() {
-    use protocol::value::DslValue;
+    use semio_framework_value::DslValue;
     let mut mesh=HalfedgeMesh::from_faces(&[[1.0,0.0,0.0],[1.0,1.0,0.0],[1.0,0.0,1.0]],&[vec![0,1,2]]).unwrap();
     mesh.set_attribute("normal".into(),MeshAttribute {domain:MeshAttributeDomain::Vertex,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0),DslValue::float(0.0)])],indices:Some(vec![0;3])}).unwrap();
     mesh.set_attribute("uv".into(),MeshAttribute {domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Linear,values:vec![DslValue::Array(vec![DslValue::float(0.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(1.0),DslValue::float(0.0)]),DslValue::Array(vec![DslValue::float(0.0),DslValue::float(1.0)])],indices:None}).unwrap();
     mesh.set_attribute("label".into(),MeshAttribute {domain:MeshAttributeDomain::Face,semantic:MeshAttributeSemantic::Custom,interpolation:MeshAttributeInterpolation::Constant,values:vec![DslValue::String("shared".repeat(4096))],indices:None}).unwrap();
-    let mut job=mesh.mirror_job(MirrorAxis::X,0.0).unwrap();let mirrored=loop {match job.step(1,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
+    let mut job=mesh.mirror_job(MirrorAxis::X,0.0).unwrap();let mirrored=loop {match job.step(1,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() {MeshModelingStep::Done(mesh)=>break mesh,MeshModelingStep::Working(_)=>{},_=>panic!("unexpected cancellation")}};
     assert_eq!(mirrored.face_count(),2);assert_eq!(mirrored.attributes()["label"].values.len(),1);assert_eq!(mirrored.attributes()["label"].indices,Some(vec![0,0]));
     assert_eq!(mirrored.attributes()["normal"].domain,MeshAttributeDomain::Corner);
     assert_eq!(mirrored.attributes()["normal"].value_at(0).unwrap().as_array().unwrap()[0].as_f64(),Some(1.0));assert_eq!(mirrored.attributes()["normal"].value_at(3).unwrap().as_array().unwrap()[0].as_f64(),Some(-1.0));
@@ -851,7 +851,7 @@ fn bulk_read_accessors_expose_a_pure_consumers_view_and_rebuild_the_mesh() {
 fn rebuild_from_source(source: semio_framework_mesh_engine::PolygonMeshSource) -> HalfedgeMesh {
     let mut job = HalfedgeMesh::polygon_source_job(source).unwrap();
     loop {
-        if let MeshModelingStep::Done(mesh) = job.step(4096,protocol::value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut protocol::value::retained_clone::RetainedCloneProgress::default()).unwrap() {
+        if let MeshModelingStep::Done(mesh) = job.step(4096,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default()).unwrap() {
             return mesh;
         }
     }
@@ -915,7 +915,7 @@ fn obj_export_writes_texture_coordinates_per_corner_once_the_mesh_is_unwrapped()
 
 #[test]
 fn the_seam_set_encodes_in_ascending_order() {
-    use protocol::value::ToValue;
+    use semio_framework_value::ToValue;
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
     mesh.mark_uv_seam(&[EdgeId(10), EdgeId(0), EdgeId(4), EdgeId(2)], true);
     let first = mesh.to_value();
@@ -928,7 +928,7 @@ fn the_seam_set_encodes_in_ascending_order() {
 #[test]
 fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_closure(){
     use crate::test_support::observe_tessellation_system as observe;
-    use protocol::value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
+    use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize){
         let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();let mut job=MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap());while job.output.as_ref().unwrap().positions.is_empty(){assert!(matches!(job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap().0,MeshTessellationStep::Working(_)));}job});
@@ -949,11 +949,11 @@ fn original_mesh_tessellation_source_collection_requires_original_buffer_reserva
     let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
     let original=job.mesh.vertices.as_ptr();
     let(mut reservation_born,mut reservation_freed)=(0,0);
-    while !job.buffer_reservation_complete(){let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:job.next_buffer_capacity_byte_demand(0).unwrap(),maximum_release_bytes:0,maximum_depth:job.next_buffer_depth_demand().unwrap()};let(step,heap)=observe(||job.reserve_buffer_step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));reservation_born+=heap.0;reservation_freed+=heap.1;}
+    while !job.buffer_reservation_complete(){let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:job.next_buffer_capacity_byte_demand(0).unwrap(),maximum_release_bytes:0,maximum_depth:job.next_buffer_depth_demand().unwrap()};let(step,heap)=observe(||job.reserve_buffer_step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));reservation_born+=heap.0;reservation_freed+=heap.1;}
     let(_,heap)=observe(||{job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();job.step(super::tessellation_metadata_tests::funded_normal_grant(&job)).unwrap();});
     assert_eq!(heap,(0,0),"original source collection requires previously admitted backing");
     assert_eq!(job.mesh.vertices.as_ptr(),original);
-    let(mut owner,handoff)=observe(||protocol::value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original tessellation closure unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed)=(source.0+reservation_born,source.1+reservation_freed);
-    while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=protocol::value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
+    let(mut owner,handoff)=observe(||semio_framework_value::retirement::controlled::ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original tessellation closure unsupported")));assert_eq!(handoff,(0,0));let(mut born,mut freed)=(source.0+reservation_born,source.1+reservation_freed);
+    while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};let(step,heap)=observe(||owner.step(grant).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;freed+=heap.1;}
     assert_eq!(born,freed);let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));
 }

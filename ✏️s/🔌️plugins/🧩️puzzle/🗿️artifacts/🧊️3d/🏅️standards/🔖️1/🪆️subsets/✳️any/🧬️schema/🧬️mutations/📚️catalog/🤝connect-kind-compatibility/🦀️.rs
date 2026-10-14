@@ -1,16 +1,16 @@
 //! 🤝 Puzzle3d mutation — `ConnectKindCompatibility`: allows one vortex-kind-id pair to attract.
-use crate::standards::v1::subsets::any::schema::mutations::DisconnectKindCompatibility;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use {crate::standards::v1::subsets::any::schema::Puzzle3dCompatSpecificity, crate::Puzzle3dSnapshot};
+use crate::disconnect_kind_compatibility::mutation::DisconnectKindCompatibility;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "connect-kind-compatibility")]
 pub struct ConnectKindCompatibility {
     pub source: String,

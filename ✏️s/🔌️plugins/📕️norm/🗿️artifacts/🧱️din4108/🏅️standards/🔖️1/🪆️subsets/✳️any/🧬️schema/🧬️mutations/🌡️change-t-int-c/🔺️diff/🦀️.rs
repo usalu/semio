@@ -1,7 +1,8 @@
 //! 🔺️ `change-t-int-c` diff — sets the indoor air temperature θ_i in °C, refused as a `mutation.invariant` outside the bound its leaf payload schema states.
 
-use super::ChangeTIntC;
-use crate::{Din4108Diff, Din4108Snapshot};
+use crate::change_t_int_c::ChangeTIntC;
+use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     if !(payload.new_t_int_c.is_finite() && payload.new_t_int_c > -273.15) {

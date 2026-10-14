@@ -1,0 +1,35 @@
+{
+  "kind": "provider-owning-current-source-freeze-observations-not-admission-receipt",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "sha256": "4d96920cc4482f2f0a05dc42b2a168ffeb765584848cf5fcb3bacdb98e7bddc4",
+      "bytes": 173264,
+      "absolutePathCharacters": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+      "sha256": "88b3e4794b8f0d67adec5fa687e7aa9b2cbdf860ccbbb61475e62f60ee405295",
+      "bytes": 47344,
+      "absolutePathCharacters": 106
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.d.mts",
+      "sha256": "cdce2fdfbc4851fc56e70ed4d9a66d1dd9d654c12f2f0c5db056749e48232e99",
+      "bytes": 7903,
+      "absolutePathCharacters": 108
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+      "sha256": "78b3abc1739e77ccef129dc2481cef028a80a1bc6a6cbc9d41955ee766d5ee35",
+      "bytes": 43815,
+      "absolutePathCharacters": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5bcdb2993838b793dab95edea6315421169c13de9693b4f332d5aa3c2221cf80",
+      "bytes": 7774,
+      "absolutePathCharacters": 126
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-use super::*;
+use semio_s_artifact_norm_en1998_mutations::*;
 use protocol::{Mutation};
 
 fn every_mutation() -> Vec<En1998Mutation> {
-    crate::standards::v1::subsets::any::io::text::mutations::demo_mutation_cases()
+    semio_s_artifact_norm_en1998_io::text::mutations::demo_mutation_cases()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -16,7 +16,7 @@ async fn every_variant_has_diff_and_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn update_site_applies_seismic_zone_enum() {
-    use crate::DeSeismicZone;
+    use semio_s_artifact_norm_en1998_model::DeSeismicZone;
     let base = En1998Snapshot::default();
     let mut site = base.site.clone();
     site.seismic_zone = DeSeismicZone::Zone3;

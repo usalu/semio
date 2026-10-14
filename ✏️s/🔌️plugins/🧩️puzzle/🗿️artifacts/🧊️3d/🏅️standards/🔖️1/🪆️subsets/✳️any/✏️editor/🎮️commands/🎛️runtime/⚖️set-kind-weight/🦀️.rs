@@ -1,9 +1,9 @@
 //! 🪣️ `set-kind-weight` command.
 
-use crate::editor::puzzle3d::snapshot::puzzle3d_apply_distribution_weight;
-use crate::editor::puzzle3d::snapshot::puzzle3d_kind_ids;
-use crate::editor::puzzle3d::session::sync_precompute_weights;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_apply_distribution_weight;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_kind_ids;
+use semio_s_artifact_puzzle_3d_editor_session::sync_precompute_weights;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 🎲️ `setObjectKindWeight`/`setVortexKindWeight` — joint probabilities across the nested tree sum to 1.

@@ -21,8 +21,13 @@
 use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun};
 use semio_s_artifact_stdio_semio_presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, SlideFrame, SlideShape};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use semio_s_artifact_stdio_pptx::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxRun;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -89,7 +94,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides }))
+        Ok(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation { slides }))
     }
 }
 //#endregion 🔖️Serializer

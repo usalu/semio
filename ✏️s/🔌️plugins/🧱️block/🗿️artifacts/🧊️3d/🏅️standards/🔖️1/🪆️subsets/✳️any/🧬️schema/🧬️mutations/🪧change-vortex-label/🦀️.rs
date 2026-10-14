@@ -1,8 +1,7 @@
 //! 🪧 Block3d mutation — `ChangeVortexLabel`: a vortex's optional display `label`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 
 //#region 🔖️Mutation
 /// 🪧 `change-vortex-label` payload.
@@ -19,19 +18,19 @@ pub struct ChangeVortexLabel {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_vortex_label(id: String, new_label: Option<String>) -> Block3dMutation {
-    Block3dMutation::ChangeVortexLabel(ChangeVortexLabel { id, new_label })
+pub fn change_vortex_label<Op: From<crate::change_vortex_label::ChangeVortexLabel>>(id: String, new_label: Option<String>) -> Op {
+    Op::from(ChangeVortexLabel { id, new_label })
 }
 
-impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexLabel {
+impl<Op> protocol::MutationKind<Block3dSnapshot, Op> for ChangeVortexLabel where Op: protocol::Mutation<Block3dSnapshot, Diff = semio_s_artifact_block_3d_diff::Block3dDiff> + From<crate::change_vortex_label::ChangeVortexLabel> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "vortex", kind: "change-vortex-label", record: "ChangedVortexLabel" };
 
     fn diff(&self, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_vortex_label::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_vortex_label::inverse::inverse(self, base)?
     
     })
 }
@@ -43,3 +42,10 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeVortexLa
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

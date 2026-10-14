@@ -1,8 +1,8 @@
 //! 📅️ `change-vent-inspection` diff — patches the one field of the row with that id; an id the document does not hold is a `mutation.invariant`.
 
-use super::ChangeVentInspection;
-use crate::diff::{Din16798Diff, Din16798VentSystemDelta, Din16798VentSystemPatch};
-use crate::Din16798Snapshot;
+use crate::change_vent_inspection::ChangeVentInspection;
+use semio_s_artifact_norm_din16798_diff::{Din16798Diff, Din16798VentSystemDelta, Din16798VentSystemPatch};
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 pub fn diff(payload: &ChangeVentInspection, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
     let Some(row) = base.vent_systems.iter().find(|row| row.id == payload.vent_id) else {

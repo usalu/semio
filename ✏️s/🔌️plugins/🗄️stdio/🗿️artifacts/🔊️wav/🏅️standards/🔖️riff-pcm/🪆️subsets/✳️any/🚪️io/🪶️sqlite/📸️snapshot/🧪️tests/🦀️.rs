@@ -9,7 +9,7 @@ fn owned_control_payload(snapshot:&WavSnapshot,encoding:store::sqlite_snapshot::
 
 #[test]
 fn sqlite_snapshot_wav_integer_query_samples_match_exact_native_words(){
- let cases:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json"))).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json")).unwrap();
  for case in cases["cases"].as_array().unwrap(){let bits=u32::from_str_radix(case["binary32Bits"].as_str().unwrap(),16).unwrap();let snapshot=WavSnapshot{data:WavData::Float32(vec![f32::from_bits(bits)]),..fixture()};let mut database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();let integer=case["integer"].as_str().unwrap().parse::<i64>().unwrap();database.table_mut("wav_float32_sample").unwrap().rows[0].values[5]=SqliteValue::Integer(integer);assert_eq!(WavSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_ok(),case["accept32"].as_bool().unwrap(),"WAV query INTEGER {integer}");}
 }
 
@@ -121,7 +121,7 @@ async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_s
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
     let patterns: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
     let floats = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| f32::from_bits(value.as_u64().unwrap() as u32)).collect();
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
         .label("Wav erased SQLite")
         .version("0.0.1")
         .package_id("semio:stdio")
@@ -256,7 +256,7 @@ fn sqlite_snapshot_wav_independent_sqlite_interprets_and_edits_semantic_entities
 async fn sqlite_snapshot_wav_actual_declaration_preserves_owned_state_over_io() {
     use {semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_artifact_reference::ArtifactDialect};
     use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotPhase};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio")
+    semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
         .label("WAV SQLite declaration")
         .version("0.0.1")
         .package_id("semio:stdio")

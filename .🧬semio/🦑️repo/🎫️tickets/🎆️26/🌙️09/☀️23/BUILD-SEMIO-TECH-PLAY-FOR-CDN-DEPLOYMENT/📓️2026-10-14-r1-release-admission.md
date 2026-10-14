@@ -85,7 +85,7 @@ Provenance is decided in `🕸️units/🟦️.ts`: a manifest outside the `work
 
 Fixing the bypass properly needs the wasm compile owner to admit Source keyed by the repository root, which means `WasmBuildPolicyV1` must carry it. The author of that policy, `📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts`, was modified at 17:38, under 60 minutes before this work. So the patch is P3 below and was not applied.
 
-## 5. Exact patches not applied (peer-owned files touched within 60 min)
+## 5. Exact patches not applied in phase 1 (peer-owned files touched within 60 min). P1, P2 and P3 have since landed (§11)
 
 **P1: `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts` (mtime 16:58), `kind()`.** Cargo's library crate types are `lib`, `rlib`, `dylib`, `cdylib` and `staticlib`:
 ```ts
@@ -335,3 +335,170 @@ One `cargo build --unit-graph` against `🌎️hub/Cargo.toml` was run directly,
   - `🏢️semio-tech/🎡️play/🧪️tests/🧪️playfreshbuild/🧫️fixtures/🔣️.json`
 - Created: `T/r1-release-admission/📜️script.ts` (probe input, kept) and this report.
 - Deleted after use: `T/🗑️generated/r1/` (logs, census JSON, tsc output) and `⚡️cache/r1/`.
+
+## 11. Phase 2 (2026-10-14 17:51 to 23:50): getting planning through to the first compile
+
+Rule followed: a peer file was edited only after it had been idle for 30 min or more. Every Cargo call went through `🚦️cargo-slot.sh` with private `⚡️cache/r1` target and build directories. After the restart, files were re-read before any write; nothing was polled.
+
+### 11.1 Result by item
+
+| Item | Status | What changed |
+|---|---|---|
+| (a) `cdylib`/`rlib` unit kinds | **Done** | `🕸️units/🟦️.ts`: `kind()` accepts every Cargo library crate type through `LIBRARY_TARGET_KINDS` (`lib`, `rlib`, `dylib`, `cdylib`, `staticlib`). New fixture case `component-cdylib-over-rlib` in `🕸️units/🧪️tests/🧫️fixtures/🔣️.json`. This unblocks the dev path as well. |
+| (b) planning metadata vs single-target fetch | **Done** | `📥️dependencies/🟦️.ts`: the canonical fetch owner `cargoDependencyFetchArgumentsV1` now fetches the complete locked platform set, which is what the planning capture's `cargo metadata` reads. The test was renamed and its fixture updated. Measured in phase 1: a target-filtered fetch made the offline metadata fail on `ahash`. |
+| (c) stale extension lockfiles | **Done 18:00, may be stale again** | `cargo update -w --offline` in all 26 extension workspaces. Verified against backups: **0 third-party version, source or checksum changes and 0 third-party additions or removals**; 81 first-party entries changed. Fleet A's later `semio-framework-graph` split (18:43) probably makes them stale again. Re-run the same command once that split is consistent. |
+| (d) `include_bytes`/`include_str` and `semio-framework-2d` | **Done (2d not compiled, see 11.3)** | The reader already counts embedded inputs: bytes and files, a sha256, 0 lines. **Root cause:** `📇️catalog/🦀️.rs` reached its fonts through a local `macro_rules! source` template, and the template inspector rightly treats any later proc-macro attribute in the same file (`#[derive(RetireOwned)]`) as an unseen expansion site, so it refuses. **Clean fix**, following fleet A's font-unit design: five missing font asset crates were created (`semio-framework-font-{anta-latin-ext,anta-math,anta-symbols,kelly-slab-latin-ext,kelly-slab-cyrillic}-regular`, same template as their 15 siblings). The catalog now names each `semio_framework_font_*::OUTLINE`, and `semio-framework-2d` depends on all 20 font crates. Measured with unlimited limits, 2d is now 32 files and 597,906 B, so it is still over the 262,144 B ceiling and needs a real split (fleet A). |
+| Reader cfg gap (`semio-s-plugin-block`, `semio-s-plugin-wfc-engine`) | **Done** | `📥️source/🟦️.ts` `selectRustSourceV1` leaves `macro_rules!` bodies as authored text. Their `#[cfg($scope)]` is decided at the expansion site. New corpus case in `📥️source/🧪️tests/🧫️fixtures/🔣️.json`. Both crates now read through: block 3 files, wfc-engine 42 files. |
+| (e) generated-input ownership | **Done (model and implementation)** | New `RustSourceOwnerV1 {manifestDirectory, generated}` is an optional argument of `readRustSourceClosureV1`. `env!("CARGO_MANIFEST_DIR")` inputs are authored, resolved against the unit's manifest directory, and counted. Token output a generator emits (`quote!{ include_str!(…) }`) belongs to the crates that expand it, where compiler dep-info qualifies it; it is never an input of the generator. `OUT_DIR` inputs and inputs reached through local-macro expansions stay refused. Without an owner, the old refusals stand. Admission passes the owner for every unit. Results: `semio-framework-plugin` (the reactor's `include!(concat!(env!("CARGO_MANIFEST_DIR"), …))`) and `semio-s-artifact-stdio-pdf` (the ICC profile) are now measured instead of refused. So are `semio-framework-value-derive` and `semio-framework-os-kernel-dsl-derive`, whose `quote!` outputs are owned by their generator. New test: "a unit owns manifest-relative inputs and the token output it emits, while OUT_DIR and unowned closures stay refused". |
+| (f) wasm engines and renderer bypass | **Done.** Fleet A extended it the same day | New single owner `admitCargoSelectionV1` in `📥️source/🎟️admission/🟦️.ts`: plan one exact selection, then admit it keyed by the repository root. The driver passes and direct-`cargo` jobs, `buildWasmWebV1` (new `admit` port, called before wasm-pack or cargo runs) and the trunk renderer (before `trunk build`, keyed by `workspace` instead of the temporary cwd) all use it. `WasmBuildPolicyV1` and its schema gained the required `workspaceRoot` and `sourceBoundary`, and fixture and test rows were added, including a refusal row in which nothing runs. At 18:04 a peer added `workspaceRoot` and `repositoryStrictStorageV1(root).sourceBoundary` to `repositoryWasmBuildPolicyV1`, and by 22:56 fleet A had made `admitCargoSelectionV1` require `storage` and threaded it through all three callers. |
+| (g) 4 GiB charge in a 16 GiB image | **Done (driver part); batching designed, not built** | The binding limit is physical: the image's filesystem size (`recheck` checks the image itself). The 4 GiB `compiler-workspace` charge is a logical ledger. Built in the driver (`🧩️component-pass/🟦️.ts`): a new policy value `storageReserveBytes` = 2 GiB (schema `Policy`), plus a `reclaim:<pass>` stage after each pass's provenance. It deletes every announced output, and its dep-info, whose unit identity (`announcedUnitIdentityV1`) appears in no remaining pass's unit graph (`unitGraphIdentityV1`). It always runs in a fresh generation; in a warm one it runs only below the reserve, so warm reuse survives. Before each pass the driver waits for pending reclaims if headroom is below the reserve, and refuses with a named message if it is still below. New pure function `reclaimablePassFilesV1`, with a vector in `🧩️component-pass/🧪️tests/🧫️fixtures/🔣️.json`. **Next step (design):** if the 44-component hub pass alone exceeds free space, `componentPassPlanV1` should split a workspace into component batches, ordered by shared closure, so reclaim runs between batches. That needs one measured hub footprint first. The A1 demo read 10.1 GB for 5 components. |
+| (h) `repositoryBuildGraphWriterDirectoryV1` | **Fixed by fleet B** | Exported from `🏗️build/📥️inputs/💾️storage/🟨️.mjs` at 17:41. No edit from R1. |
+| Slot-gate rule | **Complied** | Every phase-2 Cargo call (`cargo update`, `cargo check`, `cargo metadata`, the probes and the census) ran through `🚦️cargo-slot.sh`. The one phase-1 deviation (§9) was a no-compile `--unit-graph` read and was not repeated. |
+
+### 11.2 Where planning stops now (23:46, single run, no polling)
+
+`cargo metadata --locked --offline` fails before any driver step because fleet A's split is partially applied. Neither failure is in R1's files:
+- `🌎️hub/Cargo.toml`: `semio-s-artifact-writer-writer` (`✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/Cargo.toml`, idle since 18:43) inherits `semio-framework-graph` from `workspace.dependencies`. That crate's manifest was removed when it was split into the `🕸️graph/{⚙️engine,🗣️dsl,🛂️manifest,🖊️drawing,🧮️algorithms}` crates.
+- Root `Cargo.toml`: `🧰️framework/🔨️modules/🚪️io/📦️codec` is listed as a root member but declares `🧰️framework/Cargo.toml` (fleet A's new framework workspace).
+
+Fixing either one means finishing fleet A's crate migration, which is not R1's call. Once both are consistent, the next steps are:
+1. Resync the hub, root and extension lockfiles offline (first-party only; verify as in (c)). This also adds the 5 new font crates to the root `Cargo.lock`.
+2. Run `bun r1-release-admission/📜️script.ts release animate online` to reach the first compile.
+3. Run `census release` for the updated over-ceiling table. The probe no longer emulates P1 and passes a `RustSourceOwnerV1`.
+
+Before phase 2, the run reached the store reservation and the online fetch (§3).
+
+### 11.3 Verification (run)
+
+| Check | Result |
+|---|---|
+| `📥️source/🧪️tests` | 18/18 pass (11 at R1's last change; peers added cases since) |
+| `🕸️wasm-build/🧪️tests` | 11/11 pass, including the refusal row and the esbuild "neutral owner" law |
+| `📥️dependencies/🧪️tests` | 1/1 pass |
+| `🕸️units/🧪️tests` | 5 pass, 3 invocation-bound real-Cargo laws not runnable standalone |
+| `🧩️component-pass/🧪️tests` (plan, generation, arguments, artifacts, unit-graph and reclaim vectors) | 5/5 pass. The 15 driver laws fail on `Original issued native storage reservation required`: this predates R1, because the tests were never given a storage reservation after fleet A's contract change |
+| Play fresh-build contract | 9/10. R1's law passes. `isolates Vite storage…` fails, outside R1's scope (Vite cache function) |
+| `tsc` over all R1-touched TypeScript | 0 errors in R1 code. The 3 remaining errors are in the driver and Cargo-kit tests (missing storage, pre-existing) |
+| Admission with unlimited limits (inline `bun -e`) | 2d, plugin, stdio-pdf, value-derive and dsl-derive are all measured, none refused before counting |
+| `cargo check -p semio-framework-2d` | **Not run.** The root workspace does not load (11.2) |
+
+### 11.4 Files changed in phase 2
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🧫️fixtures/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🧪️tests/{🟦️.ts,🧫️fixtures/🔣️.json}`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/{🟦️.ts,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml`
+- New: `🧰️framework/🔨️modules/🖼️assets/🔤️fonts/{🚀️anta/{➕️latin-ext,🧮️math,🔣️symbols},🧱️kelly-slab/{➕️latin-ext,🪆️cyrillic}}/📖️regular/{🦀️.rs,📦️packages/🦀️rust/{Cargo.toml,📋️project.json}}`
+- The 26 `Cargo.lock` files under `✏️s/🔌️plugins/*/🧩️extensions/*/`
+- `r1-release-admission/📜️script.ts`: the census uses the real P1 kind and a `RustSourceOwnerV1`
+- `T/🗑️generated/r1/` holds phase-2 outputs: lockfile backups, logs, the phase-1 census JSON. The coordinator said to leave it alone, so it was not deleted. `⚡️cache/r1/` was deleted.
+
+## 12. Phase 3 (2026-10-15): driver tests, the Play Vite test, hub batching
+
+Rules as before: slot-gated foreground runs, no polling, each file re-read before writing, `🗑️generated` and the ticket untouched. Since 10-14 20:40, `.cargo/config.toml` routes rustc through the peer's compiler-ingress gate. Any Cargo run inside the repository without the issued launcher therefore fails at `rustc -vV` (lane K0). Laws that compile repository crates are marked **uncompiled, awaiting K0** below.
+
+### 12.1 The 15 driver tests: a real reservation through the canonical owner
+
+**Root cause.** Fleet A's driver contract requires `storage` (an issued `compiler-workspace` reservation bound to the caller's control signal) and `sourceBoundary`. It also runs **real** Cargo planning plus Source admission per pass before anything compiles. The tests passed neither, and the stub workspaces were not valid Cargo workspaces.
+
+**Fix**, with no defaults or shims:
+
+- **Shared Cargo test kit** (`🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts` and a new fixture `🧫️fixtures/🔣️.json`):
+  - `withLawStorageV1(control, bytes, body)` provisions a fresh fixed image through the canonical owner (`provisionNativeImageStorageV1`) and acquires an original `compiler-workspace` reservation (`acquireNativeStorageV1` with `nativeStorageRetirementPortV1`), both bound to the law's own control. It hands over the owned directory and bounded Cargo home and temporary directories, then retires the reservation, detaches the image and removes it afterwards.
+  - A law whose control is cancelled or out of time can no longer prove its reservation. Its image is force-detached (bounded retries, sized in the fixture), and a remaining mount is reported instead of thrown.
+  - `lawSourceBoundaryV1` is the configured ceiling, kept as a fixture.
+  - `schedulerBinaries()` builds the scheduler inside its own reservation: registry inputs are fetched into that reservation's Cargo home, and the binaries are copied out before it retires.
+- **`🧩️component-pass/🧪️tests`:**
+  - `stubWorkspace` writes real, locked `cdylib` workspaces with both component profiles.
+  - `runStub` runs every driver call inside `withLawStorageV1` (stores, cache and target live in the reservation). An `inspect` hook reads the generation (report, `units.json`, provenance) before retirement.
+  - The real build and the subprocess law (queued exclusive cancellation) hold their own reservations.
+  - Budgets that must now also cover provisioning plus real planning were raised in the fixture: finite budget 6 s, unlaned 15 s, stage authority 6 s, with longer test timeouts.
+  - The stage-authority law counts only its own `native-stage-law` publish and the continuations after the stage is entered, because planning now publishes through the same control.
+- **Driver bug found by these laws:** headroom is now measured on the reservation's filesystem (`storage.backing.root`). It used to be measured on `generation.build`, which does not exist before the first pass.
+
+**Result:**
+- `🧩️component-pass/🧪️tests`: **22/23 pass** (was 7/22). The real wasm32-wasip2 build is **uncompiled, awaiting K0**: its scheduler build runs Cargo on the repository's own crate, which the ingress gate refuses.
+- `🎟️admission`: 7/8; `📈️telemetry`: 5/6; `🎰️jobserver`: 4/6. Every failure is the same ingress refusal (awaiting K0).
+- Verification runs used an artifact directory outside the repository plus `RUSTUP_TOOLCHAIN=nightly-2026-07-20` (the repository's pinned channel), so the repository's ingress `.cargo/config.toml` did not apply. RUSTC and RUSTC_WRAPPER were never touched.
+
+### 12.2 Play `isolates Vite storage…`: root cause and fix
+
+- **Root cause:** a peer rewrote the canonical Vite cache owner at 10-14 20:04. `viteCacheDirectory(workspace, environment)` now takes the repository root and accepts only the cache directory the bounded product store issues (`SEMIO_VITE_CACHE_DIRECTORY`, set by `buildViteArtifact` through `withViteStorageV1`, keyed by mode and owner inside the `products` partition).
+- Play still passed a caller-chosen directory (`repoCacheDirectory(…/vite/semio-tech-play)`, plus a stray third argument) in `🏗️builder/🌐️vite/🟦️.ts`. Its wrapper `playViteCacheDirectory` in `🔨️modules/📦️site/🆕️fresh-build/🟦️.ts` asserted the retired per-invocation layout.
+- **Fix:**
+  - The Play Vite config calls `viteCacheDirectory(repoRoot, {…, SEMIO_BUILD_MODE})`, exactly like the dev builder.
+  - The obsolete wrapper and its unused import are deleted.
+  - The law is rewritten against the canonical contract. An AST check confirms the config has exactly one `viteCacheDirectory(repoRoot, env)` call. The cache path is accepted only when it was issued inside the `products` partition, for both modes. Unissued, foreign and invalid-mode cases are refused. Fixture: `vite`.
+- Play fresh-build contract: **10/10**.
+
+### 12.3 Hub batching sized from `units.jsonl`
+
+- **Measured footprint:** `ObservationV1` (admission schema and type) gains a required `outputBytes`.
+  - The driver measures every successful unit's outputs right after its pass, before reclaim, and at the end for job units: `unitOutputBytesV1` sums the files its artifact stem names, `<stem>.*` and `lib<stem>.*`.
+  - `unitObservationsV1(units, remainingMs, outputBytes, atMs)` refuses an unmeasured unit.
+  - No `units.jsonl` existed on disk, so no stored history broke.
+  - Admission fixtures were updated, and two refusal rows added (missing and negative `outputBytes`), plus a footprint vector.
+- **Batches:** `componentBatchesV1(pass, graph, history, budgetBytes, fallbackBytes, quantile)` reuses the unit-graph identities and closures.
+  - A unit's footprint is the p95 (`ADMISSION_POLICY_V1.quantile`, R-7) of its recorded `outputBytes`, keyed by `unitGraphHistoryKeyV1`, which is the same key `unitKeyV1` gives the rustc unit.
+  - *(Superseded by §12.6: an unmeasured unit is now estimated by kind, and the 2 GiB reserve is a separate hard floor.)*
+  - Components are packed in planned order while their joint closure fits the budget; shared units count once. A component that does not fit alone is its own batch. A pass that fits whole keeps its id, and batches are `<pass>-b<n>`.
+- **Driver wiring:**
+  - Inside the run's `try`, every pass is batched against the reservation's free bytes (the ids are path-admitted up front), and lanes run the batches.
+  - Before each batch, the driver waits for pending reclaims if headroom is below that batch's prediction.
+  - A **measured** prediction that still does not fit is refused, with the numbers in the message. A fallback-only prediction runs and logs that it is unmeasured, so the first history-less run is not blocked by the conservative guess.
+  - Warm reclaim triggers when headroom falls below the largest remaining prediction.
+  - Provenance and reclaim resolve a batch's unit graph through its parent pass.
+- **Tests:**
+  - New vector `batches`: keys for every node, including `null` for the build-script run, then a whole pass under a large budget and two batches under a 160 B budget (150 B measured, then 1,170 B with fallback).
+  - Admission vectors as above.
+  - All of these pass.
+- **Probe:** `r1-release-admission/📜️script.ts batches <budget-MiB> <units.jsonl>` prints the planned batches of every release pass. **Not run, awaiting K0**: it needs `--unit-graph` on repository crates.
+
+### 12.4 Verification
+
+| Check | Result |
+|---|---|
+| `🧩️component-pass/🧪️tests` | 22 pass, 1 awaiting K0 (real build) |
+| `🎟️admission` / `📈️telemetry` / `🎰️jobserver` tests | 7/8, 5/6, 4/6; every failure is the ingress refusal (awaiting K0) |
+| Play fresh-build contract | 10/10 |
+| `tsc` over the driver, its tests, admission and its tests, the Cargo kit, the Play Vite config and the Play fresh-build module | 0 errors in these files |
+| Leftover mounts after all runs | 0 |
+
+### 12.5 Files changed in phase 3
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/{🟦️.ts,🧫️fixtures/🔣️.json}` (fixture new)
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+- `🏢️semio-tech/🎡️play/🏗️builder/🌐️vite/🟦️.ts`
+- `🏢️semio-tech/🎡️play/🔨️modules/📦️site/🆕️fresh-build/🟦️.ts`
+- `🏢️semio-tech/🎡️play/🧪️tests/🧪️playfreshbuild/{🟦️.ts,🧫️fixtures/🔣️.json}`
+- `r1-release-admission/📜️script.ts` (`batches`)
+
+### 12.6 Correction: conservative estimates for unmeasured units and the hard reserve
+
+The coordinator's concern was correct. A flat 16 MiB per unmeasured unit is optimistic, so on a cold M0 run (empty `units.jsonl`) the 44-component hub pass would have planned as a single batch.
+
+- **Estimate by kind.** `unitFootprintKindV1` classifies a unit from its crate name and crate types as `component` (`cdylib`), `procMacro`, `buildScript` or `library`. An unmeasured unit is estimated as follows:
+  1. The p95 of every recorded unit of the same kind in `units.jsonl`, when any exist.
+  2. Otherwise the kind's documented upper bound, `Policy.unitFootprintBoundsBytes`, taken from this ticket's measurements: component 2 GiB (multiple GiB before codegen-units 16, 50 to 110 MB of wasm after), library 16 MiB, proc-macro 64 MiB, build script (binary plus `OUT_DIR`) 32 MiB.
+
+  The library bound comes from a component closure re-hashing 3 to 4 GB (4.05 GB for process) over about 350 units, roughly 11 MiB per unit. 16 MiB is 1.5 times that mean, summed over a closure. Build-script runs count as `buildScript`.
+- **Hard floor.** `Policy.storageReserveBytes` = 2 GiB is back as its own field. Batches are packed into free space minus the reserve. Before each batch the driver waits for pending reclaims, then **refuses** any batch whose prediction plus the reserve exceeds free space, whether or not the units were measured. Warm reclaim triggers below the largest remaining prediction plus the reserve. The driver takes `storageReserveBytes` as an option next to `physicalBytes`, with the policy value as the default. The laws pass a 4 MiB reserve (kit fixture `lawReserveBytes`) because their images are 64 MiB.
+- **Vectors.** `batches` now covers a warm history: a measured unit, an unmeasured library estimated by the library p95 (100 B), and the build-script run at its bound. It also covers a **cold empty history** (every unit at its kind bound: one batch of 12,300 B under a large budget, two batches of 6,300 B and 7,300 B under a 7,000 B budget) and kind classification. New law: a batch that free storage cannot cover above the reserve is refused before Cargo starts, and the stub Cargo is never invoked.
+- **Results** (bun test run directly; K0 has rewired `🚦️cargo-slot.sh` to `bun repo cargo`, which admits only Cargo commands):
+  - `🧩️component-pass/🧪️tests`: **23/24 pass**.
+  - The real wasm32-wasip2 build still fails: the kit's scheduler build runs raw Cargo on a repository crate, which the ingress gate refuses. Fixing that means wiring framework Cargo laws to K0's issued launcher, which K0 owns. Still uncompiled.
+  - `tsc` reports 0 errors in the touched files. 0 leftover mounts.
+- An earlier full-suite run timed out on 30 s deadlines. The cause was a concurrent second run of the same suite sharing the artifact and lease directory, not the code: the same laws pass in isolation and in the final full run.
+- **Files:**
+  - `🧩️component-pass/{🟦️.ts,🧬️schema/🔣️.json,🧪️tests/🟦️.ts,🧪️tests/🧫️fixtures/🔣️.json}`
+  - `🧪️tests/🦀️cargo/{🟦️.ts,🧫️fixtures/🔣️.json}`
+  - `r1-release-admission/📜️script.ts` (`batches` uses the kind estimates and the reserve)
+

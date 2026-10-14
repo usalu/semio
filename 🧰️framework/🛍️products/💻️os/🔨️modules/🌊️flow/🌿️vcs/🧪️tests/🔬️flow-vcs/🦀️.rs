@@ -1840,12 +1840,12 @@ fn set_layout_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_layout_drag_produces_one_edit() {
-    let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
+    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer), crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs no owner catalog, and every mutating command is refused
     // without one — the refusal drops the replayed projection on its error path, so the law reports
     // `ordered-map root must be explicitly retired before drop` instead of the validation that caused it
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
+    crate::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     let transaction = crate::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
     for y in [10.0, 20.0, 30.0] {
         history_identity!(|identity| store
@@ -1937,9 +1937,9 @@ fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
 /// codec.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None);
-    let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    crate::os_store::install_funded_member_store_owners(&mut store).expect("flow history owners");
+    let envelope = create_document_envelope("test/v1", "test", FlowHostSnapshot::default(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
+    let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    crate::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();

@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-io-codec-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-contract": "bun --cwd \"../../../../../..\" nx run @semio-tech/framework-io-codec-rs:test-contract",
+    "test-native": "bun --cwd \"../../../../../..\" nx run @semio-tech/framework-io-codec-rs:test-native"
+  }
+}

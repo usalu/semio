@@ -3,9 +3,9 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::viewer::generation3d::presence::component::mutations::*;
-use crate::viewer::generation3d::presence::component::Generation3dViewPresence;
-use crate::viewer::generation3d::config::Generation3dViewCamera;
+use crate::mutations::*;
+use crate::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 
 impl protocol::OpBinary for Generation3dViewPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

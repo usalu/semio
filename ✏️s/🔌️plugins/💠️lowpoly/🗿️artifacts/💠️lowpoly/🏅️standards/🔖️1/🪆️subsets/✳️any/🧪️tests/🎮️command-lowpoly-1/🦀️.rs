@@ -11,11 +11,12 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_lowpoly_lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
-    use semio_s_artifact_lowpoly_lowpoly::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, document, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
-    use semio_s_artifact_lowpoly_lowpoly::editor::lowpoly::config::LowpolyConfig;
-    use semio_s_artifact_lowpoly_lowpoly::editor::lowpoly::session::LowpolyScratch;
-    use semio_s_artifact_lowpoly_lowpoly::editor::lowpoly::{ArtifactView, ConfigView, HistoryView, LowpolyCommand};
+    use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+    use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
+    use semio_s_artifact_lowpoly_lowpoly_commands::{add_primitive, camera, chrome, engagement, document, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
+    use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+    use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+    use semio_s_artifact_lowpoly_lowpoly_editor::{ArtifactView, ConfigView, HistoryView, LowpolyCommand};
 
     /// 🧾️ One representative value per group, mirroring the crate's own `every_command()` test
     /// helper's example payloads exactly (`✏️editor/🦀️.rs`'s `#[cfg(test)] mod tests`), so a

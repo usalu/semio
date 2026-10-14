@@ -3,15 +3,17 @@
   "artifact": "xlsx",
   "package": "semio-s-artifact-stdio-xlsx",
   "order": 26,
-  "selections": ["full"],
+  "selections": [
+    "full"
+  ],
   "apps": [
     {
       "owner": "stdio-office",
       "order": 12,
       "variant": "XlsxEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor",
-      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_editor",
+      "type": "semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor",
+      "factory": "semio_s_artifact_stdio_xlsx_base::editor::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "xlsx_editor",
@@ -23,8 +25,8 @@
       "order": 13,
       "variant": "XlsxViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer",
-      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_viewer",
+      "type": "semio_s_artifact_stdio_xlsx_base::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer",
+      "factory": "semio_s_artifact_stdio_xlsx_base::viewer::xlsx::standards::v_ecma_376::subsets::base::create_xlsx_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -33,8 +35,8 @@
       "order": 14,
       "variant": "XlsxStrictEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor",
-      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_editor",
+      "type": "semio_s_artifact_stdio_xlsx_strict::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor",
+      "factory": "semio_s_artifact_stdio_xlsx_strict::editor::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "xlsx_strict_editor",
@@ -46,8 +48,8 @@
       "order": 15,
       "variant": "XlsxStrictViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer",
-      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_viewer",
+      "type": "semio_s_artifact_stdio_xlsx_strict::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer",
+      "factory": "semio_s_artifact_stdio_xlsx_strict::viewer::xlsx::standards::v_ecma_376::subsets::strict::create_xlsx_strict_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -56,8 +58,8 @@
       "order": 16,
       "variant": "XlsxTransitionalEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor",
-      "factory": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_editor",
+      "type": "semio_s_artifact_stdio_xlsx_transitional::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor",
+      "factory": "semio_s_artifact_stdio_xlsx_transitional::editor::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "xlsx_transitional_editor",
@@ -69,15 +71,22 @@
       "order": 17,
       "variant": "XlsxTransitionalViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer",
-      "factory": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_viewer",
+      "type": "semio_s_artifact_stdio_xlsx_transitional::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer",
+      "factory": "semio_s_artifact_stdio_xlsx_transitional::viewer::xlsx::standards::v_ecma_376::subsets::transitional::create_xlsx_transitional_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
   "catalogPackage": null,
-  "symbolPackages": [],
+  "symbolPackages": [
+    "semio-s-artifact-stdio-xlsx-base",
+    "semio-s-artifact-stdio-xlsx-base-model",
+    "semio-s-artifact-stdio-xlsx-base-mutations",
+    "semio-s-artifact-stdio-xlsx-strict",
+    "semio-s-artifact-stdio-xlsx-strict-mutations",
+    "semio-s-artifact-stdio-xlsx-transitional"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-office",
@@ -119,18 +128,18 @@
   "mutationDescriptors": [
     {
       "name": "XlsxMutation",
-      "snapshot": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
-      "mutation": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation"
+      "snapshot": "semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
+      "mutation": "semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation"
     },
     {
       "name": "XlsxStrictMutation",
-      "snapshot": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
-      "mutation": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::strict::schema::mutations::XlsxStrictMutation"
+      "snapshot": "semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
+      "mutation": "semio_s_artifact_stdio_xlsx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::XlsxStrictMutation"
     },
     {
       "name": "XlsxTransitionalMutation",
-      "snapshot": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
-      "mutation": "semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::transitional::schema::mutations::XlsxTransitionalMutation"
+      "snapshot": "semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot",
+      "mutation": "semio_s_artifact_stdio_xlsx_transitional::standards::v_ecma_376::subsets::transitional::schema::mutations::XlsxTransitionalMutation"
     }
   ],
   "mutationCoordinates": [

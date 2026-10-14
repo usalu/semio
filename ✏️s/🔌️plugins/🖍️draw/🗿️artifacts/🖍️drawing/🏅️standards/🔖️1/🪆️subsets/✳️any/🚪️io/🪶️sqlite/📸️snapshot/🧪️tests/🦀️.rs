@@ -3,7 +3,7 @@
 mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::sqlite::snapshot::*;
+use crate::io::sqlite::snapshot::*;
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect {semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.draw.drawing".into(),standard:"1".into(),subset:"*".into()}}
 fn provider()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<DrawingSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Draw snapshot must declare full semantic SQLite capability")}
 #[test]

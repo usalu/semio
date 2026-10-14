@@ -4,7 +4,6 @@
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 #[cfg(test)] use crate::hot_path_census;
 use super::replay_preparation;
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use super::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationTask, ArtifactReplayPrepared};

@@ -1,3 +1,6 @@
+#[derive(Clone,Copy)]
+pub struct HashMemberStoreProducer;
+
 use super::*;
 use std::sync::Arc as StdArc;
 
@@ -1828,27 +1831,27 @@ impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirement
     }
 }
 
-impl store::os_store::document_store_owners::MemberStoreOwner<HashMutation> for HashProjection {
+impl store::os_store::document_store_owners::MemberStoreProducer<HashProjection,HashMutation> for HashMemberStoreProducer {
     /// 📦️ The fixture projection opens as an owned member through its own `ArtifactPack` codec.
-    type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
+    type SnapshotOpen = store::ProducedMemberSnapshotOpen<HashProjection,store::ArtifactPackSnapshotDecoder<HashProjection>>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::os_store::document_store_owners::DocumentStoreOwners::<Self, HashMutation>::source_birth_bytes::<HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer<Self, HashMutation>>()?, depth: 1 })
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::os_store::document_store_owners::DocumentStoreOwners::<HashProjection, HashMutation>::source_birth_bytes::<HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer<HashProjection, HashMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, HashMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, HashMutation>> {
-        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer::<Self, HashMutation>::new()))
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<HashProjection, HashMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<HashProjection, HashMutation>> {
+        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer::<HashProjection, HashMutation>::new()))
     }
 }
 //#endregion 🔖️RecoveryFixtureStore
 
 async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
-    use store::os_store::document_store_owners::MemberStoreOwner as _;
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None);
+    use store::os_store::document_store_owners::MemberStoreProducer as _;
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
-    let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");
-    store.install_document_store_owners_exact(HashProjection::member_store_owners());
+    let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_member_store_owners(&HashMemberStoreProducer).expect("actual cold fixture catalog source birth"));
     store
 }
 

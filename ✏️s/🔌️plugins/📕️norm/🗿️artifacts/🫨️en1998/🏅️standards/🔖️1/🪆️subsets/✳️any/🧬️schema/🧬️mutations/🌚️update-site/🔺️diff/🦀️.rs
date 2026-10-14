@@ -1,6 +1,7 @@
 //! Diff for `update-site`.
-use super::UpdateSite;
-use crate::{En1998Diff, En1998Snapshot};
+use crate::update_site::UpdateSite;
+use semio_s_artifact_norm_en1998_diff::En1998Diff;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &UpdateSite, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.site == payload.site {

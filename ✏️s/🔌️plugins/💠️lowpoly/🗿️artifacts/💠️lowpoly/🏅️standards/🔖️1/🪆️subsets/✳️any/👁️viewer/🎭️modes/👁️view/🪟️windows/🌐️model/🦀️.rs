@@ -8,8 +8,8 @@
 //! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-3 gap, pre-existing, not introduced here) — real
 //! parity with the editor's CURRENT behavior for that gap, not a regression.
 
-use crate::LowpolySnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::euler_degrees_to_quaternion;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_inferences::euler_degrees_to_quaternion;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
 // `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`

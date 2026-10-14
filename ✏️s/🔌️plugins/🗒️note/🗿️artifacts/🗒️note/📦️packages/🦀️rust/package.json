@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-note-empty-config-ownership": "bun repo run @semio-tech/note-note-rs:verify-note-empty-config-ownership"
+    "verify-note-empty-config-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/note-note-rs:verify-note-empty-config-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

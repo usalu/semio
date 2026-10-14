@@ -1,8 +1,8 @@
 //! 📄️ Block 5D play app panel — the document tree: grip-kind catalog + rim-grip templates, selectable.
 
-use crate::Block5dSnapshot;
-use crate::editor::block5d::terminology::Block5dLabels;
-use crate::editor::block5d::{ui_label, BLOCK5D_GRANULARITY_GRIP, BLOCK5D_GRANULARITY_GRIP_KIND, BLOCK5D_INTERACTION_GRIP, BLOCK5D_PLAY_APP_ID};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use crate::terminology::Block5dLabels;
+use crate::{ui_label, BLOCK5D_GRANULARITY_GRIP, BLOCK5D_GRANULARITY_GRIP_KIND, BLOCK5D_INTERACTION_GRIP, BLOCK5D_PLAY_APP_ID};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

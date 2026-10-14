@@ -15,7 +15,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut snapshot = DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
-        snapshot.xml_parts.try_push(crate::schema::snapshot::DocxXmlPart {
+        snapshot.xml_parts.try_push(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart {
             path: "word/strict-extra.xml".into(),
             content_type: "application/xml".into(),
             document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),

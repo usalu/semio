@@ -1,12 +1,12 @@
 //! ↩️ `change-method` inverse.
 
-use crate::mutations::change_method::ChangeMethod;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_method::ChangeMethod;
 
-pub fn inverse(_payload: &ChangeMethod, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeMethod, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_method::ChangeMethod> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeMethod(ChangeMethod { new_method: base.method })]
+    vec![Op::from(ChangeMethod { new_method: base.method })]
 
     })())
 }

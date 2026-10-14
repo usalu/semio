@@ -40,15 +40,15 @@ use crate::app_emission::EphemeralEmit;
 use crate::app_views::InteractionHoverState;
 use crate::app_views::PresencePeersView;
 use crate::app_views::PresenceView;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::bounded_ownership::PluginLifecycleFailure;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
 use crate::media_contract::ArtifactDownloadOutput;
 use crate::media_contract::ArtifactOutputChunks;
 
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactDisposal;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 use crate::app_emission::ArtifactMutationOutcome;
 use crate::tool_cancellation::ToolCancellationLease;
 use semio_framework_job::InteractiveJobCloseStep;
@@ -262,7 +262,7 @@ impl InstanceInferenceSessions {
  }
  pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
   let demand=self.retirement_demands(loan.maximum_copy_bytes)?;
-  crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
+  semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|_,grant|{let step=self.close_granted(grant)?;let terminal=self.terminal_is_empty();Ok((match step{semio_framework_value::RetainedCloneStep::Complete(progress)=>PluginLifecycleStep::Complete(progress),semio_framework_value::RetainedCloneStep::Progress(progress)=>PluginLifecycleStep::Progress(progress)},terminal))})
  }
 
 }
@@ -432,7 +432,7 @@ impl ArtifactInstanceOperationOwnerHandle {
 
     pub(crate) fn maintenance_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => {let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|owner.maintenance_step(cx,grant).map(|step|(step,true)))},
+            Ok(mut owner) => {let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|owner.maintenance_step(cx,grant).map(|step|(step,true)))},
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
@@ -440,7 +440,7 @@ impl ArtifactInstanceOperationOwnerHandle {
 
     pub(crate) fn close_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         match self.inner.try_lock() {
-            Ok(mut owner) => {if owner.terminal_is_empty(){drop(owner);return self.close_inference_step(cx,loan)}let grant=crate::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|{let step=owner.close_step(cx,grant)?;let terminal=owner.terminal_is_empty();Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},terminal))})},
+            Ok(mut owner) => {if owner.terminal_is_empty(){drop(owner);return self.close_inference_step(cx,loan)}let grant=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,loan);let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|cx,grant|{let step=owner.close_step(cx,grant)?;let terminal=owner.terminal_is_empty();Ok((match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step},terminal))})},
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(PluginLifecycleStep::Progress(Default::default())),
             Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"app-instance operation owner is poisoned").into()),
         }
@@ -795,7 +795,7 @@ impl ArtifactToolRawInput {
         }
         let mut input = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-page-busy"), "typed-operation raw page owner is busy or poisoned"))?;
         let Some(owner) = input.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
-        let step = owner.close_step(grant).map_err(crate::bounded_ownership::plugin_retirement_fault)?;
+        let step = owner.close_step(grant).map_err(semio_framework_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
         if owner.terminal_is_empty() {
             *input = None;
         }

@@ -1,13 +1,11 @@
 //! Numeric worked examples + Wave D DoD tests for DIN 4108.
 
-use crate::document::CheckStatus;
-use crate::field_meta::din4108_field_meta;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::io::text::snapshot::{encode_din4108_dsl};
-use crate::standards::v1::subsets::any::schema::{
-    layer_resistance, part_2, part_3, part_4, part_6, part_7, total_resistance, u_value, F_RSI_MINIMUM, R_SE, R_SI_WALL,
-};
-use crate::{Din4108Snapshot, EnvelopeElement, LayerDocument, LayerSegment};
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_din4108_editor::field_meta::din4108_field_meta;
+use semio_s_artifact_norm_din4108_inferences::evaluate;
+use semio_s_artifact_norm_din4108_io::text::snapshot::encode_din4108_dsl;
+use semio_s_artifact_norm_din4108_checks::{layer_resistance, part_2, part_3, part_4, part_6, part_7, total_resistance, u_value, F_RSI_MINIMUM, R_SE, R_SI_WALL};
+use semio_s_artifact_norm_din4108_model::{Din4108Snapshot, EnvelopeElement, LayerDocument, LayerSegment};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use std::path::PathBuf;
@@ -75,7 +73,7 @@ async fn summer_heat_s_vorh_includes_orientation_and_inclination() {
     assert!((s_zul - table).abs() < 1e-12);
     let with_extras = part_2::s_zul_full('B', "heavy", "moderate", true, true);
     assert!((with_extras - (table + 0.03 + 0.04)).abs() < 1e-12);
-    let check = part_2::check_summer_heat(zone, crate::document::ClimateZoneDe::Zone2, &snap.elements, &snap.usage);
+    let check = part_2::check_summer_heat(zone, semio_s_plugin_norm_compliance::ClimateZoneDe::Zone2, &snap.elements, &snap.usage);
     assert_eq!(check.status, CheckStatus::Pass);
 }
 
@@ -133,7 +131,7 @@ async fn table3_light_construction_and_frame_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn iso6946_67_timber_stud_upper_lower_bound_matches_hand_calc() {
-    use crate::standards::v1::subsets::any::schema::{total_resistance, total_resistance_lower, total_resistance_upper, u_value, R_SE, R_SI_WALL};
+    use semio_s_artifact_norm_din4108_schema::{total_resistance, total_resistance_lower, total_resistance_upper, u_value, R_SE, R_SI_WALL};
     let layers = [
         LayerDocument { id: "plaster".into(), material_id: "gypsum".into(), thickness_m: 0.015, lambda: 0.70, mu: 10.0, density: 1400.0, application_type: String::new(), compressive_class: String::new(), water_class: String::new(), tensile_class: String::new(), acoustic_class: String::new(), segments: vec![] },
         LayerDocument {
@@ -163,7 +161,6 @@ async fn iso6946_67_timber_stud_upper_lower_bound_matches_hand_calc() {
     assert_eq!(check.clause.section.as_str(), "6.7");
     assert_eq!(check.status, CheckStatus::Pass);
 }
-
 
 #[semio_framework_async_macros::async_test]
 async fn committed_demo_and_failing_assets_match_regenerated_dsl() {
@@ -298,8 +295,8 @@ async fn every_emitted_subject_path_resolves_on_default_and_failing() {
                 if path.is_empty() {
                     continue;
                 }
-                crate::app_surface::parse_path(path).unwrap_or_else(|e| panic!("{label} parse '{path}': {e}"));
-                crate::app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("{label} resolve '{path}': {e}"));
+                semio_s_plugin_norm_app_surface::parse_path(path).unwrap_or_else(|e| panic!("{label} parse '{path}': {e}"));
+                semio_s_plugin_norm_app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("{label} resolve '{path}': {e}"));
                 seen += 1;
                 if path.contains('[') && !path.contains("[]") {
                     assert!(path.contains("[id="), "{label} entity path must use [id=…]: {path}");
@@ -312,7 +309,7 @@ async fn every_emitted_subject_path_resolves_on_default_and_failing() {
 
 fn apply_numeric_remedy(snap: &mut Din4108Snapshot, path: &str, value: f64) {
     let mut root = semio_framework_value::ToValue::to_value(&*snap);
-    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).unwrap_or_else(|e| panic!("set {path}: {e}"));
     *snap = semio_framework_value::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
 }
 
@@ -356,7 +353,7 @@ async fn remedy_law_shading_fc_fixes_summer() {
         if !(path.contains("shadingFc") || path.contains("areaM2") || path.contains("floorAreaM2") || path.contains("gValue")) {
             continue;
         }
-        crate::app_surface::apply_remedy_edit(&report, &fail.id, index, 0, &mut root)
+        semio_s_plugin_norm_app_surface::apply_remedy_edit(&report, &fail.id, index, 0, &mut root)
             .unwrap_or_else(|e| panic!("apply summer remedy[{index}] {path}: {e:?}"));
     }
     snap = semio_framework_value::FromValue::from_value(root).unwrap_or_else(|e| panic!("from_value: {e:?}"));
@@ -421,9 +418,7 @@ async fn jsonschema_validates_default_and_failing_snapshots() {
     }
 }
 
-
-
-fn check_signature(report: &crate::document::CheckReport) -> Vec<(String, String, u64, u64, u64)> {
+fn check_signature(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, String, u64, u64, u64)> {
     let mut rows: Vec<(String, String, u64, u64, u64)> = report
         .checks
         .iter()
@@ -617,9 +612,8 @@ async fn oracle_manifest_fixture_coverage_counts_every_catalog_scenario() {
     let scenarios: usize = catalog.iter().map(|vector| vector["scenarios"].as_array().map_or(0, Vec::len)).sum();
     let kinds: Vec<&str> = catalog.iter().filter_map(|vector| vector["mutationId"].as_str()).collect();
     assert_eq!(vectors as usize, scenarios, "oracle fixtureCoverage.vectors must count every committed catalog scenario");
-    assert_eq!(kinds, crate::standards::v1::subsets::any::schema::mutations::KINDS, "the catalog must hold one vector per Din4108Mutation kind, in declaration order");
+    assert_eq!(kinds, semio_s_artifact_norm_din4108_mutations::KINDS, "the catalog must hold one vector per Din4108Mutation kind, in declaration order");
 }
-
 
 #[semio_framework_async_macros::async_test]
 async fn din4108_10_property_classes_affect_status_or_utilization() {
@@ -652,7 +646,7 @@ async fn dangling_material_id_fails_referential_integrity() {
     snap.elements[0].layers[2].material_id = "not-in-catalogue".into();
     let report = evaluate(&snap);
     assert!(
-        report.checks.iter().any(|c| c.id.contains("integrity") && c.id.contains("materialId") && c.status == crate::document::CheckStatus::Fail),
+        report.checks.iter().any(|c| c.id.contains("integrity") && c.id.contains("materialId") && c.status == semio_s_plugin_norm_compliance::CheckStatus::Fail),
         "expected materialId integrity Fail, got {:?}",
         report.checks.iter().map(|c| (&c.id, &c.status)).collect::<Vec<_>>()
     );
@@ -664,7 +658,7 @@ async fn dangling_zone_id_fails_referential_integrity() {
     snap.elements[0].zone_id = "zone-missing".into();
     let report = evaluate(&snap);
     assert!(
-        report.checks.iter().any(|c| c.id.contains("integrity") && c.id.contains("zoneId") && c.status == crate::document::CheckStatus::Fail),
+        report.checks.iter().any(|c| c.id.contains("integrity") && c.id.contains("zoneId") && c.status == semio_s_plugin_norm_compliance::CheckStatus::Fail),
         "expected zoneId integrity Fail"
     );
 }
@@ -676,7 +670,7 @@ async fn duplicate_element_id_fails_integrity() {
     snap.elements.push(dup);
     let report = evaluate(&snap);
     assert!(
-        report.checks.iter().any(|c| c.id.contains("integrity.duplicate.elements") && c.status == crate::document::CheckStatus::Fail),
+        report.checks.iter().any(|c| c.id.contains("integrity.duplicate.elements") && c.status == semio_s_plugin_norm_compliance::CheckStatus::Fail),
         "expected duplicate elements Fail"
     );
 }
@@ -700,9 +694,9 @@ async fn glaser_climate_changes_condensation_or_limit() {
     let base = Din4108Snapshot::compliant_etics_dwelling();
     let before = evaluate(&base);
     let mut cold = base.clone();
-    cold.climate_zone = crate::document::ClimateZoneDe::Zone1;
+    cold.climate_zone = semio_s_plugin_norm_compliance::ClimateZoneDe::Zone1;
     let after = evaluate(&cold);
-    let g = |r: &crate::document::CheckReport| {
+    let g = |r: &semio_s_plugin_norm_compliance::CheckReport| {
         r.checks.iter().filter(|c| c.id.starts_with("din4108-3.glaser.")).map(|c| (c.computed.value.to_bits(), c.limit.value.to_bits())).collect::<Vec<_>>()
     };
     assert_ne!(g(&before), g(&after), "climate must change Glaser computed or limit");
@@ -719,7 +713,6 @@ fn catalogue_design_lambda_matches_evaluated_limit() {
     // Same const the catalogue panel publishes as DESIGN_LAMBDA_ROWS.
     assert!(part_4::DESIGN_LAMBDA_ROWS.iter().any(|(id, v)| *id == "eps" && (*v - cell).abs() < 1e-12));
 }
-
 
 fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
     let report = evaluate(snap);
@@ -749,7 +742,7 @@ fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
     let mut cleared = false;
     for &(index, _) in &applicables {
         let mut tree = semio_framework_value::ToValue::to_value(snap);
-        if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
+        if semio_s_plugin_norm_app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
             continue;
         }
         let Ok(fixed) = semio_framework_value::FromValue::from_value(tree) else {
@@ -772,7 +765,7 @@ fn assert_fail_has_clearing_remedy(snap: &Din4108Snapshot, check_id: &str) {
         let mut tree = semio_framework_value::ToValue::to_value(snap);
         let mut ok = true;
         for &(index, _) in &applicables {
-            if crate::app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
+            if semio_s_plugin_norm_app_surface::apply_remedy_edit(&report, check_id, index, 0, &mut tree).is_err() {
                 ok = false;
                 break;
             }
@@ -818,7 +811,7 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
     // Option index 0 on the first applicable (gate's first probe).
     {
         let mut tree = semio_framework_value::ToValue::to_value(&snap0);
-        crate::app_surface::apply_remedy_edit(&report0, ht_id, applicables[0], 0, &mut tree)
+        semio_s_plugin_norm_app_surface::apply_remedy_edit(&report0, ht_id, applicables[0], 0, &mut tree)
             .expect("apply zone-ht first applicable option 0");
         let flipped: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after zone-ht option0");
         let targets = [
@@ -837,7 +830,7 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
     {
         let mut tree = semio_framework_value::ToValue::to_value(&snap0);
         for index in &applicables {
-            crate::app_surface::apply_remedy_edit(&report0, ht_id, *index, 0, &mut tree)
+            semio_s_plugin_norm_app_surface::apply_remedy_edit(&report0, ht_id, *index, 0, &mut tree)
                 .unwrap_or_else(|e| panic!("sequential zone-ht remedy[{index}]: {e:?}"));
         }
         let flipped: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after zone-ht sequential");
@@ -854,7 +847,6 @@ async fn zone_ht_flip_leaves_u_prime_and_targets_with_clearing_remedies() {
     }
 }
 
-
 /// 🩹 Gate-shaped: option-0 on initial failing_thin_insulation must clear u-prime.wall-north (not a printed-1.0000 Fail).
 #[semio_framework_async_macros::async_test]
 async fn failing_thin_u_prime_option0_clears_wall_north() {
@@ -866,7 +858,7 @@ async fn failing_thin_u_prime_option0_clears_wall_north() {
     assert!(!check.remedies.is_empty(), "Fail must carry remedies");
     assert!(check.remedies[0].applicable, "remedy[0] must be applicable");
     let mut tree = semio_framework_value::ToValue::to_value(&snap);
-    crate::app_surface::apply_remedy_edit(&report, id, 0, 0, &mut tree).expect("apply remedy[0] option 0");
+    semio_s_plugin_norm_app_surface::apply_remedy_edit(&report, id, 0, 0, &mut tree).expect("apply remedy[0] option 0");
     let fixed: Din4108Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode after remedy[0]");
     let after = evaluate(&fixed);
     let updated = after.checks.iter().find(|c| c.id == id).expect("u-prime after");

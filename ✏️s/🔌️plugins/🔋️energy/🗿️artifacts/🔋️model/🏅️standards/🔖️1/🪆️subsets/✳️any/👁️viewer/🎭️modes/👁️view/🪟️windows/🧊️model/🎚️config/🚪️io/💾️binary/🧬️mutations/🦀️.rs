@@ -3,8 +3,8 @@
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::viewer::model::modes::view::windows::model::config::mutations::*;
-use crate::viewer::model::modes::view::windows::model::config::{EnergyModelViewerCameraPose, EnergyModelViewerWindowConfig};
+use crate::modes::view::windows::model::config::mutations::*;
+use crate::modes::view::windows::model::config::{EnergyModelViewerCameraPose, EnergyModelViewerWindowConfig};
 
 impl protocol::OpBinary for EnergyModelViewerWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

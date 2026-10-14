@@ -1,8 +1,8 @@
 //! 🏗️ `change-members` diff — replaces the whole collection: every base row leaves from its base index, every new row enters at its index.
 
-use super::ChangeMembers;
-use crate::diff::{En1990Diff, En1990MemberDelta, En1990MemberInsertion, En1990MemberRemoval};
-use crate::En1990Snapshot;
+use crate::change_members::ChangeMembers;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990MemberDelta, En1990MemberInsertion, En1990MemberRemoval};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeMembers, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

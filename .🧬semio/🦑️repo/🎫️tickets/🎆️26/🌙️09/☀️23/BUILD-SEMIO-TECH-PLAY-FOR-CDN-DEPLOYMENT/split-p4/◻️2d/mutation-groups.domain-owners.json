@@ -1,0 +1,54 @@
+{
+ "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+  "🟢️node": {
+   "🌱create-node": "create-node",
+   "🗑️delete-node": "delete-node",
+   "🏗️change-node-kind": "change-node-kind",
+   "⚓change-node-anchor": "change-node-anchor",
+   "✏️edit-node-text": "edit-node-text",
+   "🎨change-node-icon": "change-node-icon",
+   "👁️change-node-visible": "change-node-visible",
+   "🔒change-node-locked": "change-node-locked",
+   "🌟change-node-root": "change-node-root",
+   "🧊replace-node-geometry": "replace-node-geometry"
+  },
+  "🧭️pose": {
+   "📍move-node": "move-node",
+   "📏scale-node": "scale-node"
+  },
+  "🔌️handle": {
+   "➕add-node-handle": "add-node-handle",
+   "➖remove-node-handle": "remove-node-handle",
+   "🔌replace-node-handle": "replace-node-handle",
+   "🪢️connect-handles": "connect-handles",
+   "✂️disconnect-handles": "disconnect-handles"
+  },
+  "〰️edge": {
+   "🏷️change-edge-kind": "change-edge-kind",
+   "👀change-edge-visible": "change-edge-visible",
+   "🔐change-edge-locked": "change-edge-locked",
+   "🖇️change-edge-tips": "change-edge-tips",
+   "🧮replace-edge-geometry": "replace-edge-geometry"
+  },
+  "🌍️region": {
+   "🌍create-target-region": "create-target-region",
+   "🪦delete-target-region": "delete-target-region",
+   "🚀move-target-region": "move-target-region",
+   "📐resize-target-region": "resize-target-region",
+   "🔏change-target-region-locked": "change-target-region-locked",
+   "🙈change-target-region-hidden": "change-target-region-hidden",
+   "🖋️edit-target-region-label": "edit-target-region-label"
+  },
+  "📚️catalog": {
+   "🆔change-manifest-id": "change-manifest-id",
+   "🤝connect-kind-compatibility": "connect-kind-compatibility",
+   "💔disconnect-kind-compatibility": "disconnect-kind-compatibility",
+   "📚replace-kind-catalogs": "replace-kind-catalogs"
+  },
+  "✋️selection": {
+   "✋️drag-selection": "drag-selection",
+   "🔄️rotate-selection": "rotate-selection",
+   "🔍️scale-selection": "scale-selection"
+  }
+ }
+}

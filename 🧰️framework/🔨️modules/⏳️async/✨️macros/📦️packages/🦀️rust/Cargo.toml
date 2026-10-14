@@ -9,6 +9,7 @@ description = "Proc-macro #[async_test]: keeps a test fn's literal `async fn` in
 [package.metadata.semio]
 role = "framework"
 id = "async-macros"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

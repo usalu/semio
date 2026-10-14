@@ -22,9 +22,10 @@ semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-3d = { workspace = true }
 semio-framework-3d-brep-analysis = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+

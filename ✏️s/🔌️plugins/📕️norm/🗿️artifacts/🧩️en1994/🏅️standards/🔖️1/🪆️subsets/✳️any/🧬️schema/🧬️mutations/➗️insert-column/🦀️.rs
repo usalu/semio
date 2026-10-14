@@ -1,6 +1,6 @@
 //! ➗️ `insert-column` mutation leaf.
 
-use crate::{CompositeColumn, En1994Mutation, En1994Snapshot};
+use semio_s_artifact_norm_en1994_model::{CompositeColumn, En1994Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,15 +14,15 @@ pub struct InsertColumn {
     pub column: CompositeColumn,
 }
 
-impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for InsertColumn {
+impl<Op> protocol::MutationKind<En1994Snapshot, Op> for InsertColumn where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::remove_column::RemoveColumn> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "column", kind: "insert-column", record: "InsertedColumn" };
 
-    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1994Snapshot>>::Diff> {
+        crate::insert_column::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::insert_column::inverse::inverse(self, base)?
     
     })
 }
@@ -31,3 +31,10 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for InsertColumn {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

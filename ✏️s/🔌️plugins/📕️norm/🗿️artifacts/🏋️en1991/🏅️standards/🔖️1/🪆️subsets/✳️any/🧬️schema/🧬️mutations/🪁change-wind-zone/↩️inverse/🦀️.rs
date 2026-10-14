@@ -1,9 +1,9 @@
 //! Inverse for `change-wind-zone`.
-use super::ChangeWindZone;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeWindZone, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_wind_zone::ChangeWindZone;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeWindZone, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_wind_zone::ChangeWindZone> {
     Ok((|| {
-    vec![En1991Mutation::ChangeWindZone(ChangeWindZone { new_wind_zone: base.wind_zone })]
+    vec![Op::from(ChangeWindZone { new_wind_zone: base.wind_zone })]
 
     })())
 }

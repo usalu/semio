@@ -1,13 +1,13 @@
 //! ↩️ `change-material-designation` inverse.
 
-use crate::mutations::change_material_designation::ChangeMaterialDesignation;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_material_designation::ChangeMaterialDesignation;
 
-pub fn inverse(payload: &ChangeMaterialDesignation, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(payload: &ChangeMaterialDesignation, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_material_designation::ChangeMaterialDesignation> {
     Ok((|| {
     let d = base.materials.iter().find(|m| m.id == payload.material_id).map(|m| m.designation.clone()).unwrap_or_default();
-    vec![En1999Mutation::ChangeMaterialDesignation(ChangeMaterialDesignation { material_id: payload.material_id.clone(), new_designation: d })]
+    vec![Op::from(ChangeMaterialDesignation { material_id: payload.material_id.clone(), new_designation: d })]
 
     })())
 }

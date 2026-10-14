@@ -36,7 +36,7 @@ async fn dwg_import_mints_a_durable_background_drawing_child() {
     let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
     let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
     assert_eq!(child.handle.target.dialect.subset, "drawing");
-    let content = crate::background_drawing_content(&document).expect("mint call retained real content");
+    let content = semio_s_artifact_layout_layout_model::background_drawing_content(&document).expect("mint call retained real content");
     assert_eq!(content.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
 }
 
@@ -63,7 +63,7 @@ async fn svg_export_merges_owned_background_drawing_behind_pages() {
 #[semio_framework_async_macros::async_test]
 async fn svg_export_composes_through_semio_drawing_bridge() {
     ensure_stdio_semio_drawing_registered();
-    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let value = doc.to_value();
     let (svg, width, height) = layout_document_json_to_svg(&value).expect("svg export succeeds");
     assert!(svg.starts_with("<svg"), "{svg}");
@@ -83,8 +83,11 @@ async fn svg_export_rejects_invalid_document_json() {
 /// real raster of the same spreads.
 #[semio_framework_async_macros::async_test]
 async fn svg_dxf_and_png_exports_are_real_files_that_frame_the_pages_again() {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{dxf::v_r12::any as dxf_in, svg::v1_1::any as svg_in};
+    use crate::export::serializers::artifacts::dxf::v_r12::any as dxf_out;
+    use crate::export::serializers::artifacts::png::v1_2::any as png_out;
+    use crate::export::serializers::artifacts::svg::v1_1::any as svg_out;
+    use crate::import::deserializers::artifacts::dxf::v_r12::any as dxf_in;
+    use crate::import::deserializers::artifacts::svg::v1_1::any as svg_in;
     let mut dwg = DwgDrawing::default();
     dwg.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [210.0, 0.0], [210.0, 297.0], [0.0, 297.0]], bulges: vec![0.0; 4] } });
     let document = LayoutSnapshot::from_value(layout_document_json_from_dwg(&dwg).expect("dwg import")).expect("layout");

@@ -16,9 +16,9 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-publication-contract": "bun repo run @semio-tech/framework-async:test-publication-contract",
-    "single-poll-check": "bun repo run @semio-tech/framework-async:single-poll-check",
-    "test-api-contract": "bun repo run @semio-tech/framework-async:test-api-contract"
+    "test-publication-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-async:test-publication-contract",
+    "single-poll-check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-async:single-poll-check",
+    "test-api-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-async:test-api-contract"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

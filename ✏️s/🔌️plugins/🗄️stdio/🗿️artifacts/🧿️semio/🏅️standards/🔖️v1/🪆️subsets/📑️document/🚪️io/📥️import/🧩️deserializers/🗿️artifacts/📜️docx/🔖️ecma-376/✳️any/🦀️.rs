@@ -19,8 +19,11 @@
 
 use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
-use semio_s_artifact_stdio_docx::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 //#region 🔖️FieldMapping
 /// ✍️ `DocxRun` -> `DocRun`: text + the 3 boolean flags both models share. `size`/`font`/`color`/

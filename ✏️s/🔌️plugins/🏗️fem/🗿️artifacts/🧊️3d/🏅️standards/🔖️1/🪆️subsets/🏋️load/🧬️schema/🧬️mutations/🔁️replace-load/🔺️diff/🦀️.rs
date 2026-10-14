@@ -5,10 +5,19 @@
 //! per-variant target resolution `add-load` runs (`mutation.target-missing`, Error), the finite
 //! magnitude bound (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesModification, Fem3dLoadsDelta, Fem3dLoadsModification};
-use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,load_breach,resolve_load};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasePatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::load_breach;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_load;
 
-use crate::{load_id, Fem3dSnapshot};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

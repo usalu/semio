@@ -1,10 +1,10 @@
 use super::*;
-use crate::mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_spread_renames_and_inverse_restores_it() {
-    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let base = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let mutation = LayoutMutation::UpdateSpread(UpdateSpread { id: "spread-1".into(), name: "Opening".into() });
     let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("spread applies");
     assert_eq!(next.spreads[0].name, "Opening");

@@ -2,9 +2,8 @@
 //! counted phases, one unit of real algorithm work per [`StagedOperation::advance`], monotone
 //! [`StageProgress`], and a single result. The one-shot function of an operation is [`drive`] over
 //! its job, so there is exactly one algorithm per operation (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`,
-//! lane J; the boolean twin is [`crate::boolean::BooleanJob`]).
+//! lane J; the boolean twin is `semio_framework_3d_brep_boolean::BooleanJob`).
 
-use crate::boolean::{boolean_job, BooleanAdmission, BooleanJob, BooleanOp, BooleanStep};
 use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
@@ -137,52 +136,6 @@ impl Plan {
     pub fn progress(&self) -> StageProgress {
         let tag = self.phases.get(self.phase).or(self.phases.last()).map_or("", |(tag, _)| *tag);
         StageProgress { done: self.done, total: self.total(), phase: tag }
-    }
-}
-
-/// 🔀 A boolean as a staged operation. The fast paths answer in one unit; the general engine runs
-/// one [`BooleanJob`] unit per advance plus one finishing unit for its terminal transition.
-pub struct BooleanStage {
-    job: Option<BooleanJob>,
-    answered: Option<SolidId>,
-    finished: bool,
-}
-
-impl BooleanStage {
-    /// 🔀 Admits `a op b` against `body` (the fast paths run here).
-    pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
-        Ok(match boolean_job(body, a, b, op, tol, rec)? {
-            BooleanAdmission::Answered(solid) => Self { job: None, answered: Some(solid), finished: false },
-            BooleanAdmission::Job(job) => Self { job: Some(job), answered: None, finished: false },
-        })
-    }
-}
-
-impl StagedOperation for BooleanStage {
-    fn progress(&self) -> StageProgress {
-        match &self.job {
-            None => StageProgress { done: usize::from(self.finished), total: 1, phase: "boolean" },
-            Some(job) => {
-                let progress = job.progress();
-                StageProgress { done: progress.units_done + usize::from(self.finished), total: progress.units_total.max(progress.units_done) + 1, phase: progress.phase.tag() }
-            }
-        }
-    }
-
-    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
-        if let Some(solid) = self.answered {
-            self.finished = true;
-            return Ok(StageStep::Done(StageOutput::Solid(solid)));
-        }
-        let job = self.job.as_mut().ok_or_else(|| KernelError::Operation("boolean stage already finished".into()))?;
-        match job.step_unbudgeted(body, rec, 1)? {
-            BooleanStep::Working(_) => Ok(StageStep::Working),
-            BooleanStep::Done(solid) => {
-                self.finished = true;
-                Ok(StageStep::Done(StageOutput::Solid(solid)))
-            }
-            BooleanStep::Cancelled(_) => Err(KernelError::Operation("boolean stage was cancelled".into())),
-        }
     }
 }
 

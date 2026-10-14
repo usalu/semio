@@ -9,8 +9,8 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use crate::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 /// 🧸️ Read-only access to a composing document's live child stores, keyed `(slot,
 /// child_id)` exactly as the parent's `ArtifactChild` handles name them.

@@ -1,12 +1,20 @@
 //! ⚡️ Block 2D artifact — the mutation dispatch enum (`dsl::Mutations`-derived, real per-mutation
 //! triads) plus the store aliases.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
@@ -92,33 +100,6 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::{add_attribute, add_attribute_at, AddAttribute};
-pub use super::add_author::{add_author, add_author_at, AddAuthor};
-pub use super::add_compatibility_rule::{add_compatibility_rule, add_compatibility_rule_at, AddCompatibilityRule};
-pub use super::change_handle_handle_kind::{change_handle_handle_kind, ChangeHandleHandleKind};
-pub use super::change_handle_kind_color::{change_handle_kind_color, ChangeHandleKindColor};
-pub use super::change_handle_kind_default_wire_kind::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
-pub use super::change_handle_kind_label::{change_handle_kind_label, ChangeHandleKindLabel};
-pub use super::change_meta_description::{change_meta_description, ChangeMetaDescription};
-pub use super::change_node_kind_description::{change_node_kind_description, ChangeNodeKindDescription};
-pub use super::change_node_kind_icon::{change_node_kind_icon, ChangeNodeKindIcon};
-pub use super::change_node_kind_label::{change_node_kind_label, ChangeNodeKindLabel};
-pub use super::change_node_kind_unit::{change_node_kind_unit, ChangeNodeKindUnit};
-pub use super::change_node_kind_variant::{change_node_kind_variant, ChangeNodeKindVariant};
-pub use super::create_handle::{create_handle, create_handle_at, CreateHandle};
-pub use super::create_handle_kind::{create_handle_kind, create_handle_kind_at, CreateHandleKind};
-pub use super::delete_handle::{delete_handle, DeleteHandle};
-pub use super::delete_handle_kind::{delete_handle_kind, DeleteHandleKind};
-pub use super::move_camera2d::{move_camera2d, MoveCamera2d};
-pub use super::move_handle::{move_handle, MoveHandle};
-pub use super::remove_attribute::{remove_attribute, RemoveAttribute};
-pub use super::remove_author::{remove_author, RemoveAuthor};
-pub use super::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
-pub use super::rename_handle_kind::{rename_handle_kind, RenameHandleKind};
-pub use super::rename_node_kind::{rename_node_kind, RenameNodeKind};
-pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
-pub use super::update_presentation::{update_presentation, UpdatePresentation};
-
 pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
     Ok({
     mutation.inverse(projection)?
@@ -126,12 +107,7 @@ pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2d
     })
 }
 
-//#region 🌉️TestBridge
-
-//#endregion 🌉️TestBridge
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

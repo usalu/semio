@@ -4,7 +4,9 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "authoredCacheDirectories",
+    "rawCacheAdmission"
   ],
   "properties": {
     "version": {
@@ -37,7 +39,53 @@
           }
         }
       }
+    },
+    "authoredCacheDirectories": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "directory",
+          "accepted"
+        ],
+        "properties": {
+          "directory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "rawCacheAdmission": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "environment",
+          "refused"
+        ],
+        "properties": {
+          "environment": {
+            "enum": [
+              "missing",
+              "foreign"
+            ]
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
     }
   }
 }
-

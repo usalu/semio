@@ -1,8 +1,10 @@
 //! 🪜 `reorder-frame` — moves one page frame one step forward or backward in the paint order.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,10 +20,10 @@ pub struct ReorderFrame {
     pub forward: bool,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderFrame {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ReorderFrame where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::reorder_frame::ReorderFrame> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "frame", kind: "reorder-frame", record: "ReorderFrame" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_reorder_frame(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_reorder_frame(self, base)? 
     })
 }
@@ -43,7 +45,7 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist.", payload.frame_id), [payload.frame_id.clone()]);
     };
     let frame = &page.frames[index];
-    if frame.locked() || crate::layer_locked(base, page, frame.layer_id()) {
+    if frame.locked() || semio_s_artifact_layout_layout_model::layer_locked(base, page, frame.layer_id()) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", "A locked frame stays in its stack position.", [payload.frame_id.clone()]);
     }
     let Some(target) = neighbor(index, page.frames.len(), payload.forward) else {
@@ -55,14 +57,14 @@ pub fn diff_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> prot
     })
 }
 
-pub fn inverse_reorder_frame(payload: &ReorderFrame, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_reorder_frame<Op: From<crate::reorder_frame::ReorderFrame>>(payload: &ReorderFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(index) = page.frames.iter().position(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
     if neighbor(index, page.frames.len(), payload.forward).is_none() {
         return Vec::new();
     }
-    vec![LayoutMutation::ReorderFrame(ReorderFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), forward: !payload.forward })]
+    vec![Op::from(ReorderFrame { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), forward: !payload.forward })]
 
     })())
 }

@@ -7,54 +7,50 @@
 //! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<Generation2dSnapshot>` and
 //! `impl protocol::SemanticMutation<Generation2dSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate self as semio_s_artifact_procedural_2d_mutations;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::Mutation;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
+use semio_framework_os_flow::FlowHost;
 #[cfg(test)]
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
-//#region 🔖️Addressing
-/// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
-pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
-    host_snapshot.widgets.iter().position(|widget| widget_id(widget) == id)
-}
-
-/// 🌡️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
-pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
-    host_snapshot.synapses.iter().position(|synapse| synapse.id == id)
-}
-//#endregion 🔖️Addressing
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation2dSnapshot, diff = Generation2dDiff, schema = "generation.2d")]
 pub enum Generation2dMutation {
-    CreateWidget(super::create_widget::CreateWidget),
-    ReplaceWidget(super::replace_widget::ReplaceWidget),
-    DeleteWidget(super::delete_widget::DeleteWidget),
-    ConnectSynapse(super::connect_synapse::ConnectSynapse),
-    ReplaceSynapse(super::replace_synapse::ReplaceSynapse),
-    DisconnectSynapse(super::disconnect_synapse::DisconnectSynapse),
-    MoveWidget(super::move_widget::MoveWidget),
-    ClearWidgetLayout(super::clear_widget_layout::ClearWidgetLayout),
-    UpdateCamera(super::update_camera::UpdateCamera),
-    ChangeSchema(super::change_schema::ChangeSchema),
-    CreateGeneration(super::create_generation::CreateGeneration),
-    DeleteGeneration(super::delete_generation::DeleteGeneration),
-    RenameGeneration(super::rename_generation::RenameGeneration),
-    ChangeGenerationValue(super::change_generation_value::ChangeGenerationValue),
-    ChangeSliderValue(super::change_slider_value::ChangeSliderValue),
-    MoveNodes(super::move_nodes::MoveNodes),
-    SelectGeneration(super::select_generation::SelectGeneration),
+    CreateWidget(semio_s_artifact_procedural_2d_mut_widgets::create_widget::CreateWidget),
+    ReplaceWidget(semio_s_artifact_procedural_2d_mut_widgets::replace_widget::ReplaceWidget),
+    DeleteWidget(semio_s_artifact_procedural_2d_mut_widgets::delete_widget::DeleteWidget),
+    ConnectSynapse(semio_s_artifact_procedural_2d_mut_synapses::connect_synapse::ConnectSynapse),
+    ReplaceSynapse(semio_s_artifact_procedural_2d_mut_synapses::replace_synapse::ReplaceSynapse),
+    DisconnectSynapse(semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse::DisconnectSynapse),
+    MoveWidget(semio_s_artifact_procedural_2d_mut_widgets::move_widget::MoveWidget),
+    ClearWidgetLayout(semio_s_artifact_procedural_2d_mut_widgets::clear_widget_layout::ClearWidgetLayout),
+    UpdateCamera(semio_s_artifact_procedural_2d_mut_document::update_camera::UpdateCamera),
+    ChangeSchema(semio_s_artifact_procedural_2d_mut_document::change_schema::ChangeSchema),
+    CreateGeneration(semio_s_artifact_procedural_2d_mut_generations::create_generation::CreateGeneration),
+    DeleteGeneration(semio_s_artifact_procedural_2d_mut_generations::delete_generation::DeleteGeneration),
+    RenameGeneration(semio_s_artifact_procedural_2d_mut_generations::rename_generation::RenameGeneration),
+    ChangeGenerationValue(semio_s_artifact_procedural_2d_mut_generations::change_generation_value::ChangeGenerationValue),
+    ChangeSliderValue(semio_s_artifact_procedural_2d_mut_widgets::change_slider_value::ChangeSliderValue),
+    MoveNodes(semio_s_artifact_procedural_2d_mut_widgets::move_nodes::MoveNodes),
+    SelectGeneration(semio_s_artifact_procedural_2d_mut_generations::select_generation::SelectGeneration),
 }
 
 //#region 🏷️Kinds
@@ -83,30 +79,6 @@ pub const KINDS: &[&str] = &[
 ];
 //#endregion 🏷️Kinds
 
-//#region 🔖️GestureLeaves
-/// 🖊️ One number as the history labels print it: English with a decimal point, German with a decimal comma.
-pub(crate) fn generation2d_label_number(value: f64) -> (String, String) {
-    let english = format!("{}", (value * 1_000.0).round() / 1_000.0);
-    let german = english.replace('.', ",");
-    (english, german)
-}
-
-/// 🧱️ The payload-intrinsic target law every relative gesture leaf states in its schema: at least one id, each once.
-pub(crate) fn generation2d_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
-    if targets.is_empty() || targets.iter().any(String::is_empty) {
-        return Err("a gesture leaf names at least one non-empty target");
-    }
-    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
-        return Err("a gesture leaf names each target once");
-    }
-    Ok(())
-}
-
-/// 🩹️ The `mutation.partial` warning of the targets a relative leaf skipped, or nothing.
-pub(crate) fn generation2d_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
-    (!skipped.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {total} target(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
-}
-//#endregion 🔖️GestureLeaves
 //#endregion 🔖️Mutations
 
 //#region 🧊️Retirement
@@ -116,7 +88,7 @@ impl Generation2dMutation {
     /// so a dropped mutation aborts the process. Every other variant drops freely.
     pub fn retire_cold(self) {
         match self {
-            Self::CreateWidget(super::create_widget::CreateWidget { widget, .. }) | Self::ReplaceWidget(super::replace_widget::ReplaceWidget { widget }) => widget.retire_cold(),
+            Self::CreateWidget(semio_s_artifact_procedural_2d_mut_widgets::create_widget::CreateWidget { widget, .. }) | Self::ReplaceWidget(semio_s_artifact_procedural_2d_mut_widgets::replace_widget::ReplaceWidget { widget }) => widget.retire_cold(),
             _ => {}
         }
     }
@@ -133,37 +105,16 @@ impl Generation2dMutation {
 /// naming (`name`/`value` here, `new_name`/`new_value` there).
 pub fn generation_mutation_to_generation2d(operation: GenerationMutation) -> Generation2dMutation {
     match operation {
-        GenerationMutation::Add { generation } => Generation2dMutation::CreateGeneration(super::create_generation::CreateGeneration { generation, index: None }),
-        GenerationMutation::Remove { id } => Generation2dMutation::DeleteGeneration(super::delete_generation::DeleteGeneration { id }),
-        GenerationMutation::Rename { id, name } => Generation2dMutation::RenameGeneration(super::rename_generation::RenameGeneration { id, name }),
-        GenerationMutation::UpdateValues { id, question_id, value } => Generation2dMutation::ChangeGenerationValue(super::change_generation_value::ChangeGenerationValue { id, question_id, value }),
+        GenerationMutation::Add { generation } => Generation2dMutation::CreateGeneration(semio_s_artifact_procedural_2d_mut_generations::create_generation::CreateGeneration { generation, index: None }),
+        GenerationMutation::Remove { id } => Generation2dMutation::DeleteGeneration(semio_s_artifact_procedural_2d_mut_generations::delete_generation::DeleteGeneration { id }),
+        GenerationMutation::Rename { id, name } => Generation2dMutation::RenameGeneration(semio_s_artifact_procedural_2d_mut_generations::rename_generation::RenameGeneration { id, name }),
+        GenerationMutation::UpdateValues { id, question_id, value } => Generation2dMutation::ChangeGenerationValue(semio_s_artifact_procedural_2d_mut_generations::change_generation_value::ChangeGenerationValue { id, question_id, value }),
     }
 }
 //#endregion 🔖️GenerationBridge
 
-//#region 🔖️Builders
-pub use super::change_generation_value::change_generation_value;
-pub use super::change_schema::change_schema;
-pub use super::change_slider_value::change_slider_value;
-pub use super::clear_widget_layout::clear_widget_layout;
-pub use super::connect_synapse::connect_synapse;
-pub use super::create_generation::create_generation;
-pub use super::create_widget::create_widget;
-pub use super::delete_generation::delete_generation;
-pub use super::delete_widget::delete_widget;
-pub use super::disconnect_synapse::disconnect_synapse;
-pub use super::move_nodes::move_nodes;
-pub use super::move_widget::move_widget;
-pub use super::rename_generation::rename_generation;
-pub use super::select_generation::select_generation;
-pub use super::replace_synapse::replace_synapse;
-pub use super::replace_widget::replace_widget;
-pub use super::update_camera::update_camera;
-//#endregion 🔖️Builders
-
 pub type Generation2dEnvelope = ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>;
 pub type Generation2dStore = ArtifactStore<Generation2dSnapshot, Generation2dMutation>;
-
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
 pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
@@ -173,12 +124,97 @@ pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation
     })
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🔖️HostGestures
+/// 🔌️ Connects two ports through the host and returns the concrete leaves the host names: a `disconnect-synapse` for every wire
+/// the host displaces from the target port, then one `connect-synapse` of the minted wire at the end of the list.
+pub fn host_connect_ports(host: &mut FlowHost, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<Vec<crate::Generation2dMutation>, String> {
+    use semio_s_artifact_procedural_2d_mut_synapses::connect_synapse;
+    use semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse;
+    let displaced: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.to == to_id && synapse.to_port == to_port).map(|synapse| synapse.id.clone()).collect();
+    let id = host.connect_ports(from_id, from_port, to_id, to_port).map_err(|error| error.to_string())?;
+    let minted = host.host_snapshot.synapses.iter().position(|synapse| synapse.id == id).ok_or_else(|| format!("the host minted no wire {id}"))?;
+    let mut leaves: Vec<_> = displaced.into_iter().map(disconnect_synapse).collect();
+    leaves.push(connect_synapse(minted, host.host_snapshot.synapses[minted].clone()));
+    Ok(leaves)
+}
 
-#[cfg(test)]
-#[path = "🧪️tests/🧪️gesture-leaves/🦀️.rs"]
-mod gesture_leaves_tests;
+/// ✂️ Cuts one wire through the host: the single `disconnect-synapse` leaf.
+pub fn host_disconnect(host: &mut FlowHost, synapse_id: &str) -> Result<Vec<crate::Generation2dMutation>, String> {
+    host.disconnect(synapse_id).map_err(|error| error.to_string())?;
+    Ok(vec![semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse(synapse_id.to_string())])
+}
+
+/// 🗑️ Removes a widget through the host: a `disconnect-synapse` per wire it carried, its `clear-widget-layout` when it was placed,
+/// then its `delete-widget`.
+pub fn host_remove_widget(host: &mut FlowHost, widget_id: &str) -> Result<Vec<crate::Generation2dMutation>, String> {
+    use semio_s_artifact_procedural_2d_mut_widgets::clear_widget_layout;
+    use semio_s_artifact_procedural_2d_mut_widgets::delete_widget;
+    use semio_s_artifact_procedural_2d_mut_synapses::disconnect_synapse;
+    let wires: Vec<String> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).map(|synapse| synapse.id.clone()).collect();
+    let placed = host.host_snapshot.layout.contains_key(widget_id);
+    host.remove_widget(widget_id).map_err(|error| error.to_string())?;
+    let mut leaves: Vec<_> = wires.into_iter().map(disconnect_synapse).collect();
+    if placed {
+        leaves.push(clear_widget_layout(widget_id.to_string()));
+    }
+    leaves.push(delete_widget(widget_id.to_string()));
+    Ok(leaves)
+}
+
+/// ➕️ Adds a widget through the host: the `create-widget` of what the host built from `descriptor_json` at the end of the list,
+/// then the `move-widget` of the position the gesture named.
+pub fn host_add_widget(host: &mut FlowHost, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<Vec<crate::Generation2dMutation>, String> {
+    use semio_s_artifact_procedural_2d_mut_widgets::create_widget;
+    use semio_s_artifact_procedural_2d_mut_widgets::move_widget;
+    let id = host.add_widget(descriptor_json, world_x, world_y).map_err(|error| error.to_string())?;
+    let at = host.host_snapshot.widgets.iter().position(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget) == id).ok_or_else(|| format!("the host built no widget {id}"))?;
+    let widget = host.host_snapshot.widgets[at].clone();
+    Ok(vec![create_widget(at, widget), move_widget(id, semio_framework_artifact_flow_flow::WidgetLayout { x: world_x, y: world_y })])
+}
+
+/// 🔢️ Inserts a port through the host: the `replace-widget` of the widget the host rebuilt, and a `replace-synapse` for each of its wires the
+/// rebuild re-addressed.
+pub fn host_insert_port(host: &mut FlowHost, widget_id: &str, input: bool, index: usize) -> Result<Vec<crate::Generation2dMutation>, String> {
+    use semio_s_artifact_procedural_2d_mut_synapses::replace_synapse;
+    use semio_s_artifact_procedural_2d_mut_widgets::replace_widget;
+    let wires: Vec<_> = host.host_snapshot.synapses.iter().filter(|synapse| synapse.from == widget_id || synapse.to == widget_id).cloned().collect();
+    if input {
+        host.add_input_port(widget_id, index).map_err(|error| error.to_string())?;
+    } else {
+        host.add_output_port(widget_id, index).map_err(|error| error.to_string())?;
+    }
+    let at = host.host_snapshot.widgets.iter().position(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget) == widget_id).ok_or_else(|| format!("the host lost widget {widget_id}"))?;
+    let widget = host.host_snapshot.widgets[at].clone();
+    let mut leaves = vec![replace_widget(widget)];
+    for before in wires {
+        if let Some(after) = host.host_snapshot.synapses.iter().find(|synapse| synapse.id == before.id).filter(|after| **after != before) {
+            leaves.push(replace_synapse(after.clone()));
+        }
+    }
+    Ok(leaves)
+}
+
+/// 🗺️ Reorganizes the graph through the host: one `move-widget` per widget whose placement the layout pass changed.
+pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<crate::Generation2dMutation>, String> {
+    use semio_s_artifact_procedural_2d_mut_widgets::move_widget;
+    let before: Vec<(String, semio_framework_artifact_flow_flow::WidgetLayout)> = host.host_snapshot.layout.iter().map(|(id, layout)| (id.clone(), layout.clone())).collect();
+    let options: semio_framework_os_infinite::board::schema::layout::DagLayoutOptions = semio_framework_pack_json::from_json_str(options_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let mut progress = |_| true;
+    let mut control = semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000, &mut progress);
+    host.reorganize(&options, &mut control).map_err(|error| error.to_string())?;
+    Ok(host
+        .host_snapshot
+        .layout
+        .iter()
+        .filter(|(id, layout)| before.iter().find(|(held, _)| held == *id).map(|(_, previous)| previous) != Some(*layout))
+        .map(|(id, layout)| move_widget(id.clone(), layout.clone()))
+        .collect())
+}
+//#endregion 🔖️HostGestures
+
+//#region 🧪️Tests
+
 //#endregion 🧪️Tests
+
+#[path = "../../../../../../🌉️apply/🦀️.rs"]
+pub mod central_apply;

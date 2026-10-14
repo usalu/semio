@@ -1,8 +1,8 @@
 //! 🔬️ KINDS catalog parity for EN 1999 mutations.
 
-use crate::mutations::KINDS;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::KINDS;
+use crate::En1999Mutation;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {

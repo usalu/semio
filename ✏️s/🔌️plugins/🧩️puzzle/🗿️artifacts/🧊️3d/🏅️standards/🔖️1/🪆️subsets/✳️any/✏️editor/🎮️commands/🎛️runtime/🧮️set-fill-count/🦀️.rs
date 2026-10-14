@@ -13,6 +13,6 @@ pub fn request(count: u32) -> Effect {
 /// 🔢️ The requested count is any `u32` — the planner plans toward exactly what was asked and reports
 /// a capacity it cannot reach as a visible stall, never as a silent clamp
 /// (`26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS` master plan §1 decision 1).
-pub(crate) fn parse_count(args: Option<&Value>) -> u32 {
+pub fn parse_count(args: Option<&Value>) -> u32 {
     args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(Value::as_f64).map_or(0, |value| value.round().clamp(0.0, f64::from(u32::MAX)) as u32)
 }

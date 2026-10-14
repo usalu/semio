@@ -1,8 +1,5 @@
 use super::*;
-use crate::{
-    brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin,
-    Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine,
-};
+use semio_s_artifact_process_process3d_model::{snapshot::brep_child_handle, snapshot::brep_snapshot_for_working_solid, snapshot::empty_process3d_snapshot, snapshot::process_working_scene_to_snapshot, snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
 use change_machine_icon::ChangeMachineIcon;
 use change_step_enabled::ChangeStepEnabled;
 use change_step_origin::ChangeStepOrigin;

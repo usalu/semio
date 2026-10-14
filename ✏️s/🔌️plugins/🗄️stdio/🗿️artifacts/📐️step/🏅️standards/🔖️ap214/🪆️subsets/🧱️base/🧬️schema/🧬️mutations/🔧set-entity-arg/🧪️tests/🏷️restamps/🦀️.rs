@@ -15,9 +15,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
 use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔧set-entity-arg/🏷️restamps/📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +42,7 @@ async fn applies_to_committed_after() {
     let outcome = apply_step_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-entity-arg/restamps-the-product-long-name: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-entity-arg/restamps-the-product-long-name: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.entities[0].args[1], crate::standards::v_ap214::subsets::base::schema::snapshot::StepValue::String("Capsule Unit A".into()), "set-entity-arg/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'");
+    assert_eq!(snapshot.entities[0].args[1], semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepValue::String("Capsule Unit A".into()), "set-entity-arg/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'");
     assert_eq!(snapshot.entities[0].name, "PRODUCT", "set-entity-arg/restamps-the-product-long-name: the entity keyword is untouched");
     assert_eq!(snapshot.entities[0].args.len(), 4, "set-entity-arg/restamps-the-product-long-name: no argument is inserted or dropped");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-entity-arg/restamps-the-product-long-name: #2 is identical on both sides and must survive untouched");

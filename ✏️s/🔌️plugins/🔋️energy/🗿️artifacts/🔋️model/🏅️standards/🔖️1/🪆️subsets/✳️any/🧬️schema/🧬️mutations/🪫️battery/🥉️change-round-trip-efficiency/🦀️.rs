@@ -1,8 +1,7 @@
 //! 🥉️ Energy model mutation — `ChangeBatteryRoundTripEfficiency`: Sets round-trip efficiency on one battery, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeBatteryRoundTripEfficiency {
     pub new_round_trip_efficiency: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_battery_round_trip_efficiency(id: crate::model::EntityId, new_round_trip_efficiency: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeBatteryRoundTripEfficiency(ChangeBatteryRoundTripEfficiency { id, new_round_trip_efficiency })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_battery_round_trip_efficiency<Op: From<ChangeBatteryRoundTripEfficiency>>(id: crate::model::EntityId, new_round_trip_efficiency: f64) -> Op {
+    ChangeBatteryRoundTripEfficiency { id, new_round_trip_efficiency }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeBatteryRoundTripEfficiency {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeBatteryRoundTripEfficiency
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeBatteryRoundTripEfficiency>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "battery", kind: "change-battery-round-trip-efficiency", record: "ChangedBatteryRoundTripEfficiency" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

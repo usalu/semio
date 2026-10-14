@@ -1,9 +1,9 @@
 //! 🗑️ `delete-selection` — removes every frame in the live `"elements"` domain selection.
 
-use crate::editor::layout::LAYOUT_INTERACTION_ELEMENTS;
-use crate::mutations::delete_frame::DeleteFrame;
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use crate::LAYOUT_INTERACTION_ELEMENTS;
+use semio_s_artifact_layout_layout_mutations_frames::delete_frame::DeleteFrame;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -32,7 +32,7 @@ pub fn apply_frame_ids(doc: &ArtifactView<'_, LayoutSnapshot>, selected: &[Strin
         .filter_map(|frame_id| {
             let page = doc.snapshot.pages.iter().find(|page| page.frames.iter().any(|frame| frame.id() == frame_id))?;
             let frame = page.frames.iter().find(|frame| frame.id() == frame_id)?;
-            if crate::frame_edits_blocked(doc.snapshot, page, frame) {
+            if semio_s_artifact_layout_layout_model::frame_edits_blocked(doc.snapshot, page, frame) {
                 return None;
             }
             Some(LayoutMutation::DeleteFrame(DeleteFrame { page_id: page.id.clone(), frame_id: frame_id.clone() }))

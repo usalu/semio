@@ -1,0 +1,13 @@
+{
+ "lib": "semio_s_artifact_puzzle_3d_mutations",
+ "lib_root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+ "parent": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+ "parent_module": "",
+ "rewrites": [],
+ "targets": [
+  {"name": "store", "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🦀️.rs", "doc": "🏪️ Puzzle3d document-store laws — command envelopes, granular replay and the selection leaves' time travel, each over a real store built by the host authority.",
+   "mounts": [{"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️envelope/🦀️.rs", "module": "envelope", "new": true},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️replay/🦀️.rs", "module": "replay", "new": true},
+              {"file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️selection-time-travel/🦀️.rs", "module": "selection_time_travel"}]}
+ ]
+}

@@ -3,8 +3,9 @@
 //! when there are no pixel runs to paint.
 
 use super::EditPaintLayer;
-use crate::diff::diff_paint_stroke;
-use crate::{LowpolyDiff, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_paint_stroke;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &EditPaintLayer, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

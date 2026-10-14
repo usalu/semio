@@ -1,18 +1,18 @@
 //! ✏️ Layout play app command — `patch-document`.
 
-use crate::mutations::change_data_fields::ChangeDataFields;
-use crate::mutations::change_print_target::ChangePrintTarget;
-use crate::mutations::rename_layout::RenameLayout;
-use crate::mutations::update_grid::UpdateGrid;
-use crate::mutations::create_character_style::CreateCharacterStyle;
-use crate::mutations::delete_character_style::DeleteCharacterStyle;
-use crate::mutations::update_character_style::UpdateCharacterStyle;
-use crate::mutations::update_paragraph_style::UpdateParagraphStyle;
-use crate::mutations::update_parent_page::UpdateParentPage;
-use crate::mutations::update_spread::UpdateSpread;
-use crate::standards::v1::subsets::any::schema::text_to_rgba;
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations_content::change_data_fields::ChangeDataFields;
+use semio_s_artifact_layout_layout_mutations_content::change_print_target::ChangePrintTarget;
+use semio_s_artifact_layout_layout_mutations_content::rename_layout::RenameLayout;
+use semio_s_artifact_layout_layout_mutations_frames::update_grid::UpdateGrid;
+use semio_s_artifact_layout_layout_mutations_content::create_character_style::CreateCharacterStyle;
+use semio_s_artifact_layout_layout_mutations_content::delete_character_style::DeleteCharacterStyle;
+use semio_s_artifact_layout_layout_mutations_content::update_character_style::UpdateCharacterStyle;
+use semio_s_artifact_layout_layout_mutations_content::update_paragraph_style::UpdateParagraphStyle;
+use semio_s_artifact_layout_layout_mutations_content::update_parent_page::UpdateParentPage;
+use semio_s_artifact_layout_layout_mutations_content::update_spread::UpdateSpread;
+use semio_s_artifact_layout_layout_model::text_to_rgba;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -115,7 +115,7 @@ pub fn handle(payload: &PatchDocument, doc: &ArtifactView<'_, LayoutSnapshot>, _
     let mutation = match payload.field.as_str() {
         "name" => LayoutMutation::RenameLayout(RenameLayout { new_name: payload.value.clone() }),
         "printTarget" => LayoutMutation::ChangePrintTarget(ChangePrintTarget { new_print_target: present(&payload.value) }),
-        "dataFields"=>{let new_fields=if payload.value.is_empty(){None}else{Some(semio_framework_pack_json::from_json_str::<crate::FormDictionary>(&payload.value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.dictionary.invalid",error.into_message()))?)};LayoutMutation::ChangeDataFields(ChangeDataFields{new_fields})},
+        "dataFields"=>{let new_fields=if payload.value.is_empty(){None}else{Some(semio_framework_pack_json::from_json_str::<semio_s_artifact_forms_forms::schema::dictionary::FormDictionary>(&payload.value,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.dictionary.invalid",error.into_message()))?)};LayoutMutation::ChangeDataFields(ChangeDataFields{new_fields})},
         "baselineGrid" => match payload.value.parse::<f64>() {
             Ok(baseline_grid) => LayoutMutation::UpdateGrid(UpdateGrid { baseline_grid, baseline_offset: grid.baseline_offset, snap_to_baseline: grid.snap_to_baseline }),
             Err(_) => return Ok(Emit::default()),

@@ -2,8 +2,8 @@
 //! an already-present key is an OVERWRITE, not an insert: undoing it means re-adding the PRIOR
 //! asset, not removing the key. Only a genuinely new key inverts to `remove-layer-asset`.
 
-use crate::mutations::{remove_layer_asset, RasterMutation};
-use crate::RasterSnapshot;
+use crate::remove_layer_asset;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
 //#region 🔖️Inverse
 /// 🩹️ `base.assets` now stores a handle, not bytes — the real prior asset content is recovered
@@ -12,13 +12,13 @@ use crate::RasterSnapshot;
 /// is in-process only) is distinguished from a genuinely-new key by checking handle presence FIRST —
 /// a present-handle-but-cold-cache fails soft to a no-op inverse (never the destructive
 /// `RemoveLayerAsset` a naive "content missing ⇒ treat as new" read would wrongly emit).
-pub fn inverse(payload: &super::AddLayerAsset, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::add_layer_asset::mutation::AddLayerAsset> + From<crate::remove_layer_asset::mutation::RemoveLayerAsset>>(payload: &crate::add_layer_asset::mutation::AddLayerAsset, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     if base.assets.get(&payload.asset_id).is_none() {
-        return vec![RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: payload.asset_id.clone() })];
+        return vec![Op::from(remove_layer_asset::RemoveLayerAsset { asset_id: payload.asset_id.clone() })];
     }
-    match crate::raster_image(&base.assets, &payload.asset_id) {
-        Some(prior) => vec![RasterMutation::AddLayerAsset(super::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: prior })],
+    match semio_s_artifact_raster_raster_model::raster_image(&base.assets, &payload.asset_id) {
+        Some(prior) => vec![Op::from(crate::add_layer_asset::mutation::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: prior })],
         None => Vec::new(),
     }
 

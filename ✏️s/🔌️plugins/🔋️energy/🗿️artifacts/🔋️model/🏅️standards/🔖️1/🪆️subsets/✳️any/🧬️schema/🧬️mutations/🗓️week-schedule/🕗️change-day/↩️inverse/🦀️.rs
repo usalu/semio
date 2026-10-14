@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeWeeklyScheduleDay` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeWeeklyScheduleDay, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ChangeWeeklyScheduleDay>,
+{
     Ok((|| {
     if payload.day_index > 6 || !base.model.schedules.daily.iter().any(|row| row.id == payload.new_daily_schedule_id) {
         return Vec::new();

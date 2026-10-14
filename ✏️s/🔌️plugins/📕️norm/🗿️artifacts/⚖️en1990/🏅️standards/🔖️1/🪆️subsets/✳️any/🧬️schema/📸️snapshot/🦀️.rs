@@ -1,7 +1,15 @@
 //! 🧬️ En1990 snapshot — complete basis-of-design subject (project → actions → members).
 
-use crate::document::AnnexChoice;
-use crate::{AccidentalAction, BridgeSls, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -63,9 +71,6 @@ pub struct En1990Snapshot {
     pub effects: Vec<MemberEffect>,
 }
 
-
-
-
 impl Default for En1990Snapshot {
     fn default() -> Self {
         Self {
@@ -121,17 +126,153 @@ impl Default for En1990Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+/// ⚓️ Permanent action entry (G_k,sup / G_k,inf / prestress) — forces in N.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PermanentAction {
+    pub id: String,
+    pub kind: String,
+    pub gk: f64,
+}
 
+/// 🏋️ Variable action — category selects ψ (site altitude is on the snapshot).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct VariableAction {
+    pub id: String,
+    pub category: String,
+    pub qk: f64,
+}
 
+/// 💥 Accidental design action A_d [N] — EN 1990 §1.5.3.5 / §6.4.3.3 (A_d is already a design value).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct AccidentalAction {
+    pub id: String,
+    pub ad: f64,
+}
 
+/// 🏛 Seismic importance class — EN 1998-1 Table 4.3 / DIN EN 1998-1/NA Table NA.5 (γ_I).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum ImportanceClass {
+    #[dsl(key = "i")]
+    I,
+    #[dsl(key = "ii")]
+    II,
+    #[dsl(key = "iii")]
+    III,
+    #[dsl(key = "iv")]
+    IV,
+}
 
+impl ImportanceClass {
+    /// 🏛 Importance factor γ_I per EN 1998-1 Table 4.3 (DE NA Table NA.5 identical).
+    pub fn gamma_i(self) -> f64 {
+        match self {
+            Self::I => 0.8,
+            Self::II => 1.0,
+            Self::III => 1.2,
+            Self::IV => 1.4,
+        }
+    }
+}
 
+/// 🌋️ Characteristic seismic action A_Ek [N] with importance class; A_Ed = γ_I · A_Ek (EN 1990 §6.4.3.4).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SeismicAction {
+    pub id: String,
+    pub a_ek: f64,
+    pub importance_class: ImportanceClass,
+}
 
+impl SeismicAction {
+    /// 🌕️ Design seismic action A_Ed = γ_I · A_Ek (EN 1990 §6.4.3.4).
+    pub fn a_ed(&self) -> f64 {
+        self.importance_class.gamma_i() * self.a_ek
+    }
+}
 
+/// 🏗️ Member / verification point with design resistances and SLS criteria (SI: N, m, Hz).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Member {
+    pub id: String,
+    pub label_en: String,
+    pub label_de: String,
+    pub rd_str: f64,
+    pub rd_geo: f64,
+    pub rd_equ_stab: f64,
+    pub rd_equ_destab: f64,
+    pub rd_fat: f64,
+    pub span: f64,
+    pub deflection_w: f64,
+    pub deflection_limit_ratio: f64,
+    pub vibration_frequency: f64,
+    pub vibration_frequency_min: f64,
+}
 
+/// 🌉 Annex A2.4 SLS criteria for a bridge member (only used when structureKind is a bridge).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct BridgeSls {
+    pub id: String,
+    pub member_id: String,
+    pub deck_acceleration: f64,
+    pub deck_acceleration_limit: f64,
+    pub deck_twist: f64,
+    pub deck_twist_limit: f64,
+    pub bridge_deflection: f64,
+    pub bridge_deflection_limit: f64,
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🔗 Influence coefficient mapping a catalogue action magnitude onto a member effect (dimensionless).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct MemberEffect {
+    pub member_id: String,
+    pub action_id: String,
+    pub influence: f64,
+}
 
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1990", "EN 1990", EN1990_DOCUMENT_SCHEMA)
+}
+
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1990_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1990", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+pub const EN1990_DOCUMENT_SCHEMA: &str = "semio.norm.en1990/v1";

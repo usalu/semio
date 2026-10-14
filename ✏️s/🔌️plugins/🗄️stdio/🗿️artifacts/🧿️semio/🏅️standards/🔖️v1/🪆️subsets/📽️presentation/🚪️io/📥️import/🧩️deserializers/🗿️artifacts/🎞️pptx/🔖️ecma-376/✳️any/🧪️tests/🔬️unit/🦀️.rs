@@ -1,6 +1,7 @@
 use super::*;
-use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxPresentation, PptxSlide};
-use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

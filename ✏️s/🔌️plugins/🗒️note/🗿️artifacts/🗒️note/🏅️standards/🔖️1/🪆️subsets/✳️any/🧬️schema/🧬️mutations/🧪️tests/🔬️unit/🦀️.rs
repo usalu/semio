@@ -353,7 +353,7 @@ async fn delete_asset_missing_target_is_error() {
 /// fresh fold of the edited log (Error/Fatal leaves fold as no-ops), and a clean report overwrites to exactly that state.
 async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: usize, edited: &NoteMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     for mutation in log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a block edit applies");
     }

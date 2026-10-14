@@ -41,7 +41,3 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetContentType {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

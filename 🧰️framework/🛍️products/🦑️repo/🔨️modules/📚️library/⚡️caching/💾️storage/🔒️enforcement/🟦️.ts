@@ -5,7 +5,7 @@ import policy from "../../🔣️policy.json" with {type:"json"};
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {repoCacheDirectory} from "../../🟦️.ts";
 
-/** 🗜️ Resolves the single declared backing envelope before provisioning or compiler writes. */
+/** 🗜️ Resolves the backing envelope and lease directory that fixes the sole queue catalog. */
 export interface RepositoryStrictStorageV1 {readonly version:1;readonly directory:string;readonly leaseDirectory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumWorkspaceBytes:number;readonly maximumArtifactBytes:number;readonly sourceBoundary:Readonly<{version:1;maxSourceBytes:number;maxSourceFiles:number;maxActiveLines:number}>}
 /** 📏️ Admits the authored fixed backing, preserving headroom independently from cache eviction. */
 export function repositoryStrictStorageV1(workspace:string):RepositoryStrictStorageV1{

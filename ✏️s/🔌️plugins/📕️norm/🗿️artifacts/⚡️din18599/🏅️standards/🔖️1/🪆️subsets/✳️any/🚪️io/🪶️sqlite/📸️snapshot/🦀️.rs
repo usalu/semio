@@ -1,7 +1,7 @@
 //! ⚡️ Complete handwritten building, system, monthly climate and derived climate-table identity entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::Din18599Snapshot;
-use crate::{Adjacency,Attachment,AutomationClass,BuildingCategory,CalculationMethod,CoolingPlant,CoolingSystem,DhwSystem,Din18599ClimateChild,ElementKind,EnvelopeElement,HeatingSystem,LightingSystem,MonthlyClimate,Renewables,ThermalZone,UsageProfile,UseClass,VentilationSystem};
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingPlant, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UsageProfile, UseClass, VentilationSystem};
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -82,8 +82,5 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Din18599Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

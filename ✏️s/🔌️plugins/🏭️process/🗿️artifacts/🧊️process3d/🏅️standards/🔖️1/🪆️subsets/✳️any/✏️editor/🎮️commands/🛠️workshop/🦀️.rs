@@ -1,14 +1,14 @@
 //! 🛠️ Process 3d play app commands — workshop machine lifecycle (add / remove / update).
 
-use crate::editor::process3d::catalog_machine;
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::change_machine_icon::ChangeMachineIcon;
-use crate::standards::v1::subsets::any::schema::mutations::create_machine::CreateMachine;
-use crate::standards::v1::subsets::any::schema::mutations::delete_machine::DeleteMachine;
-use crate::standards::v1::subsets::any::schema::mutations::rename_machine::RenameMachine;
-use crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-use crate::{Process3dSnapshot, WorkshopMachine};
+use semio_s_artifact_process_process3d_kit::catalog_machine;
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation};
+use semio_s_artifact_process_process3d_mut_machines::change_machine_icon::ChangeMachineIcon;
+use semio_s_artifact_process_process3d_mut_machines::create_machine::CreateMachine;
+use semio_s_artifact_process_process3d_mut_machines::delete_machine::DeleteMachine;
+use semio_s_artifact_process_process3d_mut_machines::rename_machine::RenameMachine;
+use semio_s_artifact_process_process3d_mut_machines::replace_machine_capabilities::ReplaceMachineCapabilities;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -41,7 +41,7 @@ pub mod add_workshop_machine {
         payload: &AddWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         match catalog_machine(&cfg.snapshot.contributions_json, &payload.catalog_id, &payload.machine_id) {
@@ -69,7 +69,7 @@ pub mod remove_workshop_machine {
         payload: &RemoveWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         match remove_workshop_machine_operation(snapshot, &payload.id) {
@@ -99,7 +99,7 @@ pub mod update_workshop_machine {
         payload: &UpdateWorkshopMachine,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let Some(existing) = doc.snapshot.workshop.machines.iter().find(|existing| existing.id == payload.machine.id) else {
             return Ok(Emit::default());

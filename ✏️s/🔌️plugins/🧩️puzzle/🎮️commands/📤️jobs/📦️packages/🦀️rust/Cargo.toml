@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-puzzle-jobs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The job-side lifecycle every puzzle job shares: a bounded outbox that lends payload outcomes, a staged"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-plugin = { workspace = true, optional = true }
+
+[features]
+testing = ["dep:semio-framework-plugin"]
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

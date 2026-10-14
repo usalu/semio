@@ -4,23 +4,21 @@
 //! tool run ledger owns and steps (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS `📋️tool-run-contract.md`
 //! §2.7, §3.7).
 
-use crate::editor::puzzle3d::snapshot::VORTEX_MARKER_MESH_KIND;
-use crate::editor::puzzle3d::precompute::brush::{
-    brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
-    BrushFillVortexTarget, BrushSceneView, TargetVortexWorld,
-};
-use crate::editor::puzzle3d::precompute::geometry::{
-    pose_isometry, precompute_work, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
-    CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
-    Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
-};
-use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::snapshot::puzzle3d_next_object_label, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject};
-use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
-use crate::standards::v1::subsets::any::schema::{
-    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
-    KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
-};
-use crate::puzzle_job::JobTurn;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_editor_snapshot::VORTEX_MARKER_MESH_KIND;
+use semio_s_artifact_puzzle_3d_precompute_brush::{brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView, BrushFillVortexTarget, BrushSceneView, TargetVortexWorld};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{pose_isometry, precompute_work, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec, Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_next_object_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject};
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry, KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps};
+use semio_s_plugin_puzzle_jobs::JobTurn;
 use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, StepContext};
 use semio_framework_tool_run::{
     ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTickWriter, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
@@ -31,7 +29,7 @@ use std::sync::Arc;
 
 /// 🛑️ Why a fill plan stopped below its requested count — the only reasons a plan may stall with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillStall {
+pub enum FillStall {
     /// 🕳️ The round enumerated no open vortex at all — every vortex is blocked or zero-weighted.
     NoOpenVortex,
     /// 🧩️ Open vortices existed, but no catalog kind is compatible with any of them.
@@ -43,10 +41,10 @@ pub(crate) enum FillStall {
 }
 
 impl FillStall {
-    pub(crate) const ALL: [Self; 4] = [Self::NoOpenVortex, Self::NoCompatibleKind, Self::NoFreePlacement, Self::ArtifactCapacity];
+    pub const ALL: [Self; 4] = [Self::NoOpenVortex, Self::NoCompatibleKind, Self::NoFreePlacement, Self::ArtifactCapacity];
 
     /// 🏷️ The run reason the stall's `warning` step names.
-    pub(crate) const fn reason(self) -> FillRunReason {
+    pub const fn reason(self) -> FillRunReason {
         match self {
             Self::NoOpenVortex => FillRunReason::NoOpenVortex,
             Self::NoCompatibleKind => FillRunReason::NoCompatibleKind,
@@ -59,7 +57,7 @@ impl FillStall {
 /// 🏁️ How a fill plan ended: it reached its requested count, or it stalled with a declared reason. A plan cannot complete
 /// without one, because [`FillJobStage::Complete`] carries it — there is no silent end to construct.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillPlanEnd {
+pub enum FillPlanEnd {
     Reached,
     Stalled(FillStall),
 }
@@ -70,7 +68,7 @@ struct StaleSpatialIndex;
 /// 🧭️ What one planner transition needs from its caller: the collision budget seam plus identity,
 /// stage and fault payloads. The job context forwards everything; the fill run job
 /// hands the planner a transition context whose fuel is the run's own candidate budget instead.
-pub(crate) trait FillStepContext: CollisionStepContext {
+pub trait FillStepContext: CollisionStepContext {
     fn operation(&self) -> OperationId;
     fn generation(&self) -> Generation;
     fn set_stage(&mut self, label: &'static str);
@@ -92,7 +90,7 @@ impl FillStepContext for StepContext<'_> {
 
 /// 🛰️ One observation the planner reports to a fill run job, in the order it happened.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum FillRunEvent {
+pub enum FillRunEvent {
     Constructed { mesh_url: String, origin: [f64; 3], orientation: [f64; 4], scale: f32 },
     Refused(FillRunReason),
     /// 🎯️ A vortex whose every compatible candidate was refused: it is marked and never picked again.
@@ -110,10 +108,10 @@ fn fill_run_scale(scale: &Option<semio_framework_value::DslValue>) -> f32 {
 /// 🧱️ One already-placed object's collision footprint, kept alongside the plan so each new fill step
 /// only has to test the candidate against bodies it can actually hit.
 #[derive(Clone, semio_framework_value::RetireOwned)]
-pub(crate) struct PlacedCollisionEntry {
-    pub(crate) object_id: String,
-    pub(crate) mesh_url: String,
-    pub(crate) world: Pose3d,
+pub struct PlacedCollisionEntry {
+    pub object_id: String,
+    pub mesh_url: String,
+    pub world: Pose3d,
 }
 
 fn fenwick_add(tree: &mut [f64], index: usize, delta: f64) {
@@ -199,7 +197,7 @@ fn weighted_pick(weights: &mut [f64], tree: &mut [f64], remaining: usize, rng_st
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillJobStage {
+pub enum FillJobStage {
     RetractTail,
     PrepareScene,
     PrepareCatalogs,
@@ -246,26 +244,26 @@ enum AcceptPhase {
     Commit,
 }
 
-pub(crate) struct FillPreparationRoots {
-    scene: Arc<SceneConfig>,
-    meshes: Arc<HashMap<String, CollisionBody>>,
+pub struct FillPreparationRoots {
+    pub scene: Arc<SceneConfig>,
+    pub meshes: Arc<HashMap<String, CollisionBody>>,
 }
 
 impl FillPreparationRoots {
-    pub(crate) fn new(scene: Arc<SceneConfig>, meshes: Arc<HashMap<String, CollisionBody>>) -> Self {
+    pub fn new(scene: Arc<SceneConfig>, meshes: Arc<HashMap<String, CollisionBody>>) -> Self {
         Self { scene, meshes }
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedSceneOwner {
-    pub(crate) objects: FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>,
-    pub(crate) attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>,
-    pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>,
+pub struct FixedSceneOwner {
+    pub objects: FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>,
+    pub attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>,
+    pub target_volumes: FixedOwnerVec<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>,
 }
 
 impl FixedSceneOwner {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { objects: FixedOwnerVec::new(), attractions: FixedOwnerVec::new(), target_volumes: FixedOwnerVec::new() }
     }
 
@@ -273,13 +271,13 @@ impl FixedSceneOwner {
 
 #[derive(Debug)]
 struct FixedCatalogOwner {
-    objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>,
-    vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>,
-    cables: FixedOwnerVec<CableKindCatalog, DOCUMENT_KIND_SLOTS>,
+    pub objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>,
+    pub vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>,
+    pub cables: FixedOwnerVec<CableKindCatalog, DOCUMENT_KIND_SLOTS>,
 }
 
 impl FixedCatalogOwner {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { objects: FixedOwnerVec::new(), vortices: FixedOwnerVec::new(), cables: FixedOwnerVec::new() }
     }
 }
@@ -299,7 +297,7 @@ impl BrushCatalogView for FixedCatalogOwner {
 }
 
 struct FillSceneView<'a> {
-    base: &'a FixedSceneOwner,
+    pub base: &'a FixedSceneOwner,
     appended: &'a [EngineSceneObject],
 }
 
@@ -364,7 +362,7 @@ impl PreparationCapacityRefusal {
 /// `DOCUMENT_ATTRACTION_SLOTS` (the scene plus the room a plan can still claim), catalogs, compatibility
 /// rows, mesh urls and kind weights at `DOCUMENT_KIND_SLOTS`. The refusal carries that capacity so
 /// the published diagnostic names the branch and the limit it exceeded.
-fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<PreparationCapacityRefusal> {
+pub fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<PreparationCapacityRefusal> {
     let catalogs = roots.scene.kind_catalogs.as_ref();
     let (branch, capacity) = [
         (PreparationCapacityBranch::EngineSceneObjects, roots.scene.scene_snapshot.objects.len(), DOCUMENT_OBJECT_SLOTS),
@@ -383,8 +381,8 @@ fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<Preparat
     Some(PreparationCapacityRefusal { branch, omitted_index: capacity, published: false })
 }
 
-pub(crate) struct FillBuilder {
-    pub(crate) base: FixedSceneOwner,
+pub struct FillBuilder {
+    pub base: FixedSceneOwner,
     preparation_roots: Option<FillPreparationRoots>,
     preparation_cursor: usize,
     preparation_inner_cursor: usize,
@@ -392,38 +390,38 @@ pub(crate) struct FillBuilder {
     /// 🎚️ Live withdrawal of ONE unapplied placement during a weight-only replan — the same
     /// resumable index mutation shape as `preparation_spatial`, so the discard never scans.
     tail_removal: Option<CollisionIndexRemoval>,
-    preparation_capacity_refusal: Option<PreparationCapacityRefusal>,
-    pub(crate) applied_count: usize,
-    pub(crate) sequence: Vec<BrushPlacePayload>,
-    pub(crate) appended_objects: Vec<EngineSceneObject>,
-    pub(crate) appended_attractions: Vec<AttractionProps>,
-    pub(crate) placed: Vec<PlacedCollisionEntry>,
-    placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
+    pub preparation_capacity_refusal: Option<PreparationCapacityRefusal>,
+    pub applied_count: usize,
+    pub sequence: Vec<BrushPlacePayload>,
+    pub appended_objects: Vec<EngineSceneObject>,
+    pub appended_attractions: Vec<AttractionProps>,
+    pub placed: Vec<PlacedCollisionEntry>,
+    pub placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
     /// 🗄️ Keeps the bookkeeping page width: no stage installs a per-target-vortex candidate list
     /// yet, so this owner exists for the census/retirement walk only and never reaches document
     /// scale. Wiring a real cache means widening it to `DOCUMENT_VORTEX_SLOTS` in the same move.
-    pub(crate) candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
-    pub(crate) rng_state: u32,
-    pub(crate) max_count: usize,
+    pub candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
+    pub rng_state: u32,
+    pub max_count: usize,
     /// 🪜️ Where a running tail discard stops: the applied prefix for a weight replan, the newly
     /// requested count for a lowered ask.
     tail_floor: usize,
     /// 🔎️ Whether the plan ever built a pose, which tells a bare document apart from one whose every
     /// candidate was refused.
     ever_constructed: bool,
-    pub(crate) operation: Operation,
-    pub(crate) stage: FillJobStage,
-    catalogs: FixedCatalogOwner,
-    weights: RetainedBrushKindWeights,
-    kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
+    pub operation: Operation,
+    pub stage: FillJobStage,
+    pub catalogs: FixedCatalogOwner,
+    pub weights: RetainedBrushKindWeights,
+    pub kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
     host_rules: BrushHostRules,
-    contact_tolerance: f64,
-    meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
+    pub contact_tolerance: f64,
+    pub meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
     spatial_index: CollisionSpatialIndex,
     /// 🌀️ The pool of free vortices, drawn from by `target_weights` (a vortex kind's distribution weight, zero once the
     /// vortex is consumed by a placement or marked) through the Fenwick tree `target_tree`.
-    targets: Vec<BrushFillVortexTarget>,
-    target_weights: Vec<f64>,
+    pub targets: Vec<BrushFillVortexTarget>,
+    pub target_weights: Vec<f64>,
     target_tree: Vec<f64>,
     targets_ready: bool,
     current_target_index: Option<usize>,
@@ -432,7 +430,7 @@ pub(crate) struct FillBuilder {
     target_attraction_cursor: usize,
     target_object_cursor: usize,
     target_vortex_cursor: usize,
-    current_target: Option<BrushFillVortexTarget>,
+    pub current_target: Option<BrushFillVortexTarget>,
     candidates: Vec<BrushCompatibleCandidate>,
     candidate_cursor: usize,
     candidate_prepare_phase: CandidatePreparePhase,
@@ -444,7 +442,7 @@ pub(crate) struct FillBuilder {
     candidate_weights: Vec<f64>,
     candidate_tree: Vec<f64>,
     candidate_remaining: usize,
-    current_preview: Option<BrushPreviewState>,
+    pub current_preview: Option<BrushPreviewState>,
     broad_phase_query: Option<CollisionQueryCursor>,
     broad_phase_cursor: usize,
     broad_phase_bounds: Option<CollisionAabb>,
@@ -456,10 +454,10 @@ pub(crate) struct FillBuilder {
     pending_object: Option<EngineSceneObject>,
     pending_attraction: Option<AttractionProps>,
     pending_spatial: Option<CollisionIndexMutation>,
-    last_rejection: Option<String>,
+    pub last_rejection: Option<String>,
     fixed_rejection: Option<FillRetiredOwner>,
-    collection_over_capacity: bool,
-    pub(crate) transition_count: u64,
+    pub collection_over_capacity: bool,
+    pub transition_count: u64,
     rejected_count: u64,
     close_field: u8,
     close_current: Option<FillRetiredOwner>,
@@ -470,15 +468,15 @@ pub(crate) struct FillBuilder {
     run_candidate_live: bool,
 }
 
-pub(crate) const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
+pub const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
 
 struct RetainedBrushKindWeights {
-    object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
-    vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
+    pub object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
+    pub vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
 }
 
 impl RetainedBrushKindWeights {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { object_weights: FixedOwnerMap::new(), vortex_weights: FixedOwnerMap::new() }
     }
 
@@ -503,7 +501,7 @@ fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, we
 }
 
 fn retained_joint_weight(weights: &RetainedBrushKindWeights, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
-    let sep = crate::editor::puzzle3d::snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let sep = semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
     let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
     if let Some(weight) = weights.vortex_weights.get(&composite) {
         return *weight;
@@ -957,8 +955,8 @@ fn scene_terminal_owners_empty(value: &FixedSceneOwner) -> bool {
 }
 
 impl FillBuilder {
-    #[cfg(test)]
-    fn preparation_refusal_owner_for_test(&self) -> Option<(&'static str, usize, String, Option<f64>)> {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn preparation_refusal_owner_for_test(&self) -> Option<(&'static str, usize, String, Option<f64>)> {
         let refusal = self.preparation_capacity_refusal?;
         let roots = self.preparation_roots.as_ref()?;
         let (owner, weight) = match refusal.branch {
@@ -986,7 +984,7 @@ impl FillBuilder {
     /// has to be able to say which owner nothing drains, instead of only that the builder is "not empty":
     /// the close walk's terminal arm returns `false` forever in that case, so the whole teardown spins
     /// without progress (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
-    pub(crate) fn terminal_owner_debt(&self) -> Option<&'static str> {
+    pub fn terminal_owner_debt(&self) -> Option<&'static str> {
         [
             ("scene_terminal_owners_empty base", scene_terminal_owners_empty(&self.base)),
             ("sequence.is_empty", self.sequence.is_empty()),
@@ -1051,13 +1049,13 @@ impl FillBuilder {
         .find_map(|(owner, empty)| (!empty).then_some(owner))
     }
 
-    fn terminal_owners_empty(&self) -> bool {
+    pub fn terminal_owners_empty(&self) -> bool {
         self.terminal_owner_debt().is_none()
     }
 
     /// 🎯️ Seeds a planner that targets exactly what was requested — there is no hidden ceiling it
     /// races toward in the background, so every placement the user sees was asked for.
-    pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation, requested_count: usize) -> Self {
+    pub fn begin_preparation(roots: FillPreparationRoots, operation: Operation, requested_count: usize) -> Self {
         let seed = roots.scene.seed;
         let preparation_capacity_refusal = preparation_capacity_refusal(&roots);
         Self {
@@ -1288,7 +1286,7 @@ impl FillBuilder {
     }
 
     /// 🏁️ How the plan ended, `None` while it still runs.
-    pub(crate) fn end(&self) -> Option<FillPlanEnd> {
+    pub fn end(&self) -> Option<FillPlanEnd> {
         match self.stage {
             FillJobStage::Complete(end) => Some(end),
             _ => None,
@@ -1308,7 +1306,7 @@ impl FillBuilder {
     }
 
     /// 🎯️ What the user is asking for right now.
-    pub(crate) fn requested_count(&self) -> usize {
+    pub fn requested_count(&self) -> usize {
         self.max_count
     }
 
@@ -1317,7 +1315,7 @@ impl FillBuilder {
     /// its exact prefix. Lowering hands the surplus tail back through the same one-placement-per-turn
     /// [`FillJobStage::RetractTail`] walk that a weight replan uses, stopping at whatever is already
     /// applied to the document.
-    pub(crate) fn set_requested_count(&mut self, requested: usize) {
+    pub fn set_requested_count(&mut self, requested: usize) {
         if requested == self.max_count {
             return;
         }
@@ -1379,7 +1377,7 @@ impl FillBuilder {
         Ok(())
     }
 
-    pub(crate) fn prepare_one(&mut self) -> Result<(), StaleSpatialIndex> {
+    pub fn prepare_one(&mut self) -> Result<(), StaleSpatialIndex> {
         if self.collection_over_capacity {
             self.last_rejection = Some("preparation-capacity".into());
             self.stall(FillStall::ArtifactCapacity);
@@ -2075,7 +2073,7 @@ impl FillBuilder {
 
     /// 🛑️ Stops the planner below its requested count with a reason the HUD can name, instead of
     /// leaving the user with a silently finished plan.
-    fn stall(&mut self, stall: FillStall) {
+    pub fn stall(&mut self, stall: FillStall) {
         if std::mem::take(&mut self.run_candidate_live) {
             self.run_event(FillRunEvent::Refused(stall.reason()));
         }
@@ -2189,12 +2187,12 @@ impl FillBuilder {
     }
 
     /// 🛰️ Starts recording observations for a fill run job.
-    pub(crate) fn observe_run(&mut self) {
+    pub fn observe_run(&mut self) {
         self.run_events.get_or_insert_with(|| Vec::with_capacity(4));
     }
 
     /// 📤️ Moves the recorded observations into `into` (cleared first), keeping both buffers' capacity.
-    pub(crate) fn swap_run_events(&mut self, into: &mut Vec<FillRunEvent>) {
+    pub fn swap_run_events(&mut self, into: &mut Vec<FillRunEvent>) {
         into.clear();
         if let Some(events) = self.run_events.as_mut() {
             std::mem::swap(events, into);
@@ -2205,7 +2203,7 @@ impl FillBuilder {
     /// preparation preflight's refusal publishes one `danger` step through the run's tick writer and then
     /// faults the run (nothing was changed). Without a writer the refusal faults at once. A page that fills
     /// mid-plan is [`FillBuilder::stall_on_capacity`] instead.
-    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, _context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<JobTurn> {
+    pub fn capacity_refusal<C: FillStepContext>(&mut self, _context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<JobTurn> {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if let Some(writer) = writer.filter(|_| !refusal.published) {
                 refusal.published = true;
@@ -2219,7 +2217,7 @@ impl FillBuilder {
 
     /// 📄️ A fixed page that refused an owner mid-plan stalls the plan as `artifact-capacity` over what was already
     /// placed; answers whether the plan is over capacity.
-    pub(crate) fn stall_on_capacity(&mut self) -> bool {
+    pub fn stall_on_capacity(&mut self) -> bool {
         if self.collection_over_capacity || self.fixed_rejection.is_some() {
             if !matches!(self.stage, FillJobStage::Complete(_)) {
                 self.stall(FillStall::ArtifactCapacity);
@@ -2233,7 +2231,7 @@ impl FillBuilder {
         JobTurn::Complete
     }
 
-    pub(crate) fn stage_label(&self) -> &'static str {
+    pub fn stage_label(&self) -> &'static str {
         match self.stage {
             FillJobStage::RetractTail => "retract-tail",
             FillJobStage::PrepareScene => "prepare-scene_snapshot",
@@ -2258,7 +2256,7 @@ impl FillBuilder {
 
 impl FillBuilder {
     /// 🪜️ One bounded planner transition under any [`FillStepContext`].
-    pub(crate) fn advance<C: FillStepContext>(&mut self, context: &mut C) -> JobTurn {
+    pub fn advance<C: FillStepContext>(&mut self, context: &mut C) -> JobTurn {
         if context.is_cancelled() {
             return JobTurn::Cancelled;
         }
@@ -2348,12 +2346,12 @@ impl FillBuilder {
 }
 
 impl FillBuilder {
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
     }
 
     /// ♻️ Retires one planner owner per granted turn; a turn needs one owner page of release credit.
-    pub(crate) fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    pub fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         self.closing = true;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < FILL_BUILDER_OWNER_PAGE_BYTES {
             return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
@@ -2366,14 +2364,14 @@ impl FillBuilder {
     }
 
     /// 📏️ Quotes the next close turn: one owner page of release credit until the planner holds nothing.
-    pub(crate) fn close_demands(&self) -> semio_framework_value::RetirementDemand {
+    pub fn close_demands(&self) -> semio_framework_value::RetirementDemand {
         if self.terminal_is_empty() {
             return Default::default();
         }
         semio_framework_value::RetirementDemand { release_bytes: FILL_BUILDER_OWNER_PAGE_BYTES, depth: 1, ..Default::default() }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.close_current.is_none() && self.terminal_owners_empty()
     }
 }
@@ -2383,24 +2381,24 @@ impl FillBuilder {
 //#region ⏯️FillRunJob
 /// 🚰️ Estimated pending tick bytes past which a fill run job flushes: one tick must fit one
 /// `JOB_PAYLOAD_PAGE_BYTES` job payload page with a placement's ops to spare.
-pub(crate) const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
+pub const FILL_RUN_TICK_FLUSH_BYTES: usize = 8 * 1024;
 /// 🧬️ Provisional ops one accepted placement appends: `create_object` then `connect_vortices`.
-pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: u32 = 2;
+pub const FILL_RUN_OPS_PER_PLACEMENT: u32 = 2;
 /// 🎯️ Trace scale of a marked vortex over the vortex marker mesh, so an exhausted vortex stands out from the open ones.
-pub(crate) const FILL_RUN_MARKED_VORTEX_SCALE: f32 = 2.0;
+pub const FILL_RUN_MARKED_VORTEX_SCALE: f32 = 2.0;
 
 /// 🆔️ Stable provisional entity of a placed object: the first eight little-endian bytes of its id digest.
-pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
+pub fn fill_run_entity(object_id: &str) -> u64 {
     let digest = semio_framework_hash::hash(object_id.as_bytes());
     u64::from_le_bytes(digest.as_bytes()[..8].try_into().expect("eight digest bytes"))
 }
 
 /// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
-pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_snapshot: &Puzzle3dSceneSnapshot) -> Option<[Vec<u8>; 2]> {
-    use crate::standards::v1::subsets::any::io::binary::mutations::encode_op;
-    use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices,create_object};
+pub fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_snapshot: &Puzzle3dSceneSnapshot) -> Option<[Vec<u8>; 2]> {
+    use semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::encode_op;
+    use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object};
 
-    let mut document: crate::standards::v1::subsets::any::schema::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
+    let mut document: semio_s_artifact_puzzle_3d_model::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
     let kind_id = object.object_kind.as_deref().unwrap_or("object");
     if document.label.as_deref().map(str::is_empty).unwrap_or(true) {
         document.label = Some(puzzle3d_next_object_label(peers, catalog_snapshot, kind_id));
@@ -2414,8 +2412,8 @@ pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionPr
 /// per placement), keyed consecutively from `first_key` — a key range the run's trace key allocator handed out
 /// (`ToolRunJobRequest::trace_keys`), since the run's own candidate keys are not recoverable from ops — with
 /// subjects indexing `mesh_lane`; `None` when the list is not a whole sequence of fill placements.
-pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation], mesh_lane: &[String], first_key: u64) -> Option<Vec<FillRunPlacement>> {
-    use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+pub fn fill_run_placements(provisional: &[semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation], mesh_lane: &[String], first_key: u64) -> Option<Vec<FillRunPlacement>> {
+    use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
     provisional
         .chunks(FILL_RUN_OPS_PER_PLACEMENT as usize)
         .enumerate()
@@ -2432,12 +2430,12 @@ pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::
 
 /// 🧱️ One provisional placement of a fill run: its trace key, entity, object and attraction.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
-pub(crate) struct FillRunPlacement {
-    pub(crate) key: u64,
-    pub(crate) subject: ToolRunTraceSubject,
-    pub(crate) entity: u64,
-    pub(crate) object: EngineSceneObject,
-    pub(crate) attraction: AttractionProps,
+pub struct FillRunPlacement {
+    pub key: u64,
+    pub subject: ToolRunTraceSubject,
+    pub entity: u64,
+    pub object: EngineSceneObject,
+    pub attraction: AttractionProps,
 }
 
 impl FillRunStage {
@@ -2460,7 +2458,7 @@ impl FillRunStage {
 /// job by run identity and generation.
 struct FillRunTransitionContext<'a, 'b> {
     outer: &'a mut StepContext<'b>,
-    operation: Operation,
+    pub operation: Operation,
 }
 
 impl CollisionStepContext for FillRunTransitionContext<'_, '_> {
@@ -2496,16 +2494,16 @@ enum FillRunOwed {
 }
 
 /// 🧾️ Test-only record of one verdict the run reached, with what the oracle needs to recompute it.
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 #[derive(Clone, Debug)]
-pub(crate) struct FillRunVerdictRecord {
-    pub(crate) key: u64,
-    pub(crate) reason: FillRunReason,
-    pub(crate) mesh_url: String,
-    pub(crate) origin: [f64; 3],
-    pub(crate) orientation: [f64; 4],
-    pub(crate) host: Option<String>,
-    pub(crate) placements_before: usize,
+pub struct FillRunVerdictRecord {
+    pub key: u64,
+    pub reason: FillRunReason,
+    pub mesh_url: String,
+    pub origin: [f64; 3],
+    pub orientation: [f64; 4],
+    pub host: Option<String>,
+    pub placements_before: usize,
 }
 
 /// ⏯️ The puzzle 3d fill tool run job (`ToolRunDefinition.runJob`): drives [`FillBuilder`] and reports
@@ -2516,11 +2514,11 @@ pub(crate) struct FillRunVerdictRecord {
 /// call after the tick that led to them. [`FillRunJob::resume`] with a new requested count continues the
 /// same deterministic sequence (raise) or retracts the tail (lower); a job rebuilt after the framework
 /// closed its predecessor reaches that checkpoint first by a silent replay ([`FillRunJob::replaying`]).
-pub(crate) struct FillRunJob {
-    outbox: crate::puzzle_job::JobOutbox,
-    builder: FillBuilder,
+pub struct FillRunJob {
+    outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
+    pub builder: FillBuilder,
     writer: ToolRunTickWriter,
-    inputs: [u8; 32],
+    pub inputs: [u8; 32],
     replay: Option<FillRunReplay>,
     mesh_lane: Vec<String>,
     mesh_index: HashMap<String, u32>,
@@ -2531,20 +2529,20 @@ pub(crate) struct FillRunJob {
     /// constructed candidate retires it, so a collision is visible only while it is the current attempt and a placement
     /// stays visible as its document instance (the `provisional` style), never as a pile of past trace records.
     shown: Option<u64>,
-    next_key: u64,
-    placement_keys: Vec<(u64, ToolRunTraceSubject)>,
+    pub next_key: u64,
+    pub placement_keys: Vec<(u64, ToolRunTraceSubject)>,
     tested: u64,
     marked: u64,
-    collisions: u64,
+    pub collisions: u64,
     rejected: u64,
-    stage: FillRunStage,
+    pub stage: FillRunStage,
     settled: bool,
     capped: bool,
     owed: Option<FillRunOwed>,
     progress_sequence: u64,
-    #[cfg(test)]
-    pub(crate) verdicts: Vec<FillRunVerdictRecord>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
+    pub verdicts: Vec<FillRunVerdictRecord>,
+    #[cfg(any(test, feature = "testing"))]
     live_record: Option<FillRunVerdictRecord>,
 }
 
@@ -2553,14 +2551,14 @@ pub(crate) struct FillRunJob {
 #[derive(Clone, Copy, Debug)]
 struct FillRunReplay {
     target: FillRunCheckpoint,
-    requested: usize,
+    pub requested: usize,
     provisional: u32,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 /// 🚫️ A checkpoint that does not belong to this resident run.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillRunResumeError {
+pub enum FillRunResumeError {
     Malformed,
     Foreign,
 }
@@ -2569,7 +2567,7 @@ impl FillRunJob {
     /// 🚦️ The one production construction path of a fill run: begins the cooperative preparation and picks
     /// replay (a `checkpoint` with the same `inputs`), restart (a predecessor left `provisional` ops or was
     /// reconfigured) or a fresh run.
-    pub(crate) fn start(roots: FillPreparationRoots, operation: Operation, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], requested: usize, checkpoint: Option<FillRunCheckpoint>, provisional: u32) -> Self {
+    pub fn start(roots: FillPreparationRoots, operation: Operation, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], requested: usize, checkpoint: Option<FillRunCheckpoint>, provisional: u32) -> Self {
         match checkpoint.filter(|checkpoint| checkpoint.inputs == inputs) {
             Some(checkpoint) => Self::replaying(FillBuilder::begin_preparation(roots, operation, checkpoint.requested as usize), identity, mesh_lane, checkpoint, requested, provisional),
             None if provisional > 0 || identity.generation > 0 => Self::restarting(FillBuilder::begin_preparation(roots, operation, requested), identity, mesh_lane, inputs, provisional),
@@ -2579,13 +2577,13 @@ impl FillRunJob {
 
     /// 🎬️ Wraps a freshly begun planner; `mesh_lane` is the plugin mesh lane trace subjects index into
     /// (a url missing from it is appended and reported through [`FillRunJob::mesh_lane`]).
-    pub(crate) fn new(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32]) -> Self {
+    pub fn new(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32]) -> Self {
         Self::with_writer(builder, ToolRunTickWriter::new(identity), mesh_lane, inputs)
     }
 
     /// 🔁️ A fresh run that replaces a predecessor whose sequence it cannot reproduce (other inputs or no
     /// checkpoint): its first tick clears the trace and retracts all `provisional` ops the ledger holds.
-    pub(crate) fn restarting(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], provisional: u32) -> Self {
+    pub fn restarting(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, inputs: [u8; 32], provisional: u32) -> Self {
         let mut job = Self::with_writer(builder, ToolRunTickWriter::with_provisional_base(identity, provisional), mesh_lane, inputs);
         job.writer.clear_trace();
         job.writer.retract_to(0);
@@ -2595,7 +2593,7 @@ impl FillRunJob {
     /// ⏪️ A run rebuilt from `checkpoint` (same `inputs`): `builder` must be begun with the checkpoint's own
     /// requested count; it replays silently to the checkpoint, retracts any `provisional` op the ledger holds
     /// past it, and then resumes toward `requested`. A replay that overshoots the checkpoint restarts.
-    pub(crate) fn replaying(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, checkpoint: FillRunCheckpoint, requested: usize, provisional: u32) -> Self {
+    pub fn replaying(builder: FillBuilder, identity: ToolRunIdentity, mesh_lane: Vec<String>, checkpoint: FillRunCheckpoint, requested: usize, provisional: u32) -> Self {
         let mut job = Self::with_writer(builder, ToolRunTickWriter::new(identity), mesh_lane, checkpoint.inputs);
         job.replay = Some(FillRunReplay { target: checkpoint, requested, provisional });
         job
@@ -2627,41 +2625,41 @@ impl FillRunJob {
             capped: false,
             owed: None,
             progress_sequence: 0,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testing"))]
             verdicts: Vec::new(),
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testing"))]
             live_record: None,
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn builder(&self) -> &FillBuilder {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn builder(&self) -> &FillBuilder {
         &self.builder
     }
 
-    #[cfg(test)]
-    pub(crate) fn operation(&self) -> Operation {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn operation(&self) -> Operation {
         self.builder.operation
     }
 
-    #[cfg(test)]
-    pub(crate) fn mesh_lane(&self) -> &[String] {
+    #[cfg(any(test, feature = "testing"))]
+    pub fn mesh_lane(&self) -> &[String] {
         &self.mesh_lane
     }
 
     /// 📟️ `[tested, locked, collisions, rejected, marked]`, in [`FillRunCounter::ALL`] order.
-    pub(crate) fn counters(&self) -> [u64; 5] {
+    pub fn counters(&self) -> [u64; 5] {
         [self.tested, self.placement_keys.len() as u64, self.collisions, self.rejected, self.marked]
     }
 
     /// 📸️ Where this run stands right now.
-    pub(crate) fn checkpoint(&self) -> FillRunCheckpoint {
+    pub fn checkpoint(&self) -> FillRunCheckpoint {
         FillRunCheckpoint { requested: self.builder.requested_count() as u64, placements: self.placement_keys.len() as u64, provisional_ops: self.writer.provisional_len(), tested: self.tested, next_key: self.next_key, inputs: self.inputs }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     /// 🧱️ The provisional placements in op order, for finalize revalidation.
-    pub(crate) fn provisional_placements(&self) -> Vec<FillRunPlacement> {
+    pub fn provisional_placements(&self) -> Vec<FillRunPlacement> {
         self.placement_keys
             .iter()
             .zip(self.builder.appended_objects.iter().zip(&self.builder.appended_attractions))
@@ -2669,9 +2667,9 @@ impl FillRunJob {
             .collect()
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     /// ⏩️ Resumes this resident run from one of its own checkpoints with a new requested count.
-    pub(crate) fn resume(&mut self, checkpoint: &[u8], requested: usize) -> Result<(), FillRunResumeError> {
+    pub fn resume(&mut self, checkpoint: &[u8], requested: usize) -> Result<(), FillRunResumeError> {
         let checkpoint = FillRunCheckpoint::decode(checkpoint).ok_or(FillRunResumeError::Malformed)?;
         let current = self.checkpoint();
         if checkpoint.inputs != self.inputs || checkpoint.next_key > current.next_key || checkpoint.tested > current.tested || checkpoint.placements > self.builder.sequence.len() as u64 {
@@ -2682,14 +2680,14 @@ impl FillRunJob {
     }
 
     /// 🪢️ Every later tick carries `identity` (the framework rebound the run after a base change).
-    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
+    pub fn rebind(&mut self, identity: ToolRunIdentity) {
         self.writer.rebind(identity);
     }
 
     /// 🎯️ Retargets this resident run in place (framework `reconfigure: resume`): later ticks carry `identity` and
     /// the plan heads for `requested` — a raise continues the same deterministic sequence, a lower retracts its
     /// tail, and a completed run wakes up again; a run still replaying adopts `requested` on arrival.
-    pub(crate) fn retarget(&mut self, identity: ToolRunIdentity, requested: usize) {
+    pub fn retarget(&mut self, identity: ToolRunIdentity, requested: usize) {
         self.writer.rebind(identity);
         if let Some(replay) = self.replay.as_mut() {
             replay.requested = requested;
@@ -2704,7 +2702,7 @@ impl FillRunJob {
         }
     }
 
-    fn mesh(&mut self, url: &str) -> u32 {
+    pub fn mesh(&mut self, url: &str) -> u32 {
         if let Some(index) = self.mesh_index.get(url) {
             return *index;
         }
@@ -2731,14 +2729,14 @@ impl FillRunJob {
         }
     }
 
-    fn verdict(&mut self, context: &mut StepContext<'_>, reason: FillRunReason, verdict: ToolRunVerdict, code: u16) -> Option<(u64, ToolRunTraceSubject)> {
+    pub fn verdict(&mut self, context: &mut StepContext<'_>, reason: FillRunReason, verdict: ToolRunVerdict, code: u16) -> Option<(u64, ToolRunTraceSubject)> {
         let (key, subject) = self.live.take()?;
         self.writer.upsert(key, verdict, code, subject);
         self.shown = Some(key);
         if self.replay.is_none() {
             context.consume_fuel(1);
         }
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testing"))]
         if let Some(mut record) = self.live_record.take() {
             record.reason = reason;
             self.verdicts.push(record);
@@ -2773,7 +2771,7 @@ impl FillRunJob {
                     let subject = ToolRunTraceSubject::Instance3d { mesh: self.mesh(mesh_url), position: origin.map(|value| value as f32), rotation: orientation.map(|value| value as f32), scale: *scale };
                     self.writer.upsert(key, ToolRunVerdict::Testing, FillRunReason::Fits.code(), subject);
                     self.live = Some((key, subject));
-                    #[cfg(test)]
+                    #[cfg(any(test, feature = "testing"))]
                     {
                         self.live_record = Some(FillRunVerdictRecord { key, reason: FillRunReason::Fits, mesh_url: mesh_url.clone(), origin: *origin, orientation: *orientation, host: self.builder.current_target.as_ref().map(|target| target.object_id.clone()), placements_before: self.builder.sequence.len() });
                     }
@@ -2837,7 +2835,7 @@ impl FillRunJob {
                     if let Some((key, _)) = self.live.take() {
                         self.writer.retire(key);
                     }
-                    #[cfg(test)]
+                    #[cfg(any(test, feature = "testing"))]
                     {
                         self.live_record = None;
                     }
@@ -2946,7 +2944,7 @@ impl FillRunJob {
 }
 
 impl FillRunJob {
-    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+    pub fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() {
             return JobTurn::Cancelled;
         }
@@ -3002,12 +3000,12 @@ impl FillRunJob {
 impl InteractiveJob for FillRunJob {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
-            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
-            crate::puzzle_job::OutboxPhase::Idle => {}
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
         self.outbox.settle(turn, cx)
@@ -3081,25 +3079,25 @@ enum FillRevalidatePhase {
 /// ♻️ The owners one `FillRevalidateJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct FillRevalidateOwners {
-    scene: Arc<SceneConfig>,
-    meshes: Arc<HashMap<String, CollisionBody>>,
+    pub scene: Arc<SceneConfig>,
+    pub meshes: Arc<HashMap<String, CollisionBody>>,
     placements: Vec<FillRunPlacement>,
     head: Vec<PlacedCollisionEntry>,
     head_ids: std::collections::HashSet<String>,
     vortex_owners: HashMap<String, String>,
     collision: Option<CollisionPenetrationState>,
     conflicts: Vec<bool>,
-    ops: Vec<ToolRunTraceOp>,
-    steps: Vec<ToolRunStep>,
+    pub ops: Vec<ToolRunTraceOp>,
+    pub steps: Vec<ToolRunStep>,
 }
 
-pub(crate) struct FillRevalidateJob {
-    close_owners: crate::puzzle_job::WorkClosing<FillRevalidateOwners>,
-    outbox: crate::puzzle_job::JobOutbox,
-    operation: Operation,
-    identity: ToolRunIdentity,
-    scene: Arc<SceneConfig>,
-    meshes: Arc<HashMap<String, CollisionBody>>,
+pub struct FillRevalidateJob {
+    close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<FillRevalidateOwners>,
+    outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
+    pub operation: Operation,
+    pub identity: ToolRunIdentity,
+    pub scene: Arc<SceneConfig>,
+    pub meshes: Arc<HashMap<String, CollisionBody>>,
     placements: Vec<FillRunPlacement>,
     head: Vec<PlacedCollisionEntry>,
     head_ids: std::collections::HashSet<String>,
@@ -3110,19 +3108,19 @@ pub(crate) struct FillRevalidateJob {
     conflicts: Vec<bool>,
     cursor: usize,
     phase: FillRevalidatePhase,
-    ops: Vec<ToolRunTraceOp>,
+    pub ops: Vec<ToolRunTraceOp>,
     /// 👁️ The one placement under revalidation still on screen: the next placement's test retires it and the finish retires
     /// the last, so a finalize never leaves a verdict mesh over every committed object (the one-candidate rule of
     /// [`FillRunJob`]).
     shown: Option<u64>,
-    steps: Vec<ToolRunStep>,
-    sequence: u64,
+    pub steps: Vec<ToolRunStep>,
+    pub sequence: u64,
     page: u32,
     closed: bool,
 }
 
 impl FillRevalidateJob {
-    pub(crate) fn new(operation: Operation, identity: ToolRunIdentity, head: FillPreparationRoots, placements: Vec<FillRunPlacement>, first_sequence: u64) -> Self {
+    pub fn new(operation: Operation, identity: ToolRunIdentity, head: FillPreparationRoots, placements: Vec<FillRunPlacement>, first_sequence: u64) -> Self {
         Self {
             close_owners: Default::default(),
             outbox: Default::default(),
@@ -3150,13 +3148,13 @@ impl FillRevalidateJob {
     }
 
     /// 🪢️ Every later tick carries `identity`.
-    pub(crate) fn rebind(&mut self, identity: ToolRunIdentity) {
+    pub fn rebind(&mut self, identity: ToolRunIdentity) {
         self.identity = identity;
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testing"))]
     /// ⚖️ `true` per placement that conflicts with the head, in op order.
-    pub(crate) fn conflicts(&self) -> &[bool] {
+    pub fn conflicts(&self) -> &[bool] {
         &self.conflicts
     }
 
@@ -3298,7 +3296,7 @@ impl FillRevalidateJob {
 }
 
 impl FillRevalidateJob {
-    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+    pub fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() {
             return JobTurn::Cancelled;
         }
@@ -3353,12 +3351,12 @@ impl FillRevalidateJob {
 impl InteractiveJob for FillRevalidateJob {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
-            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
-            crate::puzzle_job::OutboxPhase::Idle => {}
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
         self.outbox.settle(turn, cx)
@@ -3388,23 +3386,23 @@ impl InteractiveJob for FillRevalidateJob {
 
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
         self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+        semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
     }
 
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -3415,7 +3413,4 @@ impl InteractiveJob for FillRevalidateJob {
 //#endregion ⏯️FillRunJob
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,5 +1,6 @@
 //! 📝️ Physical text diff representation.
 
+use protocol::OpText;
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 
@@ -9,10 +10,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type RasterDiffText = String;
 
 
+use crate::*;
 
-use crate::standards::v1::subsets::any::schema::diff::*;
-use crate::standards::v1::subsets::any::io::text::mutations::RasterImageDsl;
-use crate::{RasterLayerNode,RasterLayerPatch,RasterOwnedMap};
+use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_framework_dsl_record::{RecordValue,RecordSpec};
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterAssetDeltaDsl {key:String,#[dsl(block)] image:Option<RasterImageDsl>}
@@ -32,19 +32,19 @@ struct RasterLayersDeltaDsl {#[dsl(table)] removed:Vec<RasterLayerRemovalDsl>,#[
 struct RasterPixelRegionDsl {layer_id:String,target:String,x:u32,y:u32,width:u32,height:u32,samples:String}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterDiffDsl {schema:Option<String>,id:Option<String>,title:Option<Option<String>>,#[dsl(block)] layers:Option<RasterLayersDeltaDsl>,#[dsl(block)] assets:Option<RasterAssetsDeltaDsl>,#[dsl(table)] pixels:Vec<RasterPixelRegionDsl>}
-use crate::RasterSnapshot;
-use crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::io::text::snapshot::record::RasterNativeDocument;
 fn document_to_dsl(snapshot:RasterSnapshot)->RasterNativeDocument {
  let document=RasterNativeDocument::ordinary(&snapshot);
- crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+ semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
  document
 }
 fn layer_to_dsl(layer:&RasterLayerNode)->RasterNativeDocument {document_to_dsl(RasterSnapshot{schema:String::new(),id:String::new(),title:None,layers:vec![layer.clone()],assets:RasterOwnedMap::new()})}
 fn layer_from_dsl(document:RasterNativeDocument)->Result<RasterLayerNode,semio_framework_diagnostic::TextError> {
  let mut snapshot=document.ordinary_snapshot().map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))?;
- if snapshot.layers.len()!=1||!snapshot.assets.is_empty(){crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"a layer diff requires one literal layer",semio_framework_diagnostic::TextSpan::at(1,1)));}
+ if snapshot.layers.len()!=1||!snapshot.assets.is_empty(){semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"a layer diff requires one literal layer",semio_framework_diagnostic::TextSpan::at(1,1)));}
  let layer=snapshot.layers.pop().expect("validated one literal layer");
- crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+ semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
  Ok(layer)
 }
 fn samples_to_hex(samples:&[u8])->String {samples.iter().map(|byte|format!("{byte:02x}")).collect()}
@@ -63,9 +63,9 @@ fn admit_diff_record(wire:RasterDiffDsl)->Result<RasterDiff,semio_framework_diag
  Ok(RasterDiff{schema:wire.schema,id:wire.id,title:wire.title,layers,assets:wire.assets.map(|v|RasterAssetsDelta{entries:v.entries.into_iter().map(|a|(a.key,a.image.map(Into::into))).collect()}),pixels})
 }
 /// 📖️ Physical record layout shared by text and binary diff codecs.
-pub(crate) fn raster_diff_record_spec()->RecordSpec {RasterDiffDsl::__dsl_spec()}
+pub fn raster_diff_record_spec()->RecordSpec {RasterDiffDsl::__dsl_spec()}
 /// 📝️ Projects a semantic delta at its physical boundary and retires copied owners.
-pub(crate) fn raster_diff_to_record(diff:&RasterDiff)->RecordValue {
+pub fn raster_diff_to_record(diff:&RasterDiff)->RecordValue {
  let wire=RasterDiffDsl{schema:diff.schema.clone(),id:diff.id.clone(),title:diff.title.clone(),
   layers:diff.layers.as_ref().map(|v|RasterLayersDeltaDsl{
    removed:v.removed.iter().map(|r|RasterLayerRemovalDsl{id:r.id.clone(),parent_id:r.parent_id.clone(),index:r.index}).collect(),
@@ -78,11 +78,58 @@ pub(crate) fn raster_diff_to_record(diff:&RasterDiff)->RecordValue {
  record
 }
 /// 📖️ Reconstructs semantic delta owners from the physical record.
-pub(crate) fn raster_diff_from_record(record:&RecordValue)->Result<RasterDiff,semio_framework_diagnostic::TextError> {RasterDiffDsl::__dsl_from_record(record).and_then(admit_diff_record)}
+pub fn raster_diff_from_record(record:&RecordValue)->Result<RasterDiff,semio_framework_diagnostic::TextError> {RasterDiffDsl::__dsl_from_record(record).and_then(admit_diff_record)}
 impl protocol::DiffText for RasterDiff {
  fn print_diff(&self)->String {semio_framework_dsl_record::print(&raster_diff_to_record(self),&raster_diff_record_spec(),semio_framework_dsl_record::JoinMode::Inline)}
  fn parse_diff(line:&str)->Result<Self,semio_framework_diagnostic::TextError> {
   let record=semio_framework_dsl_record::parse_exact(line,&raster_diff_record_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Inline})?;
   raster_diff_from_record(&record)
  }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar)]
+enum RasterImageColorspaceDsl { Rgb, Rgba, Grayscale, GrayscaleAlpha, Indexed }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+struct RasterImageFrameDsl { delay_ms: u32, rgba8: Vec<u8> }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+struct RasterImageMetadataDsl { key: String, value: String }
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+pub struct RasterImageDsl {
+    schema: String,
+    width: u32,
+    height: u32,
+    colorspace: RasterImageColorspaceDsl,
+    bit_depth: u8,
+    #[dsl(table)]
+    frames: Vec<RasterImageFrameDsl>,
+    icc: Option<Vec<u8>>,
+    #[dsl(table)]
+    metadata: Vec<RasterImageMetadataDsl>,
+}
+
+impl From<&SemioImageSnapshot> for RasterImageDsl {
+    fn from(image: &SemioImageSnapshot) -> Self {
+        use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace;
+        Self {
+            schema: image.schema.clone(), width: image.width, height: image.height, bit_depth: image.bit_depth,
+            colorspace: match image.colorspace { SemioColorspace::Rgb => RasterImageColorspaceDsl::Rgb, SemioColorspace::Rgba => RasterImageColorspaceDsl::Rgba, SemioColorspace::Grayscale => RasterImageColorspaceDsl::Grayscale, SemioColorspace::GrayscaleAlpha => RasterImageColorspaceDsl::GrayscaleAlpha, SemioColorspace::Indexed => RasterImageColorspaceDsl::Indexed },
+            frames: image.frames.iter().map(|frame| RasterImageFrameDsl { delay_ms: frame.delay_ms, rgba8: frame.rgba8.clone() }).collect(),
+            icc: image.icc.clone(), metadata: image.metadata.iter().map(|entry| RasterImageMetadataDsl { key: entry.key.clone(), value: entry.value.clone() }).collect(),
+        }
+    }
+}
+
+impl From<RasterImageDsl> for SemioImageSnapshot {
+    fn from(image: RasterImageDsl) -> Self {
+        use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+        Self {
+            schema: image.schema, width: image.width, height: image.height, bit_depth: image.bit_depth,
+            colorspace: match image.colorspace { RasterImageColorspaceDsl::Rgb => SemioColorspace::Rgb, RasterImageColorspaceDsl::Rgba => SemioColorspace::Rgba, RasterImageColorspaceDsl::Grayscale => SemioColorspace::Grayscale, RasterImageColorspaceDsl::GrayscaleAlpha => SemioColorspace::GrayscaleAlpha, RasterImageColorspaceDsl::Indexed => SemioColorspace::Indexed },
+            frames: image.frames.into_iter().map(|frame| SemioImageFrame { delay_ms: frame.delay_ms, rgba8: frame.rgba8 }).collect(),
+            icc: image.icc, metadata: image.metadata.into_iter().map(|entry| SemioImageMetadataEntry { key: entry.key, value: entry.value }).collect(),
+        }
+    }
 }

@@ -1,0 +1,30 @@
+{
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "invalid": [
+    "debug",
+    "development",
+    "production",
+    ""
+  ],
+  "root": "next",
+  "payload": "bounded coordinator temporary",
+  "escapes": [
+    "/tmp/foreign-next",
+    "../../../foreign-next"
+  ],
+  "declarations": [
+    {
+      "project": "tsconfig.json",
+      "compiled": "next",
+      "route": "next/types/routes.d.ts"
+    },
+    {
+      "project": "typed/tsconfig.json",
+      "compiled": "compiled",
+      "route": "../compiled/types/routes.d.ts"
+    }
+  ]
+}

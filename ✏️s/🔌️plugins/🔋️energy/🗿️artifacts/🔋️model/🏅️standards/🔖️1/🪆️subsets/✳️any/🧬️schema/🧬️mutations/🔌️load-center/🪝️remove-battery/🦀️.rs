@@ -1,8 +1,7 @@
 //! 🪝️ Energy model mutation — `RemoveElectricalLoadCenterBattery`: Detaches one battery from a load centre; the battery itself survives, unattached.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveElectricalLoadCenterBattery {
     pub battery_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_electrical_load_center_battery(id: crate::model::EntityId, battery_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveElectricalLoadCenterBattery(RemoveElectricalLoadCenterBattery { id, battery_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_electrical_load_center_battery<Op: From<RemoveElectricalLoadCenterBattery>>(id: crate::model::EntityId, battery_id: crate::model::EntityId) -> Op {
+    RemoveElectricalLoadCenterBattery { id, battery_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveElectricalLoadCenterBattery {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveElectricalLoadCenterBattery
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveElectricalLoadCenterBattery> + From<crate::AddElectricalLoadCenterBattery>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "electrical-load-center", kind: "remove-electrical-load-center-battery", record: "RemovedElectricalLoadCenterBattery" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

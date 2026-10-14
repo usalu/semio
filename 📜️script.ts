@@ -1,8 +1,11 @@
 #!/usr/bin/env bun
+import {semioMemberStoreProducerSourceSelfTests} from "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🟦️.ts";
+import { toolJobMemberStoreProducerExact, memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
+import {readBuildMode} from "./🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {type PolicyModSpan,policyMaskLiterals,policyTestModSpans,policyLineInTestMod,interactivityCfgTestItemSpans} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import {type InteractivityToolRunRequirement,INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunWithin,interactivityToolRunScopePath,interactivityToolRunCode,interactivityToolRunEnclosing,interactivityToolRunLocalLifecycleFailures,interactivityToolRunLegacyTraceFailures,interactivityToolRunDeclarationFailures,interactivityToolRunReservedActionFailures} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
-import { resolveTestLevel, testLevelRank } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {type InteractivityToolRunSource,type InteractivityToolRunRequirement,INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunWithin,interactivityToolRunScopePath,interactivityToolRunCode,interactivityToolRunEnclosing,interactivityToolRunLocalLifecycleFailures,interactivityToolRunLegacyTraceFailures,interactivityToolRunDeclarationFailures,interactivityToolRunReservedActionFailures} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
+import { resolveTestLevel, testLevelRank, testLevelBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
@@ -49,7 +52,7 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
  */
 import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioReleaseEnv, semioBuildParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter, scriptInvocationEnvironment, scriptInvocationBudget } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkDerivedConfig, writeDerivedConfig } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
@@ -289,8 +292,7 @@ export class DevScript extends Script {
       : [];
     for (const id of scopeIds) {
       if (!/^[a-z0-9][a-z0-9/-]*$/i.test(id)) {
-        console.error(`[dev.storybook] invalid scope ${JSON.stringify(id)}`);
-        process.exit(1);
+        throw Error(`[dev.storybook] invalid scope ${JSON.stringify(id)}`);
       }
     }
     if (scopeIds.length > 0) {
@@ -298,8 +300,7 @@ export class DevScript extends Script {
         const { resolveActiveScopes } = await import("./.storybook/📖️stories/🧭️coordination/🟦️.ts");
         resolveActiveScopes(scopeIds.join(","));
       } catch (error) {
-        console.error(error instanceof Error ? `[dev.storybook] ${error.message}` : error);
-        process.exit(1);
+        throw Error(error instanceof Error ? `[dev.storybook] ${error.message}` : String(error));
       }
     }
     return { scope: scopeIds.join(","), args };
@@ -307,56 +308,12 @@ export class DevScript extends Script {
 
   private async runStorybook(extra: string[]): Promise<void> {
     const storybook = await this.parseStorybookSegments(extra);
-    const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    const port = process.env.STORYBOOK_PORT ?? "6010";
-    const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
-    const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...storybook.args];
-    runCmd(process.execPath, ["x", ...storybookArgs], {
-      cwd: this.root,
-      env: {
-        ...process.env,
-        STORYBOOK_SCOPE: storybook.scope,
-        WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
-        CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
-      },
-      ...daemonBudgetOpts(),
-    });
+    const {serveRepositoryStorybookV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts");
+    await serveRepositoryStorybookV1(this.root,storybook.scope,storybook.args,this.invocation);
   }
 
-  private async runStorybookStatic(): Promise<void> {
-    const host = process.env.STORYBOOK_STATIC_HOST ?? "0.0.0.0";
-    const port = Number(process.env.STORYBOOK_PORT ?? "6010");
-    const documentRoot = resolve(this.root, "storybook-static");
-    const server = Bun.serve({
-      hostname: host,
-      port,
-      async fetch(request) {
-        const requestUrl = new URL(request.url);
-        const requestPath = decodeURIComponent(requestUrl.pathname);
-        const candidatePath = resolve(documentRoot, `.${requestPath}`);
-        if (!candidatePath.startsWith(documentRoot)) return new Response("Forbidden", { status: 403 });
-        const filePath = await (async () => {
-          try {
-            const fileInfo = await stat(candidatePath);
-            if (fileInfo.isDirectory()) return resolve(candidatePath, "🌐️.html");
-            return candidatePath;
-          } catch {
-            if (extname(candidatePath) === "") return resolve(candidatePath, "🌐️.html");
-            return candidatePath;
-          }
-        })();
-        try {
-          const file = Bun.file(filePath);
-          if (!(await file.exists())) return new Response("Not Found", { status: 404 });
-          return new Response(file);
-        } catch {
-          return new Response("Not Found", { status: 404 });
-        }
-      },
-    });
-
-    console.log(`storybook-static listening on http://${host}:${port}`);
-    await new Promise(() => {});
+  private async runStorybookStatic():Promise<void>{
+    const {serveRepositoryStorybookArtifactV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/🏃️execution/🟦️.ts");await serveRepositoryStorybookArtifactV1(this.root,readBuildMode(process.env.SEMIO_BUILD_MODE),process.env.STORYBOOK_SCOPE??"",this.invocation);
   }
 
   private runMcp(segments: string[]): void {
@@ -1925,84 +1882,6 @@ function toolJobChildContentRootExact(store: string, plugin: string): boolean {
     !plugin.includes("entry.snapshot.clone()") &&
     dispatch.body.includes("let children = std::sync::Arc::new(ChildContentView::clone(&self.child_content_root)") &&
     !dispatch.body.includes("ChildContentView::new(&self.children)")
-  );
-}
-
-function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
-  const ownerTraitStart = store.indexOf("pub trait MemberStoreOwner<Mutation>");
-  const ownerTraitOpen = ownerTraitStart < 0 ? -1 : store.indexOf("{", ownerTraitStart);
-  const ownerTrait = ownerTraitOpen < 0 ? undefined : toolJobRustBlock(store, ownerTraitOpen);
-  const exactInstallStart = store.indexOf("fn install_member_store_owners_exact");
-  const exactInstallOpen = exactInstallStart < 0 ? -1 : store.indexOf("{", exactInstallStart);
-  const exactInstall = exactInstallOpen < 0 ? undefined : toolJobRustBlock(store, exactInstallOpen);
-  return (
-    !!ownerTrait &&
-    !!exactInstall &&
-    ownerTrait.body.includes("fn member_store_owners() -> MemberStoreOwners<Self, Mutation>;") &&
-    !ownerTrait.body.includes("fn member_store_owners() -> MemberStoreOwners<Self, Mutation> {") &&
-    store.includes("pub struct MemberStoreOwners<P, Mutation>") &&
-    store.includes("snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>") &&
-    store.includes("initial_snapshot_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>") &&
-    store.includes("mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>") &&
-    store.includes("store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>") &&
-    store.includes("pub trait ArtifactOwnedValueRetirementFactory<T>: Send + Sync") &&
-    store.includes("pub struct ArtifactStoreCloseView<'a, P, Mutation>") &&
-    store.includes("pub fn take_history_mutation_at(&mut self, edit_index: usize)") &&
-    store.includes("pub fn take_last_history_edit_retirement(&mut self)") &&
-    store.includes("pub fn take_runtime_string_retirement(&mut self, lane: ArtifactStoreCloseStringLane)") &&
-    store.includes("pub fn take_history_metadata_retirement(&mut self, lane: ArtifactStoreHistoryMetadataLane)") &&
-    store.includes("pub fn take_message_ledger_retirement(&mut self, lane: ArtifactStoreMessageLedgerLane)") &&
-    store.includes("pub fn take_conflict_retirement(&mut self)") &&
-    store.includes("pub fn take_pending_report_retirement(&mut self)") &&
-    store.includes("pub fn take_envelope_metadata_string_retirement(&mut self)") &&
-    store.includes("pub fn take_tail_snapshot_retirement(&mut self)") &&
-    store.includes("pub fn take_current_snapshot_retirement(&mut self)") &&
-    store.includes("pub fn take_final_envelope_retirement(&mut self)") &&
-    store.includes("envelope: std::mem::ManuallyDrop<ArtifactEnvelope<P, Mutation>>") &&
-    store.includes("current: std::mem::ManuallyDrop<Arc<P>>") &&
-    store.includes("artifact store conflict retirement reached Drop before every envelope, message, identity, and payload owner was terminal-empty") &&
-    store.includes("artifact store edit retirement reached Drop before every exact nested owner was cursor-disposed") &&
-    store.includes("artifact store string retirement reached Drop before its exact byte owner was terminal-empty") &&
-    store.includes("artifact store history metadata retirement reached Drop before every nested owner was terminal-empty") &&
-    store.includes("artifact store message-ledger retirement reached Drop before every nested owner was terminal-empty") &&
-    store.includes("pub struct ArtifactEditMessageLedger") &&
-    store.includes("pub edit_messages: ArtifactEditMessageLedger") &&
-    store.includes("const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192") &&
-    !store.includes("edit_messages: BTreeMap<String, Vec<crate::os_spr::MutationMessage>>") &&
-    !store.includes("edit_messages: HashMap<String, Vec<crate::os_spr::MutationMessage>>") &&
-    store.includes("pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send") &&
-    store.includes("fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;") &&
-    (store.match(/ArtifactPack \+ MemberStoreOwner<Mutation>/g) ?? []).length >= 3 &&
-    (store.match(/install_member_store_owners_exact\(P::member_store_owners\(\)\)/g) ?? []).length === 2 &&
-    store.includes("create_member_store(kind, id, dialect, initial_pack).await") &&
-    store.includes("open_member_store(envelope_pack).await") &&
-    store.includes("typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child") &&
-    store.includes("member_close_rejects_missing_owner_and_preserves_the_installed_blocked_disposer") &&
-    store.includes("member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog") &&
-    exactInstall.body.includes("self.snapshot_retirement_factory = Some(owners.snapshot_retirement)") &&
-    exactInstall.body.includes("self.initial_snapshot_retirement_factory = Some(owners.initial_snapshot_retirement)") &&
-    exactInstall.body.includes("self.mutation_retirement_factory = Some(owners.mutation_retirement)") &&
-    exactInstall.body.includes("self.owned_disposer = Some(owners.store_disposer)") &&
-    semio.includes("semio_subset_table!(member_owners);") &&
-    semio.includes("impl dsl::os_store::document_store_owners::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>") &&
-    semio.includes("dsl::MemberStoreOwners::new(") &&
-    semio.includes("SemioOwnedValueRetirementFactory") &&
-    semio.includes("SemioMutationRetirementFactory") &&
-    semio.includes("SemioStoreClosePhase::ReturnedLeases") &&
-    semio.includes("SemioStoreClosePhase::HistoryMutations") &&
-    semio.includes("SemioStoreClosePhase::HistoryEdits") &&
-    semio.includes("SemioStoreClosePhase::HistoryMetadata") &&
-    semio.includes("SemioStoreClosePhase::MessageLedgers") &&
-    semio.includes("SemioStoreClosePhase::Conflicts") &&
-    semio.includes("SemioStoreClosePhase::PendingReport") &&
-    semio.includes("SemioStoreClosePhase::EnvelopeMetadata") &&
-    semio.includes("SemioStoreClosePhase::RuntimeStrings") &&
-    semio.includes("SemioStoreClosePhase::TailSnapshot") &&
-    semio.includes("SemioStoreClosePhase::CurrentSnapshot") &&
-    semio.includes("SemioStoreClosePhase::FinalEnvelope") &&
-    semio.includes("SemioStoreOwnedDisposer") &&
-    !semio.includes("fn install_semio_snapshot_retirement") &&
-    !semio.includes("install_semio_snapshot_retirement(&mut member)")
   );
 }
 
@@ -6472,7 +6351,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   } catch {
     fixedOperationFixture = undefined;
   }
-  const selfTests = (await toolJobCoverageSelfTestsModule()).toolJobCoverageSelfTests() + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
+  const selfTests = (await toolJobCoverageSelfTestsModule()).toolJobCoverageSelfTests() + semioMemberStoreProducerSourceSelfTests(toolJobMemberStoreProducerExact, policyReadMemberStoreProducerSources(root)) + toolJobFixedOperationRegistrySelfTests(jobRuntime) + toolJobDrawingGestureOperationOwnerSelfTests() + toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
   const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
   for (const [file, source] of allRustFiles) {
     const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;
@@ -6525,7 +6404,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(plugin) || !toolJobTypedPersistentFoundation(plugin))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
   if (!toolJobImmutableOperationRootsExact(store)) failures.push("document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots");
   if (!toolJobChildContentRootExact(store, plugin)) failures.push("typed command preparation lacks a fixed-width event-maintained immutable child-content root and no-default terminal-witnessed old-root retirement authority");
-  if (!toolJobMemberStoreOwnerExact(store, semio)) failures.push("generated member create/open permits a missing, partial, default, or wrapper-bypassable snapshot/whole-store disposal owner");
+  if (!toolJobMemberStoreProducerExact(policyReadMemberStoreProducerSources(root))) failures.push("generated member create/open permits a missing, partial, default, or wrapper-bypassable snapshot/whole-store disposal owner");
   if (!toolJobArtifactStoreStructuralOwnersExact(store, semio, causal, vcs)) failures.push("artifact store structural owners still use resizable string-key indexes, deep direct replacement, or lack bounded conflict/backbone/DAG/history disassembly and terminal Drop authority");
   if (!toolJobArtifactEnvelopeOwnedCodecExact(store, allRustFiles)) failures.push("ArtifactEnvelope ingress retains public serde Deserialize or lacks fixed-page owned preflight/decode/error-close authority across every production caller");
   if (!toolJobPresentationEnvelopeCallerRetainedExact(presentationEnvelopeCodec, presentationWasm, plugin)) failures.push("Presentation envelope representative caller exposes a raw job/whole-string Wasm route or lacks fixed app-retained worker/result/close ownership");
@@ -7540,8 +7419,6 @@ export class VerifyScript extends Script {
         }
         if (nativePhase === undefined || nativePhase === "consumers") {
           const consumers = [
-          ["semio-s-artifact-procedural-generation2d", ["every_command_round_trips_through_text_and_binary"]],
-          ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"]],
           ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"]],
           ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"]],
           ["semio-hub-space", ["node_graph_viewport_writes_typed_workflow_camera_config"]],
@@ -7553,6 +7430,7 @@ export class VerifyScript extends Script {
           ] as const;
           const filters = [...new Set(consumers.flatMap(([, filters]) => [...filters]))];
           await runCargo(["test", "--manifest-path", "Cargo.toml", ...consumers.flatMap(([packageName]) => ["-p", packageName]), "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
+          for (const packageName of ["semio-s-artifact-procedural-2d-editor", "semio-s-artifact-procedural-generation3d"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--test", "editor-routes", "--", "--nocapture", "--test-threads=1", "every_command_round_trips_through_text_and_binary"], this.root);
         }
       }
       return;
@@ -7574,7 +7452,7 @@ export class VerifyScript extends Script {
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
       if (segments[1] === "outer-native") {
         const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-host", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
         return;
       }
       if (segments[1] === "catalog-native") {
@@ -7591,7 +7469,7 @@ export class VerifyScript extends Script {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_inflater_physical_", "--", "--nocapture", "--test-threads=1"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_pipeline_diagnostic_deflate_", "--", "--nocapture", "--test-threads=1"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "write_then_read_round_trip_with_compressed_segment_and_chunk", "--", "--nocapture", "--test-threads=1"], this.root);
-        for (const packageName of ["semio-s-artifact-procedural-generation2d", "semio-s-artifact-procedural-generation3d"]) {
+        for (const packageName of ["semio-s-artifact-procedural-2d-io-binary", "semio-s-artifact-procedural-3d-io-binary"]) {
           await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", "retained_mounted_laws", "--", "--nocapture", "--test-threads=1"], this.root);
         }
         return;
@@ -7613,8 +7491,10 @@ export class VerifyScript extends Script {
           ["semio-framework-replication", ["retained_paged_list_capacity_admission_and_exact_release_grants"]],
           ["semio-framework-pack", ["retained_symbol_table_", "retained_pack_catalog_", "write_then_read_round_trip_with_compressed_segment_and_chunk"]],
           ["semio-framework-os-kernel", ["retained_value_", "retained_record_body_"]],
-          ["semio-s-artifact-procedural-generation2d", ["every_fourteen_variant_decodes_through_retained_structural_grants", "retained_mounted_laws"]],
-          ["semio-s-artifact-procedural-generation3d", ["every_fourteen_variant_decodes_through_retained_structural_grants", "retained_mounted_laws"]],
+          ["semio-s-artifact-procedural-2d-host", ["every_fourteen_variant_decodes_through_retained_structural_grants"]],
+          ["semio-s-artifact-procedural-2d-io-binary", ["retained_mounted_laws"]],
+          ["semio-s-artifact-procedural-generation3d", ["every_fourteen_variant_decodes_through_retained_structural_grants"]],
+          ["semio-s-artifact-procedural-3d-io-binary", ["retained_mounted_laws"]],
         ] as const) {
           for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", filter, "--", "--nocapture"], this.root);
         }
@@ -7625,9 +7505,9 @@ export class VerifyScript extends Script {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "value::list::", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "retained_pack_source_laws", "--", "--nocapture"], this.root);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-pack", "--lib", "write_then_read_round_trip_with_compressed_segment_and_chunk", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation2d", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-generation3d", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-io-binary", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-host", "--lib", "retained_pack_outer_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-3d-io-binary", "--lib", "retained_mounted_laws", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -13545,11 +13425,11 @@ export class TestScript extends Script {
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_TEST_LEVEL: level });
       if (native) {
         const [{ repositoryCargoPreparationStorageV1 }, { prepareCargoWorkspaceInvocation }] = await Promise.all([import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts")]);
-        prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["test", "--manifest-path", join(cwd, "Cargo.toml")],cwd,process.env);
+        await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["test", "--manifest-path", join(cwd, "Cargo.toml")],cwd,scriptInvocationEnvironment(this.invocation,env),scriptCompilerAdmissionControlV1(this.invocation,"canvas:native:preparation",testLevelBudgetMs(level)));
         env.SEMIO_CARGO_TEST_POLICY = JSON.stringify(repositoryCargoTestPolicyV1(join(cwd, "Cargo.toml"), cwd));
       } else env.SEMIO_VITEST_POLICY = JSON.stringify(repositoryVitestPolicyV1(cwd, env));
       const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "test", level, ...rest.slice(2)], cwd, `canvas-${rest[1]}:test`, 0, { env });
+      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "test", level, ...rest.slice(2)], cwd, `canvas-${rest[1]}:test`, scriptInvocationBudget(this.invocation,testLevelBudgetMs(level)), { signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,env) });
       return;
     }
     if (rest[0] === "storybook") {
@@ -14697,36 +14577,16 @@ export class SchemaScript extends Script {
   }
 
   /** 📤️ Runs the genuine native producer and removes only its unique intermediate output. */
-  private async productionEntries(args: string[]): Promise<SchemaRustEntryDump> {
-    const outIndex = args.indexOf("--out");
-    if (outIndex >= 0 && !args[outIndex + 1]) throw Error("[schema] --out requires a path.");
-    const destination = outIndex >= 0 ? resolve(this.root, args[outIndex + 1]!) : null;
-    if (destination && existsSync(destination)) throw Error("[schema] --out requires a new output file.");
-    const base = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(getMapCacheDir(this.root), "schema-registry");
-    mkdirSync(base, { recursive: true });
-    const module = join(this.root, "🧰️framework/🔨️modules/🧬️schema");
-    const { loadProductionSchemaEntriesV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts");
-    const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    const directory = mkdtempSync(join(base, "registry-")), output = join(directory, "entries.json");
-    let text = "";
-    try {
-      const dump = await loadProductionSchemaEntriesV1({ produce: async () => {
-        await runOwnedCommand(process.execPath, [
-          join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "relay",
-          "run", "--locked", "--manifest-path", join(module, "📦️packages/🦀️rust/Cargo.toml"),
-          "-p", SCHEMA_RUST_CRATE, "--bin", "schema-export-entries", "--", "--out", output
-        ], this.root, "schema:registry-production", buildBudgetMs(), { env: process.env });
-        text = readFileSync(output, "utf8");
-        return text;
-      } }, JSON.parse(readFileSync(join(module, "🔣️.json"), "utf8")));
-      if (destination) {
-        mkdirSync(dirname(destination), { recursive: true });
-        writeFileSync(destination, text, { flag: "wx" });
-      }
-      return dump;
-    } finally {
-      rmSync(directory, { recursive: true, force: true });
-    }
+  private async productionEntries(args:string[]):Promise<SchemaRustEntryDump>{
+    const outIndex=args.indexOf("--out"),name=outIndex>=0?args[outIndex+1]:undefined;if(outIndex>=0&&!name)throw Error("[schema] --out requires a report name");
+    const {withRepositoryCacheStoreV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
+    return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,async store=>{
+      const {requireNativeStoragePathV1}=await import("./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
+      const {loadProductionSchemaEntriesV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts"),{runOwnedCommand}=await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");let text="";
+      try{await store.recheck();const dump=await loadProductionSchemaEntriesV1({produce:async()=>{await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","run","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--bin","schema-export-entries","--","--out",output],this.root,"schema:registry-production",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,store.environment)});await store.recheck();text=readFileSync(output,"utf8");return text;}},JSON.parse(readFileSync(join(module,"🔣️.json"),"utf8")));
+        if(name){const {withRepositoryBuildReportV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(this.root,name,JSON.parse(text),this.invocation,async artifact=>{console.log(artifact.path);});}return dump;
+      }finally{rmSync(directory,{recursive:true,force:true});}
+    });
   }
 
   /**
@@ -14844,8 +14704,8 @@ class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
     if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
-    if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:profile", 0));
-    if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0));
+    if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:profile", 0),(await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
+    if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
     throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
   }
 }
@@ -17029,6 +16889,20 @@ const OS_STORE_ROOT_SOURCES = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs",
 ] as const;
+
+/** 🏭️ Binds exact domain-owned member producer bodies and this workspace’s explicit semio extension. */
+function policyReadMemberStoreProducerSources(repoRoot:string):ToolJobMemberStoreProducerSources{
+  const read=(reference:Readonly<{path:string;symbols:readonly string[]}>)=>policyReadRustSourceEvidence(repoRoot,reference.path).production;
+  const extensionPath="✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🔣️.json";
+  const extension=JSON.parse(policyReadFileSafe(repoRoot,extensionPath)) as MemberProducerSourceExtension["declaration"];
+  const roles=Object.fromEntries(Object.entries(memberStoreProducerSourceDeclarationV1.roles).map(([role,reference])=>[role,read(reference)])) as Omit<ToolJobMemberStoreProducerSources,"extensions">;
+  const store=policyReadRustSourceEvidence(repoRoot,memberStoreProducerSourceDeclarationV1.roles.store.path);
+  if(!store.tests.some(test=>test.path===memberStoreProducerSourceDeclarationV1.roles.storeLaws.path))throw new Error("[member producer evidence] missing declared canonical store laws");
+  const lawSource=roles.storeLaws as {path:string;source:string};
+  const catalogPath=memberStoreProducerSourceDeclarationV1.roles.catalogLaws.path;
+  if(!inspectRustStructure(lawSource.source).includes.some(item=>item.macro==="include"&&!item.usesOutDir&&(()=>{try{return posix.normalize(posix.join(posix.dirname(lawSource.path),JSON.parse(item.expression)))===catalogPath;}catch{return false;}})()))throw new Error("[member producer evidence] missing declared canonical catalog laws");
+  return {...roles,extensions:[{declaration:extension,producer:read(extension.roles.producer),members:read(extension.roles.members)}]};
+}
 
 function policyReadOsStoreSource(repoRoot: string): string {
   return OS_STORE_ROOT_SOURCES.map((path) => policyReadFileSafe(repoRoot, path)).join("\n");
@@ -25720,7 +25594,8 @@ export {
   toolJobSegmentedTerminalDrainExact,
   toolJobMediaExportBounded,
   toolJobChildContentRootExact,
-  toolJobMemberStoreOwnerExact,
+  toolJobMemberStoreProducerExact,
+  policyReadMemberStoreProducerSources,
   toolJobArtifactStoreStructuralOwnersExact,
   toolJobHistoryLedgerAdmissionExact,
   toolJobArtifactEventSourcedMergeExact,

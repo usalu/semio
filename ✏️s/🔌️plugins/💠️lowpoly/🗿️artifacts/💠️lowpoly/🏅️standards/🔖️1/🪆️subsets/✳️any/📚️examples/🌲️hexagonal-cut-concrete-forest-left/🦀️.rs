@@ -1,5 +1,13 @@
 //! 📚️ Example `hexagonal-cut-concrete-forest-left`.
 
+extern crate semio_framework_os_kernel as protocol;
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🧪️tests/🧩️example/🦀️.rs"]
+mod art_lowpoly_hexagonal_cut_concrete_forest_left_tests;
+//#endregion 🧩️Modules
+
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app, render as render_body, render_localized};
+use semio_s_artifact_layout_layout_editor::unit_tests::context::{layout_app, render as render_body, render_localized};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_sample_pages() {
@@ -46,8 +46,8 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 }
 
 //#region 🪟️WindowLaws
-use crate::editor::layout::terminology::layout_labels;
-use crate::{ImageLink, Layer, ParagraphStyle, TextStory};
+use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
+use semio_s_artifact_layout_layout_model::{ImageLink, Layer, ParagraphStyle, TextStory};
 use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
 use semio_framework_ui_contract::{TreeWindow, UI_BUILT_CHILDREN_MAX};
@@ -66,7 +66,7 @@ fn frame_with_id(frame: &Frame, id: String) -> Frame {
 /// 120 links, 150 paragraph styles, 90 stories and 60 layers — the five genuinely open-ended
 /// collections of this tree.
 fn oversized() -> LayoutSnapshot {
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let page = document.pages.first_mut().expect("the demo document has a page");
     let seed_frame = page.frames.first().cloned().expect("the demo page has a frame");
     page.frames = (0..300).map(|index| frame_with_id(&seed_frame, format!("frame-{index:03}"))).collect();

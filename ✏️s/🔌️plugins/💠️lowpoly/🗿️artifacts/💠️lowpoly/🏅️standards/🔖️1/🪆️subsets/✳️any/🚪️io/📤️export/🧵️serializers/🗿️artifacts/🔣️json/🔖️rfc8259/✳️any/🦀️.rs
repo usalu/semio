@@ -1,5 +1,5 @@
 //! lowpoly -> json
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
@@ -9,7 +9,7 @@ pub fn register() {}
 
 pub fn serialize(snapshot: &LowpolySnapshot) -> Result<JsonSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value: serde_json::Value = crate::standards::v1::subsets::any::io::text::lowpoly_json_value(snapshot).into();
+    let value: serde_json::Value = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_value(snapshot).into();
     Ok(JsonSnapshot::from_value(value))
 }
 

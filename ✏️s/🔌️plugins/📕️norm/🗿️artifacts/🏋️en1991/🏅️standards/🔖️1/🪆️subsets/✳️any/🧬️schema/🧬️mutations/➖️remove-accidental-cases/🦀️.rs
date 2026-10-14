@@ -1,6 +1,6 @@
 //! ➖ `remove-accidental-cases`.
 
-use crate::{En1991Mutation, En1991Snapshot};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +13,7 @@ pub struct RemoveAccidentalCases {
     pub index: usize,
 }
 
-impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveAccidentalCases {
+impl<Op> protocol::MutationKind<En1991Snapshot, Op> for RemoveAccidentalCases where Op: protocol::Mutation<En1991Snapshot, Diff = semio_s_artifact_norm_en1991_diff::En1991Diff> + From<crate::insert_accidental_cases::InsertAccidentalCases> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove",
         entity: "accidental-cases",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveAccidental
         record: "RemovedAccidentalCases",
     };
 
-    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1991Snapshot>>::Diff> {
+        crate::remove_accidental_cases::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::remove_accidental_cases::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for RemoveAccidental
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

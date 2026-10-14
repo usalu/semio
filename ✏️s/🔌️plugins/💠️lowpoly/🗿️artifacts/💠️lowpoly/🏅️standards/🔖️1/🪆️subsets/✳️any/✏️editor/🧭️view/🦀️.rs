@@ -10,10 +10,26 @@
 //! presence auto-stamp share one id space) and `selection_from_interaction`, the boundary that turns a
 //! resolved `InteractionView` into the engine's `LowpolySelection`.
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::engine::LowpolyDocument;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_value_derive as value_derive;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod lowpoly {
+        #[path = "../🖌️session/🦀️.rs"]
+        pub mod session;
+        #[path = "../🗣️terminology/🦀️.rs"]
+        pub mod terminology;
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_engine::LowpolyDocument;
 use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::{LowpolyObject, LowpolySelection, LowpolySelectionTargets, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySelection, snapshot::LowpolySelectionTargets, snapshot::LowpolySnapshot};
 use semio_framework_plugin::app::InteractionView;
 
 //#region 🔖️View

@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `DeleteVortex`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::{Block3dDiff, Block3dVorticesDelta};
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::{Block3dDiff, Block3dVorticesDelta};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::DeleteVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::delete_vortex::DeleteVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if !base.vortices.iter().any(|item| item.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex", payload.id), vec![payload.id.clone()]);
     }

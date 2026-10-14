@@ -63,6 +63,8 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-mutation-diff={path="../../../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
+semio-framework-io-control = { path = "../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-one-item = { path = "../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }

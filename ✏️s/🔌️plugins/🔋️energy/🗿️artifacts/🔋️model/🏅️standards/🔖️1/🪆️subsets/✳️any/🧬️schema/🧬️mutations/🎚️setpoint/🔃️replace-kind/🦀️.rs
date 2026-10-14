@@ -1,8 +1,7 @@
 //! 🔃️ Energy model mutation — `ReplaceSetpointManagerKind`: Swaps the whole tagged control law of one setpoint manager. `replace`, not `change`, because the payload shape genuinely differs per variant (taxonomy rule for tagged unions); the four outdoor-air-reset limits are carried flattened beside the variant's wire name and must be zero for every other variant.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -21,19 +20,22 @@ pub struct ReplaceSetpointManagerKind {
     pub new_high_setpoint_c: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_setpoint_manager_kind(id: crate::model::EntityId, new_kind: String, new_low_outdoor_c: f64, new_high_outdoor_c: f64, new_low_setpoint_c: f64, new_high_setpoint_c: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ReplaceSetpointManagerKind(ReplaceSetpointManagerKind { id, new_kind, new_low_outdoor_c, new_high_outdoor_c, new_low_setpoint_c, new_high_setpoint_c })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn replace_setpoint_manager_kind<Op: From<ReplaceSetpointManagerKind>>(id: crate::model::EntityId, new_kind: String, new_low_outdoor_c: f64, new_high_outdoor_c: f64, new_low_setpoint_c: f64, new_high_setpoint_c: f64) -> Op {
+    ReplaceSetpointManagerKind { id, new_kind, new_low_outdoor_c, new_high_outdoor_c, new_low_setpoint_c, new_high_setpoint_c }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceSetpointManagerKind {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceSetpointManagerKind
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceSetpointManagerKind>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "setpoint-manager", kind: "replace-setpoint-manager-kind", record: "ReplacedSetpointManagerKind" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

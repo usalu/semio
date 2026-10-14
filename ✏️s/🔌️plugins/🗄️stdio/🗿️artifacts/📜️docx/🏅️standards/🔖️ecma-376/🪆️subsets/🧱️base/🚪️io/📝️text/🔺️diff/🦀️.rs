@@ -15,9 +15,9 @@ use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -46,9 +46,9 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -316,9 +316,9 @@ pub use diff_wire_codec::*;
 mod residual_diff_helper {
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};

@@ -10,7 +10,8 @@ async fn definition_declares_a_table_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn strict_grid_binds_blank_cell_creation_to_the_strict_controller() {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     fn visit(node: &BuiltNode, found: &mut bool) {
         if matches!(node.component, Component::Input(_)) {
             *found |= node.bindings.iter().any(|binding| binding.trigger == Trigger::Commit && binding.action.scope.as_str() == "s.stdio.xlsx@ecma-376/strict#editor" && binding.action.name.as_str() == "set-cell");
@@ -19,7 +20,7 @@ async fn strict_grid_binds_blank_cell_creation_to_the_strict_controller() {
             visit(child, found);
         }
     }
-    let document = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
+    let document = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Blank".into(), cells: Vec::new() }], ..Default::default() });
     let node = render(&document, Locale::En, &TreeWindows::unhosted(), semio_framework_plugin::UiPublicationRevision(23)).unwrap();
     let mut found = false;
     visit(&node, &mut found);

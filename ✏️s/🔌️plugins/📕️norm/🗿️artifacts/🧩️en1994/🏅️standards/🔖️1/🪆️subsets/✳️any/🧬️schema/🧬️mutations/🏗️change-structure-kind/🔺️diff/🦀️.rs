@@ -1,6 +1,7 @@
 //! Diff for `change-structure-kind`.
-use super::ChangeStructureKind;
-use crate::{En1994Diff, En1994Snapshot};
+use crate::change_structure_kind::ChangeStructureKind;
+use semio_s_artifact_norm_en1994_diff::En1994Diff;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn diff(payload: &ChangeStructureKind, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if payload.new_structure_kind.is_empty() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "invalid value", Vec::<String>::new());

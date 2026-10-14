@@ -1,6 +1,7 @@
 //! 🔄️ `change-exchange-process` — sets the ISO 16757 exchange-process stage scalar.
 
-use crate::{part_5::ExchangeProcess, Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::part_5::ExchangeProcess;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +14,15 @@ pub struct ChangeExchangeProcess {
     pub new_exchange_process: ExchangeProcess,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeExchangeProcess {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeExchangeProcess where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_exchange_process::mutation::ChangeExchangeProcess> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "exchange-process", kind: "change-exchange-process", record: "ChangedExchangeProcess" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::change_exchange_process::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_exchange_process::inverse::inverse(self, base)?
     
     })
 }

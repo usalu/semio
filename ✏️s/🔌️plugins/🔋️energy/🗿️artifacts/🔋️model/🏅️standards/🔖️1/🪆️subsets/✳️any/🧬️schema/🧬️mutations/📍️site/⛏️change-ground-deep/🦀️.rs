@@ -1,8 +1,7 @@
 //! ⛏️ Energy model mutation — `ChangeGroundDeep`: Sets the deep ground temperature, read by the ground heat transfer solve.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeGroundDeep {
     pub new_temperature_c: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_ground_deep(new_temperature_c: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeGroundDeep(ChangeGroundDeep { new_temperature_c })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_ground_deep<Op: From<ChangeGroundDeep>>(new_temperature_c: f64) -> Op {
+    ChangeGroundDeep { new_temperature_c }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeGroundDeep {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeGroundDeep
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGroundDeep>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ground", kind: "change-ground-deep", record: "ChangedGroundDeep" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

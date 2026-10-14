@@ -19,6 +19,8 @@ path = "🦀️.rs"
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
+semio-s-artifact-process-process3d-editor = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }
@@ -40,6 +42,7 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 serde_json.workspace = true
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-s-artifact-process-process3d-viewer = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

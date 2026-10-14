@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::snapshot::*;
 
 fn synapse_digest(synapse: &semio_framework_artifact_flow_flow::SynapseSpec) -> u64 {
     let mut digest = 0xcbf2_9ce4_8422_2325u64;

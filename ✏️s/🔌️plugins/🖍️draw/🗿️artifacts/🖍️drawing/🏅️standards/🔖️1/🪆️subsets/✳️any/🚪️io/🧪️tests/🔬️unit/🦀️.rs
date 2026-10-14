@@ -1,4 +1,4 @@
-use super::*;
+
 use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};

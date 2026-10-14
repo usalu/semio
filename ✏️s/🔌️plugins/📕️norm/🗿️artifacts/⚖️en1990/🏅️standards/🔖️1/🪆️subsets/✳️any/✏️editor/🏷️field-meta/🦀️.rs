@@ -1,6 +1,6 @@
 //! 🏷️ EN 1990 NormFieldMeta lookup — SI display units + en/de labels (longest-prefix + `[]` wildcards).
 
-use crate::app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }
@@ -126,6 +126,3 @@ pub fn en1990_field_meta(path: &str) -> Option<NormFieldMeta> {
     lookup_norm_field_meta(TABLE, path)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

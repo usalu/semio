@@ -19,8 +19,8 @@ fn transfer(mutation: Mutation) -> State {
 
 /// 📦️ Shares the exact production lifecycle across window and document replacement laws.
 pub(crate) fn owners() -> WindowTransientOwnerBundle<State, Mutation> {
-    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<State>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
-    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<Mutation>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
+    let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<State>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::default());
+    let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<Mutation>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::default());
     let preparation = Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(footprint, transfer, state.clone(), mutation.clone()));
     WindowTransientOwnerBundle::new(preparation, state, mutation)
 }

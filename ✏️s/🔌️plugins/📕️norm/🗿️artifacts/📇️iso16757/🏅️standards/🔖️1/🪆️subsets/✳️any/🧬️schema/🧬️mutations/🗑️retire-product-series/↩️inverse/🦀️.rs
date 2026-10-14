@@ -1,15 +1,15 @@
 //! Inverse for `retire-product-series`.
 
-use crate::mutations::introduce_product_series;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
-use super::mutation::RetireProductSeries;
+use crate::introduce_product_series;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use crate::retire_product_series::mutation::RetireProductSeries;
 
-pub fn inverse(payload: &RetireProductSeries, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RetireProductSeries, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::introduce_product_series::mutation::IntroduceProductSeries> {
     Ok((|| {
     let Some((index, item)) = base.catalogue.product_series.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::IntroduceProductSeries(introduce_product_series::mutation::IntroduceProductSeries {
+    vec![Op::from(introduce_product_series::mutation::IntroduceProductSeries {
         product_series: item.clone(),
         index: Some(index),
     })]

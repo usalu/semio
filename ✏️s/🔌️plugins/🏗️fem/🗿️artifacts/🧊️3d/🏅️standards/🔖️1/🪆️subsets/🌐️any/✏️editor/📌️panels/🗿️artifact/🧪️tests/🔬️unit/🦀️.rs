@@ -1,5 +1,51 @@
-use super::*;
-use crate::editor::fem3d::terminology::fem3d_labels;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact::*;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SOLID;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::FEM3D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_framework_plugin::plugin_app_close_prelude::Buildable;
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
+use semio_framework_plugin::plugin_app_close_prelude::HasBase;
+use semio_framework_ui_contract::Label as UiLabel;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_window_item;
+use semio_framework_ui_locale::LabelText;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL;
+use semio_framework_ui_contract as ui;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_ui_locale::Locale;
@@ -10,7 +56,7 @@ use semio_framework_ui_contract::{TreeWindow, TREE_WINDOW_PATH_SEPARATOR, UI_BUI
 
 //#region 🔖️Fixtures
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot()
+    semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot()
 }
 
 fn english() -> &'static Fem3dLabels {
@@ -126,7 +172,7 @@ fn oversized() -> Fem3dSnapshot {
 fn house() -> Fem3dSnapshot {
     let mut document = demo();
     document.nodes = (0..63).map(|index| FemNode { id: format!("h{index}"), x: index as f64, y: 0.0, z: 0.0 }).collect();
-    document.supports = (0..63).map(|index| crate::FemSupport { id: format!("hs{index}"), node_id: format!("h{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect();
+    document.supports = (0..63).map(|index| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport { id: format!("hs{index}"), node_id: format!("h{index}"), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] }).collect();
     document.solids = (0..8)
         .map(|index| FemSolid {
             id: format!("hsol{index}"),
@@ -138,7 +184,7 @@ fn house() -> Fem3dSnapshot {
             layers: 1,
             mesh_size: 1.0,
             material_id: "concrete".into(),
-            axis: crate::FemAxis::Z,
+            axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z,
         })
         .collect();
     document.load_cases = (0..4)
@@ -268,7 +314,7 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
     assert_eq!(fem3d_coordinate(-4.0), "−4.00");
 
     let mut document = Fem3dSnapshot::default();
-    document.solids.push(FemSolid { id: "s1".into(), name: "S".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), base_z: 0.0, height: 0.2, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: crate::FemAxis::Z });
+    document.solids.push(FemSolid { id: "s1".into(), name: "S".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), base_z: 0.0, height: 0.2, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z });
     let tree = build(&document, labels);
     let clipped = row_labels(section_node(&tree, "solids")).remove(0);
     assert!(clipped.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
@@ -343,7 +389,7 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
 /// its render routing switches on.
 #[semio_framework_async_macros::async_test]
 async fn the_app_declares_the_artifact_panel_under_its_body_key() {
-    let definition = crate::editor::fem3d::create_fem3d_app();
+    let definition = semio_s_artifact_fem_3d_editor::editor::fem3d::create_fem3d_app();
     let panel = definition.panel_tabs.iter().find(|tab| tab.body_key.as_deref() == Some(BODY_KEY)).expect("the artifact panel is declared");
     assert!(matches!(panel.group, PanelGroup::Workbench));
     assert!(matches!(&panel.kind, PanelTabKind::App(id) if id == FRAMEWORK_PANEL_TAB_ARTIFACT_ID));

@@ -11,7 +11,7 @@ struct Span {start:usize,end:usize,next:usize,farthest:usize,distance:f64,force:
 #[derive(Clone,Copy,semio_framework_value::RetireOwned)]
 enum SimplifyFailure {Geometry,Contour,Capacity}
 impl SimplifyFailure {fn message(self)->&'static str {match self {Self::Geometry=>"Invalid path geometry",Self::Contour=>"A contour must start with a move",Self::Capacity=>"Path simplification exceeds work capacity"}}}
-fn distance(p:[f64;2],a:[f64;2],b:[f64;2])->f64 {
+pub fn distance(p:[f64;2],a:[f64;2],b:[f64;2])->f64 {
     let scale=p.into_iter().chain(a).chain(b).map(f64::abs).fold(1.0,f64::max);
     let a=a.map(|v|v/scale);let b=b.map(|v|v/scale);let p=p.map(|v|v/scale);
     let d=[b[0]-a[0],b[1]-a[1]];let length=d[0]*d[0]+d[1]*d[1];

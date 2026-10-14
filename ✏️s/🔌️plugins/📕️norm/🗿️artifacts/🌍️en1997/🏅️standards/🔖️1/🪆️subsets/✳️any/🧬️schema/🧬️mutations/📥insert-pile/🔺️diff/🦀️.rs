@@ -1,6 +1,6 @@
-use super::InsertPile;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997PilesRows};
+use crate::insert_pile::InsertPile;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997PilesRows};
 
 pub fn diff(payload: &InsertPile, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.piles.iter().any(|existing| existing.id == payload.pile.id) {

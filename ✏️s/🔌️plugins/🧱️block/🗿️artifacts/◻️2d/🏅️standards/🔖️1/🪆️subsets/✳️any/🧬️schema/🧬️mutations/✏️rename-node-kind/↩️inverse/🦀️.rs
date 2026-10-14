@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `RenameNodeKind`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::RenameNodeKind, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &crate::rename_node_kind::RenameNodeKind, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::rename_node_kind::RenameNodeKind> {
     Ok((|| {
-    vec![super::super::rename_node_kind::rename_node_kind(base.node_kind.name.clone())]
+    vec![crate::rename_node_kind::rename_node_kind(base.node_kind.name.clone())]
 
     })())
 }

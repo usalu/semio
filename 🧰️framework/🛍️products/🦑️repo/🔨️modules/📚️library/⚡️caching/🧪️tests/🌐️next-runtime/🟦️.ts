@@ -1,3 +1,5 @@
+import {withNextStorageV1} from "../../../../🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts";
+import {withRepositoryArtifactV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
@@ -11,14 +13,16 @@ import { scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocat
 
 /** 🌐️ Runs the assembled Next artifact with outside-module resolution refused by an independent Node guard. */
 export async function proveNextRuntime(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
-  const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), fixture = JSON.parse(await readFile(join(import.meta.dir, "../🏗️web-build/🧫️cases.json"), "utf8")), artifact = join(workspace, "dist", mode, "repo-coordinator", "next", "standalone"), manifest = JSON.parse(await readFile(join(artifact, "node_modules/next/package.json"), "utf8"));
+  const mode=readBuildMode(process.env.SEMIO_BUILD_MODE);
+  return withNextStorageV1(workspace,mode,invocation,async(store,layout)=>withRepositoryArtifactV1(workspace,{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:2147483648,maximumFiles:131072},invocation,async artifactReader=>{await artifactReader.recheck();
+  const fixture = JSON.parse(await readFile(join(import.meta.dir, "../🏗️web-build/🧫️cases.json"), "utf8")), artifact = join(layout.output,"standalone"), manifest = JSON.parse(await readFile(join(artifact, "node_modules/next/package.json"), "utf8"));
   const packageRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"), require = createRequire(join(packageRoot, "package.json"));
   assert.equal(manifest.version, require("next/package.json").version);
   const socket = createServer(); await new Promise<void>((accept, reject) => { socket.once("error", reject); socket.listen(0, "127.0.0.1", accept); });
   const port = (socket.address() as { port: number }).port; await new Promise<void>((accept, reject) => socket.close(error => error ? reject(error) : accept()));
   const controller = new AbortController(), signal = AbortSignal.any([controller.signal, invocation.control.signal]), lines: string[] = [];
   let ready!: () => void; const started = new Promise<void>(accept => { ready = accept; });
-  const child = runOwnedCommand("node", ["--experimental-strip-types", join(import.meta.dir, "📜️script.ts"), "guard", artifact], workspace, "next:runtime-oracle", scriptInvocationBudget(invocation, 30_000), { signal, env: scriptInvocationEnvironment(invocation, { ...process.env, PORT: String(port), HOSTNAME: "127.0.0.1" }), onLine(line) { lines.push(line); if (line.includes("Ready in")) ready(); } });
+  const child = runOwnedCommand("node", ["--experimental-strip-types", join(import.meta.dir, "📜️script.ts"), "guard", artifact], workspace, "next:runtime-oracle", scriptInvocationBudget(invocation, 30_000), { signal, env: scriptInvocationEnvironment(invocation, { ...store.environment, PORT: String(port), HOSTNAME: "127.0.0.1" }), onLine(line) { lines.push(line); if (line.includes("Ready in")) ready(); } });
   const completed = child.then(() => { throw Error("Standalone server ended before cancellation"); }, error => { if (!controller.signal.aborted) throw error; });
   try {
     await Promise.race([started, completed]);
@@ -31,6 +35,7 @@ export async function proveNextRuntime(workspace: string, output: string, invoca
     console.log(`[DEBUG] Next ${mode} standalone SDK=${manifest.version} HTTP=${response.status} HTML=${html.length} assets=${assets.length} assetBytes=${bytes}`);
   } finally { controller.abort(); await completed; }
   assert.ok(lines.some(line => line.includes("local modules without ancestor fallback")));
+  }));
 }
 
 /** 🔥️ Proves actual lazy Next compilation, cached serving during another graph and owned child cancellation. */

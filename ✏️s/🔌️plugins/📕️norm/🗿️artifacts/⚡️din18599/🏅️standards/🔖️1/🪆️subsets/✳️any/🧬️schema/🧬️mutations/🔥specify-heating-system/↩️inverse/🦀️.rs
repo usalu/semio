@@ -1,12 +1,12 @@
 //! ↩️ `specify-heating-system` inverse.
 
-use crate::mutations::specify_heating_system::SpecifyHeatingSystem;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::specify_heating_system::SpecifyHeatingSystem;
 
-pub fn inverse(_payload: &SpecifyHeatingSystem, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &SpecifyHeatingSystem, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::specify_heating_system::SpecifyHeatingSystem> {
     Ok((|| {
-    vec![Din18599Mutation::SpecifyHeatingSystem(SpecifyHeatingSystem { new_heating: base.heating.clone() })]
+    vec![Op::from(SpecifyHeatingSystem { new_heating: base.heating.clone() })]
 
     })())
 }

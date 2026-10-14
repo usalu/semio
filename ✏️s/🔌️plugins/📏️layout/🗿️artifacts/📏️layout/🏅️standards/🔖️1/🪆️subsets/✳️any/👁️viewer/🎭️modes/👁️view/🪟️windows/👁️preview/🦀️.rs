@@ -9,8 +9,9 @@
 //! simplification for a first-pass viewer, not a bug, mirroring cad's viewer "default camera/sun,
 //! fallback-box mesh" documented gap.
 
-use crate::standards::v1::subsets::any::schema::resolve_page;
-use crate::{Frame, LayoutSnapshot};
+use semio_s_artifact_layout_layout_model::resolve_page;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;

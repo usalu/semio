@@ -4,17 +4,20 @@
     {
       "version": 1,
       "directory": "/a",
-      "program": "/original/📜️script.ts"
+      "program": "/original/📜️script.ts",
+      "leaseDirectory": "/leases"
     },
     {
       "version": 1,
       "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "program": "/original/📜️script.ts"
+      "program": "/original/📜️script.ts",
+      "leaseDirectory": "/leases"
     },
     {
       "version": 1,
       "directory": "C:\\a",
-      "program": "C:\\original\\📜️script.ts"
+      "program": "C:\\original\\📜️script.ts",
+      "leaseDirectory": "C:\\leases"
     }
   ],
   "rejected": [
@@ -56,6 +59,31 @@
     {
       "version": 1,
       "directory": "/a"
+    },
+    {
+      "version": 1,
+      "directory": "/scratch",
+      "program": "/original/📜️script.ts"
+    },
+    {
+      "version": 1,
+      "directory": "/scratch",
+      "program": "/original/📜️script.ts",
+      "leaseDirectory": "relative"
     }
-  ]
+  ],
+  "scope": {
+    "phases": [
+      {
+        "phase": "open",
+        "admitted": true
+      },
+      {
+        "phase": "retired",
+        "admitted": false
+      }
+    ],
+    "retiredRefusal": "Original Cargo preparation scope retired",
+    "outsideScratch": "escaped-preparation"
+  }
 }

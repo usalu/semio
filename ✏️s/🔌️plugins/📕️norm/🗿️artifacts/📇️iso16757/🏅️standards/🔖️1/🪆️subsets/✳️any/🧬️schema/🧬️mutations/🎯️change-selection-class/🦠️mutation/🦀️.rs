@@ -1,6 +1,6 @@
 //! 🎯️ `change-selection-class` — sets the product-class scalar of the active selection request.
 
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +13,15 @@ pub struct ChangeSelectionClass {
     pub new_class_id: String,
 }
 
-impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeSelectionClass {
+impl<Op> protocol::MutationKind<Iso16757Snapshot, Op> for ChangeSelectionClass where Op: protocol::Mutation<Iso16757Snapshot, Diff = semio_s_artifact_norm_iso16757_diff::Iso16757Diff> + From<crate::change_selection_class::mutation::ChangeSelectionClass> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "selection-class", kind: "change-selection-class", record: "ChangedSelectionClass" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        crate::change_selection_class::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_selection_class::inverse::inverse(self, base)?
     
     })
 }

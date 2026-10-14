@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-cad-document-contract": "bun repo run @semio-tech/cad-cad-rs:verify-cad-document-contract"
+    "verify-cad-document-contract": "bun --cwd \"../../../../../../..\" repo run @semio-tech/cad-cad-rs:verify-cad-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

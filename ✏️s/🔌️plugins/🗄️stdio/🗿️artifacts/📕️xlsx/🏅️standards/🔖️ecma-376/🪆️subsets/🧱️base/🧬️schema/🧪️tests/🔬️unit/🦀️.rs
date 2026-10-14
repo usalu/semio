@@ -1,10 +1,10 @@
-use super::*;
-use crate::schema::refusal::XlsxError;
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
-use crate::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
-use crate::schema::construction::build_minimal_xlsx;
-use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_xlsx, sniff_xlsx_bytes};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{
     column_index, column_letter, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SHARED_STRINGS, REL_TYPE_SHARED_STRINGS_STRICT, REL_TYPE_WORKSHEET, SHARED_STRINGS_CONTENT_TYPE, SHARED_STRINGS_PART, WORKBOOK_CONTENT_TYPE, WORKBOOK_PART,
     WORKSHEET_CONTENT_TYPE,
 };
@@ -168,7 +168,7 @@ async fn unmodeled_parts_survive_decode_encode_verbatim() {
     let mut snap = build_minimal_xlsx(sample_workbook());
     snap.opc.content_types.set_override("xl/styles.xml", STYLES_CONTENT_TYPE);
     snap.opc.set_part("xl/media/blob.bin", "application/octet-stream", vec![0, 159, 255]);
-    snap.xml_parts.push(crate::schema::snapshot::XlsxXmlPart { path: "xl/styles.xml".into(), content_type: STYLES_CONTENT_TYPE.into(), document: xml_document_from_text("<styleSheet/>").expect("styles xml") });
+    snap.xml_parts.push(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart { path: "xl/styles.xml".into(), content_type: STYLES_CONTENT_TYPE.into(), document: xml_document_from_text("<styleSheet/>").expect("styles xml") });
     snap.validate_authority().expect("an unmodeled XML part and a binary part are valid package authority");
     let bytes = encode_xlsx(&snap).expect("encode");
 
@@ -195,9 +195,9 @@ async fn analyzer_builder_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn shrinking_sheet_count_drops_stale_worksheet_parts() {
-    use crate::schema::mutations::{apply_xlsx_mutation, remove_sheet::RemoveSheet, XlsxMutation};
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, remove_sheet::RemoveSheet, XlsxMutation};
     let mut snap = build_minimal_xlsx(sample_workbook());
-    let second = crate::schema::mutations::cell_address::xlsx_cell_address(&snap, "Second", 1, 0).expect("second sheet cell").part_path;
+    let second = semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::cell_address::xlsx_cell_address(&snap, "Second", 1, 0).expect("second sheet cell").part_path;
     assert!(snap.xml_part(&second).is_some());
 
     apply_xlsx_mutation(&mut snap, &XlsxMutation::RemoveSheet(RemoveSheet { name: "Second".into() }));
@@ -252,9 +252,9 @@ async fn decode_recognizes_strict_office_document_and_shared_strings_relationshi
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
-    use super::*;
-use crate::schema::refusal::XlsxError;
-    use crate::schema::{diff, mutations, snapshot};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::*;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -263,11 +263,11 @@ use crate::schema::refusal::XlsxError;
     /// message).
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
@@ -275,7 +275,7 @@ use crate::schema::refusal::XlsxError;
     /// 🧾️ The native Text grammar recognizes the complete owned logical workbook.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let text = pack::snapshot::ArtifactDsl::print_dsl(&demo_xlsx_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         let native = format!("{}\n{body}", envelope.envelope_id());
@@ -286,7 +286,7 @@ use crate::schema::refusal::XlsxError;
     /// output for every `XlsxMutation` variant (`mutations::demo_mutation_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -298,7 +298,7 @@ use crate::schema::refusal::XlsxError;
     /// for every representative `XlsxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
@@ -309,21 +309,21 @@ use crate::schema::refusal::XlsxError;
     /// 🧭️ The literal native protocol consumes every snapshot, mutation and diff byte.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_xlsx_snapshot();
         let packed = pack::snapshot::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
 
-        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
@@ -398,7 +398,7 @@ fn logical_construction_fixture_matches_calamine_and_native_roundtrips() {
 #[test]
 fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
     use calamine::{Data, Reader};
-    use crate::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_vacancy_address, XlsxMutation};
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_vacancy_address, XlsxMutation};
     const BEFORE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
     const AFTER: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/➡️after/🔣️.json");
     const MUTATION: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
@@ -417,7 +417,7 @@ fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
 /// 🪪️ History retains the addressed worksheet identity while editing vacancy coordinates and cell content.
 #[test]
 fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
-    use crate::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
     use semio_framework_value::ToValue;
     const BEFORE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
     const MUTATION: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");

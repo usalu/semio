@@ -31,7 +31,6 @@ semio-framework-3d-brep-representation.workspace = true
 semio-framework-hash.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-replication.workspace = true
 semio-framework-value.workspace = true
 semio-framework-value-derive.workspace = true
 

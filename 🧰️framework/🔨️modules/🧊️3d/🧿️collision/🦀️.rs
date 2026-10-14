@@ -19,7 +19,7 @@ use crate::rigid::{Isometry3, Point3, Vector3};
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`; `Point3` (`🌀️rigid`) already covered.
 #[derive(Clone, Copy, Debug, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 struct Aabb3 {
     min: Point3,
     max: Point3,

@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `DeleteSurface` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, AdjacencyPairPatch, FenestrationPatch, ModelPatch, Rows, SurfacePatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, AdjacencyPairPatch, FenestrationPatch, ModelPatch, SurfacePatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

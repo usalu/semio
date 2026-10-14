@@ -1,0 +1,13 @@
+# Rust Compiler Follow-Up
+
+Read-only observations while the compiler SDK remains frozen for ordinary semantic cache qualification.
+
+The direct library adapter currently hashes the rustc executable and target rustlib inventory. It does not include host compiler driver shared libraries in the shown identity implementation. A complete owned toolchain generation seal should include actual compiler loader/driver/toolchain bytes, retain generation custody through compilation and allow warm builds to use immutable authenticated facts instead of repeatedly hashing every large sysroot file. Storage agent owns the new Rustup generation protocol.
+
+The direct library adapter emits link output only. Source hashes checked before and after compilation do not independently establish the exact bytes rustc consumed during an intervening ABA edit. Existing actual Cargo provenance supports compiler dep-info consumed-byte checksums. Extend the direct unit adapter with actual dep-info/checksum evidence before artifact publication, or use an authentic immutable Source snapshot with correct manifest-relative paths and compile environment semantics. Nx agent owns this compiler adapter frontier; no current concurrent Source ABA correctness claim.
+
+The corrected Source walker now retains file inner attributes. The actual OS Kernel entry has a large initial inner allow attribute followed by os_dsl; prior census could skip that complete first inline module. Remeasure the complete Kernel before using old 3.7 MB totals. Existing common crate limits remain unchanged; production route qualification must refuse actual oversized owners before compilation.
+
+StoreCore's link resolver group is coherent but currently depends on high VcsError/SpaceHost and BlobStore. A future lower ownership cut needs first-party blob/link schema and controlled read ports, with the SpaceHost implementation remaining above the ports. Current LinkState resolver maps directory errors to Missing and blob read failures to PinnedOnly despite its documentation claiming errors remain distinct. A schema-first cut must preserve or deliberately correct actual error semantics through native laws; moving this code verbatim and calling it a finished architecture would miss that mismatch. No Store body was changed during this audit.
+
+Current ordinary declarative intents also expose project-root collisions: package aggregate and canonical crate project both use the manifest directory. A physical stable per-unit descriptor namespace is a candidate unique project root; keep command cwd and explicit source inputs separate. Do not relax unique ownership merely to make a fixture pass.

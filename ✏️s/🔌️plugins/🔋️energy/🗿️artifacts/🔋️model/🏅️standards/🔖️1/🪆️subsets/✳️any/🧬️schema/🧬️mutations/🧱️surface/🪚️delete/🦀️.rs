@@ -1,8 +1,7 @@
 //! 🪚️ Energy model mutation — `DeleteSurface`: Removes one surface and CASCADES: every fenestration hosted on it and every adjacency pair naming it go with it, reported at info level as `mutation.cascade`. It still RESTRICTS on the one reference a cascade could not answer for — another surface naming this one as its interzone partner — because silently rewriting that surface's boundary condition is a physics decision no delete may take.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteSurface {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_surface(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteSurface(DeleteSurface { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_surface<Op: From<DeleteSurface>>(id: crate::model::EntityId) -> Op {
+    DeleteSurface { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteSurface {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteSurface
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteSurface> + From<crate::boundary_mutations::ConnectSurfaces> + From<crate::fenestration_mutations::CreateFenestration> + From<crate::CreateSurface> + From<crate::fenestration_mutations::ReplaceFenestrationVertices>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "surface", kind: "delete-surface", record: "DeletedSurface" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

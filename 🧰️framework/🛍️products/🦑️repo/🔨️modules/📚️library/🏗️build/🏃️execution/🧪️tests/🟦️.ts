@@ -26,7 +26,7 @@ test("closed source and native execution declarations match the independent sche
  console.log(`[DEBUG] all ${fixture.contracts.length} complete execution declaration cases agree with independent Ajv`);
 });
 test("generated Cargo commands declare compilation versus development-test ownership",async()=>{
- const {cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),projectRoot="🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",targets=cacheInternals.cargoTargets(projectRoot,root);
+ const {cacheInternals}=await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"),projectRoot="🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",targets=await cacheInternals.cargoTargets(projectRoot,root);
  expect(Object.keys(targets).sort()).toEqual(["build","check","test"]);
  for(const [name,target] of Object.entries(targets) as [string,any][]){
   expect(target.metadata?.semio?.execution).toEqual({version:1,kind:"native",scope:name==="test"?"test":"production"});

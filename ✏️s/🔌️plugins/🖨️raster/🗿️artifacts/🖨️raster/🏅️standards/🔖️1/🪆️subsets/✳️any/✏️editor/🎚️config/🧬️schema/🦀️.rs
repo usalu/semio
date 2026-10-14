@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
-pub use crate::editor::raster::selection::RasterPixelSelection;
+pub use crate::selection::RasterPixelSelection;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]

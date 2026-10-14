@@ -1,10 +1,10 @@
 //! ⚖️ EN 1992 compliance numeric worked examples + remedy law + oracle parity.
 
-use crate::document::AnnexChoice;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::schema::na_de::AnnexParams;
-use crate::standards::v1::subsets::any::schema::part_1_1;
-use crate::En1992Snapshot;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1992_inferences::evaluate;
+use semio_s_artifact_norm_en1992_checks::na_de::AnnexParams;
+use semio_s_artifact_norm_en1992_checks::part_1_1;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -40,8 +40,8 @@ fn cot_theta_de_limits() {
 
 #[test]
 fn fire_r60_axis_distance() {
-    use crate::standards::v1::subsets::any::schema::part_1_2_fire;
-    use crate::FireRating;
+    use semio_s_artifact_norm_en1992_checks::part_1_2_fire;
+    use semio_s_artifact_norm_en1992_model::FireRating;
     let a = part_1_2_fire::required_axis_distance_beam_m(0.160, FireRating::R60);
     assert!((a * 1000.0 - 35.0).abs() < 0.5);
 }
@@ -68,8 +68,8 @@ fn failing_under_reinforced_has_multiple_fails_with_remedies() {
 
 #[test]
 fn gate_blocking_remedies_clear_fail_status() {
-    use crate::app_surface::apply_remedy_edit;
-    use crate::document::CheckStatus;
+    use semio_s_plugin_norm_app_surface::apply_remedy_edit;
+    use semio_s_plugin_norm_compliance::CheckStatus;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
@@ -190,14 +190,14 @@ fn remedy_law_cover_as_and_stirrups_flip_to_pass() {
 
 #[test]
 fn c_min_dur_xc3_de() {
-    use crate::ExposureClass;
+    use semio_s_artifact_norm_en1992_model::ExposureClass;
     let c = part_1_1::c_min_dur_m(ExposureClass::Xc3);
     assert!((c - 0.020).abs() < 1e-9);
 }
 
 #[test]
 fn subject_paths_use_id_selectors_and_resolve() {
-    use crate::app_surface::{get_value_at_path, parse_path};
+    use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path};
     let snap = En1992Snapshot::compliant_office_frame();
     let report = evaluate(&snap);
     let root = semio_framework_value::ToValue::to_value(&snap);
@@ -233,20 +233,20 @@ fn de_na_material_factors_and_cover_tables() {
     assert_eq!(AnnexParams::de().gamma_s, 1.15);
     assert_eq!(AnnexParams::de().alpha_cc, 0.85);
     assert_eq!(AnnexParams::en().alpha_cc, 1.0);
-    use crate::ExposureClass;
+    use semio_s_artifact_norm_en1992_model::ExposureClass;
     assert!((part_1_1::c_min_dur_m(ExposureClass::Xc3) - 0.020).abs() < 1e-12);
     assert!((part_1_1::c_min_dur_m(ExposureClass::Xc4) - 0.025).abs() < 1e-12);
     assert!((part_1_1::w_max_m(ExposureClass::Xc3) - 0.30e-3).abs() < 1e-12);
     assert!((part_1_1::w_max_m(ExposureClass::Xc1) - 0.40e-3).abs() < 1e-12);
-    let k_ss = part_1_1::basic_ld_limit(crate::SupportCondition::SimplySupported, 0.01, 0.0);
-    let k_cont = part_1_1::basic_ld_limit(crate::SupportCondition::Continuous, 0.01, 0.0);
+    let k_ss = part_1_1::basic_ld_limit(semio_s_artifact_norm_en1992_model::SupportCondition::SimplySupported, 0.01, 0.0);
+    let k_cont = part_1_1::basic_ld_limit(semio_s_artifact_norm_en1992_model::SupportCondition::Continuous, 0.01, 0.0);
     assert!(k_cont > k_ss, "continuous K=1.5 raises l/d vs simply-supported K=1.0");
     assert!((En1992Snapshot::compliant_office_frame().delta_c_dev - 0.010).abs() < 1e-12);
 }
 
 #[test]
 fn field_meta_covers_every_editable_leaf_en_de() {
-    use crate::field_meta::en1992_field_meta;
+    use semio_s_artifact_norm_en1992_editor::field_meta::en1992_field_meta;
     let snap = En1992Snapshot::compliant_office_frame();
     let value = serde_json::to_value(&snap).expect("json");
     let mut missing = Vec::new();
@@ -375,7 +375,6 @@ fn family_any_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }
 
-
 fn oracle_script() -> PathBuf {
     family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance/🐍️.py")
 }
@@ -405,7 +404,7 @@ fn accidental_de_gamma_reduces_vs_uls() {
 
 #[test]
 fn fire_tables_route_per_kind_and_rating() {
-    use crate::standards::v1::subsets::any::schema::part_1_2_fire;
+    use semio_s_artifact_norm_en1992_checks::part_1_2_fire;
     use crate::{FireRating, MemberKind, SupportCondition};
     let ratings = [FireRating::R30, FireRating::R60, FireRating::R90, FireRating::R120];
     for r in ratings {
@@ -518,7 +517,7 @@ fn walkdir_ts(root: &PathBuf) -> Vec<PathBuf> {
 
 #[test]
 fn field_meta_no_prefix_only_fallback_for_editable_leaves() {
-    use crate::field_meta::en1992_field_meta;
+    use semio_s_artifact_norm_en1992_editor::field_meta::en1992_field_meta;
     let examples = [
         En1992Snapshot::compliant_office_frame(),
         En1992Snapshot::failing_prestressed_beam(),
@@ -540,7 +539,6 @@ fn field_meta_no_prefix_only_fallback_for_editable_leaves() {
     }
     assert!(missing.is_empty(), "editable leaves without explicit meta (no prefix fallback): {missing:?}");
 }
-
 
 #[test]
 fn every_editable_leaf_influences_a_check_scope_aware() {
@@ -597,7 +595,6 @@ fn every_editable_leaf_influences_a_check_scope_aware() {
         missing.len()
     );
 }
-
 
 fn resolve_json_path<'a>(tree: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {
     let mut segs = Vec::new();
@@ -757,7 +754,6 @@ fn concrete_table_3_1_derived_not_in_snapshot_json() {
     assert!(g.get("fCm").is_none());
 }
 
-
 #[test]
 fn liquid_retaining_example_has_verdict() {
     let snap = En1992Snapshot::liquid_retaining_fem_anchor();
@@ -779,8 +775,8 @@ fn liquid_retaining_example_has_verdict() {
 
 #[test]
 fn evaluated_concrete_fck_matches_catalogue_cell() {
-    use crate::app_surface::CatalogueCell;
-    use crate::editor::en1992::panels::catalogue::{reference_tables, TABLE_3_1_FCK_MPA};
+    use semio_s_plugin_norm_app_surface::CatalogueCell;
+    use semio_s_artifact_norm_en1992_editor::panels::catalogue::{reference_tables, TABLE_3_1_FCK_MPA};
     let snap = En1992Snapshot::compliant_office_frame();
     let grade = snap.concrete("c30").expect("c30");
     let from_const = TABLE_3_1_FCK_MPA.iter().find(|(f, _)| *f == 30).expect("const row");
@@ -804,5 +800,5 @@ fn dangling_prestress_steel_id_fails() {
     let mut snap = En1992Snapshot::compliant_prestressed_beam();
     snap.members[0].prestress_steel_id = "missing-steel".into();
     let report = evaluate(&snap);
-    assert!(report.checks.iter().any(|c| c.id.contains("prestressSteel") && matches!(c.status, crate::document::CheckStatus::Fail)));
+    assert!(report.checks.iter().any(|c| c.id.contains("prestressSteel") && matches!(c.status, semio_s_plugin_norm_compliance::CheckStatus::Fail)));
 }

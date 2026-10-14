@@ -1,6 +1,6 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN 4108 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
 
 /// 📚 Every path an DIN 4108 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

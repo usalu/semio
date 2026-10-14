@@ -1,7 +1,8 @@
 //! 🔺️ `replace-part-number-rule` — sparse diff construction.
 
-use super::mutation::ReplacePartNumberRule;
-use crate::{Iso16757Diff, Iso16757Snapshot};
+use crate::replace_part_number_rule::mutation::ReplacePartNumberRule;
+use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplacePartNumberRule, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

@@ -5,8 +5,8 @@
 //! Parameter `t` runs over `[0, 1]` and is proportional to arc length (lines by length, arcs by angle).
 //! Tolerances: coincidence is [`LENGTH_EPS`] (1 nm in metres) for lengths and [`ANGLE_EPS`] for angles; see `T/r3-geometry-api.md` for the policy per function.
 
-use crate::vector::{angle_between, cross, perp, unit, ANGLE_EPS, LENGTH_EPS};
-use crate::{Affine, Point, Rect, Vec2};
+use semio_framework_geometry_vector::{angle_between, cross, perp, unit, ANGLE_EPS, LENGTH_EPS};
+use semio_framework_geometry_primitives::{Affine, Point, Rect, Vec2};
 use std::f64::consts::{PI, TAU};
 
 /// 🌙️ Sweep angle (radians, signed, counter-clockwise positive) of a bulge.

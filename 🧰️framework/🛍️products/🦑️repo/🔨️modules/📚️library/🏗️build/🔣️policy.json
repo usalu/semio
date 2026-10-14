@@ -1,12 +1,32 @@
 {
   "version": 1,
   "defaultTool": "nx",
-  "catalogProviders": [
-    {
-      "ownerRoot": "✏️s",
-      "sourcePath": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts"
-    }
-  ],
+  "graphMembers": {
+    "description": "Workspace files whose presence the portable graph consumes; every other file reaches inference only through observed facts, so adding or removing it cannot change the graph.",
+    "basenames": [
+      "📋️project.json",
+      "Cargo.toml",
+      "package.json",
+      "go.mod",
+      "bun.lock"
+    ],
+    "suffixes": [
+      ".patch",
+      ".feature",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".cjs",
+      ".cjsx",
+      ".mjs",
+      ".mjsx",
+      ".cts",
+      ".ctsx",
+      ".mts",
+      ".mtsx"
+    ]
+  },
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",

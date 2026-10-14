@@ -1,8 +1,10 @@
 //! 🎨 `update-character-style` — replaces one character style.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{CharacterStylePatch, LayoutCharacterStylesDelta, LayoutCharacterStylesModification};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{CharacterStylePatch, LayoutCharacterStylesDelta};
+use crate::standards::v1::subsets::any::schema::diff::LayoutCharacterStylesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,10 +25,10 @@ pub struct UpdateCharacterStyle {
     pub tracking: Option<f64>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateCharacterStyle {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateCharacterStyle where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_character_style::UpdateCharacterStyle> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "character-style", kind: "update-character-style", record: "UpdatedCharacterStyle" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_character_style(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_update_character_style(self, base)? 
     })
 }
@@ -64,10 +66,10 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
     })
 }
 
-pub fn inverse_update_character_style(payload: &UpdateCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_character_style<Op: From<crate::update_character_style::UpdateCharacterStyle>>(payload: &UpdateCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(style) = base.character_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateCharacterStyle(UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking })]
+    vec![Op::from(UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking })]
 
     })())
 }

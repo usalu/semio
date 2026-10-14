@@ -7,8 +7,8 @@
 //! fix is to emit zero mutations (`Emit::default()`) rather than inventing a fake semantic edit.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::En1995Mutation;
-use crate::En1995Snapshot;
+use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

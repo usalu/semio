@@ -1,10 +1,10 @@
-use super::ChangeMemberDampingXi;
-use crate::mutations::En1995Mutation;
-use crate::En1995Snapshot;
-pub fn inverse(payload: &ChangeMemberDampingXi, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+use crate::change_member_damping_xi::ChangeMemberDampingXi;
+
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+pub fn inverse<Op>(payload: &ChangeMemberDampingXi, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_member_damping_xi::ChangeMemberDampingXi> {
     Ok((|| {
     let Some(item) = base.members.iter().find(|item| item.id == payload.member_id) else { return Vec::new(); };
-    vec![En1995Mutation::ChangeMemberDampingXi(ChangeMemberDampingXi { member_id: payload.member_id.clone(), new_value: item.damping_xi })]
+    vec![Op::from(ChangeMemberDampingXi { member_id: payload.member_id.clone(), new_value: item.damping_xi })]
 
     })())
 }

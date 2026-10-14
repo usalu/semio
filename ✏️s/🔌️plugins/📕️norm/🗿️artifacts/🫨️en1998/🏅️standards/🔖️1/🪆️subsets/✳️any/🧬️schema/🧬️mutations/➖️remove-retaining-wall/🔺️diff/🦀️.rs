@@ -1,8 +1,8 @@
 //! ➖️ `remove-retaining-wall` diff — removes the row at the index, guarded by the row's own id; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemoveRetainingWall;
-use crate::diff::{En1998Diff, En1998RetainingWallDelta};
-use crate::En1998Snapshot;
+use crate::remove_retaining_wall::RemoveRetainingWall;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998RetainingWallDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &RemoveRetainingWall, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if payload.index >= base.retaining_walls.len() {

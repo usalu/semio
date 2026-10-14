@@ -511,5 +511,51 @@
         "triple_only"
       ]
     }
-  ]
+  ],
+  "passthrough": [
+    {
+      "subcommand": "test",
+      "tail": [
+        "--nocapture"
+      ],
+      "compilerFlags": false
+    },
+    {
+      "subcommand": "bench",
+      "tail": [
+        "--k0-filter"
+      ],
+      "compilerFlags": false
+    },
+    {
+      "subcommand": "rustc",
+      "tail": [
+        "--cfg",
+        "k0_passthrough"
+      ],
+      "compilerFlags": true
+    }
+  ],
+  "multiTarget": [
+    {
+      "name": "check-all-targets",
+      "args": [
+        "check",
+        "--all-targets"
+      ]
+    },
+    {
+      "name": "test-no-run",
+      "args": [
+        "test",
+        "--no-run"
+      ]
+    }
+  ],
+  "identicalUnits": {
+    "case": 0,
+    "unit": 1,
+    "copies": 2,
+    "rootAll": true
+  }
 }

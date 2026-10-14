@@ -81,8 +81,8 @@ async fn export_concrete_forest_left_lowpoly_mesh_json() {
     eprintln!("LOWPOLY_FOREST_MESH_JSON_START");
     eprintln!("{json}");
     eprintln!("LOWPOLY_FOREST_MESH_JSON_END");
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json(&json, "obj-1", "Hexagonal Cut Concrete Forest Left");
+    let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::component::text::snapshot::snapshot_from_mesh_json(&json, "obj-1", "Hexagonal Cut Concrete Forest Left");
     eprintln!("LOWPOLY_FOREST_DSL_START");
-    eprintln!("{}", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot));
+    eprintln!("{}", semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::component::text::snapshot::print_dsl(&snapshot));
     eprintln!("LOWPOLY_FOREST_DSL_END");
 }

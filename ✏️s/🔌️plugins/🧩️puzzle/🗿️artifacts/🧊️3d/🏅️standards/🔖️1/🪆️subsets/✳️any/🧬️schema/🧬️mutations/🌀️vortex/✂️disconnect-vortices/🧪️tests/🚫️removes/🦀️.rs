@@ -8,26 +8,26 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
+use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
+use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
+use semio_s_artifact_puzzle_3d_mutations::inverse_puzzle3d_mutation;
 
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🦠️mutation/🔣️.json")).expect("committed test data reads"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🔺️diff/🔣️.json")).expect("committed test data reads"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✂️disconnect-vortices/🚫️removes/🎯️outcome/🔣️.json")).expect("committed test data reads"));
 
 fn before() -> Puzzle3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Puzzle3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Puzzle3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ The committed `disconnect-vortices` payload carries `before` to exactly the committed `after`, and
@@ -59,22 +59,22 @@ fn inverse_restores_before() {
 /// decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "disconnect-vortices/removes-attraction-1: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
-    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded_mutation)).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION.as_str()).expect("mutation reparses");
     assert_eq!(reencoded, original, "disconnect-vortices/removes-attraction-1: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `disconnect-vortices` actually produces on this base.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let outcome: serde_json::Value = serde_json::from_str(OUTCOME.as_str()).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let mut snapshot = before();
     let applied = apply_puzzle3d_mutation(&mut snapshot, &mutation()).is_ok();
@@ -96,7 +96,7 @@ fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff decodes");
     assert_eq!(produced, committed, "disconnect-vortices/removes-attraction-1: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["attractions"]["removed"][0]["id"].as_str(), Some("attraction-1"), "disconnect-vortices/removes-attraction-1: the diff must remove attraction-1 by id");
     assert!(committed["objects"].is_null(), "disconnect-vortices/removes-attraction-1: a disconnect must not touch the objects delta");
@@ -105,9 +105,9 @@ fn produces_committed_diff() {
 /// 🔣️ The committed `disconnect-vortices` diff is itself canonical and decodes to `Puzzle3dDiff`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(DIFF.as_str()).expect("committed diff reparses");
     assert_eq!(reencoded, original, "disconnect-vortices/removes-attraction-1: committed diff JSON is not canonical");
 }
 
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// the diff is a complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "disconnect-vortices/removes-attraction-1: committed diff did not carry before to after");
 }

@@ -20,10 +20,9 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_step::{
-    schema::snapshot::{StepEntity, StepValue},
-    StepSnapshot,
-};
+use semio_s_artifact_stdio_step::schema::snapshot::StepEntity;
+use semio_s_artifact_stdio_step::schema::snapshot::StepValue;
+use semio_s_artifact_stdio_step::StepSnapshot;
 use std::collections::HashMap;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId::ANY };

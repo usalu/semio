@@ -1,8 +1,7 @@
 //! ⛰️ Energy model mutation — `ChangeSiteElevation`: Sets the site's elevation above sea level (EnergyPlus `Site:Location`: -300 m to below 8900 m).
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeSiteElevation {
     pub new_elevation_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_site_elevation(new_elevation_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSiteElevation(ChangeSiteElevation { new_elevation_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_site_elevation<Op: From<ChangeSiteElevation>>(new_elevation_m: f64) -> Op {
+    ChangeSiteElevation { new_elevation_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSiteElevation {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSiteElevation
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSiteElevation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "site", kind: "change-site-elevation", record: "ChangedSiteElevation" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

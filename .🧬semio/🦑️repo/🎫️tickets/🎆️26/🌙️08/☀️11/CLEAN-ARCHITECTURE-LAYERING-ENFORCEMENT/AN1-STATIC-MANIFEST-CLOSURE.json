@@ -1,0 +1,1289 @@
+{
+  "kind": "static-cargo-manifest-overapproximation-not-compiler-metadata",
+  "root": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+  "includeRootDev": true,
+  "includeDependencyDev": false,
+  "includeAllTargetAndOptionalBranches": true,
+  "manifests": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "845f8d0ae6a172f0fd03dbda80cbd0add6ec890a89a22d39a7da8eb3c655404f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "3efd7ee00553ea597cce47eedcd0a83c909f784e38b4f72adf5196d87380bf76"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "0ac38977d1f180c2d12edda9d328e7e591699ee0f1bef2adeb5403ab6594b3f9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "706cf8ccfdf26a5e7c774a14bdd6f3ba22c97a5873d3f71e7a8f71638eab4046"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "829b609272f28a799b3771f19df0dbfe8fdb402a5e5654f478131fa85a6e8493"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "05794c019549f54623fd2a22c05e7001bdcd1ee3557fb90678f6eec8b9f0a77e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "199c7e7e4bbb13a5ca169f3e4aa88e83c2c259b79841ea34068fbc3a2ca1b5ca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "06aeffad62da0bd20055b3bfc29ee82b7d3264ef87931b71f83ecfefad13bf9d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "18b7b8bf41728582a3f8d6183d300821ebfe2cef2639132d5b341cfea0f8d203"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "b1bdeb9e5693e122444609a3b003bc775dd95edc1377ab96498c7f82d3069aa4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "56d83f2dce398764bc6ea7c63c3518948acb1726daf5d9e75880c65cbc8fd95b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "1f04bb4a8bfb1f715ddab71e6867fd5e8c3981eea83e1645a71c58aced0249e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "1251254674c0718a32172ae2ec3c9a797a1c008d1c85d1764cd92e45fd763b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "5c00e9a841eed638f37a5498857ea4332c6d2b4681e6c68b7917732f94301291"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "cb95424476063f4357d385d85aa10b187147537db8e463a5ea7d6562b624bc1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "3672b08b52fa3f4a54d7abb53aa58deabf556b1365aea3337d5b7b2ca115eae0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "360178aa6c995a51b9c057b0170bd8853cc943439a01f74e0b20e87f9799144d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "ca42d965f8043cf30aad30a4e77544272390c809a4cc34d442e20a255f5c850b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "54281456a22beb2848ead2959e55f1fdfbd86fcae75b9832b0b502a429825c90"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "6a555613f9d994ec0811a2bcc05d5324408abf24f597f934924a18f992e5e976"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "dd35a17daab24aedf58ed5d59161654417ab80775d5e35db02fd722c610af671"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "3db413c343fb3ebb79dfba3785d7aacd023c9d3e9cb67110818af433222d4d3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "859663952da06b52db666c245c001b511b28f16ff1350773b583037795fb2c3a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "518f0c7f9baecbfc62999a5cb6b5f9b8e026ba64673e9035f6608df50461037e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "46b3d18950250dacca5d72a26f68b379d50b54c406db151fb607563ebac9f3ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "6e8ded5e38954fa2c131623b3695f8f8a1c4748f3b35e14946b8ba30d221a866"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "96e97bf1d9ba2cb509ac03fb1c56c9e7631f22b092f1db7a8150a58318a9ce3c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "c06f71c224bae47b52037123cffa07250d21d95aa4c2911f3494d9666b0d07ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "9019ef5c4b44bea7d702dc13de2651f9c29171908aaf4e5f0e5910b092cc93e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "240a5b3666f2d05b8fb6174ba288046b0c764a5f8cdf72de75cc371056541db7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "dd32f6b25dc880cb4c1b26aa83bb4003f6b39e7a7f34d433a1136207ee293469"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "e7c168093076d3b3c5bbd37815790e4dcccf160388d3eb29f4652179a039b845"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "29906bbb6e47dde4167c85eab6acd19a44589231cbb9eb628789152b1c2ecf1e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "33230687e4586fabe4435851b9e6a25d58e657e8db16024e0faa36464eb67ca5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "b7b2eecbd98adbce1fc2bfe905a3cfa4109c873aab732314492181e1a7556d33"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "afd1163977245732cc30f19cb9a5ff8491db29857ea41c881e3ef9a560e7eccd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "df162a636fe6d46eb4d991bd9bf770376ed0017130d13ac76c9dd4ef8ac5eecc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "99d7efec7d60c436cd32771e39b2bb7b93b3ae5480b458a2e0d3d48b54d1c7b8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "21c3443abeed2db948164c9adac7e25ef71213ef79f09bd26e3c00adb6e8fcca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fd302be177869ec4a35e9c1780769c97985084104ef7d947a9b3804c63873ac1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "c0cf18ad17368e80735f5890255931d3d4e3cd1e63a78d259e2493a46d1f1fee"
+    }
+  ],
+  "edges": [
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-job",
+      "to": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-async",
+      "to": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-replication",
+      "to": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-derive",
+      "to": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dev-dependencies",
+      "name": "semio-framework-job",
+      "to": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": [
+        "testkit"
+      ]
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dev-dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dev-dependencies",
+      "name": "semio-framework-trace",
+      "to": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dev-dependencies",
+      "name": "semio-framework-pack-json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dev-dependencies",
+      "name": "semio-framework-async-macros",
+      "to": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+      "section": "target.cfg(all(target_arch = \"wasm32\", not(target_env = \"p2\"))).dependencies",
+      "name": "semio-framework-async",
+      "to": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-trace",
+      "to": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retained-map",
+      "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retained-clone",
+      "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-intrinsic",
+      "to": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-clone-source",
+      "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-ordered",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-text",
+      "to": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-decoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-encoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-original-aliases",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement-queue",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-shared-issuance",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-factory",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-allocation-return",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-derive",
+      "to": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-io-base64",
+      "to": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-schema-registry",
+      "to": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-hash",
+      "to": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-allocation-return",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-allocation-return",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-derive",
+      "to": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-encoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-encoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-decoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-decoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-shared-issuance",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-decoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-native-encoding",
+      "to": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-ordered",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-io-base64",
+      "to": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-intrinsic",
+      "to": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-clone-source",
+      "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-shared-issuance",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-paged-list",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retained-clone",
+      "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-intrinsic",
+      "to": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-derive",
+      "to": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-pack-json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-trace",
+      "to": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-async",
+      "to": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-record",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-record-emission",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-notation",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-io-control",
+      "to": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-record-model",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-pack-json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-lexical",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-token",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-token",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🔤️token/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-pack-json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-io-control",
+      "to": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-control-contract",
+      "to": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-record-model",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-dsl-notation",
+      "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-mutation-diff",
+      "to": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-pack-json",
+      "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-pack-error",
+      "to": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-trace",
+      "to": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-schema-registry",
+      "to": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-schema-state",
+      "to": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-hash",
+      "to": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-deflate",
+      "to": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+      "optional": true,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-io-base64",
+      "to": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-derive",
+      "to": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-diagnostic",
+      "to": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-retirement",
+      "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    },
+    {
+      "from": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust/Cargo.toml",
+      "section": "dependencies",
+      "name": "semio-framework-value-intrinsic",
+      "to": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml",
+      "optional": false,
+      "features": []
+    }
+  ]
+}

@@ -90,14 +90,14 @@ impl Mutation<DemoSnapshot> for LawOp {
     }
 }
 
-impl MemberStoreOwner<LawOp> for DemoSnapshot {
-    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+impl MemberStoreProducer<DemoSnapshot,LawOp> for crate::os_store::tests::DemoMemberStoreProducer<LawOp> {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<LawOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, LawOp>> {
+    fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<DemoSnapshot, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<DemoSnapshot, LawOp>> {
         super::fixture_authoring_member_owners::<LawOp>(grant)
     }
 }
@@ -128,7 +128,7 @@ fn corpus() -> serde_json::Value {
 }
 
 async fn law_store(id: &str) -> LawStore {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, LawOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, LawOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn apply(store: &mut LawStore, operation: LawOp, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
@@ -178,7 +178,7 @@ fn staged(row: &serde_json::Value) -> (LawOp, protocol::InputReplacement) {
 
 async fn reloaded(store: &LawStore) -> LawStore {
     let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-    ArtifactStore::new(parse_document_pack::<DemoSnapshot, LawOp>(&files.pack, &files.spr).await.expect("the pair parses").into_envelope()).await
+    ArtifactStore::new(parse_document_pack::<DemoSnapshot, LawOp>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 //#endregion 🧰️Harness
 
@@ -241,7 +241,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
     test_support::assert_live_equals_replay(&store).await;
     assert_eq!(reloaded(&store).await.snapshot_ref().n, Some(4));
     let text = print_document_text(store.envelope()).await.expect("the text prints");
-    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, LawOp>(&text.dsl, &text.ops).await.expect("the text parses").into_envelope()).await;
+    let mirrored = ArtifactStore::new(parse_document_text::<DemoSnapshot, LawOp>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(mirrored.snapshot_ref().n, Some(4));
     let log = store.event_log().expect("log");
     for rotation in 0..log.len() {

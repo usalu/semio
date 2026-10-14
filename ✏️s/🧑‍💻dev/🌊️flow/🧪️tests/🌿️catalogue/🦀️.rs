@@ -211,7 +211,7 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
 "#;
     let mut fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
     fixture.camera.zoom = 1.0;
-    let mut host = FlowHost::from_host_snapshot(fixture);
+    let mut host = FlowHost::from_host_snapshot(fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     host.set_viewport(1280, 800, 1.0);
     let mut port_texts = |lod: &str| -> Vec<String> {
@@ -300,7 +300,7 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
 }
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
-    let mut host = FlowHost::from_host_snapshot(fixture);
+    let mut host = FlowHost::from_host_snapshot(fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     let eval_json = host.evaluate().expect("evaluate");
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
@@ -348,7 +348,7 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
 }
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
-    let mut host = FlowHost::from_host_snapshot(fixture);
+    let mut host = FlowHost::from_host_snapshot(fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
     let eval_json = host.evaluate().expect("evaluate");
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");

@@ -146,10 +146,14 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_step::part21::{parse_part21, write_part21};
-    use semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+    use semio_s_artifact_stdio_step::part21::parse_part21;
+    use semio_s_artifact_stdio_step::part21::write_part21;
+    use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
     use semio_s_artifact_stdio_step::StepSnapshot;
-    use semio_s_artifact_stdio_step::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_step::apply_mutation_checked;
+    use semio_s_artifact_stdio_step::mutation_from_payload_json;
+    use semio_s_artifact_stdio_step::mutation_inverse;
+    use semio_s_artifact_stdio_step::mutation_payload_json;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::project_step_ap214_any;
 

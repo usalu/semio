@@ -1,7 +1,16 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::op::RasterMutation;
-use crate::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterSnapshot};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES;
+use semio_s_artifact_raster_raster_mutations::RasterMutation;
+use semio_s_artifact_raster_raster_model::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use protocol::{Mutation, OpBinary};
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 fn decode_raster_snapshot_pack(bytes: &[u8]) -> Result<RasterSnapshot, ()> {
@@ -315,7 +324,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     self.fail(b"raster-store.initializer-envelope-missing");
                     return Ok(None);
                 };
-                if envelope.schema != crate::RASTER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > RASTER_OWNED_FIELD_BYTES {
+                if envelope.schema != semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > RASTER_OWNED_FIELD_BYTES {
                     self.fail(b"raster-store.initializer-envelope-invalid");
                 } else {
                     self.phase = RasterStoreInitializationPhase::ValidateEdit { index: 0 };
@@ -643,7 +652,6 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
     }
 }
 
-const RASTER_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct RasterSnapshotRetirementFactory;
@@ -911,7 +919,7 @@ impl RasterSnapshotCloneAuthority {
                     // source child's materialization has to be carried across explicitly — a cloned
                     // snapshot whose assets lost their pixels renders an empty composite.
                     if let Some(source_child) = source.assets.get(&key) {
-                        crate::adopt_raster_asset_owner(source_child, &mut child);
+                        semio_s_artifact_raster_raster_model::adopt_raster_asset_owner(source_child, &mut child);
                     }
                     match target.assets.insert_pre_admitted(key, child) {
                         Ok(RasterOwnedMapInsert::Inserted) => {}
@@ -1274,7 +1282,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerLocked(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        crate::mutations::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layers::change_layer_locked::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
                         *locked=value.locked;
                     }
@@ -1331,7 +1339,7 @@ impl RasterMutationCandidateAuthority {
                         *height = Some(value.new_height);
                     }
                     RasterMutation::ChangeLayerAdjustmentParameter(value) => {
-                        crate::mutations::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layers::change_layer_adjustment_parameter::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
                         if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
                             if !raster_reserve_unit(cx) {return Ok(false);}
@@ -1347,15 +1355,15 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerTransform(value)=>{
                         if !raster_reserve_unit(cx){return Ok(false);}
-                        crate::mutations::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_layers::change_layer_transform::validate(value,snapshot).map_err(|code| code.as_str())?;
                         let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
                         *transform=value.transform.clone();
                     }
                     RasterMutation::ChangeLayerMask(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }
-                        crate::mutations::change_layer_mask::validate(value, snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::validate(value, snapshot).map_err(|code| code.as_str())?;
                         let replacement = value.mask.as_ref().map(|mask| {
-                            Ok::<_, &'static str>(crate::RasterLayerMask {
+                            Ok::<_, &'static str>(semio_s_artifact_raster_raster_model::RasterLayerMask {
                                 enabled: mask.enabled, linked: mask.linked, invert: mask.invert,
                                 width: mask.width, height: mask.height, transform: mask.transform.clone(),
                                 image_key: mask.image_key.as_ref().map(raster_clone_owned_string).transpose()?,
@@ -1368,7 +1376,7 @@ impl RasterMutationCandidateAuthority {
                     }
                     RasterMutation::ChangeLayerPixels(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }
-                        crate::mutations::change_layer_pixels::validate(value, snapshot).map_err(|code| code.as_str())?;
+                        semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::validate(value, snapshot).map_err(|code| code.as_str())?;
                         let replacement = value.content.image_key.as_ref().map(raster_clone_owned_string).transpose()?;
                         let RasterLayerNode::Pixel { image_key, width, height, transform, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-pixels-target"); };
                         if let Some(previous) = std::mem::replace(image_key, replacement) {
@@ -1433,7 +1441,7 @@ impl RasterMutationCandidateAuthority {
                         // break `add-layer-asset`'s inverse) and produces the materialization this
                         // handle must retain — without it the asset pool holds pixel-less handles and
                         // the composite surface renders nothing.
-                        self.asset_mint = Some(crate::mint_raster_image_child(&value.asset_id, &value.asset));
+                        self.asset_mint = Some(semio_s_artifact_raster_raster_model::mint_raster_image_child(&value.asset_id, &value.asset));
                     }
                     1 => {
                         if !raster_reserve_unit(cx) {
@@ -1493,7 +1501,7 @@ impl RasterMutationCandidateAuthority {
                             return Ok(false);
                         }
                         let (key, mut child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
-                        crate::adopt_raster_asset_owner(&self.asset_mint.take().ok_or("raster-store.mutation-asset-mint")?, &mut child);
+                        semio_s_artifact_raster_raster_model::adopt_raster_asset_owner(&self.asset_mint.take().ok_or("raster-store.mutation-asset-mint")?, &mut child);
                         if let Some(slot) = snapshot.assets.get_mut(&value.asset_id) {
                             let previous = std::mem::replace(slot, child);
                             self.retirement.put(RasterDisplaced::AssetEntry((key, previous)));
@@ -1992,26 +2000,6 @@ pub fn raster_document_store_initialization_job(
     semio_framework_plugin::ArtifactStoreInitializationJob::new(Box::new(RasterStoreInitializationAuthority::new(envelope, operation, generation, actor)))
 }
 
-/// 🧹️ Closes one cold-owned Raster value to terminal-empty through grants sized exactly by the retirement's own quotes.
-pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwned>(value: T) {
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_depth: 2, ..Default::default() };
-    match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
-        Ok((owner, _)) => close_raster_owner_cold(owner),
-        Err((error, _value)) => panic!("Raster cold retirement refused its frame: {error}"),
-    }
-}
-
-/// 🧹️ Drives one admitted retirement frame to terminal-empty through grants sized exactly by its own quotes.
-pub fn close_raster_owner_cold(mut owner: Box<dyn store::ErasedSnapshotRetirement>) {
-    let mut turns = 0usize;
-    while !owner.terminal_is_empty() {
-        let demand = owner.next_demand(RASTER_OWNED_FIELD_BYTES).expect("Raster cold retirement quotes its next turn");
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RASTER_OWNED_FIELD_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        owner.close_step(grant).expect("Raster cold retirement closes within its quoted grant");
-        turns += 1;
-        assert!(turns < 1 << 24, "Raster cold retirement made no progress");
-    }
-}
 
 /// 🧯️ A retirement or clone cursor found its own bookkeeping inconsistent.
 fn invariant(message: &str) -> ValueError {
@@ -2102,10 +2090,10 @@ impl RasterOwnerTotals {
     fn map<V>(&mut self, value: &RasterOwnedMap<V>, candidate_extra_entries: usize) -> Result<(), &'static str> {
         let source_pages = value.allocated_page_count();
         let candidate_entries = value.len().checked_add(candidate_extra_entries).ok_or("raster-store.preflight-map-entry-overflow")?;
-        if candidate_entries > crate::RASTER_OWNED_MAP_CAPACITY {
+        if candidate_entries > semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
             return Err("raster-store.preflight-map-item-capacity");
         }
-        let candidate_pages = candidate_entries.div_ceil(crate::RASTER_OWNED_MAP_PAGE_CAPACITY);
+        let candidate_pages = candidate_entries.div_ceil(semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_PAGE_CAPACITY);
         let page_bytes = RasterOwnedMap::<V>::conservative_page_credit_bytes();
         self.add(source_pages, source_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-source-byte-overflow")?, candidate_pages, candidate_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-candidate-byte-overflow")?)
     }
@@ -2587,8 +2575,8 @@ struct RasterLayerCloneAuthority {
 }
 
 impl RasterLayerCloneAuthority {
-    fn mask(source: &Option<crate::RasterLayerMask>) -> Option<crate::RasterLayerMask> {
-        source.as_ref().map(|value| crate::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height, image_key:None, transform:value.transform.clone() })
+    fn mask(source: &Option<semio_s_artifact_raster_raster_model::RasterLayerMask>) -> Option<semio_s_artifact_raster_raster_model::RasterLayerMask> {
+        source.as_ref().map(|value| semio_s_artifact_raster_raster_model::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height, image_key:None, transform:value.transform.clone() })
     }
 
     fn skeleton(source: &RasterLayerNode) -> RasterLayerNode {
@@ -2963,7 +2951,7 @@ impl RasterSnapshotBoundsAuthority {
                 if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                self.totals.map(&source.assets, usize::from(source.assets.len()<crate::RASTER_OWNED_MAP_CAPACITY))?;
+                self.totals.map(&source.assets, usize::from(source.assets.len()<semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY))?;
                 self.phase = 7;
             }
             7 => {

@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "reason": "Defining discovery exports every $defs and hashes exact raw schema bytes; moved schema metadata was stale",
+  "schema": {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+    "sha256": "5e58aa102b88677ebc213e6269b2725e55f4fececd5fd36f6b7fe5fb3a870732",
+    "bytes": 9350
+  },
+  "before": {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema",
+    "level": "framework-module",
+    "facetKind": "🧬️data",
+    "formats": {
+      "🔣️jsonschema": "🔣️.json"
+    },
+    "exports": {
+      "DocumentPair": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "Hex": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecAnswerProjection": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecOutcomeProjection": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecRequest": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      }
+    },
+    "dependsOn": [],
+    "hashes": {
+      "🔣️.json": "01f542ca1eb04345a1df294470eb277776bae3633ae61d27fe00287d48a92a41"
+    }
+  },
+  "after": {
+    "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema",
+    "level": "framework-module",
+    "facetKind": "🧬️data",
+    "formats": {
+      "🔣️jsonschema": "🔣️.json"
+    },
+    "exports": {
+      "ActorCodecAnswerProjection": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecOperationAnswerProjection": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecOutcomeProjection": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "ActorCodecRequest": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "DocumentPair": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "Hex": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "RuntimeOwnerRules": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      },
+      "RuntimeRequestOwnerRules": {
+        "file": "🔣️.json",
+        "facet": "schema"
+      }
+    },
+    "dependsOn": [],
+    "hashes": {
+      "🔣️.json": "5e58aa102b88677ebc213e6269b2725e55f4fececd5fd36f6b7fe5fb3a870732"
+    }
+  },
+  "beforeDocumentationRow": "| `framework.actor.codec` | framework-module | `🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema` | `DocumentPair` (`🔣️.json`), `Hex` (`🔣️.json`), `ActorCodecRequest` (`🔣️.json`) | — |",
+  "afterDocumentationRow": "| `framework.actor.codec` | framework-module | `🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema` | `ActorCodecAnswerProjection` (`🔣️.json`), `ActorCodecOperationAnswerProjection` (`🔣️.json`), `ActorCodecOutcomeProjection` (`🔣️.json`), `ActorCodecRequest` (`🔣️.json`), `DocumentPair` (`🔣️.json`), `Hex` (`🔣️.json`), `RuntimeOwnerRules` (`🔣️.json`), `RuntimeRequestOwnerRules` (`🔣️.json`) | — |",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "293103a60e2ab33665c4688ca4c0398d65517dd4fe960a7080b616b614a214c8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "effbac46aacb6314d9d5861f12bfc04ce39353f81ccda3e4b51393e3e6b96e37"
+    }
+  ],
+  "registeredTestsCollected": 0
+}

@@ -1,8 +1,7 @@
 //! 🧿️ Energy model mutation — `ChangePvSystemAzimuth`: Sets azimuth on one pv system, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangePvSystemAzimuth {
     pub new_azimuth_deg: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_pv_system_azimuth(id: crate::model::EntityId, new_azimuth_deg: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangePvSystemAzimuth(ChangePvSystemAzimuth { id, new_azimuth_deg })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_pv_system_azimuth<Op: From<ChangePvSystemAzimuth>>(id: crate::model::EntityId, new_azimuth_deg: f64) -> Op {
+    ChangePvSystemAzimuth { id, new_azimuth_deg }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangePvSystemAzimuth {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePvSystemAzimuth
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePvSystemAzimuth>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "pv-system", kind: "change-pv-system-azimuth", record: "ChangedPvSystemAzimuth" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

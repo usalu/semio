@@ -1,0 +1,5 @@
+import {acquireResourceLease} from "../../../../../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {retainResourceQueueMetadataHeadroomV1} from "../../../../../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/📦️metadata/🟦️.ts";
+await receiveScriptProcessInvocation(process.env,async original=>{const directory=process.argv[2];if(!directory)throw Error("Original metadata directory required");const control=scriptCompilerAdmissionControlV1(original,"test:metadata-crash",15000),catalog=await acquireResourceLease({directory,resource:"queue-claim-catalog",mode:"exclusive",signal:control.signal,control,maximumDatabaseBytes:16384}),keeper=retainResourceQueueMetadataHeadroomV1(directory,catalog,control);keeper.recover();console.log("[DEBUG] Original metadata headroom physically released before process crash");await new Promise(()=>setInterval(()=>{},1000));});

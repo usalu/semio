@@ -1,7 +1,7 @@
 //! 🧩️ Puzzle catalog physical projection.
-use crate::Block3dSnapshot;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use semio_framework_pack_json::{array,Value};
-use crate::standards::v1::subsets::any::schema::inferences::resolve_active_mesh_url;
+use semio_s_artifact_block_3d_inferences::resolve_active_mesh_url;
 /// 🌉️ Maps this `ObjectKind` definition into the `s/plugin/puzzle` 3d catalog shape (`objectKinds`/
 /// `vortexKinds`/`cableKinds`/`attractionKinds` — see `Puzzle3dKindCatalogs`), the seam puzzle imports
 /// through its `Kit×Type` media port. The active representation's mesh (first row, or the first
@@ -16,7 +16,7 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&s
         "meshUrl": resolve_active_mesh_url(definition, wanted_tags),
         "vortices": vortices,
     });
-    let vortex_kinds: Vec<Value> = crate::vortex_kinds_of(definition).iter().map(|kind| semio_framework_pack_json::json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultCableKind": kind.default_cable_kind.as_str() })).collect();
+    let vortex_kinds: Vec<Value> = semio_s_artifact_block_3d_model::vortex_kinds_of(definition).iter().map(|kind| semio_framework_pack_json::json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultCableKind": kind.default_cable_kind.as_str() })).collect();
     let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| semio_framework_pack_json::json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect();
     semio_framework_pack_json::json!({
         "schema": "manifest",

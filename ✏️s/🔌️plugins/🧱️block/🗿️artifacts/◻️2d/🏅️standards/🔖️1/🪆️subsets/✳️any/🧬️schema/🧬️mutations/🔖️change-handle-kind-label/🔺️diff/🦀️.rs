@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `ChangeHandleKindLabel`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block2dHandleKindsDelta, Block2dHandleKindsPatchEntry, Block2dHandleKindPatch};
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
+use semio_s_artifact_block_2d_diff::{Block2dHandleKindsDelta, Block2dHandleKindsPatchEntry, Block2dHandleKindPatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeHandleKindLabel, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &crate::change_handle_kind_label::ChangeHandleKindLabel, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     let Some(existing) = base.handle_kinds.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "handle-kind", payload.id), vec![payload.id.clone()]);
     };

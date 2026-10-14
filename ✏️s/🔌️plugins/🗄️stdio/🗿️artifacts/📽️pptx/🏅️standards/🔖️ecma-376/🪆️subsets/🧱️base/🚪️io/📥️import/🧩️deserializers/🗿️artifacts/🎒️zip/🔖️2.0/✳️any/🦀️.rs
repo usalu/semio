@@ -1,6 +1,7 @@
 //! Deserialize stdio.pptx from stdio.binary (parse ZIP bytes).
 
-use crate::{PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec

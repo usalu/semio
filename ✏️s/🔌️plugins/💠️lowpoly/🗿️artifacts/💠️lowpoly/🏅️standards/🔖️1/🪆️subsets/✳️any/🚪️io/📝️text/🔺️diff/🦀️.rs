@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub type LowpolyDiffText = String;
 
 /// 🔺️ Physical sparse delta text encoding.
-impl protocol::os_spr::DiffText for crate::schema::diff::LowpolyDiff {
-    fn print_diff(&self) -> String { super::lowpoly_json_encode(self) }
-    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { super::lowpoly_json_decode(text).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1))) }
+impl protocol::os_spr::DiffText for crate::LowpolyDiff {
+    fn print_diff(&self) -> String { semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(self) }
+    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1))) }
 }

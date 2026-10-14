@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-paged-list"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-paged-list"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-allocation-return = { path="../../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

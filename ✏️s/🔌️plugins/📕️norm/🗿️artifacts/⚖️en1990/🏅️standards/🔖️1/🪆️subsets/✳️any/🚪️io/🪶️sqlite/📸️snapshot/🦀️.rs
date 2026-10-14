@@ -1,7 +1,8 @@
 //! ⚖️ Handwritten EN1990 actions, verification members and influence relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1990Snapshot;
-use crate::{AccidentalAction, BridgeSls, ImportanceClass, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction, document::AnnexChoice};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+use semio_s_artifact_norm_en1990_model::{AccidentalAction, BridgeSls, ImportanceClass, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, validate_sqlite_database_schema, artifact::{Cell, FloatColumn, FloatRow, NativeEncodingBound, RowWriter, reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -197,8 +198,5 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1990Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec() }
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

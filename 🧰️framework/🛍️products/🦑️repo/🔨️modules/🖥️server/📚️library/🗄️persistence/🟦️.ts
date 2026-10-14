@@ -4,7 +4,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox } from "@semio-tech/framework";
+import { ephemeralBox } from "../../../../../../🔨️modules/🎠️kernel/🫧️transient/🟦️.ts";
 import {
   createOwnedDatabasePool,
   createOwnedJsonResponse,

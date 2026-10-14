@@ -6,17 +6,14 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-#[path = "../../../../../../../../🌉️wasm/⚠️diagnostic/🦀️.rs"]
-mod fault_bridge;
-
-use crate::Puzzle3dSnapshot;
-use crate::editor::puzzle3d::Puzzle3dPlayApp;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
+use crate::Puzzle3dPlayApp;
 use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 pub use js_sys::{Promise, Uint8Array};
 
-type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+pub type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 
 const PUZZLE3D_ENVELOPE_MAXIMUM_PAGES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const PUZZLE3D_ENVELOPE_MAXIMUM_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
@@ -30,7 +27,7 @@ fn js_fault(error: impl ToString) -> JsValue {
 
 #[wasm_bindgen]
 pub struct Puzzle3dEnvelopeLoadHandle {
-    operation: u64,
+    pub operation: u64,
     generation: u64,
 }
 
@@ -55,7 +52,7 @@ impl Puzzle3dEnvelopeLoadHandle {
 
 #[wasm_bindgen]
 pub struct Puzzle3dArtifactVcs {
-    app: RefCell<Puzzle3dApp>,
+    pub app: RefCell<Puzzle3dApp>,
 }
 
 #[wasm_bindgen]
@@ -67,7 +64,7 @@ impl Puzzle3dArtifactVcs {
     /// never have admitted a typed command anyway (`admit_command_wire_with_proof`).
     pub fn create() -> Promise {
         semio_framework_async::future_to_promise(async {
-            let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle3d::create_puzzle3d_app());
+            let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::create_puzzle3d_app());
             let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
             let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
             let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE3D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
@@ -158,6 +155,6 @@ pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
 }
 
 /// 🎟️ One close or maintenance turn funded exactly by what the owner quoted for it.
-fn funded_turn(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+pub fn funded_turn(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }

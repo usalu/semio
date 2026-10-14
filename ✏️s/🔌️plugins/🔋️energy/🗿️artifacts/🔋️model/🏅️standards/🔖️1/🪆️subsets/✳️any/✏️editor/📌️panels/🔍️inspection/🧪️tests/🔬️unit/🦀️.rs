@@ -1,8 +1,8 @@
 use super::*;
-use crate::ENERGY_MODEL_DOCUMENT_SCHEMA;
+use crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA;
 
 fn snapshot_of(model: &Model) -> EnergyModelSnapshot {
-    crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
+    crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
 }
 
 /// 🧫️ ANSI/ASHRAE 140 case 600 — zone 1, surfaces 40..45, windows 50/51, materials 10..21, glazing
@@ -114,7 +114,7 @@ async fn a_selected_zone_renders_its_five_fields_and_a_delete_verb() {
     assert_eq!(component_at(&json, "energy-model-inspection.zone.floor-area.toggle"), "toggle");
     assert!(json.contains(SET_ZONE_PROPERTY_ACTION_ID));
     assert_eq!(component_at(&json, "energy-model-inspection.actions.delete"), "treeItem", "a zone can be deleted from the inspector");
-    assert!(json.contains(crate::editor::model::DELETE_ZONE_ACTION_ID));
+    assert!(json.contains(crate::editor_commands::DELETE_ZONE_ACTION_ID));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -196,7 +196,7 @@ async fn a_thermostat_control_round_trips_the_typed_number_through_the_action_br
     let thermostat = model.thermostats.iter().find(|entry| entry.id.0 == 62).expect("thermostat 62");
     assert_eq!(
         command,
-        crate::editor::model::EnergyModelEditorCommand::SetThermostatSetpoints {
+        crate::editor_commands::EnergyModelEditorCommand::SetThermostatSetpoints {
             thermostat: 62,
             heating_schedule: thermostat.heating_setpoint_schedule_id.0,
             cooling_schedule: thermostat.cooling_setpoint_schedule_id.0,
@@ -218,7 +218,7 @@ async fn a_site_control_round_trips_the_typed_number_through_the_action_bridge()
     let command = bridged(control, "30");
     assert_eq!(
         command,
-        crate::editor::model::EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) },
+        crate::editor_commands::EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) },
         "the north-axis control writes 30.0 into its own field only, not the bridge's 0.0 default: {json}"
     );
 }
@@ -226,8 +226,7 @@ async fn a_site_control_round_trips_the_typed_number_through_the_action_bridge()
 /// 🌉️ Runs ONE projected control through the exact wire path a click takes: its authored args, the
 /// host's `{value}` merge (`🗣️Interpreter/🟦️.tsx` `dispatchDeclarativeControlAction`), then
 /// `command_from_action`. Nothing here is a shape assertion — the point is what the bridge DECODES.
-fn bridged(control: &serde_json::Value, value: &str) -> crate::editor::model::EnergyModelEditorCommand {
-    use semio_framework_plugin::ArtifactEditor;
+fn bridged(control: &serde_json::Value, value: &str) -> crate::editor_commands::EnergyModelEditorCommand {
     let binding = control["bindings"].as_array().and_then(|bindings| bindings.first()).unwrap_or_else(|| panic!("the control carries a binding: {control}"));
     let action = binding["action"]["name"].as_str().unwrap_or_else(|| panic!("the binding names its action: {binding}")).to_string();
     let scalar = |value: &serde_json::Value| match value {
@@ -247,7 +246,7 @@ fn bridged(control: &serde_json::Value, value: &str) -> crate::editor::model::En
     };
     entries.retain(|(key, _)| key != "value");
     entries.push(("value".to_string(), semio_framework_plugin::DslValue::String(value.to_string())));
-    <crate::editor::model::EnergyModelEditor as ArtifactEditor>::command_from_action(&action, Some((semio_framework_plugin::DslValue::Object(entries)).clone()), None).unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
+    crate::editor_commands::args_bridge::command_from_action(&action, Some(&semio_framework_plugin::DslValue::Object(entries))).unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
 }
 
 /// 📍️ Nothing selected: the document summary plus the SITE, which is a singleton with no
@@ -298,8 +297,8 @@ async fn every_body_carries_the_result_field_selector() {
     for ids in [&[][..], &["40"][..], &["50"][..], &["1"][..], &["10"][..], &["22"][..], &["23"][..], &["30"][..], &["62"][..]] {
         let json = english(ids);
         assert_eq!(component_at(&json, "energy-model-inspection.results.field.select"), "select", "selection {ids:?} lost the result-field control: {json}");
-        assert!(json.contains(crate::editor::model::modes::edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID), "selection {ids:?}: the control dispatches the colour verb");
-        for field in crate::editor::model::results::ResultField::ALL {
+        assert!(json.contains(crate::editor_edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID), "selection {ids:?}: the control dispatches the colour verb");
+        for field in crate::editor_config::ResultField::ALL {
             assert!(json.contains(field.id()), "selection {ids:?}: the select offers {}", field.id());
         }
         assert!(carries_a_tree(&json), "{json}");
@@ -311,7 +310,7 @@ async fn every_body_carries_the_result_field_selector() {
 /// value already held and make the control inert.
 #[semio_framework_async_macros::async_test]
 async fn the_result_field_select_reads_the_config_and_leaves_value_to_the_host() {
-    use crate::editor::model::results::ResultField;
+    use crate::editor_config::ResultField;
     let mut config = EnergyModelConfig::default();
     config.result_field = ResultField::SolarAbsorbed.id().into();
     let json = panel_with(&demo(), &[], &config, Locale::En);
@@ -322,7 +321,7 @@ async fn the_result_field_select_reads_the_config_and_leaves_value_to_the_host()
     assert!(!bindings.contains("\"field\""), "no `field` is authored, or the host's merged value would be ignored: {bindings}");
 
     let command = bridged(control, ResultField::ConductionGain.id());
-    assert_eq!(command, crate::editor::model::EnergyModelEditorCommand::SetResultField { field: ResultField::ConductionGain.id().into() });
+    assert_eq!(command, crate::editor_commands::EnergyModelEditorCommand::SetResultField { field: ResultField::ConductionGain.id().into() });
     assert!(panel_with(&demo(), &[], &config, Locale::De).contains("Solare Absorption"), "and the labels are authored in both languages");
 }
 
@@ -341,7 +340,7 @@ async fn a_surface_form_picks_its_interzone_partner_and_never_offers_a_partnerle
     let command = bridged(partner, "41");
     assert_eq!(
         command,
-        crate::editor::model::EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "interzonePartner".into(), value: "41".into(), partner_surface: 0 },
+        crate::editor_commands::EnergyModelEditorCommand::SetSurfaceProperty { surface: 40, property: "interzonePartner".into(), value: "41".into(), partner_surface: 0 },
         "picking a neighbour is what makes a surface interzone"
     );
 }

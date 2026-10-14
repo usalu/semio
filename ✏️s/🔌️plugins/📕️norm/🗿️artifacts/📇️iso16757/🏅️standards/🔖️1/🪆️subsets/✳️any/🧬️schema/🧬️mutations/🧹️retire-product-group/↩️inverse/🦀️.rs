@@ -1,18 +1,18 @@
 //! ↩️ `retire-product-group` — undo re-`create`s the group from BASE state, at its original
 //! index; missing id ⇒ `Vec::new()`.
 
-use crate::mutations::introduce_product_group;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use crate::introduce_product_group;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
-use super::mutation::RetireProductGroup;
+use crate::retire_product_group::mutation::RetireProductGroup;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RetireProductGroup, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RetireProductGroup, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::introduce_product_group::mutation::IntroduceProductGroup> {
     Ok((|| {
     let Some(position) = base.catalogue.product_groups.iter().position(|group| group.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::IntroduceProductGroup(introduce_product_group::mutation::IntroduceProductGroup { product_group: base.catalogue.product_groups[position].clone(), index: Some(position) })]
+    vec![Op::from(introduce_product_group::mutation::IntroduceProductGroup { product_group: base.catalogue.product_groups[position].clone(), index: Some(position) })]
 
     })())
 }

@@ -3,7 +3,7 @@
 //! `crate::energy_zones_table_from_model` already derives for the artifact's own
 //! composed `zones` child, kept in lockstep by hand (both read straight off `crate::model::Zone`).
 
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionDefinition;
@@ -73,7 +73,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `set-cell` edit target (`EnergyModelEditorCommand::SetZoneCell`, keyed by row index into
 /// `model.zones`).
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::energy_model(document);
+    let model = crate::snapshot::energy_model(document);
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
     let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
     TableWindowKit::render(&TableView { columns, rows })

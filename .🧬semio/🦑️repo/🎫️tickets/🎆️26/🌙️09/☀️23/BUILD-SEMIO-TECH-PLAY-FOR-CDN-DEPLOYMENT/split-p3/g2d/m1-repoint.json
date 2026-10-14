@@ -1,0 +1,38 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "monolith": "semio_s_artifact_procedural_generation2d",
+ "map": {
+  "GENERATION_2D_SCHEMA": "standards::v1::subsets::any::schema::GENERATION_2D_SCHEMA",
+  "GENERATION2D_DIALECT": "standards::v1::subsets::any::schema::GENERATION2D_DIALECT",
+  "widget_id": "standards::v1::subsets::any::schema::widget_id",
+  "GENERATION2D_CHILD_PROJECTION": "standards::v1::subsets::any::schema::GENERATION2D_CHILD_PROJECTION",
+  "generation2d_document_fault_notices": "standards::v1::subsets::any::schema::generation2d_document_fault_notices",
+  "artifact_kind": "standards::v1::subsets::any::schema::artifact_kind",
+  "editor::generation2d::GENERATION2D_PLAY_APP_ID": "standards::v1::subsets::any::schema::GENERATION2D_PLAY_APP_ID",
+  "editor::generation2d::GENERATION2D_EDITOR_APP_ID": "standards::v1::subsets::any::schema::GENERATION2D_EDITOR_APP_ID",
+  "editor::generation2d::GENERATION2D_INTERACTION_DOMAIN": "standards::v1::subsets::any::schema::GENERATION2D_INTERACTION_DOMAIN",
+  "editor::generation2d::GENERATION2D_INTERACTION_CHANNEL": "standards::v1::subsets::any::schema::GENERATION2D_INTERACTION_CHANNEL",
+  "editor::generation2d::GENERATION2D_GRAPH_NODE_TARGET_PREFIX": "standards::v1::subsets::any::schema::GENERATION2D_GRAPH_NODE_TARGET_PREFIX",
+  "editor::generation2d::GENERATION2D_GRAPH_EDGE_TARGET_PREFIX": "standards::v1::subsets::any::schema::GENERATION2D_GRAPH_EDGE_TARGET_PREFIX",
+  "editor::generation2d::GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX": "standards::v1::subsets::any::schema::GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX",
+  "standards::v1::subsets::any::schema::host_connect_ports": "standards::v1::subsets::any::schema::mutations::host_connect_ports",
+  "standards::v1::subsets::any::schema::host_disconnect": "standards::v1::subsets::any::schema::mutations::host_disconnect",
+  "standards::v1::subsets::any::schema::host_remove_widget": "standards::v1::subsets::any::schema::mutations::host_remove_widget",
+  "standards::v1::subsets::any::schema::host_add_widget": "standards::v1::subsets::any::schema::mutations::host_add_widget",
+  "standards::v1::subsets::any::schema::host_insert_port": "standards::v1::subsets::any::schema::mutations::host_insert_port",
+  "standards::v1::subsets::any::schema::host_reorganize": "standards::v1::subsets::any::schema::mutations::host_reorganize",
+  "standards::v1::subsets::any::schema::split_endpoint": "preview_eval::split_endpoint",
+  "standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow": "preview_eval::dag_host_snapshot_to_workflow",
+  "editor::generation2d::commands::generation::prepare_command": "editor::generation2d::prepare_command",
+  "editor::generation2d::generation2d_preview_target": "editor::generation2d::commands::flow_eval_tick::generation2d_preview_target",
+  "editor::generation2d::generation2d_preview_windows": "editor::generation2d::commands::flow_eval_tick::generation2d_preview_windows",
+  "editor::generation2d::reset_generation2d_document_effect": "editor::generation2d::commands::set_active_example::reset_generation2d_document_effect"
+ },
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge"
+ ]
+}

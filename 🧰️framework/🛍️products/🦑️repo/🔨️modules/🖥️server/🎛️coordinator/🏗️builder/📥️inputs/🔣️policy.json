@@ -1,0 +1,1 @@
+{"version":1,"owner":"repo-coordinator:next","root":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript","project":"tsconfig.json","routes":"app","externalDependencies":["next","react","react-dom","pg","pg-boss"],"maximumFiles":512,"maximumBytes":8388608}

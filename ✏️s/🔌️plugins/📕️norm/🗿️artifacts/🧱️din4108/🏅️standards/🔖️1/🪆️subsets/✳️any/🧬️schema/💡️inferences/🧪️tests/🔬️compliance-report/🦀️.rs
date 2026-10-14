@@ -1,11 +1,11 @@
-use crate::document::CheckStatus;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::Din4108Snapshot;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use crate::evaluate;
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 use semio_framework_value::ToValue;
 
 fn apply_numeric(snap: &mut Din4108Snapshot, path: &str, value: f64) {
     let mut root = semio_framework_value::ToValue::to_value(&*snap);
-    crate::app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).expect("set");
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut root, path, semio_framework_value::DslValue::float(value)).expect("set");
     *snap = semio_framework_value::FromValue::from_value(root).expect("decode");
 }
 

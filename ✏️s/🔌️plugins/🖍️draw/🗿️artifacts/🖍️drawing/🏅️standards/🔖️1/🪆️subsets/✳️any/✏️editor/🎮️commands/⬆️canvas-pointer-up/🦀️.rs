@@ -1,6 +1,6 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-pointer-up`.
 
-use crate::commands::canvas_pointer_down::{canvas_point_to_world, DrawingPointer, DrawingSession};
+use crate::{canvas_point_to_world, DrawingPointer, DrawingSession};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

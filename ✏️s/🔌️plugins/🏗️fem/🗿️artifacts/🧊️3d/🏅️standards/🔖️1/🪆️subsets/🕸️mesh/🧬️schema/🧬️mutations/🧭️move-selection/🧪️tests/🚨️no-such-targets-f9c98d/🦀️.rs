@@ -5,21 +5,21 @@
 //!
 //! 🚨️ A transform resolves its targets on THIS base; when none of them exist there is nothing to move.
 
-use super::laws;
+use crate::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🦠️mutation/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🚨️no-such-targets-f9c98d/🎯️outcome/🔣️.json");
 
 /// ⛔️ The refused or no-op leaf leaves the document byte-identical, emits the declared diagnostic and inverts to nothing.
 #[test]
 fn refusal_leaves_the_document_untouched() {
-    laws::refusal(BEFORE, MUTATION, AFTER, OUTCOME);
+    laws::refusal(BEFORE.as_str(), MUTATION.as_str(), AFTER.as_str(), OUTCOME.as_str());
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    laws::canonical(BEFORE, AFTER, MUTATION, None);
+    laws::canonical(BEFORE.as_str(), AFTER.as_str(), MUTATION.as_str(), None);
 }

@@ -1,8 +1,8 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
-use crate::editor::process3d::terminology::{process3d_measure_icon, Process3dLabels};
-use crate::editor::process3d::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
-use crate::{Process3dSnapshot, ProcessStep};
+use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_measure_icon, editor::process3d::terminology::Process3dLabels};
+use semio_s_artifact_process_process3d_kit::{PROCESS3D_GRANULARITY_OBJECT, PROCESS3D_INTERACTION_DOMAIN, PROCESS_3D_PLAY_APP_ID};
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::ProcessStep};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::tree_item;
@@ -47,7 +47,7 @@ fn ui_text(value: &str) -> UiAssemblyResult<semio_framework_plugin::UiText> {
 
 /// 🪵️ The stock row — the composition identity, always the document's first target.
 fn stock_row(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let mut item = tree_item(&snapshot.stock_id, crate::editor::process3d::ui_label(&snapshot.stock_label)?)?;
+    let mut item = tree_item(&snapshot.stock_id, semio_s_artifact_process_process3d_kit::ui_label(&snapshot.stock_label)?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         props.icon = Some(ui_text("box")?);
         props.granularity = Some(ui_text(PROCESS3D_GRANULARITY_OBJECT)?);
@@ -60,9 +60,9 @@ fn stock_row(snapshot: &Process3dSnapshot) -> UiAssemblyResult<BuiltNode> {
 /// ACTIONS naming only a verb, while selection is the tree's: the row declares its granularity and the tree carries the
 /// single `interactionSelect` binding both it and the canvas pick through.
 fn step_row(index: usize, step: &ProcessStep, cursor: usize, labels: &Process3dLabels) -> UiAssemblyResult<BuiltNode> {
-    let mut item = tree_item(&step.id, crate::editor::process3d::ui_label(&step.label)?)?;
-    let args = crate::editor::process3d::ui_value_map([("enabled", crate::editor::process3d::ui_value_bool(!step.enabled)), ("id", crate::editor::process3d::ui_value_text(&step.id)?)])?;
-    let target = row_target(crate::editor::process3d::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
+    let mut item = tree_item(&step.id, semio_s_artifact_process_process3d_kit::ui_label(&step.label)?)?;
+    let args = semio_s_artifact_process_process3d_kit::ui_value_map([("enabled", semio_s_artifact_process_process3d_kit::ui_value_bool(!step.enabled)), ("id", semio_s_artifact_process_process3d_kit::ui_value_text(&step.id)?)])?;
+    let target = row_target(semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID, Some(args), None)?;
     let mut row_actions = semio_framework_plugin::UiFixedList::default();
     row_actions.try_push(row_action(if step.enabled { "eye" } else { "eye-off" }, labels.enabled.as_str(), "setStepEnabled", RowActionPlacement::Row)?).map_err(|_| document_error("row-actions"))?;
     row_actions.try_push(row_action("trash", labels.remove.as_str(), "removeStep", RowActionPlacement::Menu)?).map_err(|_| document_error("row-actions"))?;
@@ -97,15 +97,12 @@ pub fn render(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>, label
     let stock = [()];
     let steps: Vec<(usize, &ProcessStep)> = snapshot.step_payloads.iter().enumerate().collect();
     PanelTreeBuilder::new("process3d-play-document")?
-        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STOCK, Some(crate::editor::process3d::ui_label(labels.stock.as_str())?), true, &stock, |_| stock_row(snapshot))?
-        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(crate::editor::process3d::ui_label(labels.steps.as_str())?), true, &steps, |(index, step)| step_row(*index, step, cursor, labels))?
+        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STOCK, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.stock.as_str())?), true, &stock, |_| stock_row(snapshot))?
+        .window_section(windows, PROCESS_3D_PLAY_DOCUMENT_STEPS, Some(semio_s_artifact_process_process3d_kit::ui_label(labels.steps.as_str())?), true, &steps, |(index, step)| step_row(*index, step, cursor, labels))?
         .interaction_domain(PROCESS_3D_PLAY_APP_ID, PROCESS3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

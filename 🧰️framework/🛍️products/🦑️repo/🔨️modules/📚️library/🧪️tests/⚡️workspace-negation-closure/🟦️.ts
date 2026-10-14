@@ -85,15 +85,15 @@ test("nx.json and every 📋️project.json declare only closed input lists", ()
 
 test("the workspace-root project's derived named inputs are closed", async () => {
   await libraryBootstrap;
-  expect(openLists("derived .", { namedInputs: cacheInternals.projectInputs(JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")), ".", root, new Map()) })).toEqual([]);
+  expect(openLists("derived .", { namedInputs: await cacheInternals.projectInputs(JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")), ".", root, new Map()) })).toEqual([]);
 }, 60_000);
 
 test.if(testLevelAtLeast("long"))("every named input the plugin derives for a project is closed", async () => {
   await libraryBootstrap;
   const facts = new Map();
-  const open = projectFiles().flatMap((path) => {
+  const open = [];for(const path of projectFiles()){
     const projectRoot = path.includes("/") ? dirname(path) : ".";
-    return openLists(`derived ${projectRoot}`, { namedInputs: cacheInternals.projectInputs(JSON.parse(readFileSync(join(root, path), "utf8")), projectRoot, root, facts) });
-  });
+    open.push(...openLists(`derived ${projectRoot}`, { namedInputs: await cacheInternals.projectInputs(JSON.parse(readFileSync(join(root, path), "utf8")), projectRoot, root, facts) }));
+  }
   expect(open).toEqual([]);
 }, 600_000);

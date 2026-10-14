@@ -1,14 +1,16 @@
 //! 🧬️ DOCX snapshot with one authoritative logical document per XML-bearing OPC part.
 
-use crate::{
-    standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}},
-    STDIO_DOCX_DOCUMENT_SCHEMA,
-};
+use crate::{standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}}};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::list::PagedList;
 use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_DOCX_DOCUMENT_SCHEMA: &str = "stdio.docx";
+/// 🧬️ Artifact schema descriptor id.
+pub const DOCX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.docx";
 
 /// 🗝️ Borrows a logical OPC path independently of its native page capacity.
 #[derive(Clone, Copy)]

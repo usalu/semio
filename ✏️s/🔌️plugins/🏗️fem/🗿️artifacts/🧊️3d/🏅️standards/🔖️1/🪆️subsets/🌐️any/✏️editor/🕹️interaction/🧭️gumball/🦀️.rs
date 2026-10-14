@@ -11,13 +11,14 @@
 use crate::editor::fem3d::interaction::{
     fem3d_element_endpoints, fem3d_entity_kind, fem3d_load_owner, Fem3dInteractionSnapshot, FEM3D_GRANULARITY_ELEMENT, FEM3D_GRANULARITY_LOAD, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SOLID, FEM3D_GRANULARITY_SUPPORT,
 };
-use crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig;
-use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::{element_id, Fem3dSnapshot, FemLoad};
+use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use machine::Command;
 use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
-use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballGesture;
+use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballGesture;
 use std::collections::HashSet;
 
 //#region 🔖️Targets
@@ -91,7 +92,7 @@ pub fn fem3d_transform_pivot(doc: &Fem3dSnapshot, targets: &Fem3dTransformTarget
         }
     }
     for id in &targets.solid_ids {
-        if let Some(point) = doc.solids.iter().find(|solid| &solid.id == id).and_then(crate::standards::v1::subsets::any::scene::fem3d_solid_centroid) {
+        if let Some(point) = doc.solids.iter().find(|solid| &solid.id == id).and_then(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_solid_centroid) {
             points.push(point);
         }
     }
@@ -374,3 +375,47 @@ pub fn fem3d_selection_json(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionS
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🎚️GumballConfig
+/// 🧭️ Which handles the transform gumball of ONE model window draws — view state, toggled from the
+/// Transform utility's options rail (`setTransformGumballFlag`), never a document field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Fem3dGumballConfig {
+    pub move_axes: bool,
+    pub move_planes: bool,
+    pub rotate: bool,
+    pub scale_axes: bool,
+    pub scale_uniform: bool,
+}
+
+impl Default for Fem3dGumballConfig {
+    /// 🧭️ Every handle a FEM entity can honestly take: moves along axes and planes, a rotation, and
+    /// scaling per axis or uniformly — the options rail turns the ones a gesture does not need off.
+    fn default() -> Self {
+        Self { move_axes: true, move_planes: true, rotate: true, scale_axes: true, scale_uniform: true }
+    }
+}
+
+impl Fem3dGumballConfig {
+    /// 🎚️ Sets, or with `pressed = None` toggles, one named handle flag; an unknown flag is refused.
+    pub fn set_flag(&mut self, flag: &str, pressed: Option<bool>) -> Result<(), semio_framework_plugin::Fault> {
+        let slot = match flag {
+            "move" | "moveAxes" => &mut self.move_axes,
+            "movePlanes" => &mut self.move_planes,
+            "rotate" => &mut self.rotate,
+            "scaleAxes" => &mut self.scale_axes,
+            "scaleUniform" => &mut self.scale_uniform,
+            other => return Err(semio_framework_plugin::Fault::from(format!("fem3d.gumball-flag.unknown: '{other}' is not a gumball handle flag"))),
+        };
+        *slot = pressed.unwrap_or(!*slot);
+        Ok(())
+    }
+
+    /// 🫥️ An all-off gumball would draw nothing to grab.
+    pub fn any(&self) -> bool {
+        self.move_axes || self.move_planes || self.rotate || self.scale_axes || self.scale_uniform
+    }
+}
+//#endregion 🎚️GumballConfig

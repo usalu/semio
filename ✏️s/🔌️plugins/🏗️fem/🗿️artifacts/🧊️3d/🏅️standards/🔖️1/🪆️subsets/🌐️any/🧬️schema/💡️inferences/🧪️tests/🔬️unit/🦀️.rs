@@ -1,5 +1,5 @@
 use super::*;
-use crate::FemNode;
+use crate::standards::v1::subsets::any::schema::structure::FemNode;
 use protocol::Inference;
 
 //#region 🧸️Fixtures

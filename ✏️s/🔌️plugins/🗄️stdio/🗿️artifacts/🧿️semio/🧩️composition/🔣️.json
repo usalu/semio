@@ -448,25 +448,34 @@
   "openTargets": [],
   "catalogPackage": "semio-s-artifact-stdio-semio-catalog",
   "symbolPackages": [
-      "semio-s-artifact-stdio-semio-base",
-      "semio-s-artifact-stdio-semio-animation",
-      "semio-s-artifact-stdio-semio-audio",
-      "semio-s-artifact-stdio-semio-brep",
-      "semio-s-artifact-stdio-semio-cad",
-      "semio-s-artifact-stdio-semio-document",
-      "semio-s-artifact-stdio-semio-drawing",
-      "semio-s-artifact-stdio-semio-flow",
-      "semio-s-artifact-stdio-semio-graph",
-      "semio-s-artifact-stdio-semio-image",
-      "semio-s-artifact-stdio-semio-kit",
-      "semio-s-artifact-stdio-semio-mesh",
-      "semio-s-artifact-stdio-semio-model",
-      "semio-s-artifact-stdio-semio-object",
-      "semio-s-artifact-stdio-semio-presentation",
-      "semio-s-artifact-stdio-semio-table",
-      "semio-s-artifact-stdio-semio-text",
-      "semio-s-artifact-stdio-semio-value",
-      "semio-s-artifact-stdio-semio-video"
+    "semio-s-artifact-stdio-semio-animation",
+    "semio-s-artifact-stdio-semio-audio",
+    "semio-s-artifact-stdio-semio-audio-model",
+    "semio-s-artifact-stdio-semio-audio-mutations",
+    "semio-s-artifact-stdio-semio-brep",
+    "semio-s-artifact-stdio-semio-cad",
+    "semio-s-artifact-stdio-semio-document",
+    "semio-s-artifact-stdio-semio-drawing",
+    "semio-s-artifact-stdio-semio-flow",
+    "semio-s-artifact-stdio-semio-graph",
+    "semio-s-artifact-stdio-semio-image",
+    "semio-s-artifact-stdio-semio-kit",
+    "semio-s-artifact-stdio-semio-mesh",
+    "semio-s-artifact-stdio-semio-model",
+    "semio-s-artifact-stdio-semio-object",
+    "semio-s-artifact-stdio-semio-presentation",
+    "semio-s-artifact-stdio-semio-table",
+    "semio-s-artifact-stdio-semio-table-model",
+    "semio-s-artifact-stdio-semio-table-mutations",
+    "semio-s-artifact-stdio-semio-text",
+    "semio-s-artifact-stdio-semio-text-model",
+    "semio-s-artifact-stdio-semio-text-mutations",
+    "semio-s-artifact-stdio-semio-value",
+    "semio-s-artifact-stdio-semio-value-model",
+    "semio-s-artifact-stdio-semio-value-mutations",
+    "semio-s-artifact-stdio-semio-video",
+    "semio-s-artifact-stdio-semio-video-model",
+    "semio-s-artifact-stdio-semio-video-mutations"
   ],
   "playgrounds": [
     {
@@ -706,8 +715,8 @@
     },
     {
       "name": "SemioAudioMutation",
-      "snapshot": "semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation"
     },
     {
       "name": "SemioMutation",
@@ -776,23 +785,23 @@
     },
     {
       "name": "SemioTableMutation",
-      "snapshot": "semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation"
     },
     {
       "name": "SemioTextMutation",
-      "snapshot": "semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation"
     },
     {
       "name": "SemioValueMutation",
-      "snapshot": "semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation"
     },
     {
       "name": "SemioVideoMutation",
-      "snapshot": "semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation"
     }
   ],
   "mutationCoordinates": [

@@ -4,9 +4,17 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::viewer::raster::modes::view;
-use crate::viewer::raster::modes::view::windows::{composite, navigator};
-use crate::{RasterSnapshot, RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use crate::modes::view;
+use crate::modes::view::windows::{composite, navigator};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_model::{RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -50,7 +58,7 @@ pub struct RasterViewer;
 
 impl ArtifactViewer for RasterViewer {
     type Snapshot = RasterSnapshot;
-    type Mutation = crate::op::RasterMutation;
+    type Mutation = semio_s_artifact_raster_raster_mutations::RasterMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -73,13 +81,13 @@ impl ArtifactViewer for RasterViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::host::owned::raster_document_store_owners_source_demands()
+        semio_s_artifact_raster_raster_host::raster_document_store_owners_source_demands()
     }
 
     fn build_document_store_owners(
         grant: semio_framework_value::retained_clone::RetainedCloneGrant,
     ) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::host::owned::raster_document_store_owners_admission(grant))
+        Some(semio_s_artifact_raster_raster_host::raster_document_store_owners_admission(grant))
     }
 
     /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's
@@ -87,7 +95,7 @@ impl ArtifactViewer for RasterViewer {
     /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its
     /// document through the archive/pack load path (raster's own paged clone authority).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()
+        semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config
@@ -135,3 +143,21 @@ pub fn create_raster_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️TaxonomyMounts

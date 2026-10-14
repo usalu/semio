@@ -1,95 +1,103 @@
 //! 🧬️ En1990 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 
-use crate::En1990Snapshot;
-use crate::document::AnnexChoice;
-use crate::MemberEffect;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1990_model::MemberEffect;
 
 //#region 🔖️Rows
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `PermanentAction`.
-    pub En1990PermanentPatch of crate::PermanentAction { set { kind: String, gk: f64 } }
+    pub En1990PermanentPatch of semio_s_artifact_norm_en1990_model::PermanentAction { set { kind: String, gk: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `PermanentAction` list.
-    pub En1990PermanentDelta { removal: En1990PermanentRemoval, insertion: En1990PermanentInsertion, relocation: En1990PermanentRelocation, modification: En1990PermanentModification, row: crate::PermanentAction, patch: En1990PermanentPatch, key: id }
+    pub En1990PermanentDelta { removal: En1990PermanentRemoval, insertion: En1990PermanentInsertion, relocation: En1990PermanentRelocation, modification: En1990PermanentModification, row: semio_s_artifact_norm_en1990_model::PermanentAction, patch: En1990PermanentPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `VariableAction`.
-    pub En1990VariablePatch of crate::VariableAction { set { category: String, qk: f64 } }
+    pub En1990VariablePatch of semio_s_artifact_norm_en1990_model::VariableAction { set { category: String, qk: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `VariableAction` list.
-    pub En1990VariableDelta { removal: En1990VariableRemoval, insertion: En1990VariableInsertion, relocation: En1990VariableRelocation, modification: En1990VariableModification, row: crate::VariableAction, patch: En1990VariablePatch, key: id }
+    pub En1990VariableDelta { removal: En1990VariableRemoval, insertion: En1990VariableInsertion, relocation: En1990VariableRelocation, modification: En1990VariableModification, row: semio_s_artifact_norm_en1990_model::VariableAction, patch: En1990VariablePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `AccidentalAction`.
-    pub En1990AccidentalPatch of crate::AccidentalAction { set { ad: f64 } }
+    pub En1990AccidentalPatch of semio_s_artifact_norm_en1990_model::AccidentalAction { set { ad: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `AccidentalAction` list.
-    pub En1990AccidentalDelta { removal: En1990AccidentalRemoval, insertion: En1990AccidentalInsertion, relocation: En1990AccidentalRelocation, modification: En1990AccidentalModification, row: crate::AccidentalAction, patch: En1990AccidentalPatch, key: id }
+    pub En1990AccidentalDelta { removal: En1990AccidentalRemoval, insertion: En1990AccidentalInsertion, relocation: En1990AccidentalRelocation, modification: En1990AccidentalModification, row: semio_s_artifact_norm_en1990_model::AccidentalAction, patch: En1990AccidentalPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SeismicAction`.
-    pub En1990SeismicPatch of crate::SeismicAction { set { a_ek: f64, importance_class: crate::ImportanceClass } }
+    pub En1990SeismicPatch of semio_s_artifact_norm_en1990_model::SeismicAction { set { a_ek: f64, importance_class: semio_s_artifact_norm_en1990_model::ImportanceClass } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SeismicAction` list.
-    pub En1990SeismicDelta { removal: En1990SeismicRemoval, insertion: En1990SeismicInsertion, relocation: En1990SeismicRelocation, modification: En1990SeismicModification, row: crate::SeismicAction, patch: En1990SeismicPatch, key: id }
+    pub En1990SeismicDelta { removal: En1990SeismicRemoval, insertion: En1990SeismicInsertion, relocation: En1990SeismicRelocation, modification: En1990SeismicModification, row: semio_s_artifact_norm_en1990_model::SeismicAction, patch: En1990SeismicPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `Member`.
-    pub En1990MemberPatch of crate::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, deflection_w: f64, deflection_limit_ratio: f64, vibration_frequency: f64, vibration_frequency_min: f64 } }
+    pub En1990MemberPatch of semio_s_artifact_norm_en1990_model::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, deflection_w: f64, deflection_limit_ratio: f64, vibration_frequency: f64, vibration_frequency_min: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `Member` list.
-    pub En1990MemberDelta { removal: En1990MemberRemoval, insertion: En1990MemberInsertion, relocation: En1990MemberRelocation, modification: En1990MemberModification, row: crate::Member, patch: En1990MemberPatch, key: id }
+    pub En1990MemberDelta { removal: En1990MemberRemoval, insertion: En1990MemberInsertion, relocation: En1990MemberRelocation, modification: En1990MemberModification, row: semio_s_artifact_norm_en1990_model::Member, patch: En1990MemberPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `BridgeSls`.
-    pub En1990BridgeSlsPatch of crate::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64 } }
+    pub En1990BridgeSlsPatch of semio_s_artifact_norm_en1990_model::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `BridgeSls` list.
-    pub En1990BridgeSlsDelta { removal: En1990BridgeSlsRemoval, insertion: En1990BridgeSlsInsertion, relocation: En1990BridgeSlsRelocation, modification: En1990BridgeSlsModification, row: crate::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
+    pub En1990BridgeSlsDelta { removal: En1990BridgeSlsRemoval, insertion: En1990BridgeSlsInsertion, relocation: En1990BridgeSlsRelocation, modification: En1990BridgeSlsModification, row: semio_s_artifact_norm_en1990_model::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
 }
 //#endregion 🔖️Rows
 
@@ -482,3 +490,8 @@ impl DiffAlgebra<En1990Snapshot> for En1990Diff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

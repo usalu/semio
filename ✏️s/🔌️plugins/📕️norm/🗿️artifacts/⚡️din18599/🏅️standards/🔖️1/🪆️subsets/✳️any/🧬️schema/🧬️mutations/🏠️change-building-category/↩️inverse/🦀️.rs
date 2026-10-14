@@ -1,12 +1,12 @@
 //! ↩️ `change-building-category` inverse.
 
-use crate::mutations::change_building_category::ChangeBuildingCategory;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_building_category::ChangeBuildingCategory;
 
-pub fn inverse(_payload: &ChangeBuildingCategory, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeBuildingCategory, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_building_category::ChangeBuildingCategory> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeBuildingCategory(ChangeBuildingCategory { new_building_category: base.building_category })]
+    vec![Op::from(ChangeBuildingCategory { new_building_category: base.building_category })]
 
     })())
 }

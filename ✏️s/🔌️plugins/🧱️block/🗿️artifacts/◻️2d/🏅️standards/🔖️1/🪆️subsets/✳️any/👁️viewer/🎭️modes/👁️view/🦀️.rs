@@ -1,7 +1,7 @@
 //! 👁️ Block 2D viewer — the `view` mode: a single full-pane board window, the read-only
 //! counterpart of the editor's single `edit` mode.
 
-use crate::viewer::block2d::modes::view::windows::board;
+use crate::modes::view::windows::board;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -27,3 +27,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📋️board/🦀️.rs"]
+    pub mod board;
+}
+//#endregion 🪢️Mounts

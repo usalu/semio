@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun repo run @semio-tech/energy-model:build",
-    "check": "bun repo run @semio-tech/energy-model:check",
-    "test": "bun repo run @semio-tech/energy-model:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/energy-model:test"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

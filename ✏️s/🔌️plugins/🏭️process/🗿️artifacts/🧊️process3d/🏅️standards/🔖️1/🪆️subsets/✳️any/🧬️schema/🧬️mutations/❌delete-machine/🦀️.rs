@@ -1,8 +1,8 @@
 //! 🗑️ `delete-machine` payload — removes an id-keyed [`WorkshopMachine`] from the document's
 //! workshop.
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️DeleteMachine
@@ -16,7 +16,7 @@ pub struct DeleteMachine {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for DeleteMachine
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::create_machine::CreateMachine>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::create_machine::CreateMachine>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "machine", kind: "delete-machine", record: "DeletedMachine" };
 

@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","command","modes","maximumDefiningFiles"],"properties":{"version":{"const":1},"command":{"const":"build"},"modes":{"const":["prototype","release"]},"maximumDefiningFiles":{"const":128}}}

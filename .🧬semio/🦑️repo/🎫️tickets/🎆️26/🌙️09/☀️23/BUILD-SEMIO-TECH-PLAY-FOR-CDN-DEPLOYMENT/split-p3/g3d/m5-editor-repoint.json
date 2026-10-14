@@ -1,0 +1,16 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "map": {
+  "editor::generation3d::create_generation3d_app": "manifest::create_generation3d_app",
+  "editor::generation3d::GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES": "editor::generation3d::commands::import_document::GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES"
+ },
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ]
+}

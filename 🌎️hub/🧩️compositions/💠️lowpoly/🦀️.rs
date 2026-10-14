@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
@@ -25,7 +26,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// sole app), `.viewer::<V>(…)` the new genuinely read-only surface — see `👁️viewer/🦀️.rs`
 /// for why it is not a thin wrapper around the editor.
 pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
-    Plugin::<LowpolyApps>::builder("lowpoly")
+    PluginBuilder::<_, LowpolyApps>::new("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
         .package_id("semio:lowpoly")

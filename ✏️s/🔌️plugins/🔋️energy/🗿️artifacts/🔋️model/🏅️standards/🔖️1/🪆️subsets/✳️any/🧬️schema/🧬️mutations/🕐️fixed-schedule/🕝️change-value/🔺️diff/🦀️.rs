@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeConstantScheduleValue` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ConstantSchedulePatch, ModelPatch, Rows, ScheduleSetPatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ConstantSchedulePatch, ModelPatch, ScheduleSetPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeConstantScheduleValue, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

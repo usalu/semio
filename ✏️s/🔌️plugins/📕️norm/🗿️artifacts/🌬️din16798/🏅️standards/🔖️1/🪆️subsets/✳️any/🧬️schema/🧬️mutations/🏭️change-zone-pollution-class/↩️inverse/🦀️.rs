@@ -1,10 +1,10 @@
 //! ↩️ `change-zone-pollution-class` inverse.
-use super::ChangeZonePollutionClass;
-use crate::{Din16798Mutation, Din16798Snapshot};
-pub fn inverse(payload: &ChangeZonePollutionClass, base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {
+use crate::change_zone_pollution_class::ChangeZonePollutionClass;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
+pub fn inverse<Op>(payload: &ChangeZonePollutionClass, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_zone_pollution_class::ChangeZonePollutionClass> {
     Ok((|| {
     let Some(z) = base.zones.iter().find(|z| z.id == payload.zone_id) else { return Vec::new(); };
-    vec![Din16798Mutation::ChangeZonePollutionClass(ChangeZonePollutionClass { zone_id: payload.zone_id.clone(), new_pollution_class: z.pollution_class.clone() })]
+    vec![Op::from(ChangeZonePollutionClass { zone_id: payload.zone_id.clone(), new_pollution_class: z.pollution_class.clone() })]
 
     })())
 }

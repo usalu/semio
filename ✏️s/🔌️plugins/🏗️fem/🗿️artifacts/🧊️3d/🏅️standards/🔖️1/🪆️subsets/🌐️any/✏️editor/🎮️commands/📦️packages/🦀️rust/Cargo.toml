@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-fem-3d-editor-commands"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d document commands"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-3d-analysis = { workspace = true }
+semio-s-artifact-fem-3d-boundary = { workspace = true }
+semio-s-artifact-fem-3d-editor-interaction = { workspace = true }
+semio-s-artifact-fem-3d-io = { workspace = true }
+semio-s-artifact-fem-3d-load = { workspace = true }
+semio-s-artifact-fem-3d-material = { workspace = true }
+semio-s-artifact-fem-3d-mesh = { workspace = true }
+semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-mutations = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }

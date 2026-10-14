@@ -4,7 +4,7 @@ use protocol::Inference;
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json("{}", "o1", "Object 1");
+    let snapshot = semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::snapshot_from_mesh_json("{}", "o1", "Object 1");
     assert_eq!(LowpolyInference::infer(&snapshot).expect("valid materialized inference fixture"), LowpolyInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -17,7 +17,7 @@ async fn inference_default_law() {
 /// 🔮️ Neutral vectors independently checked with Three XYZ Euler/quaternion mathematics.
 #[semio_framework_async_macros::async_test]
 async fn semantic_transform_neutral_three_oracle_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json")).expect("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔬️unit/🔄️transform.json").leak()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let triple = |value: &serde_json::Value| -> [f32; 3] { std::array::from_fn(|i| value[i].as_f64().unwrap() as f32) };
         let transform = LowpolyTransform { position: triple(&case["transform"]["position"]), rotation: triple(&case["transform"]["rotation"]), scale: triple(&case["transform"]["scale"]) };

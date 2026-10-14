@@ -1,14 +1,14 @@
 //! ↩️ `change-annex` inverse — restores the pre-change `annex` from BASE state; `change` is its
 //! own inverse partner (per `📓️taxonomy.md`).
 
-use crate::mutations::change_annex::ChangeAnnex;
-use crate::mutations::En1995Mutation;
-use crate::En1995Snapshot;
+use crate::change_annex::ChangeAnnex;
+
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeAnnex, base: &En1995Snapshot) -> Result<Vec<En1995Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(_payload: &ChangeAnnex, base: &En1995Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_annex::ChangeAnnex> {
     Ok((|| {
-    vec![En1995Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex })]
+    vec![Op::from(ChangeAnnex { new_annex: base.annex })]
 
     })())
 }

@@ -136,7 +136,7 @@ fn topology_reads_are_sound_for_every_leaf() {
         let (diff, _messages) = protocol::Mutation::diff(&mutation, &*base).into_parts();
         let diff = Generation3dDiffRead::new(diff);
         let next = Generation3dSnapshotRead::new(protocol::apply_diff(&diff, &base).expect("the committed quintet's diff applies"));
-        let moved = semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_serial::geometry_input(&base)).expect("topology infers") != semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_serial::geometry_input(&next)).expect("topology infers");
+        let moved = semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_geometry::geometry_input(&base)).expect("topology infers") != semio_s_artifact_procedural_3d_inferences::Generation3dInference::infer(&crate::test_geometry::geometry_input(&next)).expect("topology infers");
         if moved {
             assert!(diff.touches().intersects_any(reads), "{kind}: the topology moves but touches() {:?} misses the reads {reads:?}", diff.touches().paths);
         }

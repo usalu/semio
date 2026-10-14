@@ -1,0 +1,110 @@
+{
+  "kind": "six-consumer-current-source-freeze-observation-not-admission",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "a2ab7c35998b3609267e7d7171b5793855e8dfb4e24cd90adde24cd87cc4f8bb",
+      "bytes": 1277
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "518f0c7f9baecbfc62999a5cb6b5f9b8e026ba64673e9035f6608df50461037e",
+      "bytes": 1044
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "154b162c92a8d9b729706c257db41350c57633c4b9fcb29b9f654002903f7373",
+      "bytes": 647
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "393df6e1574120edc6aa3f5d7f566039f9b697111d4e7d1c4fe00db8337b26d5",
+      "bytes": 1288
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "46b3d18950250dacca5d72a26f68b379d50b54c406db151fb607563ebac9f3ad",
+      "bytes": 1026
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "1a9ec2e446f1785688191c7e55daa1c75391a36e8bd21be681ed30ca8fbf6d74",
+      "bytes": 706
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "3b1024544ebfa0c953b591aca5b0d9de78e29dc4bf677206aa9adfc258f8d10d",
+      "bytes": 1289
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "05794c019549f54623fd2a22c05e7001bdcd1ee3557fb90678f6eec8b9f0a77e",
+      "bytes": 2566
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "aaeff3e969536bb36af1a95d93a041d506b00961143fb836cf5258baa0d8081b",
+      "bytes": 710
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "ffe5997678107021022dd22aa748e6291cde2e03648b50d3b49936cb660e9a3b",
+      "bytes": 1290
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "a78c0a24720c7cc6133415805ebca90e60c77f00686808fbd759dfa0b012a3d9",
+      "bytes": 1007
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "7a8dfd2ad0db5267fb105c57e214c6dc63bde4781176c03c1dea05ac41e6f7a1",
+      "bytes": 715
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "271a64713cc51f2be21e5eec062155832a2bf8e40c37489b9175b278ed14eb49",
+      "bytes": 1289
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "21c3443abeed2db948164c9adac7e25ef71213ef79f09bd26e3c00adb6e8fcca",
+      "bytes": 638
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "f7a15b443308af41e100dff95861d7c04ab2e1d5a18bf4773d8071528e6adb3a",
+      "bytes": 714
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "d412e25dc5e59330b8b7da35785229d7ef26a4abae3adc9fd56d589524606881",
+      "bytes": 1217
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "eb26bd93fa53a14897efe9ba49b016defd5d8c6692e637f78d9d5eb8e5e49acc",
+      "bytes": 2165
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust/🧪️execution/🔣️.json",
+      "sha256": "fe7b44edf32d46313d31aeac7831466e7b23095aa5e6deaae1f2d6695ec827a0",
+      "bytes": 656
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+      "sha256": "6400099966c3a901914b108495f79a14329dd4af0fd9b5c8178e44c4ebc07417",
+      "bytes": 18826
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7a516ba8751bf3b622cdc4dd6c7132dc02752e5399f78402b1402fd2d91952bd",
+      "bytes": 9128
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+      "sha256": "0c5ea473885aa6df9da1d832c9fe01d613b82063a200cddcf8876297796de70a",
+      "bytes": 34021
+    }
+  ]
+}

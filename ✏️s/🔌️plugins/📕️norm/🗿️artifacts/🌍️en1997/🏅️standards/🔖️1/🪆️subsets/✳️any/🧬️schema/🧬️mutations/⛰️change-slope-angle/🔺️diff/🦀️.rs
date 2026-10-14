@@ -1,6 +1,6 @@
-use super::ChangeSlopeAngle;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997SlopesRows, En1997SlopesPatch};
+use crate::change_slope_angle::ChangeSlopeAngle;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997SlopesRows, En1997SlopesPatch};
 
 pub fn diff(payload: &ChangeSlopeAngle, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if !payload.new_angle_deg.is_finite() || payload.new_angle_deg <= 0.0 || payload.new_angle_deg >= 90.0 {

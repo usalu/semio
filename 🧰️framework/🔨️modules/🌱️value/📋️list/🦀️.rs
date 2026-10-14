@@ -445,24 +445,24 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     /// 🎟️ Reserves one original metadata or payload page only with independent structural funding.
-    pub fn reserve_one_funded(&mut self, grant:crate::retained_clone::RetainedCloneGrant) -> Result<crate::retained_clone::RetainedCloneProgress,PagedListAllocationError> {
+    pub fn reserve_one_funded(&mut self, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
         if self.has_reserved_slot() { return Ok(Default::default()); }
         let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         let depth=self.next_reserve_depth_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         if grant.maximum_items==0||grant.maximum_depth<depth||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
-        Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
+        Ok(semio_framework_value_control_contract::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
     /// 🎟️ Reserves at most one original page toward a requested logical capacity only with independent structural funding.
-    pub fn reserve_capacity_one_funded(&mut self, capacity:usize, grant:crate::retained_clone::RetainedCloneGrant) -> Result<crate::retained_clone::RetainedCloneProgress,PagedListAllocationError> {
+    pub fn reserve_capacity_one_funded(&mut self, capacity:usize, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
         let refused=|error:PagedListError|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason};
         let copy=self.next_capacity_copy_byte_demand(capacity).map_err(refused)?;
         let Some(bytes)=self.next_capacity_allocation_bytes(capacity).map_err(refused)? else { return Ok(Default::default()); };
         let depth=self.next_page_reserve_depth_demand().map_err(refused)?;
         if grant.maximum_items==0||grant.maximum_depth<depth||copy>grant.maximum_copy_bytes||bytes>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_capacity_one(capacity,grant.maximum_capacity_bytes)?;
-        Ok(crate::retained_clone::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
+        Ok(semio_framework_value_control_contract::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
     /// 📏️ Admits the actual remaining final payload extent without reserving a full unused page.
     pub fn next_exact_capacity_allocation_bytes(&self, limit: usize) -> Result<Option<usize>, PagedListError> {
@@ -703,27 +703,27 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     /// 🏠️ Hands one genuine empty allocation to its pre-admitted parent without physical disposal credit.
-    pub fn return_empty_page<const P:usize>(&mut self,parent:&mut crate::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<PagedListReturnProgress,crate::ValueError>{
-        fn transfer<T,const P:usize>(link:&mut Vec<Page<T>>,slots:&mut usize,parent:&mut crate::retirement::allocation_return::ParentAllocationReturn<P>)->Result<PagedListReturnProgress,crate::ValueError>{
+    pub fn return_empty_page<const P:usize>(&mut self,parent:&mut semio_framework_value_allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<PagedListReturnProgress,semio_framework_value_control_contract::ValueError>{
+        fn transfer<T,const P:usize>(link:&mut Vec<Page<T>>,slots:&mut usize,parent:&mut semio_framework_value_allocation_return::ParentAllocationReturn<P>)->Result<PagedListReturnProgress,semio_framework_value_control_contract::ValueError>{
             let Some(node)=link.first_mut()else{return Ok(PagedListReturnProgress::default());};
             match node{
                 Page::Branch { children, .. }=>{
                     if let Some(index)=children.iter().rposition(|child|!child.is_empty()){return transfer(&mut children[index],slots,parent);}
                 }
                 Page::Leaf{items,slots:reserved}=>{
-                    if !items.is_empty(){return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated,"paged payload must retire before parent backing handoff"));}
+                    if !items.is_empty(){return Err(semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::InvariantViolated,"paged payload must retire before parent backing handoff"));}
                     if *reserved!=0{
-                        let bytes=items.capacity().checked_mul(size_of::<T>()).ok_or_else(||crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit,"paged payload backing layout is invalid"))?;
+                        let bytes=items.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::OwnershipLimit,"paged payload backing layout is invalid"))?;
                         if !parent.return_empty_vec(items,1)?{return Ok(PagedListReturnProgress::default());}
                         *slots-=*reserved;*reserved=0;
                         return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:bytes});
                     }
                 }
             }
-            let bytes=link.capacity().checked_mul(size_of::<Page<T>>()).ok_or_else(||crate::ValueError::new(crate::ValueRefusalKind::OwnershipLimit,"paged metadata backing layout is invalid"))?;
+            let bytes=link.capacity().checked_mul(size_of::<Page<T>>()).ok_or_else(||semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::OwnershipLimit,"paged metadata backing layout is invalid"))?;
             if !parent.can_receive_vec_backing::<Page<T>>(link.capacity())?{return Ok(PagedListReturnProgress::default());}
             link.clear();
-            if !parent.return_empty_vec(link,1)?{return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated,"pre-admitted parent backing slot disappeared"));}
+            if !parent.return_empty_vec(link,1)?{return Err(semio_framework_value_control_contract::ValueError::new(crate::ValueRefusalKind::InvariantViolated,"pre-admitted parent backing slot disappeared"));}
             Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:bytes})
         }
         if maximum_items==0{return Ok(PagedListReturnProgress::default());}
@@ -895,3 +895,19 @@ impl<T, const N: usize> Extend<T> for PagedList<T, N> {
 #[cfg(test)]
 #[path = "🧪️tests/⚠️refusal/🦀️.rs"]
 mod refusal_tests;
+
+use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
+impl From<PagedListError> for ValueError {
+    fn from(error: PagedListError) -> Self {
+        let kind = match error.kind {
+            PagedListRefusalKind::OwnershipLimit => crate::ValueRefusalKind::OwnershipLimit,
+            PagedListRefusalKind::AllocationFailed => crate::ValueRefusalKind::AllocationFailed,
+            PagedListRefusalKind::InvariantViolated => crate::ValueRefusalKind::InvariantViolated,
+        };
+        ValueError::literal(kind, error.reason)
+    }
+}
+
+#[cfg(test)]
+#[path="🧪️tests/📏️final/🦀️.rs"]
+mod original_exact_final_extent_tests;

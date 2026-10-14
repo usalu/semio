@@ -7,21 +7,21 @@ async fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::Block5dSnapshot;
+    use semio_s_artifact_block_5d_model::Block5dSnapshot;
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio");
     let snapshot = <Block5dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("example dsl parses");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture");
-    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
+    let inference = semio_s_artifact_block_5d_inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture");
+    assert_eq!(inference, semio_s_artifact_block_5d_inferences::Block5dInference::infer(&snapshot).expect("valid materialized inference fixture"));
     assert!(inference.bounds.bounding_box.is_some(), "example has real grips, so it should have a bounding box");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::Block5dSnapshot;
+    use semio_s_artifact_block_5d_model::Block5dSnapshot;
     use protocol::Inference;
 
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::Block5dInference::infer(&Block5dSnapshot::default()).expect("valid materialized inference fixture"), crate::standards::v1::subsets::any::schema::inferences::Block5dInference::default());
+    assert_eq!(semio_s_artifact_block_5d_inferences::Block5dInference::infer(&Block5dSnapshot::default()).expect("valid materialized inference fixture"), semio_s_artifact_block_5d_inferences::Block5dInference::default());
 }
 //#endregion 🧪️InferenceLaws

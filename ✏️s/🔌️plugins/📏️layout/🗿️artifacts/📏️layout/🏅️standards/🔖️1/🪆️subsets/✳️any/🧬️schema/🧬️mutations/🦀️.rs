@@ -12,13 +12,19 @@
 //! `patch-frame`) and their glue mounts were deleted. This file `use super::*`-reaches those
 //! glue-mounted siblings.
 
-use crate::{LayoutDiff, LayoutSnapshot};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-use super::{
-    change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link, create_page, create_story,
-    delete_frame, delete_link, delete_page, delete_story, drag_frames, edit_story, move_frame, rename_layout, rotate_frames, scale_frames, rename_page, reorder_pages, resize_frame, rotate_frame, set_frame_flags, update_grid, create_character_style, delete_character_style, set_page_guides, set_page_parent, set_story_runs, update_link, set_page_overrides, create_layer, set_frame_layer, set_drawing_text, reorder_frame, update_character_style, update_layer, update_page_columns, update_page_margins, update_paragraph_style, update_parent_page, update_spread, update_text_frame,
-};
+use semio_s_artifact_layout_layout_mutations_content::{change_data_fields, change_link_path, change_page_height, change_page_width, change_print_target, create_link, create_page, create_story, delete_link, delete_page, delete_story, edit_story, rename_layout, rename_page, reorder_pages, create_character_style, delete_character_style, set_page_guides, set_page_parent, set_story_runs, update_link, set_page_overrides, update_character_style, update_page_columns, update_page_margins, update_paragraph_style, update_parent_page, update_spread};
+use semio_s_artifact_layout_layout_mutations_frames::{change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, create_frame, delete_frame, drag_frames, move_frame, rotate_frames, scale_frames, resize_frame, rotate_frame, set_frame_flags, update_grid, create_layer, set_frame_layer, set_drawing_text, reorder_frame, update_layer, update_text_frame};
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`
@@ -81,87 +87,8 @@ pub enum LayoutMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️FrameSelection
-/// 🖼️ The sparse diff of a frame-selection transform (`drag-frames`/`rotate-frames`/`scale-frames`): every unlocked
-/// target frame of `page_id` gets `transform` applied to its BASE bounds — so the leaf replays on any base — and is
-/// patched in page order with the fields `fields` keeps. A repeated or empty target set is the Fatal `mutation.invariant`;
-/// a missing page, or no target that is an unlocked frame of it, is the Error `mutation.target-missing`; missing and
-/// locked targets are skipped with one Warning `mutation.partial` per reason; a transform that moves nothing is the
-/// Warning `mutation.no-op`.
-pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets: &[String], transform: impl Fn(&crate::LayoutBounds) -> crate::LayoutBounds, fields: impl Fn(&crate::LayoutBounds) -> crate::FramePatch) -> protocol::MutationOutcome<LayoutDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PageFramesModification, PagePatch};
-    if let Err(reason) = layout_frame_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
-    }
-    let Some(page) = base.pages.iter().find(|page| page.id == page_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{page_id}\" does not exist."), [page_id.to_string()]);
-    };
-    let missing: Vec<String> = targets.iter().filter(|id| !page.frames.iter().any(|frame| frame.id() == id.as_str())).cloned().collect();
-    let locked: Vec<String> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && crate::frame_edits_blocked(base, page, frame)).map(|frame| frame.id().to_string()).collect();
-    let movable = layout_frame_selection_targets(base, page_id, targets);
-    if movable.is_empty() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} target(s) is an unlocked frame of page \"{page_id}\".", targets.len()), targets.to_vec());
-    }
-    let partial: Vec<protocol::MutationMessage> = [(missing, "not on this page"), (locked, "locked")]
-        .into_iter()
-        .filter(|(ids, _)| !ids.is_empty())
-        .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
-        .collect();
-    let patched: Vec<PageFramesModification> = movable.iter().filter_map(|frame| Some(transform(frame.bounds())).filter(|next| next != frame.bounds()).map(|next| PageFramesModification { id: frame.id().to_string(), patch: fields(&next) })).collect();
-    if patched.is_empty() {
-        return protocol::MutationOutcome::new(LayoutDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "The transform moves no frame.").at(targets.to_vec())]));
-    }
-    protocol::MutationOutcome::new(LayoutDiff {
-        pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: page_id.to_string(), patch: PagePatch { frames: PageFramesDelta { modified: patched, ..Default::default() }, ..Default::default() } }], ..Default::default() }),
-        ..Default::default()
-    })
-    .absorb_messages(partial)
-}
 
-/// 🎯️ The frames a frame-selection transform moves: the unlocked frames of `page_id` named by `targets`, in page order.
-pub fn layout_frame_selection_targets<'a>(base: &'a LayoutSnapshot, page_id: &str, targets: &[String]) -> Vec<&'a crate::Frame> {
-    let Some(page) = base.pages.iter().find(|page| page.id == page_id) else { return Vec::new() };
-    page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && !crate::frame_edits_blocked(base, page, frame)).collect()
-}
 
-/// 🚨️ A frame-selection target set names at least one frame and no frame twice — the schema's `minItems`/`uniqueItems`.
-pub fn layout_frame_targets_invariant(targets: &[String]) -> Result<(), String> {
-    if targets.is_empty() {
-        return Err("targets must name at least one frame".to_string());
-    }
-    match targets.iter().enumerate().find(|(at, id)| targets[..*at].contains(id)) {
-        Some((_, id)) => Err(format!("targets must not repeat {id:?}")),
-        None => Ok(()),
-    }
-}
-
-/// 📍️ The pivot a frame-selection rotate or scale records for `targets` on `page`: the centroid of their frame centres —
-/// one recorded point, so the leaf replays on any base. `None` when no target is a frame of the page.
-pub fn layout_frame_selection_pivot(page: &crate::Page, targets: &[String]) -> Option<(f64, f64)> {
-    let centres: Vec<(f64, f64)> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id())).map(|frame| layout_frame_centre(frame.bounds())).collect();
-    (!centres.is_empty()).then(|| (centres.iter().map(|centre| centre.0).sum::<f64>() / centres.len() as f64, centres.iter().map(|centre| centre.1).sum::<f64>() / centres.len() as f64))
-}
-
-/// 🎯️ A frame's centre: the point its rotation turns about.
-pub fn layout_frame_centre(bounds: &crate::LayoutBounds) -> (f64, f64) {
-    (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5)
-}
-
-/// 🔢️ A label number in both locales, `(en, de)`: rounded to two decimals, trailing zeros dropped, German decimal comma.
-pub fn layout_label_number(value: f64) -> (String, String) {
-    let rounded = (value * 100.0).round() / 100.0;
-    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
-    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
-    let de = en.replace('.', ",");
-    (en, de)
-}
-
-/// 🔠️ A label's counted frames, `(en, de)`: "1 frame" / "1 Rahmen", "3 frames" / "3 Rahmen".
-pub fn layout_label_frames(count: usize) -> (String, String) {
-    match count {
-        1 => ("1 frame".to_string(), "1 Rahmen".to_string()),
-        count => (format!("{count} frames"), format!("{count} Rahmen")),
-    }
-}
 //#endregion 🔖️FrameSelection
 
 //#region 🧪️Tests
@@ -234,3 +161,10 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
+
+//#region 🪢️TaxonomyMounts
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+//#endregion 🪢️TaxonomyMounts

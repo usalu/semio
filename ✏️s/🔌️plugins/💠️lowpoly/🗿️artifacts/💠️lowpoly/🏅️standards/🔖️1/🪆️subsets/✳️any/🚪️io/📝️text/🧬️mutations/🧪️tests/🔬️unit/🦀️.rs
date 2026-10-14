@@ -1,16 +1,18 @@
-use crate::standards::v1::subsets::any::io::text::mutations::*;
-use crate::mutations::{create_mesh, create_object, delete_mesh, delete_object, edit_paint_layer, insert_paint_layer, rename_object};
-use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
+use crate::standards::v1::subsets::any::io::component::text::mutations::*;
+use semio_s_artifact_lowpoly_lowpoly_mut_geometry::{create_mesh, delete_mesh};
+use semio_s_artifact_lowpoly_lowpoly_mut_objects::{create_object, delete_object, rename_object};
+use semio_s_artifact_lowpoly_lowpoly_mut_paint::{edit_paint_layer, insert_paint_layer};
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use protocol::{OpBinary, OpText};
 
 fn tiny_mesh_json() -> String {
     semio_framework_3d::mesh::HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
 }
 
-fn tiny_object(id: &str, name: &str) -> crate::LowpolyObject {
+fn tiny_object(id: &str, name: &str) -> semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyObject {
     let mesh_workspace = tiny_mesh_json();
-    let mesh = crate::mesh_child_handle(id, &mesh_workspace);
-    crate::LowpolyObject { mesh_state:None, id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
+    let mesh = semio_s_artifact_lowpoly_lowpoly_model::snapshot::mesh_child_handle(id, &mesh_workspace);
+    semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyObject { mesh_state:None, id: id.into(), name: name.into(), transform: Default::default(), smooth_shading: false, mesh: Some(mesh), paint_layers: vec![semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::new("Base")], mesh_content: String::new() }
 }
 
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
@@ -20,12 +22,12 @@ fn demo_mutation_cases() -> Vec<LowpolyMutation> {
     vec![
         LowpolyMutation::CreateObject(create_object::CreateObject { index: 1, object: tiny_object("obj-100", "Box") }),
         LowpolyMutation::DeleteObject(delete_object::DeleteObject { id: object_id.clone() }),
-        LowpolyMutation::ReorderObjects(crate::mutations::reorder_objects::ReorderObjects { id: object_id.clone(), to_index: 0 }),
+        LowpolyMutation::ReorderObjects(semio_s_artifact_lowpoly_lowpoly_mut_objects::reorder_objects::ReorderObjects { id: object_id.clone(), to_index: 0 }),
         LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id.clone(), new_name: "Renamed".into() }),
-        LowpolyMutation::ChangeObjectSmoothShading(crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id: object_id.clone(), new_smooth_shading: true }),
-        LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id: object_id.clone(), new_position: [1.0, 2.0, 3.0] }),
-        LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id: object_id.clone(), new_rotation: [0.1, 0.2, 0.3] }),
-        LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
+        LowpolyMutation::ChangeObjectSmoothShading(semio_s_artifact_lowpoly_lowpoly_mut_objects::change_object_smooth_shading::ChangeObjectSmoothShading { id: object_id.clone(), new_smooth_shading: true }),
+        LowpolyMutation::MoveObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::move_object::MoveObject { id: object_id.clone(), new_position: [1.0, 2.0, 3.0] }),
+        LowpolyMutation::RotateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::rotate_object::RotateObject { id: object_id.clone(), new_rotation: [0.1, 0.2, 0.3] }),
+        LowpolyMutation::ScaleObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::scale_object::ScaleObject { id: object_id.clone(), new_scale: [2.0, 2.0, 2.0] }),
         LowpolyMutation::CreateMesh(create_mesh::CreateMesh { mesh_state:None,
             id: object_id.clone(),
             child_id: "mesh-fixture-01".into(),
@@ -33,12 +35,12 @@ fn demo_mutation_cases() -> Vec<LowpolyMutation> {
             mesh_workspace: tiny_mesh_json(),
         }),
         LowpolyMutation::DeleteMesh(delete_mesh::DeleteMesh { id: object_id.clone() }),
-        LowpolyMutation::InsertPaintLayer(insert_paint_layer::InsertPaintLayer { object_id: object_id.clone(), index: 1, layer: crate::LowpolyPaintLayer::new("Detail") }),
-        LowpolyMutation::RemovePaintLayer(crate::mutations::remove_paint_layer::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
-        LowpolyMutation::RenamePaintLayer(crate::mutations::rename_paint_layer::RenamePaintLayer { object_id: object_id.clone(), index: 0, new_name: "Top".into() }),
-        LowpolyMutation::ChangePaintLayerVisible(crate::mutations::change_paint_layer_visible::ChangePaintLayerVisible { object_id: object_id.clone(), index: 0, new_visible: false }),
-        LowpolyMutation::ChangePaintLayerOpacity(crate::mutations::change_paint_layer_opacity::ChangePaintLayerOpacity { object_id: object_id.clone(), index: 0, new_opacity: 0.5 }),
-        LowpolyMutation::ChangePaintLayerBlendMode(crate::mutations::change_paint_layer_blend_mode::ChangePaintLayerBlendMode { object_id: object_id.clone(), index: 0, new_blend_mode: "multiply".into() }),
+        LowpolyMutation::InsertPaintLayer(insert_paint_layer::InsertPaintLayer { object_id: object_id.clone(), index: 1, layer: semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::new("Detail") }),
+        LowpolyMutation::RemovePaintLayer(semio_s_artifact_lowpoly_lowpoly_mut_paint::remove_paint_layer::RemovePaintLayer { object_id: object_id.clone(), index: 0 }),
+        LowpolyMutation::RenamePaintLayer(semio_s_artifact_lowpoly_lowpoly_mut_paint::rename_paint_layer::RenamePaintLayer { object_id: object_id.clone(), index: 0, new_name: "Top".into() }),
+        LowpolyMutation::ChangePaintLayerVisible(semio_s_artifact_lowpoly_lowpoly_mut_paint::change_paint_layer_visible::ChangePaintLayerVisible { object_id: object_id.clone(), index: 0, new_visible: false }),
+        LowpolyMutation::ChangePaintLayerOpacity(semio_s_artifact_lowpoly_lowpoly_mut_paint::change_paint_layer_opacity::ChangePaintLayerOpacity { object_id: object_id.clone(), index: 0, new_opacity: 0.5 }),
+        LowpolyMutation::ChangePaintLayerBlendMode(semio_s_artifact_lowpoly_lowpoly_mut_paint::change_paint_layer_blend_mode::ChangePaintLayerBlendMode { object_id: object_id.clone(), index: 0, new_blend_mode: "multiply".into() }),
         LowpolyMutation::EditPaintLayer(edit_paint_layer::EditPaintLayer { object_id, layer_index: 0, runs: vec![PixelRun { offset: 12, bytes: vec![255, 0, 0, 255] }, PixelRun { offset: 400, bytes: vec![0, 255, 0, 255, 0, 0, 0, 128] }] }),
     ]
 }

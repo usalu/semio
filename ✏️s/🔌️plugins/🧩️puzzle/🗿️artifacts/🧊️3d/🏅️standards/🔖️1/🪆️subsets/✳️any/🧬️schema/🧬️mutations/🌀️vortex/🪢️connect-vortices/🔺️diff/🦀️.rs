@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectVortices` — a real append-only insert. No-op when the id
 //! already exists in `base`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::Puzzle3dSnapshot};
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ConnectVortices, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

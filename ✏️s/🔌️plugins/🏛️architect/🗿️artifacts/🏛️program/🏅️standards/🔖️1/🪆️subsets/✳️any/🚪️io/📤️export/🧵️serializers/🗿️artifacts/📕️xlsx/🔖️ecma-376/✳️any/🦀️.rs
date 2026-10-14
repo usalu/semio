@@ -1,9 +1,12 @@
 //! program -> xlsx — one worksheet per program table, header row 1 and one row per record from column A; stdio's minimal
 //! package builder turns the workbook into the authoritative OPC XML parts (`build_minimal_xlsx`).
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
-pub use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-pub use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
-use semio_s_artifact_stdio_xlsx::schema::construction::build_minimal_xlsx;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
 use std::collections::BTreeSet;
 
 pub fn register() {}
@@ -49,7 +52,7 @@ pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_fram
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let workbook = serialize(snapshot)?;
-    semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
+    semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&workbook).map_err(|error| export_error(format!("program->xlsx: {error}")))
 }
 
 #[cfg(test)]

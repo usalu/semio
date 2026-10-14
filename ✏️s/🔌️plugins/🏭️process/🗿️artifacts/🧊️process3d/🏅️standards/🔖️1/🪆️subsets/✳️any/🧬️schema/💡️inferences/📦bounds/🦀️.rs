@@ -11,7 +11,7 @@
 //! empty placeholder minted for `WorkingSolid::ImportedMesh`/`ImportedSolid`) degenerates to a
 //! single point at `pose.position` — honest given what the brep content alone can tell us.
 
-use crate::Pose;
+use semio_s_artifact_process_process3d_model::snapshot::Pose;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 

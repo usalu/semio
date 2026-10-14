@@ -16,7 +16,7 @@ mod tests {
         let o4 = body.len();
         body.extend_from_slice(b"4 0 obj\n<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (sRGB2014) /DestOutputProfile 5 0 R >>\nendobj\n");
         let o5 = body.len();
-        let profile=include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc"));
+        let profile=include_bytes!("../../../../../../../🖼️assets/🌈️icc/🌈️sRGB2014.icc");
         body.extend_from_slice(format!("5 0 obj\n<< /Length {} /N 3 >>\nstream\n",profile.len()).as_bytes());
         body.extend_from_slice(profile);
         body.extend_from_slice(b"\nendstream\nendobj\n");

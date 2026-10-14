@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repository-cargo-storage-arguments:v1",
+  "definitions": {
+    "Context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "compilerConfiguration",
+        "buildDirectory",
+        "targetDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "compilerConfiguration": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "buildDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "targetDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "target": "--target-dir",
+        "configuration": "--config",
+        "delimiter": "--",
+        "buildKey": "build.build-dir",
+        "targetKey": "build.target-dir",
+        "maximumArguments": 512,
+        "forbidden": [
+          "--artifact-dir",
+          "--lockfile-path",
+          "--root"
+        ]
+      }
+    }
+  }
+}

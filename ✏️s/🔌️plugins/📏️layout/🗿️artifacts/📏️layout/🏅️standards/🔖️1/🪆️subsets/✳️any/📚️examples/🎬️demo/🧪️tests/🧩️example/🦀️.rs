@@ -7,8 +7,8 @@ async fn primary_asset_is_nonempty() {
 //#region 💡️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::LayoutInference;
-    use crate::LayoutSnapshot;
+    use semio_s_artifact_layout_layout_model::inferences::LayoutInference;
+    use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -22,7 +22,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::LayoutInference;
+    use semio_s_artifact_layout_layout_model::inferences::LayoutInference;
 
     assert_eq!(LayoutInference::default().topology.node_count, 0);
     assert!(LayoutInference::default().topology.cycle_free);

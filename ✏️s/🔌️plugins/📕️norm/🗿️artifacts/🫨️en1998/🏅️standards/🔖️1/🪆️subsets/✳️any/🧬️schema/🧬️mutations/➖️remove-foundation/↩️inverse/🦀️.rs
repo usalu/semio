@@ -1,12 +1,12 @@
 //! Inverse for `remove-foundation`.
-use super::RemoveFoundation;
-use crate::{En1998Mutation, En1998Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::insert_foundation;
+use crate::remove_foundation::RemoveFoundation;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use crate::insert_foundation;
 
-pub fn inverse(payload: &RemoveFoundation, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RemoveFoundation, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_foundation::InsertFoundation> {
     Ok((|| {
     match base.foundations.get(payload.index) {
-        Some(item) => vec![En1998Mutation::InsertFoundation(insert_foundation::InsertFoundation { index: Some(payload.index), foundation: item.clone() })],
+        Some(item) => vec![Op::from(insert_foundation::InsertFoundation { index: Some(payload.index), foundation: item.clone() })],
         None => Vec::new(),
     }
 

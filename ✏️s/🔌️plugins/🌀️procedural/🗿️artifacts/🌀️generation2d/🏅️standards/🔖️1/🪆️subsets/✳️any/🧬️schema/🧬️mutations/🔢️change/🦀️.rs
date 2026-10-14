@@ -1,7 +1,6 @@
 //! 🦠️ `🔢️change` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeGenerationValue {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_generation_value(id: String, question_id: String, value: semio_framework_value::DslValue) -> Generation2dMutation {
-    Generation2dMutation::ChangeGenerationValue(ChangeGenerationValue { id, question_id, value })
+pub fn change_generation_value<Op: From<ChangeGenerationValue>>(id: String, question_id: String, value: semio_framework_value::DslValue) -> Op {
+    Op::from(ChangeGenerationValue { id, question_id, value })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeGenerationValue {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ChangeGenerationValue
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<ChangeGenerationValue>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_generation_value::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_generation_value::inverse::inverse(self, base)?
     
     })
 }

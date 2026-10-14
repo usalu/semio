@@ -8,7 +8,27 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      }
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-goals",
+            "scope": "package",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "proc-macro",
+                "build-script",
+                "build-script-run"
+              ]
+            }
+          }
+        }
+      },
+      "cache": false
     },
     "test": {
       "executor": "repo:script",

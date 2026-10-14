@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "partition",
+    "directory",
+    "live"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "partition": {
+      "const": "diagnostics"
+    },
+    "directory": {
+      "const": "tests"
+    },
+    "live": {
+      "const": true
+    }
+  },
+  "definitions": {
+    "Retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumRetainedBytes",
+        "maximumRuns"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumRetainedBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1073741824
+        },
+        "maximumRuns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        }
+      }
+    },
+    "Run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "task",
+        "run"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "task": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "run": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "runLeaseShards": 16
+      }
+    }
+  }
+}

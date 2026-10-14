@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-process-process3d-commands"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d editor command handlers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+machine = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-process-process3d-config = { workspace = true }
+semio-s-artifact-process-process3d-inferences = { workspace = true }
+semio-s-artifact-process-process3d-io = { workspace = true }
+semio-s-artifact-process-process3d-kit = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-process-process3d-modes = { workspace = true }
+semio-s-artifact-process-process3d-mut-machines = { workspace = true }
+semio-s-artifact-process-process3d-mut-steps = { workspace = true }
+semio-s-artifact-process-process3d-mut-stock = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

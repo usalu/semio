@@ -5,6 +5,14 @@
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
 //! ⚙️engine::register) for the native `s.norm.iso16757` dialect only.
+
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &[]
 }
@@ -13,8 +21,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Iso16757Analyzer;
-    use crate::Iso16757Snapshot;
+    use crate::Iso16757Analyzer;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
@@ -46,26 +54,26 @@ pub mod derived_composition {
         }
     }
 }
-pub use derived_composition::*;
+pub use crate::derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚪️JsonSerializers
 /// 🚪️ Whole-artifact JSON serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
-use crate::document::NormError;
+use semio_s_plugin_norm_compliance::NormError;
 
 pub mod io {
-    use super::*;
+    use crate::*;
 
-    pub fn catalogue_to_json(catalogue: &crate::part_1::Catalogue) -> Result<String, NormError> {
+    pub fn catalogue_to_json(catalogue: &semio_s_artifact_norm_iso16757_model::part_1::Catalogue) -> Result<String, NormError> {
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(catalogue))))
     }
 
-    pub fn catalogue_from_json(json: &str) -> Result<crate::part_1::Catalogue, NormError> {
+    pub fn catalogue_from_json(json: &str) -> Result<semio_s_artifact_norm_iso16757_model::part_1::Catalogue, NormError> {
         semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
-    pub fn dictionary_to_json(dictionary: &crate::part_4::Dictionary) -> Result<String, NormError> {
+    pub fn dictionary_to_json(dictionary: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary) -> Result<String, NormError> {
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(dictionary))))
     }
 }
@@ -76,7 +84,7 @@ pub mod io {
 /// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
 /// composer dispatch belongs.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Iso16757Composer as Iso16757AnyComposer;
+    use crate::Iso16757Composer as Iso16757AnyComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -104,7 +112,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+    use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
+    use semio_s_artifact_norm_iso16757_mutations::Iso16757Mutation;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -151,10 +161,10 @@ pub mod derived_construction {
         }
     }
 }
-pub use derived_construction::*;
+pub use crate::derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Iso16757Snapshot;
+    use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -198,7 +208,7 @@ pub mod derived_analysis {
         }
     }
 }
-pub use derived_analysis::*;
+pub use crate::derived_analysis::*;
 
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Iso16757BuilderFacets {
@@ -211,23 +221,4 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Iso16757Composer,
 );
 
-//#region 🌉️ExternalCodecBridge
-/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff, applied through the central applier.
-pub mod mutation_bridge {
-    use crate::{Iso16757Mutation, Iso16757Snapshot};
-
-    /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
-    pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutation) -> Result<(Iso16757Snapshot, Vec<String>), String> {
-        let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
-        let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-        let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-        Ok((applied, messages))
-    }
-
-    /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
-    pub fn inverse_iso16757_mutation(mutation: &Iso16757Mutation, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
-        <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::inverse(mutation, base)
-    }
-}
 pub use mutation_bridge::*;
-//#endregion 🌉️ExternalCodecBridge

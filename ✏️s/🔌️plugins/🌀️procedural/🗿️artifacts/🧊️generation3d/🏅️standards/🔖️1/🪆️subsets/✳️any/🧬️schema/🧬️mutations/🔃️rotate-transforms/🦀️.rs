@@ -2,9 +2,8 @@
 //! operator of the generator graph composes after its own. Editing it in history re-derives the operator on any base.
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::generation3d_label_items;
-use crate::generation3d_label_number;
-use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_items;
+use semio_s_artifact_procedural_3d_mut_widgets::generation3d_label_number;
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
@@ -21,18 +20,21 @@ pub struct RotateTransforms {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_transforms(targets: Vec<String>, axis: [f64; 3], angle: f64) -> Generation3dMutation {
-    Generation3dMutation::RotateTransforms(RotateTransforms { targets, ax: axis[0], ay: axis[1], az: axis[2], angle })
+pub fn rotate_transforms<Op: From<RotateTransforms>>(targets: Vec<String>, axis: [f64; 3], angle: f64) -> Op {
+    Op::from(RotateTransforms { targets, ax: axis[0], ay: axis[1], az: axis[2], angle })
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for RotateTransforms {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for RotateTransforms
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "transforms", kind: "rotate-transforms", record: "RotatedTransforms" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::rotate_transforms::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::rotate_transforms::inverse::inverse(self, base)?
     

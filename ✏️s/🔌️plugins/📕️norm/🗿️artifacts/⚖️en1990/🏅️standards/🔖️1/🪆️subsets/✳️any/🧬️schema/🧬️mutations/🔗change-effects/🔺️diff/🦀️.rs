@@ -1,9 +1,9 @@
 //! 🔗 `change-effects` diff — replaces the whole collection: every base row is removed back to front, then every new row is inserted in order.
 
-use super::ChangeEffects;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990EffectEdit};
-use crate::En1990Snapshot;
+use crate::change_effects::ChangeEffects;
+use semio_s_artifact_norm_en1990_diff::En1990RowEdit as _;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990EffectEdit};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeEffects, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

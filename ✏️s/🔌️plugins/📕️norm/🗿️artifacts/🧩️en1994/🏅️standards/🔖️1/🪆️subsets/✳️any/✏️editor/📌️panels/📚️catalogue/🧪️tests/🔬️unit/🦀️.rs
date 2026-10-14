@@ -1,9 +1,9 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::artifact_schema::{part_1_1, part_en1990};
-use crate::document::AnnexChoice;
-use crate::editor::en1994::unit_tests::context;
-use crate::CompositeBeam;
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use semio_s_artifact_norm_en1994_checks::{part_1_1, part_en1990};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use crate::unit_tests::context;
+use semio_s_artifact_norm_en1994_model::CompositeBeam;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

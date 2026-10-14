@@ -3,18 +3,17 @@
 
 use crate::change_widget_input::ChangeWidgetInput;
 use crate::update_widget::UpdateWidget;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 
 /// ↩️ The base widget, when it is an operator or a text source.
-pub fn inverse(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::update_widget::UpdateWidget>>(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     base.host_snapshot
         .widgets
         .iter()
         .find(|widget| matches!(widget, Widget::Neuron { id, .. } | Widget::InputNote { id, .. } if *id == payload.id))
-        .map(|widget| Generation3dMutation::UpdateWidget(UpdateWidget { widget: widget.clone() }))
+        .map(|widget| Op::from(UpdateWidget { widget: widget.clone() }))
         .into_iter()
         .collect()
 

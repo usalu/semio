@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "sources": {
+    "base/lib.rs": "pub fn value()->u32{1}\n",
+    "shared/compiler.json": "{\"mode\":\"prototype\"}\n"
+  },
+  "unrelated": "removed-scope.rs",
+  "refusals": [
+    "missing",
+    "changed",
+    "symlink",
+    "duplicate",
+    "traversal",
+    "bytes"
+  ]
+}

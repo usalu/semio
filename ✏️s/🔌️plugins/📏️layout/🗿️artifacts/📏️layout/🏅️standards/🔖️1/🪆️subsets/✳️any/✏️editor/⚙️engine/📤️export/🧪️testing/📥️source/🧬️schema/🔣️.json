@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/editor/engine/export/source/schema.json",
+  "title": "LayoutMediaAdoptionSourceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sources",
+    "adopter",
+    "producer"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "editor",
+        "export"
+      ],
+      "properties": {
+        "editor": {
+          "const": "../../🦀️.rs"
+        },
+        "export": {
+          "const": "./🦀️.rs"
+        }
+      }
+    },
+    "adopter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementation",
+        "method",
+        "parameters",
+        "result",
+        "body"
+      ],
+      "properties": {
+        "implementation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definition",
+        "phases"
+      ],
+      "properties": {
+        "definition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "implementation",
+            "method",
+            "parameters",
+            "result"
+          ],
+          "properties": {
+            "implementation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1
+            },
+            "parameters": {
+              "type": "string",
+              "minLength": 1
+            },
+            "result": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

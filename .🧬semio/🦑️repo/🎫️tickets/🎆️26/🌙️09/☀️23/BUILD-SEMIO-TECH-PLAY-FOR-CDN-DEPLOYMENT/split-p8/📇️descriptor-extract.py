@@ -52,6 +52,11 @@ for dirpath, dirnames, filenames in os.walk(crate_dir):
             p = os.path.join(dirpath, f)
             t = writes.get(p) or open(p, encoding="utf-8").read()
             n = re.sub(r"\b(crate::" + re.escape(module) + r")::" + name + r"\b", r"\1::descriptor::" + name, t)
+            if p == root:
+                n = re.sub(r"(?<![\w:])(" + re.escape(module) + r")::" + name + r"\b", r"\1::descriptor::" + name, n)
+            glob = re.search(r"(?m)^use crate::" + re.escape(module) + r"::\*;\n", n)
+            if glob and re.search(r"(?<![\w:])" + name + r"\s*\(", n) and "descriptor::" + name not in n:
+                n = n[:glob.end()] + f"use crate::{module}::descriptor::{name};\n" + n[glob.end():]
             if n != t:
                 writes[p] = n
                 print("retarget", os.path.relpath(p, crate_dir))

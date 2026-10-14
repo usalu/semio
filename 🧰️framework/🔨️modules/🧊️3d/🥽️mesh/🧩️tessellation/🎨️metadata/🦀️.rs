@@ -1,9 +1,9 @@
 use super::*;
-use protocol::value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Default)]
 pub(super) struct MeshMetadataReceipt(pub RetainedCloneProgress);
-protocol::value::artifact_retire_leaf!(MeshMetadataReceipt);
+semio_framework_value::artifact_retire_leaf!(MeshMetadataReceipt);
 
 fn semantic_index(semantic:MeshAttributeSemantic)->Option<usize>{match semantic{MeshAttributeSemantic::Normal=>Some(0),MeshAttributeSemantic::Uv=>Some(1),MeshAttributeSemantic::Color=>Some(2),_=>None}}
 

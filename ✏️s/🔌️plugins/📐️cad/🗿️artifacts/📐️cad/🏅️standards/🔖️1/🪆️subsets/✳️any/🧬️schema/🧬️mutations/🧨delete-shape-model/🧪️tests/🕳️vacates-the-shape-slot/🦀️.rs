@@ -7,7 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::CadMutation;
+extern crate semio_framework_os_kernel as protocol;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::Mutation;
 
@@ -113,7 +114,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-shape-model/vacates-the-shape-slot: committed diff JSON is not canonical");
@@ -134,8 +135,8 @@ async fn committed_diff_applies_to_after() {
     let in_memory = mutation().diff(&base).diff().clone();
     assert_eq!(protocol::apply_diff(&in_memory, &base).expect("the in-memory diff applies"), expected_after(), "delete-shape-model/vacates-the-shape-slot: the in-memory diff must carry before to after");
 
-    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    assert_eq!(decoded, semio_s_artifact_cad_cad_model::diff::CadDiff::default(), "delete-shape-model/vacates-the-shape-slot: a `null` shapeModel is indistinguishable from an untouched one, so the decoded diff is empty");
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    assert_eq!(decoded, semio_s_artifact_cad_cad_model_diff::CadDiff::default(), "delete-shape-model/vacates-the-shape-slot: a `null` shapeModel is indistinguishable from an untouched one, so the decoded diff is empty");
     assert_eq!(protocol::apply_diff(&decoded, &base).expect("the decoded diff applies"), base, "delete-shape-model/vacates-the-shape-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
 }
 

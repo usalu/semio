@@ -425,59 +425,59 @@ fn compliance_gate_all_families() {
 
     let mut results = Vec::new();
 
-    results.push(gate_family::<semio_s_artifact_norm_din4108::editor::din4108::Din4108Family>(
+    results.push(gate_family::<semio_s_artifact_norm_din4108_editor::Din4108Family>(
         "din4108",
         &[
-            ("demo", semio_s_artifact_norm_din4108::examples::demo::PRIMARY_TEXT),
-            ("failing_thin_insulation", semio_s_artifact_norm_din4108::examples::failing_thin_insulation::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_din4108_examples::demo::PRIMARY_TEXT),
+            ("failing_thin_insulation", semio_s_artifact_norm_din4108_examples::failing_thin_insulation::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_din16798::editor::din16798::DinEn16798Family>(
+    results.push(gate_family::<semio_s_artifact_norm_din16798_editor::DinEn16798Family>(
         "din16798",
         &[
-            ("demo", semio_s_artifact_norm_din16798::examples::demo::PRIMARY_TEXT),
-            ("compliant_office", semio_s_artifact_norm_din16798::examples::compliant_office::PRIMARY_TEXT),
-            ("noncompliant_office", semio_s_artifact_norm_din16798::examples::noncompliant_office::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_din16798_examples::demo::PRIMARY_TEXT),
+            ("compliant_office", semio_s_artifact_norm_din16798_examples::compliant_office::PRIMARY_TEXT),
+            ("noncompliant_office", semio_s_artifact_norm_din16798_examples::noncompliant_office::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_din18599::editor::din18599::DinV18599Family>(
+    results.push(gate_family::<semio_s_artifact_norm_din18599_editor::DinV18599Family>(
         "din18599",
         &[
-            ("demo", semio_s_artifact_norm_din18599::examples::demo::PRIMARY_TEXT),
-            ("compliant_detached", semio_s_artifact_norm_din18599::examples::compliant_detached::PRIMARY_TEXT),
-            ("noncompliant_detached", semio_s_artifact_norm_din18599::examples::noncompliant_detached::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_din18599_examples::demo::PRIMARY_TEXT),
+            ("compliant_detached", semio_s_artifact_norm_din18599_examples::compliant_detached::PRIMARY_TEXT),
+            ("noncompliant_detached", semio_s_artifact_norm_din18599_examples::noncompliant_detached::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1990::editor::en1990::En1990Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1990_editor::En1990Family>(
         "en1990",
         &[
             (
                 "high_consequence_office",
-                semio_s_artifact_norm_en1990::standards::v1::subsets::any::examples::high_consequence_office::PRIMARY_TEXT,
+                semio_s_artifact_norm_en1990_examples::high_consequence_office::PRIMARY_TEXT,
             ),
             (
                 "road_bridge_compliant",
-                semio_s_artifact_norm_en1990::standards::v1::subsets::any::examples::road_bridge_compliant::PRIMARY_TEXT,
+                semio_s_artifact_norm_en1990_examples::road_bridge_compliant::PRIMARY_TEXT,
             ),
             (
                 "road_bridge_failing",
-                semio_s_artifact_norm_en1990::standards::v1::subsets::any::examples::road_bridge_failing::PRIMARY_TEXT,
+                semio_s_artifact_norm_en1990_examples::road_bridge_failing::PRIMARY_TEXT,
             ),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1991::editor::en1991::En1991Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1991_editor::En1991Family>(
         "en1991",
         &[
-            ("de_office_compliant", semio_s_artifact_norm_en1991::de_office_compliant::PRIMARY_TEXT),
-            ("multi_fail_noncompliant", semio_s_artifact_norm_en1991::multi_fail_noncompliant::PRIMARY_TEXT),
+            ("de_office_compliant", semio_s_artifact_norm_en1991_examples::de_office_compliant::PRIMARY_TEXT),
+            ("multi_fail_noncompliant", semio_s_artifact_norm_en1991_examples::multi_fail_noncompliant::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1992::editor::en1992::En1992Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1992_editor::En1992Family>(
         "en1992",
         &[
-            ("compliant_office_frame", semio_s_artifact_norm_en1992::compliant_office_frame::PRIMARY_TEXT),
-            ("failing_under_reinforced", semio_s_artifact_norm_en1992::failing_under_reinforced::PRIMARY_TEXT),
-            ("liquid_retaining_fem_anchor", semio_s_artifact_norm_en1992::liquid_retaining_fem_anchor::PRIMARY_TEXT),
+            ("compliant_office_frame", semio_s_artifact_norm_en1992_examples::compliant_office_frame::PRIMARY_TEXT),
+            ("failing_under_reinforced", semio_s_artifact_norm_en1992_examples::failing_under_reinforced::PRIMARY_TEXT),
+            ("liquid_retaining_fem_anchor", semio_s_artifact_norm_en1992_examples::liquid_retaining_fem_anchor::PRIMARY_TEXT),
         ],
     ));
     results.push(gate_family::<semio_s_artifact_norm_en1993_editor::En1993Family>(
@@ -487,68 +487,68 @@ fn compliance_gate_all_families() {
             ("high_strength_connection", semio_s_artifact_norm_en1993_examples::high_strength_connection::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1994::editor::en1994::En1994Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1994_editor::En1994Family>(
         "en1994",
         &[
-            ("composite_floor_beam", semio_s_artifact_norm_en1994::composite_floor_beam::PRIMARY_TEXT),
-            ("composite_floor_beam_failing", semio_s_artifact_norm_en1994::composite_floor_beam_failing::PRIMARY_TEXT),
-            ("composite_bridge_girder", semio_s_artifact_norm_en1994::composite_bridge_girder::PRIMARY_TEXT),
+            ("composite_floor_beam", semio_s_artifact_norm_en1994_examples::composite_floor_beam::PRIMARY_TEXT),
+            ("composite_floor_beam_failing", semio_s_artifact_norm_en1994_examples::composite_floor_beam_failing::PRIMARY_TEXT),
+            ("composite_bridge_girder", semio_s_artifact_norm_en1994_examples::composite_bridge_girder::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1995::editor::en1995::En1995Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1995_editor::En1995Family>(
         "en1995",
         &[
-            ("glulam_footbridge", semio_s_artifact_norm_en1995::glulam_footbridge::PRIMARY_TEXT),
-            ("multi_fail_timber", semio_s_artifact_norm_en1995::multi_fail_timber::PRIMARY_TEXT),
+            ("glulam_footbridge", semio_s_artifact_norm_en1995_examples::glulam_footbridge::PRIMARY_TEXT),
+            ("multi_fail_timber", semio_s_artifact_norm_en1995_examples::multi_fail_timber::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1996::editor::en1996::En1996Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1996_editor::En1996Family>(
         "en1996",
         &[
-            ("loadbearing_wall", semio_s_artifact_norm_en1996::loadbearing_wall::PRIMARY_TEXT),
-            ("multi_fail_masonry", semio_s_artifact_norm_en1996::multi_fail_masonry::PRIMARY_TEXT),
+            ("loadbearing_wall", semio_s_artifact_norm_en1996_examples::loadbearing_wall::PRIMARY_TEXT),
+            ("multi_fail_masonry", semio_s_artifact_norm_en1996_examples::multi_fail_masonry::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1997::editor::en1997::En1997Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1997_editor::En1997Family>(
         "en1997",
         &[
-            ("demo", semio_s_artifact_norm_en1997::examples::demo::PRIMARY_TEXT),
-            ("compliant", semio_s_artifact_norm_en1997::examples::compliant::PRIMARY_TEXT),
-            ("noncompliant", semio_s_artifact_norm_en1997::examples::noncompliant::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_en1997_examples::demo::PRIMARY_TEXT),
+            ("compliant", semio_s_artifact_norm_en1997_examples::compliant::PRIMARY_TEXT),
+            ("noncompliant", semio_s_artifact_norm_en1997_examples::noncompliant::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1998::editor::en1998::En1998Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1998_editor::En1998Family>(
         "en1998",
         &[
             (
                 "seismic_rc_frame",
-                leaked_print_dsl(&semio_s_artifact_norm_en1998::seismic_rc_frame::snapshot()),
+                leaked_print_dsl(&semio_s_artifact_norm_en1998_examples::seismic_rc_frame::snapshot()),
             ),
             (
                 "seismic_rc_frame_fail",
-                leaked_print_dsl(&semio_s_artifact_norm_en1998::seismic_rc_frame_fail::snapshot()),
+                leaked_print_dsl(&semio_s_artifact_norm_en1998_examples::seismic_rc_frame_fail::snapshot()),
             ),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1999::editor::en1999::En1999Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1999_editor::En1999Family>(
         "en1999",
         &[
-            ("aluminium_roof_purlin", semio_s_artifact_norm_en1999::aluminium_roof_purlin::PRIMARY_TEXT),
-            ("noncompliant_multi_fail", semio_s_artifact_norm_en1999::noncompliant_multi_fail::PRIMARY_TEXT),
+            ("aluminium_roof_purlin", semio_s_artifact_norm_en1999_examples::aluminium_roof_purlin::PRIMARY_TEXT),
+            ("noncompliant_multi_fail", semio_s_artifact_norm_en1999_examples::noncompliant_multi_fail::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757Family>(
+    results.push(gate_family::<semio_s_artifact_norm_iso16757_editor::Iso16757Family>(
         "iso16757",
         &[
-            ("demo", semio_s_artifact_norm_iso16757::examples::demo::PRIMARY_TEXT),
-            ("broken", semio_s_artifact_norm_iso16757::examples::broken::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_iso16757_examples::demo::PRIMARY_TEXT),
+            ("broken", semio_s_artifact_norm_iso16757_examples::broken::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805Family>(
+    results.push(gate_family::<semio_s_artifact_norm_vdi3805_editor::Vdi3805Family>(
         "vdi3805",
         &[
-            ("demo", semio_s_artifact_norm_vdi3805::examples::demo::PRIMARY_TEXT),
-            ("nonconforming", semio_s_artifact_norm_vdi3805::examples::nonconforming::PRIMARY_TEXT),
+            ("demo", semio_s_artifact_norm_vdi3805_examples::demo::PRIMARY_TEXT),
+            ("nonconforming", semio_s_artifact_norm_vdi3805_examples::nonconforming::PRIMARY_TEXT),
         ],
     ));
 

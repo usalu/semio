@@ -45,8 +45,9 @@ fn kinds_match_enum_and_catalog() {
 //#region 🔖️StampLaw
 /// 🏗️ A three-sheet workbook declaring the transitional families, so every stamp kind has something to retarget.
 fn stampable() -> XlsxSnapshot {
-    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     let workbook = XlsxWorkbook { sheets: ["One", "Two", "Three"].into_iter().map(|name| XlsxSheet { name: name.into(), cells: vec![] }).collect(), shared_strings: vec![] };
     build_minimal_xlsx(workbook)
 }

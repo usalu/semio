@@ -1,8 +1,7 @@
 //! 🩻️ Energy model mutation — `ChangeGlazingMaterialInfraredEmissivity`: Sets both long-wave emissivities of one glazing pane in one step — front and back are one optical facet of the same sheet, and a coating that changes one almost always changes the other.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct ChangeGlazingMaterialInfraredEmissivity {
     pub new_infrared_emissivity_back: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_glazing_material_infrared_emissivity(id: crate::model::EntityId, new_infrared_emissivity_front: f64, new_infrared_emissivity_back: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeGlazingMaterialInfraredEmissivity(ChangeGlazingMaterialInfraredEmissivity { id, new_infrared_emissivity_front, new_infrared_emissivity_back })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_glazing_material_infrared_emissivity<Op: From<ChangeGlazingMaterialInfraredEmissivity>>(id: crate::model::EntityId, new_infrared_emissivity_front: f64, new_infrared_emissivity_back: f64) -> Op {
+    ChangeGlazingMaterialInfraredEmissivity { id, new_infrared_emissivity_front, new_infrared_emissivity_back }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeGlazingMaterialInfraredEmissivity {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeGlazingMaterialInfraredEmissivity
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialInfraredEmissivity>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "glazing-material", kind: "change-glazing-material-infrared-emissivity", record: "ChangedGlazingMaterialInfraredEmissivity" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

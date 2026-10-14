@@ -3,9 +3,9 @@
 //! old (step `label` is a display string, not a key, so no `duplicate-id` case applies here). The derived `steps`/`tool_solids`
 //! handles are re-derived by `apply`, never carried.
 
-use crate::diff::{Process3dStepPatch, Process3dStepsDelta};
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::{Process3dStepPatch, Process3dStepsDelta};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameStep, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

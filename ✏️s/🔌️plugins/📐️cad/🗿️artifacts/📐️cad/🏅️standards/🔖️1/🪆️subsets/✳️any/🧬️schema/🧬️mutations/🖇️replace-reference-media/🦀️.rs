@@ -24,11 +24,11 @@ pub struct ReplaceReferenceMedia {
 
 impl<Op> MutationKind<CadSnapshot, Op> for ReplaceReferenceMedia
 where
-    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::replace_reference_media::ReplaceReferenceMedia>,
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model_diff::CadDiff> + From<crate::replace_reference_media::ReplaceReferenceMedia>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-media", record: "ReplacedReferenceMedia" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model_diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

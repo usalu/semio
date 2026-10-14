@@ -6,7 +6,7 @@
 use crate::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 use crate::editor::puzzle2d::precompute::fill::{FillRunCounter, FillRunReason, FillRunStage};
 use crate::editor::puzzle2d::terminology::{puzzle2d_localized, Puzzle2dLabels};
-use crate::editor::puzzle2d::{puzzle2d_action, Puzzle2dScene};
+use {crate::editor::puzzle2d::snapshot::puzzle2d_action, crate::editor::puzzle2d::snapshot::Puzzle2dScene};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::WindowMeasure;
@@ -14,9 +14,7 @@ use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefin
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "fill";
-/// 🎯️ The count a fresh 2d document offers: a batch large enough to be worth watching, small enough
-/// that a first run finishes while the operator is still looking at it.
-pub const PUZZLE2D_DEFAULT_FILL_COUNT: u32 = 100;
+
 /// 🧵️ Job kind of the fill run job (`ToolRunDefinition.runJob`).
 pub const PUZZLE2D_FILL_RUN_JOB: &str = "puzzle2d.fill.run";
 /// 🔍️ Job kind of the fill revalidation job (`ToolRunDefinition.revalidateJob`).

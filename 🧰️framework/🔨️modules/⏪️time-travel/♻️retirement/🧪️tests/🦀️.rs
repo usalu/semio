@@ -132,7 +132,7 @@ fn time_travel_discard_validates_before_effect_admission_and_explicit_commit(){
 
 #[test]
 fn time_travel_pending_command_pays_slot_frame_and_original_transfer_separately(){
- use crate::{TimeTravelCommandCustody,TimeTravelEvent};use semio_framework_value::retirement::queue::RetirementQueue;
+ use crate::{TimeTravelCommandCustody,TimeTravelEvent};use semio_framework_value::retirement_queue::RetirementQueue;
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["pendingCommandGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
  let mut original=Some(TimeTravelEvent::Discard{generation:5});
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(value,heap)=observe_heap_allocations_on_this_thread(||TimeTravelCommandCustody::admit_original(&mut original,denied).unwrap());assert!(value.is_none());assert!(original.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}

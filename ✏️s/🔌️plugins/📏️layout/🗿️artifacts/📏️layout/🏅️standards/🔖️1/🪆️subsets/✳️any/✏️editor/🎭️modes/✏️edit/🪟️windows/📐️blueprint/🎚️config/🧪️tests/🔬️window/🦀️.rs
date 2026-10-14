@@ -1,5 +1,6 @@
 use super::*;
-use crate::editor::layout::modes::edit::windows::blueprint::transient::{LayoutWindowTransient, LayoutWindowTransientMutation};
+use crate::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
+use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransientMutation;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 fn block_on_layout_windows<F: std::future::Future>(future: F) -> F::Output {
@@ -20,8 +21,9 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
         .name("layout-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_layout_windows(async {
-            use crate::editor::layout::commands::{engagement_input, set_camera};
-            use crate::editor::layout::{create_layout_app, LayoutCommand, LayoutPlayApp, LAYOUT_PLAY_BODY_BLUEPRINT};
+            use crate::{engagement_input, set_camera};
+            use semio_s_artifact_layout_layout_editor::{create_layout_app, LayoutCommand, LayoutPlayApp};
+            use crate::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
             use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
@@ -46,7 +48,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 window_instances: vec![
                     ViewWindowInstance { id: "layout-left".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() },
                     ViewWindowInstance { id: "layout-right".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() },
-                    ViewWindowInstance { id: "layout-preview".into(), window_kind_id: crate::editor::layout::LAYOUT_PLAY_WINDOW_PREVIEW.into() },
+                    ViewWindowInstance { id: "layout-preview".into(), window_kind_id: crate::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW.into() },
                 ],
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             };

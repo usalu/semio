@@ -117,7 +117,7 @@ fn the_evaluate_budget_envelope_obeys_its_fixture_end_to_end() {
         let emit = handle(
             &FlowEvalResolve {
                 window_id: BUDGET_WINDOW_ID.into(),
-                window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
+                window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
                 node_hash: BUDGET_NODE_HASH,
                 output_json,
                 extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.into(),
@@ -214,7 +214,7 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
         let emit = handle(
             &FlowEvalResolve {
                 window_id: BUDGET_WINDOW_ID.into(),
-                window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
+                window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
                 node_hash: BUDGET_NODE_HASH,
                 output_json: serde_json::to_string(&envelope).expect("envelope json"),
                 extension_id: GEOMETRY_EXTENSION_PLUGIN_ID.into(),
@@ -255,7 +255,7 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
 #[test]
 fn the_kernel_release_reaches_the_evaluation_registry_too() {
     let fixture = fixture();
-    let payload = semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
+    let payload = semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
     let invocations = semio_s_artifact_procedural_3d_preview_eval::release_invocations_for(&payload, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()));
     let capabilities: Vec<&str> = invocations.iter().map(|invocation| invocation.capability.as_str()).collect();
     assert!(capabilities.contains(&fixture.cancel_capability.as_str()), "the release emits the fixture's evaluation-cancel capability, got {capabilities:?}");

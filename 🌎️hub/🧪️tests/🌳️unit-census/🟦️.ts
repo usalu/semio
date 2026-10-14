@@ -22,7 +22,13 @@ type FixtureV1 = {
   readonly featureVarianceAllowed: readonly { readonly package: string; readonly reason: string; readonly until: string }[];
   readonly cases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly expected: readonly CargoUnitCensusRowV1[]; readonly drift: readonly string[] }[];
   readonly crateTypeCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly nonComponentCdylibs: readonly string[] }[];
+  readonly firstPartyFeaturesAllowed: readonly FirstPartyFeatureAllowanceV1[];
+  readonly featureCases: readonly { readonly name: string; readonly graphs: readonly CargoPackageUnitGraphV1[]; readonly allowed: readonly string[]; readonly violations: readonly string[] }[];
 };
+
+/** 📜️ One documented exception to L2 (no consumer-dependent first-party features). The list is empty by default; every row names why the feature
+ * still exists and who removes it. `test-only` rows may appear only in test units, never in a release unit. */
+export type FirstPartyFeatureAllowanceV1 = { readonly package: string; readonly feature: string; readonly classification: "test-only" | "peer-owned" | "peer-blocked"; readonly reason: string };
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const fixture = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🧫️fixtures/🌳️unit-census/🔣️.json"), "utf8")) as FixtureV1;
@@ -78,6 +84,25 @@ export function cargoNonComponentCdylibsV1(graphs: readonly CargoPackageUnitGrap
     });
   }
   return [...keys].sort();
+}
+
+/** 🚫️ L2, G3: every `package/feature` a first-party (path) unit is compiled with that the allow-list does not name, as `name@version feature`.
+ * Registry and git packages keep their features; a first-party crate carries none. */
+export function cargoFirstPartyFeatureViolationsV1(graphs: readonly CargoPackageUnitGraphV1[], allowed: ReadonlySet<string>): string[] {
+  const violations = new Set<string>();
+  for (const graph of graphs) for (const unit of graph.units) {
+    if (!unit.pkg_id.startsWith("path+")) continue;
+    const key = packageKey(unit.pkg_id);
+    for (const feature of unit.features) if (!allowed.has(`${key.split("@")[0]}/${feature}`)) violations.add(`${key} ${feature}`);
+  }
+  return [...violations].sort();
+}
+
+/** 🔍️ Independent oracle for G3: every feature a first-party package of the workspace declares (implicit optional-dependency features included), from
+ * `cargo metadata`, as `package/feature`. */
+async function cargoMetadataFirstPartyFeatures(manifest: string, signal: AbortSignal): Promise<string[]> {
+  const metadata = JSON.parse(await cargo(["metadata", "--locked", "--offline", "--format-version", "1", "--manifest-path", manifest], signal)) as { packages: { name: string; source: string | null; features: Record<string, string[]> }[] };
+  return [...new Set(metadata.packages.filter((pkg) => pkg.source === null).flatMap((pkg) => Object.keys(pkg.features).map((feature) => `${pkg.name}/${feature}`)))].sort();
 }
 
 /** 🔍️ Independent oracle for L5: every workspace member whose library target declares `cdylib`, from `cargo metadata`, with its crate types. */
@@ -139,6 +164,16 @@ test("the library XOR component law reproduces every language-neutral crate-type
   for (const row of fixture.crateTypeCases) expect(cargoNonComponentCdylibsV1(row.graphs), row.name).toEqual(row.nonComponentCdylibs);
 });
 
+test("G3 reproduces every language-neutral first-party feature case", () => {
+  for (const row of fixture.featureCases) expect(cargoFirstPartyFeatureViolationsV1(row.graphs, new Set(row.allowed)), row.name).toEqual(row.violations);
+});
+
+test("every G3 allowance is documented and unique", () => {
+  const keys = fixture.firstPartyFeaturesAllowed.map((row) => `${row.package}/${row.feature}`);
+  expect(new Set(keys).size, "duplicate allowance").toBe(keys.length);
+  for (const row of fixture.firstPartyFeaturesAllowed) expect(row.reason.length, `${row.package}/${row.feature} needs a reason`).toBeGreaterThan(0);
+});
+
 test("the census reproduces every language-neutral unit graph case", () => {
   expect(fixture.schema).toBe("semio.hub.unit-census/v1");
   for (const row of fixture.cases) {
@@ -156,7 +191,12 @@ test("every crate of the hub release closure compiles once per profile, apart fr
     const workspaces = componentWorkspacesV1(repoRoot, fixture.workspaces);
     expect(workspaces.map((workspace) => workspace.manifest)).toEqual(fixture.workspaces.map((workspace) => join(repoRoot, workspace, "Cargo.toml")));
     const allowed = fixture.featureVarianceAllowed.map((row) => row.package);
+    const allowances = new Set(fixture.firstPartyFeaturesAllowed.map((row) => `${row.package}/${row.feature}`));
+    const releaseAllowances = new Set(fixture.firstPartyFeaturesAllowed.filter((row) => row.classification !== "test-only").map((row) => `${row.package}/${row.feature}`));
     for (const workspace of workspaces) {
+      const declared = await cargoMetadataFirstPartyFeatures(workspace.manifest, controller.signal);
+      expect(declared.filter((key) => !allowances.has(key)), `G3 cargo metadata oracle: ${workspace.manifest} declares first-party features outside the allow-list`).toEqual([]);
+      expect([...allowances].filter((key) => !declared.includes(key)), "G3: these allowances name no declared feature any more; drop them").toEqual([]);
       for (const profile of fixture.profiles) {
         const graphs = await readCargoPackageUnitGraphsV1(workspace.manifest, workspace.packages, fixture.target, profile, controller.signal);
         const rows = cargoUnitCensusV1(graphs);
@@ -165,6 +205,7 @@ test("every crate of the hub release closure compiles once per profile, apart fr
         expect(cargoUnitFeatureDriftV1(rows, allowed), `${workspace.manifest} ${profile}`).toEqual([]);
         for (const name of allowed) expect(variance, `${name} is allowed to vary but compiles once; drop it from featureVarianceAllowed`).toContain(name);
         expect(cargoNonComponentCdylibsV1(graphs), `${workspace.manifest} ${profile} links a cdylib outside a component crate`).toEqual([]);
+        expect(cargoFirstPartyFeatureViolationsV1(graphs, releaseAllowances), `G3: ${workspace.manifest} ${profile} compiles a release unit with a first-party feature`).toEqual([]);
         if (profile !== fixture.profiles[0]) continue;
         const cdylibs = await cargoMetadataCdylibPackages(workspace.manifest, controller.signal);
         for (const name of workspace.packages) expect(cdylibs.get(name), `cargo metadata oracle: component ${name} is cdylib-only`).toEqual(["cdylib"]);

@@ -1,0 +1,8 @@
+{
+ "FEM2D_APP_ID": "crate::editor::fem2d::terminology",
+ "FEM2D_PLAY_CONTROLLER_ID": "crate::editor::fem2d::terminology",
+ "ui_label": "crate::editor::fem2d::terminology",
+ "fem2d_action": "crate::editor::fem2d::terminology",
+ "fem2d_measure_action": "crate::editor::fem2d::terminology",
+ "results_window_instance_id": "crate::editor::fem2d::modes::edit::windows::results"
+}

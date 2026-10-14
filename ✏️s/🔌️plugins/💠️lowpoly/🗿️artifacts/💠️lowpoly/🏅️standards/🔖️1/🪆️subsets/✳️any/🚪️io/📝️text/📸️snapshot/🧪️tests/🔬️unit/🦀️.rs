@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_snapshot};
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot;
+use crate::standards::v1::subsets::any::io::component::text::snapshot::*;
 
 /// 🕸️ The live half-edge mesh JSON is not a field of `LowpolyObject` at all (round 2 of this
 /// ticket's round-trip law fix — see that struct's own doc comment and
@@ -8,14 +8,14 @@ use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// struct equality, unlike the pre-fix version of these tests.
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_the_default_snapshot() {
-    let projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let projection = crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot();
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_a_projection_with_a_painted_layer() {
-    let mut projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    projection.objects[0].paint_layers[0].pixels = crate::empty_paint_pixels();
+    let mut projection = crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot();
+    projection.objects[0].paint_layers[0].pixels = crate::snapshot::empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -26,7 +26,7 @@ async fn handcrafted_example_text_is_concrete_forest_left_with_mesh_content() {
     let parsed = parse_dsl(LOWPOLY_EXAMPLE_TEXT).expect("handcrafted example should parse");
     assert_eq!(parsed.objects.len(), 1);
     assert_eq!(parsed.objects[0].id, "obj-1");
-    assert_eq!(parsed.objects[0].name, crate::schema::LOWPOLY_DEFAULT_EXAMPLE_LABEL);
+    assert_eq!(parsed.objects[0].name, crate::LOWPOLY_DEFAULT_EXAMPLE_LABEL);
     assert!(!parsed.objects[0].mesh_content.is_empty());
     assert!(parsed.objects[0].mesh.is_some());
     assert!(COMPONENT_GRAMMAR_SEMIO.contains("halfedge"));
@@ -46,7 +46,7 @@ async fn dsl_parse_rejects_unterminated_string_literal() {
 
 /// 🧬️ Printed text of the default projection, the base every derived-grammar failure case edits.
 fn default_text() -> String {
-    print_dsl(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
+    print_dsl(&crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot())
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,7 +76,7 @@ async fn dsl_parse_rejects_unrecognized_fields() {
 #[semio_framework_async_macros::async_test]
 async fn dsl_parse_round_trips_quotes_backslashes_and_newlines() {
     let tricky_name = "Quote \" and \\ and newline\ndone";
-    let mut projection = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut projection = crate::standards::v1::subsets::any::io::component::text::snapshot::default_snapshot();
     projection.objects[0].name = tricky_name.into();
     assert_eq!(parse_dsl(&print_dsl(&projection)).expect("escaped strings round-trip").objects[0].name, tricky_name);
 }

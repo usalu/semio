@@ -11,13 +11,33 @@
 //! full `total` beside it. A document past one viewport streams; it never truncates and it never
 //! closes a section with a `+N` row (see `semio_framework_plugin::TreeWindows`).
 
-use crate::editor::fem3d::interaction::{
-    Fem3dInteractionSnapshot, FEM3D_GRANULARITY_COMBINATION, FEM3D_GRANULARITY_ELEMENT, FEM3D_GRANULARITY_LOAD, FEM3D_GRANULARITY_LOAD_CASE, FEM3D_GRANULARITY_MATERIAL, FEM3D_GRANULARITY_NODE, FEM3D_GRANULARITY_SECTION, FEM3D_GRANULARITY_SOLID,
-    FEM3D_GRANULARITY_SUPPORT, FEM3D_INTERACTION_DOMAIN,
-};
-use crate::editor::fem3d::terminology::Fem3dLabels;
-use crate::editor::fem3d::{ui_label, FEM3D_PLAY_CONTROLLER_ID};
-use crate::{element_id, load_id, Fem3dSnapshot, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SOLID;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::FEM3D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;
@@ -340,7 +360,4 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

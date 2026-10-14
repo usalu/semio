@@ -30,7 +30,6 @@
    "process3d_action",
    "process3d_action_fault",
    "process3d_interaction_definition",
-   "process3d_io",
    "process_json_envelope_is_bounded",
    "reset_process3d_document_effect",
    "set_active_utility_effect",

@@ -4,7 +4,7 @@ name = "semio-s-artifact-stdio-dwg-exports-proto"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Stdio dwg Protocol Buffers schema exports of every schema facet"
+description = "stdio.dwg Protocol Buffers schema exports of every schema facet"
 
 [package.metadata.semio]
 role = "library"

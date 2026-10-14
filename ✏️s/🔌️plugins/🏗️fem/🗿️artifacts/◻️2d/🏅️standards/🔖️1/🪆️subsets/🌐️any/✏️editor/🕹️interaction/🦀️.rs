@@ -2,17 +2,13 @@
 //! snapshot every render reads, screen-space hit-testing of document entities and the
 //! `interactionSelect`/`interactionHover` request effects a pick emits. Slice A fills this in.
 
-use crate::editor::fem2d::modes::edit::windows::model as model_window;
-use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_os_kernel::Viewport2d;
-use model_window::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::GranularityDefinition;
 use semio_framework_plugin::HierarchyProvider;
@@ -20,7 +16,6 @@ use semio_framework_plugin::HoverSpec;
 use semio_framework_plugin::InteractionDefinition;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::MergeMode;
-use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
@@ -398,23 +393,27 @@ pub fn interaction_hover_effect<G: AsRef<str>, I: AsRef<str>>(targets: &[(G, I)]
 }
 //#endregion 🔖️Effects
 
-//#region 🔖️WindowCamera
-/// 🪟️ The kind id of the window one command is addressed to.
-pub fn fem2d_addressed_window_kind<'a>(view: &'a ViewModel, fault: &str) -> Result<&'a str, Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| Fault::from(format!("{fault}.window-required")))?;
-    view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| Fault::from(format!("{fault}.window-stale")))
+
+//#region 🔖️CanvasGeometry
+/// 📐️ Model-meters -> screen-pixels scale for the 2D canvas (a 6m span shouldn't render as 6px wide).
+pub const SCALE_2D: f64 = 20.0;
+/// 📐️ Screen-space origin offset so a structure anchored at (0,0) isn't drawn at the canvas corner.
+pub const ORIGIN_2D: f64 = 40.0;
+
+pub fn screen_2d(x: f64, y: f64) -> (f64, f64) {
+    (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-/// 🎥️ The camera the addressed Canvas2d window is currently drawn with — both window kinds keep it
-/// in their own persisted window config, so a pick must read the one it was produced under.
-pub fn fem2d_addressed_camera(cfg: &ConfigView<'_, NoConfig>, view: &ViewModel, fault: &str) -> Result<Viewport2d, Fault> {
-    match fem2d_addressed_window_kind(view, fault)? {
-        model_window::WINDOW_KIND_ID => Ok(model_window::config::current(cfg).camera),
-        results_window::WINDOW_KIND_ID => Ok(results_window::config::current(cfg).camera),
-        _ => Err(Fault::from(format!("{fault}.window-kind"))),
+pub fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
+    nodes.iter().find(|n| n.id == id)
+}
+
+pub fn fem2d_element_endpoints(element: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement) -> (&str, &str) {
+    match element {
+        FemElement::Bar { start, end, .. } | FemElement::Beam { start, end, .. } => (start.as_str(), end.as_str()),
     }
 }
-//#endregion 🔖️WindowCamera
+//#endregion 🔖️CanvasGeometry
 
 //#region 🧪️Tests
 #[cfg(test)]

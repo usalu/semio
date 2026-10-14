@@ -1,13 +1,13 @@
 //! ↩️ `change-element-u` inverse.
 
-use crate::mutations::change_element_u::ChangeElementU;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_element_u::ChangeElementU;
 
-pub fn inverse(payload: &ChangeElementU, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(payload: &ChangeElementU, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_element_u::ChangeElementU> {
     Ok((|| {
     let current = base.elements.iter().find(|e| e.id == payload.element_id).map(|e| e.u_value_w_m2k).unwrap_or(payload.new_u_value_w_m2k);
-    vec![Din18599Mutation::ChangeElementU(ChangeElementU { element_id: payload.element_id.clone(), new_u_value_w_m2k: current })]
+    vec![Op::from(ChangeElementU { element_id: payload.element_id.clone(), new_u_value_w_m2k: current })]
 
     })())
 }

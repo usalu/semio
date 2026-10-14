@@ -3,7 +3,7 @@
 use super::*;
 use super::super::fixture_mutations::demo::{AddN, DemoMutation, SetN};
 use super::super::tests::DemoSnapshot;
-use crate::os_store::{document_materialize::create_document_envelope, document_store_owners::fund_document_store_owners, install_unscheduled_catalog, document_store_owners::MemberStoreOwner, text_format::parse_document_pack, text_format::print_document_pack, store_schema::ArtifactCommand, store_schema::SupersedeInput};
+use crate::os_store::{document_materialize::create_document_envelope, document_store_owners::fund_document_store_owners, install_unscheduled_catalog, document_store_owners::MemberStoreProducer, text_format::parse_document_pack, text_format::print_document_pack, store_schema::ArtifactCommand, store_schema::SupersedeInput};
 use semio_framework_job::StepBudget;
 
 const SCHEMA: &str = "demo/v1";
@@ -11,7 +11,7 @@ const ACTOR: &str = "actor:replay";
 const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
 
-type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation>;
+type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, super::super::document_store_owners::BoundedDocumentStoreOwnerProducer>;
 type Store = ArtifactStore<DemoSnapshot, DemoMutation>;
 
 fn set(n: i32) -> DemoMutation {
@@ -23,8 +23,8 @@ fn add(delta: i32) -> DemoMutation {
 }
 
 async fn open(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Store {
-    let mut store = Store::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the fixture history is valid");
-    install_unscheduled_catalog(&mut store, fund_document_store_owners(<DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners_birth_demand().expect("the fixture catalog quotes its birth"), <DemoSnapshot as MemberStoreOwner<DemoMutation>>::member_store_owners)).expect("the fixture owners install");
+    let mut store = Store::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the fixture history is valid");
+    install_unscheduled_catalog(&mut store, fund_document_store_owners(crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners_birth_demand().expect("the fixture catalog quotes its birth"), |grant|crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(grant))).expect("the fixture owners install");
     store
 }
 
@@ -46,7 +46,7 @@ struct Source {
 }
 
 async fn source(name: &str, edits: usize, supersede: &[(usize, Option<i32>)]) -> Source {
-    let mut store = open(create_document_envelope::<DemoSnapshot, DemoMutation>(SCHEMA, name, DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = open(create_document_envelope::<DemoSnapshot, DemoMutation>(SCHEMA, name, DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     let mut operations = 0;
     let mut values: Vec<(bool, i32)> = Vec::new();
     for index in 0..edits {
@@ -72,7 +72,7 @@ async fn source(name: &str, edits: usize, supersede: &[(usize, Option<i32>)]) ->
 }
 
 async fn envelope(source: &Source) -> ArtifactEnvelope<DemoSnapshot, DemoMutation> {
-    parse_document_pack::<DemoSnapshot, DemoMutation>(&source.pack, &source.spr).await.expect("the pair parses").into_envelope()
+    parse_document_pack::<DemoSnapshot, DemoMutation>(&source.pack, &source.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
 }
 
 fn initializer(envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation>) -> Initializer {

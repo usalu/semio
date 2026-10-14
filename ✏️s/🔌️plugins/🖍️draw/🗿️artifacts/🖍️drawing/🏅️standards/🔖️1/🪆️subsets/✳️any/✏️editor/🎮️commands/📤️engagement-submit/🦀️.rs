@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Drawing play app commands command — `engagement-submit`.
 
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

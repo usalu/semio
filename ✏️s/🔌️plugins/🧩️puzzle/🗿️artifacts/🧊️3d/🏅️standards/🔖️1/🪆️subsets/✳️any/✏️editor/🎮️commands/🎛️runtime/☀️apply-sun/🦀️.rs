@@ -1,6 +1,6 @@
 //! ☀️ `apply-sun` command.
 
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
 use semio_framework_plugin::apply_world3d_sun_action;
 use semio_framework_pack_json::Value;
 

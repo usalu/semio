@@ -7,8 +7,8 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::document::ClauseId;
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_compliance::ClauseId;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1999.play.catalogue";
@@ -16,7 +16,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1999.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -27,7 +27,7 @@ pub fn reference_tables() -> Vec<CatalogueTable> {
 }
 
 pub fn alloy_table_3_2() -> CatalogueTable {
-    use crate::standards::v1::subsets::any::schema::part_1_1::CATALOGUE_ALLOY_ROWS;
+    use semio_s_artifact_norm_en1999_checks::part_1_1::CATALOGUE_ALLOY_ROWS;
     CatalogueTable {
         id: "table-3-2",
         title_en: "Aluminium alloys and tempers",
@@ -58,7 +58,7 @@ pub fn alloy_table_3_2() -> CatalogueTable {
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let tables = reference_tables();
     let windows = TreeWindows::unhosted();
-    crate::app_surface::render_catalogue(&examples, &tables, locale, controller_id, &windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &windows)
 }
 //#endregion 🔖️Render
 

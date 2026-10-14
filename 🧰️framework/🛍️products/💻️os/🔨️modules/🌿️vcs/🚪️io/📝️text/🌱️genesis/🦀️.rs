@@ -1,5 +1,5 @@
 //! 🌱️ Native stored genesis Pack text framing.
-use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
+use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisProducer};
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
 pub fn encode_genesis_hex_controlled(pack:&[u8],control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{
  let capacity=pack.len().checked_mul(2).filter(|n|*n<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Genesis hex capacity overflow"))?;
@@ -13,4 +13,5 @@ pub fn decode_genesis_hex_controlled(hex:&str,control:&mut NativeDecodeControl<'
  for pair in hex.as_bytes().chunks_exact(2){let high=nibble(pair[0]).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Native genesis hex invalid"))?;let low=nibble(pair[1]).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Native genesis hex invalid"))?;pack.push(high<<4|low);control.advance(1)?;}control.checkpoint()?;Ok(pack)
 }
 impl<P> ToValue for AdmittedArtifactGenesis<P>{fn to_value(&self)->DslValue{DslValue::String(encode_genesis_hex_controlled(self.pack(),&mut NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("admitted native genesis hex"))}}
-impl<P:ArtifactGenesisCodec> FromValue for AdmittedArtifactGenesis<P>{fn from_value(value:DslValue)->Result<Self,ValueError>{let hex=String::from_value(value)?;let pack=decode_genesis_hex_controlled(&hex,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true))?;Self::from_stored_pack(pack)}}
+/// 🌱️ The selected codec admits the exact decoded stored Pack into its original typed genesis.
+pub fn native_genesis_from_value<P>(value:DslValue,producer:&impl ArtifactGenesisProducer<P>)->Result<AdmittedArtifactGenesis<P>,ValueError>{let hex=String::from_value(value)?;let pack=decode_genesis_hex_controlled(&hex,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true))?;AdmittedArtifactGenesis::from_stored_pack(pack,producer)}

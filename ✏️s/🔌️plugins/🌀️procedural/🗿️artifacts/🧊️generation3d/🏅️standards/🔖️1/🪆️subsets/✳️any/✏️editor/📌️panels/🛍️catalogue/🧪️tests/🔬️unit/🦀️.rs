@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn every_catalogue_row_activates_the_exact_drag_descriptor() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let sections = catalogue().sections;
     let mut keys = std::collections::BTreeSet::new();
     for item in sections.iter().flat_map(|section| &section.items) {
@@ -17,7 +17,7 @@ fn every_catalogue_row_activates_the_exact_drag_descriptor() {
         if let Some(format) = &item.format {
             assert!(props.label.0.as_str().contains(&format.to_uppercase()), "format is visible in the catalogue label");
         }
-        let payload = crate::editor::generation3d::commands::add_widget::AddWidget::from_catalogue(item);
+        let payload = semio_s_artifact_procedural_3d_add_widget::AddWidget::from_catalogue(item);
         let typed: serde_json::Value = serde_json::from_str(&payload.descriptor_json().expect("registered descriptor fits the command schema")).unwrap();
         assert_eq!(typed, descriptor);
         assert!(keys.insert(node.key.as_str().to_owned()), "catalogue row identity is unique");
@@ -27,7 +27,7 @@ fn every_catalogue_row_activates_the_exact_drag_descriptor() {
 
 #[test]
 fn generation3d_catalogue_exports_only_its_own_codec_roster() {
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎮️commands/🧩️add-widget/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let catalogue = catalogue();
     let formats = catalogue.sections.iter().flat_map(|section| &section.items).filter(|item| item.kind == "outputExport").map(|item| item.format.as_deref().unwrap()).collect::<Vec<_>>();

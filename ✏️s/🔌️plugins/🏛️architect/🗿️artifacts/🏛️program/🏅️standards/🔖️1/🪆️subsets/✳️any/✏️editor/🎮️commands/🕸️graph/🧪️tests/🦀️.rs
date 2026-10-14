@@ -1,6 +1,6 @@
 use super::node_graph_edit::{NodeGraphEdit, handle};
 use crate::editor::architect::{catalog::new_adjacency, config::ArchitectConfig};
-use crate::standards::v1::subsets::any::schema::{kernel::EntityId, registers::AdjacencyKind, mutations::ProgramMutation};
+use crate::standards::v1::subsets::any::schema::{kernel::EntityId, registers::{AdjacencyKind, RegisterKey}, mutations::ProgramMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 #[test]
@@ -26,7 +26,7 @@ fn graph_tools_follow_the_language_neutral_transaction_law() {
         let kinds = emit.artifact_mutations.iter().map(|leaf| match leaf {
             ProgramMutation::ConnectAdjacency(_) => "connect-adjacency",
             ProgramMutation::DisconnectAdjacency(_) => "disconnect-adjacency",
-            ProgramMutation::DeleteProgramElement(_) => "delete-program-element",
+            ProgramMutation::DeleteRegisterRow(row) if row.register == RegisterKey::ProgramElement => "delete-register-row",
             other => panic!("unexpected graph leaf {other:?}"),
         }).collect::<Vec<_>>();
         let expected = case.get("mutations").unwrap().as_array().unwrap().iter().map(|kind| kind.as_str().unwrap()).collect::<Vec<_>>();

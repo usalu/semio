@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{txt::v_utf_8::any as txt_out};
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
+use crate::export::serializers::artifacts::txt::v_utf_8::any as txt_out;
+use crate::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
 use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 const SCENE: &str = r#"{"width":100,"height":100,"nodes":[
@@ -32,10 +32,10 @@ fn an_evaluation_without_geometry_is_refused() {
 
 #[test]
 fn txt_is_the_exact_dsl_carrier() {
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let document = semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot();
     let bytes = txt_out::serialize_bytes(&document).expect("txt export");
     let back = txt_in::deserialize_bytes(&bytes).expect("txt import");
-    assert_eq!(<crate::Generation2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&back), <crate::Generation2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&document));
+    assert_eq!(<semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&back), <semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&document));
     back.retire_cold();
     document.retire_cold();
 }

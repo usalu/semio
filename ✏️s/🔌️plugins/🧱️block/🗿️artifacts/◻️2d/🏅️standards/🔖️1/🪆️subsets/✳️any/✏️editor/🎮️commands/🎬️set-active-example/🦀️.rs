@@ -10,14 +10,14 @@ pub const BLOCK2D_EXAMPLE_RIGHT: &str = "hexagonal-cut-concrete-forest-right";
 /// it carries no mutation rows, no diff and no history row, so re-selecting the open example leaves `canUndo` false.
 pub fn load_document_effect(document: &Block2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Block2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block2d", crate::BLOCK_2D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("block2d", semio_s_artifact_block_2d_model::BLOCK_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️LoadDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
-use crate::Block2dSnapshot;
-use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
+use semio_s_artifact_block_2d_mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use crate::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -29,8 +29,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK2D_EXAMPLE_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-        BLOCK2D_EXAMPLE_RIGHT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_LEFT => semio_s_artifact_block_2d_io::text::snapshot::parse_dsl(semio_s_artifact_block_2d_io::text::snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_RIGHT => semio_s_artifact_block_2d_io::text::snapshot::parse_dsl(semio_s_artifact_block_2d_io::text::snapshot::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

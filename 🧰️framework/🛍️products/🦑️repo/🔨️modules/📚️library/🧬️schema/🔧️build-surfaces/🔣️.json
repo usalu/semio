@@ -11,9 +11,62 @@
     "environmentSources",
     "commandSources",
     "editorInputs",
-    "fixedBuildFiles"
+    "fixedBuildFiles",
+    "packageRouting",
+    "editorAnswers"
   ],
   "properties": {
+    "packageRouting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "sourceCaller"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "platform",
+              "root",
+              "package",
+              "command",
+              "arguments"
+            ],
+            "properties": {
+              "platform": {
+                "enum": [
+                  "posix",
+                  "win32"
+                ]
+              },
+              "root": {
+                "type": "string"
+              },
+              "package": {
+                "type": "string"
+              },
+              "command": {
+                "type": "string"
+              },
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "sourceCaller": {
+          "type": "string"
+        }
+      }
+    },
     "version": {
       "const": 1
     },
@@ -177,6 +230,40 @@
           },
           "path": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "editorAnswers": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "repoBuildTool",
+          "repoBuildTask",
+          "repoBuildProject",
+          "repoBuildProjects"
+        ],
+        "properties": {
+          "repoBuildTool": {
+            "enum": [
+              "nx",
+              "bazel"
+            ]
+          },
+          "repoBuildTask": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repoBuildProject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repoBuildProjects": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

@@ -1,14 +1,14 @@
 //! ↩️ `remove-curve` — undo re-`create`s the curve from BASE state; missing id ⇒ `Vec::new()`.
 
-use super::RemoveCurve;
-use crate::mutations::add_curve;
-use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::remove_curve::RemoveCurve;
+use crate::add_curve;
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RemoveCurve, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RemoveCurve, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::add_curve::AddCurve> {
     Ok((|| {
     match base.curves.get(&payload.id) {
-        Some(curve) => vec![Vdi3805Mutation::AddCurve(add_curve::AddCurve { curve: curve.clone() })],
+        Some(curve) => vec![Op::from(add_curve::AddCurve { curve: curve.clone() })],
         None => Vec::new(),
     }
 

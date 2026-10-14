@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `RemoveCompatibilityRule`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
 use semio_s_plugin_block::BlockCompatibilityDelta;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::RemoveCompatibilityRule, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::remove_compatibility_rule::RemoveCompatibilityRule, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     if !base.compatibility.iter().any(|item| item.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "compatibility-rule", payload.id), vec![payload.id.clone()]);
     }

@@ -1,7 +1,7 @@
 //! 🖱️ Ephemeral viewport marquee state and hit-testing for the Canvas2d model/results windows.
 
 use super::{fem2d_hit_test, interaction_select_effect, Fem2dPick, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
-use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d};
+use super::{fem2d_element_endpoints, find_node_2d, screen_2d};
 use super::fem2d_load_glyph;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -88,16 +88,11 @@ pub fn fem2d_canvas_meta_utility_layer(utility: &str) -> semio_framework_pack_js
     })
 }
 
-pub fn fem2d_gesture_window_id_for_render(view: &ViewModel, body_key: &str) -> Option<String> {
+pub fn fem2d_gesture_window_id_for_render(view: &ViewModel, window_kind_id: &str) -> Option<String> {
     if let Some(id) = view.window_id.clone() {
         return Some(id);
     }
-    let kind = match body_key {
-        crate::editor::fem2d::modes::edit::windows::model::BODY_KEY => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
-        crate::editor::fem2d::modes::edit::windows::results::BODY_KEY => crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID,
-        _ => return None,
-    };
-    view.window_instances.iter().find(|window| window.window_kind_id == kind).map(|window| window.id.clone())
+    view.window_instances.iter().find(|window| window.window_kind_id == window_kind_id).map(|window| window.id.clone())
 }
 
 pub fn fem2d_finish_canvas_layers_json(mut layers: Vec<semio_framework_pack_json::Value>, window_instance_id: Option<&str>, active_utility: &str, gumball_meta: Option<semio_framework_pack_json::Value>) -> String {
@@ -128,13 +123,6 @@ fn partial_window_refresh(body_key: &str) -> UiDirtyScope {
     }
 }
 
-pub fn fem2d_addressed_body_key(view: &ViewModel, fault: &str) -> Result<&'static str, Fault> {
-    match super::fem2d_addressed_window_kind(view, fault)? {
-        crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID => Ok(crate::editor::fem2d::modes::edit::windows::model::BODY_KEY),
-        crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID => Ok(crate::editor::fem2d::modes::edit::windows::results::BODY_KEY),
-        _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("fem.canvas.window-kind"), format!("{fault}: the addressed window has the wrong kind"))),
-    }
-}
 //#endregion 🔖️GestureStore
 
 //#region 🔖️MarqueeGeometry
@@ -425,8 +413,7 @@ pub fn pointer_down(
             &window_id,
             Fem2dCanvasGesture { tracking: true, active: false, method: method.to_string(), canvas_points: vec![(x, y)], layer_points: vec![layer] },
         );
-        let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-down")?;
-        return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
+                return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
     let hit = fem2d_hit_test(doc, camera, x, y, width, height);
     let merge = if hit.is_some() { merge } else { "replace" };
@@ -439,7 +426,7 @@ pub fn pointer_down(
 /// the rectangle only reads its last point) and the activation threshold is judged against the
 /// LAST sample; the partial window refresh is emitted once per batch, not once per sample. When
 /// nothing is tracking only the last sample is hover hit-tested — intermediate hovers are moot.
-pub fn pointer_move(doc: &Fem2dSnapshot, camera: &Viewport2d, view: &ViewModel, samples: &[(f64, f64)], width: f64, height: f64) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
+pub fn pointer_move(doc: &Fem2dSnapshot, camera: &Viewport2d, view: &ViewModel, body: &str, samples: &[(f64, f64)], width: f64, height: f64) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let window_id = fem2d_addressed_window_id(view, "fem2d.canvas-pointer-move")?;
     let Some(&(x, y)) = samples.last() else { return Ok(Emit::default()) };
     let mut gesture = gesture_for_window(&window_id);
@@ -457,8 +444,7 @@ pub fn pointer_move(doc: &Fem2dSnapshot, camera: &Viewport2d, view: &ViewModel, 
             }
         }
         set_gesture(&window_id, gesture.clone());
-        let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-move")?;
-        return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
+                return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
     let targets: Vec<Fem2dPick> = fem2d_hit_test(doc, camera, x, y, width, height).into_iter().collect();
     Ok(Emit { effects: vec![super::interaction_hover_effect(&targets)], ..Default::default() })
@@ -470,6 +456,7 @@ pub fn pointer_up(
     doc: &Fem2dSnapshot,
     camera: &Viewport2d,
     view: &ViewModel,
+    body: &str,
     x: f64,
     y: f64,
     width: f64,
@@ -480,8 +467,7 @@ pub fn pointer_up(
     let window_id = fem2d_addressed_window_id(view, "fem2d.canvas-pointer-up")?;
     let gesture = gesture_for_window(&window_id);
     clear_gesture(&window_id);
-    let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-up")?;
-    if cancelled || !gesture.tracking {
+        if cancelled || !gesture.tracking {
         return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
     if gesture.active {

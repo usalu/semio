@@ -2,7 +2,7 @@
 //! layer list at a BASE-state index. Reuses this directory's pre-existing path (glue.rs still
 //! `#[path]`-wires it) — same kebab slug survives the semantic-mutations rewrite unchanged.
 
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
@@ -18,13 +18,16 @@ pub struct RemovePaintLayer {
     pub index: usize,
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RemovePaintLayer {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for RemovePaintLayer
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::insert_paint_layer::InsertPaintLayer>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "paint-layer", kind: "remove-paint-layer", record: "RemovedPaintLayer" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

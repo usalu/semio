@@ -6,8 +6,8 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1998Inference;
-    use crate::En1998Snapshot;
+    use semio_s_artifact_norm_en1998_inferences::En1998Inference;
+    use semio_s_artifact_norm_en1998_model::En1998Snapshot;
     use protocol::Inference;
     let snapshot = En1998Snapshot::default();
     assert_eq!(En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -15,8 +15,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1998Inference;
-    use crate::En1998Snapshot;
+    use semio_s_artifact_norm_en1998_inferences::En1998Inference;
+    use semio_s_artifact_norm_en1998_model::En1998Snapshot;
     use protocol::Inference;
     assert_eq!(En1998Inference::infer(&En1998Snapshot::default()).expect("valid materialized inference fixture"), En1998Inference::default());
 }
@@ -32,7 +32,7 @@ async fn every_example_asset_decodes_to_its_code_built_snapshot() {
         (crate::seismic_multipart::ID, crate::seismic_multipart::PRIMARY_TEXT, crate::seismic_multipart::snapshot()),
         (crate::seismic_multipart_fail::ID, crate::seismic_multipart_fail::PRIMARY_TEXT, crate::seismic_multipart_fail::snapshot()),
     ] {
-        let decoded = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
+        let decoded = semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
         assert!(decoded == snapshot, "{id}: the committed asset must be the code-built snapshot");
     }
 }

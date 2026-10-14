@@ -285,7 +285,7 @@ describe("📐️ canonical test layout", () => {
     };
     for (const row of vectors.cacheOwnership) {
       const project = JSON.parse(readFileSync(join(repoRoot, row.projectRoot, "📋️project.json"), "utf8"));
-      const groups = cacheInternals.projectInputs(project, row.projectRoot, repoRoot, new Map());
+      const groups = await cacheInternals.projectInputs(project, row.projectRoot, repoRoot, new Map());
       expect(existsSync(join(repoRoot, row.path)), row.id).toBe(true);
       expect(contains(expanded(groups, "default"), row.path, row.projectRoot), row.id).toBe(row.defaults);
       expect(contains(expanded(groups, "production"), row.path, row.projectRoot), row.id).toBe(row.production);

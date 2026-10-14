@@ -27,7 +27,12 @@ semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-mutations = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-procedural-3d-mut-document = { workspace = true }
+semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
+semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
+semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
+semio-s-artifact-procedural-3d-testkit = { workspace = true }
+

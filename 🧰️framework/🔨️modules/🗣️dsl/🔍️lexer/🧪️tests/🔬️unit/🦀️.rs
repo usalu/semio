@@ -493,8 +493,8 @@ async fn lone_leading_dot_without_closing_dot_is_unaffected_by_dotenum() {
 
 #[test]
 fn original_json_string_tokens_agree_with_independent_serde_oracle(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📐️json-strings.json")).unwrap();
- let options=LexOptions{strings:vec![StringMode{quote:'"',escape:StringEscape::Backslash}],comments:CommentDialect::default()};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📐️json-strings.json")).unwrap();
+ let options=LexOptions{strings:vec![StringMode{quote:'"',escape:StringEscape::Backslash}],comment:CommentDialect::default()};
  for row in fixture["cases"].as_array().unwrap(){let source=row["source"].as_str().unwrap();let oracle:String=serde_json::from_str(source).unwrap();let tokens=lex_with(source,&Limits::default(),false,&options).unwrap();let strings:Vec<_>=tokens.iter().filter(|token|token.kind==TokenKind::Text).collect();assert_eq!(strings.len(),1);assert_eq!(strings[0].text.as_str().as_ref(),oracle);assert_eq!(oracle,row["decoded"].as_str().unwrap());}
  eprintln!("[DEBUG] Original strict lexical JSON string tokens match independent Serde on escaped Unicode/control and empty sources");
 }

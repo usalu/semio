@@ -24,13 +24,13 @@ mod artifacts {
 
 //#region ✏️Editor
 mod editor {
-    pub use semio_s_artifact_raster_raster::editor::*;
+    pub use semio_s_artifact_raster_raster_editor::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_raster_raster::viewer::*;
+    pub use semio_s_artifact_raster_raster_viewer::*;
 }
 //#endregion 👁️Viewer
 

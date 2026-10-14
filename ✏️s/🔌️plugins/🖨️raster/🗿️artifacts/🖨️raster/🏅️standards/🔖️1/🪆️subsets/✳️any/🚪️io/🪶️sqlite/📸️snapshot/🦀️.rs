@@ -1,7 +1,8 @@
 //! 🖨️ Authored Raster layers, masks, intrinsic variants and literal child relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
-use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
+use crate::{RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform};
+use crate::snapshot::RasterSnapshot;
+use crate::snapshot::RasterSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Projection,Cell,FloatColumn,FloatRow,Reconstruction,insert_ieee754}};
 use std::collections::BTreeMap;
 use semio_framework_value::{ValueError,ValueRefusalKind};
@@ -90,8 +91,8 @@ impl Drop for Members{fn drop(&mut self){while let Some((_,value))=self.0.pop(){
 
 struct Items(Vec<semio_framework_value::DslValue>);
 impl Drop for Items{fn drop(&mut self){while let Some(value)=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}
-pub(super) fn retire_snapshot(snapshot:RasterSnapshot){host::owned::retire_raster_value_cold(snapshot);}
-pub(super) fn retire_layer(root:RasterLayerNode){retire_snapshot(RasterSnapshot{schema:String::new(),id:String::new(),title:None,layers:vec![root],assets:RasterOwnedMap::new()});}
+pub fn retire_snapshot(snapshot:RasterSnapshot){crate::retire_raster_value_cold(snapshot);}
+pub fn retire_layer(root:RasterLayerNode){retire_snapshot(RasterSnapshot{schema:String::new(),id:String::new(),title:None,layers:vec![root],assets:RasterOwnedMap::new()});}
 struct LayerOwned(Option<RasterLayerNode>);
 impl Drop for LayerOwned{fn drop(&mut self){if let Some(node)=self.0.take(){retire_layer(node);}}}
 struct Forest(BTreeMap<i64,RasterLayerNode>);
@@ -135,14 +136,14 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for RasterSnapsh
  fn retire_sqlite_snapshot(self){retire_snapshot(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
-   let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
+  store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+   let document=crate::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
-   let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),crate::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
+   let document=crate::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
    document.__dsl_to_record_controlled(native)
   },control,native_owner)
  }

@@ -1,8 +1,8 @@
 //! 🏷️ `rename-step` payload — changes an id-keyed [`ProcessStep`]'s `label` (its identity/display
 //! field — the step's `id` itself is immutable).
 
-use crate::diff::Process3dDiff;
-use crate::Process3dSnapshot;
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️RenameStep
@@ -17,7 +17,7 @@ pub struct RenameStep {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for RenameStep
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::rename_step::RenameStep>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::rename_step::RenameStep>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "step", kind: "rename-step", record: "RenamedStep" };
 

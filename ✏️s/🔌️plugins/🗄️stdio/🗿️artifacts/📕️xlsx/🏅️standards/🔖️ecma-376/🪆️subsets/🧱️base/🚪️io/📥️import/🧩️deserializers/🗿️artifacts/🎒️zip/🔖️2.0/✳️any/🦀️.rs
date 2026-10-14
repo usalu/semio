@@ -1,6 +1,7 @@
 //! Deserialize stdio.xlsx from stdio.binary (parse ZIP bytes).
 
-use crate::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec

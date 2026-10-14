@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "function",
+  "id": "function-a",
+  "newName": "Renamed Function A"
+}

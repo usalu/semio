@@ -1,7 +1,16 @@
-use super::*;
-use crate::editor::fem3d::commands::{add_bar, add_combination, add_load_case, add_material, add_member_udl, add_node, add_section, set_self_weight};
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_empty_app, Fem3dApp};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_nodal_load::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load;
+use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::{add_bar, add_combination, add_load_case, add_material, add_member_udl, add_node, add_section, set_self_weight};
+use crate::context::{dispatch, fem3d_empty_app, Fem3dApp};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 
 async fn app_with_load_case() -> Fem3dApp {
     let mut app = fem3d_empty_app().await;
@@ -20,7 +29,7 @@ async fn add_nodal_load_with_no_existing_case_creates_one() {
     let mut app = fem3d_empty_app().await;
     dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0, z: 0.0 })).await;
     let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
-    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: crate::FemDof::Tz, value: -5000.0, case_id: None })).await;
+    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     assert_eq!(snapshot.load_cases.len(), 1);
     assert_eq!(snapshot.load_cases[0].id, "case-1");
@@ -38,7 +47,7 @@ async fn add_member_udl_action_emits_op_3d() {
     let (start, end) = (snapshot.nodes[0].id.clone(), snapshot.nodes[1].id.clone());
     let (material, section) = (snapshot.materials[0].id.clone(), snapshot.sections[0].id.clone());
     dispatch(&mut app, Fem3dCommand::AddBar(add_bar::AddBar { start, end, material_id: material, section_id: section })).await;
-    let element_id = crate::element_id(&app.snapshot().expect("snapshot").elements[0]).to_string();
+    let element_id = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id(&app.snapshot().expect("snapshot").elements[0]).to_string();
     dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id, wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let load_case = &snapshot.load_cases[0];
@@ -52,7 +61,7 @@ async fn add_nodal_load_targets_named_case() {
     let live_case_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
     dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 })).await;
     let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
-    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: crate::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
+    dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
     let snapshot = app.snapshot().expect("snapshot");
     assert!(snapshot.load_cases[1].loads.iter().any(|l| matches!(l, FemLoad::Nodal { .. })));
     assert!(snapshot.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");

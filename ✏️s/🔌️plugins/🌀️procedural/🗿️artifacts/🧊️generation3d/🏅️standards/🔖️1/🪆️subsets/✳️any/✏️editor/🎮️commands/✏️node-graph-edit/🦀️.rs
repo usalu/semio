@@ -1,8 +1,10 @@
 //! 🕸️ Generation3d command — `node-graph-edit`: the one verb both node-graph hosts dispatch for graph edits.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value;
-use semio_s_artifact_procedural_3d_mutations::move_nodes::move_nodes;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::change_slider_value;
+use semio_s_artifact_procedural_3d_mut_widgets::move_nodes::move_nodes;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
@@ -84,7 +86,7 @@ fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEdi
     }
     leaves.extend(generation3d_node_drag_leaves(host_snapshot, &records));
     let gesture = records.first().map_or("nodeGraphEdit", |record| record.gesture_id.as_str());
-    Ok(node_drag_emit(crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into())
+    Ok(node_drag_emit(semio_s_artifact_procedural_3d_model::GENERATION3D_EDITOR_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into())
 }
 
 /// 🎚️ The ABSOLUTE `change-slider-value` leaf of one `setSlider` row, or nothing for a widget that is no slider or the
@@ -117,12 +119,12 @@ pub(crate) fn generation3d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
 pub(crate) fn slider_gesture_ui_scope() -> UiDirtyScope {
     UiDirtyScope::Partial {
         window_bodies: vec![
-            crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN.to_string(),
-            crate::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW.to_string(),
+            semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN.to_string(),
+            semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_BODY_PREVIEW.to_string(),
         ],
         panel_bodies: vec![
-            crate::editor::generation3d::panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION.to_string(),
-            crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT.to_string(),
+            semio_s_artifact_procedural_3d_editor_panels::inspection::GENERATION_3D_PLAY_BODY_INSPECTION.to_string(),
+            semio_s_artifact_procedural_3d_editor_panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT.to_string(),
         ],
         utilities: false,
         tools: false,
@@ -138,6 +140,3 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Generation3dSnapsh
     apply_rows(doc, &rows(payload)?)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

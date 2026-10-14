@@ -1,4 +1,13 @@
-use semio_s_artifact_cad_cad_model::diff::*;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_os_kernel as protocol;
+use semio_s_artifact_cad_cad_model_diff::*;
+use semio_s_artifact_cad_cad_model::{snapshot::CadBrepChild, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReference};
+use framework_schema::ArtifactSchema;
+use semio_framework_value_derive::{FromValue, ToValue};
+use std::collections::BTreeMap;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use protocol::list_delta::RowPatch;
+use protocol::MutationDiff;
 use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
 use semio_s_artifact_cad_cad_mut_nodes::delete_node::DeleteNode;
 use semio_s_artifact_cad_cad_mut_nodes::rename_node::RenameNode;

@@ -1,8 +1,8 @@
 //! 🔀️ `reorder-layers` diff — moves the layer from `from` to `to`.
 
-use super::ReorderLayers;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta};
-use crate::Din4108Snapshot;
+use crate::reorder_layers::ReorderLayers;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ReorderLayers, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {

@@ -1,0 +1,516 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/member-producer/source/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "roles"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "os/store/member-producer"
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer",
+        "catalog",
+        "opening",
+        "store",
+        "valueFactory",
+        "readRetirement",
+        "editRetirement",
+        "messageLedger",
+        "storeLaws",
+        "catalogLaws"
+      ],
+      "properties": {
+        "producer": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+                "symbols": [
+                  "MemberStoreProducer"
+                ]
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+                "symbols": [
+                  "DocumentStoreOwners",
+                  "funded_member_store_owners",
+                  "complete_unscheduled_catalog",
+                  "bounded_artifact_store_owners"
+                ]
+              }
+            }
+          ]
+        },
+        "opening": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+                "symbols": [
+                  "InitialMemberStoreOpen",
+                  "MemberSnapshotOpenOperation"
+                ]
+              }
+            }
+          ]
+        },
+        "store": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+                "symbols": [
+                  "ArtifactStore",
+                  "ArtifactStoreOwnedDisposer",
+                  "ArtifactStoreCursorDisposer",
+                  "create_member_store",
+                  "open_member_store"
+                ]
+              }
+            }
+          ]
+        },
+        "valueFactory": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+                "symbols": [
+                  "ArtifactOwnedValueRetirementFactory"
+                ]
+              }
+            }
+          ]
+        },
+        "readRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+                "symbols": [
+                  "ArtifactStoreVcsRetirement",
+                  "ArtifactStoreEnvelopeRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "editRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+                "symbols": [
+                  "ArtifactStoreOperationRowsRetirement",
+                  "ArtifactStoreDecodedEditRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "messageLedger": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+                "symbols": [
+                  "ArtifactEditMessageLedger",
+                  "ArtifactEditMessageLedgerRetirement"
+                ]
+              }
+            }
+          ]
+        },
+        "storeLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+                "symbols": [
+                  "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
+                  "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
+                  "typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child"
+                ]
+              }
+            }
+          ]
+        },
+        "catalogLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ModuleReference"
+            },
+            {
+              "const": {
+                "language": "rust",
+                "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+                "symbols": [
+                  "member_catalog_constructor_birth_and_retirement_match_original_system_allocations",
+                  "member_catalog_initial_open_cancellation_pays_original_catalog_and_page_before_drop"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ModuleReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "language",
+        "path",
+        "symbols"
+      ],
+      "properties": {
+        "language": {
+          "const": "rust"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "MemberProducerSourceBody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "source"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "MemberProducerSourceExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declaration",
+        "producer",
+        "members"
+      ],
+      "properties": {
+        "declaration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "owner",
+            "producerType",
+            "producerMacro",
+            "membersMacro",
+            "roles"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "producerType": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+            },
+            "producerMacro": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+            },
+            "membersMacro": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+            },
+            "roles": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "producer",
+                "members"
+              ],
+              "properties": {
+                "producer": {
+                  "$ref": "#/$defs/ModuleReference"
+                },
+                "members": {
+                  "$ref": "#/$defs/ModuleReference"
+                }
+              }
+            }
+          }
+        },
+        "producer": {
+          "$ref": "#/$defs/MemberProducerSourceBody"
+        },
+        "members": {
+          "$ref": "#/$defs/MemberProducerSourceBody"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    },
+    "ToolJobMemberStoreProducerSources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer",
+        "catalog",
+        "opening",
+        "store",
+        "valueFactory",
+        "readRetirement",
+        "editRetirement",
+        "messageLedger",
+        "storeLaws",
+        "catalogLaws",
+        "extensions"
+      ],
+      "properties": {
+        "producer": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "catalog": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "opening": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "store": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "valueFactory": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "readRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "editRetirement": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "messageLedger": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "storeLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "catalogLaws": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MemberProducerSourceBody"
+            },
+            {
+              "properties": {
+                "path": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "extensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MemberProducerSourceExtension"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
+    }
+  },
+  "title": "MemberStoreProducerSourceDeclaration",
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

@@ -4,7 +4,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
 /// 🧳️ Typed delta pack encoding preserves intrinsic octets directly.
-impl protocol::os_spr::DiffBinary for crate::schema::diff::LowpolyDiff {
+impl protocol::os_spr::DiffBinary for crate::LowpolyDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }

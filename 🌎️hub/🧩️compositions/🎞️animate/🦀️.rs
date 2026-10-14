@@ -4,6 +4,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest, MEDIA_VIDEO_RENDER_CAPABILITY};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 // 🗃️ Closed runtime app fleet for the declaration-owned animate surfaces.
@@ -19,7 +20,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
-    Plugin::<AnimateApps>::builder("animate")
+    PluginBuilder::<_, AnimateApps>::new("animate")
         .label("Animate")
         .version("0.1.0")
         .package_id("semio:animate")

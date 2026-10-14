@@ -318,7 +318,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
-        ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+        ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ModuleRenderPayload, ModulePayloadMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut payload = default_payload();
     payload.interactive = false;

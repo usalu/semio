@@ -28,8 +28,8 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use crate::app_contract::ArtifactApp;
 use crate::app_views::NoConfigMutation;
 use crate::app_views::NoDraftMutation;
-use crate::bounded_ownership::PluginLifecycleStep;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 
 
 

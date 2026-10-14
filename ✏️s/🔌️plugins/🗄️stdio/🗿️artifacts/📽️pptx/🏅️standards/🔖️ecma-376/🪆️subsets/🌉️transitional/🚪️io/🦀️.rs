@@ -5,9 +5,9 @@
 //! `🧱️base/🚪️io` already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ecma_376::subsets::base::io::PptxComposer as PptxAnyComposer;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxComposer as PptxAnyComposer;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;
-    use crate::PptxSnapshot;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
     use semio_framework_diagnostic::FaultCode;
     use semio_framework_diagnostic::Severity;
@@ -96,9 +96,11 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v_ecma_376::subsets::base::io::PptxBuilder as PptxAnyBuilder;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxBuilder as PptxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;
-    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+    use semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation;
+    use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
     use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -161,8 +163,9 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::io::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
-    #[cfg(test)] use crate::PptxSnapshot;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxAnalyzer as PptxAnyAnalyzer;
+    use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::PptxParts;
+    #[cfg(test)] use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
     #[cfg(test)] use semio_framework_diagnostic::FaultCode;
     #[cfg(test)] use semio_framework_diagnostic::FaultScope;

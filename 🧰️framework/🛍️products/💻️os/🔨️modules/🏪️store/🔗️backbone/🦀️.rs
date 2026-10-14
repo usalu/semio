@@ -2,7 +2,6 @@
 //! The engine attaches them; their retirement lives beside them in `♻️retirement`.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use crate::os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;

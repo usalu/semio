@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun repo run @semio-tech/norm-en1992:build",
-    "check": "bun repo run @semio-tech/norm-en1992:check",
-    "test": "bun repo run @semio-tech/norm-en1992:test"
+    "build": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1992:build",
+    "check": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1992:check",
+    "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/norm-en1992:test"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

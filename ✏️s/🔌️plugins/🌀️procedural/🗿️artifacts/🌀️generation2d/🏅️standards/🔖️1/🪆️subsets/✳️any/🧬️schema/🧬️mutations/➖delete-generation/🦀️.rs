@@ -1,7 +1,6 @@
 //! 🦠️ `➖delete-generation` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -14,19 +13,22 @@ pub struct DeleteGeneration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_generation(id: String) -> Generation2dMutation {
-    Generation2dMutation::DeleteGeneration(DeleteGeneration { id })
+pub fn delete_generation<Op: From<DeleteGeneration>>(id: String) -> Op {
+    Op::from(DeleteGeneration { id })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for DeleteGeneration {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for DeleteGeneration
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::create_generation::CreateGeneration> + From<crate::select_generation::SelectGeneration>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "generation", kind: "delete-generation", record: "DeletedGeneration" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::delete_generation::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::delete_generation::inverse::inverse(self, base)?
     
     })
 }

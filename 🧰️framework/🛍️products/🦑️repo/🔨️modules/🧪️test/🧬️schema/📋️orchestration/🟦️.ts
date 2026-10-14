@@ -529,18 +529,18 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
  *
  *   bun 📜️script.ts schema mutation-inputs [--census] [--inputs] [--under <path>] [--json]
  */
-function runMutationInputUi(repoRoot: string, segments: string[]): never {
+function runMutationInputUi(repoRoot: string, segments: string[]): void {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const report = mutationInputUiReport(repoRoot, under);
   if (under !== "" && report.census.every((row) => row.leaves === 0)) {
     console.error(`[schema mutation-inputs] --under ${JSON.stringify(under)} holds no mutation leaf: pass a repository-relative path such as ✏️s/🔌️plugins/<plugin>`);
-    process.exit(2);
+    {process.exitCode=2;return;}
   }
   const census = segments.includes("--census");
   const listed = segments.includes("--inputs");
   if (segments.includes("--json")) {
     console.log(JSON.stringify(census ? report.census : listed ? report.inputs : { diagnostics: report.diagnostics, census: report.census, multiline: report.multiline }, null, 2));
-    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+    {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
   }
   const total = report.census.reduce((sum, row) => ({ leaves: sum.leaves + row.leaves, withdrawOnly: sum.withdrawOnly + row.withdrawOnly, inputs: sum.inputs + row.inputs, declared: sum.declared + row.declared, inferred: sum.inferred + row.inferred, labelInferred: sum.labelInferred + row.labelInferred }), { leaves: 0, withdrawOnly: 0, inputs: 0, declared: 0, inferred: 0, labelInferred: 0 });
   if (census) {
@@ -552,7 +552,7 @@ function runMutationInputUi(repoRoot: string, segments: string[]): never {
     for (const input of report.inputs) console.log([input.owner, input.verdict, input.pointer, input.type ?? "", input.widget ?? "", input.role ?? "", input.label === null ? "" : Object.entries(input.label).map(([locale, source]) => `${locale}:${source}`).join(","), input.step ?? "", input.snaps ?? "", input.path].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-inputs]   ${entry.scope} — ${entry.detail}`);
   console.log(`[schema mutation-inputs] ${total.declared} declared + ${total.inferred} inferred of ${total.inputs} input(s) of ${total.leaves} leaves (${total.inputs - total.declared - total.inferred} refused, ${total.withdrawOnly} leaves withdraw-only); ${total.labelInferred} glossary label(s) at every depth; ${report.multiline.declared} multiline input(s), multilineUncontrolled ${report.multiline.armed ? "armed" : "pending (the reader maps multiline to no control yet)"}; ${report.diagnostics.length} schema-mutation-input-ui finding(s)${under === "" ? "" : ` under ${under}`}`);
-  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
 }
 //#endregion 🎛️MutationInputUi
 
@@ -1347,13 +1347,13 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
  *
  *   bun 📜️script.ts schema mutation-payloads [--census] [--under <path>] [--json]
  */
-function runMutationPayloadParity(repoRoot: string, segments: string[]): never {
+function runMutationPayloadParity(repoRoot: string, segments: string[]): void {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const report = mutationPayloadParityReport(repoRoot, under);
   const census = segments.includes("--census");
   if (segments.includes("--json")) {
     console.log(JSON.stringify(census ? report.census : report, null, 2));
-    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+    {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
   }
   const total = report.census.reduce((sum, row) => ({ leaves: sum.leaves + row.leaves, witnessed: sum.witnessed + row.witnessed, fixtures: sum.fixtures + row.fixtures + row.rows, negatives: sum.negatives + row.negatives, invariants: sum.invariants + row.invariants, clean: sum.clean + row.clean }), { leaves: 0, witnessed: 0, fixtures: 0, negatives: 0, invariants: 0, clean: 0 });
   if (census) {
@@ -1362,7 +1362,7 @@ function runMutationPayloadParity(repoRoot: string, segments: string[]): never {
     for (const row of report.census) console.log([row.owner, row.leaves, row.witnessed, row.fixtures, row.negatives, row.invariants, row.rows, row.clean, ...classes.map((name) => row.findings[name] ?? 0)].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-payloads]   ${entry.path} — ${entry.detail}`);
   console.log(`[schema mutation-payloads] ${total.clean}/${total.fixtures} fixture payload(s) and wire-form feature row(s) meet their leaf schema (${total.negatives} negative witness(es) it must reject, ${total.invariants} of them by a declared x-semio-invariant); ${total.witnessed}/${total.leaves} leaves witnessed; ${report.diagnostics.length} schema-mutation-payload-parity finding(s)${under === "" ? "" : ` under ${under}`}`);
-  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
 }
 //#endregion ⚖️MutationPayloadParity
 
@@ -1708,13 +1708,13 @@ export function mutationLabelReport(repoRoot: string, under = ""): MutationLabel
  *
  *   bun 📜️script.ts schema mutation-labels [--census] [--under <path>] [--json]
  */
-function runMutationLabels(repoRoot: string, segments: string[]): never {
+function runMutationLabels(repoRoot: string, segments: string[]): void {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const report = mutationLabelReport(repoRoot, under);
   const census = segments.includes("--census");
   if (segments.includes("--json")) {
     console.log(JSON.stringify(census ? report.census : { diagnostics: report.diagnostics, census: report.census }, null, 2));
-    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+    {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
   }
   const total = report.census.reduce((sum, row) => ({ labels: sum.labels + row.labels, native: sum.native + row.native, forward: sum.forward + row.forward }), { labels: 0, native: 0, forward: 0 });
   if (census) {
@@ -1723,7 +1723,7 @@ function runMutationLabels(repoRoot: string, segments: string[]): never {
     for (const row of report.census) console.log([row.owner, row.labels, row.native, row.forward, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-labels]   ${entry.path} — ${entry.detail}`);
   console.log(`[schema mutation-labels] ${total.native} native and ${total.forward} forwarding of ${total.labels} leaf label(s); ${report.diagnostics.length} schema-mutation-label finding(s)${under === "" ? "" : ` under ${under}`}`);
-  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
 }
 //#endregion 🏷️MutationLabels
 
@@ -2151,7 +2151,7 @@ export function faultNoticeReport(repoRoot: string, under = "", scope: FaultNoti
  *
  *   bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts schema fault-notices [--census] [--under <path>] [--scope all|history-editing] [--json]
  */
-function runFaultNotices(repoRoot: string, segments: string[]): never {
+function runFaultNotices(repoRoot: string, segments: string[]): void {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const scope = segments.includes("--scope") ? segments[segments.indexOf("--scope") + 1] : "all";
   if (scope !== "all" && scope !== "history-editing") throw new Error(`[schema fault-notices] --scope expects all or history-editing, got ${JSON.stringify(scope)}`);
@@ -2159,7 +2159,7 @@ function runFaultNotices(repoRoot: string, segments: string[]): never {
   const census = segments.includes("--census");
   if (segments.includes("--json")) {
     console.log(JSON.stringify(census ? report.census : { diagnostics: report.diagnostics, census: report.census }, null, 2));
-    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+    {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
   }
   const total = report.census.reduce((sum, row) => ({ codes: sum.codes + row.codes, labelled: sum.labelled + row.labelled, declared: sum.declared + row.declared, anonymous: sum.anonymous + row.anonymous }), { codes: 0, labelled: 0, declared: 0, anonymous: 0 });
   if (census) {
@@ -2168,7 +2168,7 @@ function runFaultNotices(repoRoot: string, segments: string[]): never {
     for (const row of report.census) console.log([row.owner, row.codes, row.labelled, row.declared, row.anonymous, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema fault-notices]   ${entry.path} — ${entry.detail}`);
   console.log(`[schema fault-notices] ${total.labelled} labelled of ${total.codes} guest fault code(s), ${total.declared} declared notice(s), ${total.anonymous} anonymous fault(s); ${report.diagnostics.length} schema-fault-notice finding(s)${under === "" ? "" : ` under ${under}`}${scope === "all" ? "" : ` in scope ${scope}`}`);
-  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
 }
 //#endregion 📢️FaultNotices
 
@@ -2530,13 +2530,13 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
  *
  *   bun 📜️script.ts schema mutation-editability [--census] [--under <path>] [--json]
  */
-function runMutationEditability(repoRoot: string, segments: string[]): never {
+function runMutationEditability(repoRoot: string, segments: string[]): void {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const report = mutationEditabilityReport(repoRoot, under);
   const census = segments.includes("--census");
   if (segments.includes("--json")) {
     console.log(JSON.stringify(census ? report.census : report, null, 2));
-    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+    {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
   }
   const total = report.census.reduce((sum, row) => ({ aggregates: sum.aggregates + row.aggregates, leaves: sum.leaves + row.leaves, editable: sum.editable + row.editable, foreign: sum.foreign + row.foreign, inert: sum.inert + row.inert, withdrawOnly: sum.withdrawOnly + row.withdrawOnly, handwritten: sum.handwritten + row.handwritten }), { aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, withdrawOnly: 0, handwritten: 0 });
   if (census) {
@@ -2545,7 +2545,7 @@ function runMutationEditability(repoRoot: string, segments: string[]): never {
     for (const row of report.census) console.log([row.owner, row.aggregates, row.leaves, row.editable, row.foreign, row.inert, row.withdrawOnly, row.handwritten, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-editability]   ${entry.path} — ${entry.detail}`);
   console.log(`[schema mutation-editability] ${total.editable}/${total.leaves} leaves of ${total.aggregates} aggregates editable (${total.foreign} composite with foreign-step capability, ${total.withdrawOnly} withdraw-only by declaration, ${total.inert - total.withdrawOnly} inert phase(s)); ${total.handwritten} hand-written aggregate(s); ${report.diagnostics.length} schema-mutation-editability finding(s)${under === "" ? "" : ` under ${under}`}`);
-  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  {process.exitCode=census || report.diagnostics.length === 0 ? 0 : 1;return;}
 }
 //#endregion ✏️MutationEditability
 
@@ -2570,11 +2570,11 @@ function runMutationEditability(repoRoot: string, segments: string[]): never {
  */
 export class SchemaScript extends Script {
   run(segments: string[]): void {
-    if (segments[0] === "mutation-inputs") runMutationInputUi(this.repoRoot, segments.slice(1));
-    if (segments[0] === "mutation-payloads") runMutationPayloadParity(this.repoRoot, segments.slice(1));
-    if (segments[0] === "mutation-labels") runMutationLabels(this.repoRoot, segments.slice(1));
-    if (segments[0] === "mutation-editability") runMutationEditability(this.repoRoot, segments.slice(1));
-    if (segments[0] === "fault-notices") runFaultNotices(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-inputs") return runMutationInputUi(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-payloads") return runMutationPayloadParity(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-labels") return runMutationLabels(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-editability") return runMutationEditability(this.repoRoot, segments.slice(1));
+    if (segments[0] === "fault-notices") return runFaultNotices(this.repoRoot, segments.slice(1));
     const under = segments[segments.indexOf("--under") + 1];
     const scope = segments.includes("--under") && under !== undefined ? under : "";
     const diagnostics: SchemaDiagnostic[] = [
@@ -2590,7 +2590,7 @@ export class SchemaScript extends Script {
     const failed = reports.filter((report) => report.outcome === "failed");
     if (segments.includes("--json")) {
       console.log(JSON.stringify({ diagnostics, fixtures: reports }, null, 2));
-      process.exit(diagnostics.length === 0 && failed.length === 0 ? 0 : 1);
+      {process.exitCode=diagnostics.length === 0 && failed.length === 0 ? 0 : 1;return;}
     }
     const byCode = new Map<string, number>();
     for (const entry of diagnostics) byCode.set(entry.code, (byCode.get(entry.code) ?? 0) + 1);
@@ -2604,6 +2604,6 @@ export class SchemaScript extends Script {
       console.log(`[test schema]   ${report.outcome === "passed" ? "✔" : "✘"} ${report.fixture} ${report.uri} — ${line}`);
       if (report.outcome === "failed") console.log(`[test schema]     ${report.detail}`);
     }
-    process.exit(diagnostics.length === 0 && failed.length === 0 ? 0 : 1);
+    {process.exitCode=diagnostics.length === 0 && failed.length === 0 ? 0 : 1;return;}
   }
 }

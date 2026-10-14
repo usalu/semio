@@ -16,7 +16,9 @@
     "coldBirthBytes",
     "rootTransferCopyBytes",
     "terminalDropBytes",
-    "physical"
+    "physical",
+    "bindingCopyBytes",
+    "bindingAdmissionBytes"
   ],
   "properties": {
     "version": {
@@ -70,6 +72,12 @@
     },
     "physical": {
       "const": "source-plus-admitted-original-frames"
+    },
+    "bindingCopyBytes": {
+      "const": 0
+    },
+    "bindingAdmissionBytes": {
+      "const": 8
     }
   }
 }

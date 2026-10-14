@@ -26,7 +26,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolYield};
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::{puzzle3d_unique_targets, Puzzle3dSelectionMotion, Puzzle3dSelectionRecord};
+use {semio_s_artifact_puzzle_3d_editor_transform::puzzle3d_unique_targets, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion, semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord};
 use std::sync::Arc;
 
 pub const UTILITY_ID: &str = "transform";

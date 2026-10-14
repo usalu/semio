@@ -35,14 +35,14 @@ pub type EnergyModelSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
+use crate::*;
 use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::standards::v1::subsets::any::io::binary::snapshot::{EnergyModelPackRecord};
+use crate::binary::{EnergyModelPackRecord};
 /// 🖨️ The derived text body: the same `EnergyModelPackRecord` the pack encodes, printed by the spec-driven engine.
 pub(crate) fn print_pack_record_text(snapshot: &EnergyModelSnapshot) -> String {
     semio_framework_dsl_record::print(&EnergyModelPackRecord::from_snapshot(snapshot).__dsl_to_record(), &EnergyModelPackRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document)
@@ -78,7 +78,7 @@ impl pack::snapshot::ArtifactDsl for EnergyModelSnapshot {
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
+use crate::*;
 use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;

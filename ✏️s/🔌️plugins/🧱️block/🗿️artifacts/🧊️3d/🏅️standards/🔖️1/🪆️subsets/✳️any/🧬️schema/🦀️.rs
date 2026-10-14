@@ -1,7 +1,14 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
+#![allow(async_fn_in_trait)]
 
-use crate::{Block3dSnapshot, Block3dVortexKindExtra};
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKindExtra};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
@@ -111,41 +118,12 @@ pub fn block3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
+        snapshot: semio_s_artifact_block_3d_model::SNAPSHOT_LEAVES,
+        diff: semio_s_artifact_block_3d_diff::DIFF_LEAVES,
+        mutations: semio_s_artifact_block_3d_mutations::MUTATION_LEAVES,
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
 /// 📸️ A fresh, empty `Block3dSnapshot` (all fields at their `Default`).
@@ -175,13 +153,13 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::BlockKindIdentity;
-pub use crate::BlockRepresentation;
-pub use crate::Block3dVortexTemplate;
-pub use crate::BlockCompatibilityRule;
-pub use crate::BlockAttribute;
-pub use crate::BlockAuthor;
-pub use crate::BlockCamera3d;
-pub use crate::BlockMeta;
-pub use crate::Block3dWindowView;
+pub use semio_s_plugin_block::BlockKindIdentity;
+pub use semio_s_plugin_block::BlockRepresentation;
+
+pub use semio_s_plugin_block::BlockCompatibilityRule;
+pub use semio_s_plugin_block::BlockAttribute;
+pub use semio_s_plugin_block::BlockAuthor;
+pub use semio_s_plugin_block::BlockCamera3d;
+pub use semio_s_plugin_block::BlockMeta;
+
 //#endregion 🔁️Re-exports

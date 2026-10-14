@@ -27,9 +27,37 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../�
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
-semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-s-artifact-procedural-3d-mut-document = { workspace = true }
+semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
+semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
+semio-s-artifact-procedural-3d-mut-transforms = { workspace = true }
+semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }
+
+[[test]]
+name = "widget-kinds"
+path = "../../🧪️tests/🔬️widget-kinds/🦀️.rs"
+
+[[test]]
+name = "synapse-kinds"
+path = "../../🧪️tests/🔬️synapse-kinds/🦀️.rs"
+
+[[test]]
+name = "generation-kinds"
+path = "../../🧪️tests/🔬️generation-kinds/🦀️.rs"
+
+[[test]]
+name = "document-kinds"
+path = "../../🧪️tests/🔬️document-kinds/🦀️.rs"
+
+[[test]]
+name = "gesture-kinds"
+path = "../../🧪️tests/🔬️gesture-kinds/🦀️.rs"
+
+[[test]]
+name = "input-kinds"
+path = "../../🧪️tests/🔬️input-kinds/🦀️.rs"

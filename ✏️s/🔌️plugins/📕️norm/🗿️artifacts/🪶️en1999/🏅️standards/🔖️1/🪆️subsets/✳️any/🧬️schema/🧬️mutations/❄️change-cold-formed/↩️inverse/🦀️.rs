@@ -1,12 +1,12 @@
 //! ↩️ `change-cold-formed` inverse.
 
-use crate::mutations::change_cold_formed::ChangeColdFormed;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
+use crate::change_cold_formed::ChangeColdFormed;
 
-pub fn inverse(_payload: &ChangeColdFormed, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeColdFormed, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_cold_formed::ChangeColdFormed> {
     Ok((|| {
-    vec![En1999Mutation::ChangeColdFormed(ChangeColdFormed { cold_formed: base.cold_formed.clone() })]
+    vec![Op::from(ChangeColdFormed { cold_formed: base.cold_formed.clone() })]
 
     })())
 }

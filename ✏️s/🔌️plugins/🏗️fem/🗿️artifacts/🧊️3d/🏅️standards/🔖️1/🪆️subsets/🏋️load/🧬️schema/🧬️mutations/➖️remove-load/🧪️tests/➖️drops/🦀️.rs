@@ -7,26 +7,26 @@
 //!
 //! The payload names only ids; the removed three-component UDL is recovered from `base` by the inverse, never carried in the mutation.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
-use crate::central_apply::apply_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🦠️mutation/🔣️.json");
+static DIFF: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🔺️diff/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/➖️remove-load/➖️drops/🎯️outcome/🔣️.json");
 
 fn before() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(AFTER.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+    semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
 }
 
 /// ▶️ `remove-load` detaches the member UDL `g2` and carries `before` to exactly the committed `after`.
@@ -36,7 +36,7 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("remove-load applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "remove-load/drops-the-trailing-member-b73b25: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.load_cases[0].loads.len(), 1, "remove-load/drops-the-trailing-member-b73b25: only the nodal load may remain");
-    assert_eq!(crate::load_id(&snapshot.load_cases[0].loads[0]), "g1", "remove-load/drops-the-trailing-member-b73b25: the surviving load is the nodal one");
+    assert_eq!(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id(&snapshot.load_cases[0].loads[0]), "g1", "remove-load/drops-the-trailing-member-b73b25: the surviving load is the nodal one");
     assert_eq!(snapshot.elements, before().elements, "remove-load/drops-the-trailing-member-b73b25: the frame the UDL sat on must stay");
 }
 
@@ -57,7 +57,7 @@ fn inverse_restores_before() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", BEFORE.as_str()), ("after", AFTER.as_str())] {
         let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
@@ -65,7 +65,7 @@ fn committed_json_is_canonical() {
     }
     let decoded_mutation = mutation();
     let reencoded = semio_framework_value::ToValue::to_value(&decoded_mutation);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
     assert_eq!(reencoded, original, "remove-load/drops-the-trailing-member-b73b25: committed mutation JSON is not canonical");
 }
 
@@ -76,7 +76,7 @@ fn committed_json_is_canonical() {
 /// still returns `Ok` — asserting `is_err()` here would be a branch that can never fire.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let outcome: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(OUTCOME.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     let status = outcome.get("status").and_then(semio_framework_value::DslValue::as_str).expect("outcome carries a status");
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
     let refused = produced.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error);
@@ -86,7 +86,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "remove-load/drops-the-trailing-member-b73b25: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "remove-load/drops-the-trailing-member-b73b25: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff::default(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("remove-load/drops-the-trailing-member-b73b25: unknown outcome status {other:?}"),
@@ -101,23 +101,23 @@ fn produces_committed_diff() {
     assert_eq!(outcome.diff().load_cases.as_ref().expect("loadCases delta").modified.len(), 1, "remove-load/drops-the-trailing-member-b73b25: the owning case must be patched exactly once");
     assert!(outcome.diff().load_cases.as_ref().expect("loadCases delta").removed.is_empty(), "remove-load/drops-the-trailing-member-b73b25: detaching a load must never remove the case");
     let produced = semio_framework_value::ToValue::to_value(outcome.diff());
-    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-load/drops-the-trailing-member-b73b25: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = semio_framework_value::ToValue::to_value(&decoded);
-    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-load/drops-the-trailing-member-b73b25: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `loadCases.modified` entry on `before` must yield the single-load case.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let decoded: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff = semio_framework_pack_json::from_json_str(DIFF.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-load/drops-the-trailing-member-b73b25: committed diff did not carry before to after");
 }

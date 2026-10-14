@@ -226,6 +226,20 @@ test("🕰️ bounded history reads stop at the selected mutation and replay the
 /** 🌱️ Independent pack and hash authorities distinguish equal decoded values from stored-byte identity. */
 test("🌱️ actor and stored genesis law preserves supplied bytes across encoder choices", () => {
   const law = read("../../🧫️fixtures/🧫️actor-genesis/🔣️.json");
+  const producerBase="../../../🌿️vcs/🚪️io/💾️binary/🌱️genesis/🧬️schema/";
+  const producerSchema=read(producerBase+"🔣️.json");const producerLaw=read(producerBase+"🧪️tests/🧫️fixtures/🔣️.json");
+  const admitProducer=new Ajv({strict:true,allErrors:true}).compile(producerSchema);expect(admitProducer(producerLaw)).toBe(true);
+  expect(admitProducer({...producerLaw,reload:"reencode-decoded-snapshot"})).toBe(false);
+  for(const [relative,invalid] of [
+    ["🏗️initialization/📣️publication/🧬️schema/",{selection:"implicit-snapshot-registration"}],
+    ["🏗️initialization/🏠️owners/🏭️producer/🧬️schema/",{close:"different-factory-or-renewed-grant"}],
+    ["🏗️initialization/🌱️genesis/🏭️factory/🧬️schema/",{reset:"parent-selected-reencoded-baseline"}],
+  ] as const){
+    const base="../../"+relative;const schema=read(base+"🔣️.json");const descriptor=read(base+"🧪️tests/🧫️fixtures/🔣️.json");
+    const independent=new Ajv({strict:true,allErrors:true}).compile(schema);
+    expect(independent(descriptor)).toBe(true);expect(independent({...descriptor,...invalid})).toBe(false);
+  }
+
   const digests: string[] = [];
   for (const row of law.packs) {
     const bytes = Uint8Array.from(Buffer.from(row.hex, "hex"));

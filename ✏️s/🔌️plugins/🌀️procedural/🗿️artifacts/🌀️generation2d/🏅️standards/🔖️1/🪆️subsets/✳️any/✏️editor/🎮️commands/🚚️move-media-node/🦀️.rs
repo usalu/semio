@@ -2,10 +2,12 @@
 //! the ONE node-drag machine as ONE relative `move-nodes` leaf — the offset from the widget's BASE position — so editing
 //! the move in history replays it on whatever base it lands on (design §13.3).
 
-use crate::editor::generation2d::commands::node_graph_edit::{generation2d_node_drag_emit, generation2d_node_drag_leaves};
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_node_graph_edit::generation2d_node_drag_emit;
+use semio_s_artifact_procedural_2d_node_graph_edit::generation2d_node_drag_leaves;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfigMutation;
+use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_tool_machine::NodeDragRecord;
@@ -26,7 +28,7 @@ pub struct MoveMediaNode {
 /// non-finite drop is refused, a drop where it already sits leaves zero trace.
 pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let host_snapshot = &doc.snapshot.host_snapshot;
-    if !host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == payload.node_id) {
+    if !host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget) == payload.node_id) {
         return Err(Fault::from(format!("moveMediaNode refusal: the graph has no widget {:?}", payload.node_id)));
     }
     let base = host_snapshot.layout.get(&payload.node_id).ok_or_else(|| Fault::from(format!("moveMediaNode refusal: widget {:?} has no stored position", payload.node_id)))?;

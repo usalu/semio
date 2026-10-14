@@ -39,571 +39,69 @@ fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'s
 
 use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 
-pub const PUZZLE_2D_SCHEMA: &str = "board.ports.directed.v1";
+
 
 //#region 🔖️Document
-/// 🎥️ The canvas camera (pan/zoom) for a puzzle 2d snapshot.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dCamera {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
-}
 
-impl Default for Puzzle2dCamera {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
-    }
-}
 
-/// 🔘️ One port on a node's rim — `handle_kind` gates link compatibility, `angle`/`radius` place it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dHandle {
-    #[dsl(defines = "handle")]
-    pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub handle_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[dsl(angle = "rad")]
-    pub angle: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub color: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub icon_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub locked: Option<bool>,
-}
 
-impl Default for Puzzle2dHandle {
-    fn default() -> Self {
-        Self { id: PagedUtf8::new(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }
-    }
-}
 
-/// ⚓️ Whether a node keeps its stored pose (`Fixed`) or derives it from edges (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub enum Puzzle2dNodeAnchor {
-    #[default]
-    Fixed,
-    Derived,
-}
 
-/// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
-/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::schema::BoardSnapshot`'s
-/// per-node fields, the canonical parser this snapshot format round-trips through.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dNode {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub node_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub shape: Option<PagedUtf8<{ usize::MAX }>>,
-    pub x: f64,
-    pub y: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub width: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub height: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub icon_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub root: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub locked: Option<bool>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub anchor: Puzzle2dNodeAnchor,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub handles: PagedList<Puzzle2dHandle, { usize::MAX }>,
-}
 
-impl Default for Puzzle2dNode {
-    fn default() -> Self {
-        Self {
-            id: PagedUtf8::new(),
-            node_kind: None,
-            shape: None,
-            x: 0.0,
-            y: 0.0,
-            radius: None,
-            width: None,
-            height: None,
-            text: None,
-            icon_kind: None,
-            root: None,
-            scale: None,
-            visible: None,
-            locked: None,
-            anchor: Puzzle2dNodeAnchor::Fixed,
-            handles: PagedList::new(),
-        }
-    }
-}
 
-/// ➡️ One directed link between two handle ids, with compose-parity connection parameters.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dEdge {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    #[dsl(refs = "handle")]
-    pub source: PagedUtf8<{ usize::MAX }>,
-    #[dsl(refs = "handle")]
-    pub target: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub edge_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub gap: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub shift: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub rise: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub turn: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub x: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub y: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub source_tip: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub target_tip: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub visible: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub locked: Option<bool>,
-}
 
-impl Default for Puzzle2dEdge {
-    fn default() -> Self {
-        Self { id: PagedUtf8::new(), source: PagedUtf8::new(), target: PagedUtf8::new(), edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, visible: None, locked: None }
-    }
-}
 
-/// 🔗️ How specifically two handle/wire kinds are allowed to link — `vortex` is a ported-graph alias
-/// for `handle` (see `semio_framework_os_infinite::parse_compat_specificity`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "lowercase"))]
-#[value(rename_all = "lowercase")]
-pub enum Puzzle2dCompatSpecificity {
-    General,
-    Node,
-    Edge,
-    Handle,
-    Wire,
-    Vortex,
-}
 
-/// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two handle/wire kind ids.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dKindCompatibility {
-    pub source: PagedUtf8<{ usize::MAX }>,
-    pub target: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub important: bool,
-    pub specificity: Puzzle2dCompatSpecificity,
-}
 
-/// 🏷️ Key/value attribute on a catalog kind (compose `Attribute` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dAttribute {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub key: PagedUtf8<{ usize::MAX }>,
-    pub value: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub definition: Option<PagedUtf8<{ usize::MAX }>>,
-}
 
-/// ✍️ Author credit on a catalog kind (compose `Author` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dAuthor {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub email: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub role: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub rank: Option<i32>,
-}
 
-/// 🖼️ Tagged representation / LOD asset on a node kind (compose `Representation` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dRepresentation {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub url: PagedUtf8<{ usize::MAX }>,
-    pub mime: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub tags: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub lod: Option<PagedUtf8<{ usize::MAX }>>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-}
 
-/// 🌱️ Handle template on a node kind — 2d uses `angle` instead of point/direction.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dHandleTemplate {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub label: PagedUtf8<{ usize::MAX }>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-    pub icon: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub handle_kind: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(angle = "rad")]
-    pub angle: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub t: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-}
 
-impl Default for Puzzle2dHandleTemplate {
-    fn default() -> Self {
-        Self { id: PagedUtf8::new(), name: PagedUtf8::new(), label: PagedUtf8::new(), description: PagedUtf8::new(), icon: PagedUtf8::new(), handle_kind: None, angle: 0.0, t: None, mandatory: None, radius: None }
-    }
-}
 
-/// 🧩 Type-like node-kind catalog row (compose `Type` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dCatalogNodeKind {
-    #[dsl(defines = "node_kind")]
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub label: PagedUtf8<{ usize::MAX }>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-    pub icon: PagedUtf8<{ usize::MAX }>,
-    pub image: PagedUtf8<{ usize::MAX }>,
-    pub unit: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, rename = "abstract"))]
-    #[value(default, rename = "abstract")]
-    pub is_abstract: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub base_kinds: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub representations: PagedList<Puzzle2dRepresentation, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub handles: PagedList<Puzzle2dHandleTemplate, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub attributes: PagedList<Puzzle2dAttribute, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub authors: PagedList<Puzzle2dAuthor, { usize::MAX }>,
-}
 
-/// 🔌️ Port-like handle-kind catalog row (compose `Port` parity).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dCatalogHandleKind {
-    #[dsl(defines = "handle_kind")]
-    pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub code: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub order: Option<i32>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub compatible_with: PagedList<PagedUtf8<{ usize::MAX }>, { usize::MAX }>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-    pub icon: PagedUtf8<{ usize::MAX }>,
-    pub color: PagedUtf8<{ usize::MAX }>,
-    pub default_wire_kind: PagedUtf8<{ usize::MAX }>,
-}
 
-/// ➡️ Edge-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dCatalogEdgeKind {
-    #[dsl(defines = "edge_kind")]
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub label: PagedUtf8<{ usize::MAX }>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-    pub icon: PagedUtf8<{ usize::MAX }>,
-    pub color: PagedUtf8<{ usize::MAX }>,
-}
 
-/// 🧵 Wire-kind catalog row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dCatalogWireKind {
-    #[dsl(defines = "wire_kind")]
-    pub id: PagedUtf8<{ usize::MAX }>,
-    pub name: PagedUtf8<{ usize::MAX }>,
-    pub label: PagedUtf8<{ usize::MAX }>,
-    pub description: PagedUtf8<{ usize::MAX }>,
-    pub icon: PagedUtf8<{ usize::MAX }>,
-    pub color: PagedUtf8<{ usize::MAX }>,
-    #[dsl(refs = "edge_kind")]
-    pub default_edge_kind: PagedUtf8<{ usize::MAX }>,
-}
 
-/// 🗂️ Typed kind-catalog bundle carried on snapshot meta.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dKindCatalogs {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub nodes: PagedList<Puzzle2dCatalogNodeKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub handles: PagedList<Puzzle2dCatalogHandleKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub edges: PagedList<Puzzle2dCatalogEdgeKind, { usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub wires: PagedList<Puzzle2dCatalogWireKind, { usize::MAX }>,
-}
 
-/// 🎯️ A persisted axis-aligned board rectangle constraining fill placement (Area Brush painted or
-/// gumball relocated) — the flat analogue of puzzle3d's `Puzzle3dTargetVolume`. `width`/`height` are
-/// board units measured from `x`/`y` (the rectangle's minimum corner); a negative extent is
-/// normalized by every reader through [`Puzzle2dTargetRegion::bounds`].
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dTargetRegion {
-    pub id: PagedUtf8<{ usize::MAX }>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub x: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub y: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub width: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub height: f64,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub locked: bool,
-}
 
-impl Puzzle2dTargetRegion {
-    /// 📐️ Normalized `[min_x, min_y, max_x, max_y]` — the one place a negative `width`/`height` is
-    /// resolved, so containment never depends on which corner the brush started from.
-    pub fn bounds(&self) -> [f64; 4] {
-        let (min_x, max_x) = if self.width < 0.0 { (self.x + self.width, self.x) } else { (self.x, self.x + self.width) };
-        let (min_y, max_y) = if self.height < 0.0 { (self.y + self.height, self.y) } else { (self.y, self.y + self.height) };
-        [min_x, min_y, max_x, max_y]
-    }
 
-    /// 🎯️ Whether the axis-aligned box `[min_x, min_y, max_x, max_y]` lies fully inside this region.
-    pub fn contains_bounds(&self, aabb: [f64; 4]) -> bool {
-        let [min_x, min_y, max_x, max_y] = self.bounds();
-        aabb[0] >= min_x && aabb[1] >= min_y && aabb[2] <= max_x && aabb[3] <= max_y
-    }
-}
 
-/// 🎯️ Whether ANY visible region contains `aabb`. An empty visible set is unconstrained — exactly
-/// puzzle3d's `world_volumes_contain_aabb` rule, flattened.
-pub fn puzzle2d_regions_contain_bounds(regions: &PagedList<Puzzle2dTargetRegion, {usize::MAX}>, aabb: [f64; 4]) -> bool {
-    let mut visible = regions.iter().filter(|region| !region.hidden).peekable();
-    if visible.peek().is_none() {
-        return true;
-    }
-    visible.any(|region| region.contains_bounds(aabb))
-}
 
-/// 🗂️ Fixture-carried metadata: manifest id, link-compatibility table, and typed kind catalogs.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dMeta {
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub manifest_id: Option<PagedUtf8<{ usize::MAX }>>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub kind_compatibility: PagedList<Puzzle2dKindCompatibility, { usize::MAX }>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub kind_catalogs: Option<Puzzle2dKindCatalogs>,
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️Document
 
 //#region 🔖️Snapshot
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Dialect
-/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
-/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
-/// `ArtifactViewer::DIALECT` to — `"s.puzzle.puzzle2d"` matches the artifact-kind id this subset's own
-/// capability rows already key off (see `definition()`'s `"s.puzzle2d.schema.artifact"` row above),
-/// standard `"1"` and subset `"*"` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
-/// Lives at the artifact level (not under `editor`/`viewer`) so `policyViewerPurityBreaches` never sees
-/// a viewer file importing through the sibling editor module just to read this constant.
-pub const PUZZLE2D_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.puzzle.puzzle2d", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
-/// 🗿️ The `2d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
-/// the artifact, not the app, owns its own identity.
-pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    semio_framework_plugin::ArtifactKindSpec {
-        id: "2d.puzzle".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("2D Puzzle", "2D-Puzzle"),
-        source_format: "puzzle.2d".into(),
-        component_kind: "puzzle2d".into(),
-        dimension: "2d".into(),
-        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Design },
-        schema: PUZZLE_2D_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
-        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
-    }
-}
+
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Declaration
@@ -817,722 +315,722 @@ pub mod standards {
                         pub use component::*;
                         #[path = "."]
                         pub mod create_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧱️zero-width-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🧪️tests/🧱️zero-width-node/🦀️.rs"]
                             mod tests_zero_width_node;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🧪️tests/🌱️appends/🦀️.rs"]
                             mod tests_appends_a_capsule_to_the_tower;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-node-c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🧪️tests/🌱️appends-node-c/🦀️.rs"]
                             mod tests_appends_node_c;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌱create-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_capsule_id_the_tower_already_holds;
                         }
                         #[path = "."]
                         pub mod delete_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️deletes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🧪️tests/🚫️deletes/🦀️.rs"]
                             mod tests_deletes_the_tambour_and_severs_its_ten_edges;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_node_a_and_severs_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🗑️removes-middle-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🧪️tests/🗑️removes-middle-node/🦀️.rs"]
                             mod tests_removes_the_middle_node_and_severs_its_edges;
                         }
                         #[path = "."]
                         pub mod move_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🧪️tests/📍️moves/🦀️.rs"]
                             mod tests_moves_a_capsule_across_the_shaft;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves-node-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🧪️tests/📍️moves-node-a/🦀️.rs"]
                             mod tests_moves_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_moving_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod replace_node_geometry {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🧱️negative-radius/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🧱️negative-radius/🦀️.rs"]
                             mod tests_negative_radius;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️circle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🔳️circle/🦀️.rs"]
                             mod tests_circle_to_rectangle;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reshaping_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️squares/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🧊replace-node-geometry/🧪️tests/🔳️squares/🦀️.rs"]
                             mod tests_squares_the_concrete_forest_seed;
                         }
                         #[path = "."]
                         pub mod change_node_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
                             mod tests_reassigns_node_a_kind;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_rekinding_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏗️rekinds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🏗️change-node-kind/🧪️tests/🏗️rekinds/🦀️.rs"]
                             mod tests_rekinds_a_capsule_j_as_a_capsule_l;
                         }
                         #[path = "."]
                         pub mod edit_node_text {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️recodes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/🧪️tests/✏️recodes/🦀️.rs"]
                             mod tests_recodes_a_capsule_id_code;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_recoding_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️retitles-node-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/✏️edit-node-text/🧪️tests/✏️retitles-node-a/🦀️.rs"]
                             mod tests_retitles_node_a;
                         }
                         #[path = "."]
                         pub mod change_node_icon {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reiconing_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🎨️swaps-a-capsule-icon/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/🧪️tests/🎨️swaps-a-capsule-icon/🦀️.rs"]
                             mod tests_swaps_a_capsule_icon;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🎨️swaps-node-a-icon/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🎨change-node-icon/🧪️tests/🎨️swaps-node-a-icon/🦀️.rs"]
                             mod tests_swaps_node_a_icon;
                         }
                         #[path = "."]
                         pub mod scale_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🧱️zero-scale/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🧪️tests/🧱️zero-scale/🦀️.rs"]
                             mod tests_zero_scale;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️doubles-node-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🧪️tests/📏️doubles-node-a/🦀️.rs"]
                             mod tests_doubles_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_scaling_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️scales/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-node/🧪️tests/📏️scales/🦀️.rs"]
                             mod tests_scales_a_capsule_by_three_halves;
                         }
                         #[path = "."]
                         pub mod change_node_visible {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🙈️hides-a-capsule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/🧪️tests/🙈️hides-a-capsule/🦀️.rs"]
                             mod tests_hides_a_capsule;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🙈️hides-node-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/🧪️tests/🙈️hides-node-a/🦀️.rs"]
                             mod tests_hides_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/👁️change-node-visible/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_node_locked {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks-node-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/🧪️tests/🔒️locks-node-a/🦀️.rs"]
                             mod tests_locks_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_the_first_storey_tambour;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🔒change-node-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_node_root {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes-node-a-to-root/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/🧪️tests/🌳️promotes-node-a-to-root/🦀️.rs"]
                             mod tests_promotes_node_a_to_root;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/🧪️tests/🌳️promotes/🦀️.rs"]
                             mod tests_promotes_the_base_to_root;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🌟change-node-root/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_rooting_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_node_anchor {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️derives/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/⚓️derives/🦀️.rs"]
                             mod tests_derives_a_capsule_pose_from_its_door_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
                             mod tests_fixed_to_derived;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/⚓change-node-anchor/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_anchoring_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod add_node_handle {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🧱️zero-radius-handle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🧪️tests/🧱️zero-radius-handle/🦀️.rs"]
                             mod tests_zero_radius_handle;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️adds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🧪️tests/➕️adds/🦀️.rs"]
                             mod tests_adds_a_third_slot_door_to_the_tambour;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️appends-handle-3-to-node-b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🧪️tests/➕️appends-handle-3-to-node-b/🦀️.rs"]
                             mod tests_appends_handle_3_to_node_b;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➕add-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_adding_a_door_to_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod remove_node_handle {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_removing_a_door_the_tambour_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_a_tambour_door_and_severs_its_capsule_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🧪️tests/🚫️removes2/🦀️.rs"]
                             mod tests_removes_handle_2_and_severs_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/➖removes-middle-handle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/➖remove-node-handle/🧪️tests/➖removes-middle-handle/🦀️.rs"]
                             mod tests_removes_the_middle_handle_and_severs_its_edge;
                         }
                         #[path = "."]
                         pub mod replace_node_handle {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🧱️negative-scale/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/🧪️tests/🧱️negative-scale/🦀️.rs"]
                             mod tests_negative_scale;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_door_the_tambour_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🔌️rekinds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🔌replace-node-handle/🧪️tests/🔌️rekinds/🦀️.rs"]
                             mod tests_rekinds_an_unconnected_tambour_door;
                         }
                         #[path = "."]
                         pub mod connect_handles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️adds-second-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🧪️tests/🪢️adds-second-edge/🦀️.rs"]
                             mod tests_adds_second_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/⏸️keeps/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🧪️tests/⏸️keeps/🦀️.rs"]
                             mod tests_keeps_an_edge_the_tower_already_holds;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️rewires/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🧪️tests/🪢️rewires/🦀️.rs"]
                             mod tests_rewires_the_capsule_the_subgraph_left_loose;
                         }
                         #[path = "."]
                         pub mod disconnect_handles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_severing_an_edge_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️removes-edge-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🧪️tests/🚫️removes-edge-1/🦀️.rs"]
                             mod tests_removes_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs-middle-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🧪️tests/✂️severs-middle-edge/🦀️.rs"]
                             mod tests_severs_the_middle_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️handle/✂️disconnect-handles/🧪️tests/✂️severs/🦀️.rs"]
                             mod tests_severs_a_capsule_from_the_first_storey_tambour;
                         }
                         #[path = "."]
                         pub mod replace_edge_geometry {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reposing_an_edge_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🧮️reposes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/🧮️reposes/🦀️.rs"]
                             mod tests_reposes_a_capsule_door_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/🦀️.rs"]
                             mod tests_repositions_edge_1;
                         }
                         #[path = "."]
                         pub mod change_edge_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️kinds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/🧪️tests/🏷️kinds/🦀️.rs"]
                             mod tests_kinds_a_capsule_door_edge_as_a_link;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_kinding_an_edge_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️rekinds-edge-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🏷️change-edge-kind/🧪️tests/🏷️rekinds-edge-1/🦀️.rs"]
                             mod tests_rekinds_edge_1;
                         }
                         #[path = "."]
                         pub mod change_edge_tips {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_tipping_an_edge_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🔀️swaps-edge-1-tips/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/🧪️tests/🔀️swaps-edge-1-tips/🦀️.rs"]
                             mod tests_swaps_edge_1_tips;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🖇️tips/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🖇️change-edge-tips/🧪️tests/🖇️tips/🦀️.rs"]
                             mod tests_tips_a_capsule_door_edge;
                         }
                         #[path = "."]
                         pub mod change_edge_visible {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_a_capsule_door_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides-edge-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/🧪️tests/🙈️hides-edge-1/🦀️.rs"]
                             mod tests_hides_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/👀change-edge-visible/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_an_edge_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_edge_locked {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks-edge-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/🧪️tests/🔒️locks-edge-1/🦀️.rs"]
                             mod tests_locks_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_the_base_to_tambour_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/〰️edge/🔐change-edge-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_an_edge_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_manifest_id {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🆔change-manifest-id/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🆔change-manifest-id/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🆔change-manifest-id/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints-manifest/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🆔change-manifest-id/🧪️tests/📦️repoints-manifest/🦀️.rs"]
                             mod tests_repoints_manifest;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🆔change-manifest-id/🧪️tests/📦️repoints/🦀️.rs"]
                             mod tests_repoints_the_tower_at_its_example_manifest;
                         }
                         #[path = "."]
                         pub mod connect_kind_compatibility {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
                             mod tests_adds_handle_kind_pair;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️admits/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🧪️tests/🤝️admits/🦀️.rs"]
                             mod tests_admits_the_reverse_tambour_circular_pair;
                         }
                         #[path = "."]
                         pub mod disconnect_kind_compatibility {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_withdrawing_a_pair_the_relation_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_handle_kind_pair;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
                             mod tests_withdraws_the_middle_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws/🦀️.rs"]
                             mod tests_withdraws_the_tambour_rectangular_pair;
                         }
                         #[path = "."]
                         pub mod replace_kind_catalogs {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🧱️off-rim-template/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/🧱️off-rim-template/🦀️.rs"]
                             mod tests_off_rim_template;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🗑️clears/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/🗑️clears/🦀️.rs"]
                             mod tests_clears_the_installed_handle_catalog;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
                             mod tests_installs_handle_kind_catalog;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/📇️installs2/🦀️.rs"]
                             mod tests_installs_the_tower_handle_catalog;
                         }
                         #[path = "."]
                         pub mod create_target_region {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️appends-region-2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/🧪️tests/🌍️appends-region-2/🦀️.rs"]
                             mod tests_appends_region_2;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️paints/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/🧪️tests/🌍️paints/🦀️.rs"]
                             mod tests_paints_a_tower_footprint;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🌍create-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_region_id_the_board_already_holds;
                         }
                         #[path = "."]
                         pub mod delete_target_region {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/🧪️tests/🪦️removes-region-1/🦀️.rs"]
                             mod tests_removes_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-middle-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/🧪️tests/🪦️removes-middle-region/🦀️.rs"]
                             mod tests_removes_the_middle_region;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🪦delete-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod move_target_region {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🚀move-target-region/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🚀move-target-region/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🚀move-target-region/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚀️slides-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🚀move-target-region/🧪️tests/🚀️slides-region-1/🦀️.rs"]
                             mod tests_slides_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🚀move-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_moving_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod resize_target_region {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/📐resize-target-region/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/📐resize-target-region/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/📐resize-target-region/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/📐️widens-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/📐resize-target-region/🧪️tests/📐️widens-region-1/🦀️.rs"]
                             mod tests_widens_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/📐resize-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_resizing_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod edit_target_region_label {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🖋️edit-target-region-label/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🖋️edit-target-region-label/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🖋️edit-target-region-label/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🖋️renames/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🖋️edit-target-region-label/🧪️tests/🖋️renames/🦀️.rs"]
                             mod tests_renames_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🖋️edit-target-region-label/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_renaming_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_target_region_hidden {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🙈️hides/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🙈change-target-region-hidden/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod change_target_region_locked {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🔏change-target-region-locked/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🔏change-target-region-locked/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🔏change-target-region-locked/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🔏️locks/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🔏change-target-region-locked/🧪️tests/🔏️locks/🦀️.rs"]
                             mod tests_locks_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🚫️rejects/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️region/🔏change-target-region-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_a_region_the_board_never_held;
                         }
                         #[path = "."]
                         pub mod drag_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
                             mod tests_no_targets;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/✋️drags-two-nodes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/✋️drags-two-nodes/🦀️.rs"]
                             mod tests_drags_two_nodes;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🎯️drags-node-and-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🎯️drags-node-and-region/🦀️.rs"]
                             mod tests_drags_node_and_region;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                             mod tests_skips_locked_ghost;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                             mod tests_rejects_ghosts;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
                             mod tests_keeps_a_zero_offset;
                         }
                         #[path = "."]
                         pub mod rotate_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
                             mod tests_repeated_targets;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🔄️turns-two-nodes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🔄️turns-two-nodes/🦀️.rs"]
                             mod tests_turns_two_nodes;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🎯️skips-the-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🎯️skips-the-region/🦀️.rs"]
                             mod tests_skips_the_region;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                             mod tests_skips_locked_ghost;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                             mod tests_rejects_ghosts;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
                             mod tests_keeps_a_zero_angle;
                         }
                         #[path = "."]
                         pub mod scale_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
                             mod tests_negative_factor;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🧱️zero-factor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🧱️zero-factor/🦀️.rs"]
                             mod tests_zero_factor;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️doubles-two-nodes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🔍️doubles-two-nodes/🦀️.rs"]
                             mod tests_doubles_two_nodes;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🎯️halves-node-region/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🎯️halves-node-region/🦀️.rs"]
                             mod tests_halves_node_region;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                             mod tests_skips_locked_ghost;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                             mod tests_rejects_ghosts;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⏸️keeps-a-unit-factor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⏸️keeps-a-unit-factor/🦀️.rs"]
                             mod tests_keeps_a_unit_factor;
                         }
                     }
@@ -1677,12 +1175,7 @@ pub mod standards {
 pub use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 
-/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
-pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-    *projection = next;
-    Ok(())
-}
+
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 
 #[path = "."]
@@ -1777,105 +1270,105 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-node/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🌱️add-node/🦀️.rs"]
             pub mod add_node;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎲️apply-board-events/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🎲️apply-board-events/🦀️.rs"]
             pub mod apply_board_events;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔒️close-handle-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔒️close-handle-suggestions/🦀️.rs"]
             pub mod close_handle_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️accept-suggestion/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/✅️accept-suggestion/🦀️.rs"]
             pub mod accept_suggestion;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🎣️target-brush-suggestions/🦀️.rs"]
             pub mod target_brush_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-candidate/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔁️cycle-candidate/🦀️.rs"]
             pub mod cycle_candidate;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💞️create-edge/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/💞️create-edge/🦀️.rs"]
             pub mod create_edge;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-edge/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/💔️delete-edge/🦀️.rs"]
             pub mod delete_edge;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️proximity-connect/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🔗️proximity-connect/🦀️.rs"]
             pub mod proximity_connect;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️set-proximity-radius/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📡️set-proximity-radius/🦀️.rs"]
             pub mod set_proximity_radius;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👯️duplicate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/👯️duplicate-selection/🦀️.rs"]
             pub mod duplicate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️engagement-abort/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🛑️engagement-abort/🦀️.rs"]
             pub mod engagement_abort;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️engagement-control-select/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🎛️engagement-control-select/🦀️.rs"]
             pub mod engagement_control_select;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/⌨️engagement-input/🦀️.rs"]
             pub mod engagement_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📨️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️focus-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🎯️focus-selection/🦀️.rs"]
             pub mod focus_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚛️force-layout/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/⚛️force-layout/🦀️.rs"]
             pub mod force_layout;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️lod-scale-json/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📊️lod-scale-json/🦀️.rs"]
             pub mod lod_scale_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️open-handle-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔓️open-handle-suggestions/🦀️.rs"]
             pub mod open_handle_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️hover-suggestion/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🖱️hover-suggestion/🦀️.rs"]
             pub mod hover_suggestion;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-inspector/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🩹️patch-inspector/🦀️.rs"]
             pub mod patch_inspector;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-same-kind/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🧬️select-same-kind/🦀️.rs"]
             pub mod select_same_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛍️set-active-example/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🛍️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚖️set-brush-kind-weights/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/⚖️set-brush-kind-weights/🦀️.rs"]
             pub mod set_brush_kind_weights;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️set-brush-node-size/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📏️set-brush-node-size/🦀️.rs"]
             pub mod set_brush_node_size;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-grid-factor/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📐️set-grid-factor/🦀️.rs"]
             pub mod set_grid_factor;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-grid-snap-enabled/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧲️set-grid-snap-enabled/🦀️.rs"]
             pub mod set_grid_snap_enabled;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/👁️set-grid-visible/🦀️.rs"]
             pub mod set_grid_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️set-selectable-kind/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/☑️set-selectable-kind/🦀️.rs"]
             pub mod set_selectable_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
             pub mod set_brush_placement_contact_tolerance;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫂️set-brush-placement-overlap-budget/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🫂️set-brush-placement-overlap-budget/🦀️.rs"]
             pub mod set_brush_placement_overlap_budget;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔂️engagement-repeat-last/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔂️engagement-repeat-last/🦀️.rs"]
             pub mod engagement_repeat_last;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-lod-mode-for-pane/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔭️set-lod-mode-for-pane/🦀️.rs"]
             pub mod set_lod_mode_for_pane;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️translate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚀️translate-selection/🦀️.rs"]
             pub mod translate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🔄️rotate-selection/🦀️.rs"]
             pub mod rotate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📏️scale-selection/🦀️.rs"]
             pub mod scale_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📤️export-snapshot/🦀️.rs"]
             pub mod export_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📥️import-snapshot/🦀️.rs"]
             pub mod import_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🗂️open-import-snapshot/🦀️.rs"]
             pub mod open_import_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-selection-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🔖️set-selection-flag/🦀️.rs"]
             pub mod set_selection_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-suggestion-offset/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧭️set-suggestion-offset/🦀️.rs"]
             pub mod set_suggestion_offset;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️set-transform-gumball-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🕹️set-transform-gumball-flag/🦀️.rs"]
             pub mod set_transform_gumball_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️add-target-region/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/➕️add-target-region/🦀️.rs"]
             pub mod add_target_region;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪦️delete-target-region/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🪦️delete-target-region/🦀️.rs"]
             pub mod delete_target_region;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️relocate-target-region/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚚️relocate-target-region/🦀️.rs"]
             pub mod relocate_target_region;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-target-region-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚩️set-target-region-flag/🦀️.rs"]
             pub mod set_target_region_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖍️set-area-brush-size/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🖍️set-area-brush-size/🦀️.rs"]
             pub mod set_area_brush_size;
         }
 

@@ -1,5 +1,79 @@
 //! 🚪️ IO s.process3d (1/✳️any) — the artifact declaration owns this composer table.
-use semio_s_artifact_stdio_step::geometry::{StepSolidExporter,StepSolidImporter};
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod import {
+    #[path = "."]
+    pub mod deserializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+#[path = "."]
+pub mod export {
+    #[path = "."]
+    pub mod serializers {
+        #[path = "."]
+        pub mod artifacts {
+            #[path = "."]
+            pub mod txt {
+                #[path = "."]
+                pub mod v_utf_8 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod json {
+                #[path = "."]
+                pub mod v_rfc8259 {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_stdio_step_geometry::geometry::StepSolidExporter;
+use semio_s_artifact_stdio_step_geometry::geometry::StepSolidImporter;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]
 }
@@ -8,8 +82,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Process3dAnalyzer;
-    use crate::Process3dSnapshot;
+    use crate::Process3dAnalyzer;
+    use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -43,7 +117,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -52,7 +126,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -65,7 +139,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️MediaImportExport
-use crate::{Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
+use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::WorkingSolid};
 use semio_framework::DslValue;
 use semio_framework::mesh_io::{MeshExporter, MeshImporter};
 use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StlSolidExporter, StlSolidImporter};
@@ -165,7 +239,7 @@ fn process_export_format(format_kind: &str) -> Result<semio_framework_plugin::io
 /// export then legitimately returns `None` (no stock to replay), the same documented gap.
 pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Option<usize>, format: &str) -> Result<Option<Process3dModelExport>, String> {
     if format == "glb" {
-        let Some(mesh) = crate::schema::inferences::processed_mesh(scene, resolved_up_to) else {
+        let Some(mesh) = semio_s_artifact_process_process3d_inferences::processed_mesh(scene, resolved_up_to) else {
             return Ok(None);
         };
         let bytes = semio_framework::mesh_io::GlbExporter.export(&mesh)?;
@@ -179,8 +253,8 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
         "stl" => ProcessSolidExporter::Stl(StlSolidExporter),
         _ => ProcessSolidExporter::Step(StepSolidExporter),
     };
-    let mut session = crate::schema::inferences::ProcessKernelReplay::new();
-    let Some(handle) = crate::schema::inferences::replay_process(&mut session, scene, resolved_up_to) else {
+    let mut session = semio_s_artifact_process_process3d_inferences::ProcessKernelReplay::new();
+    let Some(handle) = semio_s_artifact_process_process3d_inferences::replay_process(&mut session, scene, resolved_up_to) else {
         return Ok(None);
     };
     let bytes = ::semio_framework_async::poll::resolve_ready(exporter.export(session.kernel(), &[handle], PROCESS3D_TESSELLATION_TOLERANCE)).map_err(|error| error.to_string())?;
@@ -216,7 +290,7 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
     if name.ends_with(".glb") {
         semio_framework::mesh_io::GlbImporter.import(&bytes).ok()?;
         let stock = Stock { id: "stock".into(), label: "Imported GLB".into(), solid: WorkingSolid::ImportedMesh { mesh_url: data_url.into() }, pose: Pose::default() };
-        return Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()));
+        return Some(semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()));
     }
     let (importer, label): (ProcessSolidImporter, &str) = if name.ends_with(".stp") || name.ends_with(".step") {
         (ProcessSolidImporter::Step(StepSolidImporter), "Imported STEP")
@@ -227,17 +301,17 @@ pub fn import_process3d_model(name: &str, data_url: &str) -> Option<Process3dSna
     } else {
         return None;
     };
-    let mut session = crate::schema::inferences::ProcessKernelReplay::new();
+    let mut session = semio_s_artifact_process_process3d_inferences::ProcessKernelReplay::new();
     let handle = ::semio_framework_async::poll::resolve_ready(importer.import(session.kernel_mut(), &bytes, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?.into_iter().next()?;
     let stock = Stock { id: "stock".into(), label: label.into(), solid: WorkingSolid::ImportedSolid { solid_handle: handle.0 }, pose: Pose::default() };
-    Some(crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
+    Some(semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock, steps: Vec::new() }, Default::default()))
 }
 //#endregion 🔖️MediaImportExport
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::io::Process3dBuilder as Process3dAnyBuilder;
-    use crate::standards::v1::subsets::any::io::Process3dComposer as Process3dAnyComposer;
+    use crate::Process3dBuilder as Process3dAnyBuilder;
+    use crate::Process3dComposer as Process3dAnyComposer;
     use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
@@ -257,7 +331,7 @@ pub mod io_registry {
     const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId("*") };
     const PROCESS3D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::Process3dSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCESS3D_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => Process3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -273,7 +347,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "Process3dComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -281,7 +355,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
@@ -306,13 +380,11 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::Process3dDiff;
-    use crate::schema::mutations::Process3dMutation;
-    use crate::schema::snapshot::Process3dSnapshot;
+    use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+    use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+    use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -362,7 +434,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Process3dSnapshot;
+    use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

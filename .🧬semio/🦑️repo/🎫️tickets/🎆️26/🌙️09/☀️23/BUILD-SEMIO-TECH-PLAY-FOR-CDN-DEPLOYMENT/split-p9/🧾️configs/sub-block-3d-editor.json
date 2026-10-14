@@ -1,0 +1,100 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+ "crate": "semio_s_artifact_block_3d_editor",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "agg": {
+   "package": "semio-s-artifact-block-3d-editor",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "",
+   "description": "Block 3d editor: the play app, its command dispatch and store preparation"
+  },
+  "commands": {
+   "package": "semio-s-artifact-block-3d-editor-commands",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "prefix": "commands",
+   "description": "Block 3d editor commands"
+  },
+  "modes": {
+   "package": "semio-s-artifact-block-3d-editor-modes",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes",
+   "prefix": "modes",
+   "description": "Block 3d editor modes, windows, the world view and the surface identities"
+  },
+  "config": {
+   "package": "semio-s-artifact-block-3d-editor-config",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "prefix": "config",
+   "description": "Block 3d editor config"
+  },
+  "terminology": {
+   "package": "semio-s-artifact-block-3d-editor-terminology",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology",
+   "prefix": "terminology",
+   "description": "Block 3d editor terminology"
+  },
+  "presence": {
+   "package": "semio-s-artifact-block-3d-editor-presence",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "prefix": "presence",
+   "description": "Block 3d editor presence"
+  }
+ },
+ "rules": [
+  [
+   "✏️editor/🌍️world/",
+   "modes",
+   "world"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/",
+   "commands"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/",
+   "modes"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/",
+   "config"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/",
+   "terminology"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/",
+   "presence"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "text": "//! 🎮️ block-3d-editor commands.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🦀️.rs",
+   "text": "//! 🎭️ block-3d-editor modes.\n"
+  }
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "workspace_root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
+ "root_to": "modes",
+ "root_to_map": {}
+}

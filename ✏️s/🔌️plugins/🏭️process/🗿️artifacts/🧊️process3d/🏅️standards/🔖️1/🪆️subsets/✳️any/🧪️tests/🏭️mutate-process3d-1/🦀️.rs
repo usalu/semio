@@ -215,8 +215,8 @@ mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_process_process3d::standards::v1::subsets::any::io::text::mutations::process3d_mutation_report_json;
-    use semio_s_artifact_process_process3d::standards::v1::subsets::any::io::text::snapshot::process3d_identity_report_json;
+    use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::text::mutations::process3d_mutation_report_json;
+    use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::process3d_identity_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

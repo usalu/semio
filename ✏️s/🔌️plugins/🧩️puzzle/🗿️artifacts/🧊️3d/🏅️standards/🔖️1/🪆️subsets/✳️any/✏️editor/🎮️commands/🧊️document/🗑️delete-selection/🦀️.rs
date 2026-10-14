@@ -1,8 +1,8 @@
 //! 🧊️ `delete-selection` command.
 
-use {crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id, crate::editor::puzzle3d::session::Puzzle3dActionCtx};
-use crate::standards::v1::subsets::any::schema::mutations::{delete_object, delete_reference, delete_target_volume, disconnect_vortices, remove_object_vortex, Puzzle3dMutation};
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::Puzzle3dSnapshot};
+use {semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx};
+use {semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::delete_object, semio_s_artifact_puzzle_3d_mutations_reference::delete_reference::mutation::delete_reference, semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume, semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::disconnect_vortices, semio_s_artifact_puzzle_3d_mutations_vortex::remove_object_vortex::mutation::remove_object_vortex, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 use std::collections::HashSet;
 
 /// 🗑️ The concrete kinds one delete gesture consists of, in base order: the explicitly selected attractions no

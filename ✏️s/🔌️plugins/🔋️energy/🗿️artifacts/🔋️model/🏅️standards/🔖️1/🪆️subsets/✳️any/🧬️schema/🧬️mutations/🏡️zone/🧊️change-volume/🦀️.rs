@@ -1,8 +1,7 @@
 //! 📦️ Energy model mutation — `ChangeZoneVolume`: Sets one zone's air volume in cubic metres — the capacitance the zone air heat balance integrates over.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneVolume {
     pub new_volume_m3: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_volume(id: crate::model::EntityId, new_volume_m3: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneVolume(ChangeZoneVolume { id, new_volume_m3 })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_volume<Op: From<ChangeZoneVolume>>(id: crate::model::EntityId, new_volume_m3: f64) -> Op {
+    ChangeZoneVolume { id, new_volume_m3 }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneVolume {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneVolume
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneVolume>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone", kind: "change-zone-volume", record: "ChangedZoneVolume" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

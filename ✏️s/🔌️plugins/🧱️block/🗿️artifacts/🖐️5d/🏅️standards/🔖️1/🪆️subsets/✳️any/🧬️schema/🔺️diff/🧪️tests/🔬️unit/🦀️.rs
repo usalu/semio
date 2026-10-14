@@ -1,6 +1,6 @@
 //! 🧪️ `Block5dDiff` — apply, absorb and inverse laws over the positional attribute rows and the field-patched kind identity.
 
-use super::*;
+use crate::*;
 use protocol::{DiffAlgebra, MutationDiff};
 use semio_s_plugin_block::{BlockAttribute, BlockAttributePatch, BlockAttributesInsertion, BlockAttributesPatchEntry, BlockAttributesRelocation, BlockAttributesRemoval};
 

@@ -1,8 +1,8 @@
 //! 🪨 `insert-foundation` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
-use super::InsertFoundation;
-use crate::diff::{En1998Diff, En1998FoundationDelta};
-use crate::En1998Snapshot;
+use crate::insert_foundation::InsertFoundation;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998FoundationDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &InsertFoundation, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if base.foundations.iter().any(|existing| existing.id == payload.foundation.id) {

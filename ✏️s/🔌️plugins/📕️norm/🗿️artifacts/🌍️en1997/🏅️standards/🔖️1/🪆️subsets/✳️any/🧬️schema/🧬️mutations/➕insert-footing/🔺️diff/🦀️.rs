@@ -1,6 +1,6 @@
-use super::InsertFooting;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997FootingsRows};
+use crate::insert_footing::InsertFooting;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997FootingsRows};
 
 pub fn diff(payload: &InsertFooting, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.footings.iter().any(|existing| existing.id == payload.footing.id) {

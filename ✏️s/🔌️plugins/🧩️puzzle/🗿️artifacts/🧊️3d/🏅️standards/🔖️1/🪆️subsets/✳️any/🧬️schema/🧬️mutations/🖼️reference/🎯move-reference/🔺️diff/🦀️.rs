@@ -1,7 +1,6 @@
 //! 🔺️ Sparse diff builder for `MoveReference` — patches the one addressed reference in place.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencesDelta};
-use protocol::list_delta::RowPatch;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::{Puzzle3dDiff, Puzzle3dReferencePatch, Puzzle3dReferencesDelta};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::MoveReference, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

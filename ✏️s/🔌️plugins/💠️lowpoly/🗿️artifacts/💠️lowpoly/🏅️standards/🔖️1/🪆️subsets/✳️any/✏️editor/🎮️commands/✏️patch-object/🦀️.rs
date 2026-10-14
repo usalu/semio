@@ -2,12 +2,12 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading;
-use crate::mutations::rename_object::RenameObject;
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_mut_objects::change_object_smooth_shading::ChangeObjectSmoothShading;
+use semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object::RenameObject;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -42,7 +42,4 @@ pub fn handle(payload: &PatchObject, doc: &ArtifactView<'_, LowpolySnapshot>, _c
 //#endregion 🔖️PatchObject
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

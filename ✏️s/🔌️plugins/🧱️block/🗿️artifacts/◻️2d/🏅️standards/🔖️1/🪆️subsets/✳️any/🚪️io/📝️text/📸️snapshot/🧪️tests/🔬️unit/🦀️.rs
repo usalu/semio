@@ -1,7 +1,7 @@
 
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{Block2dHandleKind, Block2dHandleTemplate};
-use crate::{BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity};
+use crate::text::snapshot::*;
+use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate};
+use semio_s_plugin_block::{BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity};
 
 /// 🌱️ Builds the `Hexagonal Cut Concrete Forest Left` node kind — the representative fixture also
 /// used to (re)generate the handcrafted example file via `print_dsl`.

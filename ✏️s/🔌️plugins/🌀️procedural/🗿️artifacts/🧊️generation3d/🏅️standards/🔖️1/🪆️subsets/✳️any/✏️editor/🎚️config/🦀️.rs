@@ -4,6 +4,10 @@
 //! This is APP state, not document state: selection, cameras, sun/LOD/show-mode display options, and
 //! generation selection lives here rather than under `🗿️artifacts/`, since it does not survive
 //! into the `.generation3d` document.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -253,3 +257,6 @@ impl protocol::DiffAlgebra<Generation3dConfig> for Generation3dConfigPatch {
         self.lod_mode.is_none() && self.show_mode.is_none() && self.camera.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.selected_generation_id.is_none()
     }
 }
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

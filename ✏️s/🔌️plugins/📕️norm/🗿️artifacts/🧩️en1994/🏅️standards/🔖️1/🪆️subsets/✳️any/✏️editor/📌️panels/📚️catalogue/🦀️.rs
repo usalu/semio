@@ -1,9 +1,9 @@
 //! 📚️ EN 1994 play app panel — selectable examples plus normative γ/ψ/stud tables.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::artifact_schema::{part_1_1, part_en1990};
-use crate::document::{AnnexChoice, ClauseId};
-use crate::CompositeBeam;
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1994_checks::{part_1_1, part_en1990};
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
+use semio_s_artifact_norm_en1994_model::CompositeBeam;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -16,7 +16,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1994.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -135,7 +135,7 @@ fn stud_spacing_limits_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

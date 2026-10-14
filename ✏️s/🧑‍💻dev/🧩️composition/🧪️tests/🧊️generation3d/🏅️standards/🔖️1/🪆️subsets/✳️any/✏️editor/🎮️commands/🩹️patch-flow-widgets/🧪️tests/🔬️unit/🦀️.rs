@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch, snapshot};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 fn patch(widget_id: &str, value: f64) -> Generation3dCommand {
     Generation3dCommand::PatchFlowWidgets(PatchFlowWidgets { widget_ids: vec![widget_id.into()], field: "value".into(), value: Some(value) })

@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
-use crate::{Member, MemberEffect, PermanentAction, VariableAction};
+use semio_s_artifact_norm_en1990_model::{Member, MemberEffect, PermanentAction, VariableAction};
 
 pub const ID: &str = "fatigue-failing";
 pub fn label() -> LocalizedLabel {
@@ -15,9 +15,9 @@ pub fn source() -> ExampleSource {
 }
 
 /// ♻️ Fatigue-active subject with R_d,FAT = 50000.0.
-pub fn reference_snapshot() -> crate::En1990Snapshot {
-    crate::En1990Snapshot {
-        annex: crate::document::AnnexChoice::De,
+pub fn reference_snapshot() -> semio_s_artifact_norm_en1990_model::En1990Snapshot {
+    semio_s_artifact_norm_en1990_model::En1990Snapshot {
+        annex: semio_s_plugin_norm_compliance::AnnexChoice::De,
         project_id: "fatigue-failing".into(),
         structure_kind: "building".into(),
         altitude_m: 0.0,
@@ -65,6 +65,3 @@ pub fn reference_snapshot() -> crate::En1990Snapshot {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod example;

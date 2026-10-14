@@ -1,8 +1,7 @@
 //! 🌐️ Energy model mutation — `ChangeFenestrationUValue`: Sets the glazing's air-to-air thermal transmittance in W/(m²·K) — the conductance the film-free window term multiplies by area and the outdoor-to-zone temperature difference.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationUValue {
     pub new_u_value_w_m2k: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_u_value(id: crate::model::EntityId, new_u_value_w_m2k: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationUValue(ChangeFenestrationUValue { id, new_u_value_w_m2k })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_u_value<Op: From<ChangeFenestrationUValue>>(id: crate::model::EntityId, new_u_value_w_m2k: f64) -> Op {
+    ChangeFenestrationUValue { id, new_u_value_w_m2k }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationUValue {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationUValue
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationUValue>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-u-value", record: "ChangedFenestrationUValue" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

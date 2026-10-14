@@ -1,8 +1,7 @@
 //! 💣️ Energy model mutation — `DeletePlantLoop`: Drops one plant loop. Refused when no loop carries the id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeletePlantLoop {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_plant_loop(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeletePlantLoop(DeletePlantLoop { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_plant_loop<Op: From<DeletePlantLoop>>(id: crate::model::EntityId) -> Op {
+    DeletePlantLoop { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeletePlantLoop {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeletePlantLoop
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeletePlantLoop> + From<crate::CreatePlantLoop>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "plant-loop", kind: "delete-plant-loop", record: "DeletedPlantLoop" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

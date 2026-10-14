@@ -1,11 +1,11 @@
 //! ⚖️ DIN EN 16798 compliance numeric worked examples + Wave D DoD tests.
 
-use crate::artifact_schema::part_1::{self, ComfortCategory, PollutionClass};
-use crate::artifact_schema::part_3;
-use crate::artifact_schema::{check_full_environment, parse_category, ComfortModel, VentMethod, VentSystemType};
-use crate::document::{AnnexChoice, CheckStatus};
-use crate::field_meta::din16798_field_meta;
-use crate::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_checks::{part_1, ComfortCategory, PollutionClass};
+use semio_s_artifact_norm_din16798_checks::part_3;
+use semio_s_artifact_norm_din16798_checks::{check_full_environment, parse_category, ComfortModel, VentMethod, VentSystemType};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
+use semio_s_artifact_norm_din16798_editor::field_meta::din16798_field_meta;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_framework_value::ToValue;
 use std::path::PathBuf;
 use std::process::Command;
@@ -51,7 +51,7 @@ fn heat_recovery_min_for_mechanical_systems() {
 
 #[test]
 fn de_annex_co2_absolute_tighter_than_en() {
-    use crate::artifact_schema::annex_params::AnnexParams;
+    use semio_s_artifact_norm_din16798_checks::annex_params::AnnexParams;
     let de = AnnexParams::de();
     let en = AnnexParams::en();
     assert!(de.co2_absolute_other_ppm < en.co2_absolute_other_ppm);
@@ -134,8 +134,8 @@ fn every_emitted_subject_path_parses_and_resolves_on_default_and_noncompliant() 
                 if path.is_empty() {
                     continue;
                 }
-                crate::app_surface::parse_path(path).unwrap_or_else(|e| panic!("{label} parse '{path}': {e}"));
-                crate::app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("{label} resolve '{path}': {e}"));
+                semio_s_plugin_norm_app_surface::parse_path(path).unwrap_or_else(|e| panic!("{label} parse '{path}': {e}"));
+                semio_s_plugin_norm_app_surface::get_value_at_path(&root, path).unwrap_or_else(|e| panic!("{label} resolve '{path}': {e}"));
                 seen += 1;
                 if path.contains("zones[") {
                     assert!(path.contains("zones[id="), "{label} zone path must use [id=…]: {path}");
@@ -318,7 +318,7 @@ fn apply_remedy_flips_filter_fail_to_pass_via_oneof() {
     let mut doc = Din16798Snapshot::noncompliant_office();
     let before = check_full_environment(&doc);
     let check = before.checks.iter().find(|c| c.id.starts_with("din16798-3.filter.") && c.status == CheckStatus::Fail).expect("filter fail");
-    let remedy = check.remedies.iter().find(|r| r.applicable && matches!(r.bound, crate::document::RemedyBound::OneOf)).expect("applicable OneOf filter remedy");
+    let remedy = check.remedies.iter().find(|r| r.applicable && matches!(r.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf)).expect("applicable OneOf filter remedy");
     let required = remedy.options.first().expect("filter option").clone();
     let path = &remedy.target.path;
     let vent_id = path.strip_prefix("ventSystems[id=").and_then(|s| s.split_once(']')).map(|(id, _)| id).expect("vent id");
@@ -382,8 +382,8 @@ fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
 fn bundled_dsl_examples_decode_and_evaluate() {
     let demo = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let failing = include_str!("../../../🖼️assets/⚠️noncompliant-office/🗣️.dsl.semio");
-    let compliant = crate::standards::v1::subsets::any::io::text::snapshot::decode_din16798_dsl(demo).expect("demo dsl");
-    let noncompliant = crate::standards::v1::subsets::any::io::text::snapshot::decode_din16798_dsl(failing).expect("failing dsl");
+    let compliant = semio_s_artifact_norm_din16798_io::text::snapshot::decode_din16798_dsl(demo).expect("demo dsl");
+    let noncompliant = semio_s_artifact_norm_din16798_io::text::snapshot::decode_din16798_dsl(failing).expect("failing dsl");
     assert!(check_full_environment(&compliant).complies());
     let fails = check_full_environment(&noncompliant).failing().count();
     assert!(fails >= 2, "noncompliant DSL must fail ≥2 checks, got {fails}");
@@ -398,11 +398,10 @@ fn winter_and_summer_operative_bands_both_evaluated() {
     assert!(report.checks.iter().any(|c| c.id.contains("pmv.winter")));
 }
 
-
 #[test]
 fn two_vent_relink_changes_capacity_on_both_systems() {
     let mut doc = Din16798Snapshot::compliant_office();
-    let mut v2 = crate::VentSystemDocument::default();
+    let mut v2 = semio_s_artifact_norm_din16798_model::VentSystemDocument::default();
     v2.id = "vent-other".into();
     v2.name = "Secondary AHU".into();
     v2.design_airflow_m3_h = 200.0;
@@ -456,7 +455,7 @@ fn duplicate_zone_id_fails_integrity() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert!(check.subject.path.contains("zones[id=zone-office].id"));
     let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable OneOf");
-    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf));
     assert!(!remedy.options.is_empty());
     assert!(!remedy.options.iter().any(|o| o == "zone-office"));
     assert_ne!(check.explanation.en, check.explanation.de);
@@ -477,7 +476,7 @@ fn duplicate_vent_system_id_fails_integrity() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert!(check.subject.path.contains("ventSystems[id=vent-central].id"));
     let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable OneOf");
-    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf));
     assert!(!remedy.options.is_empty());
     assert!(!remedy.options.iter().any(|o| o == "vent-central"));
     assert_ne!(check.explanation.en, check.explanation.de);
@@ -495,8 +494,8 @@ fn residential_method3_uses_predefined_rates() {
 
 #[test]
 fn draught_rate_respects_category_limit() {
-    let dr = crate::artifact_schema::part_1::draught_rate_percent(24.5, 0.1, 40.0);
-    let lim = crate::artifact_schema::part_1::draught_limit_percent(crate::artifact_schema::part_1::ComfortCategory::II);
+    let dr = semio_s_artifact_norm_din16798_checks::part_1::draught_rate_percent(24.5, 0.1, 40.0);
+    let lim = semio_s_artifact_norm_din16798_checks::part_1::draught_limit_percent(semio_s_artifact_norm_din16798_checks::ComfortCategory::II);
     assert!(dr < lim, "DR={dr} lim={lim}");
     let mut doc = Din16798Snapshot::compliant_office();
     doc.zones[0].air_speed_m_s = 0.35;
@@ -506,7 +505,7 @@ fn draught_rate_respects_category_limit() {
     assert!(d.remedies.iter().any(|r| r.applicable && r.target.path.contains("airSpeedMS")));
 }
 
-fn report_fingerprint(report: &crate::document::CheckReport) -> Vec<(String, CheckStatus, u64, u64, u64)> {
+fn report_fingerprint(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, CheckStatus, u64, u64, u64)> {
     report
         .checks
         .iter()
@@ -516,7 +515,7 @@ fn report_fingerprint(report: &crate::document::CheckReport) -> Vec<(String, Che
 
 fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
     let mut tree = semio_framework_value::ToValue::to_value(&*doc);
-    let cur = crate::app_surface::get_value_at_path(&tree, path).expect("get").clone();
+    let cur = semio_s_plugin_norm_app_surface::get_value_at_path(&tree, path).expect("get").clone();
     let next = match cur {
         semio_framework_value::DslValue::Bool(b) => semio_framework_value::DslValue::Bool(!b),
         semio_framework_value::DslValue::Number(n) => {
@@ -580,10 +579,9 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
         }
         other => panic!("unsupported leaf value at {path}: {other:?}"),
     };
-    crate::app_surface::set_value_at_path(&mut tree, path, next).expect("set");
+    semio_s_plugin_norm_app_surface::set_value_at_path(&mut tree, path, next).expect("set");
     *doc = <Din16798Snapshot as semio_framework_value::FromValue>::from_value(tree).expect("from_value");
 }
-
 
 fn zone_id_from_leaf_path(path: &str) -> Option<&str> {
     let start = path.find("zones[id=")?;
@@ -630,7 +628,7 @@ fn leaf_applies_in_example(doc: &Din16798Snapshot, path: &str, leaf: &str) -> bo
 fn editable_leaves_perturb_at_least_one_check_across_examples() {
     const EXEMPT_LEAVES: &[&str] = &["id", "name"];
     let mut compliant = Din16798Snapshot::compliant_office();
-    let mut v2 = crate::VentSystemDocument::default();
+    let mut v2 = semio_s_artifact_norm_din16798_model::VentSystemDocument::default();
     v2.id = "vent-other".into();
     v2.name = "Secondary AHU".into();
     v2.design_airflow_m3_h = 500.0;
@@ -698,11 +696,11 @@ fn oda4_requires_stricter_filter_than_oda3() {
 
 #[test]
 fn sfp_catalogue_class3_matches_sfp_bound_and_check_limit() {
-    let tables = crate::editor::din16798::panels::catalogue::reference_tables();
+    let tables = semio_s_artifact_norm_din16798_editor::panels::catalogue::reference_tables();
     let sfp = tables.iter().find(|t| t.id == "sfp-class-bounds").expect("sfp table");
     let row = sfp.rows.iter().find(|r| r.id == "3").expect("class 3 row");
     let cell = match &row.cells[1] {
-        crate::app_surface::CatalogueCell::Number { value, .. } => *value,
+        semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => *value,
         other => panic!("expected number cell, got {other:?}"),
     };
     let bound = part_3::sfp_bound(3);

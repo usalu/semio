@@ -1,7 +1,11 @@
 //! 🔺️ Sparse diff for `ReplaceWidget`, built directly from `(payload, base)`.
 use super::ReplaceWidget;
-use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dWidgetPatch, Generation2dWidgetModification, Generation2dWidgetsDelta};
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dWidgetPatch;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dWidgetModification;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dWidgetsDelta;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

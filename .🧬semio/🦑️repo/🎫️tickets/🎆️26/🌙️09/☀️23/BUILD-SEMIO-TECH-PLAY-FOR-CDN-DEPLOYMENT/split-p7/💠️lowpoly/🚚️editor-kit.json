@@ -1,0 +1,30 @@
+{
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "from_module": "crate::editor::lowpoly",
+   "to": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "to_module": "crate::editor::lowpoly::kit",
+   "items": [
+    "LOWPOLY_PLAY_APP_ID",
+    "LOWPOLY_PLAY_CONTROLLER_ID",
+    "lowpoly_action",
+    "lowpoly_window_action",
+    "ui_label",
+    "ui_value_text",
+    "ui_value_bool",
+    "ui_value_number",
+    "ui_value_list",
+    "ui_value_map",
+    "lowpoly_window_measures",
+    "utility_param_slider",
+    "paint_utility_params_group",
+    "lowpoly_window_engagement",
+    "lowpoly_window_engagement_with_selection",
+    "reset_document_effect"
+   ],
+   "doc": "//! 🧰️ lowpoly editor kit: identifiers, the dispatch context and the ui-value and helper plumbing every command, mode\n//! and panel builds on.",
+   "mount": "#[path = \"🧰️kit/🦀️.rs\"]\npub mod kit;"
+  }
+ ]
+}

@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1992Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -61,8 +69,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{CheckReport, CheckResult};
-use crate::standards::v1::subsets::any::schema::{evaluate_anchor, evaluate_member};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult};
+use semio_s_artifact_norm_en1992_checks::{evaluate_anchor, evaluate_member};
 
 /// 📋️ `En1992Snapshot -> CheckReport` — full hierarchical structure assessment.
 pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
@@ -85,7 +93,7 @@ pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
 }
 
 fn push_duplicate_ids(report: &mut CheckReport, document: &En1992Snapshot, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
-    use crate::document::{CheckStatus, ClauseId, LocalizedCopy, Remedy, SubjectRef};
+    use semio_s_plugin_norm_compliance::{CheckStatus, ClauseId, LocalizedCopy, Remedy, SubjectRef};
     let mut counts = std::collections::BTreeMap::<String, usize>::new();
     for id in ids {
         *counts.entry(id.clone()).or_insert(0) += 1;
@@ -131,5 +139,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1992Outline;
+pub use crate::outline::En1992Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

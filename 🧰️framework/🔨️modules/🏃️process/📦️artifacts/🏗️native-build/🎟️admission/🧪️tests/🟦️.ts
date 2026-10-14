@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
-import { admissionFrozenV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
+import { admissionFrozenV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 const ajv = new Ajv({ strict: true, allowUnionTypes: true }).addSchema(schema);
@@ -71,3 +71,8 @@ test("real Cargo through the wrapper: a tight memory budget admits one unit at a
   expect(roomy.peakRunning).toBeLessThanOrEqual(fixture.cargo.tokens);
   expect(roomy.peakRunning).toBe(fixture.cargo.tokens);
 }, 600_000);
+
+test("a unit's output footprint counts exactly the files its artifact stem names", () => {
+  const vector = fixture.outputs as { artifact: string; entries: string[]; sizes: Record<string, number>; bytes: number };
+  expect(unitOutputBytesV1(vector.artifact, vector.entries, (name) => vector.sizes[name]!)).toBe(vector.bytes);
+});

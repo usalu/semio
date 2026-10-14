@@ -1,0 +1,9 @@
+# Repository Artifact Reader Boundary
+
+The current finite Vite consumer already verifies the complete manifest, regular nofollow inventory, actual streamed SHA-256 bytes, callback lifetime, and original artifact shared resource. Next start and runtime consumers retain that same resource but currently validate only shallow manifest identity. Extract the existing Vite reader into a repository artifact domain adjacent to publication so both builders share the same concrete implementation.
+
+The request must be closed version1 with actual products-relative output identity, authored owner, finite maximum bytes/files, and Original ScriptInvocation. The owner opens the products image, validates requested output nofollow under it, then retains artifact:absolute-output shared through all Node/Bun consumers. No path-only capability escape: callback recheck refuses released lifetime and checks exact current inventory/hash against the issued baseline. Actual manifests remain version1 owner/files from canonical stageArtifacts; do not create a legacy facade or new compatibility marker.
+
+Neutral corpus must express valid manifest, invalid duplicate/traversal/absolute files, wrong owner, extra/missing inventory and mutation. Independent Ajv/SQLite + Node SHA oracle validates it. Real test publishes a fixture, starts a held reader, observes exact publication EX refusal, releases reader, verifies publisher successor, rejects escaped callback and direct mutation. Both Vite runtime and Next standalone HTTP tests must consume the new concrete reader; prototype/release run once after implementation and Source freeze.
+
+Wait until current299-file authentic Next compiler Source capture settles before editing the Vite closure. This sequencing preserves actual source evidence; no SDK/source hash expectation refresh can turn a changed loaded body into a qualified hit.

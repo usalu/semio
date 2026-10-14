@@ -1,5 +1,5 @@
-use super::*;
-use crate::Iso16757Snapshot;
+use crate::*;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_json_round_trip() {

@@ -1,8 +1,65 @@
-use super::*;
-use crate::editor::fem3d::commands::set_active_example::SetActiveExample;
-use crate::editor::fem3d::terminology::fem3d_labels;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, render as render_body};
-use crate::editor::fem3d::Fem3dCommand;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::inspection::*;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::ADD_TERM_FIELD;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::REMOVE_TERM_FIELD;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination::TERM_FIELD_PREFIX;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_kind;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_COMBINATION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_ELEMENT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_LOAD_CASE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_MATERIAL;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SECTION;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SOLID;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_SUPPORT;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact::dof_symbol;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_action;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_plugin::tree_item;
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_plugin::tree_item_with_action;
+use semio_framework_plugin::ActionId;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::Trigger;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin::UiFixedList;
+use semio_framework_plugin::UiMapBuilder;
+use semio_framework_plugin::UiText;
+use semio_framework_plugin::UiValue;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL;
+use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_framework_ui_contract as ui;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
+use crate::context::{dispatch, fem3d_app, render as render_body};
+use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::ComponentTree;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
@@ -12,12 +69,12 @@ use semio_framework_plugin::ViewModel;
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 /// 🌲️ The document the app actually boots on (`concrete-forest`) — frames and member UDLs only.
 fn boot() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot()
+    semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot()
 }
 
 fn selecting(ids: &[&str]) -> Fem3dInteractionSnapshot {
@@ -186,7 +243,7 @@ async fn nothing_selected_renders_the_document_summary_3d() {
     let json = english(&doc, &[]);
     assert!(json.contains("fem3d-play-inspection.summary.nodes"), "{json}");
     assert!(json.contains("fem3d-play-inspection.summary.solids"));
-    assert!(json.contains(crate::FEM_3D_SCHEMA));
+    assert!(json.contains(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA));
     assert!(json.contains("fem3d-play-inspection.summary.deformation-scale"), "the analysis settings are reported, not edited, here");
     assert!(!json.contains("patchNode"));
     assert!(carries_a_tree(&json), "the empty-selection summary is still a tree panel: {json}");
@@ -208,7 +265,7 @@ async fn german_resolves_every_field_label_the_inspector_binds_3d() {
 #[semio_framework_async_macros::async_test]
 async fn the_body_key_routes_to_this_panel_on_the_live_app_3d() {
     let mut app = fem3d_app();
-    dispatch(&mut app, Fem3dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem3dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::demo::ID.into() })).await;
     let json = render_body(&mut app, BODY_KEY);
     assert!(json.contains("fem3d-play-inspection.summary.nodes"), "{json}");
     assert!(json.contains("16"), "the demo's sixteen nodes are counted");

@@ -5,8 +5,12 @@
 //! framework's typed `PresenceInteraction` (declared by `create_generation3d_viewer`'s
 //! `.interaction("graph")`), so they are deliberately absent here — the surface stores neither.
 //! MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
-use crate::viewer::generation3d::config::Generation3dViewCamera;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactPack;
 
@@ -123,3 +127,6 @@ impl protocol::DiffAlgebra<Generation3dViewPresence> for Generation3dViewPresenc
         self.preview_camera.is_none() && self.show_mode.is_none()
     }
 }
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

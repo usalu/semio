@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "decision",
+  "id": "decision-a",
+  "newName": "Renamed Decision A"
+}

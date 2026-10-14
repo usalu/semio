@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join, resolve, dirname } from "node:path";
-import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -24,30 +24,13 @@ export class BuildScript extends Script {
       const { prepareCargoWorkspaceInvocation } = await import("../🗂️workspaces/🦀️cargo/🟦️.ts");
       const {repositoryCargoPreparationStorageV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts");
       const { devToolingEnv } = await import("../🏃️process/🌿️environment/🟦️.ts");
-      prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.repoRoot), this.repoRoot, ["build", "--manifest-path", join(cwd, "Cargo.toml")], this.repoRoot, process.env);
+      await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.repoRoot), this.repoRoot, ["build", "--manifest-path", join(cwd, "Cargo.toml")], this.repoRoot, scriptInvocationEnvironment(this.invocation,process.env),scriptCompilerAdmissionControlV1(this.invocation,"cargo:font-preparation",buildBudgetMs()));
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_CARGO_ARTIFACT_POLICY: JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd, this.repoRoot)) });
       await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "build"], cwd, "canvas-font-assets:build", scriptInvocationBudget(this.invocation, buildBudgetMs()), { env, signal: this.invocation.control.signal });
       return;
     }
     if (slice === "storybook") {
-      const { assertNoOwnedStorybookMdx, assertUiStorybookDiscovery } = await import("./📖️storybook/🟦️.ts");
-      assertNoOwnedStorybookMdx(this.repoRoot);
-      const [{ mkdir, mkdtemp, rm }, { collectArtifactFiles }, { stageRepositoryArtifacts }, { withCompilerState }, { repoCacheDirectory }, { createRequire }] = await Promise.all([
-        import("node:fs/promises"), import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts"), import("../⚡️caching/📦️artifacts/🟦️.ts"), import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts"), import("../⚡️caching/🟦️.ts"), import("node:module"),
-      ]);
-      const require = createRequire(join(this.repoRoot, "package.json")), output = resolve(this.repoRoot, process.env.STORYBOOK_OUTPUT_DIR ?? `dist/${mode}/storybook`);
-      const temporaryRoot = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : repoCacheDirectory(this.repoRoot, "storybook-staging");
-      await mkdir(temporaryRoot, { recursive: true });
-      const temporary = await mkdtemp(join(temporaryRoot, "storybook-"));
-      const control = scriptCompilerAdmissionControlV1(this.invocation, "storybook:build", 600_000);
-      try {
-        await withCompilerState({ root: repoCacheDirectory(this.repoRoot), owner: "storybook", compiler: `storybook:${require("storybook/package.json").version}:bun:${process.versions.bun}`, configuration: process.env.STORYBOOK_SCOPE ?? "", mode, control, leaseDirectory: join(this.repoRoot, ".cache/b/l/m/data"), files: [".semio-artifact.json"] }, async (directory, compilerEnvironment) => {
-          await runOwnedCommand(process.execPath, ["x", "storybook", "build", "-c", ".storybook", "--output-dir", temporary], this.repoRoot, "storybook:build", compilerAdmissionBudgetV1(control), { signal: control.signal, env: { ...compilerEnvironment, SEMIO_VITE_CACHE_DIRECTORY: directory, SEMIO_STORYBOOK_BUILD: "true" } });
-          await stageRepositoryArtifacts(output, `storybook:${mode}`, await collectArtifactFiles(temporary, control.signal), { signal: control.signal });
-        });
-      } finally { await rm(temporary, { recursive: true, force: true }); }
-      assertUiStorybookDiscovery(this.repoRoot);
-      return;
+      if(segments.length!==1)throw Error("Storybook build accepts only its declared intent");const {buildRepositoryStorybookV1}=await import("./📖️storybook/🏃️execution/🟦️.ts");await buildRepositoryStorybookV1(this.repoRoot,mode,this.invocation);return;
     }
     const targets: Readonly<Record<string, string>> = { assets: "@semio-tech/assets:build", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
     const target = targets[slice];
@@ -91,10 +74,10 @@ export async function runOwnedBuildInvocationV1(root:string,args:readonly string
 }
 
 async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation):Promise<void> {
-  const {parseBuildInvocationV1,resolveBuildInvocationV1,nxBuildArgumentsV1,readBuildDependencyInvocationV1}=await import("./🧭️invocation/🟦️.ts");
+  const {parseBuildInvocationV1,resolveBuildInvocationV1,nxBuildArgumentsV1,readBuildDependencyInvocationV1,readBuildGraphAncestorSelectionV1,loadBuildInvocationGraphV1}=await import("./🧭️invocation/🟦️.ts");
   const {scriptInvocationEnvironment,checkScriptInvocation}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
   checkScriptInvocation(parent);
-  const selected=parseBuildInvocationV1(args),resolved=resolveBuildInvocationV1(root,selected.args),issued=await createBuildBootstrapCapabilitiesV1(root,args,{...process.env,SEMIO_SCRIPT_CAPABILITIES:undefined}),original=parent.capabilities as {tool?:unknown;native?:unknown;buildMode?:unknown;workspaceRoot?:unknown},capabilities=original.tool!==undefined&&original.native!==undefined&&original.workspaceRoot===root?{...issued,native:original.native,buildMode:resolved.env.SEMIO_BUILD_MODE??original.buildMode}:issued,invocation={...parent,capabilities};
+  const selected=parseBuildInvocationV1(args),resolved=resolveBuildInvocationV1(root,selected.args),issued=await createBuildBootstrapCapabilitiesV1(root,args,{...process.env,SEMIO_SCRIPT_CAPABILITIES:undefined}),original=parent.capabilities as {tool?:unknown;native?:unknown;buildMode?:unknown;workspaceRoot?:unknown},ancestor=readBuildGraphAncestorSelectionV1(root,original),capabilities=ancestor?{...issued,native:original.native,buildMode:resolved.env.SEMIO_BUILD_MODE??original.buildMode}:issued,invocation={...parent,capabilities};
   const patch:NodeJS.ProcessEnv={...resolved.env,SEMIO_BUILD_TOOL:selected.tool,SEMIO_WORKSPACE_ROOT:root,SEMIO_BUILD_INVOCATION_PID:process.env.SEMIO_BUILD_INVOCATION_PID??String(process.pid),SEMIO_BUILD_REUSE_GRAPH:process.env.SEMIO_BUILD_REUSE_GRAPH,SEMIO_BUILD_GRAPH_PATH:process.env.SEMIO_BUILD_GRAPH_PATH,SEMIO_BUILD_GRAPH_DIGEST:process.env.SEMIO_BUILD_GRAPH_DIGEST};
   const encoded=scriptInvocationEnvironment(invocation,{...process.env,...patch});
   patch.SEMIO_SCRIPT_PROCESS_INVOCATION=encoded.SEMIO_SCRIPT_PROCESS_INVOCATION;
@@ -105,14 +88,14 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const native=await import("../../🎛️dashboard/📦️installation/🟦️.ts"),mode=readBuildMode((capabilities as {buildMode?:unknown}).buildMode??resolved.env.SEMIO_BUILD_MODE??"prototype");
       const nativeArguments=native.dashboardInvocation(resolved.args);
       if(nativeArguments&&native.dashboardInstalled(root,mode)){
-        const {readNativeCallerAuthorityV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");const code=await native.launchDashboard(root,nativeArguments,{mode,network:readNativeCallerAuthorityV1(invocation.capabilities).network,control:scriptCompilerAdmissionControlV1(invocation,"dashboard:launch",0)});
+        const {readNativeCallerAuthorityV1}=await import("../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");const code=await native.launchDashboard(root,nativeArguments,{invocation,workspace:root,mode,network:readNativeCallerAuthorityV1(invocation.capabilities).network,control:scriptCompilerAdmissionControlV1(invocation,"dashboard:launch",0)});
         if(code!==0)throw Error(`Dashboard invocation failed (${code})`);
         return;
       }
     }
     const command=resolved.args[0];
     if(!command||resolved.args.slice(0,resolved.args.indexOf("--")<0?undefined:resolved.args.indexOf("--")).includes("--help")){
-      console.log("bun repo [--tool=nx|bazel] run <project:target[:configuration]> | run-many --targets=<targets> [--projects=<projects>] | affected --targets=<targets> | exec --projects=<projects> -- <command> | graph | show projects|project <name>|targets | watch --projects=<projects> -- <command> | reset | tools setup [nx|bazel|all] | dependencies sync|lock --all|--scope <owner>");return;
+      console.log("bun repo [--tool=nx|bazel] run <project:target[:configuration]> | run-many --targets=<targets> [--projects=<projects>] | affected --targets=<targets> | exec --projects=<projects> -- <command> | graph | show projects|project <name>|targets | watch --projects=<projects> -- <command> | reset | tools setup [nx|bazel|all] | dependencies sync|lock --all|--scope <owner> | cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>");return;
     }
     if(["run","run-many","affected","exec","watch"].includes(command)){
       const {validateBuildTaskArgumentsV1}=await import("./🧭️selection/🟦️.ts");
@@ -121,6 +104,10 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     if(command==="dependencies"){
       const {mode,selection}=readBuildDependencyInvocationV1(resolved.args),{SyncScript,RefreshLockScript}=await import("../⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts");
       await new (mode==="lock"?RefreshLockScript:SyncScript)(root,root,invocation).run(selection.kind==="all"?["--all"]:["--scope",selection.owner]);return;
+    }
+    if(command==="cargo"){
+      const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
+      process.exitCode=await launchRepositoryCargoV1(invocation,root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
     if(command==="tools"){
       if(resolved.args[1]!=="setup"||resolved.args.length>3)throw Error("Expected repo tools setup [nx|bazel|all]");
@@ -132,30 +119,30 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     }
     if(command==="reset"){
       const {invalidateBuildGraphV1}=await import("./🕸️graph/🟦️.ts");await invalidateBuildGraphV1(root,invocation);
-      const {rm}=await import("node:fs/promises");
-      if(selected.tool==="bazel")await rm(join(root,".🧬semio/🦑️repo/⚡️cache/bz"),{recursive:true,force:true});
+      if(selected.tool==="bazel")throw Error("Bazel reset requires an issued cache maintenance owner");
       else{const {runOwnedNxInvocationV1}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");await runOwnedNxInvocationV1(root,["reset"],invocation);}
       return;
     }
     const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/📜️script.ts");
     await ensureBuildEnvironmentV1(root,invocation);
     if(["graph","show"].includes(command)){
-      const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,{reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true"});
+      const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true"});
       const {buildOptionV1}=await import("./🧭️selection/🟦️.ts");
       let result:unknown=graph;
+      for(const row of graph.unavailable??[])console.error(`[build] unavailable project ${row.project??row.root}: ${row.source} does not parse (${row.sha256.slice(0,12)})`);
       if(command==="show"){
         const subject=resolved.args[1];
-        if(subject==="project"){result=graph.projects[resolved.args[2]];if(!result)throw Error(`Unknown build project: ${resolved.args[2]}`);}
+        if(subject==="project"){const name=resolved.args[2];if(!name)throw Error("Build project name required");result=graph.projects[name];const withheld=graph.unavailable?.find(row=>row.project===name);if(!result)throw Error(withheld?`Build project ${name} is unavailable until ${withheld.source} parses: ${withheld.reason}`:`Unknown build project: ${name}`);}
         else if(subject==="projects")result=Object.keys(graph.projects).sort();
         else if(subject==="targets")result=[...new Set(Object.values(graph.projects).flatMap(project=>Object.keys(project.targets)))].sort();
         else throw Error("Expected repo show projects|project <name>|targets");
       }
       const output=buildOptionV1(resolved.args,"file");
-      if(output){const {mkdir,writeFile}=await import("node:fs/promises");const path=resolve(root,output);await mkdir(dirname(path),{recursive:true});await writeFile(path,JSON.stringify(result,null,2)+"\n");}
+      if(output){const {withRepositoryBuildReportV1}=await import("./📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,result,invocation,async artifact=>{console.log(artifact.path);});}
       else if(Array.isArray(result)&&!resolved.args.includes("--json"))console.log(result.join("\n"));else console.log(JSON.stringify(result,null,2));
       return;
     }
-    const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),baseline=await loadBuildGraphV1(root,invocation,{reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true"}),{prepareSelectedRustBuildGraphV1}=await import("./🕸️graph/🦀️rust/🟦️.ts"),prepared=await prepareSelectedRustBuildGraphV1(root,baseline,resolved.args,invocation),graph=prepared.graph;for(const[key,value]of Object.entries(prepared.environment)){previous[key]=process.env[key];process.env[key]=value;}
+    const baseline=await loadBuildInvocationGraphV1(root,resolved.args,parent,invocation,process.env.SEMIO_BUILD_REUSE_GRAPH==="true"),{withSelectedRustBuildGraphV1}=await import("./🕸️graph/🦀️rust/🟦️.ts");await withSelectedRustBuildGraphV1(root,baseline,resolved.args,invocation,async prepared=>{const graph=prepared.graph;for(const[key,value]of Object.entries(prepared.environment)){previous[key]=process.env[key];process.env[key]=value;}
     const {withRepositoryBuildGraphArtifactV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
     await withRepositoryBuildGraphArtifactV1(root,graph,invocation,async pinned=>{
     process.env.SEMIO_BUILD_GRAPH_PATH=pinned.path;process.env.SEMIO_BUILD_GRAPH_DIGEST=pinned.digest;process.env.SEMIO_BUILD_REUSE_GRAPH="true";
@@ -175,7 +162,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     if(planning){
       const plan=adapter.planBazelTasksV1(graph,request),output=selection.buildOptionV1(resolved.args,"graph");
       if(output&&output!=="stdout"&&output!=="true"){
-        const {mkdir,writeFile}=await import("node:fs/promises"),path=resolve(root,output);await mkdir(dirname(path),{recursive:true});await writeFile(path,JSON.stringify(plan,null,2)+"\n");
+        const {withRepositoryBuildReportV1}=await import("./📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,plan,invocation,async artifact=>{console.log(artifact.path);});
       }else console.log(JSON.stringify(plan,null,2));
       return;
     }
@@ -188,6 +175,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     await adapter.runBazelTasksV1(root,graph,request,invocation);
+    });
     });
   } finally {for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}
 }

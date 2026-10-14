@@ -2,7 +2,17 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📦️packages/🦀️rust" ]
+members = [
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
+]
 exclude = [
   "**/🏅️standards/**",
   "**/👽️guest/**",
@@ -236,3 +246,27 @@ opt-level = 2
 # 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
 [profile.wasm-prototype.package.semio-framework-pack]
 opt-level = 2
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-descriptor]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-inferences]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-mutations]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-model]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-transitional]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-strict-mutations]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-strict]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/📦️packages/🦀️rust"

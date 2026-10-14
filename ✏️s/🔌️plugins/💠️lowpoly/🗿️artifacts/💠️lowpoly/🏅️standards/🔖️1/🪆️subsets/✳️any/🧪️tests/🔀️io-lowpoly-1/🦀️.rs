@@ -28,9 +28,9 @@ const STUB_FORMATS: &[&str] = &[];
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
+    use semio_s_artifact_lowpoly_lowpoly_io::export::serializers::artifacts as export;
+    use semio_s_artifact_lowpoly_lowpoly_io::import::deserializers::artifacts as import;
+    use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
     /// 🧫️ The committed fixture the scenario's own doc string names, parsed as a real
     /// `LowpolySnapshot` (not a hand-transcribed Rust literal) so the fixture stays the one place

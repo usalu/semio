@@ -213,7 +213,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
 /// pane lists (one guest menu per document instance), each candidate keyed by its BOARD twin in the brush run's
 /// trace (`PUZZLE5D_PLANNER_TRACE_TWIN_BIT`), so hovering its row focuses exactly that placement on the board. The
 /// twin key sets bit 62, beyond what a JSON number survives in a JavaScript double, so it travels as its decimal text.
-pub fn board_suggestion_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsFound>) -> Option<String> {
+pub fn board_suggestion_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound>) -> Option<String> {
     let menu = envelope.runtime.suggestion_menu.as_ref()?;
     let (rows, pending) = world3d::suggestion_rows(envelope, labels, suggestions)?;
     let candidates: Vec<Value> = rows.iter().map(|row| json!({ "index": row.index, "key": (row.key | PUZZLE5D_PLANNER_TRACE_TWIN_BIT).to_string(), "nodeLabel": row.part_label, "handleLabel": row.grip_label, "icon": row.icon, "color": row.color })).collect();
@@ -234,7 +234,7 @@ pub fn board_suggestion_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLab
 }
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsFound>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, suggestions: Option<&semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene = puzzle5d_board_scene(envelope);
     scene.suggestion_menu_json = board_suggestion_menu_json(envelope, labels, suggestions);
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Board2d, &scene)

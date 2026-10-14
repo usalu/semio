@@ -1,6 +1,6 @@
 //! 📰️ Projects semantic DOCX document views from owned XML nodes.
 use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*,refusal::DocxError,namespaces::{is_word_name,scoped_bindings,word_attr,word_local_name}};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
 fn child_elements(node: &XmlNode) -> &[XmlNode] {

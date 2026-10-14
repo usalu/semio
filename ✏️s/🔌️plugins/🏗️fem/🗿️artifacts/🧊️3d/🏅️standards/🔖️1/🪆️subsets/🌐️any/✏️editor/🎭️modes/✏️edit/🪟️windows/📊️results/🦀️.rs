@@ -11,11 +11,13 @@ pub mod config;
 pub mod transient;
 
 use self::config::Fem3dResultsWindowConfig;
-use crate::app_surface::{normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
-use crate::editor::fem3d::interaction::gumball::fem3d_selection_json;
-use crate::editor::fem3d::interaction::{Fem3dInteractionSnapshot, FEM3D_GRANULARITY_NODE, FEM3D_INTERACTION_DOMAIN};
-use crate::standards::v1::subsets::any::scene::fem3d_scene_parts;
-use crate::Fem3dSnapshot;
+use semio_s_fem_app_surface::{normalize_mode_shape, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::fem3d_selection_json;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_GRANULARITY_NODE;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_contract::{Buildable, HasChildren, HasStackLayout};
 use std::collections::HashMap;
@@ -53,7 +55,7 @@ struct Fem3dResultsCache {
 pub type ResultsCacheKey = (u32, [u8; 32]);
 
 /// 📊️ Every case's static result plus the nodal-averaged von Mises field per solved case.
-type Statics = (HashMap<String, crate::model::StaticResult>, HashMap<String, HashMap<String, f64>>);
+type Statics = (HashMap<String, semio_s_fem_model::StaticResult>, HashMap<String, HashMap<String, f64>>);
 
 /// 🎵️ One normalized mode shape: its eigenvalue (frequency in Hz, or buckling factor) and values.
 type ModeValues = (f64, HashMap<String, [f64; 6]>);
@@ -104,10 +106,10 @@ fn entry_for(cache: &mut Option<Fem3dResultsCache>, key: ResultsCacheKey) -> &mu
 /// once — the stress field rides the same cache entry as the displacements it was derived from.
 fn solve_statics(doc: &Fem3dSnapshot) -> Result<Statics, String> {
     note_solve();
-    let results = crate::fem3d_engine::fem3d_solve_all(doc).map_err(|error| error.to_string())?;
+    let results = semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all(doc).map_err(|error| error.to_string())?;
     let mut stresses = HashMap::with_capacity(results.len());
     for (id, result) in &results {
-        if let Ok(field) = crate::fem3d_engine::mesh_preview::fem3d_nodal_von_mises_of(doc, result) {
+        if let Ok(field) = semio_s_artifact_fem_3d_engine::fem3d_engine::mesh_preview::fem3d_nodal_von_mises_of(doc, result) {
             stresses.insert(id.clone(), field);
         }
     }
@@ -117,8 +119,8 @@ fn solve_statics(doc: &Fem3dSnapshot) -> Result<Statics, String> {
 fn solve_mode(doc: &Fem3dSnapshot, key: &ModeKey) -> Result<ModeValues, String> {
     note_solve();
     let values = match key {
-        ModeKey::Modal(index) => crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values(doc, *index),
-        ModeKey::Buckling(case_id, index) => crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values(doc, case_id, *index),
+        ModeKey::Modal(index) => semio_s_artifact_fem_3d_engine::fem3d_engine::modal_buckling::fem3d_modal_mode_values(doc, *index),
+        ModeKey::Buckling(case_id, index) => semio_s_artifact_fem_3d_engine::fem3d_engine::modal_buckling::fem3d_buckling_mode_values(doc, case_id, *index),
     };
     let (eigenvalue, mut shape) = values.map_err(|error| error.to_string())?;
     normalize_mode_shape(&mut shape);
@@ -163,7 +165,7 @@ pub fn with_mode_values<T>(doc: &Fem3dSnapshot, key: Option<ResultsCacheKey>, mo
 
 // #region 🔖️Render
 /// 📐️ Bounding-box diagonal (in model meters) over every node plus every solid's footprint/height —
-/// drives mode-shape amplitude (see `crate::app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
+/// drives mode-shape amplitude (see `semio_s_fem_app_surface::MODE_SHAPE_AMPLITUDE_RATIO`'s doc). Falls
 /// back to `1.0` for a degenerate model.
 pub fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
     let mut min = [f64::INFINITY; 3];
@@ -201,7 +203,7 @@ pub fn mode_shape_scale(doc: &Fem3dSnapshot, amplitude: f64) -> f64 {
 /// those under one parent are a `duplicate-key` projection fault.
 fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let admission = |detail: &'static str| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", detail);
-    let caption = semio_framework_ui_contract::text(crate::editor::fem3d::ui_label(caption)?);
+    let caption = semio_framework_ui_contract::text(semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label(caption)?);
     let scene_stack = semio_framework_ui_contract::column().grow(true).try_child(scene).map_err(|_| admission("FEM caption scene child admission failed"))?;
     semio_framework_ui_contract::column()
         .grow(true)
@@ -214,7 +216,7 @@ fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::Ui
 }
 
 /// ⏯️ The transport read-out a running window carries in its caption — silent while stopped.
-fn playback_caption(animation: &crate::app_surface::FemResultsAnimation) -> String {
+fn playback_caption(animation: &semio_s_fem_app_surface::FemResultsAnimation) -> String {
     if animation.playing {
         format!(" · phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed)
     } else {
@@ -227,11 +229,11 @@ fn playback_caption(animation: &crate::app_surface::FemResultsAnimation) -> Stri
 /// a pick HERE lands in the same selection.
 fn results_scene(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, scale: f64, stress: Option<&HashMap<String, f64>>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, displacements, scale, stress);
-    let gumball = crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
-    let mut scene = semio_framework_plugin::world3d_scene(crate::viewport::scene_camera_json(&window.camera), meshes_json, instances_json, fem3d_selection_json(doc, interaction, false, &gumball), &semio_framework_plugin::WorldSunConfig::default());
+    let gumball = semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
+    let mut scene = semio_framework_plugin::world3d_scene(semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&window.camera), meshes_json, instances_json, fem3d_selection_json(doc, interaction, false, &gumball), &semio_framework_plugin::WorldSunConfig::default());
     scene.domain_id = Some(FEM3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(FEM3D_GRANULARITY_NODE.into());
-    crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, &scene)
+    semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_RESULTS, &scene)
 }
 
 /// ⚠️ A solve that failed still shows the structure: the undeformed scene under a caption naming
@@ -306,7 +308,19 @@ fn render_buckling(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interact
 // #endregion 🔖️Render
 
 // #region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 // #endregion 🧪️Tests
+
+//#region 🪟️InstanceLookup
+/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
+/// the panel itself has no window context.
+pub fn results_window_instance_id(view_state: &semio_framework_plugin::ViewModel) -> Option<String> {
+    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == FEM3D_WINDOW_RESULTS);
+    view_state
+        .window_id
+        .as_deref()
+        .filter(|id| is_results(id))
+        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
+        .map(str::to_string)
+        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == FEM3D_WINDOW_RESULTS).map(|window| window.id.clone()))
+}
+//#endregion 🪟️InstanceLookup

@@ -1,8 +1,7 @@
 //! 📊️ Energy model mutation — `AddOutputVariable`: Attaches one reporting registration to the document-root output-variable set. `(name, key)` is the natural composite key — `OutputVariableSpec` carries no id — so a duplicate registration is refused rather than silently doubled.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -19,19 +18,22 @@ pub struct AddOutputVariable {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_output_variable(name: String, key: String, reporting_frequency: crate::model::OutputReportFrequency, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::AddOutputVariable(AddOutputVariable { name, key, reporting_frequency, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn add_output_variable<Op: From<AddOutputVariable>>(name: String, key: String, reporting_frequency: crate::model::OutputReportFrequency, index: Option<u32>) -> Op {
+    AddOutputVariable { name, key, reporting_frequency, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddOutputVariable {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddOutputVariable
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddOutputVariable> + From<crate::RemoveOutputVariable>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "output-variable", kind: "add-output-variable", record: "AddedOutputVariable" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

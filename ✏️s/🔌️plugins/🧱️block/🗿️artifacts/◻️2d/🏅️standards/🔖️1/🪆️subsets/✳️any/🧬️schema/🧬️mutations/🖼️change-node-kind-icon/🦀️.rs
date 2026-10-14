@@ -1,8 +1,7 @@
 //! 🖼️ Block2d mutation — `ChangeNodeKindIcon`: the node kind's optional `icon`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 🖼️ `change-node-kind-icon` payload.
@@ -18,19 +17,19 @@ pub struct ChangeNodeKindIcon {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_kind_icon(new_icon: Option<String>) -> Block2dMutation {
-    Block2dMutation::ChangeNodeKindIcon(ChangeNodeKindIcon { new_icon })
+pub fn change_node_kind_icon<Op: From<crate::change_node_kind_icon::ChangeNodeKindIcon>>(new_icon: Option<String>) -> Op {
+    Op::from(ChangeNodeKindIcon { new_icon })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeNodeKindIcon {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for ChangeNodeKindIcon where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::change_node_kind_icon::ChangeNodeKindIcon> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-kind", kind: "change-node-kind-icon", record: "ChangedNodeKindIcon" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::change_node_kind_icon::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_node_kind_icon::inverse::inverse(self, base)?
     
     })
 }
@@ -39,3 +38,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for ChangeNodeKind
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

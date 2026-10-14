@@ -1,8 +1,8 @@
 //! 🏋️ `change-variables` diff — replaces the whole collection: every base row leaves from its base index, every new row enters at its index.
 
-use super::ChangeVariables;
-use crate::diff::{En1990Diff, En1990VariableDelta, En1990VariableInsertion, En1990VariableRemoval};
-use crate::En1990Snapshot;
+use crate::change_variables::ChangeVariables;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990VariableDelta, En1990VariableInsertion, En1990VariableRemoval};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeVariables, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

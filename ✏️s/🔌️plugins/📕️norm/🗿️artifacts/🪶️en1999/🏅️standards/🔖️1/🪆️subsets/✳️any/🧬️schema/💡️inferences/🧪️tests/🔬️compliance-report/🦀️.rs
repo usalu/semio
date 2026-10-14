@@ -1,7 +1,7 @@
 //! 🔬️ evaluate() report shape for hierarchical EN 1999 subject.
 
-use crate::snapshot::En1999Snapshot;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use crate::evaluate;
 
 #[test]
 fn evaluate_emits_member_and_connection_checks() {

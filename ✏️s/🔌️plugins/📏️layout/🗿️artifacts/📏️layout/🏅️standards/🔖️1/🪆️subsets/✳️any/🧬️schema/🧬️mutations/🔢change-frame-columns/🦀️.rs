@@ -1,8 +1,11 @@
 //! 🔢 `change-frame-columns` — sets a `Frame::Text`'s `columns` count. A no-op on non-text frames.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +22,12 @@ pub struct ChangeFrameColumns {
     pub new_columns: u32,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameColumns {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameColumns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_columns::ChangeFrameColumns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-columns", kind: "change-frame-columns", record: "ChangedFrameColumns" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_columns(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_frame_columns(self, base)?
     
@@ -66,7 +69,7 @@ pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnap
 //#endregion 🔢ChangeFrameColumns
 
 //#region 🔢ChangeFrameColumns
-pub fn inverse_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_frame_columns<Op: From<crate::change_frame_columns::ChangeFrameColumns>>(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -77,8 +80,14 @@ pub fn inverse_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutS
     let Frame::Text { columns, .. } = frame else {
         return Vec::new();
     };
-    vec![LayoutMutation::ChangeFrameColumns(ChangeFrameColumns { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_columns: *columns })]
+    vec![Op::from(ChangeFrameColumns { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_columns: *columns })]
 
     })())
 }
 //#endregion 🔢ChangeFrameColumns
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔤️splits/🦀️.rs"]
+mod tests_splits_the_text_frame_into_two_columns;
+//#endregion 🪢️TaxonomyMounts

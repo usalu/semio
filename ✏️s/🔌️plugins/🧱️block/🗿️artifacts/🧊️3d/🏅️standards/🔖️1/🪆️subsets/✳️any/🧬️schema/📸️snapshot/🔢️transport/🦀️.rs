@@ -12,7 +12,7 @@ fn scalar(value:&mut DslValue,decode:bool)->Result<(),ValueError>{
 }
 fn fields(value:&mut DslValue,vector:&[&str],number:&str,decode:bool)->Result<(),ValueError>{for name in vector{if let Some(value)=member(value,name){let DslValue::Array(values)=value else{return Err(invalid())};for value in values{scalar(value,decode)?}}}if let Some(value)=member(value,number){scalar(value,decode)?}Ok(())}
 /// 🚚️ Convert only the fourteen declared geometry roles before the owner codec runs.
-pub(crate) fn convert(value:&mut DslValue,decode:bool)->Result<(),ValueError>{
+pub fn convert(value:&mut DslValue,decode:bool)->Result<(),ValueError>{
  if let Some(vortices)=member(value,"vortices"){let DslValue::Array(vortices)=vortices else{return Err(invalid())};for vortex in vortices{fields(vortex,&["position","direction"],"radius",decode)?}}
  if let Some(camera)=member(value,"camera3d"){fields(camera,&["position","target"],"zoom",decode)?}
  Ok(())

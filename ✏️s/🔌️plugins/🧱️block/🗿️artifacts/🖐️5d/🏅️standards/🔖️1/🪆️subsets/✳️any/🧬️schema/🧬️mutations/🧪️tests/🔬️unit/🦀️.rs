@@ -1,8 +1,8 @@
 
-use super::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::empty_block5d_snapshot;
-use crate::{Block5dGripKind, Block5dGripTemplate};
-use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
+use semio_s_artifact_block_5d_mutations::*;
+use semio_s_artifact_block_5d_io::text::snapshot::empty_block5d_snapshot;
+use semio_s_artifact_block_5d_model::{Block5dGripKind, Block5dGripTemplate};
+use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};

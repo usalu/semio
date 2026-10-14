@@ -13,7 +13,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::DocxAnalyzer;
-    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -57,8 +57,6 @@ pub use derived_composition::*;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxRawAnyComposer;
-    use crate::standards::v_ecma_376::subsets::strict::io::DocxStrictComposer;
-    use crate::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -66,23 +64,23 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<DocxRawAnyComposer>(), composer_entry_of::<DocxStrictComposer>(), composer_entry_of::<DocxTransitionalComposer>()]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<DocxRawAnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -139,7 +137,7 @@ pub mod derived_construction {
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
             document.body.push(DocxBlock::Paragraph(paragraph));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
+            self.snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
 
@@ -157,7 +155,7 @@ pub mod derived_construction {
         pub fn add_table(mut self, table: DocxTable) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
             document.body.push(DocxBlock::Table(table));
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
+            self.snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
 
@@ -169,7 +167,7 @@ pub mod derived_construction {
             } else {
                 document.styles.push(style);
             }
-            self.snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
+            self.snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
             self
         }
     }
@@ -178,7 +176,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts

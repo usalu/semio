@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "namespace": "crate",
+      "traitPath": [
+        "crate",
+        "FactoryPayloadRetirement"
+      ],
+      "retirementTraitPath": [
+        "crate",
+        "retirement",
+        "RetireOwned"
+      ],
+      "cloneTraitPath": [
+        "crate",
+        "retained_clone",
+        "RetainedClone"
+      ]
+    },
+    {
+      "namespace": "::semio_framework_value_retirement",
+      "traitPath": [
+        "semio_framework_value_retirement",
+        "FactoryPayloadRetirement"
+      ],
+      "retirementTraitPath": [
+        "semio_framework_value_retirement",
+        "retirement",
+        "RetireOwned"
+      ],
+      "cloneTraitPath": [
+        "semio_framework_value_retirement",
+        "retained_clone",
+        "RetainedClone"
+      ]
+    },
+    {
+      "namespace": "::semio_framework_value",
+      "traitPath": [
+        "semio_framework_value",
+        "FactoryPayloadRetirement"
+      ],
+      "retirementTraitPath": [
+        "semio_framework_value",
+        "retirement",
+        "RetireOwned"
+      ],
+      "cloneTraitPath": [
+        "semio_framework_value",
+        "retained_clone",
+        "RetainedClone"
+      ]
+    }
+  ]
+}

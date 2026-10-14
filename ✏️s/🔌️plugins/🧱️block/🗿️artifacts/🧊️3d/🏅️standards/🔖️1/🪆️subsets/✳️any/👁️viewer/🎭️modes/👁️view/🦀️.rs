@@ -2,7 +2,7 @@
 //! the editor's single `edit` mode. Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1
 //! only requires "at least the mesh world-3d window" for a viewer packet.
 
-use crate::viewer::block3d::modes::view::windows::world;
+use crate::modes::view::windows::world;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -30,3 +30,11 @@ pub fn layout() -> WindowLayout {
     }
 }
 //#endregion 🔖️Definition
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🌐️world/🦀️.rs"]
+    pub mod world;
+}
+//#endregion 🪢️Mounts

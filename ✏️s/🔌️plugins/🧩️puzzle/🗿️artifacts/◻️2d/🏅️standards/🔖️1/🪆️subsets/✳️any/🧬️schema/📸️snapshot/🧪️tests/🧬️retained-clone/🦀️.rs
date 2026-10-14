@@ -58,7 +58,7 @@ fn history_edit_puzzle2d_retained_snapshot_clone_preserves_native_ownership_and_
         if journey == "largeUtf8" { snapshot.nodes[0].text = Some("😀".repeat(controls["largeTextScalars"].as_u64().unwrap() as usize).into()); }
         let length = controls["largeCollectionItems"].as_u64().unwrap() as usize;
         if journey == "largeNodes" { snapshot.nodes = (0..length).map(|index| { let mut node = snapshot.nodes[0].clone(); node.id = format!("node-{index}").into(); node }).collect(); }
-        if journey == "nestedHandles" { snapshot.nodes[0].handles = (0..length).map(|index| crate::Puzzle2dHandle { id: format!("handle-{index}").into(), ..Default::default() }).collect(); }
+        if journey == "nestedHandles" { snapshot.nodes[0].handles = (0..length).map(|index| crate::standards::v1::subsets::any::schema::Puzzle2dHandle { id: format!("handle-{index}").into(), ..Default::default() }).collect(); }
         if journey == "nestedCatalogs" { snapshot.meta.kind_catalogs.as_mut().unwrap().nodes[0].representations[0].tags = (0..length).map(|index| format!("tag-{index}").into()).collect(); }
         let expected = serde_json::to_value(&snapshot).unwrap();
         let owner = Arc::new(snapshot);

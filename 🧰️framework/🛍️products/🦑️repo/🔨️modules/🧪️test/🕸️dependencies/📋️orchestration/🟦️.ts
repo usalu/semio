@@ -117,6 +117,6 @@ export class DependencyScript extends Script {
     for (const entry of leaked) console.error(`[dependency] oracle package ${entry.name} is production-reachable and is NOT recorded as debt — oracles must be test-only`);
     for (const name of verdict.newProduction) console.error(`[dependency] NEW production-reachable dependency ${name} is declared in the tree and absent from the committed baseline — the ratchet is shrink-only`);
     for (const name of verdict.unregisteredTestDeps) console.error(`[dependency] ${name} is declared as a test dependency but no oracle or probe registers it`);
-    if (!verdict.ok || leaked.length > 0) process.exit(1);
+    if (!verdict.ok || leaked.length > 0) {process.exitCode=1;return;}
   }
 }

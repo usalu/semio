@@ -24,12 +24,12 @@ use crate::artifact_declaration::FlowExtensionRegistry;
 use crate::artifact_declaration::HostMediaHandlerDeclaration;
 use crate::artifact_declaration::HostMediaHandlerRegistry;
 use crate::artifact_identity::ArtifactDefinitionRegistry;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::artifact_inference::ArtifactInferenceService;
 use crate::artifact_inference::ArtifactInferenceServiceKey;
 use crate::artifact_inference::ArtifactInferenceServiceMetadata;
 use crate::artifact_inference::ArtifactInferenceServiceRegistry;
-use crate::store_lifecycle::OwnerMutationRoster;
+use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
 #[cfg(test)]
 use crate::artifact_identity::ArtifactDefinition;
 #[cfg(test)]

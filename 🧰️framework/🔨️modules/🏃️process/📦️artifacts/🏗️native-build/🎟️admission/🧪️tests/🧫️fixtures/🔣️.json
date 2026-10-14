@@ -1,880 +1,932 @@
 {
- "version": 1,
- "requests": {
-  "valid": [
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "cdylib",
-     "rlib"
+  "version": 1,
+  "requests": {
+    "valid": [
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "cdylib",
+          "rlib"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null,
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ]
+      },
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "host",
+        "crateTypes": [
+          "proc-macro"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": false,
+        "buildScriptOutDir": "/b/build/x/out",
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ]
+      }
     ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null,
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
+    "invalid": [
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "cdylib",
+          "rlib"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null
+      },
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio-hub",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "cdylib",
+          "rlib"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null,
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ]
+      },
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "weird"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null,
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ]
+      },
+      {
+        "v": 1,
+        "op": "done",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "cdylib",
+          "rlib"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null,
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ]
+      },
+      {
+        "v": 1,
+        "op": "admit",
+        "pass": "wasm-release-00",
+        "pid": 4242,
+        "crate": "semio_hub_raster",
+        "package": "semio-hub-raster",
+        "version": "0.1.0",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "cdylib",
+          "rlib"
+        ],
+        "outDir": "/b/wasm32-wasip2/wasm-release/deps",
+        "extraFilename": "-0a1b2c",
+        "source": "/r/🌎️hub/🦀️.rs",
+        "manifestDir": "/r/🌎️hub",
+        "primary": true,
+        "buildScriptOutDir": null,
+        "externs": [
+          "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
+          "/b/release/deps/libserde_derive-1.dylib"
+        ],
+        "extra": 1
+      }
     ]
-   },
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "host",
-    "crateTypes": [
-     "proc-macro"
+  },
+  "done": {
+    "valid": [
+      {
+        "v": 1,
+        "op": "done",
+        "exit": 0,
+        "peakRssBytes": 9750000000,
+        "userMs": 187000,
+        "sysMs": 9000,
+        "startMs": 1000,
+        "endMs": 218000,
+        "rmetaMs": null
+      }
     ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": false,
-    "buildScriptOutDir": "/b/build/x/out",
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
+    "invalid": [
+      {
+        "v": 1,
+        "op": "done",
+        "exit": 0,
+        "peakRssBytes": -1,
+        "userMs": 0,
+        "sysMs": 0,
+        "startMs": 0,
+        "endMs": 0,
+        "rmetaMs": null
+      }
     ]
-   }
+  },
+  "observations": {
+    "valid": [
+      {
+        "v": 1,
+        "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib",
+        "peakRssBytes": 9750000000,
+        "outputBytes": 1048576,
+        "wallMs": 217000,
+        "cpuMs": 196000,
+        "remainingMs": 217000,
+        "atMs": 1791854511000
+      }
+    ],
+    "invalid": [
+      {
+        "v": 1,
+        "key": "k",
+        "peakRssBytes": 1,
+        "outputBytes": 1048576,
+        "wallMs": 1,
+        "cpuMs": 1,
+        "remainingMs": 1,
+        "atMs": 1
+      },
+      {
+        "v": 1,
+        "key": "semio@x|host|dev|lib",
+        "peakRssBytes": 1.5,
+        "outputBytes": 1048576,
+        "wallMs": 1,
+        "cpuMs": 1,
+        "remainingMs": 1,
+        "atMs": 1
+      },
+      {
+        "v": 1,
+        "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib",
+        "peakRssBytes": 9750000000,
+        "wallMs": 217000,
+        "cpuMs": 196000,
+        "remainingMs": 217000,
+        "atMs": 1791854511000
+      },
+      {
+        "v": 1,
+        "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib",
+        "peakRssBytes": 9750000000,
+        "outputBytes": -1,
+        "wallMs": 217000,
+        "cpuMs": 196000,
+        "remainingMs": 217000,
+        "atMs": 1791854511000
+      }
+    ]
+  },
+  "keys": [
+    {
+      "request": {
+        "package": "semio-hub-raster",
+        "crate": "semio_hub_raster",
+        "target": "wasm32-wasip2",
+        "crateTypes": [
+          "rlib",
+          "cdylib"
+        ]
+      },
+      "profile": "wasm-release",
+      "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib"
+    },
+    {
+      "request": {
+        "package": "serde",
+        "crate": "build_script_build",
+        "target": "host",
+        "crateTypes": [
+          "bin"
+        ]
+      },
+      "profile": "wasm-prototype",
+      "key": "serde@build_script_build|host|wasm-prototype|bin"
+    }
   ],
-  "invalid": [
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "cdylib",
-     "rlib"
-    ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null
-   },
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio-hub",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "cdylib",
-     "rlib"
-    ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null,
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
-    ]
-   },
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "weird"
-    ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null,
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
-    ]
-   },
-   {
-    "v": 1,
-    "op": "done",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "cdylib",
-     "rlib"
-    ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null,
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
-    ]
-   },
-   {
-    "v": 1,
-    "op": "admit",
-    "pass": "wasm-release-00",
-    "pid": 4242,
-    "crate": "semio_hub_raster",
-    "package": "semio-hub-raster",
-    "version": "0.1.0",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "cdylib",
-     "rlib"
-    ],
-    "outDir": "/b/wasm32-wasip2/wasm-release/deps",
-    "extraFilename": "-0a1b2c",
-    "source": "/r/🌎️hub/🦀️.rs",
-    "manifestDir": "/r/🌎️hub",
-    "primary": true,
-    "buildScriptOutDir": null,
-    "externs": [
-     "/b/wasm32-wasip2/wasm-release/deps/libsemio_framework_value-9f.rmeta",
-     "/b/release/deps/libserde_derive-1.dylib"
-    ],
-    "extra": 1
-   }
-  ]
- },
- "done": {
-  "valid": [
-   {
-    "v": 1,
-    "op": "done",
-    "exit": 0,
-    "peakRssBytes": 9750000000,
-    "userMs": 187000,
-    "sysMs": 9000,
-    "startMs": 1000,
-    "endMs": 218000,
-    "rmetaMs": null
-   }
+  "artifacts": [
+    {
+      "outDir": "/b/deps",
+      "crate": "alpha",
+      "extraFilename": "-9f",
+      "artifact": "/b/deps/alpha-9f"
+    }
   ],
-  "invalid": [
-   {
-    "v": 1,
-    "op": "done",
-    "exit": 0,
-    "peakRssBytes": -1,
-    "userMs": 0,
-    "sysMs": 0,
-    "startMs": 0,
-    "endMs": 0,
-    "rmetaMs": null
-   }
-  ]
- },
- "observations": {
-  "valid": [
-   {
-    "v": 1,
-    "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib",
-    "peakRssBytes": 9750000000,
-    "wallMs": 217000,
-    "cpuMs": 196000,
-    "remainingMs": 217000,
-    "atMs": 1791854511000
-   }
+  "externs": [
+    {
+      "path": "/b/deps/libalpha-9f.rmeta",
+      "candidates": [
+        "/b/deps/alpha-9f",
+        "/b/deps/libalpha-9f"
+      ],
+      "edge": "rmeta"
+    },
+    {
+      "path": "/b/deps/liblibc-1.rlib",
+      "candidates": [
+        "/b/deps/libc-1",
+        "/b/deps/liblibc-1"
+      ],
+      "edge": "full"
+    },
+    {
+      "path": "/b/release/deps/serde_derive-2.dll",
+      "candidates": [
+        "/b/release/deps/serde_derive-2"
+      ],
+      "edge": "full"
+    }
   ],
-  "invalid": [
-   {
-    "v": 1,
-    "key": "k",
-    "peakRssBytes": 1,
-    "wallMs": 1,
-    "cpuMs": 1,
-    "remainingMs": 1,
-    "atMs": 1
-   },
-   {
-    "v": 1,
-    "key": "semio@x|host|dev|lib",
-    "peakRssBytes": 1.5,
-    "wallMs": 1,
-    "cpuMs": 1,
-    "remainingMs": 1,
-    "atMs": 1
-   }
-  ]
- },
- "keys": [
-  {
-   "request": {
-    "package": "semio-hub-raster",
-    "crate": "semio_hub_raster",
-    "target": "wasm32-wasip2",
-    "crateTypes": [
-     "rlib",
-     "cdylib"
-    ]
-   },
-   "profile": "wasm-release",
-   "key": "semio-hub-raster@semio_hub_raster|wasm32-wasip2|wasm-release|cdylib,rlib"
-  },
-  {
-   "request": {
-    "package": "serde",
-    "crate": "build_script_build",
-    "target": "host",
-    "crateTypes": [
-     "bin"
-    ]
-   },
-   "profile": "wasm-prototype",
-   "key": "serde@build_script_build|host|wasm-prototype|bin"
-  }
- ],
- "artifacts": [
-  {
-   "outDir": "/b/deps",
-   "crate": "alpha",
-   "extraFilename": "-9f",
-   "artifact": "/b/deps/alpha-9f"
-  }
- ],
- "externs": [
-  {
-   "path": "/b/deps/libalpha-9f.rmeta",
-   "candidates": [
-    "/b/deps/alpha-9f",
-    "/b/deps/libalpha-9f"
-   ],
-   "edge": "rmeta"
-  },
-  {
-   "path": "/b/deps/liblibc-1.rlib",
-   "candidates": [
-    "/b/deps/libc-1",
-    "/b/deps/liblibc-1"
-   ],
-   "edge": "full"
-  },
-  {
-   "path": "/b/release/deps/serde_derive-2.dll",
-   "candidates": [
-    "/b/release/deps/serde_derive-2"
-   ],
-   "edge": "full"
-  }
- ],
- "quantiles": [
-  {
-   "values": [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8
-   ],
-   "q": 0.95,
-   "value": 7.6499999999999995
-  },
-  {
-   "values": [
-    42
-   ],
-   "q": 0.95,
-   "value": 42
-  },
-  {
-   "values": [
-    5,
-    1,
-    3
-   ],
-   "q": 0.5,
-   "value": 3
-  },
-  {
-   "values": [
-    4000000000,
-    5000000000,
-    6000000000
-   ],
-   "q": 0.95,
-   "value": 5900000000.0
-  }
- ],
- "predictions": [
-  {
-   "peaks": [],
-   "kloc": 0,
-   "componentFinal": false,
-   "bytes": 644245094
-  },
-  {
-   "peaks": [],
-   "kloc": 125.5,
-   "componentFinal": false,
-   "bytes": 5908096614
-  },
-  {
-   "peaks": [],
-   "kloc": 3,
-   "componentFinal": true,
-   "bytes": 6442450944
-  },
-  {
-   "peaks": [
-    100000000
-   ],
-   "kloc": 0,
-   "componentFinal": false,
-   "bytes": 268435456
-  },
-  {
-   "peaks": [
-    4000000000,
-    5000000000,
-    6000000000
-   ],
-   "kloc": 0,
-   "componentFinal": false,
-   "bytes": 6785000000
-  },
-  {
-   "peaks": [
-    1000000000,
-    2000000000,
-    3000000000,
-    4000000000,
-    5000000000,
-    6000000000,
-    7000000000,
-    8000000000,
-    9000000000,
-    10000000000
-   ],
-   "kloc": 0,
-   "componentFinal": false,
-   "bytes": 11097500000
-  },
-  {
-   "peaks": [
-    13300000000,
-    11800000000,
-    12900000000,
-    14100000000
-   ],
-   "kloc": 0,
-   "componentFinal": false,
-   "bytes": 16077000000
-  }
- ],
- "walls": [
-  {
-   "walls": [],
-   "expected": null
-  },
-  {
-   "walls": [
-    10,
-    30,
-    20
-   ],
-   "expected": 20
-  },
-  {
-   "walls": [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10
-   ],
-   "expected": 7
-  }
- ],
- "order": [
-  {
-   "waiters": [
+  "quantiles": [
     {
-     "id": "a",
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 100,
-     "arrival": 0
+      "values": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "q": 0.95,
+      "value": 7.6499999999999995
     },
     {
-     "id": "b",
-     "predictedBytes": 2147483648,
-     "expectedWallMs": null,
-     "remainingMs": 100,
-     "arrival": 1
+      "values": [
+        42
+      ],
+      "q": 0.95,
+      "value": 42
     },
     {
-     "id": "c",
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 500,
-     "arrival": 2
+      "values": [
+        5,
+        1,
+        3
+      ],
+      "q": 0.5,
+      "value": 3
     },
     {
-     "id": "d",
-     "predictedBytes": 2147483648,
-     "expectedWallMs": null,
-     "remainingMs": 100,
-     "arrival": 3
+      "values": [
+        4000000000,
+        5000000000,
+        6000000000
+      ],
+      "q": 0.95,
+      "value": 5900000000.0
     }
-   ],
-   "expected": [
-    "c",
-    "b",
-    "d",
-    "a"
-   ]
-  }
- ],
- "decisions": [
-  {
-   "name": "every waiter that fits starts",
-   "state": {
-    "budgetBytes": 10737418240,
-    "frozen": false,
-    "nowMs": 0,
-    "running": []
-   },
-   "waiters": [
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    }
-   ],
-   "admitted": [
-    0,
-    1,
-    2
-   ]
-  },
-  {
-   "name": "with nothing running the first waiter starts whatever its prediction",
-   "state": {
-    "budgetBytes": 2147483648,
-    "frozen": false,
-    "nowMs": 0,
-    "running": []
-   },
-   "waiters": [
-    {
-     "predictedBytes": 5368709120,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 1
-    }
-   ],
-   "admitted": [
-    0
-   ]
-  },
-  {
-   "name": "a frozen broker starts nothing while a unit runs",
-   "state": {
-    "budgetBytes": 21474836480,
-    "frozen": true,
-    "nowMs": 0,
-    "running": [
-     {
-      "predictedBytes": 1073741824,
-      "expectedEndMs": null
-     }
-    ]
-   },
-   "waiters": [
-    {
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    }
-   ],
-   "admitted": []
-  },
-  {
-   "name": "a frozen broker still guarantees progress",
-   "state": {
-    "budgetBytes": 21474836480,
-    "frozen": true,
-    "nowMs": 0,
-    "running": []
-   },
-   "waiters": [
-    {
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 1073741824,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 1
-    }
-   ],
-   "admitted": [
-    0
-   ]
-  },
-  {
-   "name": "a short unit backfills before the reservation's shadow time",
-   "state": {
-    "budgetBytes": 10737418240,
-    "frozen": false,
-    "nowMs": 1000,
-    "running": [
-     {
-      "predictedBytes": 6442450944,
-      "expectedEndMs": 61000
-     }
-    ]
-   },
-   "waiters": [
-    {
-     "predictedBytes": 8589934592,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": 30000,
-     "remainingMs": 0,
-     "arrival": 1
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": 120000,
-     "remainingMs": 0,
-     "arrival": 2
-    },
-    {
-     "predictedBytes": 2147483648,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 3
-    }
-   ],
-   "admitted": [
-    1
-   ]
-  },
-  {
-   "name": "a long unit backfills only into the memory left beside the reservation",
-   "state": {
-    "budgetBytes": 12884901888,
-    "frozen": false,
-    "nowMs": 1000,
-    "running": [
-     {
-      "predictedBytes": 6442450944,
-      "expectedEndMs": 61000
-     }
-    ]
-   },
-   "waiters": [
-    {
-     "predictedBytes": 8589934592,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": 30000,
-     "remainingMs": 0,
-     "arrival": 1
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": 120000,
-     "remainingMs": 0,
-     "arrival": 2
-    },
-    {
-     "predictedBytes": 2147483648,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 3
-    }
-   ],
-   "admitted": [
-    1,
-    2
-   ]
-  },
-  {
-   "name": "units without recorded walls never delay the reservation",
-   "state": {
-    "budgetBytes": 12884901888,
-    "frozen": false,
-    "nowMs": 0,
-    "running": [
-     {
-      "predictedBytes": 6442450944,
-      "expectedEndMs": null
-     }
-    ]
-   },
-   "waiters": [
-    {
-     "predictedBytes": 8589934592,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 0
-    },
-    {
-     "predictedBytes": 5368709120,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 1
-    },
-    {
-     "predictedBytes": 3221225472,
-     "expectedWallMs": null,
-     "remainingMs": 0,
-     "arrival": 2
-    }
-   ],
-   "admitted": [
-    2
-   ]
-  }
- ],
- "freeze": [
-  {
-   "wasFrozen": false,
-   "actualBytes": 22548578304,
-   "budgetBytes": 21474836480,
-   "swapOutBytesPerSecond": null,
-   "frozen": true
-  },
-  {
-   "wasFrozen": false,
-   "actualBytes": 10737418240,
-   "budgetBytes": 21474836480,
-   "swapOutBytesPerSecond": 104857600,
-   "frozen": true
-  },
-  {
-   "wasFrozen": true,
-   "actualBytes": 20401094656,
-   "budgetBytes": 21474836480,
-   "swapOutBytesPerSecond": 0,
-   "frozen": true
-  },
-  {
-   "wasFrozen": true,
-   "actualBytes": 18253611008,
-   "budgetBytes": 21474836480,
-   "swapOutBytesPerSecond": 0,
-   "frozen": false
-  },
-  {
-   "wasFrozen": false,
-   "actualBytes": 20401094656,
-   "budgetBytes": 21474836480,
-   "swapOutBytesPerSecond": 1048576,
-   "frozen": false
-  }
- ],
- "store": {
-  "rows": [
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 1000,
-    "wallMs": 1,
-    "cpuMs": 1,
-    "remainingMs": 0,
-    "atMs": 1
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 2000,
-    "wallMs": 2,
-    "cpuMs": 2,
-    "remainingMs": 0,
-    "atMs": 2
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 3000,
-    "wallMs": 3,
-    "cpuMs": 3,
-    "remainingMs": 0,
-    "atMs": 3
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 4000,
-    "wallMs": 4,
-    "cpuMs": 4,
-    "remainingMs": 0,
-    "atMs": 4
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 5000,
-    "wallMs": 5,
-    "cpuMs": 5,
-    "remainingMs": 0,
-    "atMs": 5
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 6000,
-    "wallMs": 6,
-    "cpuMs": 6,
-    "remainingMs": 0,
-    "atMs": 6
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 7000,
-    "wallMs": 7,
-    "cpuMs": 7,
-    "remainingMs": 0,
-    "atMs": 7
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 8000,
-    "wallMs": 8,
-    "cpuMs": 8,
-    "remainingMs": 0,
-    "atMs": 8
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 9000,
-    "wallMs": 9,
-    "cpuMs": 9,
-    "remainingMs": 0,
-    "atMs": 9
-   },
-   {
-    "v": 1,
-    "key": "p@k|host|dev|lib",
-    "peakRssBytes": 10000,
-    "wallMs": 10,
-    "cpuMs": 10,
-    "remainingMs": 0,
-    "atMs": 10
-   },
-   {
-    "v": 1,
-    "key": "p@j|host|dev|lib",
-    "peakRssBytes": 5,
-    "wallMs": 5,
-    "cpuMs": 5,
-    "remainingMs": 0,
-    "atMs": 4
-   },
-   {
-    "v": 1,
-    "key": "p@j|host|dev|lib",
-    "peakRssBytes": 5,
-    "wallMs": 5,
-    "cpuMs": 5,
-    "remainingMs": 0,
-    "atMs": 2
-   }
   ],
-  "kept": {
-   "p@k|host|dev|lib": [
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10
-   ],
-   "p@j|host|dev|lib": [
-    2,
-    4
-   ]
+  "predictions": [
+    {
+      "peaks": [],
+      "kloc": 0,
+      "componentFinal": false,
+      "bytes": 644245094
+    },
+    {
+      "peaks": [],
+      "kloc": 125.5,
+      "componentFinal": false,
+      "bytes": 5908096614
+    },
+    {
+      "peaks": [],
+      "kloc": 3,
+      "componentFinal": true,
+      "bytes": 6442450944
+    },
+    {
+      "peaks": [
+        100000000
+      ],
+      "kloc": 0,
+      "componentFinal": false,
+      "bytes": 268435456
+    },
+    {
+      "peaks": [
+        4000000000,
+        5000000000,
+        6000000000
+      ],
+      "kloc": 0,
+      "componentFinal": false,
+      "bytes": 6785000000
+    },
+    {
+      "peaks": [
+        1000000000,
+        2000000000,
+        3000000000,
+        4000000000,
+        5000000000,
+        6000000000,
+        7000000000,
+        8000000000,
+        9000000000,
+        10000000000
+      ],
+      "kloc": 0,
+      "componentFinal": false,
+      "bytes": 11097500000
+    },
+    {
+      "peaks": [
+        13300000000,
+        11800000000,
+        12900000000,
+        14100000000
+      ],
+      "kloc": 0,
+      "componentFinal": false,
+      "bytes": 16077000000
+    }
+  ],
+  "walls": [
+    {
+      "walls": [],
+      "expected": null
+    },
+    {
+      "walls": [
+        10,
+        30,
+        20
+      ],
+      "expected": 20
+    },
+    {
+      "walls": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "expected": 7
+    }
+  ],
+  "order": [
+    {
+      "waiters": [
+        {
+          "id": "a",
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 100,
+          "arrival": 0
+        },
+        {
+          "id": "b",
+          "predictedBytes": 2147483648,
+          "expectedWallMs": null,
+          "remainingMs": 100,
+          "arrival": 1
+        },
+        {
+          "id": "c",
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 500,
+          "arrival": 2
+        },
+        {
+          "id": "d",
+          "predictedBytes": 2147483648,
+          "expectedWallMs": null,
+          "remainingMs": 100,
+          "arrival": 3
+        }
+      ],
+      "expected": [
+        "c",
+        "b",
+        "d",
+        "a"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "name": "every waiter that fits starts",
+      "state": {
+        "budgetBytes": 10737418240,
+        "frozen": false,
+        "nowMs": 0,
+        "running": []
+      },
+      "waiters": [
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        }
+      ],
+      "admitted": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "with nothing running the first waiter starts whatever its prediction",
+      "state": {
+        "budgetBytes": 2147483648,
+        "frozen": false,
+        "nowMs": 0,
+        "running": []
+      },
+      "waiters": [
+        {
+          "predictedBytes": 5368709120,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 1
+        }
+      ],
+      "admitted": [
+        0
+      ]
+    },
+    {
+      "name": "a frozen broker starts nothing while a unit runs",
+      "state": {
+        "budgetBytes": 21474836480,
+        "frozen": true,
+        "nowMs": 0,
+        "running": [
+          {
+            "predictedBytes": 1073741824,
+            "expectedEndMs": null
+          }
+        ]
+      },
+      "waiters": [
+        {
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        }
+      ],
+      "admitted": []
+    },
+    {
+      "name": "a frozen broker still guarantees progress",
+      "state": {
+        "budgetBytes": 21474836480,
+        "frozen": true,
+        "nowMs": 0,
+        "running": []
+      },
+      "waiters": [
+        {
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 1073741824,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 1
+        }
+      ],
+      "admitted": [
+        0
+      ]
+    },
+    {
+      "name": "a short unit backfills before the reservation's shadow time",
+      "state": {
+        "budgetBytes": 10737418240,
+        "frozen": false,
+        "nowMs": 1000,
+        "running": [
+          {
+            "predictedBytes": 6442450944,
+            "expectedEndMs": 61000
+          }
+        ]
+      },
+      "waiters": [
+        {
+          "predictedBytes": 8589934592,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": 30000,
+          "remainingMs": 0,
+          "arrival": 1
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": 120000,
+          "remainingMs": 0,
+          "arrival": 2
+        },
+        {
+          "predictedBytes": 2147483648,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 3
+        }
+      ],
+      "admitted": [
+        1
+      ]
+    },
+    {
+      "name": "a long unit backfills only into the memory left beside the reservation",
+      "state": {
+        "budgetBytes": 12884901888,
+        "frozen": false,
+        "nowMs": 1000,
+        "running": [
+          {
+            "predictedBytes": 6442450944,
+            "expectedEndMs": 61000
+          }
+        ]
+      },
+      "waiters": [
+        {
+          "predictedBytes": 8589934592,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": 30000,
+          "remainingMs": 0,
+          "arrival": 1
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": 120000,
+          "remainingMs": 0,
+          "arrival": 2
+        },
+        {
+          "predictedBytes": 2147483648,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 3
+        }
+      ],
+      "admitted": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "units without recorded walls never delay the reservation",
+      "state": {
+        "budgetBytes": 12884901888,
+        "frozen": false,
+        "nowMs": 0,
+        "running": [
+          {
+            "predictedBytes": 6442450944,
+            "expectedEndMs": null
+          }
+        ]
+      },
+      "waiters": [
+        {
+          "predictedBytes": 8589934592,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 0
+        },
+        {
+          "predictedBytes": 5368709120,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 1
+        },
+        {
+          "predictedBytes": 3221225472,
+          "expectedWallMs": null,
+          "remainingMs": 0,
+          "arrival": 2
+        }
+      ],
+      "admitted": [
+        2
+      ]
+    }
+  ],
+  "freeze": [
+    {
+      "wasFrozen": false,
+      "actualBytes": 22548578304,
+      "budgetBytes": 21474836480,
+      "swapOutBytesPerSecond": null,
+      "frozen": true
+    },
+    {
+      "wasFrozen": false,
+      "actualBytes": 10737418240,
+      "budgetBytes": 21474836480,
+      "swapOutBytesPerSecond": 104857600,
+      "frozen": true
+    },
+    {
+      "wasFrozen": true,
+      "actualBytes": 20401094656,
+      "budgetBytes": 21474836480,
+      "swapOutBytesPerSecond": 0,
+      "frozen": true
+    },
+    {
+      "wasFrozen": true,
+      "actualBytes": 18253611008,
+      "budgetBytes": 21474836480,
+      "swapOutBytesPerSecond": 0,
+      "frozen": false
+    },
+    {
+      "wasFrozen": false,
+      "actualBytes": 20401094656,
+      "budgetBytes": 21474836480,
+      "swapOutBytesPerSecond": 1048576,
+      "frozen": false
+    }
+  ],
+  "store": {
+    "rows": [
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 1000,
+        "outputBytes": 4096,
+        "wallMs": 1,
+        "cpuMs": 1,
+        "remainingMs": 0,
+        "atMs": 1
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 2000,
+        "outputBytes": 8192,
+        "wallMs": 2,
+        "cpuMs": 2,
+        "remainingMs": 0,
+        "atMs": 2
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 3000,
+        "outputBytes": 12288,
+        "wallMs": 3,
+        "cpuMs": 3,
+        "remainingMs": 0,
+        "atMs": 3
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 4000,
+        "outputBytes": 16384,
+        "wallMs": 4,
+        "cpuMs": 4,
+        "remainingMs": 0,
+        "atMs": 4
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 5000,
+        "outputBytes": 20480,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 0,
+        "atMs": 5
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 6000,
+        "outputBytes": 24576,
+        "wallMs": 6,
+        "cpuMs": 6,
+        "remainingMs": 0,
+        "atMs": 6
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 7000,
+        "outputBytes": 28672,
+        "wallMs": 7,
+        "cpuMs": 7,
+        "remainingMs": 0,
+        "atMs": 7
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 8000,
+        "outputBytes": 32768,
+        "wallMs": 8,
+        "cpuMs": 8,
+        "remainingMs": 0,
+        "atMs": 8
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 9000,
+        "outputBytes": 36864,
+        "wallMs": 9,
+        "cpuMs": 9,
+        "remainingMs": 0,
+        "atMs": 9
+      },
+      {
+        "v": 1,
+        "key": "p@k|host|dev|lib",
+        "peakRssBytes": 10000,
+        "outputBytes": 40960,
+        "wallMs": 10,
+        "cpuMs": 10,
+        "remainingMs": 0,
+        "atMs": 10
+      },
+      {
+        "v": 1,
+        "key": "p@j|host|dev|lib",
+        "peakRssBytes": 5,
+        "outputBytes": 45056,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 0,
+        "atMs": 4
+      },
+      {
+        "v": 1,
+        "key": "p@j|host|dev|lib",
+        "peakRssBytes": 5,
+        "outputBytes": 49152,
+        "wallMs": 5,
+        "cpuMs": 5,
+        "remainingMs": 0,
+        "atMs": 2
+      }
+    ],
+    "kept": {
+      "p@k|host|dev|lib": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "p@j|host|dev|lib": [
+        2,
+        4
+      ]
+    }
+  },
+  "cargo": {
+    "tokens": 2,
+    "tightPhysicalGiB": 6.9,
+    "roomyPhysicalGiB": 22,
+    "crates": [
+      "base",
+      "left",
+      "right",
+      "top"
+    ]
+  },
+  "outputs": {
+    "artifact": "/t/wasm32-wasip2/wasm-release/deps/base-1a",
+    "entries": [
+      "libbase-1a.rlib",
+      "libbase-1a.rmeta",
+      "base-1a.d",
+      "libbase-1ab.rlib",
+      "other-1a.rlib"
+    ],
+    "sizes": {
+      "libbase-1a.rlib": 4096,
+      "libbase-1a.rmeta": 512,
+      "base-1a.d": 64,
+      "libbase-1ab.rlib": 9999,
+      "other-1a.rlib": 7777
+    },
+    "bytes": 4672
   }
- },
- "cargo": {
-  "tokens": 2,
-  "tightPhysicalGiB": 6.9,
-  "roomyPhysicalGiB": 22,
-  "crates": [
-   "base",
-   "left",
-   "right",
-   "top"
-  ]
- }
 }

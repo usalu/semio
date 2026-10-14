@@ -1,7 +1,6 @@
 //! 🦠️ `🔄️replace` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,19 +14,22 @@ pub struct ReplaceSynapse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_synapse(synapse: SynapseSpec) -> Generation2dMutation {
-    Generation2dMutation::ReplaceSynapse(ReplaceSynapse { synapse })
+pub fn replace_synapse<Op: From<ReplaceSynapse>>(synapse: SynapseSpec) -> Op {
+    Op::from(ReplaceSynapse { synapse })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ReplaceSynapse {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for ReplaceSynapse
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<ReplaceSynapse>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "synapse", kind: "replace-synapse", record: "ReplacedSynapse" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::replace_synapse::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::replace_synapse::inverse::inverse(self, base)?
     
     })
 }

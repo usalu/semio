@@ -39,7 +39,6 @@ test("media producer keeps paired input and body through each denied publication
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  for(const row of fixture.producerPreparation.cases){const db=new Database(":memory:");db.exec("CREATE TABLE owners (phase TEXT)");for(const [index,phase]of fixture.producerPreparation.phases.entries()){db.exec("BEGIN");db.query("INSERT INTO owners VALUES (?)").run(phase);const admitted=row.sourceRoot===row.incomingRoot&&index<row.deniedPhase;db.exec(admitted?"COMMIT":"ROLLBACK");if(!admitted)break;}expect(db.query("SELECT phase FROM owners").all()).toEqual(row.expectedPhases.map(phase=>({phase})));db.close();}
  const sdk=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🧩️app/🦀️.rs"),"utf8");expect(sdk.includes("body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>")).toBe(true);
- const root=resolve(import.meta.dir,"../../../../../../../../");const layout=readFileSync(resolve(root,"✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"),"utf8");expect(layout.includes("LayoutMediaExportJob::admit_original(request,body,cx)")).toBe(true);
  console.log("[DEBUG] mutable original producer slots retain denied source and body; SQLite independent publication transaction oracle");
 });
 
@@ -54,4 +53,16 @@ test("media handle receiving retains custody before posting even when the receip
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  for(const row of fixture.handleReceiving){const db=new Database(":memory:");db.exec("CREATE TABLE custody (owner TEXT PRIMARY KEY)");db.exec("INSERT INTO custody VALUES ('source')");if(row.occupied)db.exec("INSERT INTO custody VALUES ('receiver')");db.exec("BEGIN");if(!row.occupied)db.exec("UPDATE custody SET owner='receiver' WHERE owner='source'");db.exec(row.items&&row.copy&&!row.occupied?"COMMIT":"ROLLBACK");const owners=db.query("SELECT owner FROM custody ORDER BY owner").all();expect(owners).toEqual([...(row.expectedReceiver?[{owner:"receiver"}]:[]),...(row.expectedSource?[{owner:"source"}]:[])]);db.close();}
  const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("pub fn receive_original")).toBe(true);const runtime=readFileSync(resolve(import.meta.dir,"../../../⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/🦀️.rs"),"utf8");expect(runtime.includes("media_submission:ManuallyDrop<Option<ArtifactMediaExportHandle>>")).toBe(true);console.log("[DEBUG] SQLite independent handle custody commit precedes receipt and preserves denied donor");
+});
+
+test("terminal download receiving keeps every result root until its paid registry recipient",()=>{
+ expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
+ for(const row of fixture.downloadReceiving.cases){const db=new Database(":memory:");db.exec("CREATE TABLE received (phase TEXT)");for(const [index,phase]of fixture.downloadReceiving.phases.entries()){db.exec("BEGIN");db.query("INSERT INTO received VALUES (?)").run(phase);const accepted=row.sameSource&&!row.occupied&&index<row.deniedPhase;db.exec(accepted?"COMMIT":"ROLLBACK");if(!accepted)break;}expect(db.query("SELECT phase FROM received").all()).toEqual(row.expectedPhases.map(phase=>({phase})));db.close();}
+ const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("receive_media_export_original")).toBe(true);expect(declaration.includes("media_export_metadata: Option<(MediaType,String)>")).toBe(true);console.log("[DEBUG] SQLite terminal download transaction retains schema/media/chunks/handle; no replacement root");
+});
+
+test("original media chunk donation retains its receiving bytes before paid EOF close",()=>{
+ expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
+ for(const row of fixture.chunkReceiving){const db=new Database(":memory:");db.exec("CREATE TABLE custody (owner TEXT)");if(!row.empty)db.exec("INSERT INTO custody VALUES ('queue')");db.exec("BEGIN");db.exec("UPDATE custody SET owner='receiver'");db.exec(row.funded&&!row.busy?"COMMIT":"ROLLBACK");expect(db.query("SELECT owner FROM custody").all()).toEqual(row.expectedOwner==="empty"?[]:[{owner:row.expectedOwner}]);expect(row.terminal).toBe(row.empty&&row.funded&&!row.busy);db.close();}
+ const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("take_chunk_original")).toBe(true);const media=readFileSync(resolve(import.meta.dir,"../../../🎞️media/🦀️.rs"),"utf8");expect(media.includes("MediaDownloadRetirement")).toBe(true);console.log("[DEBUG] SQLite original chunk custody and EOF retain complete controlled output roots");
 });

@@ -1,5 +1,8 @@
 use super::*;
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_document_window() {
@@ -10,7 +13,7 @@ async fn definition_declares_a_document_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_emits_one_page_per_slide() {
-    let document = crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
+    let document = semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
         slides: vec![PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("only")], position: Default::default() }] }],
     });
     assert_eq!(render(&document).expect("render").children.len(), 1);

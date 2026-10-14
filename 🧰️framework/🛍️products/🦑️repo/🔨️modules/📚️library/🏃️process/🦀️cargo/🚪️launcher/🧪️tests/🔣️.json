@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "arguments": [
+    {
+      "name": "shared-check",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "check",
+        "-p",
+        "semio-framework-diagnostic"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "prototype",
+        "parallelism": "available",
+        "kind": "compile",
+        "cargo": [
+          "check",
+          "-p",
+          "semio-framework-diagnostic"
+        ]
+      }
+    },
+    {
+      "name": "split-options-wasm",
+      "argv": [
+        "--store",
+        "isolated",
+        "--configuration",
+        "release",
+        "--",
+        "check",
+        "--manifest-path",
+        "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+        "--target",
+        "wasm32-wasip2"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "isolated",
+        "configuration": "release",
+        "parallelism": "available",
+        "kind": "compile",
+        "cargo": [
+          "check",
+          "--manifest-path",
+          "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml",
+          "--target",
+          "wasm32-wasip2"
+        ]
+      }
+    },
+    {
+      "name": "explicit-parallelism-test-passthrough",
+      "argv": [
+        "--parallelism=4",
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "-p",
+        "x",
+        "--",
+        "--nocapture"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype"
+      },
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "prototype",
+        "parallelism": 4,
+        "kind": "compile",
+        "cargo": [
+          "test",
+          "-p",
+          "x",
+          "--",
+          "--nocapture"
+        ]
+      }
+    },
+    {
+      "name": "metadata-resolves",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "metadata",
+        "--format-version",
+        "1",
+        "--no-deps"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "prototype",
+        "parallelism": "available",
+        "kind": "resolve",
+        "cargo": [
+          "metadata",
+          "--format-version",
+          "1",
+          "--no-deps"
+        ]
+      }
+    },
+    {
+      "name": "tree-resolves",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "tree",
+        "-p",
+        "x"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "prototype",
+        "parallelism": "available",
+        "kind": "resolve",
+        "cargo": [
+          "tree",
+          "-p",
+          "x"
+        ]
+      }
+    },
+    {
+      "name": "lock-resync",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "generate-lockfile",
+        "--offline"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "prototype",
+        "parallelism": "available",
+        "kind": "lock",
+        "cargo": [
+          "generate-lockfile",
+          "--offline"
+        ]
+      }
+    },
+    {
+      "name": "update-package",
+      "argv": [
+        "--store=shared",
+        "--configuration=release",
+        "--",
+        "update",
+        "-p",
+        "serde",
+        "--offline"
+      ],
+      "environment": {},
+      "request": {
+        "version": 1,
+        "store": "shared",
+        "configuration": "release",
+        "parallelism": "available",
+        "kind": "lock",
+        "cargo": [
+          "update",
+          "-p",
+          "serde",
+          "--offline"
+        ]
+      }
+    },
+    {
+      "name": "missing-store",
+      "argv": [
+        "--configuration=prototype",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "missing-configuration",
+      "argv": [
+        "--store=shared",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "missing-delimiter",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "unknown-store",
+      "argv": [
+        "--store=private",
+        "--configuration=prototype",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "unknown-configuration",
+      "argv": [
+        "--store=shared",
+        "--configuration=dev",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "foreign-option",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--target-dir=/outside",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "repeated-option",
+      "argv": [
+        "--store=shared",
+        "--store=isolated",
+        "--configuration=prototype",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "option-without-value",
+      "argv": [
+        "--store",
+        "--configuration=prototype",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "literal-cargo-program",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "cargo",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "undeclared-subcommand",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "install",
+        "ripgrep"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "global-flag-before-subcommand",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "--locked",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "empty-cargo",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "zero-parallelism",
+      "argv": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--parallelism=0",
+        "--",
+        "check"
+      ],
+      "environment": {},
+      "request": null
+    },
+    {
+      "name": "mode-conflict",
+      "argv": [
+        "--store=shared",
+        "--configuration=release",
+        "--",
+        "check"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype"
+      },
+      "request": null
+    }
+  ],
+  "lifecycle": [
+    {
+      "name": "completed",
+      "outcome": "return",
+      "removedAfterOwner": true,
+      "removedBySweep": false
+    },
+    {
+      "name": "failed",
+      "outcome": "throw",
+      "removedAfterOwner": true,
+      "removedBySweep": false
+    },
+    {
+      "name": "cancelled",
+      "outcome": "abort",
+      "removedAfterOwner": true,
+      "removedBySweep": false
+    },
+    {
+      "name": "killed-owner",
+      "outcome": "killed",
+      "removedAfterOwner": false,
+      "removedBySweep": true
+    },
+    {
+      "name": "live-peer",
+      "outcome": "live",
+      "removedAfterOwner": false,
+      "removedBySweep": false
+    }
+  ]
+}

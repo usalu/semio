@@ -1,10 +1,10 @@
 //! 🖌️ Composite-window option — the `paintBrush` utility's size/opacity sliders. Command handlers live
 //! in `🎮️commands/🖌️brush::{set_brush_size,set_brush_opacity}`.
 
-use crate::editor::raster::config::RasterConfig;
-use crate::editor::raster::raster_measure_action;
+use crate::config::RasterConfig;
+use crate::raster_measure_action;
 use semio_framework_plugin::WindowMeasure;
-use crate::editor::raster::terminology::RasterPlayLabels;
+use crate::terminology::RasterPlayLabels;
 
 //#region 🔖️Measure
 pub fn measure(config: &RasterConfig, labels: &RasterPlayLabels) -> WindowMeasure {
@@ -67,7 +67,7 @@ pub fn measure(config: &RasterConfig, labels: &RasterPlayLabels) -> WindowMeasur
 }
 
 /// 🎨️ The session foreground picker every colour-painting utility shows (the brush and the bucket share one colour).
-pub(crate) fn foreground_measure(config: &RasterConfig, labels: &RasterPlayLabels, id: &str) -> WindowMeasure {
+pub fn foreground_measure(config: &RasterConfig, labels: &RasterPlayLabels, id: &str) -> WindowMeasure {
     WindowMeasure::Select {
         id: id.into(),
         label: Some(labels.foreground.as_str().to_string()),

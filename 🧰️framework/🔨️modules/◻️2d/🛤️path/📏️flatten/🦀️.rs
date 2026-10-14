@@ -1,5 +1,5 @@
 //! 📏️ Device-tolerance path preparation for https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes.
-use crate::{PathSegment,Vec2};
+use semio_framework_2d_engine::{PathSegment,Vec2};
 #[derive(Clone,Debug)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PathFlattenInput {pub segments:Vec<PathSegment>,pub transform:[f64;6],pub tolerance:f64}
@@ -126,9 +126,9 @@ impl PathFlattenJob {
  }
  pub fn into_result(self)->Result<Vec<FlatContour>,PathFlattenError> {self.result()?;Ok(self.contours)}
 }
-pub type PathFlattenRetirementProgress=crate::retirement::WorkRetirementProgress;
+pub type PathFlattenRetirementProgress=semio_framework_2d_retire::WorkRetirementProgress;
 semio_framework_value::artifact_retire_leaf!(PathFlattenPhase,PathFlattenProgress,Ellipse,Curve);
-crate::physical_work_retirement!(PathFlattenRetirement,PathFlattenJob,PathFlattenError,|_:&str|PathFlattenError::Invalid("Path retirement refused its physical grant"));
+semio_framework_2d_retire::physical_work_retirement!(PathFlattenRetirement,PathFlattenJob,PathFlattenError,|_:&str|PathFlattenError::Invalid("Path retirement refused its physical grant"));
 impl PathFlattenJob{
  /// 🧹️ Moves complete output to its caller and keeps unpublished contours private during cleanup.
  pub fn into_retirement(mut self)->(PathFlattenRetirement,Option<Vec<FlatContour>>){let output=if self.done&&!self.cancelled&&self.failed.is_none(){Some(std::mem::take(&mut self.contours))}else{None};self.cancelled=true;self.current=None;(PathFlattenRetirement::new(self),output)}

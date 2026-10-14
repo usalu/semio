@@ -1,18 +1,18 @@
 //! ↩️ `retire-product` — undo re-`create`s the product from BASE state, at its original index;
 //! missing id ⇒ `Vec::new()`.
 
-use crate::mutations::introduce_product;
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use crate::introduce_product;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
-use super::mutation::RetireProduct;
+use crate::retire_product::mutation::RetireProduct;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RetireProduct, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RetireProduct, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::introduce_product::mutation::IntroduceProduct> {
     Ok((|| {
     let Some(position) = base.catalogue.products.iter().position(|product| product.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::IntroduceProduct(introduce_product::mutation::IntroduceProduct { product: base.catalogue.products[position].clone(), index: Some(position) })]
+    vec![Op::from(introduce_product::mutation::IntroduceProduct { product: base.catalogue.products[position].clone(), index: Some(position) })]
 
     })())
 }

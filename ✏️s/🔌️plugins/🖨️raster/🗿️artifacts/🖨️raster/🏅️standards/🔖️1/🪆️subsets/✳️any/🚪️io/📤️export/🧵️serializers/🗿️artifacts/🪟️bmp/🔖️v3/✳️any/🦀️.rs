@@ -4,8 +4,8 @@
 //! This plugin owns no bmp byte codec and never will.
 //!
 //! 🧾️ BMP v3 carries no alpha channel: stdio's own `encode_bmp` writes 24bpp `BI_RGB` rows and drops alpha. That loss is the FORMAT's, documented by that codec, not a shortcut taken here.
-use crate::standards::v1::subsets::any::io::{raster_composite_image, semio_image_to_format, BMP_DIALECT};
-use crate::RasterSnapshot;
+use crate::{raster_composite_image, semio_image_to_format, BMP_DIALECT};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("bmp export not available for this raster document: {reason}"))?;

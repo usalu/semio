@@ -6,8 +6,9 @@
 //! reports their units as its own, so the boolean engine's phases stay visible through it.
 
 use super::*;
-use crate::primitives::ConvexHullJob;
-use crate::staged::{BooleanStage, ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::primitives::ConvexHullJob;
+use super::BooleanStage;
+use semio_framework_3d_brep_construction::staged::{ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_tessellation::{TessellationJob, TessellationStep};
 
 // #region 🔖️Section
@@ -79,7 +80,7 @@ impl StagedOperation for SectionJob {
                 if self.points.len() < 3 {
                     return Ok(StageStep::Done(StageOutput::Faces(Vec::new())));
                 }
-                let face = crate::primitives::make_planar_face_from_points(body, &self.points, rec)?;
+                let face = semio_framework_3d_brep_construction::primitives::make_planar_face_from_points(body, &self.points, rec)?;
                 return Ok(StageStep::Done(StageOutput::Faces(vec![face])));
             }
         }

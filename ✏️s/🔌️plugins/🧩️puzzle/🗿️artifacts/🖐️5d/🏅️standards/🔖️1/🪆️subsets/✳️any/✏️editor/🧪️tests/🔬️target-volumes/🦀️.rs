@@ -176,8 +176,8 @@ fn target_volumes_reach_the_planner_snapshot() {
     let bridged = snapshot.typed().target_volumes.clone();
     assert_eq!(bridged.len(), 2, "a hidden volume still constrains the planner");
     assert_eq!(bridged[0].origin, [1.0, 2.0, 3.0]);
-    assert_eq!(bridged[0].scale, Some(semio_s_artifact_puzzle_3d::Puzzle3dScale::Uniform(2.0)));
-    assert_eq!(bridged[1].scale, Some(semio_s_artifact_puzzle_3d::Puzzle3dScale::Vec3([1.0, 2.0, 3.0])));
+    assert_eq!(bridged[0].scale, Some(semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Uniform(2.0)));
+    assert_eq!(bridged[1].scale, Some(semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3([1.0, 2.0, 3.0])));
     assert!(bridged[1].hidden && bridged[1].locked);
 }
 

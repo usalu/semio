@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun repo run @semio-tech/framework-mesh-attributes-ownership:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-attributes-ownership:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

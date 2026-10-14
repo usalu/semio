@@ -1,7 +1,7 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::GENERATION_3D_LOD_MODES;
+use semio_s_artifact_procedural_3d_editor_config::GENERATION_3D_LOD_MODES;
 use crate::editor_domain::editor_laws::context::{self, app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 /// ⚖️ LAW: the level-of-detail ladder cycles over exactly the rungs the flow window's picker offers,
 /// and an unset `lod_mode` steps off the `medium` that picker displays for it.

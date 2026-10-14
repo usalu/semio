@@ -1,7 +1,26 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
-use crate::editor::layout::LayoutPlayApp;
-use crate::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+
+
+use semio_s_artifact_layout_layout_engine_json::JsonScalar;
+use semio_s_artifact_layout_layout_engine_json::JsonValidationCursor;
+use semio_s_artifact_layout_layout_engine_json::MAX_LAYOUT_EXPORT_DECODED_ITEMS;
+use semio_s_artifact_layout_layout_engine_json::MAX_LAYOUT_EXPORT_STRING_BYTES;
+use semio_s_artifact_layout_layout_engine_json::StringSource;
+use semio_s_artifact_layout_layout_engine_json::TypedJsonCursor;
+use semio_s_artifact_layout_layout_engine_json::TypedJsonNode;
+use semio_s_artifact_layout_layout_engine_json::finite_json_number;
+use semio_s_artifact_layout_layout_engine_json::frame_bounds;
+use semio_s_artifact_layout_layout_engine_json::integer_json_scalar;
+use semio_s_artifact_layout_layout_engine_json::typed_json_node_owned_bytes;
+use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 #[cfg(test)]
@@ -17,8 +36,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
-#[path="🧾️dictionary/🦀️.rs"] mod dictionary;
-use dictionary::DictionaryJsonCursor;
+use semio_s_artifact_layout_layout_engine_json::dictionary::DictionaryJsonCursor;
 
 //#region 🔖️Contract
 pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage"];
@@ -39,8 +57,6 @@ pub const MAX_LAYOUT_EXPORT_STYLES: usize = 256;
 pub const MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE: usize = 16;
 pub const MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE: usize = 64;
 pub const MAX_LAYOUT_EXPORT_SPREAD_PAGE_IDS: usize = 64;
-pub const MAX_LAYOUT_EXPORT_JSON_NODES: usize = 2_048;
-pub const MAX_LAYOUT_EXPORT_STRING_BYTES: usize = 8 << 10;
 pub const MAX_LAYOUT_EXPORT_DIMENSION: u32 = 2_048;
 pub const MAX_LAYOUT_EXPORT_PIXELS: u64 = 4_194_304;
 pub const MAX_LAYOUT_EXPORT_FILES: usize = 3;
@@ -49,16 +65,12 @@ pub const MAX_LAYOUT_EXPORT_FILES: usize = 3;
 /// (`🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json`'s `contract.maximumTotalBytes`).
 pub const MAX_LAYOUT_EXPORT_OUTPUT_BYTES: usize = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
 pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 634;
-pub const MAX_LAYOUT_EXPORT_DECODED_ITEMS: usize = 131_072;
-pub const MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES: usize = 64 << 10;
 /// 📤️ Derived, never a literal: the exact per-chunk cap [`ArtifactOutputChunks::push`] enforces. A
 /// literal that drifts from it turns a correct producer into a runtime fault on the wire.
 const OUTPUT_CHUNK_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
 const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
 const BASE64_INPUT_BYTES_PER_UNIT: usize = 3_072;
 const PNG_PIXELS_PER_UNIT: u32 = 256;
-const JSON_INPUT_BYTES_PER_UNIT: usize = 2_048;
-const JSON_OUTPUT_BYTES_PER_UNIT: usize = 1_024;
 const MAX_LAYOUT_EXPORT_AUTHORITY_BYTES: usize = 256;
 const LAYOUT_EXPORT_CHECKPOINT_MAGIC: &[u8; 4] = b"LXC2";
 
@@ -109,7 +121,7 @@ impl LayoutExportKind {
         }
     }
 
-    pub(crate) fn extension(self) -> &'static str {
+    pub fn extension(self) -> &'static str {
         match self {
             Self::Png => "png",
             Self::Svg => "svg",
@@ -151,7 +163,7 @@ pub struct LayoutExportCommit {
 
 #[cfg(test)]
 impl LayoutExportCommit {
-    pub(crate) fn from_output(kind: LayoutExportKind, name: &str, bytes: Vec<u8>) -> Self {
+    pub fn from_output(kind: LayoutExportKind, name: &str, bytes: Vec<u8>) -> Self {
         // SAFETY: every final route emits only ASCII: SVG's owned numeric vocabulary or the owned
         // base64 encoder. The invariant is enforced before bytes enter the final commit cursor.
         let data = unsafe { String::from_utf8_unchecked(bytes) };
@@ -268,1839 +280,16 @@ struct ZipState {
     current_offset: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonRootState {
-    Value,
-    Done,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonArrayState {
-    FirstValueOrEnd,
-    Value,
-    CommaOrEnd,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonObjectState {
-    FirstKeyOrEnd,
-    Key,
-    Colon,
-    Value,
-    CommaOrEnd,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonContainer {
-    Array(JsonArrayState),
-    Object(JsonObjectState),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonStringEscape {
-    None,
-    Escape,
-    Unicode { digits: u8, value: u16 },
-    LowSlash,
-    LowU,
-    LowUnicode { digits: u8, value: u16 },
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonNumberState {
-    Sign,
-    Zero,
-    Integer,
-    FractionStart,
-    Fraction,
-    ExponentStart,
-    ExponentSign,
-    Exponent,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonLiteral {
-    True,
-    False,
-    Null,
-}
-
-impl JsonLiteral {
-    fn bytes(&self) -> &'static [u8] {
-        match self {
-            Self::True => b"true",
-            Self::False => b"false",
-            Self::Null => b"null",
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-enum JsonToken {
-    None,
-    String { key: bool, decoded_bytes: usize, escape: JsonStringEscape },
-    Number(JsonNumberState),
-    Literal { literal: JsonLiteral, cursor: usize },
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
-pub struct JsonValidationCursor {
-    byte_cursor: usize,
-    nodes: usize,
-    require_array: bool,
-    root: JsonRootState,
-    stack: Vec<JsonContainer>,
-    token: JsonToken,
-}
-
-impl JsonValidationCursor {
-    fn new(text: &str, require_array: bool) -> Result<Self, String> {
-        if text.len() > MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES {
-            return Err("layout-export-json-byte-limit".into());
-        }
-        Ok(Self { byte_cursor: 0, nodes: 0, require_array, root: JsonRootState::Value, stack: Vec::new(), token: JsonToken::None })
-    }
-
-    fn add_node(&mut self) -> Result<(), String> {
-        self.nodes = self.nodes.checked_add(1).ok_or("layout-export-json-node-limit")?;
-        if self.nodes > MAX_LAYOUT_EXPORT_JSON_NODES || self.stack.len() > 64 {
-            return Err("layout-export-json-node-limit".into());
-        }
-        Ok(())
-    }
-
-    fn start_value(&mut self, byte: u8) -> Result<(), String> {
-        if self.require_array && self.root == JsonRootState::Value && self.stack.is_empty() && byte != b'[' {
-            return Err("layout-export-preflight-schema".into());
-        }
-        match self.stack.last_mut() {
-            Some(JsonContainer::Array(state @ (JsonArrayState::FirstValueOrEnd | JsonArrayState::Value))) => *state = JsonArrayState::CommaOrEnd,
-            Some(JsonContainer::Object(state @ JsonObjectState::Value)) => *state = JsonObjectState::CommaOrEnd,
-            None if self.root == JsonRootState::Value => self.root = JsonRootState::Done,
-            _ => return Err("layout-export-json-structure".into()),
-        }
-        self.add_node()?;
-        match byte {
-            b'{' => self.stack.push(JsonContainer::Object(JsonObjectState::FirstKeyOrEnd)),
-            b'[' => self.stack.push(JsonContainer::Array(JsonArrayState::FirstValueOrEnd)),
-            b'"' => self.token = JsonToken::String { key: false, decoded_bytes: 0, escape: JsonStringEscape::None },
-            b'-' => self.token = JsonToken::Number(JsonNumberState::Sign),
-            b'0' => self.token = JsonToken::Number(JsonNumberState::Zero),
-            b'1'..=b'9' => self.token = JsonToken::Number(JsonNumberState::Integer),
-            b't' => self.token = JsonToken::Literal { literal: JsonLiteral::True, cursor: 1 },
-            b'f' => self.token = JsonToken::Literal { literal: JsonLiteral::False, cursor: 1 },
-            b'n' => self.token = JsonToken::Literal { literal: JsonLiteral::Null, cursor: 1 },
-            _ => return Err("layout-export-json-value".into()),
-        }
-        if self.stack.len() > 64 {
-            return Err("layout-export-json-depth-limit".into());
-        }
-        Ok(())
-    }
-
-    fn finish_string(&mut self, key: bool) -> Result<(), String> {
-        if key {
-            match self.stack.last_mut() {
-                Some(JsonContainer::Object(state @ (JsonObjectState::FirstKeyOrEnd | JsonObjectState::Key))) => {
-                    *state = JsonObjectState::Colon;
-                    Ok(())
-                }
-                _ => Err("layout-export-json-key".into()),
-            }
-        } else {
-            Ok(())
-        }
-    }
-
-    fn add_string_bytes(decoded_bytes: &mut usize, bytes: usize) -> Result<(), String> {
-        *decoded_bytes = decoded_bytes.checked_add(bytes).ok_or("layout-export-json-string-limit")?;
-        if *decoded_bytes > MAX_LAYOUT_EXPORT_STRING_BYTES {
-            return Err("layout-export-json-string-limit".into());
-        }
-        Ok(())
-    }
-
-    fn hex(byte: u8) -> Option<u16> {
-        match byte {
-            b'0'..=b'9' => Some(u16::from(byte - b'0')),
-            b'a'..=b'f' => Some(u16::from(byte - b'a' + 10)),
-            b'A'..=b'F' => Some(u16::from(byte - b'A' + 10)),
-            _ => None,
-        }
-    }
-
-    fn finish_unicode(decoded_bytes: &mut usize, value: u16, low: bool) -> Result<JsonStringEscape, String> {
-        if low {
-            if !(0xdc00..=0xdfff).contains(&value) {
-                return Err("layout-export-json-unicode".into());
-            }
-            Self::add_string_bytes(decoded_bytes, 4)?;
-            return Ok(JsonStringEscape::None);
-        }
-        if (0xd800..=0xdbff).contains(&value) {
-            return Ok(JsonStringEscape::LowSlash);
-        }
-        if (0xdc00..=0xdfff).contains(&value) {
-            return Err("layout-export-json-unicode".into());
-        }
-        let scalar = char::from_u32(u32::from(value)).ok_or("layout-export-json-unicode")?;
-        Self::add_string_bytes(decoded_bytes, scalar.len_utf8())?;
-        Ok(JsonStringEscape::None)
-    }
-
-    fn number_delimiter(byte: u8) -> bool {
-        byte.is_ascii_whitespace() || matches!(byte, b',' | b']' | b'}')
-    }
-
-    fn advance_token(&mut self, bytes: &[u8]) -> Result<bool, String> {
-        match &mut self.token {
-            JsonToken::None => Ok(false),
-            JsonToken::String { key, decoded_bytes, escape } => {
-                let byte = *bytes.get(self.byte_cursor).ok_or("layout-export-json-string")?;
-                let low = matches!(escape, JsonStringEscape::LowUnicode { .. });
-                match escape {
-                    JsonStringEscape::None => match byte {
-                        b'"' => {
-                            let key = *key;
-                            self.byte_cursor += 1;
-                            self.token = JsonToken::None;
-                            self.finish_string(key)?;
-                        }
-                        b'\\' => {
-                            self.byte_cursor += 1;
-                            *escape = JsonStringEscape::Escape;
-                        }
-                        0..=0x1f => return Err("layout-export-json-string".into()),
-                        _ => {
-                            self.byte_cursor += 1;
-                            Self::add_string_bytes(decoded_bytes, 1)?;
-                        }
-                    },
-                    JsonStringEscape::Escape => {
-                        self.byte_cursor += 1;
-                        match byte {
-                            b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {
-                                Self::add_string_bytes(decoded_bytes, 1)?;
-                                *escape = JsonStringEscape::None;
-                            }
-                            b'u' => *escape = JsonStringEscape::Unicode { digits: 0, value: 0 },
-                            _ => return Err("layout-export-json-escape".into()),
-                        }
-                    }
-                    JsonStringEscape::Unicode { digits, value } | JsonStringEscape::LowUnicode { digits, value } => {
-                        let digit = Self::hex(byte).ok_or("layout-export-json-unicode")?;
-                        self.byte_cursor += 1;
-                        *value = (*value << 4) | digit;
-                        *digits += 1;
-                        if *digits == 4 {
-                            *escape = Self::finish_unicode(decoded_bytes, *value, low)?;
-                        }
-                    }
-                    JsonStringEscape::LowSlash => {
-                        if byte != b'\\' {
-                            return Err("layout-export-json-unicode".into());
-                        }
-                        self.byte_cursor += 1;
-                        *escape = JsonStringEscape::LowU;
-                    }
-                    JsonStringEscape::LowU => {
-                        if byte != b'u' {
-                            return Err("layout-export-json-unicode".into());
-                        }
-                        self.byte_cursor += 1;
-                        *escape = JsonStringEscape::LowUnicode { digits: 0, value: 0 };
-                    }
-                }
-                Ok(true)
-            }
-            JsonToken::Literal { literal, cursor } => {
-                let expected = literal.bytes();
-                let byte = *bytes.get(self.byte_cursor).ok_or("layout-export-json-literal")?;
-                if expected.get(*cursor).copied() != Some(byte) {
-                    return Err("layout-export-json-literal".into());
-                }
-                self.byte_cursor += 1;
-                *cursor += 1;
-                if *cursor == expected.len() {
-                    self.token = JsonToken::None;
-                }
-                Ok(true)
-            }
-            JsonToken::Number(state) => {
-                let Some(byte) = bytes.get(self.byte_cursor).copied() else {
-                    return Ok(false);
-                };
-                let next = match *state {
-                    JsonNumberState::Sign => match byte {
-                        b'0' => JsonNumberState::Zero,
-                        b'1'..=b'9' => JsonNumberState::Integer,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Zero => match byte {
-                        b'.' => JsonNumberState::FractionStart,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Integer => match byte {
-                        b'0'..=b'9' => JsonNumberState::Integer,
-                        b'.' => JsonNumberState::FractionStart,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::FractionStart => match byte {
-                        b'0'..=b'9' => JsonNumberState::Fraction,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Fraction => match byte {
-                        b'0'..=b'9' => JsonNumberState::Fraction,
-                        b'e' | b'E' => JsonNumberState::ExponentStart,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::ExponentStart => match byte {
-                        b'+' | b'-' => JsonNumberState::ExponentSign,
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::ExponentSign => match byte {
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                    JsonNumberState::Exponent => match byte {
-                        b'0'..=b'9' => JsonNumberState::Exponent,
-                        _ if Self::number_delimiter(byte) => {
-                            self.token = JsonToken::None;
-                            return Ok(false);
-                        }
-                        _ => return Err("layout-export-json-number".into()),
-                    },
-                };
-                *state = next;
-                self.byte_cursor += 1;
-                Ok(true)
-            }
-        }
-    }
-
-    fn start_key(&mut self) {
-        self.token = JsonToken::String { key: true, decoded_bytes: 0, escape: JsonStringEscape::None };
-    }
-
-    fn close_container(&mut self) -> Result<(), String> {
-        self.stack.pop().ok_or_else(|| "layout-export-json-structure".into()).map(|_| ())
-    }
-
-    fn advance(&mut self, text: &str) -> Result<bool, String> {
-        let bytes = text.as_bytes();
-        let end = self.byte_cursor.saturating_add(JSON_INPUT_BYTES_PER_UNIT).min(bytes.len());
-        while self.byte_cursor < end {
-            if !matches!(self.token, JsonToken::None) && self.advance_token(bytes)? {
-                continue;
-            }
-            let byte = bytes[self.byte_cursor];
-            if byte.is_ascii_whitespace() {
-                self.byte_cursor += 1;
-                continue;
-            }
-            match self.stack.last().cloned() {
-                None => match self.root {
-                    JsonRootState::Value => {
-                        self.byte_cursor += 1;
-                        self.start_value(byte)?;
-                    }
-                    JsonRootState::Done => return Err("layout-export-json-trailing".into()),
-                },
-                Some(JsonContainer::Array(JsonArrayState::FirstValueOrEnd)) => {
-                    if byte == b']' {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    } else {
-                        self.byte_cursor += 1;
-                        self.start_value(byte)?;
-                    }
-                }
-                Some(JsonContainer::Array(JsonArrayState::Value)) => {
-                    self.byte_cursor += 1;
-                    self.start_value(byte)?;
-                }
-                Some(JsonContainer::Array(JsonArrayState::CommaOrEnd)) => match byte {
-                    b',' => {
-                        self.byte_cursor += 1;
-                        if let Some(JsonContainer::Array(state)) = self.stack.last_mut() {
-                            *state = JsonArrayState::Value;
-                        }
-                    }
-                    b']' => {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    }
-                    _ => return Err("layout-export-json-array".into()),
-                },
-                Some(JsonContainer::Object(JsonObjectState::FirstKeyOrEnd)) => {
-                    if byte == b'}' {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    } else if byte == b'"' {
-                        self.byte_cursor += 1;
-                        self.start_key();
-                    } else {
-                        return Err("layout-export-json-key".into());
-                    }
-                }
-                Some(JsonContainer::Object(JsonObjectState::Key)) => {
-                    if byte != b'"' {
-                        return Err("layout-export-json-key".into());
-                    }
-                    self.byte_cursor += 1;
-                    self.start_key();
-                }
-                Some(JsonContainer::Object(JsonObjectState::Colon)) => {
-                    if byte != b':' {
-                        return Err("layout-export-json-colon".into());
-                    }
-                    self.byte_cursor += 1;
-                    if let Some(JsonContainer::Object(state)) = self.stack.last_mut() {
-                        *state = JsonObjectState::Value;
-                    }
-                }
-                Some(JsonContainer::Object(JsonObjectState::Value)) => {
-                    self.byte_cursor += 1;
-                    self.start_value(byte)?;
-                }
-                Some(JsonContainer::Object(JsonObjectState::CommaOrEnd)) => match byte {
-                    b',' => {
-                        self.byte_cursor += 1;
-                        if let Some(JsonContainer::Object(state)) = self.stack.last_mut() {
-                            *state = JsonObjectState::Key;
-                        }
-                    }
-                    b'}' => {
-                        self.byte_cursor += 1;
-                        self.close_container()?;
-                    }
-                    _ => return Err("layout-export-json-object".into()),
-                },
-            }
-        }
-        if self.byte_cursor != bytes.len() {
-            return Ok(false);
-        }
-        match &self.token {
-            JsonToken::None => {}
-            JsonToken::Number(JsonNumberState::Zero | JsonNumberState::Integer | JsonNumberState::Fraction | JsonNumberState::Exponent) => self.token = JsonToken::None,
-            _ => return Err("layout-export-json-incomplete".into()),
-        }
-        if self.stack.is_empty() && self.root == JsonRootState::Done {
-            Ok(true)
-        } else {
-            Err("layout-export-json-incomplete".into())
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-enum TopArrayKind {
-    ParagraphStyles,
-    CharacterStyles,
-    Stories,
-    Links,
-    ParentPages,
-    Spreads,
-    Pages,
-}
-
-#[derive(Clone, Copy, Debug)]
-enum RecordOwner {
-    Page(usize),
-    Parent(usize),
-}
-
-#[derive(Clone, Copy, Debug)]
-enum StringArraySource {
-    SpreadPage(usize),
-    PageLayer(usize),
-    ParentLayer(usize),
-    LayerObject { owner: RecordOwner, layer: usize },
-}
-
-#[derive(Clone, Debug)]
-enum StringSource {
-    DocumentSchema,
-    DocumentName,
-    PrintTarget,
-    StringArrayElement { source: StringArraySource, index: usize },
-    ParagraphId(usize),
-    ParagraphName(usize),
-    ParagraphFontFamily(usize),
-    ParagraphAlignment(usize),
-    CharacterId(usize),
-    CharacterName(usize),
-    CharacterFontFamily(usize),
-    StoryId(usize),
-    StoryContent(usize),
-    StoryRunParagraph { story: usize, run: usize },
-    StoryRunCharacter { story: usize, run: usize },
-    LinkId(usize),
-    LinkPath(usize),
-    LinkHash(usize),
-    LinkColorProfile(usize),
-    LinkState(usize),
-    LinkProxy(usize),
-    ParentId(usize),
-    ParentName(usize),
-    SpreadId(usize),
-    SpreadName(usize),
-    PageId(usize),
-    PageName(usize),
-    PageSpreadId(usize),
-    PageParentId(usize),
-    LayerId { owner: RecordOwner, layer: usize },
-    LayerName { owner: RecordOwner, layer: usize },
-    FrameId { owner: RecordOwner, frame: usize },
-    FrameLayerId { owner: RecordOwner, frame: usize },
-    FrameStoryId { owner: RecordOwner, frame: usize },
-    FrameThreadNext { owner: RecordOwner, frame: usize },
-    FrameWrapMode { owner: RecordOwner, frame: usize },
-    FrameLinkId { owner: RecordOwner, frame: usize },
-    OverrideObjectId { page: usize, value: usize },
-    ChildId,
-    ChildTargetArtifactId,
-    ChildTargetArtifactKind,
-    ChildTargetStandard,
-    ChildTargetSubset,
-    DrawingSchema,
-    DrawStyleName(usize),
-    DrawLayerId(usize),
-    DrawLayerName(usize),
-    DrawNodeValue { layer: usize, path: Vec<usize> },
-    DrawNodeStyle { layer: usize, path: Vec<usize> },
-    DrawNodeMime { layer: usize, path: Vec<usize> },
-    ReferencedTargetArtifactId,
-    ReferencedTargetArtifactKind,
-    ReferencedTargetStandard,
-    ReferencedTargetSubset,
-    ReferencedRole,
-    ReferencedCheckpointId,
-    ReferencedBlobHash,
-    ReferencedBlobMediaType,
-}
-
-#[derive(Clone, Debug, Default)]
-struct JsonStringWriteCursor {
-    byte_cursor: usize,
-    opened: bool,
-    closed: bool,
-}
-
-#[derive(Clone, Debug)]
-enum TypedJsonNode {
-    FragmentStart,
-    FragmentEnd,
-    Static { bytes: &'static [u8], cursor: usize },
-    Scalar { bytes: Vec<u8>, cursor: usize },
-    String { source: StringSource, cursor: JsonStringWriteCursor },
-    OwnedString { value: String, cursor: JsonStringWriteCursor },
-    Document,
-    Dictionary(DictionaryJsonCursor),
-    Grid,
-    TopArray { kind: TopArrayKind, index: usize, opened: bool },
-    Paragraph(usize),
-    Character(usize),
-    Story(usize),
-    StoryRuns { story: usize, index: usize, opened: bool },
-    StoryRun { story: usize, run: usize },
-    Link(usize),
-    Parent(usize),
-    Spread(usize),
-    Page(usize),
-    StringArray { source: StringArraySource, index: usize, opened: bool },
-    Layers { owner: RecordOwner, index: usize, opened: bool },
-    Layer { owner: RecordOwner, layer: usize },
-    Frames { owner: RecordOwner, index: usize, opened: bool },
-    Frame { owner: RecordOwner, frame: usize },
-    Bounds { owner: RecordOwner, frame: usize },
-    Rect { page: usize, guide: usize },
-    TextInset { owner: RecordOwner, frame: usize },
-    Margins(usize),
-    Columns(usize),
-    Guides { page: usize, index: usize, opened: bool },
-    Overrides { page: usize, index: usize, opened: bool },
-    Override { page: usize, value: usize },
-    OverrideBounds { page: usize, value: usize },
-    BackgroundDrawing,
-    ChildHandle,
-    ArtifactRef { referenced: bool },
-    Dialect { referenced: bool },
-    Drawing,
-    DrawCanvas,
-    DrawRgba(SemioRgba),
-    DrawStyles { index: usize, opened: bool },
-    DrawStyle(usize),
-    DrawLayers { index: usize, opened: bool },
-    DrawLayer(usize),
-    DrawNode { layer: usize, path: Vec<usize> },
-    DrawChildren { layer: usize, path: Vec<usize>, index: usize, opened: bool },
-    DrawSegments { layer: usize, path: Vec<usize>, index: usize, opened: bool },
-    DrawSegment { layer: usize, path: Vec<usize>, segment: usize },
-    DrawPoint2(SemioPoint2),
-    DrawPoint3(SemioPoint3),
-    DrawQuaternion(SemioQuaternion),
-    DrawTransform(SemioTransform),
-    DrawBytes { layer: usize, path: Vec<usize>, index: usize, opened: bool },
-    ReferencedModel,
-    LinkPin,
-    BlobRef,
-    MissingLinks { index: usize, opened: bool, emitted: bool },
-    MissingLink(usize),
-    Manifest,
-    ManifestLinks { index: usize, opened: bool },
-    ManifestLink(usize),
-}
-
-#[derive(Clone, Debug, Default)]
-struct TypedJsonCursor {
-    stack: Vec<TypedJsonNode>,
-    emitted_nodes: usize,
-    fragment_bytes: Option<usize>,
-}
-
-fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
-    match source {
-        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.len().saturating_mul(size_of::<usize>()),
-        _ => 0,
-    }
-}
-
-fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
-    match node {
-        TypedJsonNode::Scalar { bytes, .. } => bytes.len(),
-        TypedJsonNode::Dictionary(cursor) => cursor.owned_bytes(),
-        TypedJsonNode::String { source, .. } => typed_string_source_owned_bytes(source),
-        TypedJsonNode::OwnedString { value, .. } => value.len(),
-        TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
-            path.len().saturating_mul(size_of::<usize>())
-        }
-        _ => 0,
-    }
-}
-
-trait JsonScalar {
-    fn json_bytes(&self) -> Result<Vec<u8>, String>;
-}
-
-macro_rules! integer_json_scalar {
-    ($($scalar:ty),* $(,)?) => {
-        $(impl JsonScalar for $scalar {
-            fn json_bytes(&self) -> Result<Vec<u8>, String> {
-                Ok(self.to_string().into_bytes())
-            }
-        })*
-    };
-}
 
 integer_json_scalar!(u8, u32, u64, usize);
 
-impl JsonScalar for bool {
-    fn json_bytes(&self) -> Result<Vec<u8>, String> {
-        Ok(if *self { b"true".to_vec() } else { b"false".to_vec() })
-    }
-}
 
-fn finite_json_number(value: f64) -> Result<Vec<u8>, String> {
-    if !value.is_finite() {
-        return Err("layout-export-json-number".into());
-    }
-    let mut text = value.to_string();
-    if !text.contains('.') && !text.contains('e') && !text.contains('E') {
-        text.push_str(".0");
-    }
-    Ok(text.into_bytes())
-}
 
-impl JsonScalar for f64 {
-    fn json_bytes(&self) -> Result<Vec<u8>, String> {
-        finite_json_number(*self)
-    }
-}
 
-impl JsonScalar for f32 {
-    fn json_bytes(&self) -> Result<Vec<u8>, String> {
-        if !self.is_finite() {
-            return Err("layout-export-json-number".into());
-        }
-        let mut text = self.to_string();
-        if !text.contains('.') && !text.contains('e') && !text.contains('E') {
-            text.push_str(".0");
-        }
-        Ok(text.into_bytes())
-    }
-}
 
-impl<T: JsonScalar> JsonScalar for Option<T> {
-    fn json_bytes(&self) -> Result<Vec<u8>, String> {
-        self.as_ref().map_or_else(|| Ok(b"null".to_vec()), JsonScalar::json_bytes)
-    }
-}
 
-impl JsonScalar for [f32; 4] {
-    fn json_bytes(&self) -> Result<Vec<u8>, String> {
-        let mut bytes = Vec::with_capacity(64);
-        bytes.push(b'[');
-        for (index, value) in self.iter().enumerate() {
-            if index > 0 {
-                bytes.push(b',');
-            }
-            bytes.extend_from_slice(&value.json_bytes()?);
-        }
-        bytes.push(b']');
-        Ok(bytes)
-    }
-}
 
-impl TypedJsonCursor {
-    fn document() -> Self {
-        Self { stack: vec![TypedJsonNode::Document], emitted_nodes: 0, fragment_bytes: None }
-    }
 
-    fn preflight() -> Self {
-        Self { stack: vec![TypedJsonNode::MissingLinks { index: 0, opened: false, emitted: false }], emitted_nodes: 0, fragment_bytes: None }
-    }
-
-    fn manifest() -> Self {
-        Self { stack: vec![TypedJsonNode::Manifest], emitted_nodes: 0, fragment_bytes: None }
-    }
-
-    fn validating(node: TypedJsonNode) -> Self {
-        Self { stack: Self::fragment(node).into_iter().rev().collect(), emitted_nodes: 0, fragment_bytes: None }
-    }
-
-    fn static_node(bytes: &'static [u8]) -> TypedJsonNode {
-        TypedJsonNode::Static { bytes, cursor: 0 }
-    }
-
-    fn scalar<T: JsonScalar + ?Sized>(value: &T) -> Result<TypedJsonNode, String> {
-        let bytes = value.json_bytes()?;
-        if bytes.len() > 256 {
-            return Err("layout-export-json-scalar-limit".into());
-        }
-        Ok(TypedJsonNode::Scalar { bytes, cursor: 0 })
-    }
-
-    fn string(source: StringSource) -> TypedJsonNode {
-        TypedJsonNode::String { source, cursor: JsonStringWriteCursor::default() }
-    }
-
-    fn owned_string(value: String) -> TypedJsonNode {
-        TypedJsonNode::OwnedString { value, cursor: JsonStringWriteCursor::default() }
-    }
-
-    fn push_sequence(&mut self, nodes: Vec<TypedJsonNode>) {
-        self.stack.extend(nodes.into_iter().rev());
-    }
-
-    fn fragment(node: TypedJsonNode) -> Vec<TypedJsonNode> {
-        vec![TypedJsonNode::FragmentStart, node, TypedJsonNode::FragmentEnd]
-    }
-
-    fn owner_page<'a>(snapshot: &'a LayoutSnapshot, owner: RecordOwner) -> Result<OwnerPage<'a>, String> {
-        match owner {
-            RecordOwner::Page(index) => snapshot.pages.get(index).map(OwnerPage::Page),
-            RecordOwner::Parent(index) => snapshot.parent_pages.get(index).map(OwnerPage::Parent),
-        }
-        .ok_or_else(|| "layout-export-json-index".into())
-    }
-
-    fn draw_node<'a>(snapshot: &'a LayoutSnapshot, layer: usize, path: &[usize]) -> Result<&'a DrawNode, String> {
-        let drawing = &snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content;
-        let mut node = &drawing.layers.get(layer).ok_or("layout-export-json-draw-layer")?.root;
-        for index in path {
-            node = match node {
-                DrawNode::Group { children, .. } => children.get(*index).ok_or("layout-export-json-draw-child")?,
-                _ => return Err("layout-export-json-draw-path".into()),
-            };
-        }
-        Ok(node)
-    }
-
-    fn resolve_string<'a>(source: &StringSource, snapshot: &'a LayoutSnapshot) -> Result<&'a str, String> {
-        let missing = || "layout-export-json-string-source".to_string();
-        Ok(match source {
-            StringSource::DocumentSchema => &snapshot.schema,
-            StringSource::DocumentName => &snapshot.name,
-            StringSource::PrintTarget => snapshot.print_target.as_deref().ok_or_else(missing)?,
-            StringSource::StringArrayElement { source, index } => match source {
-                StringArraySource::SpreadPage(owner) => snapshot.spreads.get(*owner).and_then(|value| value.page_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::PageLayer(owner) => snapshot.pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::ParentLayer(owner) => snapshot.parent_pages.get(*owner).and_then(|value| value.layer_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-                StringArraySource::LayerObject { owner, layer } => Self::owner_page(snapshot, *owner)?.layers().get(*layer).and_then(|value| value.object_ids.get(*index)).map(String::as_str).ok_or_else(missing)?,
-            },
-            StringSource::ParagraphId(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.id,
-            StringSource::ParagraphName(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.name,
-            StringSource::ParagraphFontFamily(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.font_family,
-            StringSource::ParagraphAlignment(index) => &snapshot.paragraph_styles.get(*index).ok_or_else(missing)?.alignment,
-            StringSource::CharacterId(index) => &snapshot.character_styles.get(*index).ok_or_else(missing)?.id,
-            StringSource::CharacterName(index) => snapshot.character_styles.get(*index).and_then(|value| value.name.as_deref()).ok_or_else(missing)?,
-            StringSource::CharacterFontFamily(index) => snapshot.character_styles.get(*index).and_then(|value| value.font_family.as_deref()).ok_or_else(missing)?,
-            StringSource::StoryId(index) => &snapshot.stories.get(*index).ok_or_else(missing)?.id,
-            StringSource::StoryContent(index) => &snapshot.stories.get(*index).ok_or_else(missing)?.content,
-            StringSource::StoryRunParagraph { story, run } => snapshot.stories.get(*story).and_then(|value| value.style_runs.get(*run)).and_then(|value| value.paragraph_style_id.as_deref()).ok_or_else(missing)?,
-            StringSource::StoryRunCharacter { story, run } => snapshot.stories.get(*story).and_then(|value| value.style_runs.get(*run)).and_then(|value| value.character_style_id.as_deref()).ok_or_else(missing)?,
-            StringSource::LinkId(index) => &snapshot.links.get(*index).ok_or_else(missing)?.id,
-            StringSource::LinkPath(index) => &snapshot.links.get(*index).ok_or_else(missing)?.path,
-            StringSource::LinkHash(index) => &snapshot.links.get(*index).ok_or_else(missing)?.hash,
-            StringSource::LinkColorProfile(index) => snapshot.links.get(*index).and_then(|value| value.color_profile.as_deref()).ok_or_else(missing)?,
-            StringSource::LinkState(index) => snapshot.links.get(*index).and_then(|value| value.state.as_deref()).ok_or_else(missing)?,
-            StringSource::LinkProxy(index) => snapshot.links.get(*index).and_then(|value| value.proxy_data_url.as_deref()).ok_or_else(missing)?,
-            StringSource::ParentId(index) => &snapshot.parent_pages.get(*index).ok_or_else(missing)?.id,
-            StringSource::ParentName(index) => &snapshot.parent_pages.get(*index).ok_or_else(missing)?.name,
-            StringSource::SpreadId(index) => &snapshot.spreads.get(*index).ok_or_else(missing)?.id,
-            StringSource::SpreadName(index) => &snapshot.spreads.get(*index).ok_or_else(missing)?.name,
-            StringSource::PageId(index) => &snapshot.pages.get(*index).ok_or_else(missing)?.id,
-            StringSource::PageName(index) => &snapshot.pages.get(*index).ok_or_else(missing)?.name,
-            StringSource::PageSpreadId(index) => &snapshot.pages.get(*index).ok_or_else(missing)?.spread_id,
-            StringSource::PageParentId(index) => snapshot.pages.get(*index).and_then(|value| value.parent_page_id.as_deref()).ok_or_else(missing)?,
-            StringSource::LayerId { owner, layer } => Self::owner_page(snapshot, *owner)?.layers().get(*layer).map(|value| value.id.as_str()).ok_or_else(missing)?,
-            StringSource::LayerName { owner, layer } => Self::owner_page(snapshot, *owner)?.layers().get(*layer).map(|value| value.name.as_str()).ok_or_else(missing)?,
-            StringSource::FrameId { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::Id).ok_or_else(missing)?,
-            StringSource::FrameLayerId { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::LayerId).ok_or_else(missing)?,
-            StringSource::FrameStoryId { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::StoryId).ok_or_else(missing)?,
-            StringSource::FrameThreadNext { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::ThreadNext).ok_or_else(missing)?,
-            StringSource::FrameWrapMode { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::WrapMode).ok_or_else(missing)?,
-            StringSource::FrameLinkId { owner, frame } => frame_string(Self::owner_page(snapshot, *owner)?.frames().get(*frame).ok_or_else(missing)?, FrameStringField::LinkId).ok_or_else(missing)?,
-            StringSource::OverrideObjectId { page, value } => &snapshot.pages.get(*page).and_then(|page| page.overrides.get(*value)).ok_or_else(missing)?.object_id,
-            StringSource::ChildId => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.child_id,
-            StringSource::ChildTargetArtifactId => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.artifact_id,
-            StringSource::ChildTargetArtifactKind => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.artifact_kind,
-            StringSource::ChildTargetStandard => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.standard,
-            StringSource::ChildTargetSubset => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.subset,
-            StringSource::DrawingSchema => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.schema,
-            StringSource::DrawStyleName(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.styles.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawLayerId(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.layers.get(*index).ok_or_else(missing)?.id,
-            StringSource::DrawLayerName(index) => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.content.layers.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawNodeValue { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Text { value, .. } => value,
-                _ => return Err(missing()),
-            },
-            StringSource::DrawNodeStyle { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Path { style: Some(value), .. } | DrawNode::Text { style: Some(value), .. } => value,
-                _ => return Err(missing()),
-            },
-            StringSource::DrawNodeMime { layer, path } => match Self::draw_node(snapshot, *layer, path)? {
-                DrawNode::Image { mime, .. } => mime,
-                _ => return Err(missing()),
-            },
-            StringSource::ReferencedTargetArtifactId => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.artifact_id,
-            StringSource::ReferencedTargetArtifactKind => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.dialect.artifact_kind,
-            StringSource::ReferencedTargetStandard => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.dialect.standard,
-            StringSource::ReferencedTargetSubset => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.dialect.subset,
-            StringSource::ReferencedRole => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.role,
-            StringSource::ReferencedCheckpointId => match &snapshot.referenced_model.as_ref().ok_or_else(missing)?.pin {
-                store::LinkPin::Checkpoint { id } => id,
-                _ => return Err(missing()),
-            },
-            StringSource::ReferencedBlobHash => match &snapshot.referenced_model.as_ref().ok_or_else(missing)?.pin {
-                store::LinkPin::Snapshot { blob } => &blob.hash,
-                _ => return Err(missing()),
-            },
-            StringSource::ReferencedBlobMediaType => match &snapshot.referenced_model.as_ref().ok_or_else(missing)?.pin {
-                store::LinkPin::Snapshot { blob } => &blob.media_type,
-                _ => return Err(missing()),
-            },
-        })
-    }
-
-    fn escaped_string_step(value: &str, cursor: &mut JsonStringWriteCursor) -> (Vec<u8>, bool) {
-        let mut output = Vec::with_capacity(JSON_OUTPUT_BYTES_PER_UNIT);
-        if !cursor.opened {
-            output.push(b'"');
-            cursor.opened = true;
-        }
-        let bytes = value.as_bytes();
-        while cursor.byte_cursor < bytes.len() {
-            let byte = bytes[cursor.byte_cursor];
-            let escaped: &[u8] = match byte {
-                b'"' => b"\\\"",
-                b'\\' => b"\\\\",
-                b'\x08' => b"\\b",
-                b'\t' => b"\\t",
-                b'\n' => b"\\n",
-                b'\x0c' => b"\\f",
-                b'\r' => b"\\r",
-                0..=0x1f => &[],
-                _ => std::slice::from_ref(&bytes[cursor.byte_cursor]),
-            };
-            let needed = if byte <= 0x1f && escaped.is_empty() { 6 } else { escaped.len() };
-            if output.len() + needed + 1 > JSON_OUTPUT_BYTES_PER_UNIT {
-                break;
-            }
-            if byte <= 0x1f && escaped.is_empty() {
-                const HEX: &[u8; 16] = b"0123456789abcdef";
-                output.extend_from_slice(&[b'\\', b'u', b'0', b'0', HEX[(byte >> 4) as usize], HEX[(byte & 15) as usize]]);
-            } else {
-                output.extend_from_slice(escaped);
-            }
-            cursor.byte_cursor += 1;
-        }
-        if cursor.byte_cursor == bytes.len() && !cursor.closed {
-            output.push(b'"');
-            cursor.closed = true;
-        }
-        (output, cursor.closed)
-    }
-
-    fn optional_string(present: bool, source: StringSource) -> TypedJsonNode {
-        if present {
-            Self::string(source)
-        } else {
-            Self::static_node(b"null")
-        }
-    }
-
-    fn account_output(&mut self, bytes: usize) -> Result<(), String> {
-        if let Some(fragment_bytes) = &mut self.fragment_bytes {
-            *fragment_bytes = fragment_bytes.checked_add(bytes).ok_or("layout-export-json-fragment-limit")?;
-            if *fragment_bytes > MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES {
-                return Err("layout-export-json-fragment-limit".into());
-            }
-        }
-        Ok(())
-    }
-
-    fn account_node(&mut self) -> Result<(), String> {
-        self.emitted_nodes = self.emitted_nodes.checked_add(1).ok_or("layout-export-json-node-limit")?;
-        let maximum = if self.fragment_bytes.is_some() { MAX_LAYOUT_EXPORT_JSON_NODES } else { MAX_LAYOUT_EXPORT_DECODED_ITEMS };
-        if self.emitted_nodes > maximum {
-            return Err("layout-export-json-node-limit".into());
-        }
-        Ok(())
-    }
-
-    fn advance(&mut self, snapshot: &LayoutSnapshot) -> Result<(Vec<u8>, bool), String> {
-        let Some(node) = self.stack.pop() else { return Ok((Vec::new(), true)) };
-        let mut output = Vec::new();
-        match node {
-            TypedJsonNode::FragmentStart => {
-                if self.fragment_bytes.replace(0).is_some() {
-                    return Err("layout-export-json-fragment-nesting".into());
-                }
-                self.emitted_nodes = 0;
-            }
-            TypedJsonNode::FragmentEnd => {
-                if self.fragment_bytes.take().is_none() {
-                    return Err("layout-export-json-fragment-state".into());
-                }
-            }
-            TypedJsonNode::Static { bytes, cursor } => {
-                let end = cursor.saturating_add(JSON_OUTPUT_BYTES_PER_UNIT).min(bytes.len());
-                output.extend_from_slice(&bytes[cursor..end]);
-                if end < bytes.len() {
-                    self.stack.push(TypedJsonNode::Static { bytes, cursor: end });
-                }
-            }
-            TypedJsonNode::Scalar { bytes, cursor } => {
-                self.account_node()?;
-                let end = cursor.saturating_add(JSON_OUTPUT_BYTES_PER_UNIT).min(bytes.len());
-                output.extend_from_slice(&bytes[cursor..end]);
-                if end < bytes.len() {
-                    self.stack.push(TypedJsonNode::Scalar { bytes, cursor: end });
-                }
-            }
-            TypedJsonNode::String { source, mut cursor } => {
-                self.account_node()?;
-                let maximum = MAX_LAYOUT_EXPORT_STRING_BYTES;
-                let value = Self::resolve_string(&source, snapshot)?;
-                if value.len() > maximum {
-                    return Err("layout-export-json-string-limit".into());
-                }
-                let (bytes, done) = Self::escaped_string_step(value, &mut cursor);
-                output = bytes;
-                if !done {
-                    self.stack.push(TypedJsonNode::String { source, cursor });
-                }
-            }
-            TypedJsonNode::Dictionary(mut cursor) => {
-                let (bytes, done) = cursor.advance(snapshot)?;
-                output = bytes;
-                if !done { self.stack.push(TypedJsonNode::Dictionary(cursor)); }
-            }
-            TypedJsonNode::OwnedString { value, mut cursor } => {
-                self.account_node()?;
-                if value.len() > MAX_LAYOUT_EXPORT_STRING_BYTES {
-                    return Err("layout-export-json-string-limit".into());
-                }
-                let (bytes, done) = Self::escaped_string_step(&value, &mut cursor);
-                output = bytes;
-                if !done {
-                    self.stack.push(TypedJsonNode::OwnedString { value, cursor });
-                }
-            }
-            node => {
-                self.account_node()?;
-                self.expand(node, snapshot)?;
-            }
-        }
-        self.account_output(output.len())?;
-        Ok((output, self.stack.is_empty()))
-    }
-
-    fn expand(&mut self, node: TypedJsonNode, snapshot: &LayoutSnapshot) -> Result<(), String> {
-        match node {
-            TypedJsonNode::Document => {
-                let mut nodes = vec![
-                    Self::static_node(b"{\"schema\":"),
-                    Self::string(StringSource::DocumentSchema),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::DocumentName),
-                    Self::static_node(b",\"grid\":"),
-                    TypedJsonNode::Grid,
-                    Self::static_node(b",\"paragraphStyles\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::ParagraphStyles, index: 0, opened: false },
-                    Self::static_node(b",\"characterStyles\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::CharacterStyles, index: 0, opened: false },
-                    Self::static_node(b",\"stories\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::Stories, index: 0, opened: false },
-                    Self::static_node(b",\"links\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::Links, index: 0, opened: false },
-                    Self::static_node(b",\"parentPages\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::ParentPages, index: 0, opened: false },
-                    Self::static_node(b",\"spreads\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::Spreads, index: 0, opened: false },
-                    Self::static_node(b",\"pages\":"),
-                    TypedJsonNode::TopArray { kind: TopArrayKind::Pages, index: 0, opened: false },
-                    Self::static_node(b",\"printTarget\":"),
-                    Self::optional_string(snapshot.print_target.is_some(), StringSource::PrintTarget),
-                ];
-                if snapshot.data_fields.is_some() {
-                    nodes.extend([Self::static_node(b",\"dataFields\":"), TypedJsonNode::Dictionary(DictionaryJsonCursor::new())]);
-                }
-                if snapshot.background_drawing.is_some() {
-                    nodes.extend([Self::static_node(b",\"backgroundDrawing\":"), TypedJsonNode::BackgroundDrawing]);
-                }
-                if snapshot.referenced_model.is_some() {
-                    nodes.extend([Self::static_node(b",\"referencedModel\":"), TypedJsonNode::ReferencedModel]);
-                }
-                nodes.push(Self::static_node(b"}"));
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::Grid => self.push_sequence(vec![
-                Self::static_node(b"{\"baselineGrid\":"),
-                Self::scalar(&snapshot.grid.baseline_grid)?,
-                Self::static_node(b",\"baselineOffset\":"),
-                Self::scalar(&snapshot.grid.baseline_offset)?,
-                Self::static_node(b",\"snapToBaseline\":"),
-                Self::scalar(&snapshot.grid.snap_to_baseline)?,
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::TopArray { kind, index, opened } => {
-                let len = match kind {
-                    TopArrayKind::ParagraphStyles => snapshot.paragraph_styles.len(),
-                    TopArrayKind::CharacterStyles => snapshot.character_styles.len(),
-                    TopArrayKind::Stories => snapshot.stories.len(),
-                    TopArrayKind::Links => snapshot.links.len(),
-                    TopArrayKind::ParentPages => snapshot.parent_pages.len(),
-                    TopArrayKind::Spreads => snapshot.spreads.len(),
-                    TopArrayKind::Pages => snapshot.pages.len(),
-                };
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::TopArray { kind, index, opened: true }]);
-                } else if index < len {
-                    let item = match kind {
-                        TopArrayKind::ParagraphStyles => TypedJsonNode::Paragraph(index),
-                        TopArrayKind::CharacterStyles => TypedJsonNode::Character(index),
-                        TopArrayKind::Stories => TypedJsonNode::Story(index),
-                        TopArrayKind::Links => TypedJsonNode::Link(index),
-                        TopArrayKind::ParentPages => TypedJsonNode::Parent(index),
-                        TopArrayKind::Spreads => TypedJsonNode::Spread(index),
-                        TopArrayKind::Pages => TypedJsonNode::Page(index),
-                    };
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, item, TypedJsonNode::TopArray { kind, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Paragraph(index) => {
-                let value = snapshot.paragraph_styles.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::ParagraphId(index)),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::ParagraphName(index)),
-                    Self::static_node(b",\"fontFamily\":"),
-                    Self::string(StringSource::ParagraphFontFamily(index)),
-                    Self::static_node(b",\"fontSize\":"),
-                    Self::scalar(&value.font_size)?,
-                    Self::static_node(b",\"fontWeight\":"),
-                    Self::scalar(&value.font_weight)?,
-                    Self::static_node(b",\"leading\":"),
-                    Self::scalar(&value.leading)?,
-                    Self::static_node(b",\"tracking\":"),
-                    Self::scalar(&value.tracking)?,
-                    Self::static_node(b",\"alignment\":"),
-                    Self::string(StringSource::ParagraphAlignment(index)),
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Character(index) => {
-                let value = snapshot.character_styles.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::CharacterId(index)),
-                    Self::static_node(b",\"name\":"),
-                    Self::optional_string(value.name.is_some(), StringSource::CharacterName(index)),
-                    Self::static_node(b",\"fontFamily\":"),
-                    Self::optional_string(value.font_family.is_some(), StringSource::CharacterFontFamily(index)),
-                    Self::static_node(b",\"fontSize\":"),
-                    Self::scalar(&value.font_size)?,
-                    Self::static_node(b",\"fontWeight\":"),
-                    Self::scalar(&value.font_weight)?,
-                    Self::static_node(b",\"italic\":"),
-                    Self::scalar(&value.italic)?,
-                    Self::static_node(b",\"color\":"),
-                    Self::scalar(&value.color)?,
-                    Self::static_node(b",\"tracking\":"),
-                    Self::scalar(&value.tracking)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Story(index) => self.push_sequence(vec![
-                Self::static_node(b"{\"id\":"),
-                Self::string(StringSource::StoryId(index)),
-                Self::static_node(b",\"content\":"),
-                Self::string(StringSource::StoryContent(index)),
-                Self::static_node(b",\"styleRuns\":"),
-                TypedJsonNode::StoryRuns { story: index, index: 0, opened: false },
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::StoryRuns { story, index, opened } => {
-                let runs = &snapshot.stories.get(story).ok_or("layout-export-json-index")?.style_runs;
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::StoryRuns { story, index, opened: true }]);
-                } else if index < runs.len() {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::StoryRun { story, run: index }, TypedJsonNode::StoryRuns { story, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::StoryRun { story, run } => {
-                let value = snapshot.stories.get(story).and_then(|story| story.style_runs.get(run)).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"start\":"),
-                    Self::scalar(&value.start)?,
-                    Self::static_node(b",\"end\":"),
-                    Self::scalar(&value.end)?,
-                    Self::static_node(b",\"paragraphStyleId\":"),
-                    Self::optional_string(value.paragraph_style_id.is_some(), StringSource::StoryRunParagraph { story, run }),
-                    Self::static_node(b",\"characterStyleId\":"),
-                    Self::optional_string(value.character_style_id.is_some(), StringSource::StoryRunCharacter { story, run }),
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Link(index) => {
-                let value = snapshot.links.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::LinkId(index)),
-                    Self::static_node(b",\"path\":"),
-                    Self::string(StringSource::LinkPath(index)),
-                    Self::static_node(b",\"hash\":"),
-                    Self::string(StringSource::LinkHash(index)),
-                    Self::static_node(b",\"width\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"height\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b",\"dpi\":"),
-                    Self::scalar(&value.dpi)?,
-                    Self::static_node(b",\"colorProfile\":"),
-                    Self::optional_string(value.color_profile.is_some(), StringSource::LinkColorProfile(index)),
-                    Self::static_node(b",\"state\":"),
-                    Self::optional_string(value.state.is_some(), StringSource::LinkState(index)),
-                    Self::static_node(b",\"proxyDataUrl\":"),
-                    Self::optional_string(value.proxy_data_url.is_some(), StringSource::LinkProxy(index)),
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Parent(index) => {
-                let value = snapshot.parent_pages.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::ParentId(index)),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::ParentName(index)),
-                    Self::static_node(b",\"width\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"height\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b",\"layerIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::ParentLayer(index), index: 0, opened: false },
-                    Self::static_node(b",\"layers\":"),
-                    TypedJsonNode::Layers { owner: RecordOwner::Parent(index), index: 0, opened: false },
-                    Self::static_node(b",\"frames\":"),
-                    TypedJsonNode::Frames { owner: RecordOwner::Parent(index), index: 0, opened: false },
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Spread(index) => self.push_sequence(vec![
-                Self::static_node(b"{\"id\":"),
-                Self::string(StringSource::SpreadId(index)),
-                Self::static_node(b",\"name\":"),
-                Self::string(StringSource::SpreadName(index)),
-                Self::static_node(b",\"pageIds\":"),
-                TypedJsonNode::StringArray { source: StringArraySource::SpreadPage(index), index: 0, opened: false },
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::Page(index) => {
-                let value = snapshot.pages.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::PageId(index)),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::PageName(index)),
-                    Self::static_node(b",\"spreadId\":"),
-                    Self::string(StringSource::PageSpreadId(index)),
-                    Self::static_node(b",\"parentPageId\":"),
-                    Self::optional_string(value.parent_page_id.is_some(), StringSource::PageParentId(index)),
-                    Self::static_node(b",\"width\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"height\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b",\"margins\":"),
-                    TypedJsonNode::Margins(index),
-                    Self::static_node(b",\"columns\":"),
-                    TypedJsonNode::Columns(index),
-                    Self::static_node(b",\"guides\":"),
-                    TypedJsonNode::Guides { page: index, index: 0, opened: false },
-                    Self::static_node(b",\"layerIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::PageLayer(index), index: 0, opened: false },
-                    Self::static_node(b",\"layers\":"),
-                    TypedJsonNode::Layers { owner: RecordOwner::Page(index), index: 0, opened: false },
-                    Self::static_node(b",\"frames\":"),
-                    TypedJsonNode::Frames { owner: RecordOwner::Page(index), index: 0, opened: false },
-                    Self::static_node(b",\"overrides\":"),
-                    TypedJsonNode::Overrides { page: index, index: 0, opened: false },
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::StringArray { source, index, opened } => {
-                let values = match source {
-                    StringArraySource::SpreadPage(owner) => &snapshot.spreads.get(owner).ok_or("layout-export-json-index")?.page_ids,
-                    StringArraySource::PageLayer(owner) => &snapshot.pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
-                    StringArraySource::ParentLayer(owner) => &snapshot.parent_pages.get(owner).ok_or("layout-export-json-index")?.layer_ids,
-                    StringArraySource::LayerObject { owner, layer } => &Self::owner_page(snapshot, owner)?.layers().get(layer).ok_or("layout-export-json-index")?.object_ids,
-                };
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::StringArray { source, index, opened: true }]);
-                } else if values.get(index).is_some() {
-                    self.push_sequence(vec![
-                        if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") },
-                        Self::string(StringSource::StringArrayElement { source, index }),
-                        TypedJsonNode::StringArray { source, index: index + 1, opened: true },
-                    ]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Layers { owner, index, opened } => {
-                let len = Self::owner_page(snapshot, owner)?.layers().len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::Layers { owner, index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::Layer { owner, layer: index }, TypedJsonNode::Layers { owner, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Layer { owner, layer } => {
-                let value = Self::owner_page(snapshot, owner)?.layers().get(layer).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::LayerId { owner, layer }),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::LayerName { owner, layer }),
-                    Self::static_node(b",\"visible\":"),
-                    Self::scalar(&value.visible)?,
-                    Self::static_node(b",\"locked\":"),
-                    Self::scalar(&value.locked)?,
-                    Self::static_node(b",\"objectIds\":"),
-                    TypedJsonNode::StringArray { source: StringArraySource::LayerObject { owner, layer }, index: 0, opened: false },
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Frames { owner, index, opened } => {
-                let len = Self::owner_page(snapshot, owner)?.frames().len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::Frames { owner, index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::Frame { owner, frame: index }, TypedJsonNode::Frames { owner, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Frame { owner, frame } => {
-                let value = Self::owner_page(snapshot, owner)?.frames().get(frame).ok_or("layout-export-json-index")?;
-                let mut nodes = vec![
-                    Self::static_node(b"{\"kind\":"),
-                    Self::static_node(match value {
-                        Frame::Rect { .. } => b"\"rect\"",
-                        Frame::Text { .. } => b"\"text\"",
-                        Frame::Image { .. } => b"\"image\"",
-                    }),
-                    Self::static_node(b",\"id\":"),
-                    Self::string(StringSource::FrameId { owner, frame }),
-                    Self::static_node(b",\"layerId\":"),
-                    Self::string(StringSource::FrameLayerId { owner, frame }),
-                    Self::static_node(b",\"bounds\":"),
-                    TypedJsonNode::Bounds { owner, frame },
-                ];
-                match value {
-                    Frame::Rect { locked, visible, fill, stroke, .. } => nodes.extend([
-                        Self::static_node(b",\"locked\":"),
-                        Self::scalar(locked)?,
-                        Self::static_node(b",\"visible\":"),
-                        Self::scalar(visible)?,
-                        Self::static_node(b",\"fill\":"),
-                        Self::scalar(fill)?,
-                        Self::static_node(b",\"stroke\":"),
-                        Self::scalar(stroke)?,
-                    ]),
-                    Frame::Text { locked, visible, thread_next, columns, .. } => nodes.extend([
-                        Self::static_node(b",\"locked\":"),
-                        Self::scalar(locked)?,
-                        Self::static_node(b",\"visible\":"),
-                        Self::scalar(visible)?,
-                        Self::static_node(b",\"storyId\":"),
-                        Self::string(StringSource::FrameStoryId { owner, frame }),
-                        Self::static_node(b",\"threadNext\":"),
-                        Self::optional_string(thread_next.is_some(), StringSource::FrameThreadNext { owner, frame }),
-                        Self::static_node(b",\"columns\":"),
-                        Self::scalar(columns)?,
-                        Self::static_node(b",\"inset\":"),
-                        TypedJsonNode::TextInset { owner, frame },
-                        Self::static_node(b",\"wrapMode\":"),
-                        Self::string(StringSource::FrameWrapMode { owner, frame }),
-                    ]),
-                    Frame::Image { locked, visible, .. } => nodes.extend([
-                        Self::static_node(b",\"locked\":"),
-                        Self::scalar(locked)?,
-                        Self::static_node(b",\"visible\":"),
-                        Self::scalar(visible)?,
-                        Self::static_node(b",\"linkId\":"),
-                        Self::string(StringSource::FrameLinkId { owner, frame }),
-                    ]),
-                }
-                nodes.push(Self::static_node(b"}"));
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::Bounds { owner, frame } => {
-                let value = frame_bounds(Self::owner_page(snapshot, owner)?.frames().get(frame).ok_or("layout-export-json-index")?);
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"x\":"),
-                    Self::scalar(&value.x)?,
-                    Self::static_node(b",\"y\":"),
-                    Self::scalar(&value.y)?,
-                    Self::static_node(b",\"w\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"h\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b",\"rotation\":"),
-                    Self::scalar(&value.rotation)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Rect { page, guide } => {
-                let value = snapshot.pages.get(page).and_then(|page| page.guides.get(guide)).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"x\":"),
-                    Self::scalar(&value.x)?,
-                    Self::static_node(b",\"y\":"),
-                    Self::scalar(&value.y)?,
-                    Self::static_node(b",\"w\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"h\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::TextInset { owner, frame } => {
-                let value = match Self::owner_page(snapshot, owner)?.frames().get(frame).ok_or("layout-export-json-index")? {
-                    Frame::Text { inset, .. } => inset,
-                    _ => return Err("layout-export-json-frame".into()),
-                };
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"x\":"),
-                    Self::scalar(&value.x)?,
-                    Self::static_node(b",\"y\":"),
-                    Self::scalar(&value.y)?,
-                    Self::static_node(b",\"w\":"),
-                    Self::scalar(&value.width)?,
-                    Self::static_node(b",\"h\":"),
-                    Self::scalar(&value.height)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Margins(page) => {
-                let value = &snapshot.pages.get(page).ok_or("layout-export-json-index")?.margins;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"top\":"),
-                    Self::scalar(&value.top)?,
-                    Self::static_node(b",\"right\":"),
-                    Self::scalar(&value.right)?,
-                    Self::static_node(b",\"bottom\":"),
-                    Self::scalar(&value.bottom)?,
-                    Self::static_node(b",\"left\":"),
-                    Self::scalar(&value.left)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Columns(page) => {
-                let value = &snapshot.pages.get(page).ok_or("layout-export-json-index")?.columns;
-                self.push_sequence(vec![Self::static_node(b"{\"count\":"), Self::scalar(&value.count)?, Self::static_node(b",\"gutter\":"), Self::scalar(&value.gutter)?, Self::static_node(b"}")]);
-            }
-            TypedJsonNode::Guides { page, index, opened } => {
-                let len = snapshot.pages.get(page).ok_or("layout-export-json-index")?.guides.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::Guides { page, index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::Rect { page, guide: index }, TypedJsonNode::Guides { page, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Overrides { page, index, opened } => {
-                let len = snapshot.pages.get(page).ok_or("layout-export-json-index")?.overrides.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::Overrides { page, index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::Override { page, value: index }, TypedJsonNode::Overrides { page, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::Override { page, value } => {
-                let override_value = snapshot.pages.get(page).and_then(|page| page.overrides.get(value)).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"objectId\":"),
-                    Self::string(StringSource::OverrideObjectId { page, value }),
-                    Self::static_node(b",\"bounds\":"),
-                    if override_value.bounds.is_some() { TypedJsonNode::OverrideBounds { page, value } } else { Self::static_node(b"null") },
-                    Self::static_node(b",\"visible\":"),
-                    Self::scalar(&override_value.visible)?,
-                    Self::static_node(b",\"locked\":"),
-                    Self::scalar(&override_value.locked)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::OverrideBounds { page, value } => {
-                let bounds = snapshot.pages.get(page).and_then(|page| page.overrides.get(value)).and_then(|value| value.bounds.as_ref()).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"x\":"),
-                    Self::scalar(&bounds.x)?,
-                    Self::static_node(b",\"y\":"),
-                    Self::scalar(&bounds.y)?,
-                    Self::static_node(b",\"w\":"),
-                    Self::scalar(&bounds.width)?,
-                    Self::static_node(b",\"h\":"),
-                    Self::scalar(&bounds.height)?,
-                    Self::static_node(b",\"rotation\":"),
-                    Self::scalar(&bounds.rotation)?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::BackgroundDrawing => self.push_sequence(vec![Self::static_node(b"{\"handle\":"), TypedJsonNode::ChildHandle, Self::static_node(b",\"content\":"), TypedJsonNode::Drawing, Self::static_node(b"}")]),
-            TypedJsonNode::ChildHandle => {
-                self.push_sequence(vec![Self::static_node(b"{\"childId\":"), Self::string(StringSource::ChildId), Self::static_node(b",\"target\":"), TypedJsonNode::ArtifactRef { referenced: false }, Self::static_node(b"}")]);
-            }
-            TypedJsonNode::ArtifactRef { referenced } => self.push_sequence(vec![
-                Self::static_node(b"{\"artifactId\":"),
-                Self::string(if referenced { StringSource::ReferencedTargetArtifactId } else { StringSource::ChildTargetArtifactId }),
-                Self::static_node(b",\"dialect\":"),
-                TypedJsonNode::Dialect { referenced },
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::Dialect { referenced } => self.push_sequence(vec![
-                Self::static_node(b"{\"artifactKind\":"),
-                Self::string(if referenced { StringSource::ReferencedTargetArtifactKind } else { StringSource::ChildTargetArtifactKind }),
-                Self::static_node(b",\"standard\":"),
-                Self::string(if referenced { StringSource::ReferencedTargetStandard } else { StringSource::ChildTargetStandard }),
-                Self::static_node(b",\"subset\":"),
-                Self::string(if referenced { StringSource::ReferencedTargetSubset } else { StringSource::ChildTargetSubset }),
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::Drawing => self.push_sequence(vec![
-                Self::static_node(b"{\"schema\":"),
-                Self::string(StringSource::DrawingSchema),
-                Self::static_node(b",\"canvas\":"),
-                TypedJsonNode::DrawCanvas,
-                Self::static_node(b",\"styles\":"),
-                TypedJsonNode::DrawStyles { index: 0, opened: false },
-                Self::static_node(b",\"layers\":"),
-                TypedJsonNode::DrawLayers { index: 0, opened: false },
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawCanvas => {
-                let value = &snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.canvas;
-                let mut nodes = vec![Self::static_node(b"{\"width\":"), Self::scalar(&value.width)?, Self::static_node(b",\"height\":"), Self::scalar(&value.height)?];
-                if let Some(background) = value.background {
-                    nodes.extend([Self::static_node(b",\"background\":"), TypedJsonNode::DrawRgba(background)]);
-                }
-                nodes.push(Self::static_node(b"}"));
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::DrawRgba(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"r\":"),
-                Self::scalar(&value.r)?,
-                Self::static_node(b",\"g\":"),
-                Self::scalar(&value.g)?,
-                Self::static_node(b",\"b\":"),
-                Self::scalar(&value.b)?,
-                Self::static_node(b",\"a\":"),
-                Self::scalar(&value.a)?,
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawStyles { index, opened } => {
-                let len = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.styles.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawStyles { index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::DrawStyle(index), TypedJsonNode::DrawStyles { index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawStyle(index) => {
-                let value = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.styles.get(index).ok_or("layout-export-json-index")?;
-                let mut nodes = vec![Self::static_node(b"{\"name\":"), Self::string(StringSource::DrawStyleName(index))];
-                if let Some(fill) = value.fill {
-                    nodes.extend([Self::static_node(b",\"fill\":"), TypedJsonNode::DrawRgba(fill)]);
-                }
-                if let Some(stroke) = value.stroke {
-                    nodes.extend([Self::static_node(b",\"stroke\":"), TypedJsonNode::DrawRgba(stroke)]);
-                }
-                if let Some(width) = value.stroke_width {
-                    nodes.extend([Self::static_node(b",\"strokeWidth\":"), Self::scalar(&width)?]);
-                }
-                if let Some(opacity) = value.opacity {
-                    nodes.extend([Self::static_node(b",\"opacity\":"), Self::scalar(&opacity)?]);
-                }
-                nodes.push(Self::static_node(b"}"));
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::DrawLayers { index, opened } => {
-                let len = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.layers.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawLayers { index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::DrawLayer(index), TypedJsonNode::DrawLayers { index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawLayer(index) => {
-                let value = snapshot.background_drawing.as_ref().ok_or("layout-export-json-background")?.content.layers.get(index).ok_or("layout-export-json-index")?;
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::DrawLayerId(index)),
-                    Self::static_node(b",\"name\":"),
-                    Self::string(StringSource::DrawLayerName(index)),
-                    Self::static_node(b",\"visible\":"),
-                    Self::scalar(&value.visible)?,
-                    Self::static_node(b",\"root\":"),
-                    TypedJsonNode::DrawNode { layer: index, path: Vec::new() },
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::DrawNode { layer, path } => {
-                if path.len() > 64 {
-                    return Err("layout-export-json-depth-limit".into());
-                }
-                let value = Self::draw_node(snapshot, layer, &path)?;
-                match value {
-                    DrawNode::Path { style, .. } => self.push_sequence(vec![
-                        Self::static_node(b"{\"kind\":\"path\",\"segments\":"),
-                        TypedJsonNode::DrawSegments { layer, path: path.clone(), index: 0, opened: false },
-                        if style.is_some() { Self::static_node(b",\"style\":") } else { Self::static_node(b"") },
-                        if style.is_some() { Self::string(StringSource::DrawNodeStyle { layer, path }) } else { Self::static_node(b"") },
-                        Self::static_node(b"}"),
-                    ]),
-                    DrawNode::Text { at, style, .. } => self.push_sequence(vec![
-                        Self::static_node(b"{\"kind\":\"text\",\"value\":"),
-                        Self::string(StringSource::DrawNodeValue { layer, path: path.clone() }),
-                        Self::static_node(b",\"at\":"),
-                        TypedJsonNode::DrawPoint2(*at),
-                        if style.is_some() { Self::static_node(b",\"style\":") } else { Self::static_node(b"") },
-                        if style.is_some() { Self::string(StringSource::DrawNodeStyle { layer, path }) } else { Self::static_node(b"") },
-                        Self::static_node(b"}"),
-                    ]),
-                    DrawNode::Group { transform, .. } => self.push_sequence(vec![
-                        Self::static_node(b"{\"kind\":\"group\",\"transform\":"),
-                        TypedJsonNode::DrawTransform(*transform),
-                        Self::static_node(b",\"children\":"),
-                        TypedJsonNode::DrawChildren { layer, path, index: 0, opened: false },
-                        Self::static_node(b"}"),
-                    ]),
-                    DrawNode::Image { at, width, height, .. } => self.push_sequence(vec![
-                        Self::static_node(b"{\"kind\":\"image\",\"at\":"),
-                        TypedJsonNode::DrawPoint2(*at),
-                        Self::static_node(b",\"width\":"),
-                        Self::scalar(width)?,
-                        Self::static_node(b",\"height\":"),
-                        Self::scalar(height)?,
-                        Self::static_node(b",\"mime\":"),
-                        Self::string(StringSource::DrawNodeMime { layer, path: path.clone() }),
-                        Self::static_node(b",\"bytes\":"),
-                        TypedJsonNode::DrawBytes { layer, path, index: 0, opened: false },
-                        Self::static_node(b"}"),
-                    ]),
-                }
-            }
-            TypedJsonNode::DrawChildren { layer, path, index, opened } => {
-                if path.len() > 64 {
-                    return Err("layout-export-json-depth-limit".into());
-                }
-                let len = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Group { children, .. } => children.len(),
-                    _ => return Err("layout-export-json-draw-path".into()),
-                };
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawChildren { layer, path, index, opened: true }]);
-                } else if index < len {
-                    let mut child = path.clone();
-                    child.push(index);
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::DrawNode { layer, path: child }, TypedJsonNode::DrawChildren { layer, path, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawSegments { layer, path, index, opened } => {
-                let len = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Path { segments, .. } => segments.len(),
-                    _ => return Err("layout-export-json-draw-path".into()),
-                };
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawSegments { layer, path, index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![
-                        if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") },
-                        TypedJsonNode::DrawSegment { layer, path: path.clone(), segment: index },
-                        TypedJsonNode::DrawSegments { layer, path, index: index + 1, opened: true },
-                    ]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawSegment { layer, path, segment } => {
-                let value = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Path { segments, .. } => segments.get(segment).ok_or("layout-export-json-index")?,
-                    _ => return Err("layout-export-json-draw-path".into()),
-                };
-                let nodes = match value {
-                    PathSegment::MoveTo { to } => vec![Self::static_node(b"{\"kind\":\"moveTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::LineTo { to } => vec![Self::static_node(b"{\"kind\":\"lineTo\",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::CubicTo { c1, c2, to } => vec![
-                        Self::static_node(b"{\"kind\":\"cubicTo\",\"c1\":"),
-                        TypedJsonNode::DrawPoint2(*c1),
-                        Self::static_node(b",\"c2\":"),
-                        TypedJsonNode::DrawPoint2(*c2),
-                        Self::static_node(b",\"to\":"),
-                        TypedJsonNode::DrawPoint2(*to),
-                        Self::static_node(b"}"),
-                    ],
-                    PathSegment::QuadTo { c, to } => vec![Self::static_node(b"{\"kind\":\"quadTo\",\"c\":"), TypedJsonNode::DrawPoint2(*c), Self::static_node(b",\"to\":"), TypedJsonNode::DrawPoint2(*to), Self::static_node(b"}")],
-                    PathSegment::ArcTo { rx, ry, x_rotation, large_arc, sweep, to } => vec![
-                        Self::static_node(b"{\"kind\":\"arcTo\",\"rx\":"),
-                        Self::scalar(rx)?,
-                        Self::static_node(b",\"ry\":"),
-                        Self::scalar(ry)?,
-                        Self::static_node(b",\"xRotation\":"),
-                        Self::scalar(x_rotation)?,
-                        Self::static_node(b",\"largeArc\":"),
-                        Self::scalar(large_arc)?,
-                        Self::static_node(b",\"sweep\":"),
-                        Self::scalar(sweep)?,
-                        Self::static_node(b",\"to\":"),
-                        TypedJsonNode::DrawPoint2(*to),
-                        Self::static_node(b"}"),
-                    ],
-                    PathSegment::Close => vec![Self::static_node(b"{\"kind\":\"close\"}")],
-                };
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::DrawPoint2(value) => self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b"}")]),
-            TypedJsonNode::DrawPoint3(value) => {
-                self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b",\"z\":"), Self::scalar(&value.z)?, Self::static_node(b"}")]);
-            }
-            TypedJsonNode::DrawQuaternion(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"x\":"),
-                Self::scalar(&value.x)?,
-                Self::static_node(b",\"y\":"),
-                Self::scalar(&value.y)?,
-                Self::static_node(b",\"z\":"),
-                Self::scalar(&value.z)?,
-                Self::static_node(b",\"w\":"),
-                Self::scalar(&value.w)?,
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawTransform(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"translation\":"),
-                TypedJsonNode::DrawPoint3(value.translation),
-                Self::static_node(b",\"rotation\":"),
-                TypedJsonNode::DrawQuaternion(value.rotation),
-                Self::static_node(b",\"scale\":"),
-                TypedJsonNode::DrawPoint3(value.scale),
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawBytes { layer, path, index, opened } => {
-                let bytes = match Self::draw_node(snapshot, layer, &path)? {
-                    DrawNode::Image { bytes, .. } => bytes,
-                    _ => return Err("layout-export-json-draw-path".into()),
-                };
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawBytes { layer, path, index, opened: true }]);
-                } else if let Some(value) = bytes.get(index) {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, Self::scalar(value)?, TypedJsonNode::DrawBytes { layer, path, index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::ReferencedModel => self.push_sequence(vec![
-                Self::static_node(b"{\"target\":"),
-                TypedJsonNode::ArtifactRef { referenced: true },
-                Self::static_node(b",\"pin\":"),
-                TypedJsonNode::LinkPin,
-                Self::static_node(b",\"role\":"),
-                Self::string(StringSource::ReferencedRole),
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::LinkPin => {
-                let pin = &snapshot.referenced_model.as_ref().ok_or("layout-export-json-reference")?.pin;
-                match pin {
-                    store::LinkPin::Head => self.stack.push(Self::static_node(b"{\"kind\":\"head\"}")),
-                    store::LinkPin::Checkpoint { .. } => self.push_sequence(vec![Self::static_node(b"{\"kind\":\"checkpoint\",\"id\":"), Self::string(StringSource::ReferencedCheckpointId), Self::static_node(b"}")]),
-                    store::LinkPin::Snapshot { .. } => self.push_sequence(vec![Self::static_node(b"{\"kind\":\"snapshot\",\"blob\":"), TypedJsonNode::BlobRef, Self::static_node(b"}")]),
-                }
-            }
-            TypedJsonNode::BlobRef => {
-                let blob = match &snapshot.referenced_model.as_ref().ok_or("layout-export-json-reference")?.pin {
-                    store::LinkPin::Snapshot { blob } => blob,
-                    _ => return Err("layout-export-json-reference".into()),
-                };
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"hash\":"),
-                    Self::string(StringSource::ReferencedBlobHash),
-                    Self::static_node(b",\"size\":"),
-                    Self::scalar(&blob.size)?,
-                    Self::static_node(b",\"mediaType\":"),
-                    Self::string(StringSource::ReferencedBlobMediaType),
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::MissingLinks { index, opened, emitted } => {
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::MissingLinks { index, opened: true, emitted }]);
-                } else if let Some(link) = snapshot.links.get(index) {
-                    if link.state.as_deref() == Some("missing") {
-                        self.push_sequence(vec![if emitted { Self::static_node(b",") } else { Self::static_node(b"") }, TypedJsonNode::MissingLink(index), TypedJsonNode::MissingLinks { index: index + 1, opened: true, emitted: true }]);
-                    } else {
-                        self.stack.push(TypedJsonNode::MissingLinks { index: index + 1, opened: true, emitted });
-                    }
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::MissingLink(index) => {
-                self.push_sequence(vec![Self::static_node(b"{\"kind\":\"missing-link\",\"linkId\":"), Self::string(StringSource::LinkId(index)), Self::static_node(b",\"path\":"), Self::string(StringSource::LinkPath(index)), Self::static_node(b"}")]);
-            }
-            TypedJsonNode::Manifest => self.push_sequence(vec![
-                Self::static_node(b"{\"schema\":\"layout.package-manifest/v1\",\"document\":\"document.json\",\"preflight\":\"preflight-report.json\",\"links\":"),
-                TypedJsonNode::ManifestLinks { index: 0, opened: false },
-                Self::static_node(b",\"generatedAt\":\"2026-07-02T00:00:00Z\"}"),
-            ]),
-            TypedJsonNode::ManifestLinks { index, opened } => {
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::ManifestLinks { index, opened: true }]);
-                } else if index < snapshot.links.len() {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::ManifestLink(index), TypedJsonNode::ManifestLinks { index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::ManifestLink(index) => {
-                let link = snapshot.links.get(index).ok_or("layout-export-json-index")?;
-                let hash = if link.hash.is_empty() { Self::owned_string(format!("sha256:{}", semio_framework_hash::sha256_hex(link.path.as_bytes()))) } else { Self::string(StringSource::LinkHash(index)) };
-                self.push_sequence(vec![
-                    Self::static_node(b"{\"id\":"),
-                    Self::string(StringSource::LinkId(index)),
-                    Self::static_node(b",\"path\":"),
-                    Self::string(StringSource::LinkPath(index)),
-                    Self::static_node(b",\"hash\":"),
-                    hash,
-                    Self::static_node(b",\"state\":"),
-                    Self::optional_string(link.state.is_some(), StringSource::LinkState(index)),
-                    Self::static_node(b",\"missing\":"),
-                    Self::scalar(&(link.state.as_deref() == Some("missing")))?,
-                    Self::static_node(b"}"),
-                ]);
-            }
-            TypedJsonNode::Dictionary(_) | TypedJsonNode::FragmentStart | TypedJsonNode::FragmentEnd | TypedJsonNode::Static { .. } | TypedJsonNode::Scalar { .. } | TypedJsonNode::String { .. } | TypedJsonNode::OwnedString { .. } => {
-                unreachable!("leaf nodes are handled before expansion")
-            }
-        }
-        Ok(())
-    }
-}
-
-enum OwnerPage<'a> {
-    Page(&'a Page),
-    Parent(&'a crate::ParentPage),
-}
-
-impl<'a> OwnerPage<'a> {
-    fn layers(&self) -> &'a [crate::Layer] {
-        match self {
-            Self::Page(value) => &value.layers,
-            Self::Parent(value) => &value.layers,
-        }
-    }
-
-    fn frames(&self) -> &'a [Frame] {
-        match self {
-            Self::Page(value) => &value.frames,
-            Self::Parent(value) => &value.frames,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-enum FrameStringField {
-    Id,
-    LayerId,
-    StoryId,
-    ThreadNext,
-    WrapMode,
-    LinkId,
-}
-
-fn frame_string(frame: &Frame, field: FrameStringField) -> Option<&str> {
-    match (frame, field) {
-        (Frame::Rect { id, .. } | Frame::Text { id, .. } | Frame::Image { id, .. }, FrameStringField::Id) => Some(id),
-        (Frame::Rect { layer_id, .. } | Frame::Text { layer_id, .. } | Frame::Image { layer_id, .. }, FrameStringField::LayerId) => Some(layer_id),
-        (Frame::Text { story_id, .. }, FrameStringField::StoryId) => Some(story_id),
-        (Frame::Text { thread_next: Some(value), .. }, FrameStringField::ThreadNext) => Some(value),
-        (Frame::Text { wrap_mode, .. }, FrameStringField::WrapMode) => Some(wrap_mode),
-        (Frame::Image { link_id, .. }, FrameStringField::LinkId) => Some(link_id),
-        _ => None,
-    }
-}
 //#endregion 🧱️Storage
 
 //#region 🧩️Job
@@ -2214,7 +403,7 @@ enum LayoutExportCloseStage {
 }
 
 #[derive(Clone, Copy)]
-enum LayoutExportPublicationKind {
+pub enum LayoutExportPublicationKind {
     Preview,
     Checkpoint { applied_progress: u64 },
     Commit,
@@ -2242,9 +431,9 @@ fn layout_close_step(turn:Result<LayoutCloseTurn,Fault>)->Result<InteractiveJobC
     })
 }
 
-type LayoutExportTurn<'a> = Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;
+pub type LayoutExportTurn<'a> = Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;
 
-struct LayoutExportPublication {
+pub struct LayoutExportPublication {
     kind: LayoutExportPublicationKind,
     bytes: [u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES],
     length: usize,
@@ -2290,7 +479,7 @@ impl LayoutExportPublication {
 
 /// 📮️ Holds the one scheduled publication of a job and closes a delivered one before the job resumes.
 #[derive(Default)]
-struct LayoutPublicationSlot {
+pub struct LayoutPublicationSlot {
     publication: Option<LayoutExportPublication>,
     delivered: bool,
 }
@@ -2392,7 +581,7 @@ pub struct LayoutExportJob {
     pdf_item_cursor: usize,
     pdf_font_cursor: usize,
     pdf_content_start: usize,
-    pdf_engine: Option<crate::editor::layout::engine::scene::LayoutEngine>,
+    pdf_engine: Option<semio_s_artifact_layout_layout_engine::scene::LayoutEngine>,
     package_section: PackageSection,
     package_index: usize,
     package_byte_cursor: usize,
@@ -2411,422 +600,6 @@ pub struct LayoutExportJob {
     close_stage: LayoutExportCloseStage,
 }
 
-pub struct LayoutExportToolPayload {
-    pub request: LayoutExportRequest,
-    pub output_chunks: ArtifactOutputChunks,
-    pub completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
-}
-
-pub struct LayoutExportToolJob {
-    inner: Option<LayoutExportJob>,
-    pending_operation: Option<Operation>,
-    pending_request: Option<LayoutExportRequest>,
-    pending_output_chunks: Option<ArtifactOutputChunks>,
-    completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
-    kind: LayoutExportKind,
-    name: String,
-    raw_input: Option<RetainedToolWireInput>,
-    raw_bytes: Vec<u8>,
-    raw_page_cursor: usize,
-    raw_validated: bool,
-    completed: bool,
-    slot: LayoutPublicationSlot,
-    pending_download: Option<ArtifactDownloadOutput>,
-    rejected_download: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-}
-
-impl LayoutExportToolJob {
-    fn materialize_decoded_job(&mut self,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> bool {
-        if self.inner.is_some() {
-            return true;
-        }
-        let (Some(operation), Some(request), Some(output_chunks)) = (self.pending_operation.take(), self.pending_request.take(), self.pending_output_chunks.take()) else {
-            return false;
-        };
-        self.name = output_name(&request);
-        self.inner = Some(LayoutExportJob::from_admitted(operation,source_identity,request,output_chunks));
-        self.inner.is_some()
-    }
-
-    /// 🔐️ The retained wire is the command's `OpBinary` encoding (ticket
-    /// 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END) — the JSON-text state machine that used to sit here
-    /// faulted at the first byte of every real export, which the shell only showed as an empty
-    /// `typed-operation failed:`. Verb and page target must match the reducer-built request.
-    fn decoded_wire_command_matches(&self) -> bool {
-        let Ok(command) = <crate::editor::layout::LayoutCommand as protocol::OpBinary>::decode_op(&self.raw_bytes) else { return false };
-        if command.command_id() != self.kind.tool_id() {
-            return false;
-        }
-        let page_id = match &command {
-            crate::editor::layout::LayoutCommand::ExportPng(payload) => payload.page_id.clone(),
-            crate::editor::layout::LayoutCommand::ExportSvg(payload) => payload.page_id.clone(),
-            crate::editor::layout::LayoutCommand::ExportPdf(payload) => payload.page_id.clone(),
-            _ => None,
-        };
-        match self.kind {
-            LayoutExportKind::Package => page_id.is_none(),
-            _ => page_id.as_ref().is_none_or(|page_id| self.pending_request.as_ref().and_then(|request| request.page_id.as_ref()) == Some(page_id)),
-        }
-    }
-}
-
-impl LayoutExportToolJob {
-    fn fault<'a>(&'a mut self, context: &mut StepContext<'_>, detail: &str) -> LayoutExportTurn<'a> {
-        self.slot.publication = Some(LayoutExportJob::fault_publication(detail));
-        self.slot.advance(context)
-    }
-
-    fn checkpoint<'a>(&'a mut self, context: &mut StepContext<'_>, applied_progress: u64) -> LayoutExportTurn<'a> {
-        let cursor = (self.raw_page_cursor as u64).to_le_bytes();
-        self.slot.publication = LayoutExportPublication::new(LayoutExportPublicationKind::Checkpoint { applied_progress }, &cursor).ok();
-        self.slot.advance(context)
-    }
-
-    fn close_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
-        if let Some(owner)=self.rejected_download.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
-        if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_download)}
-        if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{inner.close_demand()}}
-        if self.pending_request.is_some(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportJob>(),..one})}
-        if self.raw_bytes.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.raw_bytes.capacity(),..one})}
-        if let Some(input)=self.raw_input.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:input.next_close_copy_byte_demand()?,capacity_bytes:input.next_close_capacity_byte_demand(0)?,release_bytes:input.next_close_release_byte_demand()?,depth:input.next_close_depth_demand()?.max(1)})}
-        if self.name.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.name.capacity(),..one})}
-        if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
-        if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
-        Ok(Default::default())
-    }
-
-}
-
-impl InteractiveJob for LayoutExportToolJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
-        if !self.slot.settle(context)? {
-            return Ok(None);
-        }
-        if self.slot.publication.is_some() {
-            return self.slot.advance(context);
-        }
-        if !self.raw_validated {
-            if context.is_cancelled() {
-                return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
-            }
-            if context.should_yield() || context.fuel_remaining() == 0 {
-                return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
-            }
-            context.set_stage("layout-export-retained-wire-decode");
-            let Some(input) = self.raw_input.as_ref() else {
-                return self.fault(context, "layout-export-wire-input-missing");
-            };
-            if let Some(page) = input.page(self.raw_page_cursor) {
-                self.raw_bytes.extend_from_slice(page);
-                self.raw_page_cursor = self.raw_page_cursor.saturating_add(1);
-                context.consume_fuel(1);
-                let progress = self.raw_bytes.len() as u64;
-                return self.checkpoint(context, progress);
-            }
-            if !self.decoded_wire_command_matches() {
-                return self.fault(context, "layout-export-wire-command-mismatch");
-            }
-            if !self.materialize_decoded_job((context.operation(),context.generation())) {
-                return self.fault(context, "layout-export-wire-job-refused");
-            }
-            self.raw_validated = true;
-            context.consume_fuel(1);
-            let progress = self.raw_bytes.len().saturating_add(1) as u64;
-            return self.checkpoint(context, progress);
-        }
-        let Some(inner) = self.inner.as_mut() else {
-            self.slot.publication = Some(LayoutExportJob::fault_publication("layout-export-inner-missing"));
-            return self.slot.advance(context);
-        };
-        if inner.commit_ready() && !self.completed && self.completion.is_some() {
-            // 📤️ The download OWNS the sealed chunk queue from here: `ArtifactOutputChunks` clones
-            // share one queue, and the job's own close (`LayoutExportCloseStage::OutputChunks`) pops it —
-            // which drained every export to a 0-byte `Demo.pdf` before the host could take a single
-            // chunk (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). The job keeps an empty stand-in.
-            let chunks = inner.output_chunks.take().expect("layout publication owns its admitted output");
-            let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), chunks);
-            if let Some(completion) = &self.completion {
-                if let Err(rejected) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
-                    if let Ok(download) = rejected.download {
-                        self.pending_download = Some(download);
-                    }
-                    self.slot.publication = Some(LayoutExportJob::fault_publication("layout-export-download-rejected"));
-                    return self.slot.advance(context);
-                }
-            }
-            self.completed = true;
-        }
-        inner.step(context)
-    }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        match descriptor.kind() {
-            JobOutcomeKind::Yield => descriptor.yielded(),
-            JobOutcomeKind::Cancelled => descriptor.cancelled(),
-            _ if self.slot.delivered => self.slot.borrow_outcome(descriptor),
-            _ => self.inner.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout export outcome lost its job"))?.borrow_outcome(descriptor),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        if let Some(input) = self.raw_input.as_mut() {
-            input.begin_close();
-        }
-        if let Some(inner) = self.inner.as_mut() {
-            inner.begin_close();
-        }
-    }
-
-    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};self.begin_close();
-        if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-        if self.inner.is_none()&&self.pending_request.is_none(){if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx)?;if input.terminal_is_empty(){self.raw_input.take();}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-        let source_identity=(cx.operation(),cx.generation());let demand=self.close_demand()?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-            if self.rejected_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected_download,grant)}
-            if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_download,&mut self.rejected_download,grant)}
-            if self.inner.is_some(){self.inner.take();return Ok(RetainedCloneStep::Progress(item))}
-            if self.pending_request.is_some(){if self.pending_operation.is_none()||self.pending_output_chunks.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout pending producer lost one of its paired original inputs"))}let operation=self.pending_operation.take().unwrap();let request=self.pending_request.take().unwrap();let chunks=self.pending_output_chunks.take().unwrap();let mut inner=LayoutExportJob::from_admitted(operation,source_identity,request,chunks);inner.begin_close();self.inner=Some(inner);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportJob>(),..item}))}
-            if self.raw_bytes.capacity()!=0{let bytes=std::mem::take(&mut self.raw_bytes).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
-            if self.name.capacity()!=0{let bytes=std::mem::take(&mut self.name).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
-            if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
-            if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.rejected_download,grant)}
-            Ok(RetainedCloneStep::Complete(Default::default()))
-        })?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
-    }
-
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.depth)}
-
-    fn terminal_is_empty(&self) -> bool {
-        self.rejected_download.is_none() && self.pending_download.is_none() && self.slot.terminal_is_empty() && self.name.capacity()==0 && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.capacity()==0 && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
-    }
-}
-
-pub struct LayoutExportJobFactory {
-    keys: Vec<ToolFactoryKey>,
-}
-
-pub struct LayoutMediaExportJob {
- inner:Option<LayoutExportJob>,completion:Option<ArtifactMediaExportCompletion>,active:Option<Box<dyn store::ErasedSnapshotRetirement>>,
- metadata:std::mem::ManuallyDrop<Option<([Vec<u8>;2],Option<(String,String)>)>>,metadata_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<([Vec<u8>;2],Option<(String,String)>)>>>,
- pending_result:std::mem::ManuallyDrop<Option<Result<ArtifactMediaExportResult,semio_framework::MediaError>>>,result_published:bool,
- slot:LayoutPublicationSlot,completed:bool,
-}
-impl LayoutMediaExportJob{
- pub fn admit_original(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
-  let _=cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let grant=cx.retained_grant();
-  if body.is_none(){let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout producer lost original request"))?;let page=input.snapshot.pages.first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires one actual page"))?;
-   if !bounded_id(&page.id)||!bounded_id(&input.parent_document_id){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires its exact bounded original authority").into())}let bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(false)}
-   let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"layout media original body allocation refused"))?;
-   let owner=Self{inner:None,completion:None,active:None,metadata:std::mem::ManuallyDrop::new(Some((std::array::from_fn(|_|Vec::new()),None))),metadata_retirement:std::mem::ManuallyDrop::new(None),pending_result:std::mem::ManuallyDrop::new(None),result_published:false,slot:LayoutPublicationSlot::default(),completed:false};*body=Some(unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
-  }
-  let owner=(&mut**body.as_mut().unwrap()as &mut dyn std::any::Any).downcast_mut::<Self>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media requires its exact concrete body"))?;
-  if owner.inner.is_some()&&request.is_none(){return Ok(true)}if owner.inner.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout original request cannot overwrite its prepared body").into())}
-  let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media lost original source before admission"))?;let page=input.snapshot.pages.first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout captured page changed"))?;let fields=&mut owner.metadata.as_mut().unwrap().0;
-  for index in 0..2{let bytes=if index==0{page.id.len()}else{64};let output=&mut fields[index];if output.capacity()<bytes{if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(false)}output.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"layout original authority allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-   if output.len()<bytes{let count=(bytes-output.len()).min(grant.maximum_copy_bytes);if grant.maximum_items==0||grant.maximum_depth==0||count==0{return Ok(false)}let start=output.len();if index==0{output.extend_from_slice(&page.id.as_bytes()[start..start+count])}else{const HEX:&[u8;16]=b"0123456789abcdef";for offset in start..start+count{let value=input.canonical_base_revision[offset/2];output.push(HEX[usize::from(if offset%2==0{value>>4}else{value&15})])}}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-  }
-  let bytes=size_of::<LayoutExportJob>()+size_of::<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-  let input=request.take().unwrap();let fields=&mut owner.metadata.as_mut().unwrap().0;let page_id=String::from_utf8(std::mem::take(&mut fields[0])).expect("layout retained page bytes preserve original UTF-8");let revision=String::from_utf8(std::mem::take(&mut fields[1])).expect("layout original revision is hexadecimal");
-  let export=LayoutExportRequest{kind:LayoutExportKind::Svg,page_id:Some(page_id),snapshot:input.snapshot,preflight_json:None,parent_document_id:input.parent_document_id,canonical_base_revision_hex:revision};
-  owner.inner=Some(LayoutExportJob::from_admitted(input.operation,input.source_identity,export,input.output_chunks).with_snapshot_close_lease(input.snapshot_close).with_media_output_credit(input.output_credit));owner.completion=Some(input.completion);owner.metadata.as_mut().unwrap().1=Some((input.tool_id,input.port));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
- }
- fn close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-  let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
-  if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{Ok(semio_framework_value::RetirementDemand{copy_bytes:inner.next_close_copy_byte_demand()?,capacity_bytes:inner.next_close_capacity_byte_demand(body)?,release_bytes:inner.next_close_release_byte_demand()?,depth:inner.next_close_depth_demand()?.max(1)})}}
-  if let Some(active)=self.active.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}
-  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
-  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
-  if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
-  if let Some(owner)=self.metadata_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.selected_demand(body)}}
-  Ok(if self.metadata.is_some(){one}else{Default::default()})
- }
- fn close_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
-  let item=semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()};
-  if self.inner.as_ref().is_some_and(InteractiveJob::terminal_is_empty){self.inner.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
-  if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
-  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_result,&mut self.active,grant)}
-  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.active,grant)}
-  if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
-  if let Some(owner)=self.metadata_retirement.as_mut(){if owner.terminal_is_empty(){self.metadata_retirement.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}return owner.step(grant)}
-  if let Some(metadata)=self.metadata.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.metadata=Some(metadata);return Err(error)}}return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
-  Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
- }
-}
-impl InteractiveJob for LayoutMediaExportJob{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{
-  if !self.slot.settle(cx)?{return Ok(None)}if self.slot.publication.is_some(){return self.slot.advance(cx)}
-  if self.pending_result.is_some()||self.result_published{self.completed=self.completion.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost its original completion receiver"))?.complete_original(&mut self.pending_result,&mut self.result_published,cx)?;return Ok(None)}
-  let inner=self.inner.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media cannot drive an unadmitted body"))?;
-  if inner.commit_ready()&&!self.completed{
-   if let Some(credit)=inner.media_output_credit.as_ref(){credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len())?}
-   let chunks=inner.output_chunks.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost supplied output roots"))?;
-   let media=ArtifactMediaExportResult::structured(MediaType{class:MediaClass::TwoD,form:MediaForm::Vector},LAYOUT_MEDIA_EXPORT_SCHEMA,"application/json",chunks)?;
-   *self.pending_result=Some(Ok(media));return Ok(None);
-  }inner.step(cx)
- }
- fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_ if self.slot.delivered=>self.slot.borrow_outcome(descriptor),_=>self.inner.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout outcome lost its original body"))?.borrow_outcome(descriptor)}}
- fn begin_close(&mut self){if let Some(inner)=self.inner.as_mut(){inner.begin_close()}}
- fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-  self.begin_close();if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-  let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_turn(grant))?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
- }
- fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
- fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(body)?.capacity_bytes)}
- fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.release_bytes)}
- fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.depth)}
- fn terminal_is_empty(&self)->bool{self.inner.is_none()&&self.completion.is_none()&&self.active.is_none()&&self.slot.terminal_is_empty()&&self.metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
-}
-
-impl ArtifactReservedJob for LayoutMediaExportJob {}
-
-pub struct LayoutMediaExportJobFactory {
-    keys: [ToolFactoryKey; 1],
-}
-
-impl LayoutMediaExportJobFactory {
-    pub fn new(controller_id: &str) -> Self {
-        Self { keys: [ToolFactoryKey::new(controller_id, LAYOUT_MEDIA_EXPORT_TOOL_ID)] }
-    }
-}
-
-impl ToolJobFactory for LayoutMediaExportJobFactory {
-    type Payload = ArtifactReservedToolJob;
-    type Job = ArtifactReservedToolJob;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> ToolExecutionContract {
-        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
-    }
-
-    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(payload)
-    }
-}
-
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
-    type Owner = EditorApp<LayoutPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = &[LAYOUT_MEDIA_EXPORT_TOOL_ID];
-    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: LAYOUT_MEDIA_EXPORT_TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
-}
-
-impl LayoutExportJobFactory {
-    pub fn new(controller_id: &str) -> Self {
-        Self { keys: LAYOUT_EXPORT_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
-    }
-}
-
-impl ToolJobFactory for LayoutExportJobFactory {
-    type Payload = LayoutExportToolPayload;
-    type Job = LayoutExportToolJob;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-
-    fn payload_schema_id(&self) -> &str {
-        LAYOUT_EXPORT_PAYLOAD_SCHEMA
-    }
-
-    fn classification(&self) -> InteractiveJobClassification {
-        InteractiveJobClassification::Migrated
-    }
-
-    fn execution_contract(&self) -> ToolExecutionContract {
-        ToolExecutionContract::resumable(MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS, 1, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, 2_000, 64, 1)
-    }
-
-    fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        let kind = payload.request.kind;
-        let name = output_name(&payload.request);
-        let inner = LayoutExportJob::from_admitted(operation,(operation.operation,operation.generation),payload.request,payload.output_chunks);
-        Ok(LayoutExportToolJob {
-            inner: Some(inner),
-            rejected_download:None,
-            pending_download: None,
-            slot: LayoutPublicationSlot::default(),
-            pending_operation: None,
-            pending_request: None,
-            pending_output_chunks: None,
-            completion: payload.completion,
-            kind,
-            name,
-            raw_input: None,
-            raw_bytes: Vec::new(),
-            raw_page_cursor: 0,
-            raw_validated: true,
-            completed: false,
-        })
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        operation: Operation,
-        payload: Self::Payload,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
-        if checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("layout export retained ingress does not accept an unvalidated checkpoint owner"), input, checkpoint));
-        }
-        let declared_bytes = input.declared_bytes();
-        if declared_bytes > MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES {
-            return Err((ToolJobFactoryError::new("layout export retained ingress exceeds its command byte envelope"), input, None));
-        }
-        let kind = payload.request.kind;
-        let mut job = LayoutExportToolJob {
-            inner: None,
-            rejected_download:None,
-            pending_download: None,
-            slot: LayoutPublicationSlot::default(),
-            pending_operation: Some(operation),
-            pending_request: Some(payload.request),
-            pending_output_chunks: Some(payload.output_chunks),
-            completion: payload.completion,
-            kind,
-            name: String::new(),
-            raw_input: None,
-            raw_bytes: Vec::new(),
-            raw_page_cursor: 0,
-            raw_validated: false,
-            completed: false,
-        };
-        if job.raw_bytes.try_reserve_exact(declared_bytes).is_err() {
-            return Err((ToolJobFactoryError::new("layout export retained decoder capacity was not admitted"), input, None));
-        }
-        job.raw_input = Some(input);
-        Ok(job)
-    }
-}
-
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
-    type Owner = EditorApp<LayoutPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = LAYOUT_EXPORT_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        ArtifactToolPublicationContract { tool_id: "exportPng", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "exportSvg", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "exportPdf", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "exportPackage", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ];
-}
 
 impl LayoutExportJob {
     fn from_admitted(operation:Operation,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),request:LayoutExportRequest,output_chunks:ArtifactOutputChunks)->Self {
@@ -3108,7 +881,7 @@ impl LayoutExportJob {
             LayoutExportCloseStage::PdfEngine => {
                 let released = usize::from(self.pdf_engine.take().is_some());
                 self.close_stage = LayoutExportCloseStage::ZipEntries;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: released * size_of::<crate::editor::layout::engine::scene::LayoutEngine>() })
+                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: released * size_of::<semio_s_artifact_layout_layout_engine::scene::LayoutEngine>() })
             }
             LayoutExportCloseStage::ZipEntries => {
                 let bytes = self.zip.entries.last().map_or(0, |entry| entry.name.len());
@@ -3525,8 +1298,8 @@ impl LayoutExportJob {
         let page = snapshot.pages.get(page_index).ok_or("layout-export-page-missing")?;
         let width = finite_dimension(page.width)?;
         let height = finite_dimension(page.height)?;
-        let engine = self.pdf_engine.get_or_insert_with(crate::editor::layout::engine::scene::LayoutEngine::new);
-        let list = crate::editor::layout::engine::scene::build_display_list_for_page(engine, &snapshot, page, "", &[], None, false);
+        let engine = self.pdf_engine.get_or_insert_with(semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new);
+        let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(engine, &snapshot, page, "", &[], None, false);
         let mut items = 0usize;
         let mut push = |item: PdfItem, pdf_items: &mut Vec<PdfItem>| -> Result<(), String> {
             if pdf_items.len() >= MAX_LAYOUT_EXPORT_DECODED_ITEMS {
@@ -3536,18 +1309,18 @@ impl LayoutExportJob {
             items += 1;
             Ok(())
         };
-        for piece in crate::editor::layout::engine::scene::stack_pieces(&list) {
+        for piece in semio_s_artifact_layout_layout_engine::scene::stack_pieces(&list) {
             match piece {
-                crate::editor::layout::engine::scene::StackPiece::Stroke(stroke) | crate::editor::layout::engine::scene::StackPiece::FrameStroke(stroke) => {
+                semio_s_artifact_layout_layout_engine::scene::StackPiece::Stroke(stroke) | semio_s_artifact_layout_layout_engine::scene::StackPiece::FrameStroke(stroke) => {
                     push(PdfItem::Stroke { points: stroke.points.clone(), closed: stroke.closed, color: stroke.color, width: stroke.width, fill: stroke.fill }, &mut self.pdf_items)?;
                 }
-                crate::editor::layout::engine::scene::StackPiece::Rect(rect) => {
+                semio_s_artifact_layout_layout_engine::scene::StackPiece::Rect(rect) => {
                     push(PdfItem::Rect { x: rect.x, y: rect.y, width: rect.width, height: rect.height, fill: rect.fill.as_ref().map(|color| color.0), stroke: rect.stroke.as_ref().map(|color| color.0) }, &mut self.pdf_items)?;
                 }
-                crate::editor::layout::engine::scene::StackPiece::Image(image) => {
+                semio_s_artifact_layout_layout_engine::scene::StackPiece::Image(image) => {
                     push(PdfItem::Image { x: image.x, y: image.y, width: image.width, height: image.height, rotation: image.rotation, placeholder: image.placeholder, mark: image.preview.clone(), raster: image.proxy_data_url.as_deref().and_then(Self::proxy_png_rgb) }, &mut self.pdf_items)?;
                 }
-                crate::editor::layout::engine::scene::StackPiece::Text(run) => {
+                semio_s_artifact_layout_layout_engine::scene::StackPiece::Text(run) => {
                     for glyph in &run.glyphs {
                         let glyph_id = u16::try_from(glyph.glyph_id).map_err(|_| "layout-export-glyph-range")?;
                         push(PdfItem::Glyph { x: glyph.x, y: glyph.y, size: glyph.font_size, glyph_id, color: glyph.color.0, italic: glyph.italic }, &mut self.pdf_items)?;
@@ -3586,7 +1359,6 @@ impl LayoutExportJob {
     fn pdf_page_object_id(page: usize) -> usize {
         7 + 3 * page
     }
-
 
 
 fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
@@ -3742,7 +1514,7 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
     }
 
     fn encode_pdf_one(&mut self) -> Result<(), String> {
-        const FONT: &[u8] = crate::editor::layout::engine::scene::LAYOUT_SANS;
+        const FONT: &[u8] = semio_s_artifact_layout_layout_engine::scene::LAYOUT_SANS;
         let page_count = self.pdf_pages.len();
         match self.pdf_section {
             PdfSection::Header => return Err("layout-export-pdf-header-state".into()),
@@ -4364,11 +2136,6 @@ impl ArtifactReservedJob for LayoutExportJob {}
 //#endregion 🧩️Job
 
 //#region 🔧️PlanPrimitives
-fn frame_bounds(frame: &Frame) -> &LayoutBounds {
-    match frame {
-        Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
-    }
-}
 
 fn frame_visible(frame: &Frame) -> bool {
     match frame {
@@ -4413,7 +2180,7 @@ fn finite_dimension(value: f64) -> Result<u32, String> {
     Ok(value.ceil() as u32)
 }
 
-fn bounded_id(value: &str) -> bool {
+pub fn bounded_id(value: &str) -> bool {
     !value.is_empty() && value.len() <= 256
 }
 
@@ -4442,7 +2209,7 @@ fn valid_bounds(bounds: &LayoutBounds) -> bool {
     bounds.x.is_finite() && bounds.y.is_finite() && bounds.width.is_finite() && bounds.height.is_finite() && bounds.rotation.is_finite()
 }
 
-fn valid_rect(rect: &crate::LayoutRect) -> bool {
+fn valid_rect(rect: &semio_s_artifact_layout_layout_model::LayoutRect) -> bool {
     rect.x.is_finite() && rect.y.is_finite() && rect.width.is_finite() && rect.height.is_finite()
 }
 
@@ -4602,7 +2369,7 @@ fn push_u32(bytes: &mut Vec<u8>, value: u32) {
     bytes.extend_from_slice(&value.to_le_bytes());
 }
 
-fn sanitize_filename(value: &str) -> String {
+pub fn sanitize_filename(value: &str) -> String {
     let value: String = value.chars().take(128).map(|character| if character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | '.') { character } else { '-' }).collect();
     if value.is_empty() {
         "layout".into()
@@ -4611,7 +2378,7 @@ fn sanitize_filename(value: &str) -> String {
     }
 }
 
-pub(crate) fn output_name(request: &LayoutExportRequest) -> String {
+pub fn output_name(request: &LayoutExportRequest) -> String {
     if matches!(request.kind, LayoutExportKind::Package) {
         sanitize_filename(&request.snapshot.name)
     } else {
@@ -4720,36 +2487,36 @@ fn headless_batch_export(kind: LayoutExportKind, snapshot: &LayoutSnapshot, page
 }
 
 #[cfg(test)]
-pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::standards::v1::subsets::any::io::LayoutError> {
+pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, semio_s_artifact_layout_layout_model::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(semio_s_artifact_layout_layout_model::LayoutError::PageNotFound(page_id.into()));
     }
-    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
+    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
+pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, semio_s_artifact_layout_layout_model::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(semio_s_artifact_layout_layout_model::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
+pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, semio_s_artifact_layout_layout_model::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(semio_s_artifact_layout_layout_model::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
+pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, semio_s_artifact_layout_layout_model::LayoutError> {
     let snapshot: LayoutSnapshot = semio_framework_pack_json::from_json_str(doc_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(semio_s_artifact_layout_layout_model::LayoutError::Svg)
 }
 //#endregion 🧪️TestOracle
 

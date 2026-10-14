@@ -4,8 +4,8 @@
 //! in history.
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §17.6).
 
-use crate::mutations::LowpolySelectionMotion;
-use crate::{LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolySelectionMotion;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
@@ -26,17 +26,20 @@ impl MoveSelection {
 
     /// 🧪️ The payload's own invariant, independent of any document: every vertex named once and a finite offset.
     pub fn invariant_violation(&self) -> Option<String> {
-        crate::mutations::lowpoly_selection_vertex_violation(&self.vertex_ids).or_else(|| (!self.offset.iter().all(|value| value.is_finite())).then(|| "The offset must be finite.".into()))
+        semio_s_artifact_lowpoly_lowpoly_model_diff::lowpoly_selection_vertex_violation(&self.vertex_ids).or_else(|| (!self.offset.iter().all(|value| value.is_finite())).then(|| "The offset must be finite.".into()))
     }
 }
 
-impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for MoveSelection {
+impl<Op> protocol::MutationKind<LowpolySnapshot, Op> for MoveSelection
+where
+    Op: protocol::Mutation<LowpolySnapshot, Diff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::set_vertex_positions::SetVertexPositions>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "selection", kind: "move-selection", record: "MovedSelection" };
 
-    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::Diff> {
+    fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<LowpolySnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<LowpolyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LowpolySnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -52,6 +55,4 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for MoveSelection 
 //#endregion 🔖️Payload
 
 //#region 🧪️Laws
-#[cfg(test)]
-pub use crate::mutations::laws;
 //#endregion 🧪️Laws

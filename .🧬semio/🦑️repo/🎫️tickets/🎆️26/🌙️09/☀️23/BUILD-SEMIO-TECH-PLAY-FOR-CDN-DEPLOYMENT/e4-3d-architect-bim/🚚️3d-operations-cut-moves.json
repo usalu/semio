@@ -1,0 +1,124 @@
+[
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean"
+  ],
+  "moves": [
+   {
+    "from": "crate::boolean",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::sweep",
+    "to": "semio_framework_3d_brep_sweep",
+    "names": "*"
+   },
+   {
+    "from": "crate::euler",
+    "to": "semio_framework_3d_brep_construction::euler",
+    "names": "*"
+   },
+   {
+    "from": "crate::primitives",
+    "to": "semio_framework_3d_brep_construction::primitives",
+    "names": "*"
+   },
+   {
+    "from": "crate::staged",
+    "to": "semio_framework_3d_brep_construction::staged",
+    "names": "*"
+   },
+   {
+    "from": "crate::transform",
+    "to": "semio_framework_3d_brep_construction::transform",
+    "names": "*"
+   },
+   {
+    "from": "crate::sew",
+    "to": "semio_framework_3d_brep_construction::sew",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep"
+  ],
+  "moves": [
+   {
+    "from": "crate::sweep",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::euler",
+    "to": "semio_framework_3d_brep_construction::euler",
+    "names": "*"
+   },
+   {
+    "from": "crate::primitives",
+    "to": "semio_framework_3d_brep_construction::primitives",
+    "names": "*"
+   },
+   {
+    "from": "crate::staged",
+    "to": "semio_framework_3d_brep_construction::staged",
+    "names": "*"
+   },
+   {
+    "from": "crate::transform",
+    "to": "semio_framework_3d_brep_construction::transform",
+    "names": "*"
+   },
+   {
+    "from": "crate::sew",
+    "to": "semio_framework_3d_brep_construction::sew",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend"
+  ],
+  "moves": [
+   {
+    "from": "crate::offset",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::blend",
+    "to": "crate::blend",
+    "names": "*"
+   },
+   {
+    "from": "crate::euler",
+    "to": "semio_framework_3d_brep_construction::euler",
+    "names": "*"
+   },
+   {
+    "from": "crate::primitives",
+    "to": "semio_framework_3d_brep_construction::primitives",
+    "names": "*"
+   },
+   {
+    "from": "crate::staged",
+    "to": "semio_framework_3d_brep_construction::staged",
+    "names": "*"
+   },
+   {
+    "from": "crate::transform",
+    "to": "semio_framework_3d_brep_construction::transform",
+    "names": "*"
+   },
+   {
+    "from": "crate::sew",
+    "to": "semio_framework_3d_brep_construction::sew",
+    "names": "*"
+   }
+  ]
+ }
+]

@@ -1,16 +1,16 @@
 //! ↩️ `rename-product` — undo restores BASE's preferred name; missing id ⇒ `Vec::new()`.
 
-use crate::{Iso16757Mutation, Iso16757Snapshot};
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
-use super::mutation::RenameProduct;
+use crate::rename_product::mutation::RenameProduct;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &RenameProduct, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &RenameProduct, base: &Iso16757Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::rename_product::mutation::RenameProduct> {
     Ok((|| {
     let Some(product) = base.catalogue.products.iter().find(|product| product.id == payload.id) else {
         return Vec::new();
     };
-    vec![Iso16757Mutation::RenameProduct(RenameProduct { id: payload.id.clone(), new_name: product.names.preferred.text.clone() })]
+    vec![Op::from(RenameProduct { id: payload.id.clone(), new_name: product.names.preferred.text.clone() })]
 
     })())
 }

@@ -3,7 +3,7 @@
 //! Byte-faithful port of `compose/client/lib/rs/lib.rs` `geom::flatten` (constants, matrix algebra,
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
-use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
+use {semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// 🎛 Absolute plane + diagram center for one object after flatten. `ToValue`/`FromValue`
@@ -170,27 +170,27 @@ pub fn plane_to_orientation(plane: FlattenPlane) -> [f64; 4] {
     [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
 }
 
-pub(crate) fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
+pub fn orientation_to_plane(origin: [f64; 3], orientation: [f64; 4]) -> FlattenPlane {
     let m = quaternion_to_matrix(orientation);
     FlattenPlane { origin, x_axis: [m[0], m[1], m[2]], y_axis: [m[4], m[5], m[6]] }
 }
 
-pub(crate) fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
+pub fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
 
-pub(crate) fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
+pub fn find_vortex<'a>(object: &'a Puzzle3dObject, vortex_id: &str) -> Option<&'a Puzzle3dVortex> {
     object.vortices.iter().find(|vortex| vortex.id == vortex_id)
 }
 
-pub(crate) fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
+pub fn vortex_geom(vortex: &Puzzle3dVortex) -> ([f64; 3], [f64; 3], f64) {
     let point = vortex.position;
     let mut direction = vortex.direction.unwrap_or([0.0, 0.0, 1.0]);
     normalize(&mut direction);
     (point, direction, 0.0)
 }
 
-pub(crate) fn compute_child_plane(parent_plane: FlattenPlane, parent_point: [f64; 3], parent_dir: [f64; 3], child_point: [f64; 3], child_dir: [f64; 3], attraction: &Puzzle3dAttraction) -> FlattenPlane {
+pub fn compute_child_plane(parent_plane: FlattenPlane, parent_point: [f64; 3], parent_dir: [f64; 3], child_point: [f64; 3], child_dir: [f64; 3], attraction: &Puzzle3dAttraction) -> FlattenPlane {
     let parent_matrix = plane_to_matrix(parent_plane);
     let mut parent_dir = parent_dir;
     let mut child_dir = child_dir;
@@ -243,7 +243,7 @@ pub(crate) fn compute_child_plane(parent_plane: FlattenPlane, parent_point: [f64
     matrix_to_plane(mul_mat(parent_matrix, transform))
 }
 
-pub(crate) fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
+pub fn diagram_center(parent_center: [f64; 2], parent_direction: [f64; 3], parent_t: f64, attraction: &Puzzle3dAttraction) -> [f64; 2] {
     let connection_x = attraction.x;
     let connection_y = attraction.y;
     let (child_x, child_y) = if parent_center[0] == 0.0 && parent_center[1] == 0.0 {

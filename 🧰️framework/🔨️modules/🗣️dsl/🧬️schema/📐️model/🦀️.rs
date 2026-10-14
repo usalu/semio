@@ -436,7 +436,7 @@ impl ExprOp {
     // 🚫️async: E1 pure, consumed by `print_expr_prec` (forced sync — its `Call` arm feeds a
     // `Display`-formatted `Iterator::map(...).join(...)` closure chain, R9) and inlined directly
     // into `format!` args elsewhere in this impl — see R9
-    fn precedence(self) -> u8 {
+    pub fn precedence(self) -> u8 {
         match self {
             ExprOp::Add | ExprOp::Sub => 1,
             ExprOp::Mul | ExprOp::Div => 2,
@@ -444,7 +444,7 @@ impl ExprOp {
     }
 
     // 🚫️async: E1 pure, same R9 chain as `precedence` above
-    fn symbol(self) -> &'static str {
+    pub fn symbol(self) -> &'static str {
         match self {
             ExprOp::Add => "+",
             ExprOp::Sub => "-",
@@ -475,3 +475,36 @@ pub enum ExprValue {
 #[cfg(test)]
 #[global_allocator]
 static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+/// 🏷️ Original canonical physical shape vocabulary shared by parser and emitter.
+pub fn shape_type_name(shape: &Shape) -> &'static str {
+    match shape {
+        Shape::Bool => "BOOL",
+        Shape::Int => "INT",
+        Shape::UInt => "UINT",
+        Shape::Float => "NUM",
+        Shape::Text => "TEXT",
+        Shape::Bytes64 => "BYTES",
+        Shape::Enum(_) => "ENUM",
+        Shape::Tuple(_, _) => "TUPLE",
+        Shape::List(_) => "LIST",
+        Shape::Record(_) => "REC",
+        Shape::Block(_) => "BLOCK",
+        Shape::Statements(_) => "STMT",
+        Shape::Map(_) => "MAP",
+        Shape::Value => "VAL",
+        Shape::Table(_) => "TABLE",
+        Shape::Wire => "WIRE",
+        Shape::Quantity(_) => "QTY",
+        Shape::Angle(_) => "ANG",
+        Shape::Ref(_) => "REF",
+        Shape::Coord(_) => "CRD",
+        Shape::Dir => "DIR",
+        Shape::Dim(_) => "DIM",
+        Shape::Range => "RNG",
+        Shape::Count => "CNT",
+        Shape::Expr => "EXPR",
+        Shape::Embed(_) | Shape::EmbedFrom(_) => "EMBED",
+    }
+}
+

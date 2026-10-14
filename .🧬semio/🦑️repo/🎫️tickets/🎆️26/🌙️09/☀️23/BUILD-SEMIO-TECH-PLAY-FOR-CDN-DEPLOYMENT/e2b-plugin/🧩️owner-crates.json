@@ -1,0 +1,14 @@
+{
+ "semio-framework-plugin-ownership": {
+  "name": "semio-framework-plugin-ownership",
+  "ident": "semio_framework_plugin_ownership",
+  "dir": "🏛️ownership/🧱️owner",
+  "modules": [
+   "bounded_ownership",
+   "sdk_fault",
+   "reserved_job_session",
+   "store_lifecycle",
+   "transient_publication"
+  ]
+ }
+}

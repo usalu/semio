@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "os/vcs/genesis/producer/schema.json",
+  "title": "Original Typed Genesis Producer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "birth",
+    "reload",
+    "digest",
+    "refusal",
+    "owner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "birth": {
+      "const": "selected-producer-encodes-original-snapshot-once"
+    },
+    "reload": {
+      "const": "selected-producer-decodes-exact-stored-pack-once"
+    },
+    "digest": {
+      "const": "hash-exact-owned-stored-pack"
+    },
+    "refusal": {
+      "const": "original-typed-snapshot-and-pack-admission"
+    },
+    "owner": {
+      "const": "same-shared-snapshot-and-pack-allocations"
+    }
+  }
+}

@@ -23,8 +23,6 @@ semio-framework-diagnostic = { path = "../../../../../../../../../../../../../�
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
-semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
@@ -36,6 +34,9 @@ semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-import = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+

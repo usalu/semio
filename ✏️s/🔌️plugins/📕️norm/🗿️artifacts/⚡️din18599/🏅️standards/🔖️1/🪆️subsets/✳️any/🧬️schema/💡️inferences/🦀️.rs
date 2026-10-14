@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::Din18599Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -92,8 +100,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::CheckReport;
-use crate::standards::v1::subsets::any::schema::evaluate_document;
+use semio_s_plugin_norm_compliance::CheckReport;
+use semio_s_artifact_norm_din18599_checks::evaluate_document;
 
 /// 📋️ Full annual balancing / GEG evaluation per DIN V 18599.
 pub fn balance_annual(inputs: &Din18599Snapshot) -> CheckReport {
@@ -114,5 +122,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::Din18599Outline;
+pub use crate::outline::Din18599Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

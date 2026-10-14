@@ -68,8 +68,8 @@ async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery,
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});
     let state: InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None);
-    let mut store = InteractionStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut store = InteractionStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
     let mut recipient=original_receiving_recipient();install_original_interaction_owners(&mut store,&mut recipient);
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
     let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -342,7 +342,7 @@ struct HostileCapture {
 
 pub(crate) fn hostile_capture_for_live_law() -> impl LocalInteractionQueryCapture {
     HostileCapture {
-        reader: store::ArtifactCanonicalJsonReader::new(std::sync::Arc::new(HostileRoot { first: "retained✓".into(), second: HostileValue }), std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HostileRoot>::default())),
+        reader: store::ArtifactCanonicalJsonReader::new(std::sync::Arc::new(HostileRoot { first: "retained✓".into(), second: HostileValue }), std::sync::Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<HostileRoot>::default())),
         identity: LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] },
     }
 }
@@ -382,7 +382,7 @@ fn local_interaction_query_partial_encoder_failure_keeps_exact_byte_ownership() 
     for bytes in [1, 64, 4096] {
         let root = std::sync::Arc::new(HostileRoot { first: laws["partialError"]["first"].as_str().unwrap().into(), second: HostileValue });
         let identity = LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] };
-        let source = HostileCapture { reader: store::ArtifactCanonicalJsonReader::new(root, std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HostileRoot>::default())), identity };
+        let source = HostileCapture { reader: store::ArtifactCanonicalJsonReader::new(root, std::sync::Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<HostileRoot>::default())), identity };
         let mut query = LocalInteractionQuery::new(source, 9, 42);
         let mut recipient=original_receiving_recipient();
         let mut failed = false;

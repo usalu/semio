@@ -1,8 +1,11 @@
 //! ✒️ `set-story-runs` — replaces the style runs on one story.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoriesModification, TextStyleRunRow, TextStyleRunsDelta};
-use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch, TextStyleRun};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutStoriesDelta, TextStyleRunRow, TextStyleRunsDelta};
+use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesModification;
+use semio_s_artifact_layout_layout_diff::{LayoutDiff, TextStoryPatch};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::TextStyleRun;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,10 +20,10 @@ pub struct SetStoryRuns {
     pub runs: Vec<TextStyleRun>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for SetStoryRuns {
+impl<Op> MutationKind<LayoutSnapshot, Op> for SetStoryRuns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::set_story_runs::SetStoryRuns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "story-runs", kind: "set-story-runs", record: "SetStoryRuns" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_set_story_runs(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_set_story_runs(self, base)? 
     })
 }
@@ -55,10 +58,10 @@ pub fn diff_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> pro
     })
 }
 
-pub fn inverse_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_set_story_runs<Op: From<crate::set_story_runs::SetStoryRuns>>(payload: &SetStoryRuns, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs: story.style_runs.clone() })]
+    vec![Op::from(SetStoryRuns { id: story.id.clone(), runs: story.style_runs.clone() })]
 
     })())
 }

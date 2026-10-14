@@ -1,8 +1,7 @@
 //! 🗂️ Energy model mutation — `ReorderAnnualScheduleRules`: Moves one date rule to another position in the year's rule list. This is the one `reorder` the schedule vocabulary carries, and it earns it: precedence between two rules whose date ranges overlap IS their list order.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct ReorderAnnualScheduleRules {
     pub to: u32,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn reorder_annual_schedule_rules(id: crate::schedule::ScheduleId, from: u32, to: u32) -> EnergyModelMutation {
-    EnergyModelMutation::ReorderAnnualScheduleRules(ReorderAnnualScheduleRules { id, from, to })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn reorder_annual_schedule_rules<Op: From<ReorderAnnualScheduleRules>>(id: crate::schedule::ScheduleId, from: u32, to: u32) -> Op {
+    ReorderAnnualScheduleRules { id, from, to }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReorderAnnualScheduleRules {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReorderAnnualScheduleRules
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReorderAnnualScheduleRules>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "annual-schedule", kind: "reorder-annual-schedule-rules", record: "ReorderedAnnualScheduleRules" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

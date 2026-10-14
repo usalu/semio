@@ -1,7 +1,15 @@
-use super::*;
-use crate::editor::fem2d::modes::edit::windows::results;
-use crate::editor::fem2d::unit_tests::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation::*;
+use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientOwner;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation, WindowTransientMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results;
+use crate::context::{close, dispatch, fem2d_mounted_app, Fem2dApp};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_framework_plugin::{Effect, InvocationResult, ViewModel, ViewWindowInstance};
 
 fn animation(command: SetResultAnimation) -> Fem2dCommand {
@@ -135,7 +143,7 @@ async fn rearm_effect_addresses_the_window_at_the_frame_delay() {
 /// disagrees with the configuration actually captured, is refused by name.
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -145,7 +153,7 @@ async fn set_result_animation_honours_the_window_a_control_tagged() {
         window_instances: vec![
             ViewWindowInstance { id: "results-left".into(), window_kind_id: results::WINDOW_KIND_ID.into() },
             ViewWindowInstance { id: "results-right".into(), window_kind_id: results::WINDOW_KIND_ID.into() },
-            ViewWindowInstance { id: "model-left".into(), window_kind_id: crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID.into() },
+            ViewWindowInstance { id: "model-left".into(), window_kind_id: semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID.into() },
         ],
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };

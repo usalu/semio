@@ -5,7 +5,7 @@
 //! spreadsheet is sparse — only cells actually present in `XlsxSheet::cells` count, never a dense
 //! row/col grid).
 
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 
 //#region 🔖️Outline
 /// 🧾️ `Xlsx` document outline.
@@ -29,8 +29,4 @@ impl XlsxOutline {
 }
 //#endregion 🔖️Outline
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

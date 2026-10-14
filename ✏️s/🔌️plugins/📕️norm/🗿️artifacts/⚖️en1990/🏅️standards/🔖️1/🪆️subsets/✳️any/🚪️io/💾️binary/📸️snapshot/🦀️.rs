@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::En1990Snapshot;
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
@@ -25,13 +25,13 @@ mod tests;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
-use super::*;
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::{AccidentalAction, BridgeSls, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
+use crate::binary::snapshot::*;
+use crate::binary::snapshot::*;
+use semio_s_artifact_norm_en1990_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1990_model::{AccidentalAction, BridgeSls, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 /// 📦️ Decodes `.pack.semio` into [`En1990Snapshot`].
 pub fn decode_en1990_pack(bytes: &[u8]) -> Result<En1990Snapshot, String> {
     <En1990Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
@@ -41,6 +41,6 @@ pub fn encode_en1990_pack(snapshot: &En1990Snapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
-pub use native_snapshot_codec::*;
+pub use crate::binary::snapshot::native_snapshot_codec::*;
 
-crate::impl_norm_artifact_record!(@binary En1990Snapshot, extension="en1990", envelope_id="norm.en1990", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1990Snapshot, extension="en1990", envelope_id="norm.en1990", sqlite=crate::sqlite::snapshot::sqlite_codec);

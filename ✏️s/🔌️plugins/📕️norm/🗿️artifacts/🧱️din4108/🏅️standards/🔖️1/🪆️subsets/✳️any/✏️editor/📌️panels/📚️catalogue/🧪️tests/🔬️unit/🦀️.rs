@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::din4108::unit_tests::context;
+use crate::panels::catalogue::*;
+use crate::unit_tests::context;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -37,8 +37,8 @@ fn design_lambda_table_matches_part4_const() {
     assert!(!table.rows.is_empty());
     let eps = table.rows.iter().find(|r| r.id == "eps").expect("eps");
     let cell = eps.cells.iter().find_map(|c| match c {
-        crate::app_surface::CatalogueCell::Number { value, .. } => Some(*value),
+        semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => Some(*value),
         _ => None,
     }).expect("number");
-    assert!((cell - crate::artifact_schema::part_4::design_lambda("eps").unwrap()).abs() < 1e-12);
+    assert!((cell - semio_s_artifact_norm_din4108_checks::part_4::design_lambda("eps").unwrap()).abs() < 1e-12);
 }

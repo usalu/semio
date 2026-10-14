@@ -1,8 +1,7 @@
 //! 🧊️ Energy model mutation — `BindFenestrationGlazingConstruction`: Points the fenestration's optional glazing slot at an existing layered construction, which then supersedes `uValueWM2k`/`shgc`/`vlt`. This is the schema seam the ticket's oracle comparison needed: with only the three scalars a semio→EnergyPlus translation can emit nothing richer than `WindowMaterial:SimpleGlazingSystem`, worth +5.7 to +8.1 % of annual cooling on ANSI/ASHRAE 140 cases 600/900.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct BindFenestrationGlazingConstruction {
     pub construction_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn bind_fenestration_glazing_construction(id: crate::model::EntityId, construction_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::BindFenestrationGlazingConstruction(BindFenestrationGlazingConstruction { id, construction_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn bind_fenestration_glazing_construction<Op: From<BindFenestrationGlazingConstruction>>(id: crate::model::EntityId, construction_id: crate::model::EntityId) -> Op {
+    BindFenestrationGlazingConstruction { id, construction_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for BindFenestrationGlazingConstruction {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for BindFenestrationGlazingConstruction
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<BindFenestrationGlazingConstruction> + From<crate::ClearFenestrationGlazingConstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "fenestration", kind: "bind-fenestration-glazing-construction", record: "BoundFenestrationGlazingConstruction" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

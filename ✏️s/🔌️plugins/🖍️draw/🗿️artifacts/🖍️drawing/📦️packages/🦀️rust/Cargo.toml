@@ -27,13 +27,17 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-draw-drawing-diff = { workspace = true }
+semio-s-artifact-draw-drawing-descriptor = { workspace = true }
 semio-s-artifact-draw-drawing-editor = { workspace = true }
-semio-s-artifact-draw-drawing-host = { workspace = true }
+semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
+semio-s-artifact-draw-drawing-editor-interaction = { workspace = true }
+semio-s-artifact-draw-drawing-editor-tool = { workspace = true }
+semio-s-artifact-draw-drawing-examples = { workspace = true }
 semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-read = { workspace = true }
+semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-viewer = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }
 

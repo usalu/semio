@@ -68,6 +68,11 @@
           }
         }
       }
+    },
+    "Protocol": {
+      "const": {
+        "writerShards": 64
+      }
     }
   }
 }

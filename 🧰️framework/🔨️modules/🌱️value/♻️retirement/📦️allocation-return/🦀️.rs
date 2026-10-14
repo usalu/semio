@@ -1,5 +1,5 @@
 //! 🎟️ A parent retains genuine returned flat allocations until their complete physical release grant.
-use crate::{ValueError,ValueRefusalKind};
+use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
 use std::{alloc::Layout,mem::ManuallyDrop,ptr::NonNull};
 
 struct ReturnedAllocation{pointer:NonNull<u8>,layout:Layout}

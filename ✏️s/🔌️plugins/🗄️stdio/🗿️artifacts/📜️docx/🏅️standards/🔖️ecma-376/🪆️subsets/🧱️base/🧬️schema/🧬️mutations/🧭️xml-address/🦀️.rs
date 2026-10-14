@@ -2,7 +2,14 @@
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
-use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{apply_bindings, expanded_name, scoped_bindings, is_word_name, qualified_word_prefix, set_word_attr, word_attr, XML_NAMESPACE};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::apply_bindings;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::expanded_name;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::scoped_bindings;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::is_word_name;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::qualified_word_prefix;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::set_word_attr;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::word_attr;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::XML_NAMESPACE;
 
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
@@ -336,7 +343,7 @@ fn collect_word_descendants(snapshot: &DocxSnapshot, part_path: &str, parent_pat
 }
 
 fn main_body_path(snapshot: &DocxSnapshot) -> Result<(String, Vec<usize>), ValueError> {
-    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
+    let part_path = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
     let body_path = word_child_path(snapshot, &part_path, &[], &["body"], 0)?;
     Ok((part_path, body_path))
 }
@@ -664,11 +671,11 @@ fn edited_run_formatting(mut run: XmlNode, scope: &[(String, String)], bold: boo
 }
 
 fn styles_part_path(snapshot: &DocxSnapshot) -> Result<String, ValueError> {
-    let main = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
+    let main = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).map_err(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::DocxError::into_value_error)?;
     snapshot
         .opc
-        .resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_STYLES)
-        .or_else(|| snapshot.opc.resolve_relationship(&main, crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_STYLES))
+        .resolve_relationship(&main, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_STYLES)
+        .or_else(|| snapshot.opc.resolve_relationship(&main, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_STYLES))
         .ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,"DOCX main document has no internal styles relationship"))
 }
 

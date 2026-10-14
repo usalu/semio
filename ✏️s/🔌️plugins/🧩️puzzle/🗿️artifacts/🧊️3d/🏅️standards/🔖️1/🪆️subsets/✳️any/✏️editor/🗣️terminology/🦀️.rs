@@ -2,7 +2,15 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, FillRunCounter, FillRunReason, FillRunStage};
 use semio_framework_ui_locale::AppLabels;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_ui_locale::Locale;

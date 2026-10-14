@@ -1,0 +1,29 @@
+{
+  "name": "@semio-tech/framework-plugin-ownership",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
+  "targets": {
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

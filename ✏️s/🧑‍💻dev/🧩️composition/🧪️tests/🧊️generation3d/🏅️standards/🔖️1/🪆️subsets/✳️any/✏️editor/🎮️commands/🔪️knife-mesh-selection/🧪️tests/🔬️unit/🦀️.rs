@@ -63,7 +63,8 @@ fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
 #[semio_framework_async_macros::async_test]
 async fn knife_selection_undo_redo_restores_the_graph_and_analysis_connection() {
     use crate::editor_domain::editor_laws::context;
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, commands::set_active_example};
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
     let _serial = crate::test_serial::lock();
     let mut app = context::app().await;
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;

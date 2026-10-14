@@ -8,23 +8,57 @@
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
 use semio_s_fem_app_surface::ResultDisplay;
-use crate::editor::fem2d::commands::{
-    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, focus_entity, patch_combination,
-    patch_element, patch_load, patch_load_case, patch_material, patch_node, patch_region, patch_section, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display,
-    set_self_weight,
-};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_area_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_bar;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_beam;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_combination;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_load_case;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_material;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_member_udl;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_nodal_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_node;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_region;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_section;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_support;
+use crate::editor::fem2d::commands::canvas_pointer_down;
+use crate::editor::fem2d::commands::canvas_pointer_move;
+use crate::editor::fem2d::commands::canvas_pointer_up;
+use crate::editor::fem2d::commands::focus_entity;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load_case;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_material;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_node;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_region;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_section;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_support;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::remove_selection;
+use crate::editor::fem2d::commands::result_animation_tick;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_analysis_settings;
+use crate::editor::fem2d::commands::set_camera;
+use crate::editor::fem2d::commands::set_result_animation;
+use crate::editor::fem2d::commands::set_result_display;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_self_weight;
 use crate::editor::fem2d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
-use crate::editor::fem2d::interaction::{fem2d_interaction_definition, Fem2dInteractionSnapshot, FEM2D_INTERACTION_DOMAIN};
-use crate::editor::fem2d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
-use crate::editor::fem2d::terminology::fem2d_labels;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_interaction_definition;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::artifact as artifact_panel;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::inspection as inspection_panel;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results as results_panel;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::fem2d::modes::edit;
-use crate::editor::fem2d::modes::edit::windows::model as model_window;
-use crate::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
 use semio_s_fem_model::{Dof, ElementResult};
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_pack_json::Value;
+use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::built_text_node;
@@ -68,15 +102,7 @@ use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
-pub const FEM2D_APP_ID: &str = "fem2d-play";
-/// 🎛️ Stable controller/action-factory tag every panel row and control binds its actions under
-/// (the `ActionFactory` id, distinct from the derived surface app id) — the same string as the app id.
-pub const FEM2D_PLAY_CONTROLLER_ID: &str = FEM2D_APP_ID;
 
-/// 📦️ The `fem2d-play` "default" example — read directly by the `setActiveExample` handler
-/// (`crate::editor::fem2d::commands::set_active_example`) and every test fixture (`EditorBuilder` has
-/// no `.example(...)` registration — see the SDK-gap doc comment on `create_fem2d_app` below).
-pub const FEM2D_EXAMPLE_DSL: &str = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -299,7 +325,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, Fault> {
-        use crate::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
+        use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
         if self.consumed {
             return Err(Fault::from("fem2d-retained-work-repeated"));
         }
@@ -671,8 +697,8 @@ impl ArtifactEditor for Fem2dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
     type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = crate::editor::fem2d::transient::FemGumballTransient;
-    type TransientMutation = crate::editor::fem2d::transient::FemGumballTransientMutation;
+    type Transient = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
+    type TransientMutation = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 
     type Command = Fem2dCommand;
 
@@ -846,7 +872,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
     /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
     fn initial_snapshot() -> Fem2dSnapshot {
-        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -854,31 +880,31 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_framework_plugin::MountedOwnerPhaseV1> {
-        (!crate::editor::fem2d::session::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
+        (!semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(crate::editor::fem2d::session::close_demands(instance_id))
+        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id))
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(crate::editor::fem2d::session::close_demands(instance_id))
+        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id))
     }
 
     fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(crate::editor::fem2d::session::maintenance_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_step(instance_id, grant))
     }
 
     fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(crate::editor::fem2d::session::close_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_step(instance_id, grant))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::editor::fem2d::session::terminal_is_empty(instance_id)
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::terminal_is_empty(instance_id)
     }
 
     fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        crate::editor::fem2d::session::prepare_snapshot_read(operation, snapshot)
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 🎞️ `"artifact:out"` reproduces the trait's default whole-document pack (overriding `export_media`
@@ -1162,7 +1188,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-        crate::editor::fem2d::session::reconcile(doc)
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::reconcile(doc)
     }
 
     /// 🎯️ Fem2d has no user-visible config defaults to expose (all of `addRegion`'s
@@ -1187,7 +1213,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, crate::editor::fem2d::transient::FemGumballTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_plugin::StepContext<'_>,
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
@@ -1218,16 +1244,16 @@ impl Fem2dPlayApp {
         match body_key {
             model_window::BODY_KEY => {
                 let window = model_window::config::current(cfg);
-                let window_id = crate::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, model_window::BODY_KEY);
-                let active_utility = crate::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
-                crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| {
+                let window_id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, model_window::WINDOW_KIND_ID);
+                let active_utility = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
+                semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| {
                     model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility)
                 })
             }
             results_window::BODY_KEY => {
                 let window = results_window::config::effective(&results_window::config::current(cfg), clock.as_ref());
-                let window_id = crate::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, results_window::BODY_KEY);
-                let active_utility = crate::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
+                let window_id = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view_state, results_window::WINDOW_KIND_ID);
+                let active_utility = semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_active_utility(view_state);
                 results_window::render(
                     canvas,
                     &config_result_display(&window),
@@ -1255,50 +1281,8 @@ fn fem2d_utility(id: &str, label: LocalizedLabel, icon: &str, category: UtilityC
 
 const FEM2D_CANVAS_UTILITIES: &[&str] = &["selectDirect", "selectMarquee", "selectLasso", "transformMove", "transform"];
 
-/// 🏷️ Admits resolved fem2d text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem2d UI label admission failed"))
-}
-
-/// 🎛️ Mints one fem2d-controller action for a panel row or control binding.
-pub fn fem2d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(FEM2D_PLAY_CONTROLLER_ID).action(action, args)
-}
-
-/// 🎛️ Window-measure action binding — same controller scope as [`fem2d_action`], without the UI assembly envelope.
-pub fn fem2d_measure_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FEM2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
-}
-
-/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
-/// the panel itself has no window context.
-pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
-    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == results_window::WINDOW_KIND_ID);
-    view_state
-        .window_id
-        .as_deref()
-        .filter(|id| is_results(id))
-        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
-        .map(str::to_string)
-        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == results_window::WINDOW_KIND_ID).map(|window| window.id.clone()))
-}
 //#endregion 🔖️UiHelpers
 //#endregion 🔖️Fem2dPlayApp
-
-//#region 🔖️ResetDocument
-/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
-/// history — the sanctioned non-mutation path for a whole-document replace (file import,
-/// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
-/// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
-/// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
-/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
-/// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA));
-    semio_framework::kernel::Effect::LoadDocument { pack, spr }
-}
-//#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
 /// 🩹️ One inspector patch action — internal (not in the palette; its arguments are authored by the
@@ -1597,12 +1581,4 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️UnitTests
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
-/// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🪟️window-config-ownership/🦀️.rs"]
-mod window_config_ownership;
 //#endregion 🧪️UnitTests

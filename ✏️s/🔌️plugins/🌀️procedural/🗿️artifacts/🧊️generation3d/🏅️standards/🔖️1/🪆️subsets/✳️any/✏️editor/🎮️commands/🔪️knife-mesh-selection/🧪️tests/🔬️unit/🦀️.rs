@@ -1,7 +1,8 @@
 #[test]
 fn knife_selection_action_declares_point_controls_and_the_editor_owner() {
-    use super::{create_generation3d_app, Generation3dBoundedCommandJobFactory};
-    use crate::editor::generation3d::modes::edit::windows::preview as edit_preview;
+    use semio_s_artifact_procedural_generation3d::manifest::create_generation3d_app;
+    use semio_s_artifact_procedural_3d_editor::Generation3dBoundedCommandJobFactory;
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let definition = create_generation3d_app();
     for window in &definition.window_kinds {

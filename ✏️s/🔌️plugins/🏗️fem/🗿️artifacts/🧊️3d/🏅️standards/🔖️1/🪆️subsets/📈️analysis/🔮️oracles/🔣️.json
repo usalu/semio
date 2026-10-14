@@ -37,5 +37,37 @@
         "update-analysis-settings"
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-fem-2d-model",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "📸️ The subject half round-trips the committed documents through the snapshot codecs the model crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-fem-3d-engine",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/⚙️engine/🧊️3d/📦️packages/🦀️rust",
+      "rationale": "⚙️ The subject half solves through the artifact engine bridge the engine crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-fem-3d-mutations",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The subject half drives the production JSON apply/undo bridge of the dispatch enum the mutations crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-fem-model",
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust",
+      "rationale": "🧮️ The subject half compares against the shared fem engine results this crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-fem-sparse-subspace",
+      "path": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🎵️subspace/📦️packages/🦀️rust",
+      "rationale": "🧮️ The subject half compares against the shared fem engine results this crate owns."
+    }
   ]
 }

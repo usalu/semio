@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
-    use crate::schema::vocabulary::MAIN_DOCUMENT_PART;
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::STRICT_MAIN_NS;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::MAIN_DOCUMENT_PART;
+    use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::STRICT_MAIN_NS;
 
     #[semio_framework_async_macros::async_test]
     async fn empty_builder_is_strict_conformant() {
@@ -27,6 +27,6 @@ mod tests {
         snapshot.opc.content_types.set_override("word/legacyDrawing.xml", "application/xml");
         let mutated = DocxStrictBuilderConstruction::from_snapshot(snapshot);
         let err = mutated.build().expect_err("VML content must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::strict::schema::conformance::CODE_VML_PRESENT));
+        assert!(err.iter().any(|d| d.code.0 == semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::CODE_VML_PRESENT));
     }
 }

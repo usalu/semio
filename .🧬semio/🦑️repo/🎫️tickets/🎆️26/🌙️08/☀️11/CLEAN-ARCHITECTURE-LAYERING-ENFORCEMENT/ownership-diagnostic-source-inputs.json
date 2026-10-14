@@ -1,0 +1,23 @@
+{
+  "kind": "bounded-diagnostic-owned-source-freeze-observations-not-admission-receipt",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+      "sha256": "525e20d7fd96fc4385fe8bcfdb554a69c013865e373abd01fc3a8d2ce832e0ae",
+      "bytes": 22519,
+      "absolutePathCharacters": 103
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🟦️.ts",
+      "sha256": "affac9f7931b6d3787dcc600ecce146ef88d90fe2c2c28ddba64d5eb54f3d3bb",
+      "bytes": 34865,
+      "absolutePathCharacters": 110
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "bdd5819155dbca3da6607678bc446f386e21cbc47cd2d9f2b974f972d2ca6439",
+      "bytes": 19415,
+      "absolutePathCharacters": 123
+    }
+  ]
+}

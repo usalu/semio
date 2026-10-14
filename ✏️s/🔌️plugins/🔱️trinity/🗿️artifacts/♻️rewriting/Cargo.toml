@@ -41,8 +41,8 @@ path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/
 [workspace.dependencies.semio-framework-dispatch-macros]
 path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
+[workspace.dependencies.semio-framework-graph-manifest]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"

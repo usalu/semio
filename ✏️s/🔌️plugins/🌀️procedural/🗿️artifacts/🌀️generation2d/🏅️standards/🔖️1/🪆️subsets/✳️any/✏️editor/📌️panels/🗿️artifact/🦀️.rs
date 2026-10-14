@@ -1,9 +1,10 @@
 //! 📄️ Generation2d play app panel — the document tree: widgets of the current fixture.
 
-use crate::editor::generation2d::config::Generation2dConfig;
-use crate::editor::generation2d::terminology::Generation2dLabels;
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::{widget_id, Generation2dSnapshot};
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_model::widget_id;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -63,7 +64,4 @@ pub fn render(document: &Generation2dSnapshot, _config: &Generation2dConfig, lab
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

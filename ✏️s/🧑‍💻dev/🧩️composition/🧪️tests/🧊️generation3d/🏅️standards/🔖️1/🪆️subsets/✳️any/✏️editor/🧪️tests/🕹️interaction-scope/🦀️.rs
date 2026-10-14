@@ -63,7 +63,7 @@ fn interaction_scope_fixture() -> InteractionScopeFixture {
 fn role_definition(role: &str) -> semio_framework_plugin::AppDefinition {
     match role {
         "editor" => create_generation3d_app(),
-        "viewer" => semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer(),
+        "viewer" => semio_s_artifact_procedural_3d_viewer::create_generation3d_viewer(),
         other => panic!("fixture names an unknown role {other}"),
     }
 }

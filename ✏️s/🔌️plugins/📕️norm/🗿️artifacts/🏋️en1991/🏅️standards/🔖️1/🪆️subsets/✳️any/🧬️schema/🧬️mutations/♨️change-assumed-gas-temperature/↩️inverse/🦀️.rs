@@ -1,9 +1,9 @@
 //! Inverse for `change-assumed-gas-temperature`.
-use super::ChangeAssumedGasTemperature;
-use crate::{En1991Mutation, En1991Snapshot};
-pub fn inverse(_payload: &ChangeAssumedGasTemperature, base: &En1991Snapshot) -> Result<Vec<En1991Mutation>, semio_framework_value::ValueError> {
+use crate::change_assumed_gas_temperature::ChangeAssumedGasTemperature;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+pub fn inverse<Op>(_payload: &ChangeAssumedGasTemperature, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_assumed_gas_temperature::ChangeAssumedGasTemperature> {
     Ok((|| {
-    vec![En1991Mutation::ChangeAssumedGasTemperature(ChangeAssumedGasTemperature { new_assumed_gas_temperature: base.assumed_gas_temperature })]
+    vec![Op::from(ChangeAssumedGasTemperature { new_assumed_gas_temperature: base.assumed_gas_temperature })]
 
     })())
 }

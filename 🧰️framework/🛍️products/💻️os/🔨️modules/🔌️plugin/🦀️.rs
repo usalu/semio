@@ -286,21 +286,15 @@ pub(crate) mod contributed_mutation_wire;
 #[path = "🧪️tests/📤️segmented-download/🦀️.rs"]
 mod segmented_download_contract;
 
+#[cfg(test)]
+#[path = "🌱️initialization/♻️retirement/🧪️tests/🦀️.rs"]
+mod bounded_initializer_laws;
+
+pub use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
 //#region 🏛️OwnershipFacet
-#[path = "🏛️ownership/🦀️.rs"]
-pub(crate) mod bounded_ownership;
-pub use bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
-#[path="👷️job/🚪️session/🦀️.rs"]
-pub(crate) mod reserved_job_session;
-#[path = "📤️fault/🦀️.rs"]
-pub(crate) mod sdk_fault;
 pub use semio_framework_job::StepContext;
 #[path = "🧬️schema/🪶️sqlite/🦀️.rs"]
 pub mod sqlite_wire;
-#[path = "♻️lifecycle/🦀️.rs"]
-pub(crate) mod store_lifecycle;
-#[path = "🫧️transient/🧵️publication/🦀️.rs"]
-pub(crate) mod transient_publication;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[path = "🧬️schema/🦀️.rs"]
 pub mod wasip2;
@@ -491,7 +485,7 @@ pub mod app {
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
-    pub use super::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
+    pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
         bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
@@ -544,8 +538,8 @@ pub mod app {
     pub use store::ArtifactStoreInitializationAuthority;
     pub use semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND;
     pub use super::builder::{NeedsLabel, NeedsVersion, PluginBuilder, Ready};
-    pub use super::bounded_ownership::*;
-    pub use super::sdk_fault::*;
+    pub use semio_framework_plugin_ownership::bounded_ownership::*;
+    pub use semio_framework_plugin_ownership::sdk_fault::*;
     pub use super::document_kit::*;
     pub use super::image_kit::*;
     pub use super::media_kit::*;
@@ -574,7 +568,7 @@ pub mod app {
     pub use super::child_content::*;
     pub use super::document_ingress::*;
     pub use super::peer_roster::*;
-    pub use super::store_lifecycle::*;
+    pub use semio_framework_plugin_ownership::store_lifecycle::*;
     pub use super::store_publication::*;
     pub use super::command_history::*;
     pub use super::reserved_jobs::*;
@@ -729,6 +723,7 @@ pub use app::{
     ArtifactMediaExportHandleLoan,
     ArtifactMediaExportJobRequest,
     ArtifactMediaExportPoll,
+    ArtifactMediaExportPublishedStatus,
     ArtifactMediaExportResult,
     ArtifactMime,
     ArtifactOutputChunks,

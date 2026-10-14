@@ -1,4 +1,4 @@
-use crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 use super::*;
 use quick_xml::{events::Event, reader::Reader, XmlVersion};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
@@ -11,7 +11,7 @@ fn literal_export_fixture() -> serde_json::Value {
 fn literal_export_snapshot(fixture: &serde_json::Value) -> PptxSnapshot {
     let mut snapshot = build_minimal_pptx(PptxPresentation::default());
     for case in fixture["cases"].as_array().unwrap() {
-        snapshot.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
+        snapshot.xml_parts.push(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart {
             path: case["path"].as_str().unwrap().into(),
             content_type: case["contentType"].as_str().unwrap().into(),
             document: xml_document_from_text(case["xml"].as_str().unwrap()).unwrap(),

@@ -29,9 +29,6 @@ path = "../../🧪️tests/📤️schema-export-entries/🦀️.rs"
 name = "schema-module-compile"
 path = "../../🧪️tests/🧩️module-compile/🦀️.rs"
 
-[features]
-default = []
-
 [dependencies]
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { workspace = true }

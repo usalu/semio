@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[test]
 fn kinds_match_the_enum() {

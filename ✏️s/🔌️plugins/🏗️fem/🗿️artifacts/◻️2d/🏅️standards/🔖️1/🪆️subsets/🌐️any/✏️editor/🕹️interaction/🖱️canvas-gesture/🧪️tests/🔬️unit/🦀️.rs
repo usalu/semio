@@ -1,6 +1,11 @@
 use super::*;
 use crate::editor::fem2d::interaction::{fem2d_layer_to_canvas, FEM2D_GRANULARITY_NODE};
-use crate::editor::fem2d::modes::edit::windows::model::{find_node_2d, screen_2d, WINDOW_KIND_ID};
+use crate::editor::fem2d::interaction::{find_node_2d, screen_2d};
+
+/// 🪟️ Any Canvas2d window kind: the gesture store is window-kind agnostic.
+const WINDOW_KIND_ID: &str = "fem2d-model";
+/// 🪟️ The body key the addressed window refreshes under.
+const BODY_KEY: &str = "fem2d.play.model";
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, ViewWindowInstance};
@@ -12,7 +17,7 @@ const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 fn addressed(utility: &str) -> ViewModel {
@@ -67,9 +72,9 @@ async fn marquee_drag_commits_on_pointer_up() {
     let camera = Viewport2d::default();
     let start = (12.0, 12.0);
     let end = (CANVAS_WIDTH - 12.0, CANVAS_HEIGHT - 12.0);
-    pointer_down(view.snapshot, &camera, &model, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
-    pointer_move(view.snapshot, &camera, &model, &[end], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
-    let emit = pointer_up(view.snapshot, &camera, &model, end.0, end.1, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", false).expect("up");
+    pointer_down(view.snapshot, &camera, &model, BODY_KEY, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    pointer_move(view.snapshot, &camera, &model, BODY_KEY, &[end], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
+    let emit = pointer_up(view.snapshot, &camera, &model, BODY_KEY, end.0, end.1, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", false).expect("up");
     let Some(semio_framework::kernel::Effect::ReplayShellCommand { args, .. }) = emit.effects.first() else { panic!("marquee commits through interactionSelect") };
     let args = args.as_ref().expect("args");
     assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("rectangle"));
@@ -87,16 +92,16 @@ fn a_batch_of_samples_builds_the_same_lasso_polyline_as_separate_moves() {
     let start = (12.0, 12.0);
 
     let separate = addressed(FEM2D_UTILITY_SELECT_LASSO);
-    pointer_down(&doc, &camera, &separate, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    pointer_down(&doc, &camera, &separate, BODY_KEY, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
     for sample in LASSO_PATH {
-        pointer_move(&doc, &camera, &separate, &[sample], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
+        pointer_move(&doc, &camera, &separate, BODY_KEY, &[sample], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
     }
     let one_per_event = gesture_for_window("w");
     clear_gesture("w");
 
     let batched = addressed(FEM2D_UTILITY_SELECT_LASSO);
-    pointer_down(&doc, &camera, &batched, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
-    let emit = pointer_move(&doc, &camera, &batched, &LASSO_PATH, CANVAS_WIDTH, CANVAS_HEIGHT).expect("batched move");
+    pointer_down(&doc, &camera, &batched, BODY_KEY, start.0, start.1, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    let emit = pointer_move(&doc, &camera, &batched, BODY_KEY, &LASSO_PATH, CANVAS_WIDTH, CANVAS_HEIGHT).expect("batched move");
     let one_batch = gesture_for_window("w");
     clear_gesture("w");
 
@@ -112,9 +117,9 @@ fn a_rectangle_batch_reads_its_last_sample() {
     let doc = demo();
     let camera = Viewport2d::default();
     let model = addressed(FEM2D_UTILITY_SELECT_MARQUEE);
-    pointer_down(&doc, &camera, &model, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    pointer_down(&doc, &camera, &model, BODY_KEY, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
     let samples = [(200.0, 300.0), (600.0, 100.0), (CANVAS_WIDTH - 12.0, CANVAS_HEIGHT - 12.0)];
-    pointer_move(&doc, &camera, &model, &samples, CANVAS_WIDTH, CANVAS_HEIGHT).expect("batched move");
+    pointer_move(&doc, &camera, &model, BODY_KEY, &samples, CANVAS_WIDTH, CANVAS_HEIGHT).expect("batched move");
     let gesture = gesture_for_window("w");
     let layers = fem2d_marquee_overlay_layers(&gesture);
     clear_gesture("w");
@@ -133,10 +138,10 @@ fn a_cancelled_release_selects_nothing_and_leaves_no_gesture() {
     let camera = Viewport2d::default();
     let model = addressed(FEM2D_UTILITY_SELECT_MARQUEE);
     let end = (CANVAS_WIDTH - 12.0, CANVAS_HEIGHT - 12.0);
-    pointer_down(&doc, &camera, &model, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
-    pointer_move(&doc, &camera, &model, &[end], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
+    pointer_down(&doc, &camera, &model, BODY_KEY, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    pointer_move(&doc, &camera, &model, BODY_KEY, &[end], CANVAS_WIDTH, CANVAS_HEIGHT).expect("move");
     assert!(gesture_for_window("w").active, "the marquee is live before the cancel");
-    let emit = pointer_up(&doc, &camera, &model, end.0, end.1, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", true).expect("cancel");
+    let emit = pointer_up(&doc, &camera, &model, BODY_KEY, end.0, end.1, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", true).expect("cancel");
     assert!(emit.effects.is_empty(), "a cancel never selects or picks");
     assert!(emit.artifact_mutations.is_empty() && emit.window_config_mutations.is_empty());
     assert!(matches!(emit.ui_scope, UiDirtyScope::Partial { .. }), "the overlay is refreshed away");
@@ -146,7 +151,7 @@ fn a_cancelled_release_selects_nothing_and_leaves_no_gesture() {
     let direct = addressed(FEM2D_UTILITY_SELECT_DIRECT);
     let n1 = find_node_2d(&doc.nodes, "n1").expect("n1");
     let (x, y) = fem2d_layer_to_canvas(&camera, screen_2d(n1.x, n1.y), CANVAS_WIDTH, CANVAS_HEIGHT);
-    let emit = pointer_up(&doc, &camera, &direct, x, y, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", true).expect("cancel");
+    let emit = pointer_up(&doc, &camera, &direct, BODY_KEY, x, y, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", true).expect("cancel");
     assert!(emit.effects.is_empty(), "no pick on a cancelled release");
 }
 //#endregion 🧪️BatchedSamples

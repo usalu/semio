@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "scenario",
+  "id": "scenario-a"
+}

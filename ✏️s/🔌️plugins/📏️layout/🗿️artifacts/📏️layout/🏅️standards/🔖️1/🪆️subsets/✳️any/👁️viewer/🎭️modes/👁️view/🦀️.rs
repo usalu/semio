@@ -4,7 +4,7 @@
 //! window" for a viewer packet — a second read-only Blueprint-shaped window is a follow-up, not a
 //! purity or completeness requirement.
 
-use crate::viewer::layout::modes::view::windows::preview;
+use crate::modes::view::windows::preview;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -38,3 +38,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/👁️preview/🦀️.rs"]
+    pub mod preview;
+}
+//#endregion 🪢️TaxonomyMounts

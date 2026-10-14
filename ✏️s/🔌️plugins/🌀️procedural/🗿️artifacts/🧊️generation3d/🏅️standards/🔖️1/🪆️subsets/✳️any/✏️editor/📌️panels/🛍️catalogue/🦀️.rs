@@ -11,7 +11,7 @@
 //! retained surface — it is the search surface, no longer an overflow valve.
 
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::tree_window_item;
@@ -55,13 +55,13 @@ fn catalogue_error(scope: &'static str) -> PluginAssemblyError {
 
 /// 🖱️ Drag payload the flow canvas already accepts: MIME `application/x-flow-widget` whose value is the widget descriptor JSON.
 fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_pack_json::Value {
-    let payload = crate::editor::generation3d::commands::add_widget::AddWidget::from_catalogue(item);
+    let payload = semio_s_artifact_procedural_3d_add_widget::AddWidget::from_catalogue(item);
     let descriptor = semio_framework_pack_json::object(payload.descriptor_fields().into_iter().map(|(name, value)| (name.into(), semio_framework_pack_json::Value::String(value.into()))));
     semio_framework_pack_json::object([(GENERATION_3D_WIDGET_DRAG_MIME.to_string(), semio_framework_pack_json::Value::String(descriptor.to_string()))])
 }
 
 fn catalogue_row(labels: &Generation3dLabels, item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let payload = crate::editor::generation3d::commands::add_widget::AddWidget::from_catalogue(item);
+    let payload = semio_s_artifact_procedural_3d_add_widget::AddWidget::from_catalogue(item);
     let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
     let fields = payload.descriptor_fields().into_iter().map(|(name, value)| Ok((name, semio_s_procedural_core_semantic_ui::ui_value_text(value)?))).collect::<semio_framework_plugin::UiAssemblyResult<Vec<_>>>()?;
     let args = semio_s_procedural_core_semantic_ui::ui_value_map(fields)?;

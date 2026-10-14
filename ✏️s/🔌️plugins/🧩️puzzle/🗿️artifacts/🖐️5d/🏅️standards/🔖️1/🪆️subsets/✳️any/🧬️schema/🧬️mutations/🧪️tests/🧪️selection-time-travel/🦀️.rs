@@ -78,7 +78,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
     for case in cases {
         let id = case.id.as_str();
-        let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
             semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut identity).await).expect("a recorded gesture applies");
         }

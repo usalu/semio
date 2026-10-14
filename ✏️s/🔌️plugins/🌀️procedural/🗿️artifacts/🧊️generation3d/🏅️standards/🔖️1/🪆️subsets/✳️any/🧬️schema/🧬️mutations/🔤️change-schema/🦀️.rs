@@ -2,7 +2,6 @@
 //! (`📓️derivation-rules.md` rule 1's `change-<field>` per remaining scalar).
 
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
-use crate::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 //#region 🔖️ChangeSchema
 /// 🔧 Whole-artifact scope — the fixture has exactly one schema field.
@@ -12,14 +11,17 @@ pub struct ChangeSchema {
     pub new_schema: String,
 }
 
-impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for ChangeSchema {
+impl<Op> protocol::MutationKind<Generation3dSnapshot, Op> for ChangeSchema
+where
+    Op: protocol::Mutation<Generation3dSnapshot, Diff = Generation3dDiff> + From<ChangeSchema>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
         crate::change_schema::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         crate::change_schema::inverse::inverse(self, base)?
     

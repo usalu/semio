@@ -3,8 +3,8 @@
 
 use crate::diff::EnergyLinkSlotDelta;
 use crate::diff::EnergyModelDiff;
-use crate::mutations as vocabulary;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::BindWeatherFile, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

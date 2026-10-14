@@ -1,0 +1,315 @@
+{
+ "artifact": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly",
+ "crate": "semio_s_artifact_lowpoly_lowpoly",
+ "consumers": [
+  "✏️s",
+  "🌎️hub"
+ ],
+ "aliases": {
+  "dsl": "semio_framework_os_kernel",
+  "protocol": "semio_framework_os_kernel",
+  "store": "semio_framework_os_kernel",
+  "framework_schema": "semio_framework_schema",
+  "value_derive": "semio_framework_value_derive"
+ },
+ "header": [],
+ "crates": [
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-model",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "description": "lowpoly model: artifact schema, snapshot records, managed mesh and the snapshot codecs",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/📸️snapshot/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/(🦀️\\.rs|🧪️tests/)",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️\\.rs"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-model-diff",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "description": "lowpoly diff algebra and its text and binary codecs",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/🔺️diff/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mutations",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/[^/]+/🧪️tests/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/"
+   ],
+   "flatten": [
+    "/🧬️mutations/[^/]+/🧪️tests/"
+   ],
+   "description": "lowpoly mutation vocabulary: the dispatch enum and every leaf's fixture laws"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-objects",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🧊️ Lowpoly object mutations: create, delete, rename, move, rotate, scale, reorder and smooth-shade objects.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(🌱️create-object|💀️delete-object|🏷️rename-object|↗️move-object|🔄️rotate-object|📐️scale-object|🔀️reorder-objects|🔘️change-object-smooth[^/]*)/(?!🧪️tests/)"
+   ],
+   "description": "lowpoly object mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🕸️ Lowpoly geometry mutations: mesh children, vertex positions and selection transforms.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(🕸️create-mesh|🧨delete-mesh|📍️set-vertex-positions|🚚️move-selection|🌀️rotate-selection|🔍️scale-selection)/(?!🧪️tests/)"
+   ],
+   "description": "lowpoly mesh and selection mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🎨️ Lowpoly paint-layer mutations: insert, remove, edit, rename, restyle layers and apply strokes.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(➕️insert-paint-layer|➖️remove-paint-layer|🎨️edit-paint-layer|🔖️rename-paint-layer|🌫️change-paint-layer[^/]*|🎛️change-paint-layer[^/]*|👁️change-paint-layer[^/]*|🖌️apply-paint-stroke)/(?!🧪️tests/)"
+   ],
+   "description": "lowpoly paint mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-inferences",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "description": "lowpoly inference owners",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/(📝️text|💾️binary)/💡️inferences/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-examples",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left",
+   "description": "lowpoly concrete-forest example"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-engine",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine",
+   "description": "lowpoly mesh editing engine"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-config",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "description": "lowpoly editor config"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-presence",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "description": "lowpoly editor presence"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-view",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/",
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/"
+   ],
+   "description": "lowpoly editor view, paint session and terminology"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-kit",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "description": "lowpoly editor kit"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-options",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options",
+   "module": "editor::lowpoly::options",
+   "create_root": "//! 🛠️ Lowpoly editor options: sun, edges, brush and eraser parameters, selection, gumball and snap.",
+   "description": "lowpoly editor options"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-modes",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/"
+   ],
+   "description": "lowpoly edit and paint modes"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "module": "editor::lowpoly::commands",
+   "create_root": "//! 🎮️ Lowpoly editor command handlers.",
+   "description": "lowpoly editor command handlers"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-panels",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "module": "editor::lowpoly::panels",
+   "create_root": "//! 📌️ Lowpoly editor panels: catalogue, artifact, inspection and layers.",
+   "description": "lowpoly editor panels"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-editor",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "description": "lowpoly editor app"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-viewer",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "description": "lowpoly viewer"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-io",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "description": "lowpoly io root: import, export and composers"
+  }
+ ],
+ "tests": [
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_patch_object"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_add_primitive"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_sun"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_camera"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_chrome"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_engagement"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️document/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_document"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_media"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_mesh_edit"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_paint"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_selection"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_object"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_transform"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-commands",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_commands_uv"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+   "name": "lowpoly_io_sqlite_snapshot"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_model_unit"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-modes",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_modes_model"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-modes",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_modes_uv"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-options",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️gumball/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_options_gumball"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_panels_layers"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_panels_artifact"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_panels_catalogue"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-editor",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "lowpoly_editor_unit"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-editor",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔌️mounted/🦀️.rs",
+   "name": "lowpoly_editor_mounted"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-objects",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️objects/🧪️tests/🦀️.rs",
+   "name": "lowpoly_objects_mutations"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-geometry",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️geometry/🧪️tests/🦀️.rs",
+   "name": "lowpoly_geometry_mutations"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-mut-paint",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint/🧪️tests/🦀️.rs",
+   "name": "lowpoly_paint_mutations"
+  },
+  {
+   "package": "semio-s-artifact-lowpoly-lowpoly-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs",
+   "name": "lowpoly_model_export_concrete_forest_mesh"
+  }
+ ],
+ "moves_files": [
+  "🚚️domain.moved.json",
+  "🚚️editor-kit.moved.json",
+  "🚚️motion.moved.json",
+  "🚚️window-chrome.moved.json",
+  "🚚️paint-step.moved.json",
+  "🚚️descriptor.moved.json"
+ ]
+}

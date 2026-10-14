@@ -1,0 +1,38 @@
+[
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+  "package": "semio-s-artifact-energy-model-io",
+  "alias": "io",
+  "description": "Energy model io: composition, io registry, model builder and analyzer"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import",
+  "package": "semio-s-artifact-energy-model-import",
+  "alias": "import",
+  "description": "Energy model import: epJSON, JSON, TXT and ZIP deserializers"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export",
+  "package": "semio-s-artifact-energy-model-export",
+  "alias": "export",
+  "description": "Energy model export: epJSON, JSON, TXT and ZIP serializers"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session",
+  "package": "semio-s-artifact-energy-model-session",
+  "alias": "session",
+  "description": "Energy model simulation session: the tool-run definition and the run job"
+ },
+ {
+  "owner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+  "package": "semio-s-artifact-energy-model-examples",
+  "alias": "examples",
+  "description": "Energy model examples: the BESTEST cases and the demo as bundled documents",
+  "tests": [
+   [
+    "example_assets",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🔬️assets/🦀️.rs"
+   ]
+  ]
+ }
+]

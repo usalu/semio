@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::En1997Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
 
 /// 🩹️ Sparse patch of the `layers` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -16,8 +24,8 @@ pub struct En1997LayersPatch {
     pub phi_prime_deg: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::SoilLayer> for En1997LayersPatch {
-    fn commit_into(&self, row: &mut crate::SoilLayer, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::SoilLayer> for En1997LayersPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::SoilLayer, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.oedometric_modulus {
             row.oedometric_modulus = value.clone();
         }
@@ -36,7 +44,7 @@ impl protocol::list_delta::RowPatch<crate::SoilLayer> for En1997LayersPatch {
         }
     }
 
-    fn inverse(&self, row: &crate::SoilLayer) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::SoilLayer) -> Self {
         Self {
             oedometric_modulus: self.oedometric_modulus.as_ref().map(|_| row.oedometric_modulus.clone()),
             phi_prime_deg: self.phi_prime_deg.as_ref().map(|_| row.phi_prime_deg.clone()),
@@ -52,7 +60,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `layers` list (rows keyed by `id`).
-    pub En1997LayersRows { removal: En1997LayersRemoved, insertion: En1997LayersInserted, relocation: En1997LayersMoved, modification: En1997LayersModified, row: crate::SoilLayer, patch: En1997LayersPatch, key: id }
+    pub En1997LayersRows { removal: En1997LayersRemoved, insertion: En1997LayersInserted, relocation: En1997LayersMoved, modification: En1997LayersModified, row: semio_s_artifact_norm_en1997_model::SoilLayer, patch: En1997LayersPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `footings` row addressed by its key.
@@ -65,8 +73,8 @@ pub struct En1997FootingsPatch {
     pub embedment: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::SpreadFoundation> for En1997FootingsPatch {
-    fn commit_into(&self, row: &mut crate::SpreadFoundation, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::SpreadFoundation> for En1997FootingsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::SpreadFoundation, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.width {
             row.width = value.clone();
         }
@@ -85,7 +93,7 @@ impl protocol::list_delta::RowPatch<crate::SpreadFoundation> for En1997FootingsP
         }
     }
 
-    fn inverse(&self, row: &crate::SpreadFoundation) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::SpreadFoundation) -> Self {
         Self {
             width: self.width.as_ref().map(|_| row.width.clone()),
             embedment: self.embedment.as_ref().map(|_| row.embedment.clone()),
@@ -101,7 +109,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `footings` list (rows keyed by `id`).
-    pub En1997FootingsRows { removal: En1997FootingsRemoved, insertion: En1997FootingsInserted, relocation: En1997FootingsMoved, modification: En1997FootingsModified, row: crate::SpreadFoundation, patch: En1997FootingsPatch, key: id }
+    pub En1997FootingsRows { removal: En1997FootingsRemoved, insertion: En1997FootingsInserted, relocation: En1997FootingsMoved, modification: En1997FootingsModified, row: semio_s_artifact_norm_en1997_model::SpreadFoundation, patch: En1997FootingsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `piles` row addressed by its key.
@@ -114,8 +122,8 @@ pub struct En1997PilesPatch {
     pub count: Option<u32>,
 }
 
-impl protocol::list_delta::RowPatch<crate::Pile> for En1997PilesPatch {
-    fn commit_into(&self, row: &mut crate::Pile, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::Pile> for En1997PilesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::Pile, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.length {
             row.length = value.clone();
         }
@@ -134,7 +142,7 @@ impl protocol::list_delta::RowPatch<crate::Pile> for En1997PilesPatch {
         }
     }
 
-    fn inverse(&self, row: &crate::Pile) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::Pile) -> Self {
         Self {
             length: self.length.as_ref().map(|_| row.length.clone()),
             count: self.count.as_ref().map(|_| row.count.clone()),
@@ -150,7 +158,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `piles` list (rows keyed by `id`).
-    pub En1997PilesRows { removal: En1997PilesRemoved, insertion: En1997PilesInserted, relocation: En1997PilesMoved, modification: En1997PilesModified, row: crate::Pile, patch: En1997PilesPatch, key: id }
+    pub En1997PilesRows { removal: En1997PilesRemoved, insertion: En1997PilesInserted, relocation: En1997PilesMoved, modification: En1997PilesModified, row: semio_s_artifact_norm_en1997_model::Pile, patch: En1997PilesPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `retaining_walls` row addressed by its key.
@@ -162,8 +170,8 @@ pub struct En1997RetainingWallsPatch {
     pub base_width: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::RetainingWall> for En1997RetainingWallsPatch {
-    fn commit_into(&self, row: &mut crate::RetainingWall, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::RetainingWall> for En1997RetainingWallsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::RetainingWall, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.base_width {
             row.base_width = value.clone();
         }
@@ -176,7 +184,7 @@ impl protocol::list_delta::RowPatch<crate::RetainingWall> for En1997RetainingWal
         }
     }
 
-    fn inverse(&self, row: &crate::RetainingWall) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::RetainingWall) -> Self {
         Self {
             base_width: self.base_width.as_ref().map(|_| row.base_width.clone()),
         }
@@ -191,7 +199,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `retaining_walls` list (rows keyed by `id`).
-    pub En1997RetainingWallsRows { removal: En1997RetainingWallsRemoved, insertion: En1997RetainingWallsInserted, relocation: En1997RetainingWallsMoved, modification: En1997RetainingWallsModified, row: crate::RetainingWall, patch: En1997RetainingWallsPatch, key: id }
+    pub En1997RetainingWallsRows { removal: En1997RetainingWallsRemoved, insertion: En1997RetainingWallsInserted, relocation: En1997RetainingWallsMoved, modification: En1997RetainingWallsModified, row: semio_s_artifact_norm_en1997_model::RetainingWall, patch: En1997RetainingWallsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `slopes` row addressed by its key.
@@ -203,8 +211,8 @@ pub struct En1997SlopesPatch {
     pub angle_deg: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::Slope> for En1997SlopesPatch {
-    fn commit_into(&self, row: &mut crate::Slope, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::Slope> for En1997SlopesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::Slope, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.angle_deg {
             row.angle_deg = value.clone();
         }
@@ -217,7 +225,7 @@ impl protocol::list_delta::RowPatch<crate::Slope> for En1997SlopesPatch {
         }
     }
 
-    fn inverse(&self, row: &crate::Slope) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::Slope) -> Self {
         Self {
             angle_deg: self.angle_deg.as_ref().map(|_| row.angle_deg.clone()),
         }
@@ -232,7 +240,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `slopes` list (rows keyed by `id`).
-    pub En1997SlopesRows { removal: En1997SlopesRemoved, insertion: En1997SlopesInserted, relocation: En1997SlopesMoved, modification: En1997SlopesModified, row: crate::Slope, patch: En1997SlopesPatch, key: id }
+    pub En1997SlopesRows { removal: En1997SlopesRemoved, insertion: En1997SlopesInserted, relocation: En1997SlopesMoved, modification: En1997SlopesModified, row: semio_s_artifact_norm_en1997_model::Slope, patch: En1997SlopesPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `uplift_cases` row addressed by its key.
@@ -248,8 +256,8 @@ pub struct En1997UpliftCasesPatch {
     pub total_stress: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::UpliftCase> for En1997UpliftCasesPatch {
-    fn commit_into(&self, row: &mut crate::UpliftCase, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1997_model::UpliftCase> for En1997UpliftCasesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1997_model::UpliftCase, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.permanent_stabilizing {
             row.permanent_stabilizing = value.clone();
         }
@@ -286,7 +294,7 @@ impl protocol::list_delta::RowPatch<crate::UpliftCase> for En1997UpliftCasesPatc
         }
     }
 
-    fn inverse(&self, row: &crate::UpliftCase) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1997_model::UpliftCase) -> Self {
         Self {
             permanent_stabilizing: self.permanent_stabilizing.as_ref().map(|_| row.permanent_stabilizing.clone()),
             permanent_destabilizing: self.permanent_destabilizing.as_ref().map(|_| row.permanent_destabilizing.clone()),
@@ -305,7 +313,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `uplift_cases` list (rows keyed by `id`).
-    pub En1997UpliftCasesRows { removal: En1997UpliftCasesRemoved, insertion: En1997UpliftCasesInserted, relocation: En1997UpliftCasesMoved, modification: En1997UpliftCasesModified, row: crate::UpliftCase, patch: En1997UpliftCasesPatch, key: id }
+    pub En1997UpliftCasesRows { removal: En1997UpliftCasesRemoved, insertion: En1997UpliftCasesInserted, relocation: En1997UpliftCasesMoved, modification: En1997UpliftCasesModified, row: semio_s_artifact_norm_en1997_model::UpliftCase, patch: En1997UpliftCasesPatch, key: id }
 }
 
 /// 🔺️ Keyed sparse diff of the En1997 artifact: scalar setters, keyed row diffs and per-field section patches.
@@ -324,7 +332,7 @@ pub struct En1997Diff {
     #[state(artifact)]
     pub design_approach: Option<String>,
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub groundwater_level: Option<f64>,
     #[state(artifact)]
@@ -479,6 +487,7 @@ impl protocol::DiffAlgebra<En1997Snapshot> for En1997Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

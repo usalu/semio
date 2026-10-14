@@ -1,8 +1,8 @@
 //! 🔺️ `retire-subject` — sparse diff construction.
 
-use super::mutation::RetireSubject;
-use crate::{Iso16757Snapshot};
-use crate::diff::{Iso16757Diff, Iso16757SubjectsRows};
+use crate::retire_subject::mutation::RetireSubject;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_s_artifact_norm_iso16757_diff::{Iso16757Diff, Iso16757SubjectsRows};
 
 //#region 🔖️Diff
 

@@ -3,7 +3,8 @@
  * 📏️ Measures every Cargo package under the given roots against the global native Source admission ceiling
  * (4,000 active lines / 262,144 full bytes / 32 files per compilation unit), with the canonical closure reader of
  * `📦️artifacts/🏗️native-build/📥️source/🟦️.ts`. Each package reports its lib unit for native aarch64-macOS and
- * wasm32-wasip2 (default features) and its lib test unit (native cfg + `test`, default + dev-enabled features).
+ * wasm32-wasip2 (default features), its lib test unit (native cfg + `test`, default + dev-enabled features) and every
+ * `[[test]]` target unit.
  *
  * usage: bun 📏️source-ceiling.ts [--json] [--over] <root>...
  */
@@ -16,7 +17,7 @@ const REPO = resolve(import.meta.dir, "../../../../../../../..");
 const CEILING = { lines: 4000, bytes: 262144, files: 32 };
 const NATIVE = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix", "debug_assertions", "panic=unwind"];
 const WASM = ["target_arch=wasm32", "target_os=wasi", "target_env=p2", "target_pointer_width=32", "target_family=wasm", "debug_assertions", "panic=abort"];
-type Manifest = { package?: { name: string }; lib?: { path?: string }; features?: Record<string, string[]>; "dev-dependencies"?: Record<string, unknown> };
+type Manifest = { package?: { name: string }; lib?: { path?: string }; test?: { name: string; path: string }[]; features?: Record<string, string[]>; "dev-dependencies"?: Record<string, unknown> };
 type Unit = { lines: number; bytes: number; files: number; over: boolean; error?: string };
 
 /** 🧾️ Walks the roots for package manifests, skipping build outputs and node modules. */
@@ -63,6 +64,10 @@ for (const root of args.filter(arg => !arg.startsWith("--"))) for (const path of
   const base = features(manifest, ["default"]), test = features(manifest, ["default", ...Object.keys(manifest.features ?? {}).filter(name => name === "testing" || name === "testkit")]);
   const row = { package: manifest.package.name, manifest: relative(REPO, path), native: await unit(entry, [...NATIVE, ...base]), wasm: await unit(entry, [...WASM, ...base]), test: await unit(entry, [...NATIVE, ...test, "test"]) };
   if (!overOnly || row.native.over || row.wasm.over || row.test.over) rows.push(row);
+  for (const target of manifest.test ?? []) {
+    const unitRow = await unit(resolve(dirname(path), target.path), [...NATIVE, ...test, "test"]);
+    if (!overOnly || unitRow.over) rows.push({ package: `${manifest.package.name} [[test]] ${target.name}`, manifest: relative(REPO, path), native: unitRow, wasm: unitRow, test: unitRow });
+  }
 }
 const cell = (unit: Unit) => unit.error ? `ERR ${unit.error}` : `${unit.over ? "OVER" : "ok"} ${unit.lines}L/${unit.bytes}B/${unit.files}F`;
 if (json) console.log(JSON.stringify(rows, null, 1));

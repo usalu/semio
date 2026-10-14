@@ -1,4 +1,5 @@
 use super::*;
+use crate::diff_patch::{ListEdit, Rows, Slots};
 use crate::model::{EntityId, Zone};
 use semio_framework_value::{FromValue, ToValue};
 
@@ -7,7 +8,7 @@ fn zone(id: u32, name: &str) -> Zone {
 }
 
 fn snapshot(zones: Vec<Zone>) -> EnergyModelSnapshot {
-    crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model { zones, ..crate::model::Model::default() }, None)
+    crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model { zones, ..crate::model::Model::default() }, None)
 }
 
 fn zones_of(zones: Rows<ZonePatch>) -> EnergyModelDiff {
@@ -20,7 +21,7 @@ fn rename(id: u32, name: &str) -> EnergyModelDiff {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_a_no_operation() {
-    let base = crate::schema::empty_energy_model_snapshot();
+    let base = crate::snapshot::EnergyModelSnapshot::default();
     let diff = EnergyModelDiff::default();
     assert!(DiffAlgebra::is_empty(&diff));
     assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);

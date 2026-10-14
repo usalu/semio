@@ -1,12 +1,12 @@
 //! ↩️ `change-attachment` inverse.
 
-use crate::mutations::change_attachment::ChangeAttachment;
-use crate::mutations::Din18599Mutation;
-use crate::Din18599Snapshot;
+use crate::change_attachment::ChangeAttachment;
 
-pub fn inverse(_payload: &ChangeAttachment, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeAttachment, base: &Din18599Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_attachment::ChangeAttachment> {
     Ok((|| {
-    vec![Din18599Mutation::ChangeAttachment(ChangeAttachment { new_attachment: base.attachment })]
+    vec![Op::from(ChangeAttachment { new_attachment: base.attachment })]
 
     })())
 }

@@ -1,8 +1,8 @@
 //! 📘️ Logical SpreadsheetML workbook projection from authoritative XML parts.
 
-use crate::schema::{refusal::XlsxError, vocabulary::*};
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
-use crate::XlsxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::{refusal::XlsxError, vocabulary::*};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 

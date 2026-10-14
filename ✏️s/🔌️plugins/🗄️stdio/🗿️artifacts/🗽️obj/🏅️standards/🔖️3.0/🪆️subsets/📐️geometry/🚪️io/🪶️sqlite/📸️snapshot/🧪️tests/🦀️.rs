@@ -15,7 +15,7 @@ fn sqlite_snapshot_obj_controlled_output_retains_exact_ieee_and_source_words_wit
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_obj_actual_declaration_typed_and_erased_io_mount(){
  use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("OBJ owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("OBJ owned SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.obj".into(),standard:"3.0".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);
  let mut snapshot=fixture();snapshot.schema="actual registered OBJ intermediate".into();snapshot.vertices[0].x=f64::from_bits(0xfff0000000001234);snapshot.faces[0].vertices.clear();snapshot.groups[0].faces=vec![u64::MAX];snapshot.objects[0].faces=vec![9007199254740993];snapshot.usemtl[0].face_index_from=u64::MAX;snapshot.unknown_statements[0].line_index=u64::MAX;
  let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();

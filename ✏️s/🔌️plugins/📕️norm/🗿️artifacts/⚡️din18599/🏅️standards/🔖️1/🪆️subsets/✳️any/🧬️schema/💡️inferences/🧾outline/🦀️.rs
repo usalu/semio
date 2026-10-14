@@ -1,6 +1,6 @@
 //! 🧾 `outline` — document field list plus zone/element entry counts.
 
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[

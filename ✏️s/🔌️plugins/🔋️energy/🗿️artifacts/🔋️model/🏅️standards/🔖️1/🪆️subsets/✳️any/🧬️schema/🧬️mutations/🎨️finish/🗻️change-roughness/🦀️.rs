@@ -1,8 +1,7 @@
 //! 🗻️ Energy model mutation — `ChangeMaterialRoughness`: Sets the surface roughness class of one material, addressed by id.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeMaterialRoughness {
     pub new_roughness: crate::model::SurfaceRoughness,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_material_roughness(id: crate::model::EntityId, new_roughness: crate::model::SurfaceRoughness) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeMaterialRoughness(ChangeMaterialRoughness { id, new_roughness })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_material_roughness<Op: From<ChangeMaterialRoughness>>(id: crate::model::EntityId, new_roughness: crate::model::SurfaceRoughness) -> Op {
+    ChangeMaterialRoughness { id, new_roughness }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeMaterialRoughness {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeMaterialRoughness
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeMaterialRoughness>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material", kind: "change-material-roughness", record: "ChangedMaterialRoughness" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

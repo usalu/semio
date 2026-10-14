@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "base": {
+    "a": 1,
+    "b": 2
+  },
+  "rows": {
+    "a": {
+      "op": "replace",
+      "value": 3
+    },
+    "b": {
+      "op": "remove"
+    },
+    "c": {
+      "op": "insert",
+      "value": 5
+    }
+  },
+  "expected": {
+    "a": 3,
+    "c": 5
+  },
+  "expectedInverse": {
+    "a": {
+      "op": "replace",
+      "value": 1
+    },
+    "b": {
+      "op": "insert",
+      "value": 2
+    },
+    "c": {
+      "op": "remove"
+    }
+  },
+  "composition": [
+    {
+      "first": {
+        "op": "insert",
+        "value": 1
+      },
+      "later": {
+        "op": "remove"
+      },
+      "expected": null
+    },
+    {
+      "first": {
+        "op": "insert",
+        "value": 1
+      },
+      "later": {
+        "op": "replace",
+        "value": 2
+      },
+      "expected": {
+        "op": "insert",
+        "value": 2
+      }
+    },
+    {
+      "first": {
+        "op": "remove"
+      },
+      "later": {
+        "op": "insert",
+        "value": 3
+      },
+      "expected": {
+        "op": "replace",
+        "value": 3
+      }
+    }
+  ]
+}

@@ -1,8 +1,7 @@
 //! 🌧️ Energy model mutation — `ChangeHumidistatHumidifyingThrottleRange`: Sets the proportional band the humidifying setpoint is approached over, in percent relative humidity.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeHumidistatHumidifyingThrottleRange {
     pub new_humidifying_throttle_range: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_humidistat_humidifying_throttle_range(id: crate::model::EntityId, new_humidifying_throttle_range: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeHumidistatHumidifyingThrottleRange(ChangeHumidistatHumidifyingThrottleRange { id, new_humidifying_throttle_range })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_humidistat_humidifying_throttle_range<Op: From<ChangeHumidistatHumidifyingThrottleRange>>(id: crate::model::EntityId, new_humidifying_throttle_range: f64) -> Op {
+    ChangeHumidistatHumidifyingThrottleRange { id, new_humidifying_throttle_range }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeHumidistatHumidifyingThrottleRange {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeHumidistatHumidifyingThrottleRange
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeHumidistatHumidifyingThrottleRange>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "humidistat", kind: "change-humidistat-humidifying-throttle-range", record: "ChangedHumidistatHumidifyingThrottleRange" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

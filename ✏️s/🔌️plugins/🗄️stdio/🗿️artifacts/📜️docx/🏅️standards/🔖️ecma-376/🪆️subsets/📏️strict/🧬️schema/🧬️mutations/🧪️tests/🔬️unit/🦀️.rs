@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::*;
 
 //#region 🔖️KindsConformanceLaw
 /// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a
@@ -48,7 +48,7 @@ fn kinds_match_enum_and_catalog() {
 #[test]
 fn stamping_out_of_a_class_and_back_is_the_identity() {
     use semio_framework_plugin::ArtifactBuilder;
-    let started = crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+    let started = semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     let mut state = started.clone();
     for mutation in stamp_conformance_class_mutations(false) {
         assert!(apply_docx_strict_mutation(&mut state, &mutation).messages().is_empty());
@@ -95,7 +95,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(carrier, fixture["document"]);
     let removal = DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
-    let (index, override_index) = crate::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
+    let (index, override_index) = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
     assert_eq!(inverse, vec![DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(index), override_index })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
@@ -105,7 +105,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn every_strict_kind_satisfies_the_inverse_sum_law() {
     use semio_framework_plugin::ArtifactBuilder;
-    let base = crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+    let base = semio_s_artifact_stdio_docx_strict::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
     let laws = protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     for mutation in stamp_conformance_class_mutations(false) {
         laws(&mutation, &base).await;

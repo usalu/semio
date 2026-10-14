@@ -1,8 +1,7 @@
 //! 🧊 Block5d mutation — `UpdatePart3d`: the whole 2-field 3D-projection pose facet atomically (orientation quaternion + scale vector, always edited together in a 3D pose gizmo).
 
-use crate::Block5dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Mutation
 /// 🧊 `update-part-3d` payload.
@@ -19,19 +18,19 @@ pub struct UpdatePart3d {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_part_3d(new_orientation: Option<[f64; 4]>, new_scale: Option<[f64; 3]>) -> Block5dMutation {
-    Block5dMutation::UpdatePart3d(UpdatePart3d { new_orientation, new_scale })
+pub fn update_part_3d<Op: From<crate::update_part_3d::UpdatePart3d>>(new_orientation: Option<[f64; 4]>, new_scale: Option<[f64; 3]>) -> Op {
+    Op::from(UpdatePart3d { new_orientation, new_scale })
 }
 
-impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart3d {
+impl<Op> protocol::MutationKind<Block5dSnapshot, Op> for UpdatePart3d where Op: protocol::Mutation<Block5dSnapshot, Diff = semio_s_artifact_block_5d_diff::Block5dDiff> + From<crate::update_part_3d::UpdatePart3d> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "part-3d", kind: "update-part3d", record: "UpdatedPart3d" };
 
     fn diff(&self, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-        super::diff::diff(self, base)
+        crate::update_part_3d::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_part_3d::inverse::inverse(self, base)?
     
     })
 }
@@ -40,3 +39,10 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for UpdatePart3d {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

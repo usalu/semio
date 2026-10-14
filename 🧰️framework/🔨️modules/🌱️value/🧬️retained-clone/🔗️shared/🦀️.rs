@@ -1,6 +1,6 @@
 //! 🔗️ Clones genuine original shared issuances through separately funded alias and projection turns.
 use super::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep};
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::sealed::SealedShared}};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep},shared_issuance::SealedShared};
 use std::mem::ManuallyDrop;
 
 struct State<T:Send+Sync+'static>{output:Option<SealedShared<T>>,source:Option<RetainedCloneBinding>,close:RetainedCloneClose,closing:bool,spent:bool}

@@ -281,7 +281,7 @@ impl semio_framework_plugin::WindowConfigApplyMutation<Puzzle5dWorldWindowConfig
 
 /// 🎣️ The grip suggestion menu one window has open — puzzle 3d's record verbatim, because the world host's
 /// suggestion protocol (`suggestionMenu` on the interaction lane, `openVortexSuggestions`) is shared.
-pub use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dSuggestionMenu as Puzzle5dSuggestionMenu;
+pub use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dSuggestionMenu as Puzzle5dSuggestionMenu;
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

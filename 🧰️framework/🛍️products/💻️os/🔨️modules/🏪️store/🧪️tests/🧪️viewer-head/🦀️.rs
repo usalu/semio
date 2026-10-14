@@ -16,7 +16,7 @@ struct Replica {
 }
 
 async fn fresh(document: &str, initial: Option<i32>) -> DemoStore {
-    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", document, DemoSnapshot { n: initial }, None)).await
+    ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", document, DemoSnapshot { n: initial }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 async fn apply(store: &mut DemoStore, mutations: Vec<DemoMutation>, _identity:&mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
@@ -103,15 +103,15 @@ async fn reloaded(store: &DemoStore, through: &str) -> DemoStore {
     let envelope = match through {
         "spr" => {
             let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-            parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("the pair parses").into_envelope()
+            parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope()
         }
         "ops" => {
             let text = print_document_text(store.envelope()).await.expect("the text prints");
-            parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("the text parses").into_envelope()
+            parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope()
         }
         other => panic!("unknown persisted form {other}"),
     };
-    ArtifactStore::new(envelope).await
+    ArtifactStore::new(envelope, &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await
 }
 
 /// 🎬️ One corpus action at replica `at`.
@@ -451,7 +451,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<crate::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     for n in [1, 2, 3] {
         test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![SeverityMutation::SetN(SeveritySetN { n })], transaction: None }).await.expect("a clean edit applies");
     }
@@ -466,7 +466,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     assert_eq!((store.snapshot_ref().n, store.supersessions().len()), (Some(30), 2));
 
     let files = print_document_pack(store.envelope()).await.expect("the pair prints");
-    let reattached = ArtifactStore::new(parse_document_pack::<DemoSnapshot, SeverityMutation>(&files.pack, &files.spr).await.expect("the pair parses").into_envelope()).await;
+    let reattached = ArtifactStore::new(parse_document_pack::<DemoSnapshot, SeverityMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the pair parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!(ledger(&reattached), expected, "edits, history transitions, alternatives and outcomes survive the re-attach");
     assert_eq!((reattached.envelope().active_alternative_id.clone(), reattached.envelope().viewer_checkpoint_id.clone()), head, "the replica stands where its own pair says");
     assert_eq!((reattached.snapshot_ref().n, reattached.supersessions(), reattached.applied_edit_ids().iter().collect::<Vec<_>>()), (Some(30), store.supersessions(), store.applied_edit_ids().iter().collect::<Vec<_>>()));
@@ -474,7 +474,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
     test_support::assert_live_equals_replay(&reattached).await;
 
     let text = print_document_text(store.envelope()).await.expect("the text prints");
-    let shared = ArtifactStore::new(parse_document_text::<DemoSnapshot, SeverityMutation>(&text.dsl, &text.ops).await.expect("the text parses").into_envelope()).await;
+    let shared = ArtifactStore::new(parse_document_text::<DemoSnapshot, SeverityMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the text parses").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     let (edits, transitions, alternatives, _) = ledger(&shared);
     assert_eq!((edits, transitions, alternatives), (expected.0.clone(), expected.1.clone(), expected.2.clone()), "the shared log carries every edit, transition and alternative");
     assert_eq!((shared.envelope().active_alternative_id.clone(), shared.envelope().viewer_checkpoint_id.clone(), shared.snapshot_ref().n, shared.supersessions().len()), (None, None, Some(3), 1), "and no head: it hydrates to the trunk tip, where only the overwrite holds");
@@ -554,7 +554,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
     apply(&mut a, vec![DemoMutation::SetN(SetN { n: 100 })], &mut identity).await;
     apply(&mut a, vec![DemoMutation::AddN(AddN { delta: 60 })], &mut identity).await;
     let folder = print_document_pack(a.envelope()).await.expect("a writes the folder");
-    let mut b = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&folder.pack, &folder.spr).await.expect("b opens the folder").into_envelope()).await;
+    let mut b = ArtifactStore::new(parse_document_pack::<DemoSnapshot, DemoMutation>(&folder.pack, &folder.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("b opens the folder").into_envelope(), &crate::os_store::tests::DemoMemberStoreProducer::<_>::new()).await;
     assert_eq!((b.snapshot_ref().n, b.applied_edit_ids().len()), (Some(160), 2), "b shows a's document and a's edit");
 
     let target = a.mutation_ops().expect("applied operations")[1].mutation_id.clone();

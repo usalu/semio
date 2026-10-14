@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Block2dSnapshot` to its binary pack form.
@@ -27,10 +27,10 @@ mod tests;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, BLOCK_2D_SCHEMA};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
+use crate::binary::snapshot::*;
+use semio_s_artifact_block_2d_model::*;
+use semio_s_artifact_block_2d_model::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, BLOCK_2D_SCHEMA};
+use semio_s_plugin_block::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use ::semio_framework_schema::ArtifactSchema;
 
 impl pack::snapshot::ArtifactPack for Block2dSnapshot {
@@ -56,7 +56,7 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
 }
 }
-#[cfg(test)] pub use snapshot_codec::*;
+#[cfg(test)] pub use crate::binary::snapshot::snapshot_codec::*;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl pack::snapshot::ArtifactNativeSnapshot for Block2dSnapshot {

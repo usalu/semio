@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "source": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec",
+  "destination": "🧰️framework/🔨️modules/🎭️actor/🧬️codec",
+  "before": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "sha256": "ad9889f6bbe776d2e4d1dc979c6700b63be5ab55d3f8a1fb0268f50899fd057c",
+      "bytes": 566
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "ce6e97955f672d7cd601a760bf98753b4732407d85f4f702e9e2f0efc69c95e3",
+      "bytes": 4904
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "sha256": "738d3d8fe7b7a1aaaeccb48110027f8148700fd385c921a20ceca1153d02b852",
+      "bytes": 191665
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts",
+      "sha256": "d3a68481787a07b54a32ce0b4ad4db4053c8ad7fa3058ade44abf6fdf7f6c0e7",
+      "bytes": 6877
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json",
+      "sha256": "734fb502d8856fbee70210ea33a7fbbfbb13620f3a2c7918e476dcf8dc466be5",
+      "bytes": 7940
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🟦️.ts",
+      "sha256": "c52b6c04b971b17568fb920bc6a5b34134c7421ce2616731e5010b8b29eb5815",
+      "bytes": 15105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "sha256": "cd3be1ea83e56861b346aa01d12d146752ebf3a34d681bbc21950f6741ced01b",
+      "bytes": 9678
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🧬️.json",
+      "sha256": "f33b7e6aeea71cfd5abc3b941b61b43e727d8c16c239e57b9ac3d31bc5fe4f1e",
+      "bytes": 3280
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🔣️.json",
+      "sha256": "acd2f9f9ff5855bd4f06149ac09f88675ea9e7b345335cbfe4ca49d69505fc89",
+      "bytes": 2475
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "sha256": "adaf1f4830c76efc9ec66284e59a19c713cbd4201e075ff1f82c703e0cc8aa8f",
+      "bytes": 5639
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "sha256": "068933093f617caca17e786eb2e72e0f6082c750c2b12cf3d1529731ed7b377f",
+      "bytes": 4473
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "e45233cdd8d0f12a9cf4db9d6b98828a1ca5313e7483d919ccb40b7ac62dbae3",
+      "bytes": 3966099
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "21570b2478a1ca3b050e352aef6253114870e12eefcb8ae83078c9b31781f8b6",
+      "bytes": 1130971
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "3214c124c542d20cfc6f247741b0ef96ab377bfef8d3be1dc3f1eda4ae296e26",
+      "bytes": 1553878
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "sha256": "92a352e30e9d0e36c6722fa0ccbad337026b22ea6854eec876cd2d84a055ca6c",
+      "bytes": 102904
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "96c6812bc05b17f87f3ab6654e8f6b83daacad17ac3007137a5a4bfbf1fe809c",
+      "bytes": 50818
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "sha256": "35bfe3634b9bb7d31be67755c1010b2f15eec49fd7eb48119b0475db4da3d309",
+      "bytes": 134296
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "sha256": "d984ec167e983b8a17f5d6ff97dd7a8389fabd8848dc12550d837488c4baee45",
+      "bytes": 11784
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+      "sha256": "d0385c66a8188c80b36e90e133921fc543f1718494e3094d2812b2ce043fe983",
+      "bytes": 1330577
+    }
+  ],
+  "schemaAndPortableRosterAuthoredBeforeMove": [
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🧬️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🧬️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🔣️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+    "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json"
+  ],
+  "testsCollected": 0,
+  "after": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+      "sha256": "315c6c9ce009a2b04ff76794503d63e79c2cbe615be91038ee011ca8477d7576",
+      "bytes": 467
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📜️script.ts",
+      "sha256": "5c53d9b8108ae0e50a4df39ffd9173e637483b5d39bc119ff5ad4d23d2e5171b",
+      "bytes": 4844
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "sha256": "6876e7877b6a8d9c33ac8a431ede2179f96ebadba34976aecf29bc1d977d9e27",
+      "bytes": 191656
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "4d2692380bfad7a71db82a9923d8091ca643997a82c441bbbd7b3f500b1cf63f",
+      "bytes": 6854
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧬️schema/🔣️.json",
+      "sha256": "db14ccbc1dcba4dd94fca2a21ce6f7b1b8c7735e32ad2fd091533fb605a49abf",
+      "bytes": 7917
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "2a8f64c9987266bd04773a74e4db340168c3ce61e86b3316b59dd017039a2118",
+      "bytes": 15077
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🧬️.json",
+      "sha256": "98d3e4113675210ba3c84f3ec1cf7b43e0a387b09b64c51f3a4bfed504991b69",
+      "bytes": 9525
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🧬️.json",
+      "sha256": "7a47df219aca92cef4eb2010366fe0b334b3bb29bafedfc57df28a27103520d4",
+      "bytes": 3250
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🔣️.json",
+      "sha256": "d4388b2ac014edd9dcb18d146dcb1c39c7f9da79c2dd8fb331c0c9dfed8f7f7e",
+      "bytes": 2445
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🧬️.json",
+      "sha256": "d8f5e1f99e3fefb94f6e4428000732abcaeecc8358610b1e01a7b4be51756c3c",
+      "bytes": 5561
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/📣️public-facets/🔣️.json",
+      "sha256": "715a70aaa3a41204d99b8a89bd676c46aa6494afcabe13ae0e21be6bfc0fa180",
+      "bytes": 4395
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
+      "sha256": "f32f8fbad834049ae1ee382e254042e97bbb6aabe17b406780facc7b6014402b",
+      "bytes": 3966046
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sha256": "c77555ce2a83cae587497730fbe194d193151c7db859917fc89ec583e6b9cd9e",
+      "bytes": 1130911
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md",
+      "sha256": "16b8286bd69764057ee80be81fedccd88e5a2206f6064bdc9f93946a674ad566",
+      "bytes": 1553825
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+      "sha256": "b734a601c4cc36099491324ef045959e0ec713311f07c92be969b94ad21087fd",
+      "bytes": 102874
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
+      "sha256": "c4a419c4d27b783e1fbf2f5cd65194359fbef9ef7d83b0e834ef016c42f524c0",
+      "bytes": 50788
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+      "sha256": "f8e89691832850978223373e2cac8da1fc6479d8af0af2b64146fbd645add681",
+      "bytes": 134296
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️component-codec-reply/🟦️.ts",
+      "sha256": "f512c4d76ef4b8bd088af39da0914cde61792207973f278c8c16ef9e0b9dd509",
+      "bytes": 11754
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+      "sha256": "393de920df8588eca9030138eb35eee3b1af86b0914da19a1a86f65c92129520",
+      "bytes": 1330524
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d6b81c69588dbdca9d5a63ca2c965f335823a549958084587ab7690c501297a6",
+      "bytes": 7345
+    }
+  ],
+  "canonicalSchemaExport": "actorCodecSchema",
+  "moveImportRepair": "moved ShardClient consumer test explicitly imports original private transport owner",
+  "probes": {
+    "semanticSourceFiles": 747,
+    "semanticDiagnostics": 0,
+    "portableLeafCases": 23,
+    "normalAndMinified": true,
+    "genuineForeignOwnerIdentity": true,
+    "registeredTestsCollected": 0,
+    "files": [
+      "🗑️generated/actor-codec-domain-semantic.json",
+      "🗑️generated/actor-codec-domain-runtime.json",
+      "🗑️generated/actor-codec-domain-product-semantic.json"
+    ],
+    "productSemanticSourceFiles": 1146,
+    "productSemanticDiagnostics": 0
+  },
+  "sourceCensus": {
+    "kind": "source-path/schema-parse/negative-name-census-not-runtime-acceptance",
+    "jsonParsed": 11,
+    "maxAbsolutePathCharacters": 142,
+    "oldSourceReferences": 0,
+    "sourceRoots": [
+      "🧰️framework",
+      "✏️s",
+      "🌎️hub"
+    ],
+    "excluded": [
+      "AGENTS.md",
+      "target",
+      "node_modules",
+      "dist"
+    ]
+  }
+}

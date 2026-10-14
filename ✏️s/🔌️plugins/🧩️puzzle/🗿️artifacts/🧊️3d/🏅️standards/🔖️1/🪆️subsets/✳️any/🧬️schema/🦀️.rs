@@ -1,6 +1,14 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle3dSnapshot};
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use crate::snapshot::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ puzzle3d document artifact state.
@@ -74,52 +82,15 @@ impl Puzzle3dArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.puzzle.puzzle3d` — twenty handcrafted schema leaves.
-pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.puzzle.puzzle3d",
-        artifact: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
-        },
-        snapshot: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: ::semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
+/// 🧬️ The artifact facet's five handcrafted schema leaves (rust, typescript, graphql, json schema, proto).
+pub const SCHEMA_LEAVES: ::semio_framework_schema_registry::FacetLeaves = ::semio_framework_schema_registry::FacetLeaves {
+    rust: include_str!("🦀️.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: include_str!("🔗️.graphql"),
+    json_schema: include_str!("🔣️.json"),
+    proto: include_str!("🛰️.proto"),
+};
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️PrecomputeModel
 // ⚙️➡️🧬️ Rehomed from the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
@@ -127,30 +98,30 @@ pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registr
 // exchanges with its host — the kind catalogs, the host rules/weights, the `EngineSceneSnapshot`/`SceneConfig` wire
 // projection `Puzzle3dEngineCommand::SetScene` carries, and the brush/fill readouts. An artifact is a schema
 // plus an io system, never an engine — the actual stateful session lives app-side; this is its data.
-pub(crate) type Quat = [f64; 4];
-pub(crate) type Vec3 = [f64; 3];
+pub type Quat = [f64; 4];
+pub type Vec3 = [f64; 3];
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct BrushHostRules {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) reject_capital_on_tambour: bool,
-    #[cfg_attr(test, serde(default))]
+    pub reject_capital_on_tambour: bool,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) reject_last_single_storey_on_mid_tambour: bool,
-    #[cfg_attr(test, serde(default))]
+    pub reject_last_single_storey_on_mid_tambour: bool,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) door_tambour_requires_door_capsule: bool,
-    #[cfg_attr(test, serde(default = "default_door_capsule_min_abs_x"))]
+    pub door_tambour_requires_door_capsule: bool,
+    #[cfg_attr(any(test, feature = "testing"), serde(default = "default_door_capsule_min_abs_x"))]
     #[value(default = "default_door_capsule_min_abs_x")]
-    pub(crate) door_capsule_min_abs_x: f64,
-    #[cfg_attr(test, serde(default = "default_door_capsule_max_abs_y"))]
+    pub door_capsule_min_abs_x: f64,
+    #[cfg_attr(any(test, feature = "testing"), serde(default = "default_door_capsule_max_abs_y"))]
     #[value(default = "default_door_capsule_max_abs_y")]
-    pub(crate) door_capsule_max_abs_y: f64,
+    pub door_capsule_max_abs_y: f64,
 }
 
 fn default_door_capsule_min_abs_x() -> f64 {
@@ -175,70 +146,70 @@ impl Default for BrushHostRules {
 
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct BrushKindWeights {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) object_weights: std::collections::BTreeMap<String, f64>,
-    #[cfg_attr(test, serde(default))]
+    pub object_weights: std::collections::BTreeMap<String, f64>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) vortex_weights: std::collections::BTreeMap<String, f64>,
+    pub vortex_weights: std::collections::BTreeMap<String, f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCompatEntry {
-    pub(crate) source: String,
-    pub(crate) target: String,
-    #[cfg_attr(test, serde(default))]
+    pub source: String,
+    pub target: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
+    pub bidirectional: bool,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) important: bool,
-    pub(crate) specificity: Option<String>,
+    pub important: bool,
+    pub specificity: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindVortexTemplate {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) id: String,
-    #[cfg_attr(test, serde(default))]
+    pub id: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) name: String,
-    #[cfg_attr(test, serde(default))]
+    pub name: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) label: String,
-    #[cfg_attr(test, serde(default))]
+    pub label: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) description: String,
-    #[cfg_attr(test, serde(default))]
+    pub description: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) icon: String,
-    #[cfg_attr(test, serde(rename = "vortexKind", default))]
+    pub icon: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "vortexKind", default))]
     #[value(rename = "vortexKind", default)]
-    pub(crate) vortex_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    pub vortex_kind: Option<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) point: Vec3,
-    #[cfg_attr(test, serde(default))]
+    pub point: Vec3,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) direction: Option<Vec3>,
-    #[cfg_attr(test, serde(default))]
+    pub direction: Option<Vec3>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) t: Option<f64>,
-    #[cfg_attr(test, serde(default))]
+    pub t: Option<f64>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default))]
+    pub mandatory: Option<bool>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) radius: Option<f64>,
+    pub radius: Option<f64>,
 }
 
 impl Default for ObjectKindVortexTemplate {
@@ -249,111 +220,111 @@ impl Default for ObjectKindVortexTemplate {
 
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKindRepresentation {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) id: String,
-    #[cfg_attr(test, serde(default))]
+    pub id: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) name: String,
-    #[cfg_attr(test, serde(default))]
+    pub name: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) url: String,
-    #[cfg_attr(test, serde(default))]
+    pub url: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) mime: String,
-    #[cfg_attr(test, serde(default))]
+    pub mime: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) tags: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    pub tags: Vec<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) lod: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    pub lod: Option<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) description: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct ObjectKind {
-    pub(crate) id: String,
-    #[cfg_attr(test, serde(default))]
+    pub id: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) representations: Vec<ObjectKindRepresentation>,
-    #[cfg_attr(test, serde(default))]
+    pub representations: Vec<ObjectKindRepresentation>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) scale: Option<semio_framework_value::DslValue>,
-    #[cfg_attr(test, serde(default))]
+    pub scale: Option<semio_framework_value::DslValue>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) vortices: Vec<ObjectKindVortexTemplate>,
+    pub vortices: Vec<ObjectKindVortexTemplate>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexKindCatalog {
-    pub(crate) id: String,
-    #[cfg_attr(test, serde(default))]
+    pub id: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) code: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    pub code: Option<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) label: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    pub label: Option<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) order: Option<i32>,
-    #[cfg_attr(test, serde(default, rename = "compatibleWith"))]
+    pub order: Option<i32>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default, rename = "compatibleWith"))]
     #[value(default, rename = "compatibleWith")]
-    pub(crate) compatible_with: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    pub compatible_with: Vec<String>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) description: String,
-    #[cfg_attr(test, serde(default))]
+    pub description: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) icon: String,
-    #[cfg_attr(test, serde(default))]
+    pub icon: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) color: String,
-    #[cfg_attr(test, serde(rename = "defaultCableKind", default))]
+    pub color: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "defaultCableKind", default))]
     #[value(rename = "defaultCableKind", default)]
-    pub(crate) default_cable_kind: Option<String>,
+    pub default_cable_kind: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct CableKindCatalog {
-    pub(crate) id: String,
-    #[cfg_attr(test, serde(rename = "defaultAttractionKind", default))]
+    pub id: String,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "defaultAttractionKind", default))]
     #[value(rename = "defaultAttractionKind", default)]
-    pub(crate) default_attraction_kind: Option<String>,
+    pub default_attraction_kind: Option<String>,
 }
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_snapshot`'s public signature.
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCatalogBundle {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) objects: Vec<ObjectKind>,
-    #[cfg_attr(test, serde(default))]
+    pub objects: Vec<ObjectKind>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) vortices: Vec<VortexKindCatalog>,
-    #[cfg_attr(test, serde(default))]
+    pub vortices: Vec<VortexKindCatalog>,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) cables: Vec<CableKindCatalog>,
+    pub cables: Vec<CableKindCatalog>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct VortexProps {
     pub id: String,
-    #[cfg_attr(test, serde(rename = "vortexKind", default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "vortexKind", default))]
     #[value(rename = "vortexKind", default)]
     pub vortex_kind: Option<String>,
     pub position: Vec3,
@@ -362,75 +333,75 @@ pub struct VortexProps {
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineSceneObject {
     pub id: String,
-    #[cfg_attr(test, serde(rename = "objectKind", default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "objectKind", default))]
     #[value(rename = "objectKind", default)]
     pub object_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub anchor: crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor,
-    #[cfg_attr(test, serde(rename = "meshUrl", default))]
+    pub anchor: crate::Puzzle3dObjectAnchor,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "meshUrl", default))]
     #[value(rename = "meshUrl", default)]
     pub mesh_url: Option<String>,
     pub origin: Vec3,
     pub orientation: Option<Quat>,
     pub scale: Option<semio_framework_value::DslValue>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub vortices: Vec<VortexProps>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct AttractionProps {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
     pub attracting: String,
     pub attracted: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub gap: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub shift: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub rise: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub turn: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub y: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct WorldVolumeProps {
     pub id: String,
     pub origin: Vec3,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub orientation: Option<Quat>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub scale: Option<semio_framework_value::DslValue>,
 }
@@ -439,15 +410,15 @@ pub struct WorldVolumeProps {
 /// `apply_brush_placement_to_snapshot`'s public signature.
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct EngineSceneSnapshot {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub attractions: Vec<AttractionProps>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub objects: Vec<EngineSceneObject>,
-    #[cfg_attr(test, serde(default, rename = "targetVolumes"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, rename = "targetVolumes"))]
     #[value(default, rename = "targetVolumes")]
     pub target_volumes: Vec<WorldVolumeProps>,
 }
@@ -457,29 +428,29 @@ pub struct EngineSceneSnapshot {
 /// instead of re-declared, so the command enum's field IS this type, not a mirror of it.
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 pub struct SceneConfig {
-    #[cfg_attr(test, serde(rename = "sceneSnapshot"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "sceneSnapshot"))]
     #[value(rename = "sceneSnapshot")]
-    pub(crate) scene_snapshot: EngineSceneSnapshot,
-    #[cfg_attr(test, serde(rename = "kindCatalogs", default))]
+    pub scene_snapshot: EngineSceneSnapshot,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "kindCatalogs", default))]
     #[value(rename = "kindCatalogs", default)]
-    pub(crate) kind_catalogs: Option<KindCatalogBundle>,
-    #[cfg_attr(test, serde(rename = "kindCompatibility", default))]
+    pub kind_catalogs: Option<KindCatalogBundle>,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "kindCompatibility", default))]
     #[value(rename = "kindCompatibility", default)]
-    pub(crate) kind_compatibility: Vec<KindCompatEntry>,
-    #[cfg_attr(test, serde(rename = "contactTolerance", default))]
+    pub kind_compatibility: Vec<KindCompatEntry>,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "contactTolerance", default))]
     #[value(rename = "contactTolerance", default)]
-    pub(crate) contact_tolerance: f64,
-    #[cfg_attr(test, serde(default))]
+    pub contact_tolerance: f64,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) seed: u32,
-    #[cfg_attr(test, serde(rename = "hostRules", default))]
+    pub seed: u32,
+    #[cfg_attr(any(test, feature = "testing"), serde(rename = "hostRules", default))]
     #[value(rename = "hostRules", default)]
-    pub(crate) host_rules: BrushHostRules,
-    #[cfg_attr(test, serde(default))]
+    pub host_rules: BrushHostRules,
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
-    pub(crate) weights: BrushKindWeights,
+    pub weights: BrushKindWeights,
 }
 
 #[derive(Debug, Clone, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -492,9 +463,9 @@ pub struct BrushCompatibleCandidate {
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 pub struct BrushPreviewState {
     pub target_vortex_full_id: String,
     pub object_kind_id: String,
@@ -503,14 +474,14 @@ pub struct BrushPreviewState {
     pub origin: Vec3,
     pub orientation: Quat,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
     pub scale: Option<semio_framework_value::DslValue>,
 }
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct BrushPlacePayload {
     pub target_vortex_full_id: String,
@@ -518,7 +489,7 @@ pub struct BrushPlacePayload {
     pub source_vortex_index: usize,
     pub origin: Vec3,
     pub orientation: Quat,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
     #[value(skip_serializing_if = "Option::is_none")]
     pub scale: Option<semio_framework_value::DslValue>,
 }
@@ -822,8 +793,6 @@ pub struct FillRunCheckpoint {
     pub inputs: [u8; 32],
 }
 
-
-
 pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
 }
@@ -846,11 +815,6 @@ pub enum Puzzle3dEngineCommand {
     #[dsl(key = "brush-preview")]
     BrushPreview { vortex_full_id: String, candidate_index: u32 },
 }
-//#region 🔖️HandcraftedOpCodecs
-
-
-
-//#endregion 🔖️HandcraftedOpCodecs
 
 /// 📬️ What `dispatch` hands back — the typed counterpart of what each old JSON-string method
 /// returned (a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
@@ -864,13 +828,12 @@ pub enum Puzzle3dEngineOutcome {
 
 //#region 🧪️PrecomputeModelTests
 /// 🧪️ The one puzzle3d-precompute test harness — every sibling app-side precompute test file builds on
-/// it instead of re-deriving a mesh-buffer/scene/fill-plan scaffold of its own. `pub(crate)` so the app's
-/// own `#[cfg(test)]` modules (session/geometry/brush) can reach it across the artifact/app boundary.
-#[cfg(test)]
+/// it instead of re-deriving a mesh-buffer/scene/fill-plan scaffold of its own. Compiled for this crate's own tests
+/// and, behind the `testing` feature, for the precompute crates' tests (session/geometry/brush/fill).
+#[cfg(any(test, feature = "testing"))]
 #[path = "🧪️tests/🔬️precompute-model/🦀️.rs"]
-pub(crate) mod precompute_model_tests;
+pub mod precompute_model_tests;
 //#endregion 🧪️PrecomputeModelTests
-
 
 /// 🧯️ Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state
 /// failures. `Json` wraps `semio_framework_value::ValueError` (not `serde_json::Error`) since every production
@@ -958,7 +921,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Puzzle3dScale {
 /// an `[x, y, z]` array) so every JSON-boundary consumer (the engine/ui wasm crates' own mirror
 /// structs, which bind `scale` as `Option<serde_json::Value>` and are out of this derive's scope)
 /// keeps parsing it exactly as before.
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 impl serde::Serialize for Puzzle3dScale {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
@@ -968,7 +931,7 @@ impl serde::Serialize for Puzzle3dScale {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 impl<'de> serde::Deserialize<'de> for Puzzle3dScale {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         match <serde_json::Value as serde::Deserialize>::deserialize(deserializer)? {
@@ -1080,8 +1043,8 @@ impl semio_framework_dsl_record::DslField for Puzzle3dScale {
 /// ⚓️ Whether a root object keeps its stored plane (`Fixed`) or resets to default XY (`Derived`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub enum Puzzle3dObjectAnchor {
     #[default]
@@ -1093,33 +1056,33 @@ pub enum Puzzle3dObjectAnchor {
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dVortex {
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "vortex_kind")]
     pub vortex_kind: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub locked: bool,
 }
@@ -1129,41 +1092,41 @@ pub struct Puzzle3dVortex {
 /// are its rim attraction ports.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dObject {
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "object_kind")]
     pub object_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub anchor: Puzzle3dObjectAnchor,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle3dScale>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub vortices: Vec<Puzzle3dVortex>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub locked: bool,
 }
@@ -1172,37 +1135,37 @@ pub struct Puzzle3dObject {
 /// connection parameters (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` plus diagram `x`/`y`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttraction {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
     pub attracting: String,
     pub attracted: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub gap: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub shift: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub rise: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub turn: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub x: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub y: f64,
 }
@@ -1212,25 +1175,25 @@ pub struct Puzzle3dAttraction {
 /// `volume_scale_vec`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dTargetVolume {
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<Puzzle3dScale>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub locked: bool,
 }
@@ -1238,14 +1201,14 @@ pub struct Puzzle3dTargetVolume {
 /// 🌐️ Where a reference image/media's bytes live and what kind of media it is.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dReferenceSource {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub url: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub media_kind: Option<String>,
 }
@@ -1253,26 +1216,26 @@ pub struct Puzzle3dReferenceSource {
 /// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dReference {
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub source: Puzzle3dReferenceSource,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(unit = "m")]
     pub width_world: f64,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub locked: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub hidden: bool,
 }
@@ -1280,8 +1243,8 @@ pub struct Puzzle3dReference {
 /// 🔗️ How specifically two vortex/cable kinds are allowed to attract.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "lowercase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "lowercase"))]
 #[value(rename_all = "lowercase")]
 pub enum Puzzle3dCompatSpecificity {
     General,
@@ -1295,21 +1258,21 @@ pub enum Puzzle3dCompatSpecificity {
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two vortex/cable kind ids.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dKindCompatibility {
     #[dsl(refs = "vortex_kind")]
     pub source: String,
     #[dsl(refs = "vortex_kind")]
     pub target: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub important: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub specificity: Puzzle3dCompatSpecificity,
 }
@@ -1317,20 +1280,20 @@ pub struct Puzzle3dKindCompatibility {
 /// 🏷️ One freeform attribute on a catalog object-kind (compose `Attribute` analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dAttribute {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub key: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub value: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub definition: Option<String>,
 }
@@ -1338,23 +1301,23 @@ pub struct Puzzle3dAttribute {
 /// ✍️ One author credit on a catalog object-kind (compose `Author` analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dAuthor {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub email: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rank: Option<i32>,
 }
@@ -1362,29 +1325,29 @@ pub struct Puzzle3dAuthor {
 /// 🖼️ One tagged representation/LOD URL on a catalog object-kind (compose `Representation` analogue).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dRepresentation {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub url: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub mime: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub tags: Vec<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub lod: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub description: String,
 }
@@ -1393,44 +1356,44 @@ pub struct Puzzle3dRepresentation {
 /// `point`/`direction`/`t`/`mandatory`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexTemplate {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(refs = "vortex_kind")]
     pub vortex_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(coord)]
     pub point: [f64; 3],
-    #[cfg_attr(test, serde(default = "puzzle3d_default_direction"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default = "puzzle3d_default_direction"))]
     #[value(default = "puzzle3d_default_direction")]
     #[dsl(dir)]
     pub direction: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
 }
@@ -1448,46 +1411,46 @@ impl Default for Puzzle3dCatalogVortexTemplate {
 /// 🧱️ One object-kind catalog row — type-like (compose `Type` analogue).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogObjectKind {
     #[dsl(defines = "object_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub image: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub unit: String,
-    #[cfg_attr(test, serde(default, rename = "abstract"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, rename = "abstract"))]
     #[value(default, rename = "abstract")]
     pub is_abstract: bool,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub base_kinds: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub representations: Vec<Puzzle3dRepresentation>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub vortices: Vec<Puzzle3dCatalogVortexTemplate>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub attributes: Vec<Puzzle3dAttribute>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub authors: Vec<Puzzle3dAuthor>,
 }
@@ -1495,34 +1458,34 @@ pub struct Puzzle3dCatalogObjectKind {
 /// 🔘️ One vortex-kind catalog row — port-like (compose `Port` analogue).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexKind {
     #[dsl(defines = "vortex_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub order: Option<i32>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub compatible_with: Vec<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub description: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub icon: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub color: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(refs = "cable_kind")]
     pub default_cable_kind: String,
@@ -1531,19 +1494,19 @@ pub struct Puzzle3dCatalogVortexKind {
 /// 🧵️ One cable-kind catalog row (mirrors `CableKindCatalog`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogCableKind {
     #[dsl(defines = "cable_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(refs = "attraction_kind")]
     pub default_attraction_kind: String,
@@ -1552,16 +1515,16 @@ pub struct Puzzle3dCatalogCableKind {
 /// 🔗️ One attraction-kind catalog row.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogAttractionKind {
     #[dsl(defines = "attraction_kind")]
     pub id: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub label: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     pub name: String,
 }
@@ -1571,23 +1534,23 @@ pub struct Puzzle3dCatalogAttractionKind {
 /// manifest layer.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dKindCatalogs {
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub objects: Vec<Puzzle3dCatalogObjectKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub vortices: Vec<Puzzle3dCatalogVortexKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub cables: Vec<Puzzle3dCatalogCableKind>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub attractions: Vec<Puzzle3dCatalogAttractionKind>,
@@ -1597,14 +1560,14 @@ pub struct Puzzle3dKindCatalogs {
 /// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle3dMeta {
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle3dKindCatalogs>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testing"), serde(default))]
     #[value(default)]
     #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
@@ -1629,13 +1592,13 @@ pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
 
 /// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar
 /// broadcasts first and an absent scale reads as `[1, 1, 1]`.
-pub fn puzzle3d_scaled(scale: Option<crate::standards::v1::subsets::any::schema::Puzzle3dScale>, factors: [f64; 3]) -> crate::standards::v1::subsets::any::schema::Puzzle3dScale {
+pub fn puzzle3d_scaled(scale: Option<crate::Puzzle3dScale>, factors: [f64; 3]) -> crate::Puzzle3dScale {
     let current = match scale {
-        Some(crate::standards::v1::subsets::any::schema::Puzzle3dScale::Uniform(value)) => [value; 3],
-        Some(crate::standards::v1::subsets::any::schema::Puzzle3dScale::Vec3(value)) => value,
+        Some(crate::Puzzle3dScale::Uniform(value)) => [value; 3],
+        Some(crate::Puzzle3dScale::Vec3(value)) => value,
         None => [1.0; 3],
     };
-    crate::standards::v1::subsets::any::schema::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
+    crate::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
 }
 
 /// ⭕️ The quaternion of no rotation, `[x, y, z, w]` — what a record without an orientation stands at.
@@ -1650,7 +1613,7 @@ const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
 pub struct Puzzle3dPose {
     pub origin: [f64; 3],
     pub orientation: Option<[f64; 4]>,
-    pub scale: Option<crate::standards::v1::subsets::any::schema::Puzzle3dScale>,
+    pub scale: Option<crate::Puzzle3dScale>,
 }
 
 /// 🔗️ The full id an attraction endpoint names one vortex by: `<objectId>:<vortexId>`, or the vortex id itself
@@ -1849,3 +1812,80 @@ pub fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a
 
     (gap, shift, rise, rad_to_deg(rotation_rad), rad_to_deg(turn_rad), rad_to_deg(tilt_rad))
 }
+
+/// 🗿️ The `3d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
+/// the artifact, not the app, owns its own identity.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "3d.puzzle".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Puzzle", "3D-Puzzle"),
+        source_format: "puzzle.3d".into(),
+        component_kind: "puzzle3d".into(),
+        dimension: "3d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Design },
+        schema: PUZZLE_3D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into()],
+        import_stdio_kinds: vec!["stdio.json".into()],
+    }
+}
+
+/// 🔌️ The `kit.catalog` artifact kind puzzle3d's `kit:in` port CONSUMES — kept as a spec puzzle can
+/// read, but no longer registered as a declaration.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar, 2026-08-18): the old doc here called the
+/// duplicate declaration "harmless if a producer, e.g. block3d, declares an identical spec". It was
+/// not harmless — it was the last thing blocking `🎪️demonstrator`, which bundles six plugins and
+/// therefore registered `kit.catalog` twice, and the definition registry correctly rejected it.
+/// An artifact kind is a SCHEMA: N declarations are N sources of truth for one contract, and the
+/// first divergence between them would be undetectable. Ownership resolved to `🧱️block`, the only
+/// plugin that actually PRODUCES the kind (`catalog:out`, `KIT_CATALOG_ARTIFACT_ID` across its 3d
+/// and 5d artifact trees); `🧩️puzzle` and `🪵️sourcing` are consumers and reference it by `kind_id`
+/// on their ports, which is all a consumer ever needed. `🗄️stdio`'s own docstrings describe
+/// absorbing this kind into the shared vocabulary later — that move stays open and is not
+/// pre-empted here.
+pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "kit.catalog".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
+        source_format: "kit.catalog".into(),
+        component_kind: "kit".into(),
+        dimension: "3d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        schema: "kit.catalog".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.png".into(), "stdio.stl".into()],
+    }
+}
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+    #[path = "."]
+    pub mod sqlite {
+        #[path = "../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+}
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+//#endregion 🌳️Modules

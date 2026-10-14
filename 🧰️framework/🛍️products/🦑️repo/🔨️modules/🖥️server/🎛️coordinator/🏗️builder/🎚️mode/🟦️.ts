@@ -4,5 +4,5 @@ import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../.
 export function coordinatorBuildPolicy(mode: BuildMode, workers: number) {
   const policy = buildModePolicy(mode);
   if (!Number.isInteger(workers) || workers < 1) throw Error("Coordinator compiler workers must be a positive integer");
-  return { output: `dist/${readBuildMode(mode)}/repo-coordinator/next`, sourceMap: policy.sourceMap, workers, optimize: policy.optimize, optimization: { minimize: policy.optimize, usedExports: policy.optimize, sideEffects: policy.optimize } };
+  return { output: `.cache/b/p/m/next/${readBuildMode(mode)}/out`, sourceMap: policy.sourceMap, workers, optimize: policy.optimize, optimization: { minimize: policy.optimize, usedExports: policy.optimize, sideEffects: policy.optimize } };
 }

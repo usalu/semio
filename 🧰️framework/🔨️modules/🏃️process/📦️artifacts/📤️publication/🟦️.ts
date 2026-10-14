@@ -89,7 +89,7 @@ export async function stageArtifacts(staging: string, owner: string, files: Read
     signal.throwIfAborted(); if (control) checkResourceLeaseControl(control);
     if (identical) return;
     mkdirSync(dirname(staging), { recursive: true });
-    temporary = mkdtempSync(`${staging}.stage-`);
+    temporary = mkdtempSync(join(dirname(staging), ".stage-"));
     const previous = `${temporary}.previous`;
     for (const [name, source] of files) {
       signal.throwIfAborted(); if (control) checkResourceLeaseControl(control);

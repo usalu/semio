@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-puzzle-3d-inferences = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -69,6 +70,7 @@ js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [dev-dependencies]
+semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

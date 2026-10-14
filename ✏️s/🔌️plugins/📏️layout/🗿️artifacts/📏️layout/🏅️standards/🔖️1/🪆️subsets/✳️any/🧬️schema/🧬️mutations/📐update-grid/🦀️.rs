@@ -1,8 +1,10 @@
 //! 📐 `update-grid` — replaces the document baseline grid.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::GridPatch;
-use crate::{GridSettings, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::GridPatch;
+use semio_s_artifact_layout_layout_model::GridSettings;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,12 +20,12 @@ pub struct UpdateGrid {
     pub snap_to_baseline: bool,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateGrid {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateGrid where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_grid::UpdateGrid> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "grid", kind: "update-grid", record: "UpdatedGrid" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_grid(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_grid(self, base)?
     
@@ -50,9 +52,9 @@ pub fn diff_update_grid(payload: &UpdateGrid, base: &LayoutSnapshot) -> protocol
     protocol::MutationOutcome::new(LayoutDiff { grid: Some(patch), ..Default::default() })
 }
 
-pub fn inverse_update_grid(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_grid<Op: From<crate::update_grid::UpdateGrid>>(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::UpdateGrid(UpdateGrid { baseline_grid: base.grid.baseline_grid, baseline_offset: base.grid.baseline_offset, snap_to_baseline: base.grid.snap_to_baseline })]
+    vec![Op::from(UpdateGrid { baseline_grid: base.grid.baseline_grid, baseline_offset: base.grid.baseline_offset, snap_to_baseline: base.grid.snap_to_baseline })]
 
     })())
 }
@@ -60,3 +62,9 @@ pub fn inverse_update_grid(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Resu
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📐️sets/🦀️.rs"]
+mod tests_sets_an_18_point_baseline;
+//#endregion 🪢️TaxonomyMounts

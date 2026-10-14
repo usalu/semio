@@ -1,0 +1,45 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-din18599-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "DIN V 18599 editor"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-din18599-checks = { workspace = true }
+semio-s-artifact-norm-din18599-examples = { workspace = true }
+semio-s-artifact-norm-din18599-inferences = { workspace = true }
+semio-s-artifact-norm-din18599-io = { workspace = true }
+semio-s-artifact-norm-din18599-model = { workspace = true }
+semio-s-artifact-norm-din18599-mutations = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-results-config = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+serde_json = { workspace = true }

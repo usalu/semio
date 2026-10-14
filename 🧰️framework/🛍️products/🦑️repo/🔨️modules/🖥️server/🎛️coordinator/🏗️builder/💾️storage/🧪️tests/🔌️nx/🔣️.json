@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "phases": [
+    {
+      "name": "cold",
+      "status": "cache-miss",
+      "compilerStateUnchanged": false
+    },
+    {
+      "name": "warm",
+      "status": "local-cache-hit",
+      "compilerStateUnchanged": true
+    },
+    {
+      "name": "restore",
+      "status": "local-cache-hit",
+      "compilerStateUnchanged": true
+    }
+  ],
+  "entry": "standalone/server.js",
+  "maximumArtifactBytes": 2147483648,
+  "maximumArtifactFiles": 131072
+}

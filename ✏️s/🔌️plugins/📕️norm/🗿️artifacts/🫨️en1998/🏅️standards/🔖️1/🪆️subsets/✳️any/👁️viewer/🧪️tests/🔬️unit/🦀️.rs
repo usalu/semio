@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_en1998_viewer_builds_a_definition_for_this_dialect() {

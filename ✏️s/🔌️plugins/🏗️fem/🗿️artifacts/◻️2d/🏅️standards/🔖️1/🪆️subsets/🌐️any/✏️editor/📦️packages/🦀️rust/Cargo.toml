@@ -1,0 +1,62 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-2d-editor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 2d play app editor: app, manifest, view commands, options and edit mode"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[[test]]
+name = "editor_app"
+path = "../../🧪️tests/🔬️app/🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d-editor-commands = { workspace = true }
+semio-s-artifact-fem-2d-editor-interaction = { workspace = true }
+semio-s-artifact-fem-2d-editor-model-window = { workspace = true }
+semio-s-artifact-fem-2d-editor-panels = { workspace = true }
+semio-s-artifact-fem-2d-editor-results-window = { workspace = true }
+semio-s-artifact-fem-2d-editor-session = { workspace = true }
+semio-s-artifact-fem-2d-editor-terminology = { workspace = true }
+semio-s-artifact-fem-2d-editor-transient = { workspace = true }
+semio-s-artifact-fem-2d-engine = { workspace = true }
+semio-s-artifact-fem-2d-io = { workspace = true }
+semio-s-artifact-fem-2d-mesh = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-mutations = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+semio-s-fem-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
+semio-s-artifact-fem-2d-analysis = { workspace = true }
+semio-s-artifact-fem-2d-boundary = { workspace = true }
+semio-s-artifact-fem-2d-load = { workspace = true }
+semio-s-artifact-fem-2d-material = { workspace = true }
+semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
+serde_json = { workspace = true }

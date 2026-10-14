@@ -9,16 +9,47 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
-use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
-use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_block;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_bool;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_str;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_style;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_xml_node;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::decode_option;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_block;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_bool;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_list;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_str;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_style;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_xml_node;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::encode_option;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::hex_decode;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::hex_encode;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::split_top_level;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::strip_brackets;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_xml_node_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_xml_node_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::parse_usize;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxPathSegment;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
 #[cfg(test)]
-use crate::schema::snapshot::DocxDocument;
-use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::docx_part_is_xml;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
 #[cfg(test)]
-use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
-use crate::DocxSnapshot;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableCell;
+#[cfg(test)]
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::diff::{diff_at_path as xml_diff_at_path, XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
@@ -36,7 +67,14 @@ use xml_address::{
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_block_bin, dec_style_bin, enc_block_bin, enc_style_bin, read_bytes_lp, read_str_lp, write_bytes_lp, write_str_lp};
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_block_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_style_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_block_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_style_bin;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::read_bytes_lp;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::read_str_lp;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::write_bytes_lp;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::write_str_lp;
 
 /// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `DocxMutation` (`#[derive(dsl::DslOps)]`
 /// confirmed rejected above) — reuses `DocxDiff`'s `pub(crate)` grammar primitives

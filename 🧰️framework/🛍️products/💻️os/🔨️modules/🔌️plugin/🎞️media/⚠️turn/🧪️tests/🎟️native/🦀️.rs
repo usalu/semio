@@ -20,3 +20,6 @@ fn original_media_completion_result_receiving(){semio_framework_plugin::media_tu
 
 #[test]
 fn original_media_handle_receiving(){semio_framework_plugin::media_turn_laws::media_original_handle_receiving_and_physical_close()}
+
+#[test]
+fn original_media_download_receiving(){semio_framework_plugin::media_turn_laws::media_original_download_receiving_chunk_and_physical_close()}

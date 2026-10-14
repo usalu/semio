@@ -1,8 +1,8 @@
 //! 🔺️ `change-shells` diff.
 
-use crate::mutations::change_shells::ChangeShells;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999ShellsRows};
+use crate::change_shells::ChangeShells;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999ShellsRows};
 
 pub fn diff(payload: &ChangeShells, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.shells == &payload.shells {

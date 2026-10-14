@@ -21,6 +21,7 @@ import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } f
 import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {requireRepositoryCargoExecutionV1} from "../../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
 
 /** 🔐️ The owner policies a native or script owner's environment carries, exactly as the Nx owner commands author them: `process` (Vitest policy and process
  * owner context), `cargo` (the repository Cargo artifact policy) and `wasm` (the repository wasm-bindgen compiler policy). `buildDirectory` redirects both
@@ -56,8 +57,12 @@ export class NativeScript extends BundleScript {
     const manifest = index >= 0 ? args[index + 1] : undefined;
     if(tool==="owner-command"){
       const original=readNativeOwnerCapabilities(this.invocation.capabilities),request=nativeOwnerTestManifestRequestV1(args.slice(1)),path=resolve(this.repoRoot,request.manifest),cwd=resolve(this.repoRoot,request.cwd),transported=consumeOwnerArgumentsV1(process.env),arguments_=[...request.args,...transported.arguments];
+      const policy=this.invocation.policy,control=this.invocation.control,{signal,remainingMilliseconds,publish,yieldContinuation}=control,authority=JSON.stringify({policy,capabilities:original});
+      const retain=():void=>{if(this.invocation.policy!==policy||this.invocation.capabilities!==original||this.invocation.control!==control||control.signal!==signal||control.remainingMilliseconds!==remainingMilliseconds||control.publish!==publish||control.yieldContinuation!==yieldContinuation||JSON.stringify({policy:this.invocation.policy,capabilities:this.invocation.capabilities})!==authority)throw Error("Original native owner invocation changed");if(original.cargoExecutionBackend)requireRepositoryCargoExecutionV1(this.repoRoot,original.cargoExecutionBackend.request,this.invocation);};
       if(original.repositoryRoot!==this.repoRoot||resolve(this.repoRoot,original.command.manifest)!==path||resolve(this.repoRoot,original.command.workingDirectory)!==cwd||original.command.program!==request.command||original.command.arguments.length!==arguments_.length||original.command.arguments.some((argument,index)=>argument!==arguments_[index])||typeof transported.environment.CARGO_TARGET_DIR!=="string"||resolve(this.repoRoot,original.artifactDirectory)!==resolve(this.repoRoot,transported.environment.CARGO_TARGET_DIR))throw Error("Original native caller command refused");
+      retain();
       await advanceScriptInvocation(this.invocation,"native:owner-command","running");
+      retain();
       const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
       const callerEnvironment={...transported.environment,SEMIO_BUILD_MODE:original.buildMode};
@@ -75,7 +80,9 @@ export class NativeScript extends BundleScript {
       if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,ownerEnvironmentV1(cwd,["wasm"],undefined,callerEnvironment));
       const remaining=this.invocation.control.remainingMilliseconds(),budget=remaining===null?original.child.maximumElapsedMilliseconds:Math.min(original.child.maximumElapsedMilliseconds,remaining);
       if(!Number.isFinite(budget)||budget<=0)throw Error("Original native child deadline exhausted");
-      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env:scriptInvocationEnvironment(this.invocation,env),output:original.transport,signal:this.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(this.invocation,"native:owner-command","running");if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
+      retain();
+      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env:scriptInvocationEnvironment(this.invocation,env),output:original.transport,signal,onProgress:async line=>{retain();await advanceScriptInvocation(this.invocation,"native:owner-command","running");retain();if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
+      retain();
       return;
     }
     if (tool === "cargo" && operation === "metadata") {

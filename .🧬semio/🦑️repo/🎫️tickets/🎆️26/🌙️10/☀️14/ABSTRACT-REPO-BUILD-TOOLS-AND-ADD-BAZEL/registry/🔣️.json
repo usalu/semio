@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "absent": [
+    "semio-s-artifact-process-process3d-io-sqlite",
+    "semio-s-artifact-cad-cad-io-sqlite",
+    "semio-s-plugin-norm-mutation-vectors"
+  ],
+  "owner": {
+    "name": "semio-s-mutation-vectors",
+    "root": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
+    "manifest": "✏️s/🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust/Cargo.toml",
+    "packages": []
+  },
+  "declaration": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.toml",
+  "dependency": "semio-s-mutation-vectors",
+  "inline": [
+    {
+      "name": "semio-s-artifact-process-process3d-model",
+      "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "module": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "sqlite": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+      "moduleReference": "../🚪️io/🪶️sqlite/🦀️.rs",
+      "testReference": "../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+    },
+    {
+      "name": "semio-s-artifact-cad-cad-model",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "module": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "sqlite": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+      "moduleReference": "../🚪️io/🪶️sqlite/🦀️.rs",
+      "testReference": "../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+    }
+  ]
+}

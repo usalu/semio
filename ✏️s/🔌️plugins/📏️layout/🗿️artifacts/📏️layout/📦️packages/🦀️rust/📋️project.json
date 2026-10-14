@@ -40,6 +40,34 @@
         "forwardAllArgs": true
       }
     },
+    "test-media-adoption-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️testing/📥️source/**/*",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🟦️.ts",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🧫️fixtures/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-media-adoption-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
     "verify-layout-window-ownership": {
       "executor": "repo:script",
       "cache": false,

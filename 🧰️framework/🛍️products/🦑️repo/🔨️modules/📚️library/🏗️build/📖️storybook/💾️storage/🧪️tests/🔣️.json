@@ -1,0 +1,11 @@
+{
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "scope": "framework-ui",
+  "relativeRoot": "storybook",
+  "output": "out",
+  "temporary": "tmp",
+  "compiler": "state"
+}

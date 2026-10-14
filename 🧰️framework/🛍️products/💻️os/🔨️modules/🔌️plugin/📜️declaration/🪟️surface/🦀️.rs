@@ -5,7 +5,7 @@
 use crate::MountedOwnerPhaseV1;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::MountedOwnerTurnV1;
-use super::transient_publication::bounded_transient_store_disposer;
+use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
 use super::window_config::WindowConfigOwnerRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use super::window_config::WindowConfigPack;
@@ -152,16 +152,16 @@ use crate::app_views::NoDraftMutation;
 use crate::app_views::PresenceView;
 use crate::window_transient::TransientView;
 use crate::artifact_io::ArtifactBuilder;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::media_contract::ArtifactMediaExportJobRequest;
 use crate::tool_contract::ArtifactReservedToolJob;
-use crate::sdk_fault::plugin_sdk_fault;
-use crate::store_lifecycle::ArtifactDisposal;
-use crate::store_lifecycle::ArtifactInitializationAdmission;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
 use crate::app_emission::ArtifactMutationOutcome;
-use crate::store_lifecycle::bounded_config_store_disposer;
-use crate::store_lifecycle::bounded_document_store_disposer;
-use crate::store_lifecycle::bounded_document_store_initialization_job;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
+use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
 use crate::tool_contract::ArtifactInstanceOperationOwner;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
@@ -237,7 +237,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -245,7 +245,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -426,7 +426,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
@@ -698,7 +698,7 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
     if !is_server_minted_artifact_document_id_v1(document_id) {
         return Err(store::VcsError::ValidationFailed("artifact genesis identity is not a server-minted artifact id".into()));
     }
-    let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, document_id, A::initial_snapshot().await, None).into_owners();
+    let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, document_id, A::initial_snapshot().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
     envelope.dialect = Some(dialect.clone());
     let zero_cursor = envelope.cursor.as_ref().is_some_and(|cursor| cursor.applied_edit_ids.is_empty() && cursor.redo_edit_ids.is_empty() && cursor.checkpoint_id.is_none());
     if envelope.id != document_id
@@ -735,7 +735,7 @@ where
     if pack.is_empty() || spr.is_empty() {
         return Err(store::VcsError::Deserialize("artifact pair carries no pack+spr baseline".into()));
     }
-    let parsed: store::os_store::text_format::ParsedDocumentText<P, Mutation> = store::os_store::text_format::parse_document_pack(pack, spr).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+    let parsed: store::os_store::text_format::ParsedDocumentText<P, Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
     Ok(parsed.into_snapshot())
 }
 
@@ -803,7 +803,7 @@ pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
     }
     fn print_mirror<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8]) -> ArtifactCodecFuture<'a, store::os_store::text_format::ArtifactTextFiles> {
         Box::pin(async move {
-            let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_pack(pack, spr).await.map_err(|error| error.into_fault())?;
+            let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.into_fault())?;
             let envelope = parsed.into_envelope();
             let mirror = store::os_store::text_format::print_document_text(&envelope).await;
             envelope.retire_unadopted();
@@ -851,7 +851,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
@@ -923,7 +923,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
 
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
-    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -931,7 +931,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok(RetirementDemand::default())
     }
 
-    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
 
@@ -1274,10 +1274,10 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { E::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { E::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         E::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         E::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -1697,10 +1697,10 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<MountedOwnerPhaseV1> { V::mounted_job_maintenance_phase(instance_id) }
     fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_maintenance_demands(instance_id, body) }
     fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<RetirementDemand, ValueError> { V::mounted_job_close_demands(instance_id, body) }
-    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         V::mounted_job_maintenance_step(instance_id,cx,grant)
     }
-    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,crate::bounded_ownership::PluginLifecycleFailure> {
+    fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         V::mounted_job_close_step(instance_id,cx,grant)
     }
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {

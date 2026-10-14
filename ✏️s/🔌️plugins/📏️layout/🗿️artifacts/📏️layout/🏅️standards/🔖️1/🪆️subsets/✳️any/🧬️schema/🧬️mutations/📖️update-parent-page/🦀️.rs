@@ -1,8 +1,10 @@
 //! 📖 `update-parent-page` — sets a parent page's name and size.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutParentPagesDelta, LayoutParentPagesModification, ParentPagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutParentPagesDelta, ParentPagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutParentPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,10 +21,10 @@ pub struct UpdateParentPage {
     pub height: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateParentPage {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateParentPage where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_parent_page::UpdateParentPage> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "parent-page", kind: "update-parent-page", record: "UpdatedParentPage" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_update_parent_page(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_update_parent_page(self, base)? 
     })
 }
@@ -43,10 +45,10 @@ pub fn diff_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot
     protocol::MutationOutcome::new(LayoutDiff { parent_pages: Some(LayoutParentPagesDelta { modified: vec![LayoutParentPagesModification { id: payload.id.clone(), patch: ParentPagePatch { name: Some(payload.name.clone()), width: Some(payload.width), height: Some(payload.height) } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_parent_page<Op: From<crate::update_parent_page::UpdateParentPage>>(payload: &UpdateParentPage, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.parent_pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateParentPage(UpdateParentPage { id: page.id.clone(), name: page.name.clone(), width: page.width, height: page.height })]
+    vec![Op::from(UpdateParentPage { id: page.id.clone(), name: page.name.clone(), width: page.width, height: page.height })]
 
     })())
 }

@@ -3,8 +3,8 @@
 //! 📜️ Exact inverse of the export leaf: the txt body IS lowpoly's own `.lowpoly` DSL text
 //! verbatim (CARRIER_TEXT law, see the export leaf's doc comment), so import is just
 //! `pack::snapshot::ArtifactDsl::parse_dsl` on the body -- no second bespoke grammar to maintain.
-use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
-use crate::schema::snapshot::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}

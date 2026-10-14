@@ -1,11 +1,11 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot;
-use crate::RasterImageAsset;
+use semio_s_artifact_raster_raster_mutations::binary::unit_tests::retirement::retire_raster_snapshot;
+use semio_s_artifact_raster_raster_model::RasterImageAsset;
 
 #[test]
 fn raster_asset_capacity_matches_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/📝️text/🔺️diff/🧪️tests/🧫️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
-    assert_eq!(vectors["capacity"].as_u64(), Some(crate::RASTER_OWNED_MAP_CAPACITY as u64));
+    assert_eq!(vectors["capacity"].as_u64(), Some(semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY as u64));
     for vector in vectors["cases"].as_array().expect("cases") {
         let count = usize::try_from(vector["count"].as_u64().expect("count")).expect("bounded count");
         let oracle: serde_json::Map<String, serde_json::Value> = (0..count).map(|index| (format!("asset-{index:03}"), serde_json::json!({"schema":"s.stdio.semio.image","width":0,"height":0,"colorspace":"rgb","bitDepth":0,"frames":[],"icc":null,"metadata":[]}))).collect();
@@ -28,5 +28,5 @@ fn raster_asset_capacity_matches_the_json_oracle() {
         assert_eq!(diff.assets.as_ref().expect("delta").entries.len(), count);
     }
     let unsupported = RasterImageAsset { mime: "application/octet-stream".into(), data: Vec::new() };
-    assert!(crate::standards::v1::subsets::any::io::semio_image_snapshot_from_raster_asset(&unsupported).is_err());
+    assert!(semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&unsupported).is_err());
 }

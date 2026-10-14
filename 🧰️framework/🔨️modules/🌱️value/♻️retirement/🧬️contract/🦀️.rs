@@ -1,13 +1,7 @@
 //! ♻️ Neutral retained-owner retirement and typed factories.
 use std::sync::Arc;
 use crate::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct RetirementDemand {
-    pub copy_bytes: usize,
-    pub capacity_bytes: usize,
-    pub release_bytes: usize,
-    pub depth: usize,
-}
+pub use semio_framework_value_control_contract::RetirementDemand;
 pub trait ErasedSnapshotRetirement: Send {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
@@ -21,13 +15,3 @@ pub trait ErasedSnapshotRetirement: Send {
     }
 }
 
-pub trait SnapshotRetirementFactory<P>: crate::FactoryRetirement + Send + Sync {
-    /// 📦️ Publishes the retained cursor birth allocation before snapshot ownership transfers.
-    fn retirement_birth_bytes(&self, snapshot: &Arc<P>) -> usize;
-    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)>;
-}
-
-pub trait ArtifactOwnedValueRetirementFactory<T>: crate::FactoryRetirement + Send + Sync {
-    fn retirement_birth_bytes(&self, value: &T) -> usize;
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)>;
-}

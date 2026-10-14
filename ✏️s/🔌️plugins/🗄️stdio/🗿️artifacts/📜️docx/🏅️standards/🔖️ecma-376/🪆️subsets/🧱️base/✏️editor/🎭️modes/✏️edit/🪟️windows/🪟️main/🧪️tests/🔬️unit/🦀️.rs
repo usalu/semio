@@ -1,6 +1,7 @@
 use super::*;
-use crate::schema::snapshot::{DocxBlock, DocxDocument};
-use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;
 
 fn descendant<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
     node.children.iter().find(|child| child.key.as_str() == key).or_else(|| node.children.iter().find_map(|child| descendant(child, key)))
@@ -21,8 +22,8 @@ async fn definition_declares_a_document_window() {
 async fn render_exposes_localized_accessible_formatting_toggles_only_for_runs() {
     let document = build_minimal_docx(DocxDocument {
         body: vec![
-            DocxBlock::Paragraph(crate::schema::snapshot::DocxParagraph { runs: vec![crate::schema::snapshot::DocxRun { text: "formatted".into(), italic: true, ..Default::default() }], ..Default::default() }),
-            DocxBlock::Paragraph(crate::schema::snapshot::DocxParagraph::default()),
+            DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph { runs: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun { text: "formatted".into(), italic: true, ..Default::default() }], ..Default::default() }),
+            DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default()),
         ],
         styles: Vec::new(),
     });
@@ -90,8 +91,8 @@ async fn render_emits_one_page_per_top_level_block() {
 async fn nested_table_text_remains_editable_in_the_document_window() {
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧭️table-run-projection/🔣️.json")).unwrap();
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(crate::schema::snapshot::DocxDocument::default());
-    let part_path = crate::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
+    let mut snapshot = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument::default());
+    let part_path = semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::document::main_document_path(&snapshot.opc).unwrap();
     snapshot.xml_part_mut(&part_path).unwrap().replace_document(xml_document_from_text(fixture["xml"].as_str().unwrap()).unwrap()).unwrap();
     let expected: Vec<Vec<String>> = serde_json::from_value(fixture["blocks"].clone()).unwrap();
     let pages = editable_pages(&snapshot).unwrap();

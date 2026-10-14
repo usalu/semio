@@ -1,8 +1,7 @@
 //! 🌬️ Energy model mutation — `ChangeZoneConditioned`: Sets whether the zone is served by heating or cooling equipment at all.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneConditioned {
     pub new_conditioned: bool,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_conditioned(id: crate::model::EntityId, new_conditioned: bool) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneConditioned(ChangeZoneConditioned { id, new_conditioned })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_conditioned<Op: From<ChangeZoneConditioned>>(id: crate::model::EntityId, new_conditioned: bool) -> Op {
+    ChangeZoneConditioned { id, new_conditioned }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneConditioned {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneConditioned
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneConditioned>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone", kind: "change-zone-conditioned", record: "ChangedZoneConditioned" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

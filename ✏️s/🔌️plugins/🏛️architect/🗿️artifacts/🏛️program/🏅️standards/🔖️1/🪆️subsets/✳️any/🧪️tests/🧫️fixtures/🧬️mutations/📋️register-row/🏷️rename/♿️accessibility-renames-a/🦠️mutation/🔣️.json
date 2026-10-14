@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "accessibilityRequirement",
+  "id": "accessibility-requirement-a",
+  "newName": "Renamed Accessibility Requirement A"
+}

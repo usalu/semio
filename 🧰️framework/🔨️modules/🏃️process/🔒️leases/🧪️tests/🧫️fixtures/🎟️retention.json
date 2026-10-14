@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "resource": "queue-claim-catalog",
+  "maximumDatabaseBytes": 16384,
+  "maximumClaimsPerTurn": 256,
+  "cases": [
+    {
+      "kernelHeld": true,
+      "queued": true,
+      "retired": false
+    },
+    {
+      "kernelHeld": true,
+      "queued": false,
+      "retired": false
+    },
+    {
+      "kernelHeld": false,
+      "queued": true,
+      "retired": true
+    },
+    {
+      "kernelHeld": false,
+      "queued": false,
+      "retired": true
+    }
+  ]
+}

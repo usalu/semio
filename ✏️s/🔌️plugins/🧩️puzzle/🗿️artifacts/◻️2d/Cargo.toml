@@ -53,8 +53,11 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-framework-geometry]
     path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust"
 
-    [workspace.dependencies.semio-framework-graph]
-    path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
+    [workspace.dependencies.semio-framework-graph-manifest]
+    path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-graph-drawing]
+    path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-hash]
     path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
@@ -126,6 +129,12 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.serde_json]
     version = "1.0.149"
     features = [ "raw_value" ]
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-inferences]
+    path = "../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-plugin-puzzle-jobs]
+    path = "../../🎮️commands/📤️jobs/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

@@ -1,6 +1,13 @@
 //! 🗣️ Block 3D play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! reaches for.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the block3d-play app; one field per label makes every locale

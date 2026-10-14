@@ -1,8 +1,7 @@
 //! ⬇️ Energy model mutation — `ChangeFenestrationSillHeight`: Sets the height of the glazing's sill above the host surface's base in metres.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeFenestrationSillHeight {
     pub new_sill_height_m: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_fenestration_sill_height(id: crate::model::EntityId, new_sill_height_m: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeFenestrationSillHeight(ChangeFenestrationSillHeight { id, new_sill_height_m })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_fenestration_sill_height<Op: From<ChangeFenestrationSillHeight>>(id: crate::model::EntityId, new_sill_height_m: f64) -> Op {
+    ChangeFenestrationSillHeight { id, new_sill_height_m }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeFenestrationSillHeight {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationSillHeight
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationSillHeight>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-sill-height", record: "ChangedFenestrationSillHeight" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,0 +1,83 @@
+{
+ "root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+ "crate": "semio_s_artifact_block_5d_io",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "agg": {
+   "package": "semio-s-artifact-block-5d-io",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "",
+   "description": "Block 5d io: composition, builder, analyzer and the text and binary codecs"
+  },
+  "write": {
+   "package": "semio-s-artifact-block-5d-io-write",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export",
+   "prefix": "export",
+   "description": "Block 5d io export serializers"
+  },
+  "read": {
+   "package": "semio-s-artifact-block-5d-io-read",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import",
+   "prefix": "import",
+   "description": "Block 5d io import deserializers"
+  },
+  "sqlite": {
+   "package": "semio-s-artifact-block-5d-io-sqlite",
+   "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
+   "prefix": "sqlite",
+   "description": "Block 5d io SQLite snapshot codec"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🔣️json/",
+   "write",
+   "json_native"
+  ],
+  [
+   "🧩️puzzle/🦀️\\.rs$",
+   "write",
+   "puzzle_catalog"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/",
+   "write"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/",
+   "read"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/",
+   "sqlite"
+  ],
+  [
+   "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "text": "//! 📤️ block-5d-io write.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🦀️.rs",
+   "text": "//! 📥️ block-5d-io read.\n"
+  }
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/🧱️block",
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "workspace_root": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d"
+}

@@ -1,0 +1,2 @@
+{"order":["binary","text","sqlite","export","import","examples","io"],"allow":{},
+"rules":[["💾️binary/","binary"],["📝️text/","text"],["🪶️sqlite/","sqlite"],["📤️export/","export"],["📥️import/","import"],["📚️examples/","examples"],[".","io"]]}

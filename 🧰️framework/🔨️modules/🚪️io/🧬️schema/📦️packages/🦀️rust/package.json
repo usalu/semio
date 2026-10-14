@@ -5,9 +5,9 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test-ownership": "bun repo run @semio-tech/framework-io-schema-rs:test-ownership",
-    "test-native": "bun repo run @semio-tech/framework-io-schema-rs:test-native",
-    "test-refusal": "bun repo run @semio-tech/framework-io-schema-rs:test-refusal"
+    "test-ownership": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-schema-rs:test-ownership",
+    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-schema-rs:test-native",
+    "test-refusal": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-schema-rs:test-refusal"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

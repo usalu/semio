@@ -221,17 +221,17 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::mutations::{Vdi3805Mutation};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::{apply_vdi3805_mutation,inverse_vdi3805_mutation};
+    use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+    use semio_s_artifact_norm_vdi3805_mutations::mutation_bridge::{apply_vdi3805_mutation, inverse_vdi3805_mutation};
 
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::mutations::{decode_vdi3805_mutation_json};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::schema::snapshot::{Vdi3805Snapshot};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::binary::snapshot::{encode_vdi3805_pack};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::binary::snapshot::{decode_vdi3805_pack};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::snapshot::{encode_vdi3805_dsl};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::snapshot::{decode_vdi3805_dsl};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::snapshot::{decode_vdi3805_snapshot_json};
-    use semio_s_artifact_norm_vdi3805::standards::v1::subsets::any::io::text::snapshot::{encode_vdi3805_snapshot_json};
+    use semio_s_artifact_norm_vdi3805_io::text::mutations::decode_vdi3805_mutation_json;
+    use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+    use semio_s_artifact_norm_vdi3805_io::binary::snapshot::encode_vdi3805_pack;
+    use semio_s_artifact_norm_vdi3805_io::binary::snapshot::decode_vdi3805_pack;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::encode_vdi3805_dsl;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_dsl;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::decode_vdi3805_snapshot_json;
+    use semio_s_artifact_norm_vdi3805_io::text::snapshot::encode_vdi3805_snapshot_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode

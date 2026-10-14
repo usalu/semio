@@ -1,0 +1,32 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "monolith": "semio_s_artifact_procedural_generation2d",
+ "package": "semio-s-artifact-procedural-2d-testkit",
+ "description": "Procedural generation2d test support: the publication door, the retirement driver and the document store fixture (dev-dependency only)",
+ "owner": "🧪️tests/🧰️support",
+ "moves": [
+  {
+   "from": "store_fixture",
+   "to": "store_fixture"
+  },
+  {
+   "from": "retirement_driver",
+   "to": "retirement_driver"
+  },
+  {
+   "from": "publication_authority",
+   "to": "publication_authority"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d"
+ ],
+ "test_upward": null,
+ "doc": "🧰️ Generation2d test support: the publication door, the retirement driver and the document store fixture. A dev-dependency only."
+}

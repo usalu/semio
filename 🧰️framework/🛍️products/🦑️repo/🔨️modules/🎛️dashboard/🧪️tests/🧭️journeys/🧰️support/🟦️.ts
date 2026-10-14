@@ -16,7 +16,7 @@ export const repository = resolve(dashboard, "../../../../..");
 
 /** 🔎️ The explicitly selected test executable or the canonical installed dashboard. */
 export function binary(): string {
-  return process.env.SEMIO_TEST_CLI ?? installedDashboard(repository,readBuildMode(process.env.SEMIO_BUILD_MODE));
+  return process.env.SEMIO_TEST_CLI ?? installedDashboard(repository,readBuildMode(process.env.SEMIO_BUILD_MODE),repository);
 }
 
 export type Run = { code: number; stdout: string; stderr: string };

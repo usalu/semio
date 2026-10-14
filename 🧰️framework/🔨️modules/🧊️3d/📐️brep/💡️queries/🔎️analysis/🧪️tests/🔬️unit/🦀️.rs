@@ -376,7 +376,7 @@ fn a_single_edge_and_vertex_scope_report_what_they_can() {
 
 #[test]
 fn analysis_values_round_trip_through_the_value_codec() {
-    use protocol::value::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let solid = make_cylinder(&mut body, 1.0, 3.0, &mut rec).unwrap();

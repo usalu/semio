@@ -44,7 +44,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   assert.deepEqual(cargoRoots, Object.keys(fixture.projects).sort());
   const { cacheInternals } = await import("../../../../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const projects: Record<string, any> = { [project.name]: project };
-  for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: cacheInternals.projectInputs({ name, targets: {} }, path, root, new Map()), targets: {} };
+  for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: await cacheInternals.projectInputs({ name, targets: {} }, path, root, new Map()), targets: {} };
   const edges = await plugin.createDependencies({}, { workspaceRoot: root, projects });
   assert.deepEqual(edges.filter((edge: any) => edge.source === project.name).map((edge: any) => edge.target).sort(), [...fixture.subjectRoots].sort());
   assert.ok(edges.every((edge: any) => edge.sourceFile === feature));

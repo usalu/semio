@@ -3,7 +3,7 @@
 use semio_s_artifact_procedural_3d_io_text::value::widget_input_literal;
 use semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal_as;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_artifact_flow_flow::neural::Value;
@@ -114,7 +114,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
     }
     if let Widget::InputNote { text, .. } = widget {
-        let row = if crate::editor::generation3d::commands::set_widget_input::mesh_source_text(host_snapshot, selected_id, "text").is_ok() { mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "text", text, labels)? }
+        let row = if semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(host_snapshot, selected_id, "text").is_ok() { mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "text", text, labels)? }
         else if text.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES { editable_input(&format!("{prefix}.note"), labels.value_field.as_str(), selected_id, "text", None, text, Some(InputKind::LongText))? }
         else { tree_item(&format!("{prefix}.note"), labels.input_text_too_long.as_str())? };
         fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
@@ -129,7 +129,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                 let key = format!("{prefix}.input.{}", port.name);
                 let label = semio_s_artifact_procedural_3d_terminology::generation3d_input_name(labels, &port.name, port.label.as_deref().unwrap_or(&port.name));
                 if neuron_kind == "brep.mesh.construct" && port.name == "data" {
-                    let row = match crate::editor::generation3d::commands::set_widget_input::mesh_source_text(host_snapshot, selected_id, "data") {
+                    let row = match semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(host_snapshot, selected_id, "data") {
                         Ok((_, _, text)) => mesh_source_input_at(windows, &format!("{prefix}.mesh"), selected_id, "data", &text, labels)?,
                         Err(_) => tree_item(&key, labels.input_connect_hint.as_str())?,
                     };
@@ -157,7 +157,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                     let schema = value.as_ref().and_then(|value| value.get("0")).and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).filter(|schema| port.item_types.iter().any(|declared| declared == schema)).or_else(|| port.item_types.first().map(String::as_str)).unwrap_or("");
                     let items = match value.as_ref() {
                         Some(value) => widget_input_of_literal_as(value, schema).and_then(|value| value.items()),
-                        None => semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue::collection(schema, Vec::new()).and_then(|value| value.items()),
+                        None => semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue::collection(schema, Vec::new()).and_then(|value| value.items()),
                     };
                     let row = if let Some(items) = items { collection_input(windows, &key, label, selected_id, &port.name, &items, &port.cardinality, labels)? } else { tree_item(&key, format!("{label}: {}", labels.input_connect_hint.as_str()))? };
                     fields.try_push(row).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
@@ -236,7 +236,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
 /// 🔌️ Connected input navigation uses the existing framework graph-selection event.
 fn connected_source(key: &str, label: &str, source: &str, port: &str, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let error = || semio_framework_plugin::PluginAssemblyError::new("ui.inspection.source", "fixed UI source admission failed");
-    let targets = crate::editor::generation3d::modes::edit::windows::flow::graph_targets_json("node", source);
+    let targets = semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_targets_json("node", source);
     let args = semio_s_procedural_core_semantic_ui::ui_value_map([("domainId", semio_s_procedural_core_semantic_ui::ui_value_text("graph")?), ("targets", semio_s_procedural_core_semantic_ui::ui_value_text(&targets)?), ("merge", semio_s_procedural_core_semantic_ui::ui_value_text("replace")?), ("method", semio_s_procedural_core_semantic_ui::ui_value_text("pick")?)])?;
     let (action, args) = ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("interactionSelect", Some(args))?;
     let button = semio_framework_ui_contract::button(semio_s_procedural_core_semantic_ui::ui_label(&format!("{}: {source}", labels.input_inspect_source.as_str()))?).try_id(format!("{key}.source")).map_err(|_| error())?;
@@ -512,7 +512,7 @@ fn mesh_source_fields(widget: &str, channel: &str, path: &[String]) -> UiAssembl
 }
 
 /// 📃️ Ordered typed inputs share the host's tree window and absolute command bindings.
-fn collection_input(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str, label: &str, widget: &str, channel: &str, items: &[semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue], cardinality: &semio_framework_os_flow::neural::Cardinality, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn collection_input(windows: &semio_framework_plugin::TreeWindows<'_>, key: &str, label: &str, widget: &str, channel: &str, items: &[semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue], cardinality: &semio_framework_os_flow::neural::Cardinality, labels: &Generation3dLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let error = || semio_framework_plugin::PluginAssemblyError::new("ui.inspection.collection", "fixed UI collection admission failed");
     let mut group = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(label)?).try_id(key).map_err(|_| error())?;
     if items.len() < 1024 && cardinality.accepts(items.len() + 1) {

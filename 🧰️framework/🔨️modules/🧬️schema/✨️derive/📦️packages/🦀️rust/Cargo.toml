@@ -9,6 +9,7 @@ description = "Proc-macros for #[derive(ArtifactSchema)] with #[state]/#[artifac
 [package.metadata.semio]
 role = "framework"
 id = "schema-derive"
+cargo-execution = "🧪️execution/🔣️.json"
 
 [lints]
 workspace = true

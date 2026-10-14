@@ -585,8 +585,8 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 
 /// 🏭️ Creates a DAG store with the exact snapshot, mutation, and cursor retirement owners installed.
 pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -> Result<DagStore, crate::os_store::VcsError> {
-    let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None), actor).await?;
-    crate::os_store::install_funded_member_store_owners(&mut store)?;
+    let mut store = DagStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), actor).await?;
+    crate::os_store::install_funded_member_store_owners(&mut store,&crate::DagMemberStoreProducer)?;
     Ok(store)
 }
 

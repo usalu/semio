@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "privacyRequirement",
+  "id": "privacy-requirement-a",
+  "newName": "Renamed Privacy Requirement A"
+}

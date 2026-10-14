@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `remove-self-weight-elements`.
-use super::RemoveSelfWeightElements;
-use crate::{En1991Diff, En1991Snapshot};
-use crate::diff::{En1991SelfWeightElementDelta};
+use crate::remove_self_weight_elements::RemoveSelfWeightElements;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_diff::En1991SelfWeightElementDelta;
 pub fn diff(payload: &RemoveSelfWeightElements, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.self_weight_elements.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);

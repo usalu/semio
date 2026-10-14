@@ -33,7 +33,3 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveRelationship {
     }
 }
 //#endregion 🔖️Payload
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

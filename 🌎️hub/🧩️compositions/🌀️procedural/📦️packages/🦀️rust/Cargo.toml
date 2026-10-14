@@ -16,6 +16,12 @@ role = "hub"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-procedural-2d-viewer = { workspace = true }
+semio-s-artifact-procedural-2d-model = { workspace = true }
+semio-s-artifact-procedural-2d-editor = { workspace = true }
+semio-s-artifact-procedural-3d-viewer = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
+semio-s-artifact-procedural-3d-editor = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
@@ -32,6 +38,7 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-job = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-procedural-3d-examples = { workspace = true }
 semio-s-artifact-procedural-3d-mutations = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }

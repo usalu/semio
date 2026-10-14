@@ -1,8 +1,7 @@
 //! 🅰️ Energy model mutation — `ChangeInfiltrationConstantTermCoefficient`: Sets EnergyPlus's `ZoneInfiltration:DesignFlowRate` constant term coefficient A. The four coefficients are non-negative by that object's own convention (BLAST 0.606/0.03636/0.1177/0, DOE-2 0/0/0.224/0).
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeInfiltrationConstantTermCoefficient {
     pub new_constant_term_coefficient: f64,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_infiltration_constant_term_coefficient(id: crate::model::EntityId, new_constant_term_coefficient: f64) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeInfiltrationConstantTermCoefficient(ChangeInfiltrationConstantTermCoefficient { id, new_constant_term_coefficient })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_infiltration_constant_term_coefficient<Op: From<ChangeInfiltrationConstantTermCoefficient>>(id: crate::model::EntityId, new_constant_term_coefficient: f64) -> Op {
+    ChangeInfiltrationConstantTermCoefficient { id, new_constant_term_coefficient }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeInfiltrationConstantTermCoefficient {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeInfiltrationConstantTermCoefficient
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeInfiltrationConstantTermCoefficient>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration", kind: "change-infiltration-constant-term-coefficient", record: "ChangedInfiltrationConstantTermCoefficient" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -7,7 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::CadMutation;
+extern crate semio_framework_os_kernel as protocol;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::Mutation;
 
@@ -115,7 +116,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-shape-model/rehandles-the-occupied-shape-slot: committed diff JSON is not canonical");
@@ -125,7 +126,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `create-shape-model` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_cad_cad_model_diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-shape-model/rehandles-the-occupied-shape-slot: committed diff did not carry before to after");
 }

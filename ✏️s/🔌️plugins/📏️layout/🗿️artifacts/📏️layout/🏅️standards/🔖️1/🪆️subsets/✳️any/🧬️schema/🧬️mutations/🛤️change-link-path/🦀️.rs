@@ -1,8 +1,10 @@
 //! 🔗 `change-link-path` — sets an {@link ImageLink}'s file `path`.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutLinksDelta, LayoutLinksModification};
-use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutLinksModification;
+use semio_s_artifact_layout_layout_diff::{ImageLinkPatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,12 +20,12 @@ pub struct ChangeLinkPath {
     pub new_path: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeLinkPath where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_link_path::ChangeLinkPath> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "link-path", kind: "change-link-path", record: "ChangedLinkPath" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_link_path(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_link_path(self, base)?
     
@@ -54,13 +56,19 @@ pub fn diff_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) ->
 //#endregion 🔗ChangeLinkPath
 
 //#region 🔗ChangeLinkPath
-pub fn inverse_change_link_path(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_link_path<Op: From<crate::change_link_path::ChangeLinkPath>>(payload: &ChangeLinkPath, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.links.iter().find(|link| link.id == payload.id) {
-        Some(link) => vec![LayoutMutation::ChangeLinkPath(ChangeLinkPath { id: payload.id.clone(), new_path: link.path.clone() })],
+        Some(link) => vec![Op::from(ChangeLinkPath { id: payload.id.clone(), new_path: link.path.clone() })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🔗ChangeLinkPath
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔗️relinks/🦀️.rs"]
+mod tests_relinks_link_1_to_a_new_file;
+//#endregion 🪢️TaxonomyMounts

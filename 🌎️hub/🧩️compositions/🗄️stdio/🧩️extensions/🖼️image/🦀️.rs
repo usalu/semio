@@ -7,6 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::PluginBuilder;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
@@ -38,7 +39,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioImageApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioImageApps>::builder("stdio-image").label("Stdio Image").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-image").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = PluginBuilder::<_, StdioImageApps>::new("stdio-image").label("Stdio Image").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-image").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_svg::declaration(semio_s_artifact_stdio_svg::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_png::declaration(semio_s_artifact_stdio_png::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_jpg::declaration(semio_s_artifact_stdio_jpg::definition()?).map_err(PluginAssemblyError::definition)?);

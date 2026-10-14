@@ -62,7 +62,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
         let grant = app.mounted_policy.close;
         let demand = mounted.retirement_demands(grant.maximum_copy_bytes).unwrap();
         assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"original mounted caller policy must fund its quoted close frontier");
-        if matches!(caller.turn(grant,|cx|mounted.retirement_step(cx)).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
+        if matches!(caller.turn(grant,|cx|mounted.retirement_step(cx)).unwrap(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
     }
     assert!(retired, "mounted original owner reaches its complete terminal retirement");
     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::Retiring);

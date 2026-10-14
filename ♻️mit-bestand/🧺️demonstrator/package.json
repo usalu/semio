@@ -17,9 +17,9 @@
     "@semio-tech/puzzle-2d": "workspace:*"
   },
   "scripts": {
-    "build": "bun repo run @semio-tech/mit-bestand-demonstrator:build",
-    "test": "bun repo run @semio-tech/mit-bestand-demonstrator:test",
-    "test:e2e": "bun repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
+    "build": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:build",
+    "test": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:test",
+    "test:e2e": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

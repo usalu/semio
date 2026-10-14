@@ -17,6 +17,9 @@
     "compactTaskPlans",
     "sourceClosureTaskEnvironments",
     "sourceClosureReceiptHolds",
-    "readNxGraphSourceProofV1"
+    "readNxGraphSourceProofV1",
+    "withOriginalSelectedNativeSnapshotV1",
+    "selectedNativeWorkspaceRootV1",
+    "requireSelectedNativeFileCoverageV1"
   ]
 }

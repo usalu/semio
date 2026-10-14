@@ -1,3 +1,6 @@
+#[derive(Clone,Copy)]
+pub struct TestMemberStoreProducer;
+
 //#region 🧪️TestAppMutationFixtures
 #[path = "../🖥️test-app-mutations-config/🦀️.rs"]
 pub mod config;

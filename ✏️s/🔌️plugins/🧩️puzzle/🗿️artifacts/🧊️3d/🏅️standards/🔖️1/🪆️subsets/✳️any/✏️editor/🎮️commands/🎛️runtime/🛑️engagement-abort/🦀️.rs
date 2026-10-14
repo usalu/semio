@@ -1,7 +1,7 @@
 //! 🤝️ `engagement-abort` command.
 
-use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
-use {crate::editor::puzzle3d::snapshot::puzzle3d_fill_tool_active, crate::editor::puzzle3d::session::Puzzle3dActionCtx, crate::editor::puzzle3d::snapshot::PUZZLE3D_DEFAULT_UTILITY};
+use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill_tool;
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_fill_tool_active, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_DEFAULT_UTILITY};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
 
@@ -15,7 +15,7 @@ use semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID;
 pub fn engagement_abort(ctx: &mut Puzzle3dActionCtx<'_>) {
     ctx.scene.runtime.engagement_input = String::new();
     ctx.scene.runtime.brush_candidate_index = 0;
-    if puzzle3d_fill_tool_active(ctx.config) || ctx.scene.active_utility == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID {
+    if puzzle3d_fill_tool_active(ctx.config) || ctx.scene.active_utility == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID {
         if let Some(run) = fill_tool::live_fill_run(ctx.tool_run) {
             let args = semio_framework::dsl_value!({ TOOL_RUN_ARG_RUN_ID: run.identity.id.run.to_string(), TOOL_RUN_ARG_GENERATION: run.identity.generation });
             ctx.effects.push(Effect::DispatchAction { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), action: TOOL_RUN_ABORT_ACTION_ID.into(), args: Some(args), delay_ms: 0 });

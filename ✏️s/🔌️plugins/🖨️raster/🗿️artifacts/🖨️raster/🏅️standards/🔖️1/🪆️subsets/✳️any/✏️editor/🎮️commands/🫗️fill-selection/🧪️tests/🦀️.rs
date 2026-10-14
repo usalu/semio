@@ -2,8 +2,8 @@
 //! with the session colour and selection; a fill the layer or the session cannot take leaves zero trace.
 
 use super::*;
-use crate::editor::raster::config::RasterPixelSelection;
-use crate::mutations::paint_stroke::RasterSelectionSpan;
+use crate::selection::RasterPixelSelection;
+use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_framework_plugin::HistoryView;
 
 fn document(locked: bool, masked: bool) -> RasterSnapshot {
@@ -16,7 +16,7 @@ fn document(locked: bool, masked: bool) -> RasterSnapshot {
 }
 
 fn selected(target: &str) -> RasterConfig {
-    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }] }), ..RasterConfig::default() }
+    RasterConfig { paint_target: target.into(), pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: target.into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }] }), ..RasterConfig::default() }
 }
 
 fn fill() -> FillSelection {
@@ -24,7 +24,7 @@ fn fill() -> FillSelection {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 #[test]

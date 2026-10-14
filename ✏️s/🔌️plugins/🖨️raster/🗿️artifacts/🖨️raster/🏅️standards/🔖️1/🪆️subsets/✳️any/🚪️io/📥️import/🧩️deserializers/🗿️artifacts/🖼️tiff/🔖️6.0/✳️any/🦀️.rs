@@ -4,8 +4,8 @@
 //! are genuinely read — nothing is fabricated.
 //!
 //! 🧾️ stdio's TIFF codec decodes/encodes IFD 0 as canonical RGBA8 strips.
-use crate::standards::v1::subsets::any::io::{raster_document_from_semio_image, semio_image_from_format, TIFF_DIALECT};
-use crate::RasterSnapshot;
+use crate::{raster_document_from_semio_image, semio_image_from_format, TIFF_DIALECT};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let decoded = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff(bytes)?;

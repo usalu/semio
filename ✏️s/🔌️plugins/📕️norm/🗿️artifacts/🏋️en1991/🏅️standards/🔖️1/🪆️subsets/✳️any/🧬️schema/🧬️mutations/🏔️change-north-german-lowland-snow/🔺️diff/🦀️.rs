@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-north-german-lowland-snow`.
-use super::ChangeNorthGermanLowlandSnow;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_north_german_lowland_snow::ChangeNorthGermanLowlandSnow;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeNorthGermanLowlandSnow, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.north_german_lowland_snow == payload.new_north_german_lowland_snow {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

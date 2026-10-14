@@ -1,6 +1,6 @@
 use crate::native_decoding::{NativeDecodeControl,NativeForwardedDecodeControl,NativeDecodeAllocation,NativeDecodeRetirementRecipient};
 use crate::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-use crate::value::observe_retirement_allocations as observe;
+use crate::allocation_testing::observe_retirement_allocations as observe;
 use std::sync::atomic::{AtomicUsize,Ordering};
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(law:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(law["grant"].clone()).unwrap()}

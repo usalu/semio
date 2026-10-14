@@ -1,8 +1,7 @@
 //! 📉️ Energy model mutation — `RemoveOutputVariable`: Detaches one reporting registration addressed by its `(name, key)` natural composite key.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveOutputVariable {
     pub key: String,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_output_variable(name: String, key: String) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveOutputVariable(RemoveOutputVariable { name, key })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_output_variable<Op: From<RemoveOutputVariable>>(name: String, key: String) -> Op {
+    RemoveOutputVariable { name, key }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveOutputVariable {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveOutputVariable
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveOutputVariable> + From<crate::AddOutputVariable>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "output-variable", kind: "remove-output-variable", record: "RemovedOutputVariable" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

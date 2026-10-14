@@ -8,7 +8,7 @@ pub type NoteStore = store::ArtifactStore<crate::NoteSnapshot, crate::schema::mu
 /// read but never mutated, undone or closed. The app installs the same catalog through
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_note_store(envelope: NoteEnvelope, actor: protocol::ActorId) -> Result<OwnedNoteStore, store::VcsError> {
-    let mut store = NoteStore::new(envelope, actor).await?;
+    let mut store = NoteStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedNoteStore(store))
 }

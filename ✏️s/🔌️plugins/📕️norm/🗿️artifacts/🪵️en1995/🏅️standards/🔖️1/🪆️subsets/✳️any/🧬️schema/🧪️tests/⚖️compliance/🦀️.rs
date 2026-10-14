@@ -1,6 +1,6 @@
-use super::*;
-use crate::app_surface::{apply_remedy_edit, get_value_at_path, parse_path};
-use crate::document::{CheckReport, CheckStatus};
+use crate::*;
+use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, parse_path};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::process::Command;
@@ -10,16 +10,16 @@ fn report_of(snap: &En1995Snapshot) -> CheckReport {
 }
 
 fn bundled_examples() -> Vec<(String, En1995Snapshot)> {
-    crate::examples()
+    semio_s_artifact_norm_en1995_model::examples()
         .into_iter()
         .map(|example| {
-            let snap = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1995_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e}", example.id()));
+            let snap = semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e}", example.id()));
             (example.id().to_string(), snap)
         })
         .collect()
 }
 
-fn check<'a>(report: &'a CheckReport, id: &str) -> &'a crate::document::CheckResult {
+fn check<'a>(report: &'a CheckReport, id: &str) -> &'a semio_s_plugin_norm_compliance::CheckResult {
     report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing check {id} in {:?}", report.checks.iter().map(|c| c.id.clone()).collect::<Vec<_>>()))
 }
 
@@ -48,7 +48,7 @@ async fn strength_class_c24_and_gl28h_tables() {
     assert!((c24.f_v_k / 1e6 - 4.0).abs() < 1e-9);
     let gl = properties_for_class("GL28h").unwrap();
     assert!((gl.f_m_k / 1e6 - 28.0).abs() < 1e-9);
-    assert_eq!(gl.product, crate::TimberProduct::Glulam);
+    assert_eq!(gl.product, semio_s_artifact_norm_en1995_model::TimberProduct::Glulam);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +66,7 @@ async fn shear_utilization_diverges_between_annexes_for_c24() {
     m.strength_class = "C24".into();
     m.b_m = 0.20;
     m.h_m = 0.30;
-    m.actions = vec![crate::CharacteristicAction {
+    m.actions = vec![semio_s_artifact_norm_en1995_model::CharacteristicAction {
         id: "g".into(),
         kind: "permanent".into(),
         category: "".into(),
@@ -111,7 +111,7 @@ async fn yield_moment_is_si_for_an_m12_bolt() {
 
 #[semio_framework_async_macros::async_test]
 async fn fire_def_r60() {
-    let beta_n = AnnexParams::en().beta_n(crate::TimberProduct::Glulam);
+    let beta_n = AnnexParams::en().beta_n(semio_s_artifact_norm_en1995_model::TimberProduct::Glulam);
     let d = d_ef(3600.0, beta_n);
     assert!((d * 1000.0 - 49.0).abs() < 0.5);
 }
@@ -236,12 +236,12 @@ async fn default_snapshot_every_editable_leaf_has_en_de_meta() {
     }
     assert!(leaves.len() > 60, "expected every member, action and connection leaf, got {}", leaves.len());
     for path in &leaves {
-        let meta = crate::field_meta::en1995_field_meta(path).unwrap_or_else(|| panic!("{path} has no field meta"));
+        let meta = semio_s_artifact_norm_en1995_editor::field_meta::en1995_field_meta(path).unwrap_or_else(|| panic!("{path} has no field meta"));
         assert!(!meta.label_en.trim().is_empty() && !meta.label_de.trim().is_empty(), "{path}");
         assert_ne!(meta.label_en, meta.label_de, "{path} must carry a German label distinct from English");
         let parent = &path[..path.rfind(['.', '[']).unwrap_or(0)];
         if !parent.is_empty() {
-            let parent_meta = crate::field_meta::en1995_field_meta(parent);
+            let parent_meta = semio_s_artifact_norm_en1995_editor::field_meta::en1995_field_meta(parent);
             assert!(parent_meta.map_or(true, |p| p.label_en != meta.label_en), "{path} resolves only to its parent's meta '{}'", meta.label_en);
         }
     }
@@ -253,7 +253,7 @@ async fn steel_plate_changes_capacity_and_can_make_the_check_fail() {
     c.t1_m = 0.04;
     c.t2_m = 0.04;
     let annex = AnnexChoice::De;
-    let run = |c: &crate::TimberConnection| evaluate_structure(annex, &[], std::slice::from_ref(c));
+    let run = |c: &semio_s_artifact_norm_en1995_model::TimberConnection| evaluate_structure(annex, &[], std::slice::from_ref(c));
     let timber = run(&c);
     let timber_check = check(&timber, "en1995.8.2.2.johansen.conn-C1");
     let scale = 0.99 / timber_check.utilization;
@@ -366,7 +366,6 @@ fn example_snapshots_validate_against_json_schema() {
         assert!(status.status.success(), "{name} jsonschema: {}\n{}", String::from_utf8_lossy(&status.stdout), String::from_utf8_lossy(&status.stderr));
     }
 }
-
 
 fn check_signature(report: &CheckReport) -> Vec<(String, String, i64, i64, i64)> {
     let mut sig: Vec<_> = report
@@ -672,8 +671,8 @@ fn unknown_strength_class_fails_with_one_of_options() {
 
 #[test]
 fn reference_table_k_mod_cell_equals_evaluated_modification_factor() {
-    use crate::app_surface::CatalogueCell;
-    use crate::editor::en1995::panels::catalogue::reference_tables;
+    use semio_s_plugin_norm_app_surface::CatalogueCell;
+    use semio_s_artifact_norm_en1995_editor::panels::catalogue::reference_tables;
     use semio_framework_ui_locale::Locale;
     let snap = En1995Snapshot::compliant_building_beam();
     let km_table = reference_tables(Locale::En).into_iter().find(|t| t.id == "k-mod").expect("k-mod table");

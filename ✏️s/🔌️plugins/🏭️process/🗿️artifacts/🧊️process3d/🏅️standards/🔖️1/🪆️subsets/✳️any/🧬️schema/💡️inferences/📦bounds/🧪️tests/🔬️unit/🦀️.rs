@@ -1,5 +1,5 @@
 use super::*;
-use crate::{brep_snapshot_for_working_solid, WorkingSolid};
+use semio_s_artifact_process_process3d_model::{snapshot::brep_snapshot_for_working_solid, snapshot::WorkingSolid};
 
 #[semio_framework_async_macros::async_test]
 async fn default_box_stock_bounds_are_unit_cube() {

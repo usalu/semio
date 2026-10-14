@@ -65,7 +65,7 @@ test("guest SQLite caller native grant preserves five independent axes and rejec
 
 
 test("guest snapshot pending custody requires the same instance and original close grant", async () => {
- const law=(await import("../../🧫️fixtures/♻️retirement/🔣️.json")).default;
+ const law=(await import("../../../../🧪️tests/🧫️fixtures/🪶️sqlite/♻️retirement/🔣️.json")).default;
  const contract=(await import("../../🧬️schema/♻️retirement/🔣️.json")).default;
  expect(new Ajv({strict:true,allErrors:true}).compile(contract)(law)).toBe(true);
  const db=new Database(":memory:");

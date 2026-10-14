@@ -281,17 +281,35 @@ class Plan:
                 self.host[id(scope)] = (key, path + scope.path[len(fs.path):])
             elif fs is self.tree.root and scope.parent is self.tree.root and "component" not in scope.children and scope.items:
                 self.host[id(scope)] = ("agg" if "agg" in self.crates else None, scope.path)
-        for _ in range(3):
+        prefixes = {tuple(x for x in (c.get("prefix") or "").split("::") if x): k for k, c in self.crates.items() if c.get("prefix")}
+        for scope in self.tree.scopes:
+            if not scope.is_file and id(scope) not in self.host and scope.path in prefixes and "component" not in scope.children:
+                self.host[id(scope)] = (prefixes[scope.path], ())
+        for _ in range(8):
+            changed = False
             for scope in self.tree.scopes:
                 if scope.is_file or id(scope) in self.host:
                     continue
                 comp = scope.children.get("component")
                 if comp is not None and id(comp) in self.host:
                     self.host[id(scope)] = self.host[id(comp)]
+                    changed = True
                     continue
                 tgt = alias_target(self.res, scope)
                 if tgt is not None and self.scope_host(tgt):
                     self.host[id(scope)] = self.scope_host(tgt)
+                    changed = True
+                    continue
+                if not scope.children or scope.items or comp is not None:
+                    continue
+                kids = [self.host.get(id(c)) for c in scope.children.values()]
+                if all(kids) and len({k[0] for k in kids}) == 1 and all(k[1][-1:] == (n,) for k, n in zip(kids, scope.children)):
+                    parents = {k[1][:-1] for k in kids}
+                    if len(parents) == 1:
+                        self.host[id(scope)] = (kids[0][0], parents.pop())
+                        changed = True
+            if not changed:
+                break
 
     def scope_host(self, scope):
         for _ in range(8):
@@ -366,6 +384,8 @@ class Rewriter:
         a, b = self.plan.file_host(file), self.plan.scope_host(scope) if scope is not None else None
         if a and b and b[0] and a[0] != b[0]:
             (self.report["test_edges"] if test else self.report["edges"])[(a[0], b[0])] += 1
+            if test:
+                self.report.setdefault("file_test_edges", {}).setdefault(file, set()).add(b[0])
             self.report.setdefault("samples", {}).setdefault((a[0], b[0], test), f"{self.plan.rel(file)}: {what}")
 
     def is_test(self, file, scope):
@@ -473,6 +493,15 @@ class Rewriter:
                 out.append((orig, "DROP"))
                 changed = True
                 continue
+            if glob and kind == "mod" and dscope is tree.root and ctx and ctx[0] != "agg" and plan.cfg.get("root_to"):
+                target_key = plan.cfg["root_to"]
+                text = ("crate" if ctx[0] == target_key else plan.idents[target_key]) + "::*"
+                if text == "crate::*":
+                    out.append((orig, "DROP"))
+                else:
+                    out.append((orig, text))
+                changed = True
+                continue
             if glob and kind == "mod" and plan.scope_host(dscope) == plan.scope_host(scope):
                 out.append((orig, "DROP"))
                 changed = True
@@ -527,9 +556,9 @@ class Rewriter:
             segs = [x for x in re.split(SEP, m.group(0)) if x]
             head = segs[0]
             anchored = head in ("crate", "$crate", "super", "self") or head == plan.cfg["crate"]
-            if not anchored and not (file == tree.root_file and (head in tree.root.children or head in tree.root.items)):
-                continue
             sc = self.scope_at(file, off)
+            if not anchored and not (file == tree.root_file and (head in tree.root.children or head in tree.root.items)) and head not in sc.children:
+                continue
             r = res.resolve(sc, segs)
             if r is None:
                 continue
@@ -874,6 +903,8 @@ def move_root_items(cfg):
             r = plan.res.resolve(rw.scope_at(file, m.start()), segs)
             if r and r[0] == "item" and r[1] is root:
                 wanted.add(r[2])
+            elif r and r[0] in ("item", "mod") and r[1] is not None and r[1].parent is root and not r[1].is_file and "component" not in r[1].children and r[1].items:
+                wanted.add(r[1].path[-1])
         for sc in plan.tree.scopes:
             if sc.file != file or rw.is_test(file, sc):
                 continue
@@ -883,9 +914,32 @@ def move_root_items(cfg):
                         r = plan.res.resolve(sc, segs[:-1] if segs[-1] == "self" else segs)
                         if r and r[0] == "item" and r[1] is root:
                             wanted.add(r[2])
+                        elif r and r[0] in ("item", "mod") and r[1] is not None and r[1].parent is root and not r[1].is_file and "component" not in r[1].children and r[1].items:
+                            wanted.add(r[1].path[-1])
+    root_names = [it.name for it in plan.tree.items_of[root.file] if it.scope is root and it.name and it.kind not in ("mod", "use", "macro", "extern", "impl", "inner-attr")]
+    for file in plan.tree.raw:
+        h = plan.file_host(file)
+        if h is None or h[0] == "agg" or file == root.file:
+            continue
+        for sc in plan.tree.scopes:
+            if sc.file != file or rw.is_test(file, sc):
+                continue
+            for item, leaves in sc.uses:
+                for segs, alias in leaves:
+                    if segs and segs[-1] == "*":
+                        r = plan.res.resolve(sc, segs[:-1])
+                        if r and r[0] == "mod" and r[1] is root:
+                            body = re.sub(r"#!?\[[^\]]*\]", " ", plan.tree.text[file])
+                            own = {it.name for it in plan.tree.items_of[file] if it.name}
+                            wanted |= {n for n in root_names if n not in own and re.search(r"(?<![\w:.])" + re.escape(n) + (r"\s*(?:\(|::<)" if n[:1].islower() else r"\b(?!\s*:(?!:))"), body)}
     wanted |= set(cfg.get("root_to_extra", []))
+    if os.environ.get("P9_DEBUG"):
+        print("[DEBUG] direct root wants:", sorted(wanted))
     raw = plan.tree.raw[root.file]
     items = {it.name: it for it in plan.tree.items_of[root.file] if it.scope is root and it.name and it.kind not in ("mod", "use", "macro", "extern", "impl", "inner-attr")}
+    for name, child in root.children.items():
+        if not child.is_file and "component" not in child.children and child.items and child.decl is not None:
+            items[name] = child.decl
     stripped = plan.tree.text[root.file]
     changed = True
     while changed:
@@ -896,35 +950,55 @@ def move_root_items(cfg):
                 continue
             body = stripped[it.start:it.end]
             for other in items:
-                if other not in wanted and re.search(r"(?<![\w:])" + re.escape(other) + r"\b", body):
+                if other not in wanted and re.search(r"(?<![\w:.])" + re.escape(other) + r"\b(?!\s*:(?!:))", body):
                     wanted.add(other)
                     changed = True
     impls = [it for it in plan.tree.items_of[root.file] if it.scope is root and it.kind == "impl" and any(re.search(r"\bfor\s+" + re.escape(n) + r"\b|^impl(?:<[^>]*>)?\s+" + re.escape(n) + r"\b", stripped[it.kw:it.end].split("{")[0].strip()) for n in wanted)]
     moving = sorted([items[n] for n in wanted if n in items] + impls, key=lambda it: it.start)
     if not moving:
         return
-    pieces, spans = [], []
-    for it in moving:
-        a, b = item_text_span(raw, it)
-        spans.append((a, b))
-        pieces.append(raw[a:b].rstrip() + "\n")
     root_imports = {}
     for item, leaves in root.uses:
         for segs, alias in leaves:
             if segs and segs[-1] not in ("*", "self"):
                 root_imports[alias or segs[-1]] = segs
-    moved_text = rebase("\n".join(pieces), os.path.dirname(root.file), os.path.dirname(plan.owner_file(target_key)))
-    needs = sorted(n for n in root_imports if re.search(r"(?<![\w:])" + re.escape(n) + r"\b", strip(moved_text)))
-    dst = plan.owner_file(target_key)
-    dst_logical = cfg["crates"][target_key]["prefix"]
-    imports = "".join(f"use {'::'.join(root_imports[n])};\n" for n in needs)
-    names = [it.name for it in moving if it.kind != "impl"]
+    route = cfg.get("root_to_map", {})
+    def target_of(it):
+        if it.kind == "impl":
+            head = stripped[it.kw:it.end].split("{")[0]
+            for n, key in route.items():
+                if re.search(r"\b" + re.escape(n) + r"\b", head):
+                    return key
+            return target_key
+        return route.get(it.name, target_key)
+    by_target = collections.defaultdict(list)
+    for it in moving:
+        by_target[target_of(it)].append(it)
+    spans, reexports = [], []
+    children = sorted(root.children, key=len, reverse=True)
+    for key, its in by_target.items():
+        dst = plan.owner_file(key)
+        pieces = []
+        for it in its:
+            a, b = item_text_span(raw, it)
+            spans.append((a, b))
+            piece = raw[a:b].rstrip() + "\n"
+            if children:
+                piece = re.sub(r"(?<![\w:$])(" + "|".join(map(re.escape, children)) + r")(\s*::)", r"crate::\1\2", piece)
+            pieces.append(piece)
+        moved_text = rebase("\n".join(pieces), os.path.dirname(root.file), os.path.dirname(dst))
+        needs = sorted(n for n in root_imports if re.search(r"(?<![\w:])" + re.escape(n) + r"\b", strip(moved_text)))
+        imports = "".join(f"use {'::'.join(root_imports[n])};\n" for n in needs)
+        names = [it.name for it in its if it.kind != "impl"]
+        if names:
+            reexports.append(f"pub use crate::{cfg['crates'][key]['prefix']}::{{{', '.join(names)}}};")
+        OVERLAY[dst] = read(dst).rstrip() + "\n\n" + imports + "\n" + moved_text
     kept = raw
     for a, b in sorted(spans, reverse=True):
         kept = kept[:a] + kept[b:]
-    kept = kept.rstrip() + f"\npub use crate::{dst_logical}::{{{', '.join(names)}}};\n"
-    OVERLAY[root.file] = kept
-    OVERLAY[dst] = read(dst).rstrip() + "\n\n" + imports + "\n" + moved_text
+    OVERLAY[root.file] = kept.rstrip() + "\n" + "\n".join(reexports) + "\n"
+
+
 def drop_use_names(text, names):
     """✂️ Removes the given imported names from every `use` item of a file (an emptied item disappears)."""
     st = strip(text)
@@ -957,25 +1031,68 @@ def generic_leaves(cfg):
     enum, snap = g["enum"], g["snapshot"]
     mroot = os.path.normpath(os.path.join(REPO, g["mutations_dir"]))
     src = read(os.path.join(mroot, "🦀️.rs"))
-    variants = {v: (mod, ty) for v, mod, ty in re.findall(r"^\s+([A-Z][A-Za-z0-9]*)\(([a-z0-9_]+)(?:::mutation)?::([A-Za-z0-9]+)\),", src, re.M)}
+    variants = {}
+    leaf_mods = {}
+    root_src = read(os.path.join(REPO, cfg["root"]))
+    for m in re.finditer(r'pub mod (\w+)\s*\{\s*#\[path\s*=\s*"[^"]*🧬️mutations/([^/"]+)/', root_src):
+        leaf_mods[m.group(2)] = m.group(1)
+    for v, mod, sub, ty in re.findall(r"^\s+([A-Z][A-Za-z0-9]*)\((?:([a-z0-9_]+)((?:::mutation)?)::)?([A-Za-z0-9]+)\),", src, re.M):
+        if not mod:
+            for leaf in g["leaves"]:
+                files = [os.path.join(mroot, leaf, "🦀️.rs"), os.path.join(mroot, leaf, "🦠️mutation", "🦀️.rs")]
+                if any(exists(f) and re.search(r"pub struct " + ty + r"\b", read(f)) for f in files):
+                    mod, sub = leaf_mods[leaf], ("::mutation" if exists(files[1]) and not exists(files[0]) else "")
+                    break
+        if mod:
+            variants[v] = (mod + sub, ty)
+    def leaf_file(leaf):
+        path = os.path.join(mroot, leaf, "🦀️.rs")
+        return path if exists(path) else os.path.join(mroot, leaf, "🦠️mutation", "🦀️.rs")
+    def constructed(text):
+        found = []
+        for v in re.findall(r"\b" + enum + r"::([A-Z][A-Za-z0-9]*)\s*\(", text):
+            mod, ty = variants[v]
+            b = f"From<{g['mutations_path']}::{mod}::{ty}>"
+            if b not in found:
+                found.append(b)
+        return found
+    builders, leaf_texts = {}, {}
+    for leaf in g["leaves"]:
+        text = read(leaf_file(leaf))
+        edits = []
+        for m in re.finditer(r"pub fn (\w+)\(([^)]*)\) -> " + enum + r" \{", text):
+            close = text.index("{", m.end() - 1)
+            depth, j = 0, close
+            while True:
+                depth += {"{": 1, "}": -1}.get(text[j], 0)
+                if depth == 0:
+                    break
+                j += 1
+            body = text[close:j + 1]
+            bounds = constructed(body)
+            builders[(leaf_mods[leaf], m.group(1))] = bounds
+            generic = f"<Op: {' + '.join(bounds)}>" if bounds else "<Op>"
+            edits.append((m.start(), j + 1, f"pub fn {m.group(1)}{generic}({m.group(2)}) -> Op " + re.sub(r"\b" + enum + r"::([A-Z][A-Za-z0-9]*)\s*\(", "Op::from(", body)))
+        for a, b, t in reversed(edits):
+            text = text[:a] + t + text[b:]
+        leaf_texts[leaf] = text
     for leaf in g["leaves"]:
         d = os.path.join(mroot, leaf)
-        inv_path, leaf_path = os.path.join(d, "↩️inverse", "🦀️.rs"), os.path.join(d, "🦀️.rs")
+        inv_path, leaf_path = os.path.join(d, "↩️inverse", "🦀️.rs"), leaf_file(leaf)
         bounds = []
         if exists(inv_path):
             inv = read(inv_path)
-            for v in re.findall(r"\b" + enum + r"::([A-Z][A-Za-z0-9]*)\s*\(", inv):
-                mod, ty = variants[v]
-                b = f"From<{g['mutations_path']}::{mod}::{ty}>"
-                if b not in bounds:
-                    bounds.append(b)
+            bounds = constructed(inv)
+            for (mod, fn), bb in builders.items():
+                if re.search(r"\b" + mod + r"\s*::\s*" + fn + r"\s*\(", inv) or (mod == leaf_mods[leaf] and re.search(r"(?<![\w:])" + fn + r"\s*\(", inv)):
+                    bounds += [x for x in bb if x not in bounds]
             inv = re.sub(r"\b" + enum + r"::([A-Z][A-Za-z0-9]*)\s*\(", "Op::from(", inv)
-            inv, n = re.subn(r"pub fn inverse\((\w+): &(\w+), (\w+): &(\w+)\) -> Result<Vec<" + enum + r">, semio_framework_value::ValueError>",
-                             lambda m: f"pub fn inverse<Op>({m.group(1)}: &{m.group(2)}, {m.group(3)}: &{m.group(4)}) -> Result<Vec<Op>, semio_framework_value::ValueError>" + (f" where Op: {' + '.join(bounds)}" if bounds else ""), inv)
+            inv, n = re.subn(r"pub fn inverse\((\w+): &([\w:]+), (\w+): &(\w+)\) -> (Result<Vec<" + enum + r">, semio_framework_value::ValueError>|Vec<" + enum + r">)",
+                             lambda m: f"pub fn inverse<Op>({m.group(1)}: &{m.group(2)}, {m.group(3)}: &{m.group(4)}) -> " + m.group(5).replace(f"Vec<{enum}>", "Vec<Op>") + (f" where Op: {' + '.join(bounds)}" if bounds else ""), inv)
             if n != 1:
                 raise SystemExit(f"inverse signature not found in {inv_path}")
             OVERLAY[os.path.normpath(inv_path)] = drop_use_names(inv, {enum})
-        text = read(leaf_path)
+        text = re.sub(r"(?:#\[cfg\(test\)\]\s*)?#\[path\s*=\s*\"🧪️tests/[^\"]+\"\]\s*(?:#\[cfg\(test\)\]\s*)?mod \w+;\n?", "", leaf_texts[leaf])
         where = f"Op: protocol::Mutation<{snap}, Diff = {g['diff_path']}>" + "".join(" + " + b for b in bounds)
         text, n = re.subn(r"impl protocol::MutationKind<" + snap + ", " + enum + r"> for (\w+) \{", lambda m: f"impl<Op> protocol::MutationKind<{snap}, Op> for {m.group(1)} where {where} {{", text)
         if n != 1:
@@ -992,7 +1109,7 @@ def facet_leaves(cfg):
     schema = os.path.normpath(os.path.join(REPO, f["schema_file"]))
     text = read(schema)
     for facet, (sub, const, modpath) in f["facets"].items():
-        pattern = facet + r": semio_framework_schema_registry::FacetLeaves \{\s*rust: include_str!\(\"" + re.escape(sub) + r"/🦀️\.rs\"\),.*?\}"
+        pattern = facet + r": (?:::)?semio_framework_schema_registry::FacetLeaves \{\s*rust: include_str!\(\"" + re.escape(sub) + r"/🦀️\.rs\"\),.*?\}"
         text, n = re.subn(pattern, f"{facet}: {modpath}::{const}", text, count=1, flags=re.S)
         if n != 1:
             raise SystemExit(f"facet {facet} leaves not found in {schema}")
@@ -1015,6 +1132,30 @@ def main():
     move_regions(cfg)
     move_root_items(cfg)
     plan = Plan(cfg)
+    for _ in range(4):
+        probe = Rewriter(plan)
+        probe.run()
+        graph = collections.defaultdict(set)
+        for (a, b) in probe.report["edges"]:
+            graph[a].add(b)
+        def reaches(x, y, seen=frozenset()):
+            return x == y or any(reaches(n, y, seen | {x}) for n in graph[x] if n not in seen)
+        moved = []
+        for file, targets in probe.report.get("file_test_edges", {}).items():
+            host = plan.file_host(file)
+            if host is None or host[0] == "agg":
+                continue
+            if any(reaches(t, host[0]) for t in targets if t != host[0]):
+                scope = plan.tree.file_scope[file]
+                lg = [x for x in scope.path if x != "component"]
+                rel_parts = [re.sub(r"[^a-z0-9]+", "_", re.sub(r"^[^a-z0-9]*", "", seg.lower())).strip("_") for seg in os.path.relpath(os.path.dirname(file), os.path.dirname(plan.owner_file(host[0]))).split(os.sep) if seg not in ("..", ".")]
+                name = "_".join([host[0].replace("-", "_")] + [x for x in rel_parts if x and x != "tests"] or [host[0].replace("-", "_"), "tests"])
+                moved.append([re.escape(plan.rel(file)) + "$", "agg", name])
+        if not moved:
+            break
+        print("## test files moved to the aggregator:", ", ".join(m[2] for m in moved))
+        cfg["rules"] = moved + cfg["rules"]
+        plan = Plan(cfg)
     if cfg.get("delete_unmounted"):
         artifact = os.path.dirname(os.path.join(REPO, cfg["root"]))
         for file in original - set(plan.tree.raw):
@@ -1032,6 +1173,9 @@ def main():
     print("## crate edges (normal)")
     for (a, b), n in sorted(rep["edges"].items()):
         print(f"  {a} -> {b}: {n}")
+    for (a, b), n in sorted(rep["edges"].items()):
+        if b == "agg" or a == "model" or os.environ.get("P9_EDGES"):
+            print(f"  ! {a} -> agg e.g. {rep['samples'].get((a, b, False), '')[-160:]}")
     print("## crate edges (test)")
     for (a, b), n in sorted(rep["test_edges"].items()):
         if (a, b) not in rep["edges"]:

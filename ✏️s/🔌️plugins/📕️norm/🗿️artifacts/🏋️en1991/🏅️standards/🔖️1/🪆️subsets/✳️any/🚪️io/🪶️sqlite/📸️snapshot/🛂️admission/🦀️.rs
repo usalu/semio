@@ -1,5 +1,5 @@
 //! 🏋️ Borrowed environmental actions and impact entities before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -18,4 +18,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,explosion)in n::list(n::field(v,2)?)?.iter().enumerate(){n::entity(out,"en1991_explosion",parent,index,&n::cells(n::record(explosion)?,[Real(0),Real(1),Real(2)])?,ACCIDENTAL_FLOATS)?;}}Ok(())
 }
 /// 🛂️ Eight authored SQL tables including the full 152-column document extent.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1991Snapshot::SQLITE_SCHEMA,8,152,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1991Snapshot::SQLITE_SCHEMA,8,152,count(root)?,write)}

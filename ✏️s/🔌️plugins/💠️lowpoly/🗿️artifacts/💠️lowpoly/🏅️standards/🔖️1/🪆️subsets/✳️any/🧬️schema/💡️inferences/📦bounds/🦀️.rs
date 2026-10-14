@@ -5,7 +5,7 @@
 //! round-trip law fix); this facet reads only the typed `transform.position` field every object
 //! already carries. Simple whole-snapshot scalar: no `InferredField` caching.
 
-use crate::{LowpolyObject, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolySnapshot};
 
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.

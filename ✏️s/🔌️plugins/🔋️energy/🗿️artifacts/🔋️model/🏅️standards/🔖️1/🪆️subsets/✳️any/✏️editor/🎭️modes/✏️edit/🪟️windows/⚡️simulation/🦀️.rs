@@ -5,9 +5,9 @@
 //! its own. Every plugin label is authored in English and German with no default; framework labels come
 //! from the framework table for the OS-owned locale.
 
-use crate::editor::model::config::EnergyModelConfig;
-use crate::editor::model::modes::edit::tools;
-use crate::editor::model::results::ResultField;
+use crate::editor_config::EnergyModelConfig;
+use crate::tools;
+use crate::editor_config::ResultField;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -72,7 +72,7 @@ pub fn result_field_action() -> ActionDefinition {
 /// `ActionKind::Mutation` reduced through the field-granular `change-run-period-*` kinds — declared HERE because
 /// this window is where it is rendered and edited.
 pub fn run_period_action() -> ActionDefinition {
-    let mut action = ActionDefinition::bounded_catalog(crate::editor::model::SET_RUN_PERIOD_ACTION_ID, LocalizedLabel::native("Set run period", "Simulationszeitraum setzen"), ActionKind::Mutation).with_args(vec![
+    let mut action = ActionDefinition::bounded_catalog(crate::editor_commands::SET_RUN_PERIOD_ACTION_ID, LocalizedLabel::native("Set run period", "Simulationszeitraum setzen"), ActionKind::Mutation).with_args(vec![
         ActionArgDef::slider("startMonth", LocalizedLabel::native("Start month", "Startmonat"), 1.0, 12.0).required(),
         ActionArgDef::slider("startDay", LocalizedLabel::native("Start day", "Starttag"), 1.0, 31.0).required(),
         ActionArgDef::slider("endMonth", LocalizedLabel::native("End month", "Endmonat"), 1.0, 12.0).required(),
@@ -92,7 +92,7 @@ pub fn definition() -> WindowKindDefinition {
         icon_id: "activity".into(),
         options: WindowOptions::default(),
         // 🔍️ DELIBERATELY EMPTY. These three verbs are declared APP-level in
-        // `crate::editor::model::window_shared_action_definitions`, because an action listed on a
+        // `semio_s_artifact_energy_model_editor_edit::window_shared_action_definitions`, because an action listed on a
         // window kind becomes that window's ALONE (`build_definition`'s `explicitly_owned_action_ids`)
         // and the inspector's result-field select — and the `mod+shift+*` keybindings — dispatch in
         // whatever window happens to be active.
@@ -100,9 +100,9 @@ pub fn definition() -> WindowKindDefinition {
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: Some(<EnergyModelConfig as pack::snapshot::ArtifactDsl>::envelope_id().into()),
-        artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
+        artifact_snapshot_schema: Some(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
-        output_schema: Some(crate::energy_simulation_session::ENERGY_SIMULATION_RUN_SCHEMA.into()),
+        output_schema: Some(crate::session::ENERGY_SIMULATION_RUN_SCHEMA.into()),
         capabilities: Vec::new(),
     }
 }
@@ -149,7 +149,7 @@ fn settings_nodes(settings: &EnergyModelConfig, model: &crate::model::Model, loc
             leaf("energy-setting-weather", format!("{}: {}", say(locale, "Weather file", "Wetterdatei"), say(locale, "bound through the model's weather link", "über die Wetterverknüpfung des Modells gebunden"))),
             leaf(
                 "energy-setting-result-field",
-                format!("{}: {}", say(locale, "Surfaces coloured by", "Flächen eingefärbt nach"), result_field_text(crate::editor::model::results::result_field(settings), locale)),
+                format!("{}: {}", say(locale, "Surfaces coloured by", "Flächen eingefärbt nach"), result_field_text(crate::editor_config::result_field(settings), locale)),
             ),
         ],
     }

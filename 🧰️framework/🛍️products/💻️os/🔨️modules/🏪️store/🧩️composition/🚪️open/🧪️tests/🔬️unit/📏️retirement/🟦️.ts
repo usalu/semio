@@ -277,8 +277,8 @@ test("initial member close keeps original inputs and independent controlled curr
     expect(result.pending).toBe(!transferred);
   }
   const source = await Bun.file(new URL("../../../🏭️operation/🦀️.rs", import.meta.url)).text();
-  const start = source.indexOf("impl<F, P, M> ErasedSnapshotRetirement for InitialMemberStoreOpen");
-  const body = source.slice(start, source.indexOf("impl<F, P, M> Drop for InitialMemberStoreOpen", start));
+  const start = source.indexOf("impl<F, P, M, C> MemberOpenOperation for InitialMemberStoreOpen");
+  const body = source.slice(start, source.indexOf("impl<F, P, M, C> Drop for InitialMemberStoreOpen", start));
   expect(body).toContain("grant: RetainedCloneGrant");
   expect(body).toContain("artifact_retirement_admit_owned");
   expect(body).toContain("next_capacity_byte_demand");
@@ -323,7 +323,7 @@ test("member hot retirement preserves pending decoder and original rejected inpu
   }
   const source = await Bun.file(new URL("../../../🏭️operation/🦀️.rs", import.meta.url)).text();
   const start = source.indexOf("fn drive_active_hydration_retirement");
-  const hot = source.slice(start, source.indexOf("impl<F, P, M> ErasedSnapshotRetirement for InitialMemberStoreOpen"));
+  const hot = source.slice(start, source.indexOf("impl<F, P, M, C> MemberOpenOperation for InitialMemberStoreOpen"));
   expect(hot).toContain("artifact_retirement_admit_owned");
   expect(hot).toContain("*self.history_auxiliary = Some(auxiliary)");
   expect(hot).toContain("*self.rejected_history_input = Some(rejected.input)");
@@ -386,7 +386,7 @@ test("member catalog admission funds ingress before source construction and prog
     expect(projected.tickets).toBe(0);
     expect(accepted ? Buffer.allocUnsafeSlow(256).byteLength : 0).toBe(row.allocated);
   }
-  const root = await Bun.file(new URL("../../../../../🦀️.rs", import.meta.url)).text();
+  const root = await Bun.file(new URL("../../../../../🏗️initialization/🏠️owners/🦀️.rs", import.meta.url)).text();
   const start = root.indexOf("pub fn admit_source_constructor");
   expect(start).toBeGreaterThan(0);
   const constructor = root.slice(start, root.indexOf("    pub fn new(", start));
@@ -394,9 +394,10 @@ test("member catalog admission funds ingress before source construction and prog
   const capacityBody = constructor.slice(constructor.indexOf("fn source_constructor_capacity"));
   expect(capacityBody).toContain("grant.maximum_capacity_bytes < capacity");
   expect(capacityBody).toContain("owners: None");
-  expect(root).toContain("fn member_store_owners(grant: RetainedCloneGrant) -> Result<");
+  const memberContract=await Bun.file(new URL("../../../../../🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",import.meta.url)).text();
+  expect(memberContract).toContain("fn member_store_owners(&self,grant:RetainedCloneGrant)->Result<");
   const operation = await Bun.file(new URL("../../../🏭️operation/🦀️.rs", import.meta.url)).text();
-  expect(operation).toContain("P::member_store_owners(source_grant)");
+  expect(operation).toContain("producer.member_store_owners(source_grant)");
   expect(operation).toContain("maximum_capacity_bytes: source_capacity");
   expect(operation).toContain("progress.fits(source_grant)");
   expect(operation).toContain("genesis_request: ManuallyDrop::new(genesis_request)");
@@ -512,7 +513,8 @@ test("source factory tree quotes capacity and depth before its constructor callb
   }
   const rootUrl = new URL("../../../../../🦀️.rs", import.meta.url);
   const root = await Bun.file(rootUrl).text();
-  expect(root.includes("fn member_store_owners_birth_demand() -> Result<")).toBe(true);
+  const memberContract=await Bun.file(new URL("🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",rootUrl)).text();
+  expect(memberContract.includes("fn member_store_owners_birth_demand(&self)->Result<")).toBe(true);
   expect(root.includes("fn member_store_owners_birth_bytes()")).toBe(false);
   const wire = await Bun.file(new URL("🧵️operation-wire/🦀️.rs", rootUrl)).text();
   const start = wire.indexOf("pub fn operation_wire_preparation_factory_source_birth_demand");
@@ -1125,11 +1127,11 @@ test("actual snapshot input step funds original birth and both physical copies",
   const source = await Bun.file(new URL("../../../🏭️operation/🦀️.rs", import.meta.url)).text();
   const trait = source.slice(source.indexOf("pub trait MemberSnapshotOpenOperation"),source.indexOf("pub struct UnsupportedMemberSnapshotOpen"));
   expect(trait.includes("grant: RetainedCloneGrant")).toBe(true);
-  const actual = source.slice(source.indexOf("impl<P: ArtifactPack"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned> PackMemberSnapshotOpen"));
+  const actual = source.slice(source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen"));
   expect(actual.includes("admit_member_input_buffer")).toBe(true);
   expect(actual.includes("grant.maximum_copy_bytes / 2")).toBe(true);
   expect(actual.includes("self.pending(expected_bytes, progress, cx)")).toBe(true);
-  const publish = source.slice(source.indexOf("fn publish_input(&mut self,"),source.indexOf("impl<P: ArtifactPack"));
+  const publish = source.slice(source.indexOf("fn publish_input(&mut self,"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"));
   expect(publish.includes("retained_progress: progress")).toBe(true);
   expect(actual.includes("self.input.try_reserve_exact(expected_bytes)")).toBe(false);
   console.log("[DEBUG] Actual snapshot input fixed grant/Ajv and original Buffer/RFC6902 oracle pays independent birth and two physical copies, native System proof remains separate");
@@ -1201,7 +1203,7 @@ test("member request physical grants remain caller policy independent of the clo
 test("snapshot input receipts debit the original context wallet exactly once",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
  const actual=fs.readFileSync(path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs"),"utf8");
- const input=actual.slice(actual.indexOf("impl<P> PackMemberSnapshotOpen<P>"),actual.indexOf("impl<P: semio_framework_value::retirement::RetireOwned> PackMemberSnapshotOpen"));
+ const input=actual.slice(actual.indexOf("impl<P,D> ProducedMemberSnapshotOpen<P,D>"),actual.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen"));
  expect(input.includes("cx.consume_retained(progress)")).toBe(true);
  expect(input.includes("let caller = cx.retained_grant()")).toBe(true);
  for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(input.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
@@ -1427,4 +1429,30 @@ test("original history mutation ordinals preserve the full unsigned64 domain acr
  }
  for(const invalid of ["-1","01","18446744073709551616",18446744073709551615])expect(validate(invalid)).toBe(false);
  console.log("[DEBUG] exact u64 history ordinals BigInt/decimal.js/Ajv/native-width independent receiving proof");
+});
+
+
+test("selected member snapshot codec owns typed decode without replacing original request custody",async()=>{
+ const schema=await Bun.file(new URL("../../../🏭️operation/🧬️schema/📦️decoder/🔣️.json",import.meta.url)).json();
+ const law=await Bun.file(new URL("../../../🏭️operation/🧬️schema/📦️decoder/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).json();
+ const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(law)).toBe(true);
+ const rejected=applyPatch(law,[{op:"replace",path:"/source",value:"replacement-pack"}],true,false).newDocument;expect(validate(rejected)).toBe(false);
+ const source=await Bun.file(new URL("../../../🏭️operation/🦀️.rs",import.meta.url)).text();
+ const start=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>");
+ const end=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen");const selected=source.slice(start,end);
+ expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(selected.includes("D::decode_snapshot(&self.input)")).toBe(true);expect(selected.includes("P::decode_pack")).toBe(false);
+ expect(selected.includes("check_step_authority(cx)")).toBe(true);expect(selected.includes("let caller = cx.retained_grant()")).toBe(true);expect(selected.includes("admit_member_input_buffer")).toBe(true);
+ console.log("[DEBUG] Actual member decoder selected by typed producer; original request authority/input receipt source linked; native decode and paid closure remain separate acceptance");
+});
+
+
+test("original Store snapshot ports are independent from selected representation methods",async()=>{
+ const schema=await Bun.file(new URL("../../../../../🧬️schema/📥️snapshot-capabilities/🔣️.json",import.meta.url)).json();
+ const law=await Bun.file(new URL("../../../../../🧬️schema/📥️snapshot-capabilities/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).json();
+ const admit=new Ajv({strict:true,allErrors:true}).compile(schema);expect(admit(law)).toBe(true);expect(admit({...law,snapshotOwner:"copied-projection"})).toBe(false);
+ const source=await Bun.file(new URL("../../../../../🦀️.rs",import.meta.url)).text();
+ const initial=source.indexOf("async fn checkpoint_identity");const start=source.indexOf("impl<P, Mutation> ArtifactStore<P, Mutation>",initial);const end=source.indexOf("fn preflight_runtime_seed",start);const owner=source.slice(start,end);
+ expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(owner.includes("ArtifactPack")).toBe(false);expect(owner.includes("ArtifactStoreSnapshot")).toBe(false);
+ expect(source.includes("pub fn snapshot_owner")).toBe(true);expect(source.includes("pub fn owned_snapshot_retirement_factory")).toBe(true);
+ console.log("[DEBUG] Original Store snapshot/supplier ports share neutral typed owner bounds; publication/Pack operation bounds remain explicit; native source custody is separate acceptance");
 });

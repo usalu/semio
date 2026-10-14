@@ -10,7 +10,8 @@
 //! @see ../../../🚪️io/🦀️.rs — `document_io::import_accept_filter`.
 //! @see ../📥️import-document/🦀️.rs — the verb the shell re-dispatches with the picked file.
 
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -39,7 +40,7 @@ pub fn emit(payload: &ImportDocumentRequest, host: &semio_framework_artifact_flo
     let target = match (&payload.widget_id, &payload.channel, &payload.texture_id) {
         (None, None, None) => None,
         (Some(widget), Some(channel), Some(texture)) if !texture.is_empty() && texture.chars().count() <= 128 => {
-            let (widget, channel, _) = super::set_widget_input::mesh_source_text(host, widget, channel).map_err(Fault::from)?;
+            let (widget, channel, _) = semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(host, widget, channel).map_err(Fault::from)?;
             Some(semio_framework_value::DslValue::Object(vec![("widgetId".into(), semio_framework_value::DslValue::String(widget)), ("channel".into(), semio_framework_value::DslValue::String(channel)), ("textureId".into(), semio_framework_value::DslValue::String(texture.clone()))]))
         }
         _ => return Err(Fault::from("Choose a complete texture target")),

@@ -1,8 +1,7 @@
 //! 🌥️ Energy model mutation — `ChangeSizingObjectDesignDayType`: Swaps which design day the sizing run reads.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSizingObjectDesignDayType {
     pub new_design_day_type: crate::model::DesignDayType,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_sizing_object_design_day_type(id: crate::model::EntityId, new_design_day_type: crate::model::DesignDayType) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSizingObjectDesignDayType(ChangeSizingObjectDesignDayType { id, new_design_day_type })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_sizing_object_design_day_type<Op: From<ChangeSizingObjectDesignDayType>>(id: crate::model::EntityId, new_design_day_type: crate::model::DesignDayType) -> Op {
+    ChangeSizingObjectDesignDayType { id, new_design_day_type }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSizingObjectDesignDayType {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSizingObjectDesignDayType
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSizingObjectDesignDayType>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sizing-object", kind: "change-sizing-object-design-day-type", record: "ChangedSizingObjectDesignDayType" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

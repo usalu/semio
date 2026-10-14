@@ -1,6 +1,50 @@
 //! 🧬️ Process3d artifact schema — every field of the artifact with its state class.
 
-use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod component {
+                        #[path = "../🚪️io/🪶️sqlite/🦀️.rs"]
+                        pub mod sqlite;
+                        #[path = "."]
+                        pub mod binary {
+                            #[path = "../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+                            pub mod snapshot;
+                        }
+                        #[path = "."]
+                        pub mod text {
+                            #[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+                            pub mod snapshot;
+                        }
+                    }
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use crate::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessStep, snapshot::Stock, snapshot::StockQuantity, snapshot::Workshop, snapshot::WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
@@ -48,7 +92,7 @@ pub struct Process3dArtifact {
 //#region 🔖️Conversions
 impl Default for Process3dArtifact {
     fn default() -> Self {
-        let base = crate::empty_process3d_snapshot();
+        let base = crate::snapshot::empty_process3d_snapshot();
         Self {
             workshop: base.workshop,
             stock_id: base.stock_id,
@@ -65,8 +109,8 @@ impl Default for Process3dArtifact {
 
 impl Process3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::Process3dSnapshot {
-        crate::Process3dSnapshot {
+    pub fn to_snapshot(&self) -> crate::snapshot::Process3dSnapshot {
+        crate::snapshot::Process3dSnapshot {
             workshop: self.workshop.clone(),
             stock_id: self.stock_id.clone(),
             stock_label: self.stock_label.clone(),
@@ -80,7 +124,7 @@ impl Process3dArtifact {
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::Process3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::snapshot::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
             stock_id: snapshot.stock_id,
@@ -95,7 +139,7 @@ impl Process3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::Process3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::snapshot::Process3dSnapshot) {
         self.workshop = snapshot.workshop;
         self.stock_id = snapshot.stock_id;
         self.stock_label = snapshot.stock_label;
@@ -108,55 +152,11 @@ impl Process3dArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.process.process3d` — twenty handcrafted schema leaves.
-pub fn process3d_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.process.process3d",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
+
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
-
-//#region 🔖️ExampleFixtures
 
 
 
-
-
-
-//#endregion 🔖️ExampleFixtures
 
 //#region 🔖️Catalog
 
@@ -188,7 +188,7 @@ impl MachineCatalog for GenericCatalog {
     }
 
     fn machines(&self) -> Vec<WorkshopMachine> {
-        crate::generic_machines()
+        crate::snapshot::generic_machines()
     }
 }
 
@@ -742,7 +742,7 @@ pub fn concrete_catalog() -> ConcreteCatalog {
 /// `A step with id "step-…" already exists` (`repeated_world_pointer_down_each_dispatch_a_mutation`).
 /// The salt walk is bounded by the roster length: `n + 1` distinct candidates cannot all collide
 /// with `n` existing ids.
-pub fn next_step_id(snapshot: &crate::Process3dSnapshot) -> String {
+pub fn next_step_id(snapshot: &crate::snapshot::Process3dSnapshot) -> String {
     let roster = snapshot.step_payloads.iter().map(|step| step.id.as_str()).collect::<Vec<_>>().join("\u{1f}");
     (0..=snapshot.step_payloads.len())
         .map(|salt| format!("step-{}", &framework_hash::hash_bytes(format!("{roster}\u{1e}{salt}").as_bytes())[..12]))
@@ -750,36 +750,19 @@ pub fn next_step_id(snapshot: &crate::Process3dSnapshot) -> String {
         .expect("one of n+1 distinct step-id candidates is free of n existing ids")
 }
 
-/// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command
-/// needs: inserting a step at the viewer's replay cursor and removing a step by id. Shared by the
-/// `🎮️commands/🪜️step` and `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an
-/// immutable `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
-///
-/// ⏱️ The cursor is VIEW state (`Process3dConfig.resolved_up_to`), never a document field: a step drawn while the
-/// viewer replays the timeline lands at the cursor (clamped to the timeline), and the caller moves its own cursor
-/// with [`process3d_cursor_after_insert`] / [`process3d_cursor_after_remove`] on the config lane.
-pub fn insert_step_mutations(snapshot: &crate::Process3dSnapshot, step: ProcessStep, cursor: Option<usize>) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Process3dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-    use crate::schema::mutations::create_step;
-    let index = cursor.map_or(snapshot.step_payloads.len(), |cursor| cursor.min(snapshot.step_payloads.len()));
-    vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })]
-}
 
-pub fn remove_step_mutations(snapshot: &crate::Process3dSnapshot, id: &str) -> Option<Vec<crate::standards::v1::subsets::any::schema::mutations::Process3dMutation>> {
-    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
-    use crate::schema::mutations::delete_step;
-    snapshot.step_payloads.iter().any(|step| step.id == id).then(|| vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })])
-}
+
+
 
 /// ⏩️ The viewer's cursor after a step was inserted at it on `snapshot`: one past the inserted step, so the new step
 /// is shown; an unset cursor (show everything) stays unset.
-pub fn process3d_cursor_after_insert(snapshot: &crate::Process3dSnapshot, cursor: Option<usize>) -> Option<usize> {
+pub fn process3d_cursor_after_insert(snapshot: &crate::snapshot::Process3dSnapshot, cursor: Option<usize>) -> Option<usize> {
     cursor.map(|cursor| cursor.min(snapshot.step_payloads.len()) + 1)
 }
 
 /// ⏪️ The viewer's cursor after the step `id` was removed from `snapshot`: pulled back by one when it sat past the
 /// removed step, unchanged otherwise.
-pub fn process3d_cursor_after_remove(snapshot: &crate::Process3dSnapshot, id: &str, cursor: Option<usize>) -> Option<usize> {
+pub fn process3d_cursor_after_remove(snapshot: &crate::snapshot::Process3dSnapshot, id: &str, cursor: Option<usize>) -> Option<usize> {
     let removed = snapshot.step_payloads.iter().position(|step| step.id == id);
     match (cursor, removed) {
         (Some(cursor), Some(removed)) if cursor > removed => Some(cursor - 1),
@@ -789,7 +772,7 @@ pub fn process3d_cursor_after_remove(snapshot: &crate::Process3dSnapshot, id: &s
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
+
+/// 🧬️ The artifact facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const ARTIFACT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };

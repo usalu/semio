@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun repo run @semio-tech/fem-js:test"
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/fem-js:test"
   },
   "dependencies": {},
   "devDependencies": {

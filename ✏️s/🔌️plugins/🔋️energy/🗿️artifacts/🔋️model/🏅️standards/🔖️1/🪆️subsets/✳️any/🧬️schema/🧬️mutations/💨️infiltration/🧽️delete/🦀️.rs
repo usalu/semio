@@ -1,8 +1,7 @@
 //! 🧽️ Energy model mutation — `DeleteInfiltration`: Removes one zone infiltration specification, leaving the zone airtight.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct DeleteInfiltration {
     pub id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_infiltration(id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::DeleteInfiltration(DeleteInfiltration { id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn delete_infiltration<Op: From<DeleteInfiltration>>(id: crate::model::EntityId) -> Op {
+    DeleteInfiltration { id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for DeleteInfiltration {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteInfiltration
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteInfiltration> + From<crate::CreateInfiltration>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "infiltration", kind: "delete-infiltration", record: "DeletedInfiltration" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

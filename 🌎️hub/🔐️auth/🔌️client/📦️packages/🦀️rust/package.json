@@ -2,9 +2,9 @@
   "name": "@semio-tech/hub-auth-client-rs",
   "private": true,
   "scripts": {
-    "check": "bun repo run @semio-tech/hub-auth-client-rs:check",
-    "test": "bun repo run @semio-tech/hub-auth-client-rs:test",
-    "test-source": "bun repo run @semio-tech/hub-auth-client-rs:test-source"
+    "check": "bun --cwd \"../../../../..\" repo run @semio-tech/hub-auth-client-rs:check",
+    "test": "bun --cwd \"../../../../..\" repo run @semio-tech/hub-auth-client-rs:test",
+    "test-source": "bun --cwd \"../../../../..\" repo run @semio-tech/hub-auth-client-rs:test-source"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

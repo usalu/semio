@@ -1,4 +1,9 @@
-use super::*;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::*;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_value_derive::{FromValue, ToValue};
+use pack::snapshot::ArtifactDsl;
 use semio_framework::kernel::Effect;
 
 /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
@@ -6,7 +11,7 @@ use semio_framework::kernel::Effect;
 /// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
 #[test]
 fn set_active_example_loads_the_demo_fixture_2d() {
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
@@ -22,7 +27,7 @@ fn set_active_example_loads_the_demo_fixture_2d() {
 
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document_2d() {
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
@@ -32,7 +37,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert_eq!(loaded, semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    assert_eq!(loaded, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
 }
 
 /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
@@ -40,7 +45,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
 /// emit operations" guard would otherwise reject it.
 #[test]
 fn set_active_example_is_declared_as_operation_2d() {
-    let definition = crate::editor::fem2d::create_fem2d_app();
+    let definition = semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
@@ -51,7 +56,7 @@ fn set_active_example_is_declared_as_operation_2d() {
 /// switcher dispatches that id verbatim, so any drift makes the switcher a no-op.
 #[test]
 fn the_declared_example_option_is_the_bundled_example_id_2d() {
-    let definition = crate::editor::fem2d::create_fem2d_app();
+    let definition = semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     let example = action.args.iter().find(|arg| arg.id == "exampleId").expect("exampleId arg declared");
     match example.control() {

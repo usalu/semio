@@ -4,7 +4,7 @@
 //! with zero trace by a cancel, and deaf to the late ticks of a closed press.
 
 use super::*;
-use crate::editor::raster::config::RasterPixelSelection;
+use crate::selection::RasterPixelSelection;
 use semio_framework_plugin::{AppOperationContext, HistoryView};
 
 fn document(locked: bool, visible: bool) -> RasterSnapshot {
@@ -29,7 +29,7 @@ fn leaf(mutation: RasterMutation) -> PaintStrokeLeaf {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 //#region 🎨️Leaf
@@ -56,7 +56,7 @@ fn a_mask_stroke_paints_the_session_mask_value_as_its_grey_level() {
 #[test]
 fn the_session_selection_clips_only_strokes_on_its_own_layer_and_target() {
     let document = document(false, true);
-    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![crate::mutations::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, crate::mutations::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
+    let selected = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "ink".into(), target: "pixels".into(), width: 4, height: 3, spans: vec![semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan { start: 6, length: 3, coverage: 128 }] }), ..config("pixels") };
     let built = leaf(paint_stroke_leaf(&stroke("ink", "brush"), &document, &selected).expect("the clipped stroke paints"));
     assert_eq!(built.selection, Some(vec![RasterSelectionSpan { start: 1, length: 2, coverage: 255 }, RasterSelectionSpan { start: 6, length: 3, coverage: 128 }]));
     let elsewhere = RasterConfig { pixel_selection: Some(RasterPixelSelection { layer_id: "other".into(), ..selected.pixel_selection.clone().expect("a selection") }), ..selected };
@@ -159,7 +159,7 @@ fn the_window_previews_its_open_stroke_through_the_one_rasterizer() {
     let (_, open) = handle_in_window(&tick("stream", "press-1", &[0.5, 3.5], &[1.5, 1.5]), &doc, &cfg, &RasterCompositeWindowTransient::default()).expect("the tick opens the stroke");
     let preview = raster_stroke_preview(&document, &open).expect("the open stroke previews");
     let leaf: RasterMutation = semio_framework_value::FromValue::from_value(open.stroke.as_deref().expect("in flight").stroke.clone()).expect("the provisional leaf decodes");
-    let painted = crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation(&document, &leaf).expect("the provisional leaf paints");
+    let painted = semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation(&document, &leaf).expect("the provisional leaf paints");
     assert_eq!(preview, painted, "the preview is the provisional leaf through the one rasterizer");
     assert_ne!(preview, document, "the preview shows a stroke the document does not hold");
     assert!(raster_stroke_preview(&document, &RasterCompositeWindowTransient::default()).is_none(), "a window at rest previews nothing");

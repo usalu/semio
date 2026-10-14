@@ -26,46 +26,13 @@
 //! No stl, obj or png hop is declared: a node kind definition carries no geometry and no raster, so
 //! those formats are not claimed at all (a declared hop that can only refuse is a stub).
 
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::Block2dAnalyzer;
-    use crate::Block2dSnapshot;
-    use {store::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,store::io::ComposeError,store::io::ComposeSource,store::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+#![allow(async_fn_in_trait)]
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block2d", standard: StandardId("1"), subset: SubsetId("*") };
-
-    /// 🎹️ The `ArtifactComposition` facet `derive_artifact_facets!` binds in `🧬️schema/🦀️.rs`.
-    /// Native-only by design: foreign dialects are the `io_mechanism` entries in `io()` below, not
-    /// composer sources.
-    pub struct Block2dComposerComposition;
-
-    impl ArtifactComposition for Block2dComposerComposition {
-        type Snapshot = Block2dSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT]
-        }
-
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
-                    };
-                    let analysis = Block2dAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-            }
-            Err(ComposeError { message: "Block2dComposerComposition: no source in this artifact's own dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
 
 //#region 🔖️IoDeclaration
 /// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
@@ -73,8 +40,8 @@ pub use derived_composition::*;
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use semio_s_artifact_block_2d_io_write::serializers::artifacts as export;
+    use semio_s_artifact_block_2d_io_read::deserializers::artifacts as import;
     use crate::{Block2dMutation, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
@@ -105,127 +72,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::bare_artifact_codec::<Block2dSnapshot, Block2dMutation>(BLOCK_2D_SCHEMA.to_string()),
+            codec: crate::store::bare_artifact_codec::<Block2dSnapshot, Block2dMutation>(BLOCK_2D_SCHEMA.to_string()),
         },
         entries: entries(),
     }
 }
 //#endregion 🔖️IoDeclaration
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-#[path = "🔣️json/🦀️.rs"]
-pub(crate) mod json;
-
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
-
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-
-pub mod derived_construction {
-    use crate::{Block2dDiff, Block2dMutation, Block2dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct Block2dBuilderConstruction {
-        snapshot: Block2dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Block2dBuilderConstruction {
-        type Snapshot = Block2dSnapshot;
-        type Mutation = Block2dMutation;
-        type Diff = Block2dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Block2dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Block2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Block2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
-
-pub mod derived_analysis {
-    use crate::Block2dSnapshot;
-    use {store::io::Analysis,store::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct Block2dParts {
-        pub snapshot: Option<Block2dSnapshot>,
-    }
-
-    pub struct Block2dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Block2dAnalyzerAnalysis {
-        type Parts = Block2dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block2d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Block2dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Block2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Block2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Block2dBuilderFacets {
@@ -238,5 +90,76 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Block2dComposer,
 );
 
-#[path="📤️export/🧵️serializers/🗿️artifacts/🧩️puzzle/🦀️.rs"]
-pub mod puzzle_catalog;
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. `pub` (was
+/// private): the new `🪆️subsets/✳️any/🦀️.rs` reads it to build `io_declaration()`'s native
+/// codec pairs, the same way trinity's own migration needed its `pilot_languages()` made `pub`.
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "block.block2d",
+                    extension: Some("block2d"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("block.block2d"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "block.block2d.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("block.block2d.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "block.block2d.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("block.block2d.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "2d.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("2d.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "2d.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("2d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
+//#region 🪢️Mounts
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+//#endregion 🪢️Mounts

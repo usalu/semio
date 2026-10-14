@@ -8,9 +8,16 @@
 //! editor and the viewer (not inside either) because both surfaces draw it and a viewer may not
 //! import through its sibling editor.
 
-use crate::fem3d_engine::mesh_preview;
-use crate::model::Dof;
-use crate::{element_id, load_id, Fem3dSnapshot, FemAxis, FemDof, FemElement, FemLoad, FemSolid};
+use semio_s_artifact_fem_3d_engine::fem3d_engine::mesh_preview;
+use semio_s_fem_model::Dof;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 
@@ -196,7 +203,7 @@ fn dof_direction(dof: FemDof, value: f64) -> Option<[f64; 3]> {
 /// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
 pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
-    let node_pos = |node: &crate::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
+    let node_pos = |node: &semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
         instances.push(instance(&node.id, FEM3D_GRANULARITY_NODE, "box", node_pos(node), [0.0, 0.0, 0.0, 1.0], [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D], &node.id));
@@ -274,11 +281,11 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
 /// duplicated vertex triple per triangle) plus its one identity-transform instance keyed by the
 /// solid's own id — `nodal_stress`, when present, colors each vertex by
-/// `crate::app_surface::von_mises_color` (min/max taken across ALL solids' averaged values), driving
+/// `semio_s_fem_app_surface::von_mises_color` (min/max taken across ALL solids' averaged values), driving
 /// the react renderer's vertex-color contour (see `PaintTexturedMesh`). `displacements` deforms vertex
 /// positions the same way `fem3d_structural_instances` deforms node/member instances.
 pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
-    use crate::app_surface::{hex_to_rgb01, von_mises_color};
+    use semio_s_fem_app_surface::{hex_to_rgb01, von_mises_color};
 
     let mut meshes = Vec::new();
     let mut instances = Vec::new();

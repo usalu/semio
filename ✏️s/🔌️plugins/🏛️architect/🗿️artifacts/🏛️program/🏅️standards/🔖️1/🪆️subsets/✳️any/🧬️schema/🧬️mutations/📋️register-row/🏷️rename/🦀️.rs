@@ -1,8 +1,8 @@
 //! 🏷️ ProgramSnapshot mutation — `rename-register-row` leaf: the generic rename over every id-keyed register, typed by the
-//! register catalog generated from `🗄️registers/🧬️schema/🔣️.json`.
+//! register catalog generated from the `x-semio-collection-catalog` of `📸️snapshot/🔣️.json`.
 
 use crate::standards::v1::subsets::any::schema::kernel::EntityId;
-use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterKey;
+use crate::standards::v1::subsets::any::schema::registers::RegisterKey;
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 

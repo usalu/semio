@@ -1,8 +1,7 @@
 //! 🧩️ Energy model mutation — `ChangeSurfaceClass`: Sets which of the eight boundary roles the surface plays — the role the kernel reads to decide whether it sees sky, ground or another zone.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeSurfaceClass {
     pub new_class: crate::model::SurfaceClass,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_surface_class(id: crate::model::EntityId, new_class: crate::model::SurfaceClass) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSurfaceClass(ChangeSurfaceClass { id, new_class })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_surface_class<Op: From<ChangeSurfaceClass>>(id: crate::model::EntityId, new_class: crate::model::SurfaceClass) -> Op {
+    ChangeSurfaceClass { id, new_class }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSurfaceClass {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceClass
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceClass>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-class", record: "ChangedSurfaceClass" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

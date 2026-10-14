@@ -25,7 +25,7 @@ semio-framework-diagnostic = { path="../../../../../⚠️diagnostic/📦️pack
 semio-framework-value = { path="../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-dsl = { path="../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path="../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-io-sqlite-snapshot = { path="../../../../../🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-io-control = { path="../../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = "1.0.140"

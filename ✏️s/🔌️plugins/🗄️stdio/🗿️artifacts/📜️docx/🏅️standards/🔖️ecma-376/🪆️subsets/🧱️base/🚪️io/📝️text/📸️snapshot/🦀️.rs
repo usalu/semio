@@ -14,10 +14,7 @@ mod snapshot_codec {
 use crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native;
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
-use crate::{
-    standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}},
-    STDIO_DOCX_DOCUMENT_SCHEMA,
-};
+use crate::{standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}}, standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_DOCX_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::list::PagedList;
 use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
@@ -34,7 +31,7 @@ impl pack::snapshot::ArtifactDsl for DocxSnapshot {
 
 
 
-impl crate::schema::snapshot::DocxSnapshot {
+impl crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot {
     pub fn part_text(&self, path: &str) -> Option<String> {
         let key = path.trim_start_matches('/');
         self.xml_part(key)

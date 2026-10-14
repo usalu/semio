@@ -20,7 +20,7 @@ mod tests {
         opc.add_relationship("", "rId1", "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument", "ppt/presentation.xml");
         opc.add_relationship("ppt/presentation.xml", "rId1", "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster", "slideMasters/slideMaster1.xml");
         let bytes = opc::encode_opc(&opc).expect("encode hand-built Strict OPC package");
-        pack::snapshot::ArtifactDsl::print_dsl(&crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("decode actual profile package"))
+        pack::snapshot::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("decode actual profile package"))
     }
 
     #[semio_framework_async_macros::async_test]
@@ -47,7 +47,7 @@ mod tests {
         opc.add_relationship("", "rId1", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument", "ppt/presentation.xml");
         opc.add_relationship("ppt/presentation.xml", "rId1", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster", "slideMasters/slideMaster1.xml");
         let bytes = opc::encode_opc(&opc).expect("encode hand-built Transitional OPC package");
-        let text = pack::snapshot::ArtifactDsl::print_dsl(&crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("decode actual profile package"));
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("decode actual profile package"));
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
         let err = PptxStrictComposerComposition::compose(&sources).expect_err("a Transitional document must not stamp strict");
         assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error && d.code.0.starts_with("stdio.pptx.")), "got {:?}", err.diagnostics);

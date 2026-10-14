@@ -1,8 +1,7 @@
 //! 🪟️ Energy model mutation — `CreateFenestration`: Adds one window, skylight or door to an existing host surface, with the full optics, geometry and attached-shading payload the entity carries — including the optional `glazingConstructionId` that supersedes the three scalar optics fields when it is set.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -32,8 +31,8 @@ pub struct CreateFenestration {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_fenestration(
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_fenestration<Op: From<CreateFenestration>>(
     id: crate::model::EntityId,
     name: String,
     surface_id: crate::model::EntityId,
@@ -51,8 +50,8 @@ pub fn create_fenestration(
     fin_offset_m: f64,
     glazing_construction_id: Option<crate::model::EntityId>,
     index: Option<u32>,
-) -> EnergyModelMutation {
-    EnergyModelMutation::CreateFenestration(CreateFenestration {
+) -> Op {
+    CreateFenestration {
         id,
         name,
         surface_id,
@@ -68,17 +67,20 @@ pub fn create_fenestration(
         overhang_offset_m,
         fin_depth_m,
         fin_offset_m,
-        glazing_construction_id, index })
+        glazing_construction_id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateFenestration {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateFenestration
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateFenestration> + From<crate::DeleteFenestration>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "fenestration", kind: "create-fenestration", record: "CreatedFenestration" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

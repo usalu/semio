@@ -1,9 +1,9 @@
-use super::ChangeGroundwaterLevel;
-use crate::mutations::En1997Mutation;
-use crate::En1997Snapshot;
-pub fn inverse(_payload: &ChangeGroundwaterLevel, base: &En1997Snapshot) -> Result<Vec<En1997Mutation>, semio_framework_value::ValueError> {
+use crate::change_groundwater_level::ChangeGroundwaterLevel;
+
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+pub fn inverse<Op>(_payload: &ChangeGroundwaterLevel, base: &En1997Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_groundwater_level::ChangeGroundwaterLevel> {
     Ok((|| {
-    vec![En1997Mutation::ChangeGroundwaterLevel(ChangeGroundwaterLevel { new_groundwater_level: base.groundwater_level })]
+    vec![Op::from(ChangeGroundwaterLevel { new_groundwater_level: base.groundwater_level })]
 
     })())
 }

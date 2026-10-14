@@ -1,15 +1,23 @@
 //! 🎮️ Puzzle 3d action dispatch — the shared action prologue (transient scene, precompute sync, dispatch) every action
 //! runs, the one dispatch table from an action id to its command arm, and the shell-only actions that need no scene.
 
-use {crate::editor::puzzle3d::session::Puzzle3dActionCtx, crate::editor::puzzle3d::session::Puzzle3dEditor, crate::editor::puzzle3d::session::Puzzle3dSession, crate::editor::puzzle3d::session::push_precompute_scene, crate::editor::puzzle3d::session::scene_config, crate::editor::puzzle3d::session::seed_one_precompute_mesh_fallback};
-use {crate::editor::puzzle3d::snapshot::Puzzle3dInteractionSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::puzzle3d_scene_active_utility, crate::editor::puzzle3d::snapshot::scene_from_snapshot};
-use {crate::editor::puzzle3d::commands::add_target_volume, crate::editor::puzzle3d::commands::apply_sun, crate::editor::puzzle3d::commands::close_vortex_suggestions, crate::editor::puzzle3d::commands::cycle_candidate, crate::editor::puzzle3d::commands::delete_attraction, crate::editor::puzzle3d::commands::delete_selection, crate::editor::puzzle3d::commands::delete_target_volume, crate::editor::puzzle3d::commands::duplicate_selection, crate::editor::puzzle3d::commands::engagement_abort, crate::editor::puzzle3d::commands::export_snapshot, crate::editor::puzzle3d::commands::engagement_control_select, crate::editor::puzzle3d::commands::engagement_input, crate::editor::puzzle3d::commands::engagement_repeat_last, crate::editor::puzzle3d::commands::engagement_submit, crate::editor::puzzle3d::commands::focus_selection, crate::editor::puzzle3d::commands::hover_suggestion, crate::editor::puzzle3d::commands::import_snapshot, crate::editor::puzzle3d::commands::open_import_snapshot, crate::editor::puzzle3d::commands::open_vortex_suggestions, crate::editor::puzzle3d::commands::register_brush_mesh, crate::editor::puzzle3d::commands::relocate_target_volume, crate::editor::puzzle3d::commands::rotate_selection, crate::editor::puzzle3d::commands::scale_selection, crate::editor::puzzle3d::commands::select_same_kind, crate::editor::puzzle3d::commands::set_automatic, crate::editor::puzzle3d::commands::set_brush_placement_contact_tolerance, crate::editor::puzzle3d::commands::set_camera, crate::editor::puzzle3d::commands::set_chunk_size, crate::editor::puzzle3d::commands::set_depth_variable, crate::editor::puzzle3d::commands::set_kind_weight, crate::editor::puzzle3d::commands::set_manual, crate::editor::puzzle3d::commands::set_projection, crate::editor::puzzle3d::commands::set_proximity_radius, crate::editor::puzzle3d::commands::set_selectable_kind, crate::editor::puzzle3d::commands::set_selection_flag, crate::editor::puzzle3d::commands::set_snap_enabled, crate::editor::puzzle3d::commands::set_spacing, crate::editor::puzzle3d::commands::set_target_volume_flag, crate::editor::puzzle3d::commands::set_transform_gumball_flag, crate::editor::puzzle3d::commands::set_visible, crate::editor::puzzle3d::commands::set_vortex_direction, crate::editor::puzzle3d::commands::set_vortex_show, crate::editor::puzzle3d::commands::set_voxel_dims, crate::editor::puzzle3d::commands::target_brush_suggestions, crate::editor::puzzle3d::commands::translate_selection, crate::editor::puzzle3d::commands::world_relocate};
-use {crate::editor::puzzle3d::config::Puzzle3dConfigMutation, crate::editor::puzzle3d::config::Puzzle3dRuntime};
-use crate::editor::puzzle3d::modes::edit::windows::main;
-use crate::editor::puzzle3d::window as window_ownership;
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::Puzzle3dSnapshot;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use {semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dSession, semio_s_artifact_puzzle_3d_editor_session::push_precompute_scene, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::seed_one_precompute_mesh_fallback};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_active_utility, semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot};
+use {semio_s_artifact_puzzle_3d_commands_document::add_target_volume, semio_s_artifact_puzzle_3d_commands_runtime::apply_sun, semio_s_artifact_puzzle_3d_commands_runtime::close_vortex_suggestions, semio_s_artifact_puzzle_3d_commands_runtime::cycle_candidate, semio_s_artifact_puzzle_3d_commands_document::delete_attraction, semio_s_artifact_puzzle_3d_commands_document::delete_selection, semio_s_artifact_puzzle_3d_commands_document::delete_target_volume, semio_s_artifact_puzzle_3d_commands_document::duplicate_selection, semio_s_artifact_puzzle_3d_commands_runtime::engagement_abort, semio_s_artifact_puzzle_3d_commands_document::export_snapshot, semio_s_artifact_puzzle_3d_commands_runtime::engagement_control_select, semio_s_artifact_puzzle_3d_commands_runtime::engagement_input, semio_s_artifact_puzzle_3d_commands_runtime::engagement_repeat_last, semio_s_artifact_puzzle_3d_commands_runtime::engagement_submit, semio_s_artifact_puzzle_3d_commands_document::focus_selection, semio_s_artifact_puzzle_3d_commands_runtime::hover_suggestion, semio_s_artifact_puzzle_3d_commands_document::import_snapshot, semio_s_artifact_puzzle_3d_commands_document::open_import_snapshot, semio_s_artifact_puzzle_3d_commands_runtime::open_vortex_suggestions, semio_s_artifact_puzzle_3d_commands_runtime::register_brush_mesh, semio_s_artifact_puzzle_3d_commands_document::relocate_target_volume, semio_s_artifact_puzzle_3d_commands_document::rotate_selection, semio_s_artifact_puzzle_3d_commands_document::scale_selection, semio_s_artifact_puzzle_3d_commands_document::select_same_kind, semio_s_artifact_puzzle_3d_commands_runtime::set_automatic, semio_s_artifact_puzzle_3d_commands_runtime::set_brush_placement_contact_tolerance, semio_s_artifact_puzzle_3d_commands_runtime::set_camera, semio_s_artifact_puzzle_3d_commands_runtime::set_chunk_size, semio_s_artifact_puzzle_3d_commands_runtime::set_depth_variable, semio_s_artifact_puzzle_3d_commands_runtime::set_kind_weight, semio_s_artifact_puzzle_3d_commands_runtime::set_manual, semio_s_artifact_puzzle_3d_commands_runtime::set_projection, semio_s_artifact_puzzle_3d_commands_runtime::set_proximity_radius, semio_s_artifact_puzzle_3d_commands_runtime::set_selectable_kind, semio_s_artifact_puzzle_3d_commands_document::set_selection_flag, semio_s_artifact_puzzle_3d_commands_runtime::set_snap_enabled, semio_s_artifact_puzzle_3d_commands_runtime::set_spacing, semio_s_artifact_puzzle_3d_commands_document::set_target_volume_flag, semio_s_artifact_puzzle_3d_commands_runtime::set_transform_gumball_flag, semio_s_artifact_puzzle_3d_commands_document::set_visible, semio_s_artifact_puzzle_3d_commands_runtime::set_vortex_direction, semio_s_artifact_puzzle_3d_commands_runtime::set_vortex_show, semio_s_artifact_puzzle_3d_commands_runtime::set_voxel_dims, semio_s_artifact_puzzle_3d_commands_runtime::target_brush_suggestions, semio_s_artifact_puzzle_3d_commands_document::translate_selection, semio_s_artifact_puzzle_3d_commands_document::world_relocate};
+use {semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime};
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
+use semio_s_artifact_puzzle_3d_editor_window as window_ownership;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
@@ -19,7 +27,7 @@ use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
 use {semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
 use semio_framework_plugin::app::EphemeralEmit;
-use crate::editor::puzzle3d::snapshot;
+use semio_s_artifact_puzzle_3d_editor_snapshot as snapshot;
 
 /// 📬️ Persisted and ephemeral effects produced by one Puzzle 3D action.
 pub type Puzzle3dActionEmission<A> = (Emit<Puzzle3dMutation, Puzzle3dConfigMutation>, EphemeralEmit<EditorApp<A>>);
@@ -51,18 +59,18 @@ enum Puzzle3dPrologueSyncStage {
 /// so a staged work that spends many turns here reads exactly the configuration the framework handed it
 /// that turn — only the expensive document-shaped halves are carried across turns.
 #[derive(Default, semio_framework_value::RetireOwned)]
-pub(crate) struct Puzzle3dActionPrologue {
+pub struct Puzzle3dActionPrologue {
     scene: Option<Puzzle3dScene>,
     base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
-    built: Option<crate::standards::v1::subsets::any::schema::SceneConfig>,
+    built: Option<semio_s_artifact_puzzle_3d_model::SceneConfig>,
     tool_run: Option<semio_framework_plugin::ToolRunView>,
 }
 
 impl Puzzle3dActionPrologue {
     /// 🧾️ Half one: the transient scene, straight off the snapshot's typed authority, plus the typed base every
     /// concrete mutation of the action is built against.
-    pub(crate) fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
+    pub fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
         self.base = Some(snapshot.typed_arc());
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
@@ -72,7 +80,7 @@ impl Puzzle3dActionPrologue {
     /// actions never touch this half at all. RESUMABLE — exactly one owed collision-mesh fallback per
     /// call, then the engine scene build, then its push; answers whether another call is still owed, so a
     /// staged work spends one bounded turn on each instead of 15 ms on all of them at once.
-    pub(crate) fn sync_step(&mut self, session: &Puzzle3dSession, action: &str, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> bool {
+    pub fn sync_step(&mut self, session: &Puzzle3dSession, action: &str, config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> bool {
         if !puzzle3d_action_uses_precompute(action) {
             return false;
         }
@@ -134,7 +142,7 @@ impl Puzzle3dActionPrologue {
         let window_before = window_ownership::Puzzle3dWindowConfig::from_runtime(config);
         let transient_before = window_ownership::transient(config, view_state);
         // 🪟️ This action targets the one exact window owner already composed into `config`.
-        let wid = window_id.map_or_else(|| main::WINDOW_KIND_ID.into(), str::to_string);
+        let wid = window_id.map_or_else(|| semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into(), str::to_string);
         let mut ui_scope = puzzle3d_scope(puzzle3d_command_scope_class(action));
         let mut effects = Vec::new();
         let mut interaction_writes = Vec::new();
@@ -178,10 +186,10 @@ impl Puzzle3dActionPrologue {
         // `SetActiveUtility` (host mutual exclusion clears the tool when the utility is non-empty).
         let is_direct_tool_switch = action == SET_ACTIVE_TOOL_ACTION_ID;
         let is_direct_utility_switch = action == SET_ACTIVE_UTILITY_ACTION_ID;
-        let initial_is_fill_tool = active_utility_initial == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID;
-        let next_is_fill_tool = next_active_utility == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID;
+        let initial_is_fill_tool = active_utility_initial == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID;
+        let next_is_fill_tool = next_active_utility == semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID;
         if !is_direct_tool_switch && next_is_fill_tool && !initial_is_fill_tool {
-            effects.push(Effect::SetActiveTool { tool_id: crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into() });
+            effects.push(Effect::SetActiveTool { tool_id: semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.into() });
         }
         if !is_direct_utility_switch && !is_direct_tool_switch && !next_is_fill_tool && next_active_utility != active_utility_initial {
             effects.push(Effect::SetActiveUtility { window_id: wid.clone(), utility_id: next_active_utility });
@@ -208,11 +216,11 @@ impl Puzzle3dActionPrologue {
     }
 
     /// 🧹️ One retained owner per bounded grant, for a staged work's own close cursor.
-    pub(crate) fn close_one(&mut self) -> bool {
+    pub fn close_one(&mut self) -> bool {
         self.scene.take().is_some() || self.base.take().is_some() || self.built.take().is_some()
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.scene.is_none() && self.base.is_none() && self.built.is_none()
     }
 
@@ -220,7 +228,7 @@ impl Puzzle3dActionPrologue {
     /// document seeds a collision fallback for, one that finds none owed, one to build the engine scene,
     /// one to push it, and one to dispatch. A document past this refuses on its work's own capacity
     /// guard rather than running long.
-    pub(crate) const WORK_ITEMS: usize = crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS + 5;
+    pub const WORK_ITEMS: usize = semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_DECODED_ITEMS + 5;
 }
 
 /// 🗨️ The two actions with no document interaction at all, hence no scene scaffolding:
@@ -365,7 +373,7 @@ pub fn puzzle3d_handle_action<A: Puzzle3dEditor>(
 
 use semio_framework_plugin::InteractionVerb;
 use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
-use crate::editor::puzzle3d::snapshot::puzzle3d_viewport_scope;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::puzzle3d_viewport_scope;
 
 /// 🐢️ Fill/distribution slider gestures refresh the world body, fill-tool measures and utility-option
 /// window measures — never the full shell chrome.

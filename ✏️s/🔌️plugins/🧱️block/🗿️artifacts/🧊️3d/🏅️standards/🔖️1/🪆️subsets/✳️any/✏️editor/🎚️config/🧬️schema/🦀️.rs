@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
-use crate::Block3dWindowView;
-use crate::BlockCamera3d;
+use semio_s_artifact_block_3d_model::Block3dWindowView;
+use semio_s_plugin_block::BlockCamera3d;
 use ::semio_framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema)]

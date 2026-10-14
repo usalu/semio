@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::Vdi3805Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 use ::framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -63,10 +71,10 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{CheckReport, CheckResult, CheckStatus, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::standards::v1::subsets::any::schema::{clause, subject_dataset, subject_product, validate_structure, valve_min_kvs_m3_h, ANNEX, RADIATOR_N_MAX, RADIATOR_N_MIN, VALVE_DN_SERIES};
-use crate::standards::v1::subsets::any::schema::snapshot::{attributes_from_records};
-use crate::*;
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, CheckStatus, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_vdi3805_checks::{clause, subject_dataset, subject_product, validate_structure, valve_min_kvs_m3_h, ANNEX, RADIATOR_N_MAX, RADIATOR_N_MIN, VALVE_DN_SERIES};
+use semio_s_artifact_norm_vdi3805_model::attributes_from_records;
+use semio_s_artifact_norm_vdi3805_model::*;
 use std::collections::{BTreeMap, BTreeSet};
 
 fn part_label(sheet: u16) -> String {
@@ -277,7 +285,6 @@ fn heat_attrs_from_product(product: &CatalogueProduct) -> HeatGeneratorAttribute
     }
 }
 
-
 fn attr_leaf_path(article: &str, leaf: &str) -> String {
     product_path(article, &format!("configuration.attributes.{leaf}"))
 }
@@ -289,7 +296,6 @@ fn generic_entry_value_path(article: &str, entries: &[GenericAttribute], key: &s
         product_path(article, "identity.productGroup")
     }
 }
-
 
 fn sync_divergence_remedy(article: &str, configured: &SheetAttributes, derived: &SheetAttributes) -> Remedy {
     match (configured, derived) {
@@ -1549,7 +1555,6 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
         }
         out.push(c.build());
     }
-
 
     {
         let mut bags: Vec<(String, &std::collections::BTreeMap<String, String>)> = vec![
@@ -2899,7 +2904,7 @@ macro_rules! define_vdi_part {
 }
 
 pub mod part_1 {
-    use super::*;
+    use crate::*;
     pub fn metadata() -> &'static SheetEntry {
         &SHEET_ENTRIES[0]
     }
@@ -3015,13 +3020,12 @@ define_vdi_part!(part_99, 99);
 define_vdi_part!(part_100, 100, multi_profile);
 //#endregion 🔖️ComplianceReport
 
-//#region 🧪️ComplianceReportTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
-mod compliance_report_tests;
-//#endregion 🧪️ComplianceReportTests
-
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::Vdi3805Outline;
+pub use crate::outline::Vdi3805Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

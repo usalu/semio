@@ -3,7 +3,7 @@
 mod stack;
 #[path="🧩️ungroup/🦀️.rs"]
 mod ungroup;
-use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_editor_tool::DrawingSession;
 use semio_s_artifact_draw_drawing_model::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
 #[cfg(test)] use semio_s_artifact_draw_drawing_model::layer_base_mut;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
@@ -132,7 +132,7 @@ pub fn handle(payload: &EditSelection, doc: &ArtifactView<'_, DrawingSnapshot>, 
     if payload.operation=="ungroup" {
         let (mutations,selection)=ungroup::plan(doc.snapshot,&ids)?;
         let mut emit=Emit::mutations(mutations);
-        emit.effects.push(crate::commands::canvas_pointer_down::interaction_select_effect(&selection,"replace"));
+        emit.effects.push(semio_s_artifact_draw_drawing_editor_tool::interaction_select_effect(&selection,"replace"));
         return Ok(emit);
     }
     let admission=doc.operation()?;

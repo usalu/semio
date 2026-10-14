@@ -1,7 +1,7 @@
 //! 🚪️ block5d ← json — foreign `Deserializer<Block5dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -20,7 +20,7 @@ pub fn from_json_text(text: &str) -> Result<Block5dSnapshot, IoError> {
     // `significand as f64 * 10^exponent`, off by one ULP for any 17-significant-digit literal
     // (`0.42839899821678995` came back as `0.4283989982167899`), which broke this leaf's own
     // `IoFidelity::Exact` claim for every example carrying full-precision geometry.
-    let raw = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()), true).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)))?;
+    let raw = semio_s_artifact_block_5d_io_write::json_native::convert(semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()), true).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)))?;
     let snapshot: Block5dSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→block5d: {error}"))))?;
     Ok(snapshot)
 }

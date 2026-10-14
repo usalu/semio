@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::op::RasterMutation;
+use crate::RasterMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RasterMutation` to its binary command form.
@@ -26,12 +26,12 @@ pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::Protoco
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::io::text::mutations::{RasterMutationDsl,raster_mutation_to_dsl,raster_mutation_from_dsl};
+use crate::text::{RasterMutationDsl, raster_mutation_to_dsl, raster_mutation_from_dsl};
 
 impl OpBinary for RasterMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

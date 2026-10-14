@@ -1,7 +1,9 @@
 //! 📏️ Borrowed EN1992 native roles admit every authored relational cell before typed construction.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::{invalid,annex,member_kind,support,exposure,ductility,fire_rating,tightness,En1992Snapshot};
-use crate::{MemberKind,SupportCondition,ExposureClass,DuctilityClass,FireRating,TightnessClass,document::AnnexChoice};
+use crate::sqlite::snapshot::{invalid, annex, member_kind, support, exposure, ductility, fire_rating, tightness};
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
+use semio_s_artifact_norm_en1992_model::{MemberKind, SupportCondition, ExposureClass, DuctilityClass, FireRating, TightnessClass};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl as N};
@@ -9,7 +11,7 @@ type Result<T>=std::result::Result<T,ValueError>;
 #[derive(Clone,Copy)]enum Role{Text,Float,UInt,Bool,Annex,Member,Support,Exposure,Ductility,Fire,OptionalTightness}
 use Role::*;
 const WIDTHS:&[(&str,usize)]=&[("en1992_anchor",26),("en1992_anchor_action",31),("en1992_bar_layer",19),("en1992_concrete_grade",8),("en1992_document",10),("en1992_fire",7),("en1992_member",57),("en1992_member_action",31),("en1992_prestress",13),("en1992_prestress_steel",11),("en1992_punching",11),("en1992_reinforcement_grade",18),("en1992_stirrups",8)];
-pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if En1992Snapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns){return Err(ValueError::new(ValueRefusalKind::WorkLimit,"EN1992 authored schema extent exceeds caller limits"))}Ok(())}
+pub(crate)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if En1992Snapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns){return Err(ValueError::new(ValueRefusalKind::WorkLimit,"EN1992 authored schema extent exceeds caller limits"))}Ok(())}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"EN1992 semantic extent overflow"))}
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{
@@ -32,7 +34,7 @@ fn row(value:&F,count:u16,table:&str,base:usize,roles:&[(u16,Role)],c:&mut Censu
 fn collection(value:&F,count:u16,table:&str,roles:&[(u16,Role)],c:&mut Census,n:&mut N<'_>)->Result<()>{for value in items(value)?{row(value,count,table,24,roles,c,n)?;}Ok(())}
 fn optional(value:&F,count:u16,table:&str,roles:&[(u16,Role)],c:&mut Census,n:&mut N<'_>)->Result<()>{if matches!(value,F::Absent){n.step()?;Ok(())}else{row(value,count,table,8,roles,c,n)}}
 const ACTION:&[(u16,Role)]=&[(0,Text),(1,Text),(2,Text),(3,Text),(4,Float),(5,Float),(6,Float),(7,Float),(8,Float),(9,Float),(10,Float),(11,Float)];
-pub(super)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{
+pub(crate)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{
  extent(limits)?;n.scoped_stage(|n|{
   n.begin_stage(0)?;shape(source,10)?;let mut c=Census{limits,rows:0,bytes:0};
   c.row("en1992_document",add(8,fields(source,&[(0,Annex),(1,Text),(2,Float),(3,Float),(4,Text)],n)?)?,n)?;

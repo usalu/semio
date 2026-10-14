@@ -5,13 +5,13 @@
 //! sample. Layout has no drag gesture on this surface — a move is a hover hit-test only — so the
 //! batch collapses to its last sample (intermediate hovers are moot once a newer one exists).
 
-use crate::editor::layout::canvas::active_page;
-use crate::editor::layout::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
+use crate::canvas::active_page;
+use crate::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::layout::engine::scene::hit_test_page_frames;
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_engine::scene::hit_test_page_frames;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -96,5 +96,5 @@ pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, LayoutSnapshot
     }
     let [x, y] = payload.last_sample();
     let hit = hit_test_at(doc.snapshot, &current(cfg), x, y, payload.width, payload.height);
-    Ok(Emit::effect(crate::editor::layout::layout_hover_effect(hit.as_deref())))
+    Ok(Emit::effect(crate::layout_hover_effect(hit.as_deref())))
 }

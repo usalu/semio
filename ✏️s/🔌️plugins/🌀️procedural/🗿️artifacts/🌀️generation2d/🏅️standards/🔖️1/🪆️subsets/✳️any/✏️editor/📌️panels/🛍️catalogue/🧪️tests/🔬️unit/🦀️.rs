@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body, render_with_view};
+use semio_s_artifact_procedural_2d_editor_panels::catalogue::*;
+use crate::app_fixture::{app, close, render as render_body, render_with_view};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 const MODES_SECTION: &str = "procedural2d-play-catalogue.modes";
@@ -125,7 +125,7 @@ async fn component_rows_drag_the_flow_widget_descriptor() {
     if let Some((section, index, neuron_kind)) = sections.iter().find_map(|section| {
         section.items.iter().position(|item| item.kind == "neuron").map(|index| (section, index, section.items[index].neuron_kind.clone().unwrap_or_default()))
     }) {
-        let mut neuron_app = crate::editor::generation2d::unit_tests::context::app().await;
+        let mut neuron_app = crate::app_fixture::app().await;
         let node_key = format!("{GENERATION2D_PLAY_CATALOGUE_SECTION}{}procedural2d-play-catalogue.{}", semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR, section.id);
         let view = ViewModel {
             tree_windows: vec![TreeWindowRequest { body_key: GENERATION2D_PLAY_BODY_CATALOGUE.into(), node_key, open: Some(true), offset: index as u32, rows: 1 }],

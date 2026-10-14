@@ -5,7 +5,7 @@ pub(crate) mod history;
 #[path = "🏭️operation/🦀️.rs"]
 mod operation;
 pub use history::factory::MemberOpenDeclaration;
-pub use operation::{admit_member_input_buffer, MemberSnapshotOpenProgress, InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+pub use operation::{admit_member_input_buffer, MemberSnapshotOpenProgress, InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, ProducedMemberSnapshotOpen, MemberSnapshotDecoder, ArtifactPackSnapshotDecoder, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
 #[path="🎟️admission/🦀️.rs"]
 mod source_admission;
 pub use source_admission::{MemberOpenSourceAdmission,diagnostic_error as member_admission_diagnostic};

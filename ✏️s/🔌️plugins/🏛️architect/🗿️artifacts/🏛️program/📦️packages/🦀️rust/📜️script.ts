@@ -71,12 +71,12 @@ if (segments[0] === "program-document-contract") {
   }
 }
 
-/** 🏭️ Generates (or with \`--check\` verifies) the Rust and TypeScript register catalog beside its JSON schema source \`🧬️schema/🗄️registers/🧬️schema/🔣️.json\`. */
+/** 🏭️ Generates (or with \`--check\` verifies) the Rust and TypeScript register catalog from the \`x-semio-collection-catalog\` of its snapshot schema \`🧬️schema/📸️snapshot/🔣️.json\`. */
 class RegisterCatalogScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length > 1 || (args.length === 1 && args[0] !== "--check")) throw Error("generate-register-catalog [--check]");
     const { generateCollectionCatalogV1 } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts");
-    const stale = generateCollectionCatalogV1(join(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧬️schema/🔣️.json"), args[0] === "--check" ? "check" : "write");
+    const stale = generateCollectionCatalogV1(join(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"), args[0] === "--check" ? "check" : "write");
     if (args[0] === "--check" && stale.length) throw Error(`register catalog is stale: ${stale.join(", ")}`);
     console.log(`[register-catalog] ${stale.length ? `wrote ${stale.length}` : "current"}`);
   }

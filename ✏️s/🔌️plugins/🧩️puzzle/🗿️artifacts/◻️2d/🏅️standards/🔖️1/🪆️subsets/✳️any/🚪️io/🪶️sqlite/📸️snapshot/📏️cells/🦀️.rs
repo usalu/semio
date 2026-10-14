@@ -1,7 +1,7 @@
 //! 🧩️ Borrowed Puzzle2d native roles admit the complete authored board and catalog before ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{invalid,specificity,Puzzle2dSnapshot};
-use crate::{Puzzle2dNodeAnchor,Puzzle2dCompatSpecificity};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
 use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl as N};
@@ -9,7 +9,7 @@ type Result<T>=std::result::Result<T,ValueError>;
 #[derive(Clone,Copy)]enum Role{Text,Float,Bool,Int,OptionalText,OptionalFloat,OptionalBool,OptionalInt,Anchor,Specificity}
 use Role::*;
 const WIDTHS:&[(&str,usize)]=&[("puzzle2d_attribute",7),("puzzle2d_author",8),("puzzle2d_base_kind",4),("puzzle2d_camera",11),("puzzle2d_catalog_edge_kind",9),("puzzle2d_catalog_handle_kind",11),("puzzle2d_catalog_node_kind",11),("puzzle2d_catalog_wire_kind",10),("puzzle2d_compatible_kind",4),("puzzle2d_document",2),("puzzle2d_edge",35),("puzzle2d_handle",18),("puzzle2d_handle_template",19),("puzzle2d_kind_catalogs",2),("puzzle2d_kind_compatibility",8),("puzzle2d_meta",3),("puzzle2d_node",30),("puzzle2d_representation",9),("puzzle2d_representation_tag",4),("puzzle2d_target_region",19)];
-pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if Puzzle2dSnapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||limits.max_columns<35||limits.max_rows<3{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Puzzle2d authored schema extent exceeds caller limits"))}Ok(())}
+pub fn extent(limits:SqliteDatabaseLimits)->Result<()>{if Puzzle2dSnapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<WIDTHS.len()||limits.max_columns<35||limits.max_rows<3{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Puzzle2d authored schema extent exceeds caller limits"))}Ok(())}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Puzzle2d semantic extent overflow"))}
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{
@@ -33,7 +33,7 @@ fn fields(record:&R,roles:&[(u16,Role)],n:&mut N<'_>)->Result<usize>{let mut byt
 fn row(value:&F,count:u16,table:&str,base:usize,roles:&[(u16,Role)],c:&mut Census,n:&mut N<'_>)->Result<()>{let value=record(value)?;shape(value,count)?;c.row(table,add(base,fields(value,roles,n)?)?,n)}
 fn collection(value:&F,count:u16,table:&str,roles:&[(u16,Role)],c:&mut Census,n:&mut N<'_>)->Result<()>{for value in items(value)?{row(value,count,table,24,roles,c,n)?;}Ok(())}
 fn texts(value:&F,table:&str,c:&mut Census,n:&mut N<'_>)->Result<()>{for value in items(value)?{c.row(table,add(24,cost(value,Text,n)?)?,n)?;}Ok(())}
-pub(super)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{
+pub fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->Result<()>{
  extent(limits)?;n.scoped_stage(|n|{
   n.begin_stage(0)?;shape(source,6)?;let mut c=Census{limits,rows:0,bytes:0};
   c.row("puzzle2d_document",add(8,fields(source,&[(0,Text)],n)?)?,n)?;

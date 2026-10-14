@@ -1,6 +1,6 @@
 //! 📦️ EN 1992 design of concrete structures — binary document surface + laws (constitutional: pack).
 
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -25,16 +25,13 @@ mod tests;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
-use super::*;
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::{
-    Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition,
-    TightnessClass,
-};
+use crate::binary::snapshot::*;
+use crate::binary::snapshot::*;
+use semio_s_artifact_norm_en1992_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 /// 📦️ Decodes `.pack.semio` envelope.
 pub fn decode_en1992_pack(bytes: &[u8]) -> Result<En1992Snapshot, String> {
     <En1992Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
@@ -44,6 +41,6 @@ pub fn encode_en1992_pack(snapshot: &En1992Snapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
-pub use native_snapshot_codec::*;
+pub use crate::binary::snapshot::native_snapshot_codec::*;
 
-crate::impl_norm_artifact_record!(@binary En1992Snapshot, extension="en1992", envelope_id="norm.en1992", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1992Snapshot, extension="en1992", envelope_id="norm.en1992", sqlite=crate::sqlite::snapshot::codec);

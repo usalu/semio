@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 semio-framework = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }

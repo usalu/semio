@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, HashMap};
 
 /// 📊 Minimum, maximum and arithmetic mean of one measured quantity.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ScalarStats {
     pub min: f64,
     pub max: f64,
@@ -22,7 +22,7 @@ pub struct ScalarStats {
 
 /// 🔲 Axis-aligned bounds of the used vertices.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],
@@ -30,7 +30,7 @@ pub struct MeshBounds {
 
 /// 🧊️ Unit-density mass properties of a closed, consistently wound mesh.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshMassProperties {
     pub volume: f64,
     pub centroid: [f64; 3],
@@ -40,7 +40,7 @@ pub struct MeshMassProperties {
 
 /// 🪞 Topology, element quality and mass report of one mesh.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct MeshQualityReport {
     pub vertex_count: usize,
     pub isolated_vertices: usize,

@@ -3,8 +3,8 @@
 //! directory name stays `🛠️machines`; see the migration report's `sharedFileRequests` for the
 //! rename once a later pass can touch `🦀️.rs`).
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, WorkshopMachine};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::WorkshopMachine};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CreateMachine
@@ -22,7 +22,7 @@ pub struct CreateMachine {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for CreateMachine
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_machine::DeleteMachine>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::delete_machine::DeleteMachine>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "machine", kind: "create-machine", record: "CreatedMachine" };
 

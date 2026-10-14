@@ -5,7 +5,7 @@
 //! only (see the surface root's `PptxTransitionalEditorCommand::SetPage` for the honest
 //! multi-shape scope note).
 
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::TreeWindows;
@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 /// ✏️ Builds one faithfully addressed draft per text-bearing slide shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn editable_pages(document: &PptxSnapshot) -> Result<Vec<EditableDocumentPage>, String> {
-    Ok(crate::schema::mutations::xml_address::pptx_slides(document)?
+    Ok(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(document)?
         .iter()
         .enumerate()
         .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape.text.clone().map(|text| EditableDocumentPage::new(page_index as u32, item_index as u32, text))))

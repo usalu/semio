@@ -1,0 +1,53 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-2d-text-font-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "📇️ Shipped font families and their progressive catalog admission."
+
+[package.metadata.semio]
+role = "framework"
+id = "2d-text-font-catalog"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_2d_text_font_catalog"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-2d-text-font = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-font-anta-latin-ext-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-anta-latin-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-anta-math-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-anta-symbols-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-kelly-slab-cyrillic-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-kelly-slab-latin-ext-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-kelly-slab-latin-regular = { path = "../../../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-activities-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-faces-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-flags-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-food-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-joined-forms-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-nature-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-objects-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-people-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-regions-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-supplement-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-symbols-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-travel-regular = { path = "../../../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-share-tech-mono-latin-regular = { path = "../../../../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+ttf-parser = "0.25.1"
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-2d-text-font-testing = { path = "../../../🧪️testing/📦️packages/🦀️rust" }

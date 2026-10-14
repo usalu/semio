@@ -54,7 +54,7 @@ fn binary_native_payload(snapshot:&BinarySnapshot,encoding:store::sqlite_snapsho
 async fn sqlite_snapshot_binary_actual_factory_canonical_external_carrier(){
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Binary full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Binary full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::STDIO_BINARY_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<BinarySnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.binary".into(),standard:"raw".into(),subset:"*".into()};let snapshot=binary_canonical_carrier_snapshot();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=binary_native_payload(&snapshot,encoding);let database=with_binary_decoding(|owner|(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default()),owner)).unwrap().value;assert_eq!(database,expected);let mut input=Some(database);let payload=with_binary_encoding(|owner|(provider.import)(&codec.schema,&dialect,&mut input,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default()),owner)).unwrap().value;let restored=binary_decode(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();assert_eq!(restored,snapshot);}
@@ -91,7 +91,7 @@ fn binary_canonical_carrier_snapshot()->BinarySnapshot{let mut snapshot=binary_n
 async fn sqlite_snapshot_binary_actual_typed_file_preserves_complete_literal_owned_fields(){
  use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
- semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Binary typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+ semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Binary typed SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.binary".into(),standard:"raw".into(),subset:"*".into()};
  let snapshot=binary_native_control_snapshot();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  assert_eq!(database.tables.iter().map(|table|table.rows.len()).sum::<usize>(),usize::try_from(binary_native_control_fixture()["expectedRows"].as_u64().unwrap()).unwrap());

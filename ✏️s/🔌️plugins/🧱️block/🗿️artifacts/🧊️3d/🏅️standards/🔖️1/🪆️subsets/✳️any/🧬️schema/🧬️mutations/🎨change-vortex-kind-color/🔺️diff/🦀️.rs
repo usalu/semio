@@ -1,12 +1,12 @@
 //! 🔺️ Diff for `ChangeVortexKindColor`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block3dVortexKindsDelta, Block3dVortexKindsPatchEntry, Block3dVortexKindPatch};
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
+use semio_s_artifact_block_3d_diff::{Block3dVortexKindsDelta, Block3dVortexKindsPatchEntry, Block3dVortexKindPatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeVortexKindColor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-    let current = crate::vortex_kinds_of(base);
+pub fn diff(payload: &crate::change_vortex_kind_color::ChangeVortexKindColor, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+    let current = semio_s_artifact_block_3d_model::vortex_kinds_of(base);
     let Some(existing) = current.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex-kind", payload.id), vec![payload.id.clone()]);
     };

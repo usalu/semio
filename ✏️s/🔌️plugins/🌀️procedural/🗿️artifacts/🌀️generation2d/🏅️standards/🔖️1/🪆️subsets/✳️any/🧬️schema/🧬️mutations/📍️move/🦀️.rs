@@ -3,9 +3,8 @@
 //! the pre-semantic generic slot this triad was repurposed from — see `sharedFileRequests` in this
 //! ticket's wave2 report for the glue.rs rename that would align the directory/module with the verb.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_artifact_flow_flow::WidgetLayout;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,19 +20,22 @@ pub struct MoveWidget {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn move_widget(id: String, layout: WidgetLayout) -> Generation2dMutation {
-    Generation2dMutation::MoveWidget(MoveWidget { id, layout })
+pub fn move_widget<Op: From<MoveWidget>>(id: String, layout: WidgetLayout) -> Op {
+    Op::from(MoveWidget { id, layout })
 }
 
-impl MutationKind<Generation2dSnapshot, Generation2dMutation> for MoveWidget {
+impl<Op> MutationKind<Generation2dSnapshot, Op> for MoveWidget
+where
+    Op: protocol::Mutation<Generation2dSnapshot, Diff = Generation2dDiff> + From<crate::clear_widget_layout::ClearWidgetLayout> + From<MoveWidget>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
     fn diff(&self, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
-        super::diff::diff(self, base)
+        crate::move_widget::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Generation2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Generation2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::move_widget::inverse::inverse(self, base)?
     
     })
 }

@@ -1,6 +1,6 @@
 //! 🧾 EN 1992 inference outline — hierarchical subject fields read by evaluate().
 
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 /// 📋 Editable / evaluated field paths (camelCase).
 pub const OUTLINE_FIELDS: &[&str] = &[

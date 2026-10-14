@@ -1,9 +1,9 @@
 //! 🔺️ `update-climate` sparse diff construction — sets the parent-owned climate and re-mints the derived
 //! `climateTable` handle from it (design §20.15 model (a); no child content is read).
 
-use crate::mutations::update_climate::UpdateClimate;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599ClimatePatch};
+use crate::update_climate::UpdateClimate;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599ClimatePatch};
 
 //#region 🔖️Diff
 

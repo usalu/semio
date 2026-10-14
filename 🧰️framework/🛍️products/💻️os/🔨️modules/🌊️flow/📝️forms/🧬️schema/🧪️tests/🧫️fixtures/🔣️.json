@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "producer": {
+    "version": 1,
+    "source": "original-widget-field-loans",
+    "capabilities": [
+      "slider",
+      "note",
+      "image",
+      "variable",
+      "finish"
+    ]
+  },
+  "widgets": [
+    {
+      "kind": "inputSlider",
+      "id": "amount",
+      "label": "Amount",
+      "value": 3,
+      "min": 0,
+      "max": 10,
+      "step": 1
+    },
+    {
+      "kind": "inputNote",
+      "id": "input_note",
+      "text": "Write"
+    },
+    {
+      "kind": "inputImage",
+      "id": "image",
+      "src": "data:image/svg+xml,test"
+    },
+    {
+      "kind": "variable",
+      "id": "mode",
+      "name": "inputMode",
+      "schema": "choice"
+    },
+    {
+      "kind": "outputAction",
+      "id": "send",
+      "action": "send"
+    }
+  ],
+  "selectedInputs": [
+    [
+      "amount",
+      "slider"
+    ],
+    [
+      "input_note",
+      "note"
+    ],
+    [
+      "image",
+      "image"
+    ],
+    [
+      "mode",
+      "variable"
+    ]
+  ],
+  "playbook": {
+    "schema": "playbook.program",
+    "id": "flow-generate",
+    "version": "1",
+    "title": "Generate",
+    "steps": [
+      {
+        "id": "inputs",
+        "title": "Inputs",
+        "blocks": [
+          {
+            "id": "amount",
+            "label": "Amount",
+            "kind": "slider",
+            "default": 3,
+            "min": 0,
+            "max": 10,
+            "step": 1
+          },
+          {
+            "id": "input_note",
+            "label": "INPUT NOTE",
+            "kind": "note",
+            "text": "Write"
+          },
+          {
+            "id": "image",
+            "label": "IMAGE",
+            "kind": "image",
+            "src": "data:image/svg+xml,test"
+          },
+          {
+            "id": "mode",
+            "label": "INPUT MODE",
+            "kind": "single",
+            "default": "inputMode",
+            "options": [
+              {
+                "value": "choice",
+                "label": "CHOICE"
+              }
+            ],
+            "schema": "choice"
+          }
+        ]
+      }
+    ]
+  }
+}

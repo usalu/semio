@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ReplaceSetpointManagerKind` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ReplaceSetpointManagerKind>,
+{
     Ok((|| {
     let kind = if payload.new_kind == "OutdoorAirReset" {
         crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c: payload.new_low_outdoor_c, high_outdoor_c: payload.new_high_outdoor_c, low_setpoint_c: payload.new_low_setpoint_c, high_setpoint_c: payload.new_high_setpoint_c }

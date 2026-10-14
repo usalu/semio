@@ -115,8 +115,3 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
         backing::reconstruction::reconstruct(database, control)
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
-

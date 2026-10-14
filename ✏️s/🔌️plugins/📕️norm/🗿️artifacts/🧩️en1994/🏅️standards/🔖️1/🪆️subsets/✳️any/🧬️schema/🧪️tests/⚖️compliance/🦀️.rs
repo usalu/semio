@@ -1,6 +1,6 @@
-use super::*;
-use crate::document::AnnexChoice;
-use crate::{CompositeBeam, HeadedStuds, ProfiledSheeting, SteelSection};
+use crate::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1994_model::{CompositeBeam, HeadedStuds, ProfiledSheeting, SteelSection};
 
 fn sample_beam() -> CompositeBeam {
     CompositeBeam::default_placeholder()

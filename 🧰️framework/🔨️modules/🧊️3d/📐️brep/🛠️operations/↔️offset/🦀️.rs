@@ -11,10 +11,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use {crate::euler::{add_shell, add_solid, make_vertex, retire_solid_scaffold}, semio_framework_3d_brep_representation::topology::make_loop};
+use {semio_framework_3d_brep_construction::euler::{add_shell, add_solid, make_vertex, retire_solid_scaffold}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_intersect::{intersect_surface_surface, IntCurve};
-use crate::primitives::{attach_face, finish_solid, line_edge};
-use crate::staged::{drive_face, drive_solid};
+use semio_framework_3d_brep_construction::primitives::{attach_face, finish_solid, line_edge};
+use semio_framework_3d_brep_construction::staged::{drive_face, drive_solid};
 use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
 use semio_framework_3d_brep_curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
@@ -676,7 +676,7 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn make_edge_entry(body: &mut Body, curve: semio_framework_3d_brep_representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    crate::euler::make_edge(body, curve, range, v0, v1, tol, rec)
+    semio_framework_3d_brep_construction::euler::make_edge(body, curve, range, v0, v1, tol, rec)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -850,6 +850,9 @@ pub fn draft_angle(body: &mut Body, solid: SolidId, faces: &[FaceId], pull_dir: 
 
 // #region 🔖️Jobs
 
+#[path = "../🎨️blend/🦀️.rs"]
+pub mod blend;
+
 #[path = "⏱️jobs/🦀️.rs"]
 mod jobs;
 pub use jobs::{ClosedShellJob, DraftJob, OffsetFaceJob, OffsetSolidJob, OpenShellJob, ShellJob, ThickenJob};
@@ -857,6 +860,10 @@ pub use jobs::{ClosedShellJob, DraftJob, OffsetFaceJob, OffsetSolidJob, OpenShel
 // #endregion 🔖️Jobs
 
 // #region 🔖️Tests
+
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch_with_view, preview_views};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::neural::{Atom, ColdRetire, Dictionary, Value};
 
@@ -13,7 +13,7 @@ async fn flow_eval_tick_does_not_panic_with_nothing_pending() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
     let (view, _) = preview_views("procedural-preview-test", "procedural-preview-test-other");
-    dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(FlowEvalTick { window_id: view.window_id.clone().expect("preview window"), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view).await.expect("flowEvalTick");
+    dispatch_with_view(&mut app, Generation3dCommand::FlowEvalTick(FlowEvalTick { window_id: view.window_id.clone().expect("preview window"), window_kind_id: view.active_window_kind_id.clone().unwrap_or_else(|| semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()) }), view).await.expect("flowEvalTick");
 }
 
 //#region 🚧️ContributionGatedArming
@@ -120,7 +120,7 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         assert_eq!(semio_s_artifact_procedural_3d_preview_eval::may_rearm(&graph), case.may_rearm, "{}: may_rearm disagrees with the fixture", case.id);
 
         let mut session = semio_framework_os_flow::FlowEvalSession::new();
-        let outcome = semio_s_artifact_procedural_3d_preview_eval::evaluate_tick("procedural-preview-gate", semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None);
+        let outcome = semio_s_artifact_procedural_3d_preview_eval::evaluate_tick("procedural-preview-gate", semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, &graph, 0.1, &mut session, None, None);
         assert_eq!(session.pending(), case.unfinished_tick, "{}: the graph must be big enough that one tick cannot finish it", case.id);
         assert!(outcome.extension_invocations.is_empty(), "{}: an in-guest graph parks no extension work", case.id);
         let owed = usize::from(session.window_tick_owed("procedural-preview-gate"));
@@ -157,7 +157,7 @@ async fn a_later_set_contributions_owes_the_settled_run_a_restart() {
     for (index, page) in pages.iter().enumerate() {
         let receipt = dispatch_with_view(
             &mut app,
-            Generation3dCommand::SetContributions(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_contributions::SetContributions { json: page.clone(), page: index as u64, page_count: pages.len() as u64 }),
+            Generation3dCommand::SetContributions(semio_s_artifact_procedural_3d_set_contributions::SetContributions { json: page.clone(), page: index as u64, page_count: pages.len() as u64 }),
             flow_view.clone(),
         )
         .await
@@ -183,7 +183,7 @@ async fn a_second_refresh_starts_no_second_run() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = crate::editor_domain::editor_laws::context::app_with_registry().await;
     let (flow_view, preview_view) = crate::editor_domain::editor_laws::context::shell_views("procedural-latch-main", "procedural-latch-preview");
-    let switched = dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() }), flow_view.clone()).await.expect("example");
+    let switched = dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(semio_s_artifact_procedural_3d_editor_commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() }), flow_view.clone()).await.expect("example");
     let first = crate::editor_domain::editor_laws::context::run_actions(&switched.effects);
     assert_eq!(first, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the gesture carries one run start");
     for _ in 0..3 {

@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-energy-model-session"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model simulation session: the tool-run definition and the run job"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-plugin-energy-engine-kernel = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-s-plugin-energy-engine-sim = { workspace = true }
+semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
+semio-s-plugin-energy-engine-sim-wire = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-energy-model-examples = { workspace = true }
+serde_json = { workspace = true }

@@ -14,7 +14,7 @@ pub type PresentationStore = ArtifactStore<PresentationSnapshot, PresentationMut
 /// same catalog through `ArtifactEditor::build_document_store_owners`; every standalone store goes
 /// through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
 pub async fn new_presentation_store(envelope: PresentationEnvelope, actor: protocol::ActorId) -> Result<OwnedPresentationStore, store::VcsError> {
-    let mut store = PresentationStore::new(envelope, actor).await?;
+    let mut store = PresentationStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<PresentationSnapshot, PresentationMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     Ok(OwnedPresentationStore(store))
 }
@@ -58,7 +58,7 @@ pub type PresentationEnvelope = ArtifactEnvelope<PresentationSnapshot, Presentat
 
 /// 📦️ Creates an empty typed VCS envelope for a presentation deck document.
 pub fn create_presentation_envelope(id: &str) -> PresentationEnvelope {
-    create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, id, empty_presentation_snapshot(), None)
+    create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, id, empty_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
 }
 
 const PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;

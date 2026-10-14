@@ -4,7 +4,21 @@
   "title": "SemioSnapshot",
   "description": "The envelope union over all eighteen semio subsets — the published JSON carrier `SemioSnapshot`'s own `ToValue`/`FromValue` read and write. `subset` is internally tagged on `subset`: each variant is that subset's own independently published snapshot schema (referenced, never redeclared) with the `subset` tag beside its own fields.",
   "type": "object",
-  "definitions": {
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "subset": {
+      "$ref": "#/$defs/SemioSubsetSnapshot",
+      "x-semio-state": "artifact"
+    }
+  },
+  "required": [
+    "schema",
+    "subset"
+  ],
+  "$defs": {
     "SemioSubsetSnapshot": {
       "oneOf": [
         {
@@ -20,7 +34,8 @@
             "subset": {
               "const": "brep"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -35,7 +50,8 @@
             "subset": {
               "const": "mesh"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -50,7 +66,8 @@
             "subset": {
               "const": "model"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -65,7 +82,8 @@
             "subset": {
               "const": "value"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -80,7 +98,8 @@
             "subset": {
               "const": "document"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -95,7 +114,8 @@
             "subset": {
               "const": "cad"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -110,7 +130,8 @@
             "subset": {
               "const": "drawing"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -125,7 +146,8 @@
             "subset": {
               "const": "image"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -140,7 +162,8 @@
             "subset": {
               "const": "video"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -155,7 +178,8 @@
             "subset": {
               "const": "audio"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -170,7 +194,8 @@
             "subset": {
               "const": "animation"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -185,7 +210,8 @@
             "subset": {
               "const": "presentation"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -200,7 +226,8 @@
             "subset": {
               "const": "flow"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -215,7 +242,8 @@
             "subset": {
               "const": "text"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -230,7 +258,8 @@
             "subset": {
               "const": "table"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -245,7 +274,8 @@
             "subset": {
               "const": "graph"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -260,7 +290,8 @@
             "subset": {
               "const": "object"
             }
-          }
+          },
+          "type": "object"
         },
         {
           "allOf": [
@@ -275,23 +306,10 @@
             "subset": {
               "const": "kit"
             }
-          }
+          },
+          "type": "object"
         }
       ]
     }
-  },
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "subset": {
-      "$ref": "#/definitions/SemioSubsetSnapshot",
-      "x-semio-state": "artifact"
-    }
-  },
-  "required": [
-    "schema",
-    "subset"
-  ]
+  }
 }

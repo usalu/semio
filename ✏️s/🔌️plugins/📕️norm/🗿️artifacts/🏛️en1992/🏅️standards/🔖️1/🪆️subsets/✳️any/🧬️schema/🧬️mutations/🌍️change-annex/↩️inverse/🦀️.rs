@@ -1,10 +1,10 @@
-use crate::mutations::change_annex::ChangeAnnex;
-use crate::mutations::En1992Mutation;
-use crate::En1992Snapshot;
+use crate::change_annex::ChangeAnnex;
 
-pub fn inverse(_payload: &ChangeAnnex, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
+
+pub fn inverse<Op>(_payload: &ChangeAnnex, base: &En1992Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_annex::ChangeAnnex> {
     Ok((|| {
-    vec![En1992Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex })]
+    vec![Op::from(ChangeAnnex { new_annex: base.annex })]
 
     })())
 }

@@ -7,11 +7,10 @@ use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::options;
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{puzzle2d_localized, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC};
+use {crate::editor::puzzle2d::puzzle2d_localized, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::config::PUZZLE2D_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = "2d-overview";
 pub const BODY_KEY: &str = "puzzle2d.play.overview";
 pub const ZOOM_SCALE: f64 = 0.68;
 //#endregion 🔖️Constants
@@ -21,7 +20,7 @@ pub const ZOOM_SCALE: f64 = 0.68;
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         initial_utility_id: None,
-        id: WINDOW_KIND_ID.into(),
+        id: crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_overview),
         body_key: BODY_KEY.into(),
         surface_kind: SurfaceKind::Board2d,
@@ -29,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: vec![utilities::select::UTILITY_ID.into(), utilities::brush::UTILITY_ID.into(), utilities::area_brush::UTILITY_ID.into()],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::PUZZLE2D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -40,18 +39,18 @@ pub fn definition() -> WindowKindDefinition {
 
 /// 🎚️ The live chrome measures for this window, collected from the mode's `☑️options/*` components.
 pub fn window_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
-    let mode = envelope.runtime.lod_mode_by_pane.get(WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
-    vec![options::lod::measure(WINDOW_KIND_ID, mode, labels), options::grid::measure(&envelope.runtime, labels), options::select::measure(&envelope.runtime, labels), options::transform::measure(&envelope.runtime, labels), options::brush::measure(envelope, labels), utilities::area_brush::options(&envelope.runtime, labels)]
+    let mode = envelope.runtime.lod_mode_by_pane.get(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
+    vec![options::lod::measure(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, mode, labels), options::grid::measure(&envelope.runtime, labels), options::select::measure(&envelope.runtime, labels), options::transform::measure(&envelope.runtime, labels), options::brush::measure(envelope, labels), utilities::area_brush::options(&envelope.runtime, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 pub fn render(document_json: &str, envelope: &Puzzle2dScene) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    edit::render_canvas(document_json, envelope, WINDOW_KIND_ID)
+    edit::render_canvas(document_json, envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)
 }
 
 pub fn engagement(envelope: &Puzzle2dScene, host: &BoardHost, labels: &Puzzle2dLabels) -> WindowEngagement {
-    edit::puzzle2d_engagement(envelope, host, WINDOW_KIND_ID, labels)
+    edit::puzzle2d_engagement(envelope, host, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID, labels)
 }
 //#endregion 🔖️Render
 

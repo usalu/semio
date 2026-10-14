@@ -1,10 +1,10 @@
 //! ↩️ `change-zone-comfort-category` inverse.
-use super::ChangeZoneComfortCategory;
-use crate::{Din16798Mutation, Din16798Snapshot};
-pub fn inverse(payload: &ChangeZoneComfortCategory, base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {
+use crate::change_zone_comfort_category::ChangeZoneComfortCategory;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
+pub fn inverse<Op>(payload: &ChangeZoneComfortCategory, base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_zone_comfort_category::ChangeZoneComfortCategory> {
     Ok((|| {
     let Some(z) = base.zones.iter().find(|z| z.id == payload.zone_id) else { return Vec::new(); };
-    vec![Din16798Mutation::ChangeZoneComfortCategory(ChangeZoneComfortCategory { zone_id: payload.zone_id.clone(), new_comfort_category: z.comfort_category.clone() })]
+    vec![Op::from(ChangeZoneComfortCategory { zone_id: payload.zone_id.clone(), new_comfort_category: z.comfort_category.clone() })]
 
     })())
 }

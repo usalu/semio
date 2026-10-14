@@ -1,8 +1,8 @@
 //! 🔍️ Generation2d play app panel — the selection inspector.
 
-use crate::editor::generation2d::config::Generation2dConfig;
-use crate::editor::generation2d::terminology::Generation2dLabels;
-use crate::Generation2dSnapshot;
+use semio_s_artifact_procedural_2d_editor_config::Generation2dConfig;
+use semio_s_artifact_procedural_2d_terminology::Generation2dLabels;
+use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -43,7 +43,4 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labe
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

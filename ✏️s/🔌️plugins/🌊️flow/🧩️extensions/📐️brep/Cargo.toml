@@ -43,6 +43,9 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-step]
 path = "../../../🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-step-geometry]
+path = "../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-spatial-kernel-semio-session]
 path = "../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
 

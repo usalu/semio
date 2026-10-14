@@ -1,6 +1,6 @@
 //! energy ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
 pub fn register() {}
 

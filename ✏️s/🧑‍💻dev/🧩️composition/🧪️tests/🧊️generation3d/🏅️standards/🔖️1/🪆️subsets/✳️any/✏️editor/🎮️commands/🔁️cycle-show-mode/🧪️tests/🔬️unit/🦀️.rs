@@ -1,7 +1,7 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::GENERATION_3D_SHOW_MODES;
+use semio_s_artifact_procedural_3d_editor_config::GENERATION_3D_SHOW_MODES;
 use crate::editor_domain::editor_laws::context::{self, app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 /// ⚖️ LAW: the ladder is a cycle over exactly the modes the picker offers, and anything off the
 /// ladder — the empty string a never-set config carries included — lands on its first entry.

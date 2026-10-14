@@ -11,9 +11,6 @@ workspace = true
 [package.metadata.semio]
 role = "s-module"
 
-[features]
-default = []
-
 [lib]
 crate-type = ["rlib"]
 path = "🦀️.rs"

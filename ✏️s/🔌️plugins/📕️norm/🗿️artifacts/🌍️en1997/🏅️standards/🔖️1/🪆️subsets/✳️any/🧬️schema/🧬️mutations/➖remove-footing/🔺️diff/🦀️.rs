@@ -1,6 +1,6 @@
-use super::RemoveFooting;
-use crate::En1997Snapshot;
-use crate::diff::{En1997Diff, En1997FootingsRows};
+use crate::remove_footing::RemoveFooting;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997FootingsRows};
 
 pub fn diff(payload: &RemoveFooting, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if payload.index >= base.footings.len() {

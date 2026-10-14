@@ -11,23 +11,32 @@
 //! face pick, selection method, engagement input, camera, sun) lives in `config::Process3dConfig`,
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
-//#region 🚚️Moved
-pub use crate::{editor::process3d::kit::ContributedMachineCatalog, editor::process3d::kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST, editor::process3d::kit::PROCESS3D_EXAMPLE_PLATE, editor::process3d::kit::PROCESS3D_EXAMPLE_TIMBER, editor::process3d::kit::PROCESS3D_GRANULARITY_FACE, editor::process3d::kit::PROCESS3D_GRANULARITY_OBJECT, editor::process3d::kit::PROCESS3D_INTERACTION_DOMAIN, editor::process3d::kit::PROCESS_3D_PLAY_APP_ID, editor::process3d::kit::Process3dDispatchCtx, editor::process3d::kit::Process3dInteractionSnapshot, editor::process3d::kit::axis_angle_from_up_to, editor::process3d::kit::catalog_machine, editor::process3d::kit::iconed_tree_item_with_action, editor::process3d::kit::installable_contributions, editor::process3d::kit::installed_catalogs, editor::process3d::kit::internal_action, editor::process3d::kit::process3d_action, editor::process3d::kit::process3d_action_fault, editor::process3d::kit::process3d_interaction_definition, editor::process3d::kit::process3d_io, editor::process3d::kit::reset_process3d_document_effect, editor::process3d::kit::set_active_utility_effect, editor::process3d::kit::ui_label, editor::process3d::kit::ui_value_bool, editor::process3d::kit::ui_value_list, editor::process3d::kit::ui_value_map, editor::process3d::kit::ui_value_number, editor::process3d::kit::ui_value_text};
-pub(crate) use crate::editor::process3d::kit::PROCESS_3D_PLAY_CONTROLLER_ID;
-//#endregion 🚚️Moved
-#[path = "🧰️kit/🦀️.rs"]
-pub mod kit;
 
-use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
-use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
-use crate::editor::process3d::modes::edit;
-use crate::editor::process3d::modes::edit::windows::workpiece;
-use crate::editor::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
-use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
-use crate::editor::process3d::terminology::process3d_labels;
-use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo_session {
+        #[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
+use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
+use semio_s_artifact_process_process3d_modes;
+use semio_s_artifact_process_process3d_modes::windows::workpiece;
+use semio_s_artifact_process_process3d_panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
+use semio_s_artifact_process_process3d_presence::{Process3dPresence, Process3dPresenceMutation};
+use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
-use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::MeasureRecipe, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
@@ -153,6 +162,48 @@ use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_ma
 use world::{world_face_drag_end, world_pointer_down};
 //#endregion 🔖️Commands
 
+//#region 🔖️Commands
+semio_framework_plugin::app_commands! {
+    /// 🎯️ `Process3dPlayApp::Command` — the SOLE dispatch surface for process3d's own behavior, assembled
+    /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
+    /// (`command_id()`) and the `dsl` wire keyword (the kebab `#[dsl(key = ..)]` the codec uses) — copied
+    /// verbatim from the pre-migration `Process3dCommand`/`command_id()` match. **Row order is the binary
+    /// variant ordinal: appending is safe, reordering is a wire-format break.**
+    pub enum Process3dCommand for Process3dSnapshot, Process3dMutation, Process3dConfig, Process3dConfigMutation, ctx = Process3dDispatchCtx {
+        "setSnapshot" as "document" => set_snapshot::SetDocument,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+        "addStep" as "add-step" => add_step::AddStep,
+        "addWorkshopMachine" as "add-workshop-machine" => add_workshop_machine::AddWorkshopMachine,
+        "removeWorkshopMachine" as "remove-workshop-machine" => remove_workshop_machine::RemoveWorkshopMachine,
+        "updateWorkshopMachine" as "update-workshop-machine" => update_workshop_machine::UpdateWorkshopMachine,
+        "removeStep" as "remove-step" => remove_step::RemoveStep,
+        "removeSelectedStep" as "remove-selected-step" => remove_selected_step::RemoveSelectedStep,
+        "moveStep" as "move-step" => move_step::MoveStep,
+        "updateStep" as "update-step" => update_step::UpdateStep,
+        "setStepEnabled" as "set-step-enabled" => set_step_enabled::SetStepEnabled,
+        "setStock" as "stock" => set_stock::SetStock,
+        "patchInspector" as "patch-inspector" => patch_inspector::PatchInspector,
+        "setCursor" as "cursor" => set_cursor::SetCursor,
+        "stepCursor" as "step-cursor" => step_cursor::StepCursor,
+        "stepCursorBack" as "step-cursor-back" => step_cursor_back::StepCursorBack,
+        "stepCursorForward" as "step-cursor-forward" => step_cursor_forward::StepCursorForward,
+        "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
+        "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
+        "worldFaceDragEnd" as "world-face-drag-end" => world_face_drag_end::WorldFaceDragEnd,
+        "importModelFile" as "import-model-file" => import_model_file::ImportModelFile,
+        "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
+        "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
+        "setCamera" as "camera" => set_camera::SetCamera,
+        "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
+        "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
+        "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
+        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
+        "setContributions" as "contributions" => set_contributions::SetContributions,
+        "exportModel" as "export-model" => export_model::ExportModel,
+        "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
+    }
+}
+//#endregion 🔖️Commands
 //#region 🔖️Process3dPlayApp
 /// 🧪️ B1: unit struct — every former `Process3dRuntime` field now lives in `config::Process3dConfig`
 /// (see `ArtifactEditor::Config`), written through `config::Process3dConfigMutation`s.
@@ -211,12 +262,7 @@ const PROCESS3D_SCAN_BYTES: usize = 256;
 /// 📏️ Everything the retained config holds APART from the contributions pack — engagement text and
 /// the sun colour. Unchanged; the contributions lane is priced separately below.
 const PROCESS3D_CONFIG_FILTER_STORE_BYTES: usize = 16_384;
-/// 📏️ The retained `contributions_json` lane, sized from the REAL pack: the four shipped
-/// `process-extension-*` bundles are 19 823 bytes of `process.machines` entries once the host has
-/// scoped them by this receiver's `consumes` row (measured 2026-09-16, ticket
-/// 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS). `installable_contributions` distils the host pack to
-/// exactly those entries before anything is retained, so the app never stores the whole closure.
-pub(crate) const PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES: usize = 24_576;
+
 const PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES: usize = PROCESS3D_CONFIG_FILTER_STORE_BYTES + PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES;
 /// 📏️ What op-encoding one config mutation adds around its string field: the `OpBinary` format
 /// byte, the variant-ordinal varint and the record body's field framing/length prefix.
@@ -494,7 +540,7 @@ impl ToolJobFactory for Process3dBoundedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
     /// 🛤️ The lane each tool publishes on, read off what its `🎮️commands/*` handler actually emits.
     /// `HostOnly` is a whole-document replacement or a shell round-trip carried as an `Effect`
     /// (`setSnapshot`/`setActiveExample`/`setStock`/`importModelFile` build
@@ -587,7 +633,7 @@ impl ToolJobFactory for Process3dResumableCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_RESUMABLE_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
@@ -1252,7 +1298,7 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source(), crate::examples::concrete_forest::source()]
+        vec![semio_s_artifact_process_process3d_examples::source(), semio_s_artifact_process_process3d_examples::examples::concrete_forest::source()]
     }
     /// 🧩️ The roster the three composed `s.stdio.semio` members (`stockSolid`/`steps`/`toolSolids`)
     /// open through — a `NoMembers` editor cannot materialise the children `genesis_child_pack`
@@ -1271,9 +1317,9 @@ impl ArtifactEditor for Process3dPlayApp {
 
     type Command = Process3dCommand;
 
-    const DIALECT: Dialect = crate::PROCESS3D_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_process_process3d_model::snapshot::PROCESS3D_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Process3dArtifactPreparationFactory))
@@ -1340,7 +1386,7 @@ impl ArtifactEditor for Process3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::owned::process3d_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_process_process3d_host::process3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
@@ -1349,15 +1395,15 @@ impl ArtifactEditor for Process3dPlayApp {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::owned::process3d_document_store_initialization_job(envelope, operation, generation, actor))
+        Ok(semio_s_artifact_process_process3d_host::process3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
     /// — so a lease the app admitted for itself (`process3d_admit_app_publication_authority`, every
     /// host-begun `Effect::LoadDocument`) is consumed here; a host-admitted lease stays the host's.
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::host::owned::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
-        crate::host::owned::process3d_release_app_publication_authority(operation);
+        semio_s_artifact_process_process3d_host::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
+        semio_s_artifact_process_process3d_host::process3d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -1378,15 +1424,15 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::process3d::presence::Process3dPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_s_artifact_process_process3d_presence::Process3dPresenceRetirementFactory))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::process3d::presence::Process3dPresenceRetirementFactory))
+        Some(std::sync::Arc::new(semio_s_artifact_process_process3d_presence::Process3dPresenceRetirementFactory))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(crate::editor::process3d::presence::process3d_presence_store_disposer())
+        Some(semio_s_artifact_process_process3d_presence::process3d_presence_store_disposer())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
@@ -1394,22 +1440,22 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::process3d::config::schema::app_schema_descriptor())
+        Some(semio_s_artifact_process_process3d_config::schema::app_schema_descriptor())
     }
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::process3d_child_restore_projection(snapshot)
+        semio_s_artifact_process_process3d_model::snapshot::process3d_child_restore_projection(snapshot)
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::genesis_process3d_child_pack(snapshot, slot, child_id)
+        semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(snapshot, slot, child_id)
     
 })())
 }
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+        semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1422,7 +1468,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::standards::v1::subsets::any::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
+            "brep:out" => match semio_s_artifact_process_process3d_io::export_process3d_model(&semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
                 Some(export) => {
                     let text = match export.data {
                         DslValue::String(text) => text,
@@ -1450,14 +1496,14 @@ impl ArtifactEditor for Process3dPlayApp {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
                     return Err(MediaError::Payload("geometry:in".into(), "expected a structured payload".into()));
                 };
-                if schema != crate::PROCESS_3D_SCHEMA && schema != "3d.process" {
+                if schema != semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA && schema != "3d.process" {
                     return Err(MediaError::Payload("geometry:in".into(), format!("unrecognized schema: {schema}")));
                 }
                 // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — the
                 // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
                 // `import_process3d_model`'s `data:...,<base64>` expectation.
                 let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
-                match crate::standards::v1::subsets::any::io::import_process3d_model("geometry-in.step", &data_url) {
+                match semio_s_artifact_process_process3d_io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }
@@ -1660,7 +1706,7 @@ impl ArtifactEditor for Process3dPlayApp {
 /// out inline. `WindowKindDefinition.options.measures` stays empty: measures are config-derived per
 /// frame by `ArtifactEditor::window_measures`, never frozen into the manifest.
 pub fn create_process3d_app() -> AppDefinition {
-    Editor::builder(crate::PROCESS3D_DIALECT)
+    Editor::builder(semio_s_artifact_process_process3d_model::snapshot::PROCESS3D_DIALECT)
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
                 definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
@@ -1863,10 +1909,39 @@ pub fn create_process3d_app() -> AppDefinition {
 
 //#endregion 🔧️Behavior
 
-//#region 🧪️UnitTests
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
-/// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-//#endregion 🧪️UnitTests
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `crate::
+/// artifact_kind()`'s literal for `"3d.process"` (schema/media type/export+import formats/presentation
+/// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
+/// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
+/// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
+pub fn process3d_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        artifact_schema: semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA.into(),
+        artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+        ports: vec![
+            semio_framework_plugin::MediaPortSpec {
+                id: "geometry:in".into(),
+                label: "Geometry".into(),
+                direction: semio_framework_plugin::MediaPortDirection::In,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
+                kind_id: None,
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+            semio_framework_plugin::MediaPortSpec {
+                id: "brep:out".into(),
+                label: "Brep".into(),
+                direction: semio_framework_plugin::MediaPortDirection::Out,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+                kind_id: Some("3d.process".into()),
+                required: false,
+                multiplicity: semio_framework_plugin::PortMultiplicity::Many,
+            },
+        ],
+        export_formats: vec![],
+        import_formats: vec![],
+        artifact: semio_framework_plugin::ArtifactPresentation { id: "3d.process".into(), name: "3D Process".into(), dimension: "3d".into(), component_kind: "process3d".into() },
+    }
+}
+//#endregion 🔖️Io

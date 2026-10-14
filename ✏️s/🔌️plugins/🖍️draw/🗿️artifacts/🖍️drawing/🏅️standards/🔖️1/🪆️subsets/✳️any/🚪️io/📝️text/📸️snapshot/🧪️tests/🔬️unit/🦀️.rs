@@ -1,4 +1,4 @@
-use crate::text::snapshot::*;
+use crate::io::text::snapshot::*;
 use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_layer_base, layer_id};
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;

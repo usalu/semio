@@ -1,0 +1,37 @@
+# Current Graph Source Invariants — Read-Only Review
+
+This is a source inspection, not runtime qualification. No production source was changed; no module was imported or evaluated, no probe or frontend/initializer/native command was run, and no Actor trace was independently replayed. Root owns the actual captures and Scope owns trace attribution. Source snapshots below identify the inspected current files, not proof of the bytes loaded by an earlier process.
+
+## Finding and limit
+
+The selected-candidate admission comparison at graph `🟦️.ts:289` returns `undefined` when `JSON.stringify(initial.admission)` differs from `JSON.stringify(final.admission)`. It precedes the existing completed-candidate TRACE diagnostic at line 290. The final pre-rename source-fact recheck at line 292 also returns `undefined` without that diagnostic. Initial/final inventory `BUILD_MEMBERSHIP_CHANGED` branches are likewise retry branches without the completed-candidate diagnostic. The outer loop admits nine candidates (attempts 0–8) and then emits the generic authority-keeps-changing error. Consequently that terminal error alone does not identify changed physical bytes, a stale semantic result, membership changes, admission-value changes, or which retry branch fired.
+
+**No cause of Actor GUI13 is established here.** Root reports GUI13 terminated after nine candidates without assertions, and GUI14 subsequently completed graph admission with zero refreshes and reached actual tests. Those are coordinator-reported observations; this review did not read or execute their captures. GUI14 does not reproduce GUI13's unknown invalidation branch. The silent branch is a documented diagnostic blind spot, not a confirmed cause or a request to weaken admission.
+
+## Candidate and capture invariants
+
+1. `loadBuildGraphV1` retains the original selected registry/scope, original invocation and enforcing store. Each candidate requires the exact loaded graph implementation/publication authority, and the original invocation is checked between attempts. This review proposes no new authority, wider selection, quota increase or receipt reuse.
+2. Selected `inventory()` builds a fresh owner closure under `captureObservedSourceInputsV1`. It verifies the current registry's selected scope, allocates new native maps and inspects actual declarations, script/native/module closures and selected inputs. The admission producer returns sorted owners, files, target/input sets and providers. JSON equality of initial/final admissions therefore compares this canonical closure value, not source-byte facts or mutable cache headers.
+3. Physical membership hashes sorted admitted paths, file/directory kind and `mode` after real `lstat`; it rejects symlinks, missing paths and kind changes. It does not hash file content. For selected closure arrays, no workspace-wide directory inventory is attached by `workspaceBuildFilesV1`; actual path/listing probes consumed by selected inference remain separate observations.
+4. Candidate computation captures graph/schema/policy/registry reads and all actual nested inference observations. It consumes the initial admission and initial file list. After a fresh final inventory, the receipt's facts are **initial inventory observations plus inference observations**. Final inventory observations are not appended; final admission equality and final physical membership are separate candidate comparisons. This is a description of the current boundary, not evidence that an input was omitted at runtime.
+5. Before publication, original captured facts must hold, initial/final admissions must match, and membership digests must match. Facts are checked again after writing bounded exclusive staging files and before rename. Reused graph publication independently validates producer authority, membership, graph digest, selected identity and the combined fresh initial-inventory/cached-receipt facts.
+
+## Semantic analysis versus exact bytes
+
+- `observedFs.readFile*` records the digest of the actual bytes returned. File observations preserve separate consumed digests for the same path; inconsistent digests reject the candidate. Same-byte restamps are equivalent. Normal file revalidation uses exact stamps as a fast path, with digest comparison after a stamp change; nested project validation additionally reads a current digest. No evidence of an actual stamp-preserving overwrite was collected.
+- Successful `observedSourceAnalysisV1` records provider identity, immutable registered parser revision, original byte hints, result-image digest and nested observations. It deliberately does not promise unchanged unrelated source bytes. Revalidation reads current bytes; unchanged bytes hold, while changed bytes must reproduce the same result digest and the same semantic nested-observation identity/meaning set under the current registered parser. A successful semantic replay does not replace an independently recorded exact file fact for that path.
+- The analysis image cache is keyed by provider/revision/path/current byte digest and rechecks nested facts. It retains bounded JSON images, not parser trees. Provider functions cannot be supplied by a persisted receipt. The parser revision binds implementation/compiler inputs.
+- `memoizedObservedComputationV1` and its async form replay all retained observations on both hit and miss into the receiving parent and active source capture. `observeProjectInferenceV1` likewise inherits a valid project's facts. Its validation memo belongs to the original inference's ALS scope; final graph `observationsHold` does not use that memo.
+- `retainObservationsV1` keys by kind, path and complete fact, preserving contradictory reads. Consistency compares a file's byte digest and an analysis's provider/revision/result digest; physical path, membership/type, module resolution and nested-source facts retain their separate observation kinds.
+- `captureObservedSourceInputsV1` adds the sealed module-load observations to each capture by default. Those facts can legitimately reject a candidate when a loaded producer's original authority is stale, even if its selected business-source closure still matches. No actual stale module-load row was identified in this review.
+
+## Required interpretation of future evidence
+
+A completed-candidate TRACE stale row is evidence about that consumed observation; a membership delta is evidence about admitted paths/types/modes. Neither alone proves final admission JSON differed. A silent retry needs an actual branch-specific receipt before attributing it to closure ordering, stale facts, concurrency or cache behavior. No production repair is assigned or applied here. Process GUI2 remains prepared and held; this review does not qualify any earlier or current Source tests.
+
+## Current byte snapshots
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs` — `fab9cb8aa3a3f70ded4b17869b055cc5900c74386c0dae641923b56ff0b77adb` (42410 bytes).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts` — `b99886be2ae13785f8de86b2b9a39d8fd5e62236f4eb18ea87b9611b9396a1b1` (40081 bytes).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts` — `46ec9e7834fee897761ea7fb9bfb6964db26edf03f073122db7862e12fea6707` (10728 bytes).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs` — `ed3fa4494c60628db7a8a442c7cd45cca900f8e2cc7e528c60b0a96c82b1a8f8` (169918 bytes).

@@ -10,20 +10,55 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::results_window_instance_id;
+use semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect;
 use crate::editor::fem3d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
-use crate::editor::fem3d::commands::{
-    add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, focus_entity, patch_combination, patch_element, patch_load, patch_load_case,
-    patch_material, patch_node, patch_section, patch_solid, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display, set_self_weight,
-};
-use crate::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
-use crate::editor::fem3d::interaction::{fem3d_interaction_definition, fem3d_transform_armed, Fem3dInteractionSnapshot, FEM3D_INTERACTION_DOMAIN, FEM3D_UTILITY_TRANSFORM};
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_area_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_bar;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_combination;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_frame;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_load_case;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_member_udl;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_nodal_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_node;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_section;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_solid;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_support;
+use crate::editor::fem3d::commands::focus_entity;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_combination;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_element;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load_case;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_material;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_section;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_solid;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_support;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::remove_selection;
+use crate::editor::fem3d::commands::result_animation_tick;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_analysis_settings;
+use crate::editor::fem3d::commands::set_camera;
+use crate::editor::fem3d::commands::set_result_animation;
+use crate::editor::fem3d::commands::set_result_display;
+use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_self_weight;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballMotion;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_interaction_definition;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_transform_armed;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::Fem3dInteractionSnapshot;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::FEM3D_UTILITY_TRANSFORM;
 use crate::editor::fem3d::modes::edit;
-use crate::editor::fem3d::modes::edit::windows::{model as window_model, results as window_results};
-use crate::editor::fem3d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
-use crate::editor::fem3d::terminology::fem3d_labels;
-use crate::model::{Dof, ElementResult};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model as window_model;
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results as window_results;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact as artifact_panel;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::inspection as inspection_panel;
+use semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::results as results_panel;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_labels;
+use semio_s_fem_model::{Dof, ElementResult};
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -74,12 +109,6 @@ use semio_framework_plugin::EphemeralEmit;
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
 
-//#region 🔖️Constants
-pub const FEM3D_APP_ID: &str = "fem3d-play";
-/// 🎛️ Stable controller/action-factory tag every panel row and control binds its actions under
-/// (the `ActionFactory` id, distinct from the derived surface app id) — the same string as the app id.
-pub const FEM3D_PLAY_CONTROLLER_ID: &str = FEM3D_APP_ID;
-//#endregion 🔖️Constants
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -428,7 +457,7 @@ impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Fem3dRetainedCommandJobFactory {
     type Owner = EditorApp<Fem3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM3D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -582,8 +611,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem3
 //#endregion 📬️ArtifactStorePreparation
 
 //#region 🔖️Fem3dResultsJson
-/// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
-/// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (the `🫀️core` kernel is
+/// 🎨️ Manual `semio_s_fem_model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
+/// — `semio_s_fem_model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (the `🫀️core` kernel is
 /// a cross-artifact shared crate, out of scope to touch here), so this hand-rolls the same shape
 /// `semio_framework_pack_json::to_json_string` would have produced, using `Dof`'s existing `{:?}` formatting. Single
 /// consumer (`export_media`), so this lives here rather than in the artifact's `⚙️engine`.
@@ -614,7 +643,7 @@ fn fem3d_element_result_json(result: &ElementResult) -> Value {
     }
 }
 
-fn fem3d_static_result_json(result: &crate::model::StaticResult) -> Value {
+fn fem3d_static_result_json(result: &semio_s_fem_model::StaticResult) -> Value {
     semio_framework_pack_json::json!({
         "displacements": result.displacements.iter().map(|d| semio_framework_pack_json::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
         "reactions": result.reactions.iter().map(|r| semio_framework_pack_json::json!({ "nodeId": r.node_id, "dof": fem3d_dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
@@ -623,7 +652,7 @@ fn fem3d_static_result_json(result: &crate::model::StaticResult) -> Value {
     })
 }
 
-fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
+fn fem3d_results_map_json(results: &HashMap<String, semio_s_fem_model::StaticResult>) -> Value {
     Value::Object(results.iter().map(|(id, result)| (id.clone(), fem3d_static_result_json(result))).collect())
 }
 //#endregion 🔖️Fem3dResultsJson
@@ -632,12 +661,12 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
 /// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
 /// as a new `FemSolid` — see `import_media` above) and `results:out` (every load case/combination's
-/// solved `crate::model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
-/// `crate::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// solved `semio_s_fem_model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
+/// `crate::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem3d_io() -> AppIo {
     AppIo {
-        artifact_schema: crate::FEM_3D_SCHEMA.into(),
+        artifact_schema: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
@@ -660,7 +689,7 @@ pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
+/// 🔌️ `results:out` — every load case/combination's solved `semio_s_fem_model::StaticResult`, pinned to the
 /// `computation.fem3d` artifact kind.
 pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
@@ -678,8 +707,8 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 
 //#region 🔖️ActionArgHelpers
 /// 🧭️ Parses one staged `dof` tag (`tx`…`rz`, case-insensitive) into the shared six-tag `FemDof`.
-fn fem3d_dof(value: Option<&str>) -> Option<crate::FemDof> {
-    use crate::FemDof;
+fn fem3d_dof(value: Option<&str>) -> Option<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof> {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
     match value?.trim().to_ascii_lowercase().as_str() {
         "tx" => Some(FemDof::Tx),
         "ty" => Some(FemDof::Ty),
@@ -693,8 +722,8 @@ fn fem3d_dof(value: Option<&str>) -> Option<crate::FemDof> {
 
 /// 🛡️ Reads `addSupport`'s separator-delimited `fixed` list, defaulting to the fully clamped base
 /// (`tx,ty,tz,rx,ry,rz`) the fem3d fixtures start from when nothing is staged.
-fn fem3d_dofs(value: Option<&str>) -> Vec<crate::FemDof> {
-    use crate::FemDof;
+fn fem3d_dofs(value: Option<&str>) -> Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof> {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
     let parsed: Vec<FemDof> = value.map(|text| text.split([',', ' ', ';']).filter_map(|token| fem3d_dof(Some(token))).collect()).unwrap_or_default();
     if parsed.is_empty() {
         vec![FemDof::Tx, FemDof::Ty, FemDof::Tz, FemDof::Rx, FemDof::Ry, FemDof::Rz]
@@ -713,7 +742,7 @@ pub struct Fem3dPlayApp;
 impl ArtifactEditor for Fem3dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12), the fem 2d table.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        semio_s_artifact_fem_2d::editor::fem2d::commands::gumball::fem_fault_notices()
+        semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::fem_fault_notices()
     }
 
     type Snapshot = Fem3dSnapshot;
@@ -724,8 +753,8 @@ impl ArtifactEditor for Fem3dPlayApp {
     type DraftMutation = NoDraftMutation;
     type Presence = semio_framework_plugin::NoPresence;
     type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient;
-    type TransientMutation = semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransientMutation;
+    type Transient = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
+    type TransientMutation = semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation;
 
     type Command = Fem3dCommand;
 
@@ -736,9 +765,9 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// 🪪️ W2 packet P7: the canonical `ArtifactEditor::DIALECT`, derived from the artifact-level
     /// `FEM3D_DIALECT` constant (`🗿️artifacts/🧊️3d/🦀️.rs`) so the sibling `👁️viewer` surface
     /// can read the very same value without ever importing through this `editor` module.
-    const DIALECT: Dialect = crate::FEM3D_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
 
     /// 📬️ Required by the Artifact publication lane — see `Fem3dArtifactPreparationFactory`.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -905,9 +934,9 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// `World3d` surface fed by `live_visual`, and an empty boot document meshes to nothing, so the very
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
-    /// the same geometry. See `crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot`.
+    /// the same geometry. See `crate::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
+        let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
         snapshot
     }
@@ -917,31 +946,31 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_framework_plugin::MountedOwnerPhaseV1> {
-        (!crate::live_visual::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
+        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_framework_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(crate::live_visual::close_demands(instance_id))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id))
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(crate::live_visual::close_demands(instance_id))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id))
     }
 
     fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(crate::live_visual::maintenance_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, grant))
     }
 
     fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(crate::live_visual::close_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, grant))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::live_visual::terminal_is_empty(instance_id)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)
     }
 
     fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        crate::live_visual::prepare_snapshot_read(operation, snapshot)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 🎞️ `"artifact:out"` reproduces the trait's default whole-document pack (overriding
@@ -960,7 +989,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 if doc.snapshot.load_cases.is_empty() {
                     return Err(MediaError::Payload("results:out".into(), "no load cases defined".into()));
                 }
-                let results = crate::fem3d_engine::fem3d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
+                let results = semio_s_artifact_fem_3d_engine::fem3d_engine::fem3d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
                 let json = fem3d_results_map_json(&results).to_string();
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.fem3d".into(), json } })
             }
@@ -998,11 +1027,11 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let base_z = value.get("baseZ").and_then(Value::as_f64).unwrap_or(0.0);
                 let height = value.get("height").and_then(Value::as_f64).unwrap_or(1.0);
                 let layers = value.get("layers").and_then(Value::as_u64).map_or(1, |v| v as usize);
-                let axis = value.get("axis").and_then(Value::as_str).and_then(crate::FemAxis::from_key).unwrap_or_default();
+                let axis = value.get("axis").and_then(Value::as_str).and_then(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::from_key).unwrap_or_default();
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
-                let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
-                let solid = crate::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id, axis };
-                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
+                let id = semio_s_fem_app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
+                let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id, axis };
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1064,7 +1093,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             "addSupport" => Ok(Fem3dCommand::AddSupport(add_support::AddSupport { node_id: text("nodeId").unwrap_or_default(), fixed: fem3d_dofs(text("fixed").as_deref()) })),
             "addNodalLoad" => Ok(Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad {
                 node_id: text("nodeId").unwrap_or_default(),
-                dof: fem3d_dof(text("dof").as_deref()).unwrap_or(crate::FemDof::Tz),
+                dof: fem3d_dof(text("dof").as_deref()).unwrap_or(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz),
                 value: number("value").unwrap_or_default(),
                 case_id: text("caseId").filter(|id| !id.is_empty()),
             })),
@@ -1086,7 +1115,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 base_z: number("baseZ"),
                 layers: number("layers").map(|value| value.max(0.0) as u32),
                 mesh_size: number("meshSize"),
-                axis: text("axis").and_then(|value| crate::FemAxis::from_key(&value)),
+                axis: text("axis").and_then(|value| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::from_key(&value)),
             })),
             "addLoadCase" => Ok(Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: text("name").unwrap_or_default(), self_weight: flag("selfWeight").unwrap_or(false) })),
             "addCombination" => Ok(Fem3dCommand::AddCombination(add_combination::AddCombination { name: text("name").unwrap_or_default(), terms: text("terms").unwrap_or_else(|| "[]".into()) })),
@@ -1103,7 +1132,7 @@ impl ArtifactEditor for Fem3dPlayApp {
             "setActiveExample" => Ok(Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text("exampleId").or_else(|| text("id")).unwrap_or_default() })),
             "setCamera" => {
                 let camera = args.and_then(|value| value.get("camera")).cloned().ok_or_else(|| Fault::from("fem3d.camera.orbit-required"))?;
-                let camera: crate::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::from(format!("fem3d.camera.orbit-invalid: {error}")))?;
+                let camera: semio_framework_os_kernel::Viewport3dOrbit = semio_framework_value::FromValue::from_value(camera).map_err(|error| Fault::from(format!("fem3d.camera.orbit-invalid: {error}")))?;
                 Ok(Fem3dCommand::SetCamera(set_camera::SetCamera { camera }))
             }
             "setResultDisplay" => Ok(Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay {
@@ -1196,7 +1225,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-        crate::live_visual::reconcile(doc)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
     }
 
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
@@ -1214,7 +1243,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient>,
+        transient: &semio_framework_plugin::TransientView<'_, semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_plugin::StepContext<'_>,
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
@@ -1258,7 +1287,7 @@ impl Fem3dPlayApp {
                 let transform_armed = fem3d_transform_armed(view_state);
                 match preview {
                     Some(preview) => window_model::render_with_progress(preview, &window, &interaction, transform_armed, None),
-                    None => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual)),
+                    None => semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(doc.snapshot, &window, &interaction, transform_armed, visual)),
                 }
             }
             window_results::FEM3D_BODY_RESULTS => {
@@ -1278,50 +1307,12 @@ impl Fem3dPlayApp {
 }
 
 //#region 🔖️UiHelpers
-/// 🏷️ Admits resolved fem3d text into the semantic UI contract.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "fem3d UI label admission failed"))
-}
 
-/// 🎛️ Mints one fem3d-controller action for a panel row or control binding.
-pub fn fem3d_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(FEM3D_PLAY_CONTROLLER_ID).action(action, args)
-}
 
-/// 🎛️ Window-measure action binding — same controller scope as [`fem3d_action`], without the UI assembly envelope.
-pub fn fem3d_measure_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FEM3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| semio_framework_pack_json::to_dsl_value(&value)) }
-}
 
-/// 🪟️ The first results-window instance of the layout — the one the results panel addresses when
-/// the panel itself has no window context.
-pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
-    let is_results = |id: &str| view_state.window_instances.iter().any(|window| window.id == id && window.window_kind_id == window_results::FEM3D_WINDOW_RESULTS);
-    view_state
-        .window_id
-        .as_deref()
-        .filter(|id| is_results(id))
-        .or_else(|| view_state.focused_window_id.as_deref().filter(|id| is_results(id)))
-        .map(str::to_string)
-        .or_else(|| view_state.window_instances.iter().find(|window| window.window_kind_id == window_results::FEM3D_WINDOW_RESULTS).map(|window| window.id.clone()))
-}
 //#endregion 🔖️UiHelpers
 //#endregion 🔖️Fem3dPlayApp
 
-//#region 🔖️ResetDocument
-/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
-/// history — the sanctioned non-mutation path for a whole-document replace (file import,
-/// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
-/// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
-/// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
-/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
-/// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Fem3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem3d", crate::FEM_3D_SCHEMA));
-    semio_framework::kernel::Effect::LoadDocument { pack, spr }
-}
-//#endregion 🔖️ResetDocument
 
 //#region 🔖️Manifest
 /// 🧱️ The manifest stitch: one call per taxonomy node. fem3d's mode/windows are all scalar
@@ -1345,12 +1336,12 @@ fn fem3d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin
 }
 
 pub fn create_fem3d_app() -> AppDefinition {
-    Editor::builder(crate::FEM3D_DIALECT)
+    Editor::builder(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::FEM3D_DIALECT)
             .document(["semio", "fem", "fem3d"])
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Statik"])
-            .artifact_kind(crate::document_artifact_kind())
-            .artifact_kind(crate::computation_artifact_kind())
+            .artifact_kind(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::document_artifact_kind())
+            .artifact_kind(semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id(edit::MODE_ID)
@@ -1423,10 +1414,10 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::concrete_forest::ID, crate::examples::concrete_forest::label()), ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Default", "Standard")), ActionArgOption::new(crate::examples::house::ID, crate::examples::house::label())]).default_value(&crate::examples::concrete_forest::ID),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::concrete_forest::ID, semio_s_artifact_fem_3d_io::examples::concrete_forest::label()), ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::demo::ID, LocalizedLabel::native("Default", "Standard")), ActionArgOption::new(semio_s_artifact_fem_3d_io::examples::house::ID, semio_s_artifact_fem_3d_io::examples::house::label())]).default_value(&semio_s_artifact_fem_3d_io::examples::concrete_forest::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
-            .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
+            .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
             // 🧵️ All 18 rows are owned by `Fem3dRetainedCommandJobFactory` — this set must stay exactly
             // equal to `FEM3D_RETAINED_TOOL_IDS`, or `AppActionRegistry::tool_job_registration` faults the
             // whole app with `interactive-job.catalog-incomplete`.
@@ -1572,11 +1563,6 @@ pub fn create_fem3d_app() -> AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️UnitTests
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
-/// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🪟️window-config-ownership/🦀️.rs"]
 mod window_config_ownership;

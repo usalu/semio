@@ -15,7 +15,7 @@ use std::collections::{BTreeSet, HashMap};
 
 /// 🏄️ The geometry of a face's supporting surface.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum SurfaceKind {
     Plane,
@@ -41,7 +41,7 @@ impl SurfaceKind {
 
 /// ➰️ The geometry of an edge's supporting curve.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum CurveKind {
     Line,
@@ -67,7 +67,7 @@ impl CurveKind {
 /// is not unique: the centroid lies within 0.1% of the radius of a cylinder's or cone's axis, a sphere's
 /// centre or a torus's axis or core circle (a full cylinder's centroid is on its axis).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct FaceRow {
     pub label: u64,
     pub surface_kind: SurfaceKind,
@@ -80,7 +80,7 @@ pub struct FaceRow {
 
 /// ⛰️ Whether an edge between two faces bulges outwards (convex), dents inwards (concave) or is smooth.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum Convexity {
     Convex,
@@ -94,7 +94,7 @@ pub enum Convexity {
 /// the angle measured through the material: `pi - normal_angle` when convex (a box edge is `pi/2`),
 /// `pi + normal_angle` when concave, `pi` when flat.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct Dihedral {
     pub normal_angle: f64,
     pub interior_angle: f64,
@@ -103,7 +103,7 @@ pub struct Dihedral {
 
 /// 🧵 One edge of the shape. `dihedral` is present only for an edge shared by exactly two distinct faces.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct EdgeRow {
     pub label: u64,
     pub curve_kind: CurveKind,

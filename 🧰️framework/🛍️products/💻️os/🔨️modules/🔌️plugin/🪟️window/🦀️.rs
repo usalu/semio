@@ -16,7 +16,7 @@ use semio_framework_ui_contract::*;
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::WindowOptions;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 
 
 

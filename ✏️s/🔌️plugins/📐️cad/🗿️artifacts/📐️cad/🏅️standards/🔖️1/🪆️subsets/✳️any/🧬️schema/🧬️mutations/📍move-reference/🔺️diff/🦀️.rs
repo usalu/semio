@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MoveReference`.
 use super::MoveReference;
-use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadReferencesDelta};
-use semio_s_artifact_cad_cad_model::diff::CadReferencePatch;
+use semio_s_artifact_cad_cad_model_diff::{CadDiff, CadReferencesDelta};
+use semio_s_artifact_cad_cad_model_diff::CadReferencePatch;
 use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use std::collections::BTreeMap;
 

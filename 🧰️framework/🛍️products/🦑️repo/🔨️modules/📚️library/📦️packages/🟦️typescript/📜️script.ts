@@ -87,7 +87,7 @@ class LintScript extends BundleScript {
     }
     if (segments.length === 1 && segments[0] === "framework-neutral-product-direction") { await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-neutral-product-direction"), "framework-neutral"); return; }
     if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot, join(repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction").SEMIO_TEST_ARTIFACT_DIR!, "rust-source-direction.json")); return; }
-    if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot); return; }
+    if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot,this.invocation); return; }
     if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
     await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
   }
@@ -191,8 +191,8 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "build-discovery") {
       if(segments.length!==1)throw Error("Expected test build-discovery");
-      const sources=["🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
-      await runRepositoryTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"build-discovery"),budgetMs:120000});
+      const sources=["🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
+      await runRepositoryTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"build-discovery"),budgetMs:420000});
       return;
     }
     if (segments[0] === "nx-project-inference") {
@@ -355,7 +355,7 @@ class TestScript extends BundleScript {
       await this.run(["rust-source-direction"]);
       await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
       await verifyRustSourceDirection(this.repoRoot);
-      await verifyCargoDependencyDirection(this.repoRoot);
+      await verifyCargoDependencyDirection(this.repoRoot,this.invocation);
       return;
     }
     if (segments[0] === "canonical-execution") {
@@ -421,6 +421,12 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test go-test-dispatch");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 70_000 });
+      return;
+    }
+    if (segments[0] === "collection-catalog") {
+      if (segments.length !== 1) throw new Error("Expected test collection-catalog");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗂️collection-catalog/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
     if (segments[0] === "generated-source-topology") {

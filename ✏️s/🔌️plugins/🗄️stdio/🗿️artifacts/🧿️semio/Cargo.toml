@@ -161,11 +161,11 @@ path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/
 [workspace.dependencies.semio-framework-geometry]
 path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-framework-hash]
 path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-algorithms]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
@@ -203,6 +203,9 @@ path = "../📊️csv/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-docx]
 path = "../📜️docx/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-model]
+path = "../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-dwg-model]
 path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
@@ -270,9 +273,15 @@ path = "../📷️png/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-pptx]
 path = "../📽️pptx/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-model]
+path = "../📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-step]
 path = "../📐️step/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-step-snapshot]
+path = "../📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-stl]
 path = "../🔺️stl/📦️packages/🦀️rust"
 

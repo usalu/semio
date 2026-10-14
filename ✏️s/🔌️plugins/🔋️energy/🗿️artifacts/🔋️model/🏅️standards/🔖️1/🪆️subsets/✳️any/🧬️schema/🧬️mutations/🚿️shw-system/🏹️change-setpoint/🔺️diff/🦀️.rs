@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeShwSystemSetpoint` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ShwSystemConfigPatch};
-use crate::EnergyModelSnapshot;
+use crate::diff::{EnergyModelDiff, ModelPatch, ShwSystemConfigPatch};
+use crate::diff_patch::{Rows};
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeShwSystemSetpoint, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

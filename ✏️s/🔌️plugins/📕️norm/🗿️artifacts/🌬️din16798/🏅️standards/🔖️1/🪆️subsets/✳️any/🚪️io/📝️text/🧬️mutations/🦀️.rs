@@ -1,50 +1,48 @@
 //! ⚡️ DIN EN 16798 — hand-rolled OpText/OpBinary for `Din16798Mutation`.
 
-use crate::artifact_schema::mutations::Din16798Mutation;
+use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
 
-use crate::artifact_schema::mutations::{
-    change_annex::ChangeAnnex,
-    change_theta_rm::ChangeThetaRm,
-    change_outdoor_co2::ChangeOutdoorCo2,
-    change_envelope_n50::ChangeEnvelopeN50,
-    change_envelope_volume::ChangeEnvelopeVolume,
-    change_cellar_area::ChangeCellarArea,
-    change_cellar_ventilation::ChangeCellarVentilation,
-    change_night_setback::ChangeNightSetback,
-    insert_zone::InsertZone,
-    remove_zone::RemoveZone,
-    change_zone_usage_type::ChangeZoneUsageType,
-    change_zone_floor_area::ChangeZoneFloorArea,
-    change_zone_occupants::ChangeZoneOccupants,
-    change_zone_comfort_category::ChangeZoneComfortCategory,
-    change_zone_pollution_class::ChangeZonePollutionClass,
-    change_zone_comfort_model::ChangeZoneComfortModel,
-    change_zone_t_op_winter::ChangeZoneTOpWinter,
-    change_zone_t_op_summer::ChangeZoneTOpSummer,
-    change_zone_air_speed::ChangeZoneAirSpeed,
-    change_zone_clothing::ChangeZoneClothing,
-    change_zone_metabolic_rate::ChangeZoneMetabolicRate,
-    change_zone_rh::ChangeZoneRh,
-    change_zone_outdoor_air::ChangeZoneOutdoorAir,
-    change_zone_co2::ChangeZoneCo2,
-    change_zone_illuminance::ChangeZoneIlluminance,
-    change_zone_noise::ChangeZoneNoise,
-    change_zone_vent_system_id::ChangeZoneVentSystemId,
-    change_zone_turbulence::ChangeZoneTurbulence,
-    change_zone_vent_method::ChangeZoneVentMethod,
-    insert_vent_system::InsertVentSystem,
-    remove_vent_system::RemoveVentSystem,
-    change_vent_system_type::ChangeVentSystemType,
-    change_vent_sfp::ChangeVentSfp,
-    change_vent_sfp_class::ChangeVentSfpClass,
-    change_vent_heat_recovery::ChangeVentHeatRecovery,
-    change_vent_oda_class::ChangeVentOdaClass,
-    change_vent_filter_sup::ChangeVentFilterSup,
-    change_vent_inspection::ChangeVentInspection,
-    change_vent_duct_class::ChangeVentDuctClass,
-    change_vent_duct_leakage::ChangeVentDuctLeakage,
-    change_vent_design_airflow::ChangeVentDesignAirflow,
-};
+use semio_s_artifact_norm_din16798_mut_building::change_annex::ChangeAnnex;
+use semio_s_artifact_norm_din16798_mut_building::change_theta_rm::ChangeThetaRm;
+use semio_s_artifact_norm_din16798_mut_building::change_outdoor_co2::ChangeOutdoorCo2;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_n50::ChangeEnvelopeN50;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_volume::ChangeEnvelopeVolume;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_area::ChangeCellarArea;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_ventilation::ChangeCellarVentilation;
+use semio_s_artifact_norm_din16798_mut_building::change_night_setback::ChangeNightSetback;
+use semio_s_artifact_norm_din16798_mut_zones::insert_zone::InsertZone;
+use semio_s_artifact_norm_din16798_mut_zones::remove_zone::RemoveZone;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_usage_type::ChangeZoneUsageType;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_floor_area::ChangeZoneFloorArea;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_occupants::ChangeZoneOccupants;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_comfort_category::ChangeZoneComfortCategory;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_pollution_class::ChangeZonePollutionClass;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_comfort_model::ChangeZoneComfortModel;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_winter::ChangeZoneTOpWinter;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_summer::ChangeZoneTOpSummer;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_air_speed::ChangeZoneAirSpeed;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_clothing::ChangeZoneClothing;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_metabolic_rate::ChangeZoneMetabolicRate;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_rh::ChangeZoneRh;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_outdoor_air::ChangeZoneOutdoorAir;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_co2::ChangeZoneCo2;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_illuminance::ChangeZoneIlluminance;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_noise::ChangeZoneNoise;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_system_id::ChangeZoneVentSystemId;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_turbulence::ChangeZoneTurbulence;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_method::ChangeZoneVentMethod;
+use semio_s_artifact_norm_din16798_mut_ventilation::insert_vent_system::InsertVentSystem;
+use semio_s_artifact_norm_din16798_mut_ventilation::remove_vent_system::RemoveVentSystem;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_system_type::ChangeVentSystemType;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp::ChangeVentSfp;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp_class::ChangeVentSfpClass;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_heat_recovery::ChangeVentHeatRecovery;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_oda_class::ChangeVentOdaClass;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_filter_sup::ChangeVentFilterSup;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection::ChangeVentInspection;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class::ChangeVentDuctClass;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage::ChangeVentDuctLeakage;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow::ChangeVentDesignAirflow;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -231,61 +229,11 @@ impl protocol::OpText for Din16798Mutation {
 }
 //#endregion 🔖️OpText
 
-//#region 🔖️OpBinaryCodec
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️OpBinaryCodec
-
 //#region 🔖️DemoCases
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
     vec![
-        Din16798Mutation::ChangeAnnex(ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        Din16798Mutation::ChangeAnnex(ChangeAnnex { new_annex: semio_s_plugin_norm_compliance::AnnexChoice::En }),
         Din16798Mutation::ChangeThetaRm(ChangeThetaRm { new_theta_rm_c: 1.0 }),
         Din16798Mutation::ChangeOutdoorCo2(ChangeOutdoorCo2 { new_outdoor_co2_ppm: 1.0 }),
         Din16798Mutation::ChangeEnvelopeN50(ChangeEnvelopeN50 { new_envelope_n50_h_inv: 1.0 }),
@@ -293,7 +241,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
         Din16798Mutation::ChangeCellarArea(ChangeCellarArea { new_cellar_area_m2: 1.0 }),
         Din16798Mutation::ChangeCellarVentilation(ChangeCellarVentilation { new_cellar_ventilation_m3_h: 1.0 }),
         Din16798Mutation::ChangeNightSetback(ChangeNightSetback { new_night_setback_k: 1.0 }),
-        Din16798Mutation::InsertZone(InsertZone { index: Some(0), zone: crate::ZoneDocument::default() }),
+        Din16798Mutation::InsertZone(InsertZone { index: Some(0), zone: semio_s_artifact_norm_din16798_model::ZoneDocument::default() }),
         Din16798Mutation::RemoveZone(RemoveZone { zone_id: "x".into() }),
         Din16798Mutation::ChangeZoneUsageType(ChangeZoneUsageType { zone_id: "x".into(), new_usage_type: "x".into() }),
         Din16798Mutation::ChangeZoneFloorArea(ChangeZoneFloorArea { zone_id: "x".into(), new_floor_area_m2: 1.0 }),
@@ -312,7 +260,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Din16798Mutation> {
         Din16798Mutation::ChangeZoneIlluminance(ChangeZoneIlluminance { zone_id: "x".into(), new_illuminance_lx: 1.0 }),
         Din16798Mutation::ChangeZoneNoise(ChangeZoneNoise { zone_id: "x".into(), new_noise_db: 1.0 }),
         Din16798Mutation::ChangeZoneVentSystemId(ChangeZoneVentSystemId { zone_id: "x".into(), new_vent_system_id: "x".into() }),
-        Din16798Mutation::InsertVentSystem(InsertVentSystem { index: Some(0), vent: crate::VentSystemDocument::default() }),
+        Din16798Mutation::InsertVentSystem(InsertVentSystem { index: Some(0), vent: semio_s_artifact_norm_din16798_model::VentSystemDocument::default() }),
         Din16798Mutation::RemoveVentSystem(RemoveVentSystem { vent_id: "x".into() }),
         Din16798Mutation::ChangeVentSystemType(ChangeVentSystemType { vent_id: "x".into(), new_system_type: "x".into() }),
         Din16798Mutation::ChangeVentSfp(ChangeVentSfp { vent_id: "x".into(), new_sfp_w_m3_s: 1.0 }),
@@ -336,56 +284,57 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{Din16798Diff, Din16798Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::change_theta_rm;
-use crate::standards::v1::subsets::any::schema::mutations::change_outdoor_co2;
-use crate::standards::v1::subsets::any::schema::mutations::change_envelope_n50;
-use crate::standards::v1::subsets::any::schema::mutations::change_envelope_volume;
-use crate::standards::v1::subsets::any::schema::mutations::change_cellar_area;
-use crate::standards::v1::subsets::any::schema::mutations::change_cellar_ventilation;
-use crate::standards::v1::subsets::any::schema::mutations::change_night_setback;
-use crate::standards::v1::subsets::any::schema::mutations::insert_zone;
-use crate::standards::v1::subsets::any::schema::mutations::remove_zone;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_usage_type;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_floor_area;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_occupants;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_comfort_category;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_pollution_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_comfort_model;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_t_op_winter;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_t_op_summer;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_air_speed;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_clothing;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_metabolic_rate;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_rh;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_outdoor_air;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_co2;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_illuminance;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_noise;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_vent_system_id;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_turbulence;
-use crate::standards::v1::subsets::any::schema::mutations::change_zone_vent_method;
-use crate::standards::v1::subsets::any::schema::mutations::insert_vent_system;
-use crate::standards::v1::subsets::any::schema::mutations::remove_vent_system;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_system_type;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_sfp;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_sfp_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_heat_recovery;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_oda_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_filter_sup;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_inspection;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_duct_class;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_duct_leakage;
-use crate::standards::v1::subsets::any::schema::mutations::change_vent_design_airflow;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_din16798_mutations::*;
+use semio_s_artifact_norm_din16798_diff::Din16798Diff;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
+use semio_s_artifact_norm_din16798_mut_building::change_annex;
+use semio_s_artifact_norm_din16798_mut_building::change_theta_rm;
+use semio_s_artifact_norm_din16798_mut_building::change_outdoor_co2;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_n50;
+use semio_s_artifact_norm_din16798_mut_building::change_envelope_volume;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_area;
+use semio_s_artifact_norm_din16798_mut_building::change_cellar_ventilation;
+use semio_s_artifact_norm_din16798_mut_building::change_night_setback;
+use semio_s_artifact_norm_din16798_mut_zones::insert_zone;
+use semio_s_artifact_norm_din16798_mut_zones::remove_zone;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_usage_type;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_floor_area;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_occupants;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_comfort_category;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_pollution_class;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_comfort_model;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_winter;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_t_op_summer;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_air_speed;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_clothing;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_metabolic_rate;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_rh;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_outdoor_air;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_co2;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_illuminance;
+use semio_s_artifact_norm_din16798_mut_indoor::change_zone_noise;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_system_id;
+use semio_s_artifact_norm_din16798_mut_thermal::change_zone_turbulence;
+use semio_s_artifact_norm_din16798_mut_zones::change_zone_vent_method;
+use semio_s_artifact_norm_din16798_mut_ventilation::insert_vent_system;
+use semio_s_artifact_norm_din16798_mut_ventilation::remove_vent_system;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_system_type;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_sfp_class;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_heat_recovery;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_oda_class;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_filter_sup;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_inspection;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_class;
+use semio_s_artifact_norm_din16798_mut_air_hygiene::change_vent_duct_leakage;
+use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow;
 
 pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

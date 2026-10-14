@@ -1,7 +1,8 @@
 //! 🏭️ Complete authored manufacturer catalogue relational ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::Vdi3805Snapshot;
-use crate::{AccessoryLink,CompositionLink,CatalogueProduct,ManufacturerCatalog,ManufacturerFile,BuildingSystemNumber,ProductIdentity,NativeRecord,RecordFamilyId,SheetId,EditionId,EditionProfileChoice,ExtensionBag,Configuration,SheetAttributes,ValveHeatingAttributes,RadiatorAttributes,PumpHeatingAttributes,HeatGeneratorAttributes,GenericAttributes,GenericAttribute,CatalogIndex,CatalogIndexEntry,ParametricGeometry,BoundingBox,ConnectionPoint,CharacteristicCurve,CurvePoint,VdiUnit,VdiQuantityKind,SecurityLimits,LocalizedText};
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
+use semio_s_artifact_norm_vdi3805_model::{AccessoryLink, CompositionLink, CatalogueProduct, ManufacturerCatalog, ManufacturerFile, BuildingSystemNumber, ProductIdentity, NativeRecord, RecordFamilyId, SheetId, EditionId, EditionProfileChoice, ExtensionBag, Configuration, SheetAttributes, ValveHeatingAttributes, RadiatorAttributes, PumpHeatingAttributes, HeatGeneratorAttributes, GenericAttributes, GenericAttribute, CatalogIndex, CatalogIndexEntry, ParametricGeometry, BoundingBox, ConnectionPoint, CharacteristicCurve, CurvePoint, VdiUnit, VdiQuantityKind, SecurityLimits};
+use semio_s_plugin_norm_compliance::LocalizedText;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -111,8 +112,5 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Vdi3805Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

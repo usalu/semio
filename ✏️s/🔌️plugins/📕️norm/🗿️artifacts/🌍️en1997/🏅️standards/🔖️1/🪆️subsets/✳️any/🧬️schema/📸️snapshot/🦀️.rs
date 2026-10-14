@@ -1,7 +1,15 @@
 //! 🌍️ EN 1997 snapshot — complete geotechnical project subject (SI).
 
-use crate::document::AnnexChoice;
-use crate::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -49,10 +57,6 @@ pub struct En1997Snapshot {
     pub uplift_cases: Vec<UpliftCase>,
 }
 //#endregion 🔖️Snapshot
-
-//#region 🔖️HandcraftedArtifactCodecs
-
-//#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1997Snapshot {
     fn default() -> Self {
@@ -224,18 +228,205 @@ pub fn noncompliant_demo() -> En1997Snapshot {
     s
 }
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
+use semio_s_plugin_norm_app_surface;
 
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    app_surface::artifact_kind_spec("en1997", "EN 1997", EN1997_DOCUMENT_SCHEMA)
+}
 
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1997_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1997", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
+pub const EN1997_DOCUMENT_SCHEMA: &str = "semio.norm.en1997/v1";
 
+/// 🪨 Stratigraphic soil layer with characteristic parameters (SI).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SoilLayer {
+    pub id: String,
+    pub soil_type: String,
+    #[dsl(unit = "m")]
+    pub depth_top: f64,
+    #[dsl(unit = "m")]
+    pub depth_bottom: f64,
+    pub gamma: f64,
+    pub gamma_prime: f64,
+    pub phi_prime_deg: f64,
+    #[dsl(unit = "Pa")]
+    pub cohesion_effective: f64,
+    #[dsl(unit = "Pa")]
+    pub cohesion_undrained: f64,
+    #[dsl(unit = "Pa")]
+    pub oedometric_modulus: f64,
+    pub poisson_ratio: f64,
+    #[dsl(unit = "Pa")]
+    pub cpt_qc: f64,
+    pub spt_n: f64,
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🏋️ Characteristic permanent/variable actions for one design situation.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FoundationLoadCase {
+    pub id: String,
+    pub design_situation: String,
+    #[dsl(unit = "N")]
+    pub vertical_permanent: f64,
+    #[dsl(unit = "N")]
+    pub vertical_variable: f64,
+    #[dsl(unit = "N")]
+    pub horizontal_permanent: f64,
+    #[dsl(unit = "N")]
+    pub horizontal_variable: f64,
+    #[dsl(unit = "J")]
+    pub moment_permanent: f64,
+    #[dsl(unit = "J")]
+    pub moment_variable: f64,
+}
 
+/// 🦶️ Spread foundation (pad/strip) geometry and actions.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SpreadFoundation {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub width: f64,
+    #[dsl(unit = "m")]
+    pub length: f64,
+    #[dsl(unit = "m")]
+    pub embedment: f64,
+    pub base_inclination_deg: f64,
+    #[dsl(unit = "m")]
+    pub settlement_limit: f64,
+    #[dsl(table)]
+    pub load_cases: Vec<FoundationLoadCase>,
+}
 
+/// 🧪 Pile load-test or CPT/table-derived calculated resistance profile.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PileTestProfile {
+    pub id: String,
+    #[dsl(unit = "N")]
+    pub shaft_resistance: f64,
+    #[dsl(unit = "N")]
+    pub base_resistance: f64,
+}
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️regen-assets/🦀️.rs"]
-mod regen_assets;
+/// 🏗️ Deep foundation pile or pile group.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Pile {
+    pub id: String,
+    pub pile_type: String,
+    #[dsl(unit = "m")]
+    pub diameter: f64,
+    #[dsl(unit = "m")]
+    pub length: f64,
+    pub count: u32,
+    pub alpha_s: f64,
+    #[dsl(unit = "Pa")]
+    pub unit_shaft_resistance: f64,
+    #[dsl(unit = "Pa")]
+    pub unit_base_resistance: f64,
+    #[dsl(unit = "N")]
+    pub compression_permanent: f64,
+    #[dsl(unit = "N")]
+    pub compression_variable: f64,
+    #[dsl(unit = "N")]
+    pub tension_permanent: f64,
+    #[dsl(unit = "N")]
+    pub tension_variable: f64,
+    #[dsl(table)]
+    pub test_profiles: Vec<PileTestProfile>,
+}
 
+/// 🧱 Retaining wall geometry and surcharge.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct RetainingWall {
+    pub id: String,
+    #[dsl(unit = "m")]
+    pub height: f64,
+    #[dsl(unit = "m")]
+    pub embedment: f64,
+    #[dsl(unit = "m")]
+    pub base_width: f64,
+    #[dsl(unit = "m")]
+    pub stem_thickness: f64,
+    pub backfill_phi_deg: f64,
+    pub backfill_gamma: f64,
+    pub wall_friction_deg: f64,
+    /// 🧱 active | atRest | increasedActive (DIN 4085 earth-pressure regime).
+    pub earth_pressure_mode: String,
+    /// 🧱 free | rigid | propped (DIN 4085 wall-movement class).
+    pub wall_movement: String,
+    /// 🧱 Overconsolidation ratio for Jáky K₀.
+    pub ocr: f64,
+    /// 🧱 Stem/base concrete unit weight γ_c [N/m³].
+    pub concrete_gamma: f64,
+    #[dsl(unit = "Pa")]
+    pub surcharge: f64,
+    #[dsl(unit = "N")]
+    pub vertical_permanent: f64,
+    #[dsl(unit = "N")]
+    pub horizontal_permanent: f64,
+}
+
+/// ⛰️ Slope geometry for overall stability (GEO-3).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Slope {
+    pub id: String,
+    pub angle_deg: f64,
+    #[dsl(unit = "m")]
+    pub height: f64,
+    #[dsl(unit = "m")]
+    pub length: f64,
+    pub governing_layer_id: String,
+}
+
+/// 💧 Uplift / heave verification case (§10 UPL/HYD).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct UpliftCase {
+    pub id: String,
+    #[dsl(unit = "N")]
+    pub permanent_stabilizing: f64,
+    #[dsl(unit = "N")]
+    pub permanent_destabilizing: f64,
+    #[dsl(unit = "N")]
+    pub variable_destabilizing: f64,
+    #[dsl(unit = "Pa")]
+    pub pore_pressure: f64,
+    #[dsl(unit = "Pa")]
+    pub total_stress: f64,
+}

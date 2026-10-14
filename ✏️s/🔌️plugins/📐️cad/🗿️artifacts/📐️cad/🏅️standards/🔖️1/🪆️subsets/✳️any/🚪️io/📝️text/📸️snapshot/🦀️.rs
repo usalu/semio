@@ -1,7 +1,7 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
 //! derive-generated `pack::snapshot::ArtifactDsl`, plus the handcrafted `default` example the app registers.
 
-use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use crate::snapshot::CadSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -27,7 +27,7 @@ pub fn print_dsl(document: &CadSnapshot) -> String {
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+pub mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -38,11 +38,11 @@ pub type CadSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use semio_s_artifact_cad_cad_model::snapshot::*;
-use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReferenceList};
+use crate::snapshot::*;
+use crate::{snapshot::empty_cad_snapshot, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReferenceList};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_cad_cad_model::CadReferenceIndex;
+use crate::CadReferenceIndex;
 
 pub(crate) fn exact_child(target: &semio_framework_artifact_reference::ArtifactRef, subset: &str) -> Result<(), String> {
     if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != subset {

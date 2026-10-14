@@ -1,8 +1,11 @@
 //! 📑 `create-layer` — appends an empty layer on one page. The inverse removes that layer.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageLayersDelta, PagePatch};
-use crate::{Layer, LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageLayersDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Layer;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,10 +24,10 @@ pub struct CreateLayer {
     pub remove: bool,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateLayer {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreateLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::create_layer::CreateLayer> + From<crate::update_layer::UpdateLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> { diff_create_layer(self, base) }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({ inverse_create_layer(self, base)? 
     })
 }
@@ -63,7 +66,7 @@ pub fn diff_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> protoc
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { layers: PageLayersDelta::insertion(at, layer), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
-pub fn inverse_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_layer<Op: From<crate::create_layer::CreateLayer> + From<crate::update_layer::UpdateLayer>>(payload: &CreateLayer, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     if payload.remove {
         let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
@@ -71,12 +74,12 @@ pub fn inverse_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> Res
         let layer = &page.layers[at];
         let mut steps = Vec::new();
         if !layer.visible || layer.locked {
-            steps.push(LayoutMutation::UpdateLayer(crate::mutations::update_layer::UpdateLayer { page_id: payload.page_id.clone(), layer_id: layer.id.clone(), name: layer.name.clone(), visible: layer.visible, locked: layer.locked }));
+            steps.push(Op::from(crate::update_layer::UpdateLayer { page_id: payload.page_id.clone(), layer_id: layer.id.clone(), name: layer.name.clone(), visible: layer.visible, locked: layer.locked }));
         }
-        steps.push(LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: layer.id.clone(), name: layer.name.clone(), index: Some(at), remove: false }));
+        steps.push(Op::from(CreateLayer { page_id: payload.page_id.clone(), id: layer.id.clone(), name: layer.name.clone(), index: Some(at), remove: false }));
         return steps;
     }
-    vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: payload.id.clone(), name: payload.name.clone(), index: None, remove: true })]
+    vec![Op::from(CreateLayer { page_id: payload.page_id.clone(), id: payload.id.clone(), name: payload.name.clone(), index: None, remove: true })]
 
     })())
 }

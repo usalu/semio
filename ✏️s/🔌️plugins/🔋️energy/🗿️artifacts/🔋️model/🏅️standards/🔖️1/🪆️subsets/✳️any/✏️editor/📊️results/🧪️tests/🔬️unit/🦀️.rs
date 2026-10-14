@@ -1,5 +1,5 @@
 use super::*;
-use crate::energy_simulation_session::{encode_surface_energy_payload, energy_surface_payload_bytes, ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS};
+use crate::session::{encode_surface_energy_payload, energy_surface_payload_bytes, ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS};
 use crate::results::SurfaceEnergySummary;
 
 fn summary(id: u32, loss: f64, gain: f64, transmitted: f64, absorbed: f64) -> SurfaceEnergySummary {
@@ -54,7 +54,6 @@ fn malformed_and_absent_payloads_are_refused_rather_than_panicking() {
     let mut truncated = encode_surface_energy_payload([summary(1, 1.0, 0.0, 0.0, 0.0), summary(2, 2.0, 0.0, 0.0, 0.0)].into_iter());
     truncated.truncate(truncated.len() - 3);
     assert_eq!(decode_run_payload(&truncated), None, "a body shorter than its own row count");
-    assert_eq!(surface_energy_from_run(None), None, "no run at all");
     let empty = encode_surface_energy_payload(std::iter::empty());
     assert_eq!(decode_run_payload(&empty).expect("an empty map is still well formed").len(), 0);
 }

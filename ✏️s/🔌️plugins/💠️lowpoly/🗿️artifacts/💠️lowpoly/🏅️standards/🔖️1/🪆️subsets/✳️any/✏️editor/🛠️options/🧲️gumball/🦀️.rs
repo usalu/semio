@@ -3,10 +3,10 @@
 //! `LowpolyConfig::utility_params_json` (`gumballMove`/`gumballRotate`/`gumballScale`) beside the snap
 //! grid, so a toggle is one `setUtilityParam` and the Model scene's `gumballConfig` reads them back.
 
-use crate::editor::lowpoly::config::LowpolyConfig;
-use crate::editor::lowpoly::lowpoly_window_action;
-use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{utility_param_bool, utility_params_value, GUMBALL_MOVE_PARAM, GUMBALL_ROTATE_PARAM, GUMBALL_SCALE_PARAM};
+use semio_s_artifact_lowpoly_lowpoly_config::LowpolyConfig;
+use semio_s_artifact_lowpoly_lowpoly_kit::lowpoly_window_action;
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::terminology::LowpolyLabels;
+use semio_s_artifact_lowpoly_lowpoly_view::{utility_param_bool, utility_params_value, GUMBALL_MOVE_PARAM, GUMBALL_ROTATE_PARAM, GUMBALL_SCALE_PARAM};
 use semio_framework_ui_locale::LabelText;
 use semio_framework_plugin::WindowMeasure;
 
@@ -61,7 +61,4 @@ pub fn measure(config: &LowpolyConfig, labels: &LowpolyLabels) -> WindowMeasure 
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

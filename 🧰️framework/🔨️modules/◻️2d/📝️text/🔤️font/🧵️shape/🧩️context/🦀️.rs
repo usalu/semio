@@ -1,5 +1,6 @@
 //! 🧩️ Genuine contextual glyph sources resolve ordered lookup records with bounded original coverage probes.
-use super::{FontLookup,super::{FontFace,FontProgress,FontReader,kerning::Index}};
+use super::FontLookup;
+use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,kerning::Index};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[path="🪄️apply/🦀️.rs"]
 pub mod apply;

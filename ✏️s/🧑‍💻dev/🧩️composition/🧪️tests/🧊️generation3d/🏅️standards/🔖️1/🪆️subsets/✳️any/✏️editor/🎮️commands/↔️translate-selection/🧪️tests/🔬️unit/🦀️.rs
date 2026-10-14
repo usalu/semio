@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
 use crate::editor_domain::editor_laws::context;
@@ -92,8 +92,10 @@ async fn a_streamed_gumball_drag_is_one_edit_and_an_abort_is_zero_trace() {
     assert_eq!(rows_after - rows_before, 1, "a tick or an abort logs no session row of its own either");
 }
 /// 🎚️ One streamed (or released) gumball tick of `extrude` in window `preview-1`, as the live `World3dHost` sends it.
-fn streamed(phase: &str, offset: [f64; 3]) -> semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::GumballDispatch<'static> {
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::{GesturePhase, GumballDispatch, GumballMotion};
+fn streamed(phase: &str, offset: [f64; 3]) -> semio_s_artifact_procedural_3d_transforms::GumballDispatch<'static> {
+    use semio_s_artifact_procedural_3d_transforms::GesturePhase;
+    use semio_s_artifact_procedural_3d_transforms::GumballDispatch;
+    use semio_s_artifact_procedural_3d_transforms::GumballMotion;
     let phase = match phase { "abort" => GesturePhase::parse(Some("abort"), Some("blur")), other => GesturePhase::parse(Some(other), None) }.expect("a host phase");
     GumballDispatch { verb: "translateSelection", window: "preview-1", ids: vec!["extrude".into()], motion: GumballMotion::Translate(offset), phase, authoring_seed: "seed", base_revision: [0; 32] }
 }
@@ -104,7 +106,9 @@ fn streamed(phase: &str, offset: [f64; 3]) -> semio_s_artifact_procedural_genera
 /// leaves nothing to paint.
 #[test]
 fn an_open_gesture_previews_exactly_what_its_release_commits() {
-    use semio_s_artifact_procedural_generation3d::editor::generation3d::{generation3d_gumball_preview, transform_commands::GumballGestures, PreviewInteractionMarks};
+    use semio_s_artifact_procedural_3d_editor::generation3d_gumball_preview;
+    use semio_s_artifact_procedural_3d_transforms::GumballGestures;
+    use semio_s_artifact_procedural_3d_editor::PreviewInteractionMarks;
     use semio_s_artifact_procedural_3d_model::example_snapshot;
     use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
     use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;

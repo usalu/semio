@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "maximumSourceBytes": 16777216,
+  "maximumSourceFiles": 8192,
+  "slots": 16,
+  "maximumPathCharacters": 256,
+  "maximumGrantBytes": 4194304
+}

@@ -1,4 +1,16 @@
 {
+  "imageInformationCapture": {
+    "images": 128,
+    "paddingBytes": 768,
+    "imagePath": "/repository/cache space/fixed.dmg",
+    "mountPoint": "/repository/cache space/m",
+    "description": "Original & <finite> image",
+    "maximumBytes": 1048576,
+    "maximumLines": 32768,
+    "overflowBytes": 1048577,
+    "tailBytes": 65536,
+    "error": "System image plist required"
+  },
  "capacity":100,
  "cases":[
   {"name":"equal ceiling admitted","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"compiler-workspace","bytes":100,"phase":"reserved"}}],"used":100,"refused":false},

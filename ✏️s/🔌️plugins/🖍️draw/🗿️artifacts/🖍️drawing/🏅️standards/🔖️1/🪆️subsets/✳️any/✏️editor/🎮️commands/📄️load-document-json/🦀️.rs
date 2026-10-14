@@ -18,11 +18,11 @@ pub fn handle(
     payload: &LoadDocumentJson,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
-    _session: &mut crate::commands::canvas_pointer_down::DrawingSession,
+    _session: &mut semio_s_artifact_draw_drawing_editor_tool::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     if payload.json.contains(DRAWING_DOCUMENT_SCHEMA) {
         if let Ok(snapshot) = semio_framework_pack_json::from_json_str::<DrawingSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-            return Ok(Emit { effects: vec![crate::drawing_reset_document_effect(&snapshot)], ..Default::default() });
+            return Ok(Emit { effects: vec![semio_s_artifact_draw_drawing_editor_interaction::drawing_reset_document_effect(&snapshot)], ..Default::default() });
         }
     }
     Ok(Emit::default())

@@ -7,7 +7,7 @@ use crate::sdk_fault::plugin_sdk_fault;
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure;
 pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
-pub(crate) use original_failure::{original_lifecycle_grant,original_lifecycle_step,original_lifecycle_delta,original_lifecycle_unposted};
+pub use original_failure::{original_lifecycle_grant,original_lifecycle_step,original_lifecycle_delta,original_lifecycle_unposted};
 
 
 
@@ -54,20 +54,20 @@ impl semio_framework_value::RetirementReceipt for PluginLifecycleStep {
 }
 
 #[derive(Debug)]
-pub(crate) struct ArtifactFixedQueue<T> {
-    pub(crate) items: std::collections::VecDeque<T>,
-    pub(crate) capacity: usize,
-    pub(crate) allocation_admitted: bool,
+pub struct ArtifactFixedQueue<T> {
+    pub items: std::collections::VecDeque<T>,
+    pub capacity: usize,
+    pub allocation_admitted: bool,
 }
 
 impl<T> ArtifactFixedQueue<T> {
-    pub(crate) fn new(capacity: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         let mut items = std::collections::VecDeque::new();
         let allocation_admitted = items.try_reserve_exact(capacity).is_ok();
         Self { items, capacity, allocation_admitted }
     }
 
-    pub(crate) fn push(&mut self, value: T) -> Result<(), T> {
+    pub fn push(&mut self, value: T) -> Result<(), T> {
         if !self.allocation_admitted || self.items.len() >= self.capacity {
             return Err(value);
         }
@@ -75,13 +75,13 @@ impl<T> ArtifactFixedQueue<T> {
         Ok(())
     }
 
-    pub(crate) fn can_push(&self) -> bool { self.allocation_admitted && self.items.len() < self.capacity }
+    pub fn can_push(&self) -> bool { self.allocation_admitted && self.items.len() < self.capacity }
 
-    pub(crate) fn pop(&mut self) -> Option<T> {
+    pub fn pop(&mut self) -> Option<T> {
         self.items.pop_front()
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.items.len()
     }
 }
@@ -92,12 +92,12 @@ fn plugin_page_grant(page_bytes: usize) -> RetainedCloneGrant {
 }
 
 /// 🎟️ Self-funds exactly one quoted turn for a caller whose owner publishes an honest demand.
-pub(crate) fn plugin_demand_grant(demand: RetirementDemand) -> RetainedCloneGrant {
+pub fn plugin_demand_grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
 /// 🚦️ Admits a turn only when every axis is funded: an under-granted axis yields, a depth below demand is refused.
-pub(crate) fn plugin_turn_admitted(demand: RetirementDemand, grant: RetainedCloneGrant) -> Result<bool, Fault> {
+pub fn plugin_turn_admitted(demand: RetirementDemand, grant: RetainedCloneGrant) -> Result<bool, Fault> {
     if grant.maximum_items != 0 && grant.maximum_depth < demand.depth {
         return Err(plugin_retirement_fault(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "plugin retirement turn exceeds admitted depth")));
     }
@@ -105,7 +105,7 @@ pub(crate) fn plugin_turn_admitted(demand: RetirementDemand, grant: RetainedClon
 }
 
 /// 🧯️ Converts a value-layer retirement refusal into the plugin fault.
-pub(crate) fn plugin_retirement_fault(error: ValueError) -> Fault {
+pub fn plugin_retirement_fault(error: ValueError) -> Fault {
     plugin_sdk_fault(error.to_string())
 }
 
@@ -115,7 +115,7 @@ fn plugin_job_close_demand<J: semio_framework_job::InteractiveJob>(job: &J, body
 }
 
 /// 📏️ Quotes the next close turn of one owned text: its last scalar, then its whole physical backing.
-pub(crate) fn plugin_text_retirement_demand(text: &String) -> RetirementDemand {
+pub fn plugin_text_retirement_demand(text: &String) -> RetirementDemand {
     match text.chars().next_back() {
         Some(scalar) => RetirementDemand { copy_bytes: scalar.len_utf8(), depth: 1, ..Default::default() },
         None => RetirementDemand { release_bytes: text.capacity(), depth: usize::from(text.capacity() != 0), ..Default::default() },
@@ -123,7 +123,7 @@ pub(crate) fn plugin_text_retirement_demand(text: &String) -> RetirementDemand {
 }
 
 /// ♻️ Closes one owned text under the grant; `None` means no physical text remains.
-pub(crate) fn plugin_text_close(text: &mut String, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
+pub fn plugin_text_close(text: &mut String, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
     let empty = RetainedCloneProgress::default();
     if text.capacity() == 0 {
         return None;
@@ -148,7 +148,7 @@ pub(crate) fn plugin_text_close(text: &mut String, grant: RetainedCloneGrant) ->
 }
 
 /// 📏️ Quotes the next turn of an original typed owner: its controlled frame admission, then its live frontier.
-pub(crate) fn plugin_typed_owner_demand<T: semio_framework_value::retirement::RetireOwned>(original: &Option<T>, active: &Option<ControlledRetirement<T>>, body: usize) -> Result<RetirementDemand, ValueError> {
+pub fn plugin_typed_owner_demand<T: semio_framework_value::retirement::RetireOwned>(original: &Option<T>, active: &Option<ControlledRetirement<T>>, body: usize) -> Result<RetirementDemand, ValueError> {
     if let Some(owner) = active.as_ref() {
         return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.max(1) });
     }
@@ -156,7 +156,7 @@ pub(crate) fn plugin_typed_owner_demand<T: semio_framework_value::retirement::Re
 }
 
 /// 🧳️ Retains an original typed owner in its controlled frame, then advances that frame under the unchanged grant.
-pub(crate) fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn plugin_typed_owner_step<T: semio_framework_value::retirement::RetireOwned>(original: &mut Option<T>, active: &mut Option<ControlledRetirement<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     let empty = RetainedCloneProgress::default();
     if active.is_none() {
@@ -188,7 +188,7 @@ pub(crate) fn plugin_typed_owner_step<T: semio_framework_value::retirement::Reti
 }
 
 /// 📏️ Quotes the next close turn of one owned byte vector: any payload truncation, then its whole physical backing.
-pub(crate) fn plugin_bytes_retirement_demand(bytes: &Vec<u8>) -> RetirementDemand {
+pub fn plugin_bytes_retirement_demand(bytes: &Vec<u8>) -> RetirementDemand {
     if bytes.is_empty() {
         RetirementDemand { release_bytes: bytes.capacity(), depth: usize::from(bytes.capacity() != 0), ..Default::default() }
     } else {
@@ -197,7 +197,7 @@ pub(crate) fn plugin_bytes_retirement_demand(bytes: &Vec<u8>) -> RetirementDeman
 }
 
 /// ♻️ Closes one owned byte vector under the grant; `None` means no physical bytes remain.
-pub(crate) fn plugin_bytes_close(bytes: &mut Vec<u8>, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
+pub fn plugin_bytes_close(bytes: &mut Vec<u8>, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
     let empty = RetainedCloneProgress::default();
     if bytes.capacity() == 0 {
         return None;
@@ -215,17 +215,17 @@ pub(crate) fn plugin_bytes_close(bytes: &mut Vec<u8>, grant: RetainedCloneGrant)
     Some(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty })
 }
 
-pub(crate) const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
+pub const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
 
 /// 📦️ Concurrent document archive loads one instance admits. A load slot carries the whole archive decode and hydration
 /// cursors inline (~25 KiB), so the slot count is what keeps the registry's one backing allocation, and the single
 /// release its close owes, under every mounted caller grant and the guest's contiguous request ceiling.
-pub(crate) const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
+pub const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
 
-pub(crate) struct ArtifactFixedRegistry<T> {
-    pub(crate) slots: Box<[std::mem::MaybeUninit<(u64, T)>]>,
-    pub(crate) occupied: u64,
-    pub(crate) allocation_admitted: bool,
+pub struct ArtifactFixedRegistry<T> {
+    pub slots: Box<[std::mem::MaybeUninit<(u64, T)>]>,
+    pub occupied: u64,
+    pub allocation_admitted: bool,
     capacity: usize,
 }
 
@@ -234,13 +234,13 @@ impl<T> ArtifactFixedRegistry<T> {
     /// initialization witness. A successful exact reservation provides capacity for all slots;
     /// `MaybeUninit` permits extending their length without values. Insertion writes before setting
     /// a bit, removal clears the bit before reading, and the zero initial mask prevents every read.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self::with_slots(ARTIFACT_LIVE_OUTPUT_SLOTS)
     }
 
     /// 📏️ A direct-mapped table of exactly `capacity` slots (a divisor of the 64-bit occupancy mask), for owners whose
     /// slot is too large to reserve sixty-four of them inside one physical release grant.
-    pub(crate) fn with_slots(capacity: usize) -> Self {
+    pub fn with_slots(capacity: usize) -> Self {
         assert!(capacity != 0 && capacity <= ARTIFACT_LIVE_OUTPUT_SLOTS && ARTIFACT_LIVE_OUTPUT_SLOTS % capacity == 0, "fixed artifact registry capacity divides its occupancy mask");
         let mut slots = Vec::<std::mem::MaybeUninit<(u64, T)>>::new();
         let allocation_admitted = slots.try_reserve_exact(capacity).is_ok();
@@ -251,13 +251,13 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     /// 🎟️ Retains the authored slot count without allocating before an original caller admits its backing.
-    pub(crate) fn unallocated(capacity:usize)->Self{
+    pub fn unallocated(capacity:usize)->Self{
         assert!(capacity!=0&&capacity<=ARTIFACT_LIVE_OUTPUT_SLOTS&&ARTIFACT_LIVE_OUTPUT_SLOTS%capacity==0);
         Self{slots:Box::new([]),occupied:0,allocation_admitted:false,capacity}
     }
 
     /// 🪙️ Allocates the exact empty slot body under the receiving caller's independent currencies.
-    pub(crate) fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}
         let bytes=self.capacity.checked_mul(size_of::<std::mem::MaybeUninit<(u64,T)>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original registry backing extent overflow"))?;
         if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -272,7 +272,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     /// 🧿️ SAFETY: the occupied bit is set only after `write` and cleared before `assume_init_read`.
-    pub(crate) fn entry(&self, index: usize) -> Option<&(u64, T)> {
+    pub fn entry(&self, index: usize) -> Option<&(u64, T)> {
         if !self.occupied(index) {
             return None;
         }
@@ -280,7 +280,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     /// 🖋️ SAFETY: the occupied bit is set only after `write` and cleared before `assume_init_read`.
-    pub(crate) fn entry_mut(&mut self, index: usize) -> Option<&mut (u64, T)> {
+    pub fn entry_mut(&mut self, index: usize) -> Option<&mut (u64, T)> {
         if !self.occupied(index) {
             return None;
         }
@@ -288,7 +288,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     #[cfg(test)]
-    pub(crate) fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
+    pub fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
         if !self.allocation_admitted {
             return Err(value);
         }
@@ -301,17 +301,17 @@ impl<T> ArtifactFixedRegistry<T> {
         Ok(())
     }
 
-    pub(crate) fn can_insert(&self, id: u64) -> bool {
+    pub fn can_insert(&self, id: u64) -> bool {
         self.slot_is_vacant(id as usize % self.capacity)
     }
 
     /// 🎰️ Whether one residue class of this direct-mapped table owns no live value — the per-slot
     /// question an admitting caller asks before it mints an id for that slot.
-    pub(crate) fn slot_is_vacant(&self, slot: usize) -> bool {
+    pub fn slot_is_vacant(&self, slot: usize) -> bool {
         self.allocation_admitted && self.entry(slot).is_none()
     }
 
-    pub(crate) fn insert_admitted(&mut self, id: u64, value: T) {
+    pub fn insert_admitted(&mut self, id: u64, value: T) {
         let index = id as usize % self.capacity;
         assert!(self.can_insert(id), "fixed artifact registry admission changed before exact owner insertion");
         self.slots[index].write((id, value));
@@ -319,7 +319,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     /// 🪢️ Borrows the value of `id` mutably and hands every other occupied value to `other` in slot order, all disjoint.
-    pub(crate) fn partition_mut<'a>(&'a mut self, id: u64, mut other: impl FnMut(&'a T)) -> Option<&'a mut T> {
+    pub fn partition_mut<'a>(&'a mut self, id: u64, mut other: impl FnMut(&'a T)) -> Option<&'a mut T> {
         let occupied = self.occupied;
         let mut selected = None;
         for (index, slot) in self.slots.iter_mut().enumerate() {
@@ -330,20 +330,20 @@ impl<T> ArtifactFixedRegistry<T> {
         selected
     }
 
-    pub(crate) fn get(&self, id: u64) -> Option<&T> {
+    pub fn get(&self, id: u64) -> Option<&T> {
         self.entry(id as usize % self.capacity).and_then(|(candidate, value)| (*candidate == id).then_some(value))
     }
 
-    pub(crate) fn get_mut(&mut self, id: u64) -> Option<&mut T> {
+    pub fn get_mut(&mut self, id: u64) -> Option<&mut T> {
         self.entry_mut(id as usize % self.capacity).and_then(|(candidate, value)| (*candidate == id).then_some(value))
     }
 
-    pub(crate) fn has_capacity(&self) -> bool {
+    pub fn has_capacity(&self) -> bool {
         self.allocation_admitted && (self.occupied.count_ones() as usize) < self.capacity
     }
 
     /// ➖️ SAFETY: exact identity and occupied state were checked, and the bit is now cleared.
-    pub(crate) fn remove(&mut self, id: u64) -> Option<T> {
+    pub fn remove(&mut self, id: u64) -> Option<T> {
         let index = id as usize % self.capacity;
         if self.entry(index).is_none_or(|(candidate, _)| *candidate != id) {
             return None;
@@ -352,11 +352,11 @@ impl<T> ArtifactFixedRegistry<T> {
         Some(unsafe { self.slots[index].assume_init_read().1 })
     }
 
-    pub(crate) fn id_at(&self, index: usize) -> Option<u64> {
+    pub fn id_at(&self, index: usize) -> Option<u64> {
         self.entry(index).map(|(id, _)| *id)
     }
 
-    pub(crate) fn each_id(&self, mut visit: impl FnMut(u64)) {
+    pub fn each_id(&self, mut visit: impl FnMut(u64)) {
         for index in 0..self.capacity {
             if let Some(id) = self.id_at(index) {
                 visit(id);
@@ -364,7 +364,7 @@ impl<T> ArtifactFixedRegistry<T> {
         }
     }
 
-    pub(crate) fn next_id_from(&self, cursor: usize) -> Option<(usize, u64)> {
+    pub fn next_id_from(&self, cursor: usize) -> Option<(usize, u64)> {
         if self.occupied == 0 {
             return None;
         }
@@ -373,15 +373,15 @@ impl<T> ArtifactFixedRegistry<T> {
         self.id_at(index).map(|id| (index, id))
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.occupied == 0
     }
 
     /// 🪵️ Borrows the full backing extent of an already empty retained registry.
-    pub(crate) fn empty_backing_byte_demand(&self) -> Option<usize> { self.is_empty().then_some(size_of_val(self.slots.as_ref())) }
+    pub fn empty_backing_byte_demand(&self) -> Option<usize> { self.is_empty().then_some(size_of_val(self.slots.as_ref())) }
 
     /// 🧺️ Releases the exact original empty registry backing under independent authority.
-    pub(crate) fn close_empty_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn close_empty_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let idle=RetainedCloneProgress::default();
         let bytes=self.empty_backing_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original registry backing still owns an active slot"))?;
         if bytes==0{return Ok(RetainedCloneStep::Complete(idle));}
@@ -391,7 +391,7 @@ impl<T> ArtifactFixedRegistry<T> {
     }
 
     /// 🧺️ Retains every empty slot until its whole original allocation is funded.
-    pub(crate) fn close_empty_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_empty_backing_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let empty = RetainedCloneProgress::default();
         let Some(bytes) = self.empty_backing_byte_demand() else {
             return Err(plugin_sdk_fault("registry backing still owns an exact active slot"));
@@ -407,7 +407,7 @@ impl<T> ArtifactFixedRegistry<T> {
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }))
     }
     /// 🔢️ Admitted entries — the occupied mask's population.
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.occupied.count_ones() as usize
     }
 
@@ -425,11 +425,11 @@ impl<T> Drop for ArtifactFixedRegistry<T> {
 
 
 /// 💰️ Whether a retirement grant funds one whole retirement demand on every axis (items, copy, capacity, release, depth).
-pub(crate) fn plugin_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
+pub fn plugin_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
     grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
 }
 
 /// 📬️ Forwards the original grant once and validates the actual owner receipt and terminal witness.
-pub(crate) fn runtime_lifecycle_step(demand: RetirementDemand, grant: RetainedCloneGrant, owner: impl FnOnce(RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>)->Result<PluginLifecycleStep,Fault> {
+pub fn runtime_lifecycle_step(demand: RetirementDemand, grant: RetainedCloneGrant, owner: impl FnOnce(RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>)->Result<PluginLifecycleStep,Fault> {
     semio_framework_value::advance_retirement_turn(demand,grant,owner).map_err(|error|match error{semio_framework_value::RetirementTurnError::Owner(fault)=>fault,semio_framework_value::RetirementTurnError::Receipt(error)=>Fault::from(error.into_message())})
 }

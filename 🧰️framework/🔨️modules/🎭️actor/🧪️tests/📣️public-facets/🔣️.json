@@ -110,21 +110,24 @@
     {
       "subpath": "./codec",
       "public": "🧬️codec/🟦️.ts",
-      "implementation": "📮️shard-client/🧬️component-codec/🟦️.ts",
+      "implementation": "🧬️codec/🟦️.ts",
       "runtime": [
         "ACTOR_CODEC_REFUSAL",
         "actorCodecAnswer",
-        "actorComponentCodecSchema"
+        "admitActorCodecRequestV1",
+        "admitActorCodecAnswerV1",
+        "actorCodecRuntimeSourceV1",
+        "actorCodecSchema"
       ],
       "types": [
-        "ShardCodecRequest",
-        "ShardCodecDocumentPair",
-        "ShardCodecSuccess",
-        "ShardCodecAnswer",
+        "ActorCodecRequest",
+        "ActorCodecDocumentPair",
+        "ActorCodecSuccess",
+        "ActorCodecAnswer",
         "ActorCodecExports"
       ],
-      "schema": "📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json",
-      "schemaExport": "actorComponentCodecSchema"
+      "schema": "🧬️codec/🧬️schema/🔣️.json",
+      "schemaExport": "actorCodecSchema"
     },
     {
       "subpath": "./liveness",

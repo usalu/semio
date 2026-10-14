@@ -12,7 +12,7 @@ rules of `🗺️facets.json`; its `modules` map (E2b) states the facet of a mod
 E2b changes against `e2-plugin/`: the splitter is E1's generic-brace-fixed `e1-os-kernel/🧱️rust_items.py`; `mod` heads
 inside `macro_rules!` bodies are expanded in the invoking crate, not here, so they are skipped; the owner index only
 holds module-level definitions (methods and locals no longer shadow extern aliases such as `crate::store`); every
-attribute stacked before a `mod` is read, `#[cfg(test)]` items with `async`/`const`/`unsafe` heads are stripped too, so `#[cfg(test)] #[path = …] mod …;` test modules are excluded (E2's reader saw
+attribute stacked before a `mod` is read, `#[cfg(test)]` items with `async`/`const`/`unsafe` heads are stripped too, root names inside `crate::{…}` groups resolve through the owner index, so `#[cfg(test)] #[path = …] mod …;` test modules are excluded (E2's reader saw
 only the attribute next to the head).
 Usage: facet-imports.py [--edges] [--back] [--modules] [--json OUT]
 """
@@ -195,6 +195,9 @@ def main():
                     if len(tos) == 1 and next(iter(tos)) != src: edges[src][next(iter(tos))].add(path[-1])
                 elif path[0] in top_mods and path[0] != src:
                     edges[src][path[0]].add(path[-1] if len(path) > 1 else path[0])
+                elif len(path) == 1 and path[0] not in top_mods:
+                    tos = owner.get(path[0], set())
+                    if len(tos) == 1 and next(iter(tos)) != src: edges[src][next(iter(tos))].add(path[0])
         for pm in PATH_RE.finditer(text):
             root, rest = pm.group(1), pm.group(2).strip(":").split("::")
             if root == "super" and len(segs) != 3: continue

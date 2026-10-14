@@ -1,9 +1,9 @@
 #!/bin/bash
-# 🏗️ One P5 cargo invocation inside a fleet slot with the private P5 target and build dirs; logs to `⚡️cache/p5/logs/<tag>.log`.
+# 🏗️ One P5 cargo invocation through the issued repository Cargo launcher (`🚦️cargo-slot.sh`, shared store); logs to `⚡️cache/p5/logs/<tag>.log`.
 # usage: 🏗️cargo.sh <tag> <cargo args...>
 TAG=$1; shift
 ROOT="/Users/ueli/Documents/semio"; P5="$ROOT/.🧬semio/🦑️repo/⚡️cache/p5"; mkdir -p "$P5/logs"
-export CARGO_TARGET_DIR="$P5/target" CARGO_BUILD_BUILD_DIR="$P5/build" CARGO_TERM_COLOR=never CARGO_INCREMENTAL=0
+unset CARGO_TARGET_DIR CARGO_BUILD_BUILD_DIR; export CARGO_TERM_COLOR=never
 cd "$ROOT" || exit 2
 s=$(date +%s)
 "$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🚦️cargo-slot.sh" "p5-$TAG" -- cargo "$@" > "$P5/logs/$TAG.log" 2>&1

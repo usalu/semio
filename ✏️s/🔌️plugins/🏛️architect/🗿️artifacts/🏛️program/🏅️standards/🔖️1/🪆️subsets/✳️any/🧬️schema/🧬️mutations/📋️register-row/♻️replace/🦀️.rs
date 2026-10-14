@@ -1,7 +1,7 @@
 //! ♻️ ProgramSnapshot mutation — `replace-register-row` leaf: the generic replace over every id-keyed register, typed by the
-//! register catalog generated from `🗄️registers/🧬️schema/🔣️.json`.
+//! register catalog generated from the `x-semio-collection-catalog` of `📸️snapshot/🔣️.json`.
 
-use crate::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
+use crate::standards::v1::subsets::any::schema::registers::RegisterRow;
 use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 

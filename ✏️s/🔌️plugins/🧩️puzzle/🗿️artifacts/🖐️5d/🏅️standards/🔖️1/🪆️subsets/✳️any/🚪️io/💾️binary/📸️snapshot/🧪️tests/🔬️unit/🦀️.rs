@@ -23,7 +23,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 
-    let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
+    let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
     semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity).await).expect("apply");
     let envelope = store.envelope();

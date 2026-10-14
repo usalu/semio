@@ -1,8 +1,8 @@
-use super::*;
-use crate::document::CheckStatus;
-use crate::field_meta::en1998_field_meta;
-use crate::standards::v1::subsets::any::schema::inferences;
-use crate::En1998Snapshot;
+use semio_s_artifact_norm_en1998_schema::*;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_artifact_norm_en1998_editor::field_meta::en1998_field_meta;
+use semio_s_artifact_norm_en1998_inferences as inferences;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -41,10 +41,10 @@ async fn t1_ct_and_base_shear_lambda() {
 
 #[semio_framework_async_macros::async_test]
 async fn de_seismic_zone_is_schema_enum_0_to_3() {
-    use crate::DeSeismicZone;
+    use semio_s_artifact_norm_en1998_model::DeSeismicZone;
     assert_eq!(DeSeismicZone::Zone0.as_u8(), 0);
     assert_eq!(DeSeismicZone::Zone3.a_gr(), 0.8);
-    let mut doc = crate::En1998Snapshot::compliant_de_office();
+    let mut doc = semio_s_artifact_norm_en1998_model::En1998Snapshot::compliant_de_office();
     doc.site.seismic_zone = DeSeismicZone::Zone0;
     doc.site.a_gr = 0.0;
     let report = inferences::check_full_seismic(&doc);
@@ -53,13 +53,13 @@ async fn de_seismic_zone_is_schema_enum_0_to_3() {
 
 #[semio_framework_async_macros::async_test]
 async fn compliant_default_has_no_fail() {
-    let report = inferences::evaluate(&crate::En1998Snapshot::default());
+    let report = inferences::evaluate(&semio_s_artifact_norm_en1998_model::En1998Snapshot::default());
     assert!(report.complies(), "fails: {:?}", report.checks.iter().filter(|c| c.status == CheckStatus::Fail).map(|c| &c.id).collect::<Vec<_>>());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn noncompliant_has_failures_and_remedies() {
-    let report = inferences::evaluate(&crate::En1998Snapshot::noncompliant_de_office());
+    let report = inferences::evaluate(&semio_s_artifact_norm_en1998_model::En1998Snapshot::noncompliant_de_office());
     let fails: Vec<_> = report.checks.iter().filter(|c| c.status == CheckStatus::Fail).collect();
     assert!(fails.len() >= 2);
     assert!(fails.iter().all(|c| !c.remedies.is_empty()));
@@ -67,7 +67,7 @@ async fn noncompliant_has_failures_and_remedies() {
 
 #[semio_framework_async_macros::async_test]
 async fn remedy_raising_vrd_improves_base_shear() {
-    let mut doc = crate::En1998Snapshot::noncompliant_de_office();
+    let mut doc = semio_s_artifact_norm_en1998_model::En1998Snapshot::noncompliant_de_office();
     let before = inferences::evaluate(&doc);
     let fail = before.checks.iter().find(|c| c.id.contains("baseShear") && c.status == CheckStatus::Fail).expect("base shear fail");
     let remedy = fail.remedies.iter().find(|r| r.target.path.contains("baseShearResistanceN")).expect("vrd remedy");
@@ -80,7 +80,7 @@ async fn remedy_raising_vrd_improves_base_shear() {
 
 #[semio_framework_async_macros::async_test]
 async fn remedy_setting_detailing_flips_q_detail() {
-    let mut doc = crate::En1998Snapshot::noncompliant_de_office();
+    let mut doc = semio_s_artifact_norm_en1998_model::En1998Snapshot::noncompliant_de_office();
     let before = inferences::evaluate(&doc);
     let fail = before.checks.iter().find(|c| c.id.contains("qDetail") && c.status == CheckStatus::Fail).expect("qDetail fail");
     assert!(fail.remedies.iter().any(|r| r.target.path.contains("detailingCompatibleWithQ") && r.target.path.contains("[id=")));
@@ -98,7 +98,7 @@ async fn remedy_setting_detailing_flips_q_detail() {
 
 #[semio_framework_async_macros::async_test]
 async fn remedy_regularity_flips_when_both_flags_set() {
-    let mut doc = crate::En1998Snapshot::noncompliant_de_office();
+    let mut doc = semio_s_artifact_norm_en1998_model::En1998Snapshot::noncompliant_de_office();
     let before = inferences::evaluate(&doc);
     let fail = before.checks.iter().find(|c| c.id.contains("regularity") && c.status == CheckStatus::Fail).expect("regularity fail");
     assert!(fail.remedies.iter().any(|r| r.target.path.contains("planRegular")));
@@ -136,7 +136,7 @@ async fn emitted_remedy_paths_use_id_selectors_and_resolve() {
                 assert!(path.contains("[id="), "expected id selector in {path}");
                 saw_id = true;
                 let tree = semio_framework_value::ToValue::to_value(&En1998Snapshot::noncompliant_de_office());
-                crate::app_surface::get_value_at_path(&tree, path).unwrap_or_else(|e| panic!("path {path} must resolve: {e}"));
+                semio_s_plugin_norm_app_surface::get_value_at_path(&tree, path).unwrap_or_else(|e| panic!("path {path} must resolve: {e}"));
             }
         }
     }
@@ -226,9 +226,6 @@ async fn python_oracle_matches_within_half_percent() {
         }
     }
 }
-
-
-
 
 fn is_numbers_only(s: &str) -> bool {
     let t = s.trim();
@@ -359,7 +356,6 @@ fn set_bool_at_path(root: &mut serde_json::Value, path: &str, value: bool) -> Re
         _ => Err("leaf must be a field".into()),
     }
 }
-
 
 fn set_i64_at_path(root: &mut serde_json::Value, path: &str, value: i64) -> Result<(), String> {
     let segments = parse_segments(path)?;
@@ -612,12 +608,12 @@ async fn de_ground_combo_table_matches_oracle_for_all_combos() {
         assert!((ptd - td).abs() <= 1e-9, "{combo} TD");
         let mut snap = En1998Snapshot::compliant_de_office();
         snap.site.de_ground_combo = match combo {
-            "A-R" => crate::DeGroundCombo::AR,
-            "B-R" => crate::DeGroundCombo::BR,
-            "C-R" => crate::DeGroundCombo::CR,
-            "B-T" => crate::DeGroundCombo::BT,
-            "C-T" => crate::DeGroundCombo::CT,
-            "C-S" => crate::DeGroundCombo::CS,
+            "A-R" => semio_s_artifact_norm_en1998_model::DeGroundCombo::AR,
+            "B-R" => semio_s_artifact_norm_en1998_model::DeGroundCombo::BR,
+            "C-R" => semio_s_artifact_norm_en1998_model::DeGroundCombo::CR,
+            "B-T" => semio_s_artifact_norm_en1998_model::DeGroundCombo::BT,
+            "C-T" => semio_s_artifact_norm_en1998_model::DeGroundCombo::CT,
+            "C-S" => semio_s_artifact_norm_en1998_model::DeGroundCombo::CS,
             _ => unreachable!(),
         };
         let input = serde_json::to_string(&snap).unwrap();
@@ -648,8 +644,6 @@ async fn de_ground_combo_table_matches_oracle_for_all_combos() {
     }
 }
 
-
-
 #[semio_framework_async_macros::async_test]
 async fn torsion_irregular_examples_evaluate_expected_verdicts() {
     let ok = inferences::evaluate(&En1998Snapshot::compliant_de_torsion_regular());
@@ -677,13 +671,11 @@ async fn en_annex_examples_evaluate_expected_verdicts() {
     assert!(fails >= 2, "EN fail_count={fails}");
 }
 
-
-
 #[semio_framework_async_macros::async_test]
 async fn catalogue_na4_cell_matches_evaluated_spectrum_params() {
-    use crate::app_surface::CatalogueCell;
-    use crate::editor::en1998::panels::catalogue::reference_tables;
-    use crate::standards::v1::subsets::any::schema::{na_de, AnnexParams};
+    use semio_s_plugin_norm_app_surface::CatalogueCell;
+    use semio_s_artifact_norm_en1998_editor::panels::catalogue::reference_tables;
+    use semio_s_artifact_norm_en1998_schema::{na_de, AnnexParams};
 
     let snap = En1998Snapshot::compliant_de_office();
     let combo = na_de::GroundCombo::from(snap.site.de_ground_combo);
@@ -716,7 +708,7 @@ async fn catalogue_na4_cell_matches_evaluated_spectrum_params() {
 
 #[semio_framework_async_macros::async_test]
 async fn duplicate_building_id_fails_integrity() {
-    use crate::document::RemedyBound;
+    use semio_s_plugin_norm_compliance::RemedyBound;
 
     let mut snap = En1998Snapshot::compliant_de_office();
     let twin = snap.buildings[0].clone();
@@ -735,7 +727,7 @@ async fn duplicate_building_id_fails_integrity() {
 
 #[semio_framework_async_macros::async_test]
 async fn dangling_supported_building_fails_with_one_of_remedy() {
-    use crate::document::RemedyBound;
+    use semio_s_plugin_norm_compliance::RemedyBound;
 
     let mut snap = En1998Snapshot::compliant_de_multipart();
     assert!(!snap.foundations.is_empty() || !snap.assessments.is_empty());

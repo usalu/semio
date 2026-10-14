@@ -7,6 +7,7 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::PluginBuilder;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
@@ -34,7 +35,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioApps>::builder("stdio").label("Stdio").version(env!("CARGO_PKG_VERSION")).package_id(semio_hub_stdio_catalog::component_package_id()?).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS);
+    let mut builder = PluginBuilder::<_, StdioApps>::new("stdio").label("Stdio").version(env!("CARGO_PKG_VERSION")).package_id(semio_hub_stdio_catalog::component_package_id()?).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS);
     let registry = semio_hub_stdio_catalog::selected_registry()?;
     let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: "stdio", package_id: semio_hub_stdio_catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;
     let catalog = semio_hub_stdio_catalog::artifact_catalog_contribution(plan.assemblies())?;

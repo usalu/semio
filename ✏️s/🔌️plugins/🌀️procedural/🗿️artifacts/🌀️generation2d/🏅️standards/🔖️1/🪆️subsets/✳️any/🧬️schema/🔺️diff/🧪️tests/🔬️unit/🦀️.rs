@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
+use crate::empty_generation2d_snapshot;
+use crate::snapshot::Generation2dSnapshotRead;
 
 fn camera_diff(oracle: &serde_json::Value, key: &str) -> (Generation2dDiff, CameraJson) {
     let camera: CameraJson = semio_framework_pack_json::from_json_str(&oracle[key].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

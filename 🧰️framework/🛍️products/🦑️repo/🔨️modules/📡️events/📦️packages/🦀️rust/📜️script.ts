@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
+import { runDeclaredRustBuildV1 } from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-events-rs` router: `bun ./📜️script.ts build|test`. */
-import { devToolingEnv, runRepositoryCargoTests, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-events"], { cwd: this.repoRoot, env: devToolingEnv() });
+  async run(segments: string[]): Promise<void> {
+    await runDeclaredRustBuildV1(this.repoRoot, "@semio-tech/repo-events-rs", this.root, this.invocation, segments);
   }
 }
 

@@ -1,142 +1,98 @@
-pub(crate) mod context {
-    use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-
-    /// 🧪️ The registered, MOUNTED fixture app every editor test drives — bound to
-    /// [`FEM2D_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
-    /// framework's exact close loop when it goes out of scope (the store's `Drop` demands the
-    /// terminal-empty witness; a test that already called [`close`] drops a closed shell, a no-op).
-    pub struct Fem2dApp(VcsArtifactApp<EditorApp<Fem2dPlayApp>>);
-
-    impl std::ops::Deref for Fem2dApp {
-        type Target = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
-        fn deref(&self) -> &Self::Target {
-            &self.0
-        }
-    }
-
-    impl std::ops::DerefMut for Fem2dApp {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            &mut self.0
-        }
-    }
-
-    impl Drop for Fem2dApp {
-        fn drop(&mut self) {
-            if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-            }
-        }
-    }
-
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    fn view(kind: &str) -> ViewModel {
-        let id = if kind == crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID { "model-left" } else { "results-left" };
-        ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: kind.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
-    }
-
-    pub(super) fn manifest() -> App { App { definition: create_fem2d_app(), examples: Vec::new() } }
-
-    semio_framework_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../..");
-
-    pub fn fem2d_app() -> Fem2dApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
-        ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
-        Fem2dApp(app)
-    }
-
-    /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
-    pub const FEM2D_TEST_INSTANCE: u32 = 1;
-
-    /// 🧪️ A MOUNTED app: bound to [`FEM2D_TEST_INSTANCE`], so a typed command reaches its retained
-    /// route instead of being refused with `interactive-job.live-instance`, and its publication
-    /// actually settles into the stores.
-    ///
-    /// ⚠️ A bound app owes the store a terminal close — dropping one unclosed trips
-    /// "artifact store reached Drop without its exact terminal-empty shallow-shell witness". Every
-    /// caller must finish with [`close`], which is why this is a SEPARATE constructor: the plain
-    /// [`fem2d_app`] stays droppable, and the dozens of render-only tests keep working unchanged.
-    pub fn fem2d_mounted_app() -> Fem2dApp {
-        fem2d_app()
-    }
-
-    /// 🧪️ A mounted app on the EMPTY document — the app boots on the bundled demo, so a test that
-    /// counts what it adds itself starts from nothing instead (any example id but the demo's loads
-    /// the empty snapshot).
-    pub fn fem2d_empty_app() -> Fem2dApp {
-        let mut app = fem2d_app();
-        ::semio_framework_async::poll::resolve_ready(dispatch(&mut app, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })));
-        assert!(app.snapshot().expect("snapshot").nodes.is_empty(), "the empty example must load an empty document");
-        app
-    }
-
-    /// 🧹️ Retires a [`fem2d_mounted_app`] the way the plugin host retires a closing instance.
-    pub fn close(app: &mut Fem2dApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-    }
-
-    pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
-        let kind = match &command {
-            Fem2dCommand::SetCamera(_) => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
-            Fem2dCommand::SetResultDisplay(_) | Fem2dCommand::SetResultAnimation(_) | Fem2dCommand::ResultAnimationTick(_) => crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID,
-            _ => crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID,
-        };
-        let mut action = meta("local");
-        action.view_state = Some(view(kind));
-        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
-        // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
-        // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
-        result.requested_effects.extend(settled.effects);
-        for effect in &result.requested_effects {
-            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
-                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
-            }
-        }
-        result
-    }
-
-    /// 🧾️ Dispatches `command` from the model window like [`dispatch`] and drives its retained publication home,
-    /// answering the applied history rows with document ops its completions upserted — how a law reads the one row a
-    /// gesture leaves.
-    pub async fn dispatch_rows(app: &mut Fem2dApp, command: Fem2dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
-        let mut action = meta("local");
-        action.view_state = Some(view(model_window::WINDOW_KIND_ID));
-        app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-        let mut rows = Vec::new();
-        while app.has_pending_typed_operations() {
-            assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
-            app.maintenance_step(1, 65_536).expect("maintenance step");
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance the publication");
-            while let Some(page) = app.take_typed_operation_result_page(FEM2D_TEST_INSTANCE) {
-                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
-            }
-            while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
-            while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
-                rows.extend(completion.history_patch.into_iter().flat_map(|patch| patch.upserts).filter(|row| row.applied && !row.op_lines.is_empty()));
-            }
-        }
-        rows
-    }
-
-    /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
-    pub async fn history_verb(app: &mut Fem2dApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-    }
-
-    pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
-        let kind = if body_key == crate::editor::fem2d::modes::edit::windows::model::BODY_KEY { crate::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID } else { crate::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID };
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(::semio_framework_async::poll::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
-    }
-}
-
-use super::*;
-use crate::editor::fem2d::unit_tests::context::{fem2d_app, render};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::*;
+use semio_s_fem_app_surface::ResultDisplay;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_area_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_bar;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_beam;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_combination;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_load_case;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_material;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_member_udl;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_nodal_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_node;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_region;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_section;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::add_support;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_down;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_move;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::canvas_pointer_up;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::focus_entity;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_combination;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load_case;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_material;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_node;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_region;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_section;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_support;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::remove_selection;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::result_animation_tick;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_analysis_settings;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_camera;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_display;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_self_weight;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::{rotate_selection, scale_selection, set_transform_gumball_flag, translate_selection};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_interaction_definition;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::FEM2D_INTERACTION_DOMAIN;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::artifact as artifact_panel;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::inspection as inspection_panel;
+use semio_s_artifact_fem_2d_editor_panels::editor::fem2d::panels::results as results_panel;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_labels;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::results_window_instance_id;
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::modes::edit;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
+use semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results as results_window;
+use semio_s_fem_model::{Dof, ElementResult};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_pack_json::Value;
+use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect;
+use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_plugin::app::{Dialect, InteractionView};
+use semio_framework_plugin::built_text_node;
+use semio_framework_plugin::create_default_layout;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::ActionArgOption;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigSpec;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::MediaType;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::PluginAssemblyError;
+use semio_framework_plugin::UtilityCategory;
+use semio_framework_plugin::UtilityDefinition;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowMeasure;
+use std::collections::HashMap;
+use semio_framework_2d::compute::EngineHandles;
+use crate::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp};
 use pack::snapshot::ArtifactDsl;
 
@@ -177,10 +133,10 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::SetResultAnimation(set_result_animation::SetResultAnimation { phase: Some(0.25), playing: Some(true), speed: None, loop_mode: Some("pingPong".into()), waveform: None, field: None, value: None, window_id: None }),
         Fem2dCommand::ResultAnimationTick(result_animation_tick::ResultAnimationTick { window_id: "results-left".into() }),
         Fem2dCommand::FocusEntity(focus_entity::FocusEntity { id: "n1".into() }),
-        Fem2dCommand::TranslateSelection(crate::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0, phase: None, reason: None }),
-        Fem2dCommand::RotateSelection(crate::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None }),
-        Fem2dCommand::ScaleSelection(crate::editor::fem2d::commands::gumball::scale_selection::ScaleSelection { ids: vec!["n1".into()], sx: 1.01, sy: 1.01, sz: 1.0, phase: None, reason: None }),
-        Fem2dCommand::SetTransformGumballFlag(crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::SetTransformGumballFlag { flag: "move".into(), pressed: None }),
+        Fem2dCommand::TranslateSelection(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::translate_selection::TranslateSelection { ids: vec!["n1".into()], dx: 0.1, dy: 0.0, dz: 0.0, phase: None, reason: None }),
+        Fem2dCommand::RotateSelection(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::rotate_selection::RotateSelection { ids: vec!["n1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 0.1, phase: None, reason: None }),
+        Fem2dCommand::ScaleSelection(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::scale_selection::ScaleSelection { ids: vec!["n1".into()], sx: 1.01, sy: 1.01, sz: 1.0, phase: None, reason: None }),
+        Fem2dCommand::SetTransformGumballFlag(semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::set_transform_gumball_flag::SetTransformGumballFlag { flag: "move".into(), pressed: None }),
     ]
 }
 
@@ -282,7 +238,7 @@ async fn retained_routes_cover_every_command_exactly_once() {
 /// refuses a completion whose emitted lane is absent from the contract.
 #[semio_framework_async_macros::async_test]
 async fn every_route_declares_the_lane_its_handler_emits() {
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -299,7 +255,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
             Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
             Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::result_animation_tick_step::<set_result_animation::Fem2dResultsPlayback>(payload, &cfg, &view("results-left", results_window::WINDOW_KIND_ID), None).map(|step| step.emit),
-            Fem2dCommand::SetTransformGumballFlag(payload) => crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
+            Fem2dCommand::SetTransformGumballFlag(payload) => semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
         .unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));
@@ -384,7 +340,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[test]
 fn window_measures_include_transform_utility_options() {
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, WindowMeasure};
-    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo");
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo");
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
@@ -392,7 +348,7 @@ fn window_measures_include_transform_utility_options() {
     let measures = Fem2dPlayApp::window_measures(&view, &cfg, &view_state);
     let model_measures = measures.get(model_window::WINDOW_KIND_ID).expect("model measures");
     let group = model_measures.iter().find_map(|measure| match measure {
-        WindowMeasure::Group { id, active_utility_id, .. } if id == &format!("{}-utility-options-transform", crate::editor::fem2d::FEM2D_PLAY_CONTROLLER_ID) => Some(active_utility_id.clone()),
+        WindowMeasure::Group { id, active_utility_id, .. } if id == &format!("{}-utility-options-transform", semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID) => Some(active_utility_id.clone()),
         _ => None,
     });
     assert_eq!(group, Some(Some("transform".into())));
@@ -457,8 +413,8 @@ async fn the_editor_boots_on_the_bundled_example_document() {
     let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
     assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
-    assert_ne!(boot, semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
-    assert_eq!(boot, Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).expect("the bundled example parses"));
+    assert_ne!(boot, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    assert_eq!(boot, Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled example parses"));
     let app = fem2d_app();
     assert!(!app.snapshot().expect("snapshot").nodes.is_empty(), "a booted app renders a non-empty document");
 }
@@ -507,13 +463,13 @@ async fn two_instances_converge_on_disjoint_edits() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let _app = Fem2dPlayApp;
-    let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
+    let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let media = Fem2dPlayApp::export_media("artifact:out", &doc).expect("document:out exports");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Vector);
-    let empty_projection = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let empty_projection = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let empty_history = semio_framework_plugin::HistoryView::empty();
     let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
     let emit = Fem2dPlayApp::import_media("artifact:in", &media, &empty_doc).expect("document:in imports");
@@ -528,7 +484,7 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_returns_json_with_every_case_and_combination() {
     let _app = Fem2dPlayApp;
-    let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
+    let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).unwrap();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let media = Fem2dPlayApp::export_media("results:out", &doc).expect("results:out exports");
@@ -552,7 +508,7 @@ async fn export_media_results_out_returns_json_with_every_case_and_combination()
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
     let _app = Fem2dPlayApp;
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
@@ -565,7 +521,7 @@ async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_unknown_port_is_not_implemented() {
     let _app = Fem2dPlayApp;
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
@@ -574,7 +530,7 @@ async fn export_media_unknown_port_is_not_implemented() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() {
     let _app = Fem2dPlayApp;
-    let mut snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let mut snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     snapshot.materials.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -595,7 +551,7 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
     let _app = Fem2dPlayApp;
-    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
+import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
@@ -29,9 +30,18 @@ test("member opening admits original sources then funds tickets before snapshot 
   }
   const store = await Bun.file(new URL("../../../../../🦀️.rs", import.meta.url)).text();
   const source = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
-  expect(store.includes("fn member_store_owners_birth_demand() -> Result<")).toBe(true);
+  const memberBase=new URL("../../../../../🏗️initialization/🏠️owners/🏭️member/🧬️schema/",import.meta.url);
+  const contract=await Bun.file(new URL("🦀️.rs",memberBase)).text();
+  const schema=await Bun.file(new URL("🔣️.json",memberBase)).json();
+  const original=await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json",memberBase)).json();
+  const oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
+  expect(oracle(original)).toBe(true);
+  for(const refused of [{selection:"snapshot-owned-default"},{custody:"cloned-source-receipt"},{grant:"renewed-capacity"},{body:"substitute-zero-body"}])expect(oracle({...original,...refused})).toBe(false);
+  expect(contract.includes("fn member_store_owners_birth_demand(&self)->Result<")).toBe(true);
+  expect(source.includes("producer:C")).toBe(true);
+  expect(source.includes("ManuallyDrop<Option<C::SnapshotOpen>>")).toBe(true);
   expect(source.includes("bytes.checked_add(source.capacity_bytes)")).toBe(true);
-  expect(source.includes("P::member_store_owners(source_grant)")).toBe(true);
+  expect(source.includes("producer.member_store_owners(source_grant)")).toBe(true);
   expect(source.includes("progress.fits(source_grant)")).toBe(true);
   expect(source.includes("owners.constructor_is_complete()")).toBe(true);
   expect(source.includes("owners.admit_constructor(grant)")).toBe(true);

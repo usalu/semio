@@ -1,8 +1,8 @@
 //! 📐 `change-element-inclination-deg` diff — patches the row's `inclination_deg`; an id the document does not hold is a `mutation.invariant`.
 
-use super::ChangeElementInclinationDeg;
-use crate::diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch};
-use crate::Din4108Snapshot;
+use crate::change_element_inclination_deg::ChangeElementInclinationDeg;
+use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch};
+use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 pub fn diff(payload: &ChangeElementInclinationDeg, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
     let Some(row) = base.elements.iter().find(|row| row.id == payload.element_id) else {

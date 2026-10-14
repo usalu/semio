@@ -1,8 +1,7 @@
 //! 🎗️ Energy model mutation — `ChangeZoneEquipmentPriority`: Sets the rank this equipment holds in its zone's own equipment list.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneEquipmentPriority {
     pub new_priority: u8,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_equipment_priority(id: crate::model::EntityId, new_priority: u8) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneEquipmentPriority(ChangeZoneEquipmentPriority { id, new_priority })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_equipment_priority<Op: From<ChangeZoneEquipmentPriority>>(id: crate::model::EntityId, new_priority: u8) -> Op {
+    ChangeZoneEquipmentPriority { id, new_priority }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneEquipmentPriority {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneEquipmentPriority
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneEquipmentPriority>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-equipment", kind: "change-zone-equipment-priority", record: "ChangedZoneEquipmentPriority" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

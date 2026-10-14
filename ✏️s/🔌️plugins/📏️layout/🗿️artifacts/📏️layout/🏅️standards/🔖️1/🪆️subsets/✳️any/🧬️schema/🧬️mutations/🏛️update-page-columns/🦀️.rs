@@ -1,8 +1,10 @@
 //! 🏛️ `update-page-columns` — atomically sets a page's column count and gutter together.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +21,12 @@ pub struct UpdatePageColumns {
     pub gutter: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageColumns {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageColumns where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_columns::UpdatePageColumns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-columns", kind: "update-page-columns", record: "UpdatedPageColumns" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_columns(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_page_columns(self, base)?
     
@@ -55,13 +57,19 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
 //#endregion 🏛️UpdatePageColumns
 
 //#region 🏛️UpdatePageColumns
-pub fn inverse_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_page_columns<Op: From<crate::update_page_columns::UpdatePageColumns>>(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
-        Some(page) => vec![LayoutMutation::UpdatePageColumns(UpdatePageColumns { id: payload.id.clone(), count: page.columns.count, gutter: page.columns.gutter })],
+        Some(page) => vec![Op::from(UpdatePageColumns { id: payload.id.clone(), count: page.columns.count, gutter: page.columns.gutter })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 🏛️UpdatePageColumns
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🏛️splits/🦀️.rs"]
+mod tests_splits_page_1_into_three_columns;
+//#endregion 🪢️TaxonomyMounts

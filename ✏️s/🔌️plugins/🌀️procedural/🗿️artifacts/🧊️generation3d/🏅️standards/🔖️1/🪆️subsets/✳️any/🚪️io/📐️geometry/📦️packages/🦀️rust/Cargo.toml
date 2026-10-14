@@ -24,6 +24,10 @@ semio-framework-io-base64 = { path = "../../../../../../../../../../../../../�
 semio-framework-job = { workspace = true }
 semio-framework-mesh-engine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-s-artifact-stdio-step-geometry = { workspace = true }
 semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
 semio-s-artifact-procedural-3d-geometry = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
@@ -32,15 +36,12 @@ semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
 semio-s-artifact-procedural-3d-mesh-support = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-phased-job = { workspace = true }
-semio-s-artifact-stdio-dwg-geometry = { workspace = true }
-semio-s-artifact-stdio-dwg-read = { workspace = true }
-semio-s-artifact-stdio-dwg-write = { workspace = true }
-semio-s-artifact-stdio-step = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../📦️packages/🦀️rust" }
 parry3d = "0.17"
 semio-framework-3d-brep-analysis = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+

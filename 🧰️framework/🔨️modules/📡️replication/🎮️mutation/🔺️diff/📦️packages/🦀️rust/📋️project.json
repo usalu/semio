@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/mutation-diff-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

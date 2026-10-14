@@ -1,0 +1,492 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ToolchainRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "channel",
+        "profile",
+        "components",
+        "targets",
+        "bootstrapVersion",
+        "store",
+        "selfUpdate",
+        "automaticInstall"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "channel": {
+          "type": "string",
+          "pattern": "^nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "profile": {
+          "const": "minimal"
+        },
+        "components": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "targets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bootstrapVersion": {
+          "type": "string",
+          "pattern": "^[0-9]+[.][0-9]+[.][0-9]+$"
+        },
+        "store": {
+          "const": "tools"
+        },
+        "selfUpdate": {
+          "const": false
+        },
+        "automaticInstall": {
+          "const": false
+        }
+      }
+    },
+    "SealEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind",
+            "bytes",
+            "digest"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+            },
+            "kind": {
+              "const": "file"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "kind": {
+              "const": "directory"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind",
+            "target"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "kind": {
+              "const": "symlink"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt",
+        "offline",
+        "canceled"
+      ],
+      "properties": {
+        "receipt": {
+          "enum": [
+            "valid",
+            "absent",
+            "foreign",
+            "interrupted-original"
+          ]
+        },
+        "offline": {
+          "type": "boolean"
+        },
+        "canceled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 32768,
+        "maximumManifestBytes": 16777216,
+        "chunkBytes": 65536,
+        "maximumBootstrapBytes": 67108864,
+        "maximumDistributionManifestBytes": 2097152,
+        "generationLeaseShards": 64,
+        "generationResourcePrefix": "rustup:generation-shard:",
+        "pathOrder": "utf8-unsigned",
+        "bootstrapVersion": "1.29.0",
+        "downloadProgressBytes": 4194304,
+        "maximumArchiveBytes": 536870912,
+        "maximumArchiveListBytes": 16777216,
+        "maximumArchiveEntries": 131072,
+        "temporaryDirectoryNameUnits": 20,
+        "maximumReceiptBytes": 8192,
+        "observationEntryInterval": 64,
+        "maximumTomlOutputBytes": 8388608
+      }
+    },
+    "BootstrapReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "bootstrapVersion",
+        "host",
+        "digest",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repo:rustup-bootstrap"
+        },
+        "bootstrapVersion": {
+          "const": "1.29.0"
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        }
+      }
+    },
+    "BootstrapIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "bootstrapVersion",
+        "host",
+        "allocation",
+        "digest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repo:rustup-bootstrap"
+        },
+        "bootstrapVersion": {
+          "const": "1.29.0"
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "allocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "architecture",
+        "libc",
+        "triple"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "architecture": {
+          "enum": [
+            "arm64",
+            "x64"
+          ]
+        },
+        "libc": {
+          "enum": [
+            "gnu",
+            "musl"
+          ]
+        },
+        "triple": {
+          "type": "string"
+        }
+      }
+    },
+    "HomeIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "allocation",
+        "host",
+        "bootstrap"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repo:rustup-home"
+        },
+        "allocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bootstrap": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "GenerationIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "allocation",
+        "request",
+        "host",
+        "channel",
+        "bootstrap"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repo:rustup-generation"
+        },
+        "allocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "request": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bootstrap": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "GenerationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "allocation",
+        "request",
+        "host",
+        "channel",
+        "bootstrap",
+        "seal",
+        "entries",
+        "manifest",
+        "rustc",
+        "cargo",
+        "directory",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "repo:rustup-generation"
+        },
+        "allocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "request": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "bootstrap": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "seal": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "manifest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rustc": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "cargo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "device",
+            "inode"
+          ],
+          "properties": {
+            "device": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "inode": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8589934592
+        }
+      }
+    },
+    "ArchivePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "home",
+        "path",
+        "accepted"
+      ],
+      "properties": {
+        "home": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

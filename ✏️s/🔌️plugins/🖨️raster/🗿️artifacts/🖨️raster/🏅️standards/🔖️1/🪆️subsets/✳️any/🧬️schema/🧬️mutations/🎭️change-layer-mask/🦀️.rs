@@ -1,7 +1,8 @@
 //! 🎭️ Undoable mask replacement guarded by its prior revision.
-use crate::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskContent, RasterMutation, RasterSnapshot};
-use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskContent};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::find_layer;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -27,7 +28,7 @@ pub fn validate(payload: &ChangeLayerMask, base: &RasterSnapshot) -> Result<(), 
     Ok(())
 }
 
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerMask {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerMask where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_mask::ChangeLayerMask> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-mask", kind: "change-layer-mask", record: "ChangedLayerMask" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
@@ -35,10 +36,10 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerMask 
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { mask_content: Some(RasterMaskContent { mask: self.mask.clone() }), ..Default::default() }))
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let Some(RasterLayerNode::Pixel { mask, .. } | RasterLayerNode::Group { mask, .. }) = find_layer(&base.layers, &self.layer_id) else { return Vec::new(); };
-        vec![RasterMutation::ChangeLayerMask(Self { layer_id: self.layer_id.clone(), expected: self.mask.clone(), mask: mask.clone() })]
+        vec![Op::from(Self { layer_id: self.layer_id.clone(), expected: self.mask.clone(), mask: mask.clone() })]
     
     })())
 }

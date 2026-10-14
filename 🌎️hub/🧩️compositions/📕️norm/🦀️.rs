@@ -6,41 +6,42 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+use semio_framework_plugin::PluginBuilder;
 
 //#region 🗃️Apps
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for all fifteen norm-family editor/viewer pairs.
     pub enum NormApps: PluginApp {
-        Din4108Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>>),
-        Din4108Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>>),
-        Din16798Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>>),
-        Din16798Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>>),
-        Din18599Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        Din18599Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>, semio_s_artifact_stdio_semio::SemioMembers>),
-        En1990Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>>),
-        En1990Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>>),
-        En1991Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>>),
-        En1991Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>>),
-        En1992Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>>),
-        En1992Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>>),
+        Din4108Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din4108_editor::Din4108PlayApp>>),
+        Din4108Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din4108_viewer::Din4108Viewer>>),
+        Din16798Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din16798_editor::Din16798PlayApp>>),
+        Din16798Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din16798_viewer::Din16798Viewer>>),
+        Din18599Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Din18599Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din18599_viewer::Din18599Viewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        En1990Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1990_editor::En1990PlayApp>>),
+        En1990Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1990_viewer::En1990Viewer>>),
+        En1991Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1991_editor::En1991PlayApp>>),
+        En1991Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1991_viewer::En1991Viewer>>),
+        En1992Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992_editor::En1992PlayApp>>),
+        En1992Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992_viewer::En1992Viewer>>),
         En1993Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993_editor::En1993PlayApp>>),
         En1993Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993_viewer::En1993Viewer>>),
-        En1994Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>>),
-        En1994Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>>),
-        En1995Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>>),
-        En1995Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>>),
-        En1996Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>>),
-        En1996Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>>),
-        En1997Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>>),
-        En1997Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>>),
-        En1998Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>>),
-        En1998Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>>),
-        En1999Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>>),
-        En1999Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>>),
-        Iso16757Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>>),
-        Iso16757Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>>),
-        Vdi3805Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>>),
-        Vdi3805Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>>),
+        En1994Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994_editor::En1994PlayApp>>),
+        En1994Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994_viewer::En1994Viewer>>),
+        En1995Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1995_editor::En1995PlayApp>>),
+        En1995Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1995_viewer::En1995Viewer>>),
+        En1996Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1996_editor::En1996PlayApp>>),
+        En1996Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1996_viewer::En1996Viewer>>),
+        En1997Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1997_editor::En1997PlayApp>>),
+        En1997Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1997_viewer::En1997Viewer>>),
+        En1998Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1998_editor::En1998PlayApp>>),
+        En1998Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1998_viewer::En1998Viewer>>),
+        En1999Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1999_editor::En1999PlayApp>>),
+        En1999Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1999_viewer::En1999Viewer>>),
+        Iso16757Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>>),
+        Iso16757Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer>>),
+        Vdi3805Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>>),
+        Vdi3805Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -70,9 +71,9 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
     let en1997 = semio_s_artifact_norm_en1997::declaration(semio_s_artifact_norm_en1997::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let en1998 = semio_s_artifact_norm_en1998::declaration(semio_s_artifact_norm_en1998::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let en1999 = semio_s_artifact_norm_en1999::declaration(semio_s_artifact_norm_en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let iso16757 = semio_s_artifact_norm_iso16757::declaration(semio_s_artifact_norm_iso16757::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let iso16757 = semio_s_artifact_norm_iso16757::declaration(semio_s_artifact_norm_iso16757_model::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let vdi3805 = semio_s_artifact_norm_vdi3805::declaration(semio_s_artifact_norm_vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    Plugin::<NormApps>::builder("norm")
+    PluginBuilder::<_, NormApps>::new("norm")
         .label("Norm")
         .version("0.1.0")
         .package_id("semio:norm")
@@ -91,81 +92,81 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .artifact(en1999)
         .artifact(iso16757)
         .artifact(vdi3805)
-        .editor::<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>(semio_s_artifact_norm_din4108::editor::din4108::create_din4108_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>()
-        .viewer::<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>(semio_s_artifact_norm_din4108::viewer::din4108::create_din4108_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>()
-        .editor::<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>(semio_s_artifact_norm_din16798::editor::din16798::create_din16798_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>()
-        .viewer::<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>(semio_s_artifact_norm_din16798::viewer::din16798::create_din16798_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>()
-        .editor::<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>(semio_s_artifact_norm_din18599::editor::din18599::create_din18599_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>()
-        .viewer::<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>(semio_s_artifact_norm_din18599::viewer::din18599::create_din18599_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>()
-        .editor::<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>(semio_s_artifact_norm_en1990::editor::en1990::create_en1990_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>(semio_s_artifact_norm_en1990::viewer::en1990::create_en1990_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>()
-        .editor::<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>(semio_s_artifact_norm_en1991::editor::en1991::create_en1991_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>(semio_s_artifact_norm_en1991::viewer::en1991::create_en1991_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>()
-        .editor::<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>(semio_s_artifact_norm_en1992::editor::en1992::create_en1992_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>(semio_s_artifact_norm_en1992::viewer::en1992::create_en1992_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>()
+        .editor::<semio_s_artifact_norm_din4108_editor::Din4108PlayApp>(semio_s_artifact_norm_din4108_editor::create_din4108_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din4108_editor::Din4108PlayApp>()
+        .viewer::<semio_s_artifact_norm_din4108_viewer::Din4108Viewer>(semio_s_artifact_norm_din4108_viewer::create_din4108_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din4108_viewer::Din4108Viewer>()
+        .editor::<semio_s_artifact_norm_din16798_editor::Din16798PlayApp>(semio_s_artifact_norm_din16798_editor::create_din16798_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din16798_editor::Din16798PlayApp>()
+        .viewer::<semio_s_artifact_norm_din16798_viewer::Din16798Viewer>(semio_s_artifact_norm_din16798_viewer::create_din16798_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din16798_viewer::Din16798Viewer>()
+        .editor::<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>(semio_s_artifact_norm_din18599_editor::create_din18599_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din18599_editor::Din18599PlayApp>()
+        .viewer::<semio_s_artifact_norm_din18599_viewer::Din18599Viewer>(semio_s_artifact_norm_din18599_viewer::create_din18599_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din18599_viewer::Din18599Viewer>()
+        .editor::<semio_s_artifact_norm_en1990_editor::En1990PlayApp>(semio_s_artifact_norm_en1990_editor::create_en1990_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1990_editor::En1990PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1990_viewer::En1990Viewer>(semio_s_artifact_norm_en1990_viewer::create_en1990_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1990_viewer::En1990Viewer>()
+        .editor::<semio_s_artifact_norm_en1991_editor::En1991PlayApp>(semio_s_artifact_norm_en1991_editor::create_en1991_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1991_editor::En1991PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1991_viewer::En1991Viewer>(semio_s_artifact_norm_en1991_viewer::create_en1991_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1991_viewer::En1991Viewer>()
+        .editor::<semio_s_artifact_norm_en1992_editor::En1992PlayApp>(semio_s_artifact_norm_en1992_editor::create_en1992_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1992_editor::En1992PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1992_viewer::En1992Viewer>(semio_s_artifact_norm_en1992_viewer::create_en1992_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1992_viewer::En1992Viewer>()
         .editor::<semio_s_artifact_norm_en1993_editor::En1993PlayApp>(semio_s_artifact_norm_en1993_editor::create_en1993_app())
         .editor_mutation_roster::<semio_s_artifact_norm_en1993_editor::En1993PlayApp>()
         .viewer::<semio_s_artifact_norm_en1993_viewer::En1993Viewer>(semio_s_artifact_norm_en1993_viewer::create_en1993_viewer())
         .viewer_mutation_roster::<semio_s_artifact_norm_en1993_viewer::En1993Viewer>()
-        .editor::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>(semio_s_artifact_norm_en1994::editor::en1994::create_en1994_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>(semio_s_artifact_norm_en1994::viewer::en1994::create_en1994_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>()
-        .editor::<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>(semio_s_artifact_norm_en1995::editor::en1995::create_en1995_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>(semio_s_artifact_norm_en1995::viewer::en1995::create_en1995_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>()
-        .editor::<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>(semio_s_artifact_norm_en1996::editor::en1996::create_en1996_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>(semio_s_artifact_norm_en1996::viewer::en1996::create_en1996_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>()
-        .editor::<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>(semio_s_artifact_norm_en1997::editor::en1997::create_en1997_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>(semio_s_artifact_norm_en1997::viewer::en1997::create_en1997_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>()
-        .editor::<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>(semio_s_artifact_norm_en1998::editor::en1998::create_en1998_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>(semio_s_artifact_norm_en1998::viewer::en1998::create_en1998_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>()
-        .editor::<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>(semio_s_artifact_norm_en1999::editor::en1999::create_en1999_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>(semio_s_artifact_norm_en1999::viewer::en1999::create_en1999_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>()
-        .editor::<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>(semio_s_artifact_norm_iso16757::editor::iso16757::create_iso16757_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>()
-        .viewer::<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>(semio_s_artifact_norm_iso16757::viewer::iso16757::create_iso16757_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>()
-        .editor::<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>(semio_s_artifact_norm_vdi3805::editor::vdi3805::create_vdi3805_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>()
-        .viewer::<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>(semio_s_artifact_norm_vdi3805::viewer::vdi3805::create_vdi3805_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din4108::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din16798::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din18599::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1990::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1991::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1992::artifact_kind().id })
+        .editor::<semio_s_artifact_norm_en1994_editor::En1994PlayApp>(semio_s_artifact_norm_en1994_editor::create_en1994_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1994_editor::En1994PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1994_viewer::En1994Viewer>(semio_s_artifact_norm_en1994_viewer::create_en1994_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1994_viewer::En1994Viewer>()
+        .editor::<semio_s_artifact_norm_en1995_editor::En1995PlayApp>(semio_s_artifact_norm_en1995_editor::create_en1995_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1995_editor::En1995PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1995_viewer::En1995Viewer>(semio_s_artifact_norm_en1995_viewer::create_en1995_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1995_viewer::En1995Viewer>()
+        .editor::<semio_s_artifact_norm_en1996_editor::En1996PlayApp>(semio_s_artifact_norm_en1996_editor::create_en1996_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1996_editor::En1996PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1996_viewer::En1996Viewer>(semio_s_artifact_norm_en1996_viewer::create_en1996_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1996_viewer::En1996Viewer>()
+        .editor::<semio_s_artifact_norm_en1997_editor::En1997PlayApp>(semio_s_artifact_norm_en1997_editor::create_en1997_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1997_editor::En1997PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1997_viewer::En1997Viewer>(semio_s_artifact_norm_en1997_viewer::create_en1997_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1997_viewer::En1997Viewer>()
+        .editor::<semio_s_artifact_norm_en1998_editor::En1998PlayApp>(semio_s_artifact_norm_en1998_editor::create_en1998_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1998_editor::En1998PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1998_viewer::En1998Viewer>(semio_s_artifact_norm_en1998_viewer::create_en1998_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1998_viewer::En1998Viewer>()
+        .editor::<semio_s_artifact_norm_en1999_editor::En1999PlayApp>(semio_s_artifact_norm_en1999_editor::create_en1999_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1999_editor::En1999PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1999_viewer::En1999Viewer>(semio_s_artifact_norm_en1999_viewer::create_en1999_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1999_viewer::En1999Viewer>()
+        .editor::<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>(semio_s_artifact_norm_iso16757_editor::create_iso16757_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_iso16757_editor::Iso16757PlayApp>()
+        .viewer::<semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer>(semio_s_artifact_norm_iso16757_viewer::create_iso16757_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_iso16757_viewer::Iso16757Viewer>()
+        .editor::<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>(semio_s_artifact_norm_vdi3805_editor::create_vdi3805_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_vdi3805_editor::Vdi3805PlayApp>()
+        .viewer::<semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer>(semio_s_artifact_norm_vdi3805_viewer::create_vdi3805_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_vdi3805_viewer::Vdi3805Viewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din4108_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din16798_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din18599_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1990_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1991_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1992_model::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1993_model::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1994::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1995::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1996::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1997::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1998::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1999::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_iso16757::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_vdi3805::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1994_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1995_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1996_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1997_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1998_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1999_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_iso16757_model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_vdi3805_model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist norm family edits to the open document".into(), optional: false })
         .try_build()

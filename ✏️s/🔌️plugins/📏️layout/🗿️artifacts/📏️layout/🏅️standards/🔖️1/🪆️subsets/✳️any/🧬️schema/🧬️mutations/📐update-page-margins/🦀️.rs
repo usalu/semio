@@ -1,9 +1,11 @@
 //! 📐 `update-page-margins` — atomically sets a page's four margin fields together (a facet that's
 //! never meaningfully edited one field at a time — a margins dialog writes all four at once).
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -22,12 +24,12 @@ pub struct UpdatePageMargins {
     pub left: f64,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdatePageMargins where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_page_margins::UpdatePageMargins> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-margins", kind: "update-page-margins", record: "UpdatedPageMargins" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_page_margins(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_page_margins(self, base)?
     
@@ -64,13 +66,19 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
 //#endregion 📐UpdatePageMargins
 
 //#region 📐UpdatePageMargins
-pub fn inverse_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_page_margins<Op: From<crate::update_page_margins::UpdatePageMargins>>(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
-        Some(page) => vec![LayoutMutation::UpdatePageMargins(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
+        Some(page) => vec![Op::from(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
         None => Vec::new(),
     }
 
     })())
 }
 //#endregion 📐UpdatePageMargins
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📐️sets/🦀️.rs"]
+mod tests_sets_asymmetric_margins_on_page_1;
+//#endregion 🪢️TaxonomyMounts

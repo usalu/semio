@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-bar`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,7 +18,7 @@ pub struct AddBar {
 
 pub fn handle(payload: &AddBar, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| crate::element_id(e).to_string()), "e");
-    let element = crate::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateElement(crate::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(element), index: None })]))
+    let id = semio_s_fem_app_surface::next_id(snapshot.elements.iter().map(|e| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id(e).to_string()), "e");
+    let element = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(element), index: None })]))
 }

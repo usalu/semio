@@ -1,11 +1,11 @@
 //! Inverse for `insert-retaining-wall`.
-use super::InsertRetainingWall;
-use crate::{En1998Mutation, En1998Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::remove_retaining_wall;
+use crate::insert_retaining_wall::InsertRetainingWall;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+use crate::remove_retaining_wall;
 
-pub fn inverse(payload: &InsertRetainingWall, base: &En1998Snapshot) -> Result<Vec<En1998Mutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &InsertRetainingWall, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_retaining_wall::RemoveRetainingWall> {
     Ok((|| {
-    vec![En1998Mutation::RemoveRetainingWall(remove_retaining_wall::RemoveRetainingWall { index: payload.index.unwrap_or(usize::MAX).min(base.retaining_walls.len()) })]
+    vec![Op::from(remove_retaining_wall::RemoveRetainingWall { index: payload.index.unwrap_or(usize::MAX).min(base.retaining_walls.len()) })]
 
     })())
 }

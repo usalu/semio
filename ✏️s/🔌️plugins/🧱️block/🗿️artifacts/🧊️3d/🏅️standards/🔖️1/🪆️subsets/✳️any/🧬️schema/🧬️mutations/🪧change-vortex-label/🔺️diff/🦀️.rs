@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `ChangeVortexLabel`.
 
-use crate::Block3dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Block3dVorticesDelta, Block3dVorticesPatchEntry, Block3dVortexTemplatePatch};
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
+use semio_s_artifact_block_3d_diff::{Block3dVorticesDelta, Block3dVorticesPatchEntry, Block3dVortexTemplatePatch};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::ChangeVortexLabel, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
+pub fn diff(payload: &crate::change_vortex_label::ChangeVortexLabel, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
     let Some(existing) = base.vortices.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex", payload.id), vec![payload.id.clone()]);
     };

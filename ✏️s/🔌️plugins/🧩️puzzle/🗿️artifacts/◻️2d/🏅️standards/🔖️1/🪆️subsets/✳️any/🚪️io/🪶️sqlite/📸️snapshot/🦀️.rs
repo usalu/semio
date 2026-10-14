@@ -1,7 +1,7 @@
 //! 🧩️ Handwritten board, ordered catalog and exact optional scalar ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
-use crate::{Puzzle2dCamera,Puzzle2dNode,Puzzle2dNodeAnchor,Puzzle2dHandle,Puzzle2dEdge,Puzzle2dTargetRegion,Puzzle2dMeta,Puzzle2dKindCompatibility,Puzzle2dCompatSpecificity,Puzzle2dKindCatalogs,Puzzle2dCatalogNodeKind,Puzzle2dRepresentation,Puzzle2dHandleTemplate,Puzzle2dAttribute,Puzzle2dAuthor,Puzzle2dCatalogHandleKind,Puzzle2dCatalogEdgeKind,Puzzle2dCatalogWireKind};
+use {crate::standards::v1::subsets::any::schema::Puzzle2dCamera, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dEdge, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion, crate::standards::v1::subsets::any::schema::Puzzle2dMeta, crate::standards::v1::subsets::any::schema::Puzzle2dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::Puzzle2dCatalogNodeKind, crate::standards::v1::subsets::any::schema::Puzzle2dRepresentation, crate::standards::v1::subsets::any::schema::Puzzle2dHandleTemplate, crate::standards::v1::subsets::any::schema::Puzzle2dAttribute, crate::standards::v1::subsets::any::schema::Puzzle2dAuthor, crate::standards::v1::subsets::any::schema::Puzzle2dCatalogHandleKind, crate::standards::v1::subsets::any::schema::Puzzle2dCatalogEdgeKind, crate::standards::v1::subsets::any::schema::Puzzle2dCatalogWireKind};
 use std::collections::{BTreeMap,BTreeSet};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,FloatColumn,read_binary64,ieee754_is_null}}};
 use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList,paged::PagedUtf8};
@@ -93,7 +93,7 @@ fn restore(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Res
  restore_authority(database,control,0)
 }
 
-fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,additional:usize)->Result<Puzzle2dSnapshot,ValueError>{
+pub fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,additional:usize)->Result<Puzzle2dSnapshot,ValueError>{
  validate_sqlite_database_schema(database,<Puzzle2dSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
  let documents=&database.table("puzzle2d_document")?.rows;let cameras=&database.table("puzzle2d_camera")?.rows;let metas=&database.table("puzzle2d_meta")?.rows;let catalog_rows=&database.table("puzzle2d_kind_catalogs")?.rows;
  if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||cameras.len()!=1||metas.len()!=1||catalog_rows.len()>1{return Err(invalid("Puzzle 2D requires one complete board, camera and metadata with at most one catalog"))}identity(&cameras[0],11)?;identity(&metas[0],3)?;if cameras[0].integer(1)?!=1||metas[0].integer(1)?!=1{return Err(invalid("Puzzle 2D singleton has another board owner"))}for row in catalog_rows{identity(row,2)?;if row.integer(1)?!=metas[0].rowid{return Err(invalid("Puzzle 2D catalog has another metadata owner"))}}
@@ -150,7 +150,7 @@ fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl
 }
 
 #[path="📏️cells/🦀️.rs"]
-mod semantic_cells;
+pub mod semantic_cells;
 impl ArtifactSqliteSnapshotHost for Puzzle2dSnapshot{
  
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
@@ -172,31 +172,6 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,control)}
 }
 
-/// 🎮️ Persists the editor's typed authority through the declared board schema.
-impl ArtifactSqliteSnapshotHost for crate::Puzzle2dPlaySnapshot{
- 
- 
- 
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let limits=control.limits();semantic_cells::extent(limits)?;
-  store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
-   semantic_cells::admit_record(record,limits,native)?;
-   native.charge(size_of::<Puzzle2dSnapshot>()+2*size_of::<usize>())?;
-   Puzzle2dSnapshot::__dsl_from_record_controlled(record,native).map(Self::from_typed)
-  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
- }
- fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.typed().preflight_sqlite_snapshot_encoding(encoding,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.typed().encode_sqlite_snapshot_native(encoding,control,native_owner)}
- fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{self.typed().validate_sqlite_snapshot_subset(dialect,database,control)}
-}
-impl pack::snapshot::ArtifactSqliteSnapshot for crate::Puzzle2dPlaySnapshot {
-const SQLITE_SCHEMA:&'static str=<Puzzle2dSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA;
-fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(control)}
-fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-  let bytes=size_of::<Puzzle2dSnapshot>().checked_add(2*size_of::<usize>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Play authority allocation overflow"))?;
-  restore_authority(database,control,bytes).map(Self::from_typed)
- }
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

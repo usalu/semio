@@ -1,10 +1,10 @@
 //! 🧊️ `duplicate-selection` command.
 
-use crate::editor::puzzle3d::snapshot::next_object_id;
-use crate::editor::puzzle3d::snapshot::puzzle3d_next_object_label;
-use crate::editor::puzzle3d::session::Puzzle3dActionCtx;
-use crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT;
-use crate::standards::v1::subsets::any::schema::mutations::create_object;
+use semio_s_artifact_puzzle_3d_editor_snapshot::next_object_id;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_next_object_label;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx;
+use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT;
+use semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object;
 
 /// 👯️ Clones every selected object, offset half a unit, and re-selects the clones — each clone is one `create-object`
 /// built from the typed base object (anchor and vortex labels included), and the framework applies the re-selection
@@ -15,7 +15,7 @@ pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     if ctx.refuse_without_selection(&ids) {
         return;
     }
-    let clones: Vec<crate::standards::v1::subsets::any::schema::Puzzle3dObject> = ctx
+    let clones: Vec<semio_s_artifact_puzzle_3d_model::Puzzle3dObject> = ctx
         .base
         .objects
         .iter()

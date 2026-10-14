@@ -1,8 +1,8 @@
 //! 🔺️ `change-bolt-count` diff.
 
-use crate::mutations::change_bolt_count::ChangeBoltCount;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999ConnectionsRows, En1999ConnectionsPatch};
+use crate::change_bolt_count::ChangeBoltCount;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999ConnectionsRows, En1999ConnectionsPatch};
 
 pub fn diff(payload: &ChangeBoltCount, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if !base.connections.iter().any(|connection| connection.id == payload.connection_id) {

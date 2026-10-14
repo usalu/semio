@@ -1,0 +1,105 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d",
+ "anchor": "#[path = \"🧪️tests/🧰️support/🔬️publication-authority/🦀️.rs\"]\npub(crate) mod publication_authority;\n",
+ "tests": [
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "editor_unit_tests",
+   "shared": true
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪟️generation2d-window-camera-ownership/🦀️.rs",
+   "name": "editor_window_camera_ownership"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "add_generation_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "set_show_mode_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-eval-outputs/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-eval-outputs/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "set_eval_outputs_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "reorganize_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "add_widget_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "node_graph_edit_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "inspection_panel_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "document_panel_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "catalogue_panel_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "edit_preview_window_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "flow_window_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "generate_preview_window_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "form_window_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "generations_window_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "preview_eval_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "mutation_unit_tests"
+  },
+  {
+   "parent": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "test": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🦀️.rs",
+   "name": "gesture_leaves_tests"
+  }
+ ],
+ "renames": {
+  "crate::editor::generation2d::unit_tests::context": "crate::editor_unit_tests::context"
+ }
+}

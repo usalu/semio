@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "auditEvent",
+  "id": "audit-event-a",
+  "newName": "Renamed Audit Event A"
+}

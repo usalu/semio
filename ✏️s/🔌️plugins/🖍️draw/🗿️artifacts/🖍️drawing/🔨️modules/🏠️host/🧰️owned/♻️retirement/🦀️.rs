@@ -1,6 +1,5 @@
 //! ♻️ Typed Drawing retirement with separately admitted payload, scaffold and backing work.
 
-use super::*;
 
 #[derive(semio_framework_value::RetireOwned)]
 pub enum DrawingRetirementOwner {

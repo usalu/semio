@@ -4,9 +4,9 @@
 //! directly, the `ComposerEntry` via the standard-level aggregator), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxAnyComposer;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxComposer as DocxAnyComposer;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;
-    use crate::DocxSnapshot;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
@@ -96,10 +96,15 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{DocxParagraph, DocxRun, DocxStyle, DocxTable};
-    use crate::standards::v_ecma_376::subsets::base::io::DocxBuilderConstruction as DocxAnyBuilder;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxBuilderConstruction as DocxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;
-    use crate::{DocxDiff, DocxMutation, DocxSnapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -201,8 +206,10 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::io::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    #[cfg(test)] use crate::{DocxSnapshot, schema::snapshot::DocxXmlPart};
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxAnalyzer as DocxAnyAnalyzer;
+    use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxParts;
+    #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot};
+ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;
 #[cfg(test)] use semio_framework_diagnostic::FaultScope;

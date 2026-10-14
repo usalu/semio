@@ -1,17 +1,19 @@
 //! 🔄️ Transform utility options — gumball handle toggles for the fem2d canvas windows.
 
-use crate::editor::fem2d::interaction::canvas_gesture::{fem2d_gesture_window_id_for_render, FEM2D_UTILITY_TRANSFORM};
-use crate::editor::fem2d::interaction::gumball::gumball_config_for_window;
-use crate::editor::fem2d::modes::edit::windows::model;
-use crate::editor::fem2d::terminology::Fem2dLabels;
-use crate::editor::fem2d::{fem2d_measure_action, FEM2D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::gumball_config_for_window;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::fem2d_measure_action;
+use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::FEM2D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
 use semio_framework_plugin::{ViewModel, WindowMeasure};
 
 pub const UTILITY_ID: &str = FEM2D_UTILITY_TRANSFORM;
 
 fn gumball_window_id(view: &ViewModel) -> String {
-    fem2d_gesture_window_id_for_render(view, model::BODY_KEY).or_else(|| view.window_id.clone()).unwrap_or_else(|| "fem2d-model".into())
+    fem2d_gesture_window_id_for_render(view, model::WINDOW_KIND_ID).or_else(|| view.window_id.clone()).unwrap_or_else(|| "fem2d-model".into())
 }
 
 /// 🎛️ Utility Options when the Transform utility is active.

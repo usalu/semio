@@ -1,9 +1,13 @@
 //! 🔺️ Sparse diff builder for `ReplaceElement`.
 use super::ReplaceElement;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta, Fem3dElementsModification};
-use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,resolve_element};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dElementsModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::resolve_element;
 
-use crate::{element_id, Fem3dSnapshot};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

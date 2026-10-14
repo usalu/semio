@@ -1,6 +1,6 @@
-use crate::diff::{En1992Diff, En1992ConcreteGradesRows, En1992ConcreteGradesPatch};
-use super::ChangeConcreteFCk;
-use crate::En1992Snapshot;
+use semio_s_artifact_norm_en1992_diff::{En1992Diff, En1992ConcreteGradesRows, En1992ConcreteGradesPatch};
+use crate::change_concrete_f_ck::ChangeConcreteFCk;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 pub fn diff(payload: &ChangeConcreteFCk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
     let Some(g) = base.concrete_grades.iter().find(|g| g.id == payload.grade_id) else {

@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 fn sample_actions() -> ActionSet {
     ActionSet::new(100.0, vec![("office".into(), 50.0), ("wind".into(), 30.0)])

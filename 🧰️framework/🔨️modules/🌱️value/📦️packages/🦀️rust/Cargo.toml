@@ -10,6 +10,11 @@ description = "Neutral typed value conversion, ordered ownership, bounded retain
 role = "framework"
 id = "value"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
@@ -21,6 +26,22 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-retained-map = { path="../../🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path="../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path="../../🌳️intrinsic/📦️packages/🦀️rust" }
+semio-framework-value-clone-source = { path="../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path="../../🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-paged-text = { path="../../📝️text/📦️paged/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path="../../🛬️decode/📦️packages/🦀️rust" }
+semio-framework-value-native-encoding = { path="../../🛫️encode/📦️packages/🦀️rust" }
+semio-framework-value-original-aliases = { path="../../♻️retirement/📦️aliases/📦️packages/🦀️rust" }
+semio-framework-value-retirement-queue = { path="../../♻️retirement/📋️queue/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path="../../♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-factory = { path="../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path="../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path="../../📋️list/📦️packages/🦀️rust" }
+semio-framework-value-allocation-return = { path="../../♻️retirement/📦️allocation-return/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path="../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }

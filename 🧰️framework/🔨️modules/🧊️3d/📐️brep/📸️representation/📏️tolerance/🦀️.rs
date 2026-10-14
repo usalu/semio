@@ -42,7 +42,7 @@ impl Default for Resolution {
 /// 🎚️ A single linear tolerance value attached to one entity (vertex containment ball radius,
 /// edge tube radius, or face shell thickness).
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(transparent)]
 pub struct Tol(pub f64);
 

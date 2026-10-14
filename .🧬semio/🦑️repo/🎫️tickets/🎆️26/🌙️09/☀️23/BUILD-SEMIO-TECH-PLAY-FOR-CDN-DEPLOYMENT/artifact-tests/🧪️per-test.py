@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """🧪️ Runs every test of each compiled artifact lib test binary in its own process (RUST_MIN_STACK=64 MiB, resumable, per-test timeout, overall budget).
 
-usage: 🧪️per-test.py <sweep-results.jsonl> <out-dir> [--only PACKAGE_SUBSTR] [--jobs N] [--timeout S] [--budget S] [--rerun-failed] [--keep-binary]
-A fully recorded package's test unit directory is deleted afterwards (disk), unless --keep-binary.
+usage: 🧪️per-test.py <sweep-results.jsonl> <out-dir> [--only PACKAGE_SUBSTR] [--jobs N] [--timeout S] [--budget S] [--rerun-failed] [--exact-package]
+--exact-package matches --only as the whole package name. Binaries live in the shared launcher store and are never deleted here.
 Reads the latest `ok` row per package from 🧪️sweep.py, writes <out-dir>/<package>.jsonl rows {name, status: pass|ignored|fail|timeout, secs, tail}
 and prints one summary line per package.
 """
-import argparse, concurrent.futures as cf, json, os, shutil, subprocess, time
+import argparse, concurrent.futures as cf, json, os, subprocess, time
 
 p = argparse.ArgumentParser()
 p.add_argument("results"); p.add_argument("out")
 p.add_argument("--only", default=""); p.add_argument("--jobs", type=int, default=4); p.add_argument("--timeout", type=int, default=300)
-p.add_argument("--budget", type=int, default=560); p.add_argument("--rerun-failed", action="store_true"); p.add_argument("--keep-binary", action="store_true")
+p.add_argument("--budget", type=int, default=560); p.add_argument("--rerun-failed", action="store_true"); p.add_argument("--exact-package", action="store_true")
 a = p.parse_args()
 start = time.time()
 REPO = "/Users/ueli/Documents/semio"
@@ -35,7 +35,7 @@ def run(binary, cwd, name):
         return {"name": name, "status": "timeout", "rc": None, "secs": a.timeout, "tail": ""}
 
 for package, row in latest.items():
-    if row["status"] != "ok" or a.only not in package or not row.get("binary"): continue
+    if row["status"] != "ok" or not row.get("binary") or (package != a.only if a.exact_package else a.only not in package): continue
     cwd = os.path.dirname(os.path.join(REPO, row["manifest"]))
     binary = row["binary"]
     if not os.path.exists(binary): print(f"missing-binary {package}", flush=True); continue
@@ -53,6 +53,5 @@ for package, row in latest.items():
             if res is None: continue
             recorded[res["name"]] = res["status"]; out.write(json.dumps(res) + "\n"); out.flush()
     rows = {k: v for k, v in recorded.items() if k in set(names)}
-    if len(rows) == len(names) and not a.keep_binary: shutil.rmtree(os.path.dirname(os.path.dirname(binary)), ignore_errors=True)
     print(f"{package}: listed={len(names)} recorded={len(rows)} pass={sum(v=='pass' for v in rows.values())} fail={sum(v=='fail' for v in rows.values())} timeout={sum(v=='timeout' for v in rows.values())} ignored={sum(v=='ignored' for v in rows.values())}", flush=True)
     if time.time() - start > a.budget: print("budget", flush=True); break

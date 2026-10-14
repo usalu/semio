@@ -2,9 +2,9 @@
 //! entry by content-type entry and relationship by relationship; each XML part is diffed as a part (its content type, and its document through the
 //! XML artifact's own recursive `XmlDiff`). A diff names only what changed -- never a whole `opc` or `xml_parts` owner.
 
-use crate::schema::snapshot::{PptxXmlPart};
-#[cfg(test)] use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxXmlPart};
+#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -155,7 +155,6 @@ impl DiffAlgebra<PptxSnapshot> for PptxDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-
 #[cfg(test)]
 pub(crate) fn demo_snapshot_a() -> PptxSnapshot {
     crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation {
@@ -184,11 +183,3 @@ pub(crate) fn demo_diff_cases() -> Vec<PptxDiff> {
         PptxDiff { schema: Some("stdio.pptx.v2".into()), opc: Some(OpcDiff { comment: Some("archive comment".into()), ..Default::default() }), xml_parts: None },
     ]
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️result-apply/🦀️.rs"]
-mod result_apply_tests;

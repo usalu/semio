@@ -4,8 +4,8 @@
 //! becomes one node/mesh pair (world-space positions, fan-triangulated n-gons).
 //!
 //! 🔖 `IoFidelity::Lossy`: objects and names survive, n-gons come back as triangles, paint does not.
-use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::mesh_geometry::world_parts;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;

@@ -1,7 +1,7 @@
 //! 🪶️ Explicit persisted aluminium entities, owned relationships and binary64 scalar words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::{En1999Snapshot,AluminiumMaterial,PlateElement,AluminiumSection,MemberAction,AluminiumMember,SupportCondition,BoltGroup,WeldGroup,AluminiumConnection,FireScenario,FatigueDetail,ColdFormedSheet,AluminiumShell};
-use crate::document::AnnexChoice;
+use semio_s_artifact_norm_en1999_model::{En1999Snapshot, AluminiumMaterial, PlateElement, AluminiumSection, MemberAction, AluminiumMember, SupportCondition, BoltGroup, WeldGroup, AluminiumConnection, FireScenario, FatigueDetail, ColdFormedSheet, AluminiumShell};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -104,8 +104,5 @@ fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Resu
 fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

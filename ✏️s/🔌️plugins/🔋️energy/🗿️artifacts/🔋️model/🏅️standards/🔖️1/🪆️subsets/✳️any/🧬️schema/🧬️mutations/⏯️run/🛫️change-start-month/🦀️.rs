@@ -1,8 +1,7 @@
 //! 🛫️ Energy model mutation — `ChangeRunStartMonth`: Sets the month the simulation run period starts in; the period must stay a calendar interval of its year.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -16,19 +15,22 @@ pub struct ChangeRunStartMonth {
     pub new_start_month: u8,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_run_start_month(new_start_month: u8) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeRunStartMonth(ChangeRunStartMonth { new_start_month })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_run_start_month<Op: From<ChangeRunStartMonth>>(new_start_month: u8) -> Op {
+    ChangeRunStartMonth { new_start_month }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeRunStartMonth {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeRunStartMonth
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeRunStartMonth>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run", kind: "change-run-start-month", record: "ChangedRunStartMonth" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

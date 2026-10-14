@@ -1,8 +1,11 @@
 use super::*;
-use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
-use crate::editor::layout::unit_tests::context::{dispatch, dispatch_in, layout_app, layout_app_with_registry, scene, test_screen_point, LayoutApp, PREVIEW_WINDOW};
-use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
+use crate::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
+use semio_s_artifact_layout_layout_editor::unit_tests::context::{dispatch, dispatch_in, layout_app, layout_app_with_registry, scene, test_screen_point, LayoutApp, PREVIEW_WINDOW};
+use crate::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+use semio_s_artifact_layout_layout_editor::LayoutCommand;
+use crate::LAYOUT_INTERACTION_ELEMENTS;
+use crate::modes::edit::windows::blueprint::LAYOUT_PLAY_SURFACE_BLUEPRINT;
+use crate::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, INTERACTION_HOVER_ACTION_ID};
@@ -64,9 +67,9 @@ async fn set_camera_mutates_config_and_emits_no_operations() {
 async fn set_camera_preview_surface_updates_independently_of_blueprint() {
     let mut app = layout_app().await;
     dispatch_in(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }), PREVIEW_WINDOW).await;
-    let preview = scene(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW).await;
+    let preview = scene(&mut app, crate::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW).await;
     assert_eq!((preview.camera_x, preview.camera_y, preview.zoom), (3.0, 4.0, 2.0), "preview scene reflects its window's camera");
-    let blueprint = scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await;
+    let blueprint = scene(&mut app, crate::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await;
     assert_eq!((blueprint.camera_x, blueprint.camera_y), (0.0, 0.0), "blueprint window camera stays independent");
 }
 
@@ -128,7 +131,7 @@ async fn pointer_move_hovers_the_hit_frame_inline() {
 /// (the `dispatch` route is gated by the tool-proof catalog and `canvasPointerMove`'s
 /// `BatchOnlyPendingRewrite` classification, which are framework-owned).
 fn hover_targets(payload: &canvas_pointer_move::CanvasPointerMove) -> String {
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
@@ -165,12 +168,12 @@ async fn a_batched_pointer_move_hovers_its_last_sample_only() {
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
     use semio_framework_value::FromValue;
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let emit = crate::editor::layout::commands::canvas_pointer_up::handle(&crate::editor::layout::commands::canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg).expect("cancel");
+    let emit = crate::canvas_pointer_up::handle(&crate::canvas_pointer_up::CanvasPointerUp { cancelled: true }, &view, &cfg).expect("cancel");
     assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty(), "a cancel never selects or commits");
 
     let f = semio_framework_value::DslValue::float;
@@ -178,7 +181,7 @@ async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
     let moved = canvas_pointer_move::CanvasPointerMove::from_value(legacy).expect("legacy move decodes");
     assert_eq!(moved.samples_or_last(), vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
     assert_eq!(moved.last_sample(), [5.0, 6.0]);
-    let released = crate::editor::layout::commands::canvas_pointer_up::CanvasPointerUp::from_value(semio_framework_value::DslValue::Object(Vec::new())).expect("legacy release decodes");
+    let released = crate::canvas_pointer_up::CanvasPointerUp::from_value(semio_framework_value::DslValue::Object(Vec::new())).expect("legacy release decodes");
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
 }
 
@@ -211,8 +214,8 @@ async fn canvas_drop_page_kind_adds_page() {
 async fn drag_over_emits_ghost_and_leave_clears() {
     let mut app = layout_app().await;
     dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 })).await;
-    assert!(scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "the blueprint window's transient carries the drop ghost");
+    assert!(scene(&mut app, crate::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "the blueprint window's transient carries the drop ghost");
 
     dispatch(&mut app, LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {})).await;
-    assert!(!scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "drag leave clears the ghost");
+    assert!(!scene(&mut app, crate::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "drag leave clears the ghost");
 }

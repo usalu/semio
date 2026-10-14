@@ -1,9 +1,8 @@
 //! 👤️ Block2d mutation — `AddAuthor`: a credited author.
 
-use crate::BlockAuthor;
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
+use semio_s_plugin_block::BlockAuthor;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Mutation
 /// 👤️ `add-author` payload.
@@ -21,24 +20,24 @@ pub struct AddAuthor {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_author(author: BlockAuthor) -> Block2dMutation {
-    Block2dMutation::AddAuthor(AddAuthor { author, index: None })
+pub fn add_author<Op: From<crate::add_author::AddAuthor>>(author: BlockAuthor) -> Op {
+    Op::from(AddAuthor { author, index: None })
 }
 
 /// 📍️ Builder — like [`add_author`] but inserts the row at `index`.
-pub fn add_author_at(author: BlockAuthor, index: u32) -> Block2dMutation {
-    Block2dMutation::AddAuthor(AddAuthor { author, index: Some(index) })
+pub fn add_author_at<Op: From<crate::add_author::AddAuthor>>(author: BlockAuthor, index: u32) -> Op {
+    Op::from(AddAuthor { author, index: Some(index) })
 }
 
-impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAuthor {
+impl<Op> protocol::MutationKind<Block2dSnapshot, Op> for AddAuthor where Op: protocol::Mutation<Block2dSnapshot, Diff = semio_s_artifact_block_2d_diff::Block2dDiff> + From<crate::remove_author::RemoveAuthor> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "author", kind: "add-author", record: "AddedAuthor" };
 
     fn diff(&self, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-        super::diff::diff(self, base)
+        crate::add_author::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Block2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::add_author::inverse::inverse(self, base)?
     
     })
 }
@@ -50,3 +49,10 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAuthor {
     }
 }
 //#endregion 🔖️Mutation
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

@@ -1,6 +1,6 @@
 //! 🪪️ Artifact identity, capabilities, localization and definitions.
-use crate::sdk_fault::ArtifactDefinitionError;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::ArtifactDefinitionError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use std::collections::BTreeMap;
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
 /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on

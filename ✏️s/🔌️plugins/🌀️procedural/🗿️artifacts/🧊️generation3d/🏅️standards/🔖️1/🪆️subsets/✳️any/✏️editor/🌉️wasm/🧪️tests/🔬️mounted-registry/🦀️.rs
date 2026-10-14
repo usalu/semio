@@ -452,7 +452,7 @@ mod mounted_laws {
     #[test]
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
-        let _serial = crate::publication_authority::lock();
+        let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
@@ -484,8 +484,8 @@ mod mounted_laws {
 
     #[test]
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_three_dimensional_coverage() {
-        let owner_source = include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-        let snapshot_source = include_str!("../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs");
+        let owner_source = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs")).expect("scanned source");
+        let snapshot_source = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs")).expect("scanned source");
         let lifecycle_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/🧷️p8yz-b-retained-mounted-laws.json");
         let owner_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/👑️p8yz-b-owner-catalog-laws.json");
         let oracle_fixture = include_str!("../../../../🧪️tests/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");

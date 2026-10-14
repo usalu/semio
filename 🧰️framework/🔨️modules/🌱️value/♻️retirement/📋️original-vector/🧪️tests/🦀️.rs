@@ -1,5 +1,5 @@
 use super::*;
-use crate::value::observe_retirement_allocations as observe;
+use crate::allocation_testing::observe_retirement_allocations as observe;
 #[test]
 fn original_vector_native_ordered_handoffs_cancel_every_original_frontier_and_pay_final_backing(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

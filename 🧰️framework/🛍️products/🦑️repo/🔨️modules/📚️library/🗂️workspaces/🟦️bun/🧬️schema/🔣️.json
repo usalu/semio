@@ -33,7 +33,7 @@
       }
     }
   },
-  "description": "Portable authoritative Source membership recipes use literal path components, * and ? within a component, and ** for zero or more components. Brackets and braces are literal Source names. Native Bun workspaces are the complete current byte-sorted native literal directory projection of independently owned packages, excluding the installation scope itself and all testing collections. Native metacharacters are escaped and an empty brace alternative selects that same exact directory through Bun glob interpretation; ordinary directories remain direct literal entries. Leading ! is prefixed with ./ to preserve literal identity. Source discovery does not depend on published native projection. All affected scopes are refreshed through the original caller control before the first installation; current topology, manifest and policy guards refuse concurrent changes.",
+  "description": "Portable authoritative Source membership recipes use literal path components, * and ? within a component, and ** for zero or more components. Brackets and braces are literal Source names. Native Bun workspaces are the complete current byte-sorted native literal directory projection of independently owned packages, excluding the installation scope itself and all testing collections. Native metacharacters are escaped and an empty brace alternative selects that same exact directory through Bun glob interpretation; ordinary directories remain direct literal entries. Leading ! is prefixed with ./ to preserve literal identity. Source discovery does not depend on published native projection. Only the explicitly selected scopes are refreshed through the original caller control before the first installation; current topology, manifest and policy guards refuse concurrent changes.",
   "$defs": {
     "OwnershipProgress": {
       "type": "object",
@@ -123,6 +123,63 @@
             "minLength": 1
           },
           "uniqueItems": true
+        }
+      }
+    },
+    "OwnershipSelection": {
+      "description": "Explicit whole-repository or one authored installation owner. A scoped operation reads only its selected Source membership and admission, excluding separate installation owners; topology, manifest and original-control guards remain mandatory.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "all"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "owner"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scope"
+            },
+            "owner": {
+              "type": "string",
+              "pattern": "^(?:\\.|[^./\\\\:\\u0000][^/\\\\:\\u0000]*)$"
+            }
+          }
+        }
+      ]
+    },
+    "InstallationCustody": {
+      "description": "One original controlled publisher computation retains all raw Source texts, physical state/topology and policy observations throughout its callback. Callback recheck replays those original observations without rediscovering package membership. Scope enumeration admits current owner manifests with the same guards but performs no package scan. Reports alone never grant installation authority. Recheck must retain live callback custody both at entry and after every awaited validation; a continuation paused inside original control cannot settle successfully after callback release.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "packages"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

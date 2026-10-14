@@ -1,5 +1,6 @@
 {
   "schema": "semio.playground.native-host-laws/v1",
+  "outputOracles": {"portable":"lodash/template","nxTool":"nx"},
   "owner": {
     "cratePath": "owners/alpha/📦️packages/🦀️rust",
     "project": "@fixture/alpha-native",

@@ -7,7 +7,8 @@
 //! (`Generation3dViewFlowEvalWindowWork`) builds its own `Emit`, and the `ViewEmit` `handle` below
 //! is the session-free fallback with no window to publish into and no retained session to advance.
 
-use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 

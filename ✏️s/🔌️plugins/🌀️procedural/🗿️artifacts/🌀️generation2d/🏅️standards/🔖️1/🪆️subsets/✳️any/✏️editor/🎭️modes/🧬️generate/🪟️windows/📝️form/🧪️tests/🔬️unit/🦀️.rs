@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::generation2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_procedural_2d_mode_generate::windows::form::*;
+use crate::app_fixture::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn generate_form_hints_without_a_selected_generation() {

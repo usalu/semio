@@ -1,5 +1,5 @@
 use super::*;
-use crate::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyPaintLayer, snapshot::LowpolyTransform, snapshot::LOWPOLY_DOCUMENT_SCHEMA};
 
 fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
     LowpolyObject { mesh_state:None, id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new() }

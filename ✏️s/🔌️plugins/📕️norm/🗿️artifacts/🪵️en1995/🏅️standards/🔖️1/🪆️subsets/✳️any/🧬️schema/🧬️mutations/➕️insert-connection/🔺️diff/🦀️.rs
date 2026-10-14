@@ -1,6 +1,7 @@
-use super::InsertConnection;
-use crate::{En1995Diff, En1995Snapshot};
-use crate::diff::{En1995ConnectionDelta};
+use crate::insert_connection::InsertConnection;
+use semio_s_artifact_norm_en1995_diff::En1995Diff;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+use semio_s_artifact_norm_en1995_diff::En1995ConnectionDelta;
 pub fn diff(payload: &InsertConnection, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     if base.connections.iter().any(|existing| existing.id == payload.connection.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Connection id {} already exists.", payload.connection.id), [payload.connection.id.clone()]);

@@ -1,8 +1,7 @@
 //! 🌘️ Energy model mutation — `RemoveElectricalLoadCenterPv`: Detaches one PV system from a load centre; the PV system itself survives, unattached.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct RemoveElectricalLoadCenterPv {
     pub pv_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_electrical_load_center_pv(id: crate::model::EntityId, pv_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::RemoveElectricalLoadCenterPv(RemoveElectricalLoadCenterPv { id, pv_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn remove_electrical_load_center_pv<Op: From<RemoveElectricalLoadCenterPv>>(id: crate::model::EntityId, pv_id: crate::model::EntityId) -> Op {
+    RemoveElectricalLoadCenterPv { id, pv_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for RemoveElectricalLoadCenterPv {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveElectricalLoadCenterPv
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveElectricalLoadCenterPv> + From<crate::AddElectricalLoadCenterPv>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "electrical-load-center", kind: "remove-electrical-load-center-pv", record: "RemovedElectricalLoadCenterPv" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

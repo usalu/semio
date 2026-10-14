@@ -1,6 +1,6 @@
 //! ✏️ Block 2D play app — the `edit` mode: the single-window board authoring layout.
 
-use crate::editor::block2d::modes::edit::windows::board;
+use crate::modes::edit::windows::board;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -26,3 +26,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/📋️board/🦀️.rs"]
+    pub mod board;
+}
+//#endregion 🪢️Mounts

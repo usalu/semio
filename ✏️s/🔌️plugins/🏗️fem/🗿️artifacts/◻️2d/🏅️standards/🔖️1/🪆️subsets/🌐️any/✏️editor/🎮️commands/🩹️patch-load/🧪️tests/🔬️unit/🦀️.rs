@@ -1,12 +1,19 @@
-use super::*;
-use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
-use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app};
-use crate::editor::fem2d::Fem2dCommand;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load::*;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_load_owner;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
+use crate::context::{dispatch, fem2d_app};
+use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("the bundled demo fixture parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchLoad) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {

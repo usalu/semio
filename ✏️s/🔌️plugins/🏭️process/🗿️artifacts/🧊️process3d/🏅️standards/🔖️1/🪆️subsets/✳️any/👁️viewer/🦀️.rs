@@ -4,9 +4,44 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::viewer::process3d::modes::view;
-use crate::viewer::process3d::modes::view::windows::workpiece;
-use crate::{Process3dMutation, Process3dSnapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod view {
+        #[path = "🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod windows {
+            #[path = "."]
+            pub mod workpiece {
+                #[path = "🎭️modes/👁️view/🪟️windows/🪚️workpiece/🦀️.rs"]
+                mod component;
+                pub use component::*;
+            }
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use crate::modes::view;
+use crate::modes::view::windows::workpiece;
+use semio_s_artifact_process_process3d_mutations::Process3dMutation;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::PROCESS3D_DIALECT, snapshot::PROCESS_3D_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -66,18 +101,18 @@ impl ArtifactViewer for Process3dViewer {
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::process3d_child_restore_projection(snapshot)
+        semio_s_artifact_process_process3d_model::snapshot::process3d_child_restore_projection(snapshot)
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::genesis_process3d_child_pack(snapshot, slot, child_id)
+        semio_s_artifact_process_process3d_model::snapshot::genesis_process3d_child_pack(snapshot, slot, child_id)
     
 })())
 }
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+        semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `Process3dViewCommand::Noop` variant never carries a

@@ -1,14 +1,13 @@
 
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::{BLOCK_5D_SCHEMA, Block5dSnapshot};
+use crate::binary::mutations::*;
+use semio_s_artifact_block_5d_model::{BLOCK_5D_SCHEMA, Block5dSnapshot};
 use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 
 #[semio_framework_async_macros::async_test]
 async fn block5d_document_vcs_replays_granular_operations() {
-    use crate::standards::v1::subsets::any::schema::mutations::{self as m,Block5dStore};
+    use semio_s_artifact_block_5d_mutations::{self as m,Block5dStore};
 
-
-    let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid initial state");
+    let mut store = Block5dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid initial state");
     // 🏪️ A bare store carries no owner catalog and refuses its first edit
     // (`edit history insertion requires its exact mutation retirement factory`); install the
     // exact owners production installs through `Block5dPlayApp::build_document_store_owners`.
@@ -21,7 +20,7 @@ async fn block5d_document_vcs_replays_granular_operations() {
 
 #[semio_framework_async_macros::async_test]
 async fn block5d_operation_binary_round_trips() {
-    let operation = crate::standards::v1::subsets::any::schema::mutations::delete_grip("g0".into());
+    let operation = semio_s_artifact_block_5d_mut_grips::delete_grip("g0".into());
     let bytes = encode_op(&operation).expect("encode");
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }

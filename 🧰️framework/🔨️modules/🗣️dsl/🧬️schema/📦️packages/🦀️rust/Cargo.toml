@@ -9,6 +9,11 @@ rust-version.workspace = true
 role = "framework"
 id = "dsl-record"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
@@ -17,8 +22,10 @@ name = "semio_framework_dsl_record"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record-emission = { path="../../🖨️printing/📦️packages/🦀️rust" }
+semio-framework-dsl-notation = { path="../../🖋️notation/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-dsl-record-model = { path="../../📐️model/📦️packages/🦀️rust" }
-semio-framework-io-sqlite-snapshot = { path = "../../../../🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }

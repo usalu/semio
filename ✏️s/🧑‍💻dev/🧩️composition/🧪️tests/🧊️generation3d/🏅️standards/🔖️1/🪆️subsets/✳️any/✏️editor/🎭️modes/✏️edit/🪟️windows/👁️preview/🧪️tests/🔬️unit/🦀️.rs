@@ -1,7 +1,7 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, drain_flow_eval_ticks, render as render_body};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_framework_plugin::PluginApp;
 
@@ -68,7 +68,7 @@ async fn switching_active_example_changes_preview_meshes() {
 async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta)
         .await
@@ -91,7 +91,7 @@ async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
 async fn the_preview_render_reads_the_retained_evaluation_instead_of_recomputing_it() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
+    let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let unevaluated = preview_scene(&context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
     assert_eq!(unevaluated.meshes_json, "[]", "a render before the run's first hop must paint nothing, not evaluate the graph itself");
     context::drive_preview_run(&mut app, &flow_view, &[]).await;

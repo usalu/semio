@@ -1,6 +1,6 @@
 //! 🗂️ Generation2d play app — the generations list window (generate mode).
 
-use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_PLAY_APP_ID;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::Locale;
@@ -50,7 +50,4 @@ pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, local
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "./🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

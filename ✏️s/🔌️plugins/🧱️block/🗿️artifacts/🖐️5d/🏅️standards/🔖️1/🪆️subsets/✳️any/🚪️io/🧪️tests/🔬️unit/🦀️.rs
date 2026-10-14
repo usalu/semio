@@ -1,10 +1,10 @@
 
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::zip::v2_0::any::Block5dIntoZip;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::zip::v2_0::any::{ZIP_MAGIC, from_zip_bytes};
+use semio_s_artifact_block_5d_io_write::serializers::artifacts::json::v_rfc8259::any::json_text;
+use semio_s_artifact_block_5d_io_write::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+use semio_s_artifact_block_5d_io_write::serializers::artifacts::zip::v2_0::any::Block5dIntoZip;
+use semio_s_artifact_block_5d_io_read::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+use semio_s_artifact_block_5d_io_read::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use semio_s_artifact_block_5d_io_read::deserializers::artifacts::zip::v2_0::any::{ZIP_MAGIC, from_zip_bytes};
 use semio_framework_os_kernel::io::io_mechanism::Serializer;
 use semio_framework::io_schema::IoPayload;
 
@@ -62,7 +62,7 @@ async fn json_matches_the_typescript_parity_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn io_declaration_registers_both_directions_of_all_three_formats() {
-    let declaration = super::io();
+    let declaration = crate::io();
     assert_eq!(declaration.entries.len(), 6, "three formats x two directions");
     let own = "s.block.block5d";
     let mut foreign: Vec<&str> = Vec::new();

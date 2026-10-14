@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-fire-mode`.
-use super::ChangeFireMode;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_fire_mode::ChangeFireMode;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeFireMode, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.fire_mode == payload.new_fire_mode {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

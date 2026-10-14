@@ -1,10 +1,10 @@
 //! 🔺️ Diff for `MoveCamera2d`.
 
-use crate::Block2dSnapshot;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::MoveCamera2d, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
+pub fn diff(payload: &crate::move_camera2d::MoveCamera2d, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
     if !payload.new_x.is_finite() || !payload.new_y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera position ({}, {}) is not finite.", payload.new_x, payload.new_y), ["camera2d"]);
     }

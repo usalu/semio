@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "document",
+  "id": "document-a",
+  "newName": "Renamed Document A"
+}

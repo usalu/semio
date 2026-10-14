@@ -1,12 +1,20 @@
 //! ⚡️ Block 3D artifact — the mutation dispatch enum (`dsl::Mutations`-derived, real per-mutation
 //! triads) plus the store aliases.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::diff::Block3dDiff;
-use crate::Block3dSnapshot;
+use semio_s_artifact_block_3d_diff::Block3dDiff;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
@@ -115,44 +123,6 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::{add_attribute, add_attribute_at, AddAttribute};
-pub use super::add_author::{add_author, add_author_at, AddAuthor};
-pub use super::add_compatibility_rule::{add_compatibility_rule, add_compatibility_rule_at, AddCompatibilityRule};
-pub use super::add_representation_attribute::{add_representation_attribute, add_representation_attribute_at, AddRepresentationAttribute};
-pub use super::add_representation_tag::{add_representation_tag, add_representation_tag_at, AddRepresentationTag};
-pub use super::change_meta_description::{change_meta_description, ChangeMetaDescription};
-pub use super::change_object_kind_description::{change_object_kind_description, ChangeObjectKindDescription};
-pub use super::change_object_kind_icon::{change_object_kind_icon, ChangeObjectKindIcon};
-pub use super::change_object_kind_label::{change_object_kind_label, ChangeObjectKindLabel};
-pub use super::change_object_kind_unit::{change_object_kind_unit, ChangeObjectKindUnit};
-pub use super::change_object_kind_variant::{change_object_kind_variant, ChangeObjectKindVariant};
-pub use super::change_representation_description::{change_representation_description, ChangeRepresentationDescription};
-pub use super::change_representation_lod::{change_representation_lod, ChangeRepresentationLod};
-pub use super::change_representation_mesh_url::{change_representation_mesh_url, ChangeRepresentationMeshUrl};
-pub use super::change_vortex_kind_color::{change_vortex_kind_color, ChangeVortexKindColor};
-pub use super::change_vortex_kind_default_cable_kind::{change_vortex_kind_default_cable_kind, ChangeVortexKindDefaultCableKind};
-pub use super::change_vortex_kind_label::{change_vortex_kind_label, ChangeVortexKindLabel};
-pub use super::change_vortex_label::{change_vortex_label, ChangeVortexLabel};
-pub use super::change_vortex_vortex_kind::{change_vortex_vortex_kind, ChangeVortexVortexKind};
-pub use super::create_representation::{create_representation, create_representation_at, CreateRepresentation};
-pub use super::create_vortex::{create_vortex, create_vortex_at, CreateVortex};
-pub use super::create_vortex_kind::{create_vortex_kind, create_vortex_kind_at, CreateVortexKind};
-pub use super::delete_representation::{delete_representation, DeleteRepresentation};
-pub use super::delete_vortex::{delete_vortex, DeleteVortex};
-pub use super::delete_vortex_kind::{delete_vortex_kind, DeleteVortexKind};
-pub use super::move_camera3d::{move_camera3d, MoveCamera3d};
-pub use super::move_vortex::{move_vortex, MoveVortex};
-pub use super::remove_attribute::{remove_attribute, RemoveAttribute};
-pub use super::remove_author::{remove_author, RemoveAuthor};
-pub use super::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
-pub use super::remove_representation_attribute::{remove_representation_attribute, RemoveRepresentationAttribute};
-pub use super::remove_representation_tag::{remove_representation_tag, RemoveRepresentationTag};
-pub use super::rename_object_kind::{rename_object_kind, RenameObjectKind};
-pub use super::rename_representation::{rename_representation, RenameRepresentation};
-pub use super::rename_vortex_kind::{rename_vortex_kind, RenameVortexKind};
-pub use super::resize_vortex::{resize_vortex, ResizeVortex};
-pub use super::scale_camera3d::{scale_camera3d, ScaleCamera3d};
-
 pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Result<Vec<Block3dMutation>, semio_framework_value::ValueError> {
     Ok({
     mutation.inverse(projection)?
@@ -160,8 +130,7 @@ pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3d
     })
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

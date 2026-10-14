@@ -1,8 +1,7 @@
 //! 🔧️ Energy model mutation — `ChangeZoneEquipmentType`: Swaps the catalog type the assignment names. The eight-way enum is one scalar, not eight fields, so it changes as a whole.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeZoneEquipmentType {
     pub new_equipment_type: crate::model::ZoneEquipmentType,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_zone_equipment_type(id: crate::model::EntityId, new_equipment_type: crate::model::ZoneEquipmentType) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeZoneEquipmentType(ChangeZoneEquipmentType { id, new_equipment_type })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_zone_equipment_type<Op: From<ChangeZoneEquipmentType>>(id: crate::model::EntityId, new_equipment_type: crate::model::ZoneEquipmentType) -> Op {
+    ChangeZoneEquipmentType { id, new_equipment_type }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeZoneEquipmentType {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeZoneEquipmentType
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeZoneEquipmentType>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "zone-equipment", kind: "change-zone-equipment-type", record: "ChangedZoneEquipmentType" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

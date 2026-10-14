@@ -158,8 +158,8 @@ path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️pa
 package = "semio-framework-geometry"
 
 [workspace.dependencies.graph]
-path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust"
-package = "semio-framework-graph"
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust"
+package = "semio-framework-graph-engine"
 
 [workspace.dependencies.number]
 path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust"

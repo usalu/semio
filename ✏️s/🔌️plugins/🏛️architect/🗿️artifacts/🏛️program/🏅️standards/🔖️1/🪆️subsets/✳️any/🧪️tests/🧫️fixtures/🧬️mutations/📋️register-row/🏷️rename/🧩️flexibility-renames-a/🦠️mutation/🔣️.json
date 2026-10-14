@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "flexibilityRequirement",
+  "id": "flexibility-requirement-a",
+  "newName": "Renamed Flexibility Requirement A"
+}

@@ -5,12 +5,12 @@
 //! geometry (n-gons, multiple objects); nothing here was reachable from the react shell before
 //! 2026-09-18 (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS).
 
-use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
-use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{obj::v3_0::any as obj_export, ply::v1_0::any as ply_export, stl::v_ascii::any as stl_export};
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{obj::v3_0::any as obj_import, ply::v1_0::any as ply_import, stl::v_ascii::any as stl_import};
-use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
-use crate::LowpolySnapshot;
+use semio_s_artifact_lowpoly_lowpoly_config::{LowpolyConfig, LowpolyConfigMutation};
+use semio_s_artifact_lowpoly_lowpoly_view::editor::lowpoly::session::LowpolyScratch;
+use semio_s_artifact_lowpoly_lowpoly_io::{export::serializers::artifacts::obj::v3_0::any as obj_export, export::serializers::artifacts::ply::v1_0::any as ply_export, export::serializers::artifacts::stl::v_ascii::any as stl_export};
+use semio_s_artifact_lowpoly_lowpoly_io::{import::deserializers::artifacts::obj::v3_0::any as obj_import, import::deserializers::artifacts::ply::v1_0::any as ply_import, import::deserializers::artifacts::stl::v_ascii::any as stl_import};
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 #[cfg(test)]
@@ -117,13 +117,10 @@ pub mod import_mesh_file {
     pub fn handle(payload: &ImportMeshFile, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let bytes = opened_file_bytes(&payload.payload)?;
         let snapshot = import_mesh_bytes(&payload.name, &bytes)?;
-        Ok(Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&snapshot)], ..Default::default() })
+        Ok(Emit { effects: vec![semio_s_artifact_lowpoly_lowpoly_kit::reset_document_effect(&snapshot)], ..Default::default() })
     }
 }
 //#endregion 🔖️ImportMeshFile
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

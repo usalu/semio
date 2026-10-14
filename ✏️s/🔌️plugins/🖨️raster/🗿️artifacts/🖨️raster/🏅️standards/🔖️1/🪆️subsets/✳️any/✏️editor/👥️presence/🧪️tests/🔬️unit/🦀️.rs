@@ -1,6 +1,6 @@
 //! 🧪️ Raster presence — the sparse `Set` mutation's concrete inverse sums to exactly the negative diff.
 use super::{RasterPresence, RasterPresenceDiff, RasterPresenceMutation, SetPresenceEdit};
-use crate::RasterCamera;
+use semio_s_artifact_raster_raster_model::RasterCamera;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::Mutation;
 

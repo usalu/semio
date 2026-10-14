@@ -16,10 +16,10 @@ fn push<T>(values: &mut Vec<T>, value: T, control: &mut SqliteSnapshotControl<'_
 
 struct ParentIndex { column: usize, ordinal: usize, positions: Vec<usize> }
 struct Table<'a> { name: &'static str, width: usize, rows: Vec<&'a SqliteRow>, used: Vec<bool>, parents: Vec<ParentIndex> }
-pub(super) struct Rows<'a> { tables: Vec<Table<'a>> }
+pub struct Rows<'a> { tables: Vec<Table<'a>> }
 
 impl<'a> Rows<'a> {
-    pub(super) fn new(database: &'a SqliteDatabase, declared: &[(&'static str, usize)], control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+    pub fn new(database: &'a SqliteDatabase, declared: &[(&'static str, usize)], control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
         let mut tables = transfer::reserve(declared.len(), control)?;
         for &(name, width) in declared {
             let source = &database.table(name)?.rows;
@@ -45,12 +45,12 @@ impl<'a> Rows<'a> {
         self.tables.iter().position(|table| table.name == name).ok_or_else(|| invalid("unknown Layout table"))
     }
 
-    pub(super) fn contains(&self, name: &str, identity: i64) -> Result<bool, ValueError> {
+    pub fn contains(&self, name: &str, identity: i64) -> Result<bool, ValueError> {
         let table = &self.tables[self.table(name)?];
         Ok(table.rows.binary_search_by_key(&identity, |row| row.rowid).is_ok_and(|position| !table.used[position]))
     }
 
-    pub(super) fn take(&mut self, name: &str, identity: i64) -> Result<&'a SqliteRow, ValueError> {
+    pub fn take(&mut self, name: &str, identity: i64) -> Result<&'a SqliteRow, ValueError> {
         let index = self.table(name)?;
         let table = &mut self.tables[index];
         let position = table.rows.binary_search_by_key(&identity, |row| row.rowid).map_err(|_| invalid("dangling Layout relation"))?;
@@ -58,7 +58,7 @@ impl<'a> Rows<'a> {
         Ok(table.rows[position])
     }
 
-    pub(super) fn list(&mut self, name: &str, parent: i64, column: usize, ordinal: usize, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
+    pub fn list(&mut self, name: &str, parent: i64, column: usize, ordinal: usize, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
         let index = self.table(name)?;
         let table = &mut self.tables[index];
         if column == 0 || column >= table.width || ordinal == 0 || ordinal >= table.width || column == ordinal { return Err(invalid("Layout parent and ordinal columns must be distinct fields")); }
@@ -102,7 +102,7 @@ impl<'a> Rows<'a> {
         Ok(output)
     }
 
-    pub(super) fn finish(self, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
+    pub fn finish(self, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         for table in self.tables {
             for (index, used) in table.used.iter().enumerate() {
                 if !used { return Err(invalid("orphan Layout rows")); }

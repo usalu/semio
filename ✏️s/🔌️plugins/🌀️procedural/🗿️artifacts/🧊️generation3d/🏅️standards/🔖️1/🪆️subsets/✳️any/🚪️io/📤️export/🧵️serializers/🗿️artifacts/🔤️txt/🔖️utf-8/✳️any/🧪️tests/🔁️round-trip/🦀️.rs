@@ -12,7 +12,7 @@
 use crate::retire_document;
 use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::txt::v_utf_8::any as export;
 use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::txt::v_utf_8::any as import;
-use semio_s_artifact_procedural_3d_mesh_bridge;
+use semio_s_artifact_procedural_3d_mesh_bridge as mesh_bridge;
 
 fn document() -> semio_s_artifact_procedural_generation3d::Generation3dSnapshot {
     mesh_bridge::import_document("brep.io.importStl", mesh_bridge::base64_encode(&crate::stl_bytes_for_txt_case()))

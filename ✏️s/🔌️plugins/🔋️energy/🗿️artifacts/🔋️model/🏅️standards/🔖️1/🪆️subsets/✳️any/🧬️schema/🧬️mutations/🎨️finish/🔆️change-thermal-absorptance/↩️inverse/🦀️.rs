@@ -1,12 +1,14 @@
 //! ↩️ Inverse for `ChangeMaterialThermalAbsorptance` — always computed from BASE, never by inverting the delta.
 
-use crate::mutations as vocabulary;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate as vocabulary;
+use crate::snapshot::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse(payload: &super::ChangeMaterialThermalAbsorptance, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op>(payload: &super::ChangeMaterialThermalAbsorptance, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
+where
+    Op: From<super::ChangeMaterialThermalAbsorptance>,
+{
     Ok((|| {
     match base.model.materials.iter().find(|item| item.id == payload.id) {
         Some(item) if item.thermal_absorptance != payload.new_thermal_absorptance && !(!(0.0..=1.0).contains(&payload.new_thermal_absorptance)) => vec![vocabulary::change_material_thermal_absorptance(payload.id, item.thermal_absorptance)],

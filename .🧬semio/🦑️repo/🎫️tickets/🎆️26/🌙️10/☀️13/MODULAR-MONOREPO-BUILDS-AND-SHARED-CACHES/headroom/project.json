@@ -2,6 +2,70 @@
   "name": "repo-private-cache",
   "root": ".",
   "targets": {
+    "dashboard-installation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute dashboard-installation prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute dashboard-installation release"
+        }
+      }
+    },
+    "rust-package-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-package-build prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-package-build release"
+        }
+      }
+    },
+    "cargo-published": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-published prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-published release"
+        }
+      }
+    },
+    "rust-build-intent": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-build-intent prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-build-intent release"
+        }
+      }
+    },
     "engine-references": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1861,6 +1925,1367 @@
         "prototype": {},
         "release": {
           "command": "bun ./📜️script.ts execute crate-feature-laws release"
+        }
+      }
+    },
+    "test-artifact-budget": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute test-artifact-budget prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute test-artifact-budget release"
+        }
+      }
+    },
+    "test-artifact-scope": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute test-artifact-scope prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute test-artifact-scope release"
+        }
+      }
+    },
+    "crate-frontier-geometry": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-geometry prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-geometry release"
+        }
+      }
+    },
+    "crate-frontier-geometry-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-geometry-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-geometry-tests release"
+        }
+      }
+    },
+    "crate-frontier-emission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-emission prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-emission release"
+        }
+      }
+    },
+    "crate-frontier-emission-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-emission-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-emission-tests release"
+        }
+      }
+    },
+    "crate-frontier-record": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-record prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-record release"
+        }
+      }
+    },
+    "crate-frontier-record-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-record-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-record-tests release"
+        }
+      }
+    },
+    "graph-reports": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-reports prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-reports release"
+        }
+      }
+    },
+    "storybook-storage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute storybook-storage prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute storybook-storage release"
+        }
+      }
+    },
+    "crate-frontier-value-control": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-control prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-control release"
+        }
+      }
+    },
+    "crate-frontier-value-control-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-control-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-control-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-retirement prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-retirement release"
+        }
+      }
+    },
+    "crate-frontier-value-paged-list": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-paged-list prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-paged-list release"
+        }
+      }
+    },
+    "crate-frontier-value-paged-list-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-paged-list-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-paged-list-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-factory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-factory prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-factory release"
+        }
+      }
+    },
+    "crate-frontier-value-shared-issuance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-shared-issuance prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-shared-issuance release"
+        }
+      }
+    },
+    "crate-frontier-value-queue": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-queue prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-queue release"
+        }
+      }
+    },
+    "authorizers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute authorizers prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute authorizers prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute authorizers release"
+        }
+      }
+    },
+    "vite-storage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute vite-storage prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute vite-storage release"
+        }
+      }
+    },
+    "vite-distribution": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute vite-distribution prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute vite-distribution release"
+        }
+      }
+    },
+    "next-storage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-storage prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-storage release"
+        }
+      }
+    },
+    "ecma-state-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute ecma-state-integration prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute ecma-state-integration release"
+        }
+      }
+    },
+    "crate-frontier-value-encoding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-encoding prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-encoding release"
+        }
+      }
+    },
+    "crate-frontier-value-encoding-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-encoding-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-encoding-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-decoding": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-decoding prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-decoding release"
+        }
+      }
+    },
+    "crate-frontier-value-decoding-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-decoding-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-decoding-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-aliases": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-aliases prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-aliases release"
+        }
+      }
+    },
+    "crate-frontier-value-factory-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-factory-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-factory-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-shared-issuance-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-shared-issuance-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-shared-issuance-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-queue-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-queue-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-queue-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-paged-text": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-paged-text prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-paged-text release"
+        }
+      }
+    },
+    "crate-frontier-value-paged-text-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-paged-text-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-paged-text-tests release"
+        }
+      }
+    },
+    "next-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-build prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-build release"
+        }
+      }
+    },
+    "actor-codec-integration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute actor-codec-integration prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute actor-codec-integration release"
+        }
+      }
+    },
+    "next-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-runtime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-runtime release"
+        }
+      }
+    },
+    "next-dev-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-dev-runtime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-dev-runtime release"
+        }
+      }
+    },
+    "runtime-verification-storage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute runtime-verification-storage prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute runtime-verification-storage prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute runtime-verification-storage release"
+        }
+      }
+    },
+    "crate-frontier-value-ordered": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-ordered prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-ordered release"
+        }
+      }
+    },
+    "crate-frontier-value-ordered-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-ordered-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-ordered-tests release"
+        }
+      }
+    },
+    "runtime-verification-storage-runtime": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute runtime-verification-storage-runtime prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute runtime-verification-storage-runtime prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute runtime-verification-storage-runtime release"
+        }
+      }
+    },
+    "nx-product-outputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute nx-product-outputs prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute nx-product-outputs release"
+        }
+      }
+    },
+    "nx-product-cache": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute nx-product-cache prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute nx-product-cache release"
+        }
+      }
+    },
+    "crate-frontier-value-clone-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-clone-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-clone-source release"
+        }
+      }
+    },
+    "crate-frontier-value-clone-source-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-clone-source-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-clone-source-tests release"
+        }
+      }
+    },
+    "rust-unit-profile": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-unit-profile prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rust-unit-profile prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-unit-profile release"
+        }
+      }
+    },
+    "rustup-protocol": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rustup-protocol prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rustup-protocol prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rustup-protocol release"
+        }
+      }
+    },
+    "rustup-generation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rustup-generation prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rustup-generation prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rustup-generation release"
+        }
+      }
+    },
+    "cargo-ingress": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-ingress prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute cargo-ingress prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-ingress release"
+        }
+      }
+    },
+    "next-nx-cache": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-nx-cache prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-nx-cache release"
+        }
+      }
+    },
+    "nx-native-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute nx-native-inventory prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute nx-native-inventory prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute nx-native-inventory release"
+        }
+      }
+    },
+    "artifact-reader": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute artifact-reader prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute artifact-reader release"
+        }
+      }
+    },
+    "configured-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute configured-source prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute configured-source release"
+        }
+      }
+    },
+    "crate-frontier-value-intrinsic": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-intrinsic prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-intrinsic release"
+        }
+      }
+    },
+    "crate-frontier-value-intrinsic-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-intrinsic-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-intrinsic-tests release"
+        }
+      }
+    },
+    "next-inputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-inputs prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-inputs release"
+        }
+      }
+    },
+    "next-nx-inputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute next-nx-inputs prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute next-nx-inputs release"
+        }
+      }
+    },
+    "crate-frontier-value-retained-clone": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-retained-clone prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-retained-clone release"
+        }
+      }
+    },
+    "crate-frontier-value-retained-clone-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-retained-clone-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-retained-clone-tests release"
+        }
+      }
+    },
+    "crate-frontier-value-retained-map": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-retained-map prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-retained-map release"
+        }
+      }
+    },
+    "crate-frontier-value-retained-map-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-retained-map-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-retained-map-tests release"
+        }
+      }
+    },
+    "task-closure": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute task-closure prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute task-closure release"
+        }
+      }
+    },
+    "task-closure-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute task-closure-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute task-closure-types release"
+        }
+      }
+    },
+    "crate-frontier-value-root": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-value-root prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-value-root release"
+        }
+      }
+    },
+    "std-copy-selection": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute std-copy-selection prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute std-copy-selection release"
+        }
+      }
+    },
+    "clone-source-custody": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute clone-source-custody prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute clone-source-custody release"
+        }
+      }
+    },
+    "io-codec-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute io-codec-contract prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute io-codec-contract release"
+        }
+      }
+    },
+    "rust-unit-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-unit-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rust-unit-types prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-unit-types release"
+        }
+      }
+    },
+    "nx-native-snapshot": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute nx-native-snapshot prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute nx-native-snapshot prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute nx-native-snapshot release"
+        }
+      }
+    },
+    "crate-frontier-io-codec": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-io-codec prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-io-codec release"
+        }
+      }
+    },
+    "crate-frontier-io-codec-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-io-codec-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-io-codec-tests release"
+        }
+      }
+    },
+    "crate-frontier-diff": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-diff prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-diff release"
+        }
+      }
+    },
+    "crate-frontier-diff-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute crate-frontier-diff-tests prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute crate-frontier-diff-tests release"
+        }
+      }
+    },
+    "mutation-diff": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute mutation-diff prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute mutation-diff release"
+        }
+      }
+    },
+    "rust-unit-semantics": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-unit-semantics prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rust-unit-semantics prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-unit-semantics release"
+        }
+      }
+    },
+    "rust-source-accounting": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-source-accounting prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-source-accounting release"
+        }
+      }
+    },
+    "build-file-membership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute build-file-membership prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute build-file-membership release"
+        }
+      }
+    },
+    "rust-owner-trace": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rust-owner-trace",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute rust-owner-trace release"
+        }
+      }
+    },
+    "rustup-toolchain": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute rustup-toolchain prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun ./📜️script.ts execute rustup-toolchain prototype"
+        },
+        "release": {
+          "command": "bun ./📜️script.ts execute rustup-toolchain release"
+        }
+      }
+    },
+    "graph-maintenance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-maintenance prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-maintenance release"
+        }
+      }
+    },
+    "catalog-task-admission": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute catalog-task-admission",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute catalog-task-admission release"
+        }
+      }
+    },
+    "cargo-test-executable": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-test-executable",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-test-executable release"
+        }
+      }
+    },
+    "graph-maintenance-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute graph-maintenance-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute graph-maintenance-types release"
+        }
+      }
+    },
+    "cargo-launcher": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-launcher prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-launcher release"
+        }
+      }
+    },
+    "cargo-launcher-types": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts execute cargo-launcher-types prototype",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {},
+        "release": {
+          "command": "bun ./📜️script.ts execute cargo-launcher-types release"
         }
       }
     }

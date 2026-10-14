@@ -1,4 +1,360 @@
 {
+  "nestedOptionalMaintenance": {
+    "minimumPressureBytes": 536870913,
+    "maximumOptionalBytes": 1073741824,
+    "imageResourcePrefix": "native-fixed-image:",
+    "cacheDirectory": ".cache/b/g",
+    "cancelReason": "Owned nested optional maintenance wait cancelled",
+    "expectedChildEntered": true
+  },
+  "optionalReaderAdmission": {
+    "namespace": "inference",
+    "expectedInventoryReads": 0,
+    "writerResource": "repository-graph-facts:",
+    "maintenance": "maintainBuildGraphOptionalCachesV1"
+  },
+  "selectedGeneratorProducers": {
+    "registry":{"version":1,"owners":[{"name":"consumer","root":"c","manifest":"c/📋️project.json","packages":[]},{"name":"producer","root":"p","manifest":"p/📋️project.json","packages":[],"nativeRoots":["native"]}],"catalogProviders":[]},
+    "contracts":{"fixture":{"ownership":"owned","ownerPath":"c","target":"consumer:generate","inputPatterns":["p/📜️script.ts"],"outputRoots":[{"path":"p/generated/result.js","inclusion":"ignored","producer":{"ownerPath":"p","target":"producer:generate"}}],"reason":"Explicit producer ownership remains authored when source execution is selected"}},
+    "projects":{"consumer":{"name":"consumer","root":"c","targets":{"test":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts test","cwd":"c"}},"generate":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts generate","cwd":"c"}}}},"producer":{"name":"producer","root":"p","metadata":{"nativeRoot":"native"},"targets":{"test":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts test","cwd":"p"}},"generate":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts generate","cwd":"p"}}}}},
+    "files":{"c/📜️script.ts":"console.log('consumer');\n","p/📜️script.ts":"console.log('producer');\n","native/Cargo.toml":"[package]\nname='fixture-native'\nversion='0.0.0'\n"},
+    "cases":[{"id":"source-only","selection":{"kind":"tasks","tasks":[{"project":"consumer","target":"test"}]},"producer":"absent","accepted":true},{"id":"pruned-producer","selection":{"kind":"tasks","tasks":[{"project":"producer","target":"test"}]},"producer":"pruned","accepted":true},{"id":"producer-selected","selection":{"kind":"tasks","tasks":[{"project":"producer","target":"generate"}]},"producer":"full","accepted":true},{"id":"all","selection":{"kind":"all"},"producer":"full","accepted":true},{"id":"all-incomplete","selection":{"kind":"all"},"producer":"pruned","accepted":false}]
+  },
+  "nativeCallerSource":{"manifest":"[package]\nname=\"native-caller-fixture\"\nversion=\"0.0.0\"\nedition=\"2021\"\n","sha256":"bdee5baa96c4a084be77fea7819044235ef10cb7ce916ed980e82a9fe75efc17","package":"native-caller-fixture"},
+  "graphCacheQuota": {
+    "retirementCases": [
+      {"usedBytes": 0, "availableBytes": 1073741824, "retire": false},
+      {"usedBytes": 536870912, "availableBytes": 1073741824, "retire": false},
+      {"usedBytes": 536870913, "availableBytes": 1073741824, "retire": true},
+      {"usedBytes": 1073741704, "availableBytes": 2358214656, "retire": true},
+      {"usedBytes": 0, "availableBytes": 1073741823, "retire": true},
+      {"usedBytes": 2147483648, "availableBytes": 2147483648, "retire": true}
+    ],
+    "policy":{"maximumBytes":1073741824,"lowWaterBytes":536870912,"minimumAvailableBytes":1073741824},
+    "cleanupError":"Owned optional cache closer failed",
+    "writerDeadlineMilliseconds":150,
+    "progressDelayMilliseconds":2,
+    "optionalPaths":["np/aaaaaaaaaaaaaaaaaaaaaaaa.json","np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.pack","np/aaaaaaaaaaaaaaaaaaaaaaaa.json.records/abc-123-aaaaaaaaaaaaaaaa.idx","mr/abc-123-aaaaaaaaaaaaaaaa.pack","inference/emoji-project-json.json","inference/test-cases.json"],
+    "requiredPaths":["inference/emoji-project-json.receipt.json","inference/emoji-project-json.publication.json","inference/p-123/emoji-project-json.publication.json","authority.json","canonical.json","snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json","build-input-closures/value.json","graph.json","np/../authority.json","/np/aaaaaaaaaaaaaaaaaaaaaaaa.json","np\\aaaaaaaaaaaaaaaaaaaaaaaa.json","np/AAAAAAAAAAAAAAAAAAAAAAAA.json"],
+    "cases":[
+      {"id":"exact-pool-boundary","state":{"maximumBytes":100,"usedBytes":60,"availableBytes":200,"minimumAvailableBytes":50},"requests":[{"peakBytes":40,"retainedDeltaBytes":40,"accepted":true,"settle":"commit"},{"peakBytes":1,"retainedDeltaBytes":1,"accepted":false}]},
+      {"id":"replacement-peak-before-retirement","state":{"maximumBytes":100,"usedBytes":80,"availableBytes":200,"minimumAvailableBytes":50},"requests":[{"peakBytes":21,"retainedDeltaBytes":-20,"accepted":false},{"peakBytes":20,"retainedDeltaBytes":-20,"accepted":true,"settle":"commit"},{"peakBytes":40,"retainedDeltaBytes":40,"accepted":true,"settle":"release"}]},
+      {"id":"physical-headroom-boundary","state":{"maximumBytes":100,"usedBytes":0,"availableBytes":70,"minimumAvailableBytes":50},"requests":[{"peakBytes":21,"retainedDeltaBytes":21,"accepted":false},{"peakBytes":20,"retainedDeltaBytes":20,"accepted":true,"settle":"commit"},{"peakBytes":1,"retainedDeltaBytes":1,"accepted":false}]},
+      {"id":"pending-peaks-compete","state":{"maximumBytes":100,"usedBytes":50,"availableBytes":100,"minimumAvailableBytes":20},"requests":[{"peakBytes":30,"retainedDeltaBytes":10,"accepted":true},{"peakBytes":21,"retainedDeltaBytes":21,"accepted":false},{"peakBytes":20,"retainedDeltaBytes":20,"accepted":true,"settle":"release"}],"releasePending":true},
+      {"id":"index-and-temp-count","state":{"maximumBytes":100,"usedBytes":70,"availableBytes":100,"minimumAvailableBytes":20},"requests":[{"peakBytes":31,"retainedDeltaBytes":20,"accepted":false},{"peakBytes":30,"retainedDeltaBytes":20,"accepted":true,"settle":"release"}]}
+    ],
+    "invalid":[{"maximumBytes":-1,"usedBytes":0,"availableBytes":1,"minimumAvailableBytes":0},{"maximumBytes":1,"usedBytes":0.5,"availableBytes":1,"minimumAvailableBytes":0},{"maximumBytes":1,"usedBytes":0,"availableBytes":1,"minimumAvailableBytes":0,"foreign":true}],
+    "records":[{"key":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","value":"alpha"},{"key":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","value":"beta"}]
+  },
+  "nativeAdmissionMemo": {
+    "files":{"Cargo.toml":"[workspace]\nmembers=['a','b','c','d','x','y']\nresolver='2'\n","a/Cargo.toml":"[package]\nname='a'\nversion='0.0.0'\n[dependencies]\nb={path='../b'}\n[dev-dependencies]\nx={path='../x'}\n","b/Cargo.toml":"[package]\nname='b'\nversion='0.0.0'\n[dependencies]\nc={path='../c'}\n[dev-dependencies]\ny={path='../y'}\n","c/Cargo.toml":"[package]\nname='c'\nversion='0.0.0'\n","d/Cargo.toml":"[package]\nname='d'\nversion='0.0.0'\n","x/Cargo.toml":"[package]\nname='x'\nversion='0.0.0'\n","y/Cargo.toml":"[package]\nname='y'\nversion='0.0.0'\n"},
+    "cases":[{"root":"a","tests":false,"expected":["a","b","c"]},{"root":"a","tests":true,"expected":["a","b","c","x"]},{"root":"b","tests":false,"expected":["b","c"]},{"root":"b","tests":true,"expected":["b","c","y"]}],
+    "mutation":{"path":"b/Cargo.toml","before":"c={path='../c'}","after":"d={path='../d'}","expected":["a","b","d"]}
+  },
+  "selectedPlaygroundStaging": {
+    "registry":{"version":1,"owners":[{"name":"plugin","root":"p","manifest":"p/📋️project.json","packages":[]},{"name":"@semio-tech/framework-os-dev","root":"d","manifest":"d/📋️project.json","packages":[]}],"catalogProviders":[]},
+    "selectedFiles":["p/📋️project.json","p/Cargo.toml"],
+    "staging":{"name":"@semio-tech/framework-os-dev","root":"d","targets":{"build-alpha-react":{"executor":"repo:script","options":{"command":"bun ./📜️script.ts build alpha react","cwd":"d"},"configurations":{"prototype":{"env":{"SEMIO_BUILD_MODE":"prototype"}},"release":{"env":{"SEMIO_BUILD_MODE":"release"}}}}}},
+    "playgrounds":[{"cratePath":"p","variant":"alpha"}],
+    "cases":[
+      {"id":"source","targets":["test"],"needsStaging":false},
+      {"id":"native","targets":["native-build"],"needsStaging":false},
+      {"id":"site","targets":["build-alpha-site"],"needsStaging":true}
+    ],
+    "siteDependency":"@semio-tech/framework-os-dev:build-alpha-react",
+    "duplicate":"Duplicate playground release staging producer",
+    "missing":"Playground site output requires the release producer's staging project"
+  },
+  "playgroundPreparation": {
+    "variants":["alpha","beta"],
+    "profiles":["prototype","release"],
+    "owner":"development",
+    "components":[{"id":"a","dependencies":["b"]},{"id":"b","dependencies":[]}],
+    "generator":{"ownership":"owned","target":"codegen:build","nativeConsumers":["components/b"]},
+    "publication":{"version":1,"ownerRoot":"catalog/publication","outputRoot":"catalog/output","contributions":[{"ownerRoot":"components","packageRoots":["components"]}]},
+    "rows":[
+      {"name":"prepare-<%= variant %>-native-<%= profile %>","outputs":["{projectRoot}/dist/runtime/native/<%= profile %>/<%= variant %>"]},
+      {"name":"run-<%= variant %>-native-<%= profile %>","outputs":[]},
+      {"name":"smoke-<%= variant %>-native-<%= profile %>","outputs":[]},
+      {"name":"serve-<%= variant %>-react-<%= profile %>","outputs":[]},
+      {"name":"dev-<%= variant %>-react-<%= profile %>","outputs":[]},
+      {"name":"activate-<%= variant %>-react-<%= profile %>","outputs":["{projectRoot}/dist/runtime/react/<%= profile %>/<%= variant %>"]},
+      {"name":"prepare-<%= variant %>-react-<%= profile %>","outputs":[]},
+      {"name":"serve-<%= variant %>-wgpu-<%= profile %>","outputs":[]},
+      {"name":"dev-<%= variant %>-wgpu-<%= profile %>","outputs":[]},
+      {"name":"activate-<%= variant %>-wgpu-<%= profile %>","outputs":["{projectRoot}/dist/runtime/wgpu/<%= profile %>/<%= variant %>"]},
+      {"name":"prepare-<%= variant %>-wgpu-<%= profile %>","outputs":[]}
+    ],
+    "prerequisites":["@semio-tech/os-plugin-describe-rs:build","codegen:build","workspace:deps-wasm-opt"],
+    "cancellation":"Original Script process deadline exhausted"
+  },
+  "registryAuthority": {
+    "error":"Original build owner registry changed before source consumption",
+    "mutations":[
+      [{"op":"replace","path":"/owners/0/packages","value":["changed-package"]}],
+      [{"op":"add","path":"/catalogProviders/0","value":{"ownerRoot":"app","sourcePath":"app/catalog.mjs","consumerRoots":["library"]}}],
+      [{"op":"replace","path":"/owners/0/root","value":"changed/app"},{"op":"replace","path":"/owners/0/manifest","value":"changed/app/📋️project.json"}]
+    ]
+  },
+  "catalogNativeManifests": {
+    "prefix":"plugins/",
+    "registry":{"version":1,"catalogProviders":[],"owners":[
+      {"name":"js","packages":[],"root":"plugins/js","manifest":"plugins/js/📋️project.json"},
+      {"name":"rust","packages":[],"root":"plugins/rust","manifest":"plugins/rust/📋️project.json"},
+      {"name":"facade","packages":[],"root":"plugins/facade","manifest":"plugins/facade/📋️project.json","nativeRoots":["plugins/native"]},
+      {"name":"declared","packages":[],"root":"plugins/declared","manifest":"plugins/declared/Cargo.toml"},
+      {"name":"outside","packages":[],"root":"outside","manifest":"outside/Cargo.toml"}
+    ]},
+    "files":["plugins/js/📋️project.json","plugins/rust/📋️project.json","plugins/rust/Cargo.toml","plugins/facade/📋️project.json","plugins/native/Cargo.toml","plugins/declared/Cargo.toml","outside/Cargo.toml"],
+    "expected":["plugins/declared/Cargo.toml","plugins/native/Cargo.toml","plugins/rust/Cargo.toml"],
+    "missing":"plugins/native/Cargo.toml"
+  },
+  "nestedGraphHandoff": {
+    "expiry": {"maximumElapsedMilliseconds":40,"progressDelayMilliseconds":65},
+    "cases": [
+      {"id":"root-same","ancestor":["run","app:build"],"request":["run","app:build"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"build"}]},"calls":["requested:reuse"]},
+      {"id":"root-foreign-pin","ancestor":["run","app:build"],"request":["run","app:build"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"test"}]},"calls":["requested:reuse"],"refused":true},
+      {"id":"same-parent-task","ancestor":["run","app:test"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"test"}]},"calls":["requested:reuse"]},
+      {"id":"different-nested-task","ancestor":["run","app:build"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"build"}]},"calls":["ancestor:reuse","requested:fresh"]},
+      {"id":"all-to-task","ancestor":["exec","--projects=app","--","bun","repo","run","app:test"],"request":["run","app:test"],"pin":{"kind":"all"},"calls":["ancestor:reuse","requested:fresh"]},
+      {"id":"corrupt-ancestor","ancestor":["run","app:build"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"build"}]},"calls":["ancestor:reuse"],"corrupt":true,"refused":true},
+      {"id":"foreign-ancestor-admission","ancestor":["run","app:build"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"test"}]},"calls":["ancestor:reuse"],"refused":true},
+      {"id":"missing-authority","ancestor":["run","app:build"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"build"}]},"calls":["requested:reuse"],"missingAuthority":true,"refused":true},
+      {"id":"undeclared-selection","ancestor":["run","app:build"],"request":["run","app:test"],"pin":{"kind":"tasks","tasks":[{"project":"app","target":"build"}]},"calls":[],"undeclared":true,"refused":true}
+    ]
+  },
+  "relativeImportResources": {
+    "owner": {"name":"resource-owner","root":"a","manifest":"a/📋️project.json","packages":[]},
+    "project": {"name":"resource-owner","targets":{"test":{"executor":"repo:script","cache":false,"dependsOn":[],"inputs":["{projectRoot}/entry.ts"],"options":{"command":"bun ./entry.ts","cwd":"a"},"metadata":{"semio":{"execution":{"version":1,"kind":"source"}}}}}},
+    "files": {"a/worker.ts":"import child from './child.ts'; export default child;\n","a/child.ts":"export default 'child';\n","a/raw.ts":"import './missing-raw-child.ts'; export default 'raw';\n"},
+    "binary": {"path":"a/b.pdf","hex":"ff00696d706f727420272e2f6d697373696e672d62696e6172792e7473273b"},
+    "cases": [
+      {"id":"query","specifier":"./b.pdf?url","files":["a/b.pdf"]},
+      {"id":"fragment","specifier":"./b.pdf#page=2","files":["a/b.pdf"]},
+      {"id":"combined","specifier":"./b.pdf?url#page=2","files":["a/b.pdf"]},
+      {"id":"binary","specifier":"./b.pdf","files":["a/b.pdf"]},
+      {"id":"raw-source","specifier":"./raw.ts?raw","files":["a/raw.ts"]},
+      {"id":"source-url","specifier":"./raw.ts?url","files":["a/raw.ts"]},
+      {"id":"source-fragment","specifier":"./worker.ts#mode","files":["a/child.ts","a/worker.ts"]},
+      {"id":"source-query","specifier":"./worker.ts?v=1","files":["a/child.ts","a/worker.ts"]},
+      {"id":"worker-url","specifier":"./worker.ts?worker&url","files":["a/child.ts","a/worker.ts"]},
+      {"id":"leaf-then-source","specifier":"./worker.ts?url","secondSpecifier":"./worker.ts","files":["a/child.ts","a/worker.ts"]},
+      {"id":"fragment-is-not-query","specifier":"./worker.ts#?raw","files":["a/child.ts","a/worker.ts"]},
+      {"id":"missing","specifier":"./missing.pdf?url#page=2","refused":true}
+    ]
+  },
+  "selectedOwnerContract": {
+    "owner": {
+      "name": "fixture-owner",
+      "root": "owner",
+      "manifest": "owner/📋️project.json",
+      "packages": []
+    },
+    "project": {
+      "name": "fixture-owner",
+      "targets": {
+        "test-source": {
+          "options": {
+            "command": "bun ./📜️script.ts",
+            "cwd": "owner"
+          },
+          "cache": true,
+          "inputs": [
+            "{projectRoot}/📜️script.ts"
+          ]
+        },
+        "generate": {
+          "options": {
+            "command": "bun ./missing/📜️script.ts",
+            "cwd": "owner"
+          },
+          "cache": true
+        }
+      }
+    },
+    "contract": {
+      "ownership": "owned",
+      "ownerPath": "owner",
+      "target": "fixture-owner:generate",
+      "inputPatterns": [],
+      "outputRoots": []
+    },
+    "selected": [
+      "test-source"
+    ],
+    "files": [
+      "owner/📋️project.json",
+      "owner/📜️script.ts"
+    ],
+    "script": "export const value = 1;\n",
+    "error": "Generator target has no project owner: fixture-owner:generate"
+  },
+  "pinnedSelection": {
+    "registry": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "closure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "cases": [
+      {
+        "admitted": {
+          "kind": "all"
+        },
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": true
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": true
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": false
+      },
+      {
+        "admitted": {
+          "kind": "all"
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": false
+      },
+      {
+        "admitted": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "app",
+              "target": "build"
+            }
+          ]
+        },
+        "requested": {
+          "kind": "tasks",
+          "tasks": [
+            {
+              "project": "lib",
+              "target": "build"
+            }
+          ]
+        },
+        "accepted": false
+      },
+      {
+        "requested": {
+          "kind": "all"
+        },
+        "accepted": false
+      }
+    ],
+    "invalid": [
+      {
+        "kind": "all",
+        "extra": true
+      },
+      {
+        "kind": "tasks",
+        "tasks": []
+      },
+      {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "app",
+            "target": "build",
+            "extra": true
+          }
+        ]
+      },
+      {
+        "kind": "other"
+      }
+    ]
+  },
+  "inferenceDataset": {
+    "valid": {
+      "version": 1,
+      "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+      "sourceRoot": "fixtures/a"
+    },
+    "refused": [
+      {
+        "version": 2,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "../other",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "directory": "/tmp",
+        "sourceRoot": "fixtures/a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "../other"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a//b"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a/"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "./a"
+      },
+      {
+        "version": 1,
+        "identity": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sourceRoot": "a/../b"
+      }
+    ]
+  },
   "graphModuleAuthority": {
     "implementation": "export const build = 1;\n",
     "publication": "{\"graph\":\"canonical.json\"}\n",
@@ -730,8 +1086,29 @@
     "digestError": "Build input closure content differs"
   },
   "version": 1,
+  "configuredSourceAdmission": {
+    "registry":{"version":1,"owners":[{"name":"app","root":"a","manifest":"a/📋️project.json","packages":[]},{"name":"lib","root":"l","manifest":"l/📋️project.json","packages":[]},{"name":"prototype-data","root":"p","manifest":"p/📋️project.json","packages":[]},{"name":"release-data","root":"r","manifest":"r/📋️project.json","packages":[]},{"name":"dependency-release-data","root":"t","manifest":"t/📋️project.json","packages":[]}],"catalogProviders":[]},
+    "projects":{
+      "a":{"name":"app","targets":{"test":{"executor":"repo:script","cache":false,"inputs":[],"dependsOn":["^build"],"options":{"command":"bun ./📜️script.ts","cwd":"a/prototype"},"configurations":{"prototype":{"env":{"SEMIO_BUILD_MODE":"prototype"}},"release":{"command":"bun","cwd":"a/release","args":["./📜️script.ts","two words",""],"env":{"SEMIO_BUILD_MODE":"release"}}},"metadata":{"semio":{"execution":{"version":1,"kind":"source"}}}}}},
+      "l":{"name":"lib","targets":{"build":{"executor":"repo:script","cache":false,"inputs":[],"options":{"command":"bun ./📜️script.ts","cwd":"l/prototype"},"configurations":{"prototype":{"env":{"SEMIO_BUILD_MODE":"prototype"}},"release":{"command":"bun run ./📜️script.ts","cwd":"l/release","env":{"SEMIO_BUILD_MODE":"release"}}},"metadata":{"semio":{"execution":{"version":1,"kind":"source"}}}}}},
+      "p":{"name":"prototype-data","targets":{}},"r":{"name":"release-data","targets":{}},"t":{"name":"dependency-release-data","targets":{}}
+    },
+    "files":{"a/prototype/📜️script.ts":"import {p} from '../../p/value.ts'; import {api} from '../../l/api.ts'; console.log(p,api);\n","a/release/📜️script.ts":"import {r} from '../../r/value.ts'; import {api} from '../../l/api.ts'; console.log(r,api);\n","l/api.ts":"export const api=1;\n","l/prototype/📜️script.ts":"import {api} from '../api.ts'; console.log(api);\n","l/release/📜️script.ts":"import {t} from '../../t/value.ts'; console.log(t);\n","p/value.ts":"export const p=2;\n","r/value.ts":"export const r=3;\n","t/value.ts":"export const t=4;\n"},
+    "entryPoints":["a/prototype/📜️script.ts","a/release/📜️script.ts","l/prototype/📜️script.ts","l/release/📜️script.ts"],
+    "owners":["app","dependency-release-data","lib","prototype-data","release-data"],
+    "targets":{"app":["test"],"lib":["build"]},
+    "configurations":["prototype","release"],
+    "missingConfiguration":"missing"
+  },
   "graph": {
     "version": 1,
+    "admission": {
+      "selection": {
+        "kind": "all"
+      },
+      "registry": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "closure": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
     "projects": {
       "app": {
         "name": "app",
@@ -1189,10 +1566,19 @@
   },
   "initialAuthoring": {
     "storagePorts": [
+      "createBuildGraphOptionalQuotaV1",
+      "isBuildGraphOptionalCachePathV1",
+      "buildGraphOptionalRetirementDueV1",
+      "maintainBuildGraphOptionalCachesV1",
+      "withBuildGraphOptionalPublicationV1",
+      "registerBuildGraphOptionalHandleV1",
       "repositoryBuildGraphDataDirectoryV1",
       "withRepositoryBuildGraphFactStoreV1",
       "requireRepositoryBuildGraphWriterV1",
-      "repositoryBuildGraphWriterDirectoryV1"
+      "repositoryBuildGraphWriterDirectoryV1",
+      "withRepositoryBuildGraphSelectionV1",
+      "readBuildInferenceDatasetV1",
+      "withRepositoryBuildInferenceDatasetV1"
     ],
     "missingLaunches": {
       "omit": "launches",
@@ -1497,5 +1883,220 @@
         }
       }
     ]
+  },
+  "reportPaths": [
+    {
+      "requested": "graph.json",
+      "valid": true
+    },
+    {
+      "requested": "../graph.json",
+      "valid": false
+    },
+    {
+      "requested": "/tmp/graph.json",
+      "valid": false
+    },
+    {
+      "requested": "folder/graph.json",
+      "valid": false
+    },
+    {
+      "requested": "graph.txt",
+      "valid": false
+    }
+  ],
+  "reportValue": {
+    "version": 1,
+    "projects": [
+      "a",
+      "b"
+    ],
+    "bytes": [
+      0,
+      127,
+      255
+    ]
+  },
+  "compilerCompanions": {
+    "registry":{"version":1,"catalogProviders":[],"owners":[{"name":"app","root":"app","manifest":"app/📋️project.json","packages":[]},{"name":"lib","root":"library","manifest":"library/📋️project.json","packages":[]}]},
+    "selection":{"kind":"tasks","tasks":[{"project":"app","target":"test"}]},
+    "files":{
+      "app/📋️project.json":"{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"inputs\":[],\"options\":{\"cwd\":\"app\",\"command\":\"bun ./📜️script.ts test\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📜️script.ts":"import type {Thing} from '../library/api.mjs'; export const current:Thing={value:1};\n",
+      "library/📋️project.json":"{\"name\":\"lib\",\"targets\":{}}",
+      "library/api.mjs":"export const runtime=1;\n",
+      "library/api.d.mts":"export type {Thing} from './definition.ts';\n",
+      "library/definition.ts":"export interface Thing {value:number}\n"
+    },
+    "expected":["app/📋️project.json","app/📜️script.ts","library/api.d.mts","library/api.mjs","library/definition.ts","library/📋️project.json"]
+  },
+  "commandSourceCancellation": {
+    "version":1,
+    "owner":{"name":"bounded-owner","root":"owner","manifest":"owner/📋️project.json","packages":[]},
+    "entry":"owner/📜️script.ts",
+    "source":"export {value as a} from './a.ts'; export {value as b} from './b.ts'; export {value as c} from './c.ts'; export {value as d} from './d.ts'; export {value as e} from './e.ts'; export {value as f} from './f.ts'; export {value as g} from './g.ts'; export {value as h} from './h.ts'; export {value as i} from './i.ts'; export {value as j} from './j.ts'; export {value as k} from './k.ts'; export {value as l} from './l.ts'; export {value as m} from './m.ts'; export {value as n} from './n.ts'; export {value as o} from './o.ts'; export {value as p} from './p.ts'; export {value as q} from './q.ts'; export {value as r} from './r.ts'; export {value as s} from './s.ts'; export {value as t} from './t.ts'; export {value as u} from './u.ts'; export {value as v} from './v.ts'; export {value as w} from './w.ts'; export {value as x} from './x.ts';\n",
+    "files":["owner/a.ts","owner/b.ts","owner/c.ts","owner/d.ts","owner/e.ts","owner/f.ts","owner/g.ts","owner/h.ts","owner/i.ts","owner/j.ts","owner/k.ts","owner/l.ts","owner/m.ts","owner/n.ts","owner/o.ts","owner/p.ts","owner/q.ts","owner/r.ts","owner/s.ts","owner/t.ts","owner/u.ts","owner/v.ts","owner/w.ts","owner/x.ts"],
+    "leaf":"export const value=1;\n",
+    "expectedContinuationsAfterAbort":1,
+    "maximumModulesBeforeFirstInnerContinuation":1
+  },
+  "resourceOwnerAdmission": {
+    "registry": {"version":1,"catalogProviders":[{"ownerRoot":"specific","sourcePath":"specific/catalog.mjs","consumerRoots":["specific"]}],"owners":[
+      {"name":"app","root":"app","manifest":"app/📋️project.json","packages":[]},
+      {"name":"lib","root":"library","manifest":"library/📋️project.json","packages":[]},
+      {"name":"workspace","root":".","manifest":"📋️project.json","packages":[]},
+      {"name":"specific","root":"specific","manifest":"specific/📋️project.json","packages":[]}
+    ]},
+    "selection":{"kind":"tasks","tasks":[{"project":"app","target":"test"}]},
+    "files": {
+      "app/📋️project.json":"{\"name\":\"app\",\"targets\":{\"test\":{\"executor\":\"repo:script\",\"cache\":false,\"dependsOn\":[\"^build\"],\"inputs\":[\"{workspaceRoot}/Cargo.toml\",\"^api\",{\"input\":\"types\",\"projects\":[\"lib\"]}],\"options\":{\"command\":\"bun ./📜️script.ts test\",\"cwd\":\"app\"},\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "app/📜️script.ts":"import type {Thing} from '../library/api.ts'; import raw from '../raw/data.ts?raw'; export const current:Thing = {value:1};\n",
+      "raw/data.ts":"import './missing.ts'; export default 'raw';\n",
+      "library/📋️project.json":"{\"name\":\"lib\",\"namedInputs\":{\"api\":[\"{projectRoot}/api-data/**/*\"],\"types\":[\"{projectRoot}/types/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\",\"cache\":false,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}}}}}",
+      "library/api.ts":"export interface Thing {value:number}\n",
+      "library/api-data/data.json":"{\"version\":1}\n",
+      "library/types/data.json":"{\"version\":2}\n",
+      "📋️project.json":"{\"name\":\"workspace\",\"namedInputs\":{\"api\":[\"{projectRoot}/specific/**/*\"]},\"targets\":{\"build\":{\"executor\":\"repo:noop\"}}}",
+      "Cargo.toml":"[workspace]\nmembers = []\n",
+      "specific/📋️project.json":"{ malformed independent source",
+      "specific/poison.ts":"throw Error('unrelated Source admitted');\n"
+    },
+    "expectedOwners":["app","lib","workspace"],
+    "expectedInputs":{"lib":["api","types"]},
+    "expectedTargets":{"app":["test"],"lib":["build"]},
+    "expectedDependencies":["lib"]
+  },
+  "ownerAdmission": {
+    "physicalInputs": {},
+    "registry": {
+      "version": 1,
+      "owners": [
+        {
+          "name": "app",
+          "root": "app",
+          "manifest": "app/📋️project.json",
+          "packages": [
+            "@fixture/app"
+          ]
+        },
+        {
+          "name": "lib",
+          "root": "library",
+          "manifest": "library/📋️project.json",
+          "packages": [
+            "@fixture/lib"
+          ]
+        },
+        {
+          "name": "types",
+          "root": "schema",
+          "manifest": "schema/📋️project.json",
+          "packages": []
+        },
+        {
+          "name": "specific",
+          "root": "specific",
+          "manifest": "specific/📋️project.json",
+          "packages": []
+        }
+      ],
+      "catalogProviders": [
+        {
+          "ownerRoot": "specific",
+          "sourcePath": "specific/provider.ts",
+          "consumerRoots": [
+            "specific"
+          ]
+        }
+      ]
+    },
+    "facts": {
+      "app": {
+        "project": {
+          "name": "app",
+          "targets": {
+            "test": {
+              "dependsOn": [
+                "^build",
+                "types:generate"
+              ]
+            }
+          }
+        },
+        "files": [
+          "app/entry.ts",
+          "library/api.ts"
+        ],
+        "dependencies": [
+          "lib"
+        ]
+      },
+      "lib": {
+        "project": {
+          "name": "lib",
+          "targets": {
+            "build": {
+              "dependsOn": []
+            }
+          }
+        },
+        "files": [
+          "library/api.ts"
+        ],
+        "dependencies": []
+      },
+      "types": {
+        "project": {
+          "name": "types",
+          "targets": {
+            "generate": {
+              "dependsOn": []
+            }
+          }
+        },
+        "files": [
+          "schema/types.json"
+        ],
+        "dependencies": []
+      }
+    },
+    "selection": {
+      "kind": "tasks",
+      "tasks": [
+        {
+          "project": "app",
+          "target": "test"
+        }
+      ]
+    },
+    "expected": {
+      "owners": [
+        "app",
+        "lib",
+        "types"
+      ],
+      "files": [
+        "app/entry.ts",
+        "app/📋️project.json",
+        "library/api.ts",
+        "library/📋️project.json",
+        "schema/types.json",
+        "schema/📋️project.json"
+      ],
+      "targets": {
+        "app": [
+          "test"
+        ],
+        "lib": [
+          "build"
+        ],
+        "types": [
+          "generate"
+        ]
+      },
+      "catalogProviders": [],
+      "inputs": {}
+    }
   }
 }

@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "knowledgeRecord",
+  "id": "knowledge-record-a",
+  "newName": "Renamed Knowledge Record A"
+}

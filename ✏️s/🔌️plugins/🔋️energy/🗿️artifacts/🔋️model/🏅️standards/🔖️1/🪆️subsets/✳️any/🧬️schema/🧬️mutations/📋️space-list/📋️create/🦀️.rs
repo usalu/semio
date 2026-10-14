@@ -1,8 +1,7 @@
 //! 📋️ Energy model mutation — `CreateSpaceList`: Adds one named grouping of spaces — the handle a report or an assignment addresses many spaces by at once.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -19,19 +18,22 @@ pub struct CreateSpaceList {
     pub space_ids: Vec<crate::model::EntityId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_space_list(index: u32, id: crate::model::EntityId, name: String, space_ids: Vec<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSpaceList(CreateSpaceList { index, id, name, space_ids })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_space_list<Op: From<CreateSpaceList>>(index: u32, id: crate::model::EntityId, name: String, space_ids: Vec<crate::model::EntityId>) -> Op {
+    CreateSpaceList { index, id, name, space_ids }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSpaceList {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSpaceList
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSpaceList> + From<crate::DeleteSpaceList>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "space-list", kind: "create-space-list", record: "CreatedSpaceList" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,6 +1,6 @@
 //! 🧾 Outline inference for EN 1999 aluminium-structure subject.
 
-use crate::En1999Snapshot;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex",

@@ -1,7 +1,6 @@
 //! ⚡️ Block2d artifact — OpText/OpBinary codecs + grammar for `Block2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
-
+use semio_s_artifact_block_2d_mutations::Block2dMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -30,7 +29,6 @@ impl protocol::OpText for Block2dMutation {
     }
 }
 
-
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📜️ Describes the artifact mutation dialect.
@@ -40,37 +38,37 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
-use crate::Block2dSnapshot;
+use crate::text::mutations::*;
+use semio_s_artifact_block_2d_mutations::*;
+use semio_s_artifact_block_2d_diff::Block2dDiff;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use protocol::Mutation;
-use crate::standards::v1::subsets::any::schema::mutations::add_attribute::{add_attribute, AddAttribute};
-use crate::standards::v1::subsets::any::schema::mutations::add_author::{add_author, AddAuthor};
-use crate::standards::v1::subsets::any::schema::mutations::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
-use crate::standards::v1::subsets::any::schema::mutations::change_handle_handle_kind::{change_handle_handle_kind, ChangeHandleHandleKind};
-use crate::standards::v1::subsets::any::schema::mutations::change_handle_kind_color::{change_handle_kind_color, ChangeHandleKindColor};
-use crate::standards::v1::subsets::any::schema::mutations::change_handle_kind_default_wire_kind::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
-use crate::standards::v1::subsets::any::schema::mutations::change_handle_kind_label::{change_handle_kind_label, ChangeHandleKindLabel};
-use crate::standards::v1::subsets::any::schema::mutations::change_meta_description::{change_meta_description, ChangeMetaDescription};
-use crate::standards::v1::subsets::any::schema::mutations::change_node_kind_description::{change_node_kind_description, ChangeNodeKindDescription};
-use crate::standards::v1::subsets::any::schema::mutations::change_node_kind_icon::{change_node_kind_icon, ChangeNodeKindIcon};
-use crate::standards::v1::subsets::any::schema::mutations::change_node_kind_label::{change_node_kind_label, ChangeNodeKindLabel};
-use crate::standards::v1::subsets::any::schema::mutations::change_node_kind_unit::{change_node_kind_unit, ChangeNodeKindUnit};
-use crate::standards::v1::subsets::any::schema::mutations::change_node_kind_variant::{change_node_kind_variant, ChangeNodeKindVariant};
-use crate::standards::v1::subsets::any::schema::mutations::create_handle::{create_handle, CreateHandle};
-use crate::standards::v1::subsets::any::schema::mutations::create_handle_kind::{create_handle_kind, CreateHandleKind};
-use crate::standards::v1::subsets::any::schema::mutations::delete_handle::{delete_handle, DeleteHandle};
-use crate::standards::v1::subsets::any::schema::mutations::delete_handle_kind::{delete_handle_kind, DeleteHandleKind};
-use crate::standards::v1::subsets::any::schema::mutations::move_camera2d::{move_camera2d, MoveCamera2d};
-use crate::standards::v1::subsets::any::schema::mutations::move_handle::{move_handle, MoveHandle};
-use crate::standards::v1::subsets::any::schema::mutations::remove_attribute::{remove_attribute, RemoveAttribute};
-use crate::standards::v1::subsets::any::schema::mutations::remove_author::{remove_author, RemoveAuthor};
-use crate::standards::v1::subsets::any::schema::mutations::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
-use crate::standards::v1::subsets::any::schema::mutations::rename_handle_kind::{rename_handle_kind, RenameHandleKind};
-use crate::standards::v1::subsets::any::schema::mutations::rename_node_kind::{rename_node_kind, RenameNodeKind};
-use crate::standards::v1::subsets::any::schema::mutations::scale_camera2d::{scale_camera2d, ScaleCamera2d};
-use crate::standards::v1::subsets::any::schema::mutations::update_presentation::{update_presentation, UpdatePresentation};
+use semio_s_artifact_block_2d_mut_meta::add_attribute::{add_attribute, AddAttribute};
+use semio_s_artifact_block_2d_mut_meta::add_author::{add_author, AddAuthor};
+use semio_s_artifact_block_2d_mut_meta::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
+use semio_s_artifact_block_2d_mut_handles::change_handle_handle_kind::{change_handle_handle_kind, ChangeHandleHandleKind};
+use semio_s_artifact_block_2d_mut_handles::change_handle_kind_color::{change_handle_kind_color, ChangeHandleKindColor};
+use semio_s_artifact_block_2d_mut_handles::change_handle_kind_default_wire_kind::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
+use semio_s_artifact_block_2d_mut_handles::change_handle_kind_label::{change_handle_kind_label, ChangeHandleKindLabel};
+use semio_s_artifact_block_2d_mut_meta::change_meta_description::{change_meta_description, ChangeMetaDescription};
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_description::{change_node_kind_description, ChangeNodeKindDescription};
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_icon::{change_node_kind_icon, ChangeNodeKindIcon};
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_label::{change_node_kind_label, ChangeNodeKindLabel};
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_unit::{change_node_kind_unit, ChangeNodeKindUnit};
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_variant::{change_node_kind_variant, ChangeNodeKindVariant};
+use semio_s_artifact_block_2d_mut_handles::create_handle::{create_handle, CreateHandle};
+use semio_s_artifact_block_2d_mut_handles::create_handle_kind::{create_handle_kind, CreateHandleKind};
+use semio_s_artifact_block_2d_mut_handles::delete_handle::{delete_handle, DeleteHandle};
+use semio_s_artifact_block_2d_mut_handles::delete_handle_kind::{delete_handle_kind, DeleteHandleKind};
+use semio_s_artifact_block_2d_mut_meta::move_camera2d::{move_camera2d, MoveCamera2d};
+use semio_s_artifact_block_2d_mut_handles::move_handle::{move_handle, MoveHandle};
+use semio_s_artifact_block_2d_mut_meta::remove_attribute::{remove_attribute, RemoveAttribute};
+use semio_s_artifact_block_2d_mut_meta::remove_author::{remove_author, RemoveAuthor};
+use semio_s_artifact_block_2d_mut_meta::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
+use semio_s_artifact_block_2d_mut_handles::rename_handle_kind::{rename_handle_kind, RenameHandleKind};
+use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::{rename_node_kind, RenameNodeKind};
+use semio_s_artifact_block_2d_mut_meta::scale_camera2d::{scale_camera2d, ScaleCamera2d};
+use semio_s_artifact_block_2d_mut_node_kind::update_presentation::{update_presentation, UpdatePresentation};
 
 /// 🌉️ One report for a `(base, mutation, after)` triple, in the framework's own JSON, so a test host
 /// can exercise this subset's codec without linking `serde_json` itself. Mirrors the bridge every
@@ -107,4 +105,4 @@ pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_
     Ok(semio_framework_pack_json::to_json_string(&report))
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;

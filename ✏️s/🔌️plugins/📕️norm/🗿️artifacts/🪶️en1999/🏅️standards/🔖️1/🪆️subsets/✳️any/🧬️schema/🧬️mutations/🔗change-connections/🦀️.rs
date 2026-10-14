@@ -1,9 +1,9 @@
 //! 🦎 `change-connections` mutation leaf.
 
-use crate::diff::En1999Diff;
-use crate::mutations::En1999Mutation;
-use crate::En1999Snapshot;
-use crate::snapshot::AluminiumConnection;
+use semio_s_artifact_norm_en1999_diff::En1999Diff;
+
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_model::AluminiumConnection;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,7 +15,7 @@ pub struct ChangeConnections {
     pub connections: Vec<AluminiumConnection>,
 }
 
-impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeConnections {
+impl<Op> protocol::MutationKind<En1999Snapshot, Op> for ChangeConnections where Op: protocol::Mutation<En1999Snapshot, Diff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::change_connections::ChangeConnections> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "connections",
@@ -24,12 +24,12 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeConnection
     };
 
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
-        super::diff::diff(self, base)
+        crate::change_connections::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<En1999Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1999Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_connections::inverse::inverse(self, base)?
     
     })
 }
@@ -38,3 +38,10 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeConnection
         semio_framework_ui_locale::LocalizedLabel::native("Change connections", "Verbindungen ändern")
     }
 }
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

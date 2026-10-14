@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "process",
+  "id": "process-a",
+  "newName": "Renamed Process A"
+}

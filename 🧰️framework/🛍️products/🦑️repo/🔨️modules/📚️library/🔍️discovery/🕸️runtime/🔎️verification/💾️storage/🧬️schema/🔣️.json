@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["version","reportDirectory","reportName","metadataPrefix"],"properties":{"version":{"const":1},"reportDirectory":{"const":"runtime-graph"},"reportName":{"const":"runtime-fixture-graph.json"},"metadataPrefix":{"const":"runtime-cargo-metadata-"}}}

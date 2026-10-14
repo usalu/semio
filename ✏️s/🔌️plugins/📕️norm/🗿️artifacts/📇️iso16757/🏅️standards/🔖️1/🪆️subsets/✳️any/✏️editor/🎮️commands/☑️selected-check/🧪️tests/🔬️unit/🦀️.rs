@@ -1,4 +1,4 @@
-use super::*;
+use crate::commands::selected_check::*;
 use semio_framework_plugin::HistoryView;
 
 #[semio_framework_async_macros::async_test]
@@ -9,5 +9,5 @@ async fn handle_emits_only_a_config_operation() {
     assert!(emit.artifact_mutations.is_empty(), "a view action must never emit document operations");
     assert!(emit.config_mutations.is_empty());
     assert!(emit.window_config_mutations.is_empty());
-    assert_eq!(window_mutation(&SetSelectedCheckIndex { index: Some(4) }), crate::results_window_config::ChangeSelectedCheckIndex { index: Some(4) }.into());
+    assert_eq!(window_mutation(&SetSelectedCheckIndex { index: Some(4) }), semio_s_plugin_norm_results_config::ChangeSelectedCheckIndex { index: Some(4) }.into());
 }

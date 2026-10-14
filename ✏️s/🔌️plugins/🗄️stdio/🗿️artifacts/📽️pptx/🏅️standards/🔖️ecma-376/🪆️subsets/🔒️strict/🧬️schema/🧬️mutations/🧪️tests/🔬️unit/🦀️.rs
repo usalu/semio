@@ -67,7 +67,7 @@ fn stampable() -> PptxSnapshot {
     }
     let xml_parts = parts
         .drain(..)
-        .map(|(path, content_type, xml)| crate::schema::snapshot::PptxXmlPart {
+        .map(|(path, content_type, xml)| semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart {
             path: path.into(),
             content_type: content_type.into(),
             document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(&xml).expect("valid XML"),
@@ -149,7 +149,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(carrier, fixture["document"]);
     let removal = PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
-    let (index, override_index) = crate::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
+    let (index, override_index) = semio_s_artifact_stdio_pptx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_part_positions(&inserted, &path).unwrap();
     assert_eq!(inverse, vec![PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(index), override_index })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);

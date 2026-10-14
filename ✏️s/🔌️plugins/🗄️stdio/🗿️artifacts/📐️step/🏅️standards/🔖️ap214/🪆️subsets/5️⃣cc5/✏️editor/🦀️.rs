@@ -4,8 +4,8 @@
 
 use crate::editor::step_cc5::modes::edit;
 use crate::editor::step_cc5::modes::edit::windows::main;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
-use crate::standards::v_ap214::subsets::cc5::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
+use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::snapshot::StepSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -42,7 +42,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::schema::mutations::edit_rules;
 
 //#region 🔖️Dialect
 pub const STEP_CC5_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc5") };
@@ -86,8 +86,8 @@ const STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.step.tool-command.v
 const STEP_CC5_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn step_cc5_editor_example_snapshot(example_id: &str) -> StepSnapshot {
-    if example_id == crate::examples::demo::ID {
-        StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(crate::examples::demo::EXCHANGE_TEXT).expect("authored AP214 exchange example"))
+    if example_id == semio_s_artifact_stdio_step_base_editor::examples::demo::ID {
+        StepSnapshot::from_part21_document(&semio_s_artifact_stdio_contract::part21::parse_part21(semio_s_artifact_stdio_step_base_editor::examples::demo::EXCHANGE_TEXT).expect("authored AP214 exchange example"))
     } else {
         StepSnapshot::default()
     }
@@ -173,7 +173,7 @@ pub struct StepCc5Editor;
 impl ArtifactEditor for StepCc5Editor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_step_base_editor::examples::demo::source()]
     }
     type Snapshot = StepSnapshot;
     type Mutation = StepCc5Mutation;
@@ -258,7 +258,7 @@ impl ArtifactEditor for StepCc5Editor {
         let args = args.as_ref(); step_cc5_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> StepSnapshot {
-        <crate::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc5 initial owner")
+        <semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc5 initial owner")
     }
 
     fn handle(
@@ -306,7 +306,7 @@ impl editing::SnapshotEditingEditor for StepCc5Editor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_step_cc5_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(STEP_CC5_DIALECT).document(["stdio", "step"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::STEP_CC5_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_step_base_editor::examples::demo::ID, semio_s_artifact_stdio_step_base_editor::examples::demo::label())], semio_s_artifact_stdio_step_base_editor::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

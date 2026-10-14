@@ -64,14 +64,14 @@ path = "../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️stand
 [workspace.dependencies.semio-s-artifact-dag-dag]
 path = "../../🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-draw-drawing]
-path = "../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-draw-drawing-model]
+path = "../../🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-fem-2d]
-path = "../../🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-fem-2d-model]
+path = "../../🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-fem-3d]
-path = "../../🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-fem-3d-model]
+path = "../../🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-gis-gismap]
 path = "../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
@@ -88,6 +88,9 @@ path = "../../🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦�
 [workspace.dependencies.semio-s-artifact-lowpoly-lowpoly]
 path = "../../🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-lowpoly-lowpoly-model]
+path = "../../🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-mathematical-equation]
 path = "../../🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust"
 
@@ -148,6 +151,9 @@ path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generatio
 [workspace.dependencies.semio-s-artifact-process-process3d]
 path = "../../🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-process-process3d-model]
+path = "../../🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-puzzle-2d]
 path = "../../🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust"
 
@@ -192,6 +198,66 @@ path = "../../🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️p
 
 [workspace.dependencies.semio-s-artifact-procedural-3d-model]
 path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1990-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-din18599-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1997-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-din16798-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1992-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1994-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-din4108-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1996-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1995-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-iso16757-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1993-model]
+path = "../../🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-s-artifact-puzzle-3d-model]
+    path = "../../🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-3d-model]
+path = "../../🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-5d-model]
+path = "../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-block-2d-model]
+path = "../../🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-2d-model]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

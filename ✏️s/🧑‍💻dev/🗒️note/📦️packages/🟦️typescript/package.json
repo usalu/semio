@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "verify-note-document-contract": "bun repo run @semio-tech/s-note-composition-tests:verify-note-document-contract"
+    "verify-note-document-contract": "bun --cwd \"../../../../..\" repo run @semio-tech/s-note-composition-tests:verify-note-document-contract"
   },
   "semio": {
     "role": "test",

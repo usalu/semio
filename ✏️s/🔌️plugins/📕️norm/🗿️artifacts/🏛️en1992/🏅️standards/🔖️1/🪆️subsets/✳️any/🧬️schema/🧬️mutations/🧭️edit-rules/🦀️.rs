@@ -1,8 +1,8 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the En1992 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
-use super::En1992Mutation;
-use crate::En1992Snapshot;
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use crate::En1992Mutation;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 /// 📚 Every path a En1992 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

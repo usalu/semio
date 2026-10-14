@@ -1,8 +1,8 @@
 //! 🔧 `change-step-origin` payload — sets an id-keyed [`ProcessStep`]'s `origin` provenance
 //! (machine/capability the step was built from) to an explicit new value, or clears it.
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, StepOrigin};
+use semio_s_artifact_process_process3d_model_diff::Process3dDiff;
+use semio_s_artifact_process_process3d_model::{snapshot::Process3dSnapshot, snapshot::StepOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ChangeStepOrigin
@@ -17,7 +17,7 @@ pub struct ChangeStepOrigin {
 
 impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ChangeStepOrigin
 where
-    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_step_origin::ChangeStepOrigin>,
+    Op: protocol::Mutation<Process3dSnapshot, Diff = semio_s_artifact_process_process3d_model_diff::Process3dDiff> + From<crate::change_step_origin::ChangeStepOrigin>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-origin", record: "ChangedStepOrigin" };
 

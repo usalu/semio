@@ -12,7 +12,7 @@
 /// 🧵️ A non-decreasing knot vector for a degree-`p` B-spline with `n` control points, satisfying
 /// `len == n + p + 1`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct KnotVector {
     pub knots: Vec<f64>,
     pub degree: usize,

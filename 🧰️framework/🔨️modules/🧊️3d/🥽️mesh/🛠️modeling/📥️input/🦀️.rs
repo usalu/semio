@@ -7,7 +7,7 @@ pub use plane::MeshPlaneProduction;
 #[path="↔️translation/🦀️.rs"]
 mod translation;
 pub use translation::MeshTranslationProduction;
-use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 
 /// 🧳️ Inline cold custody of the caller's exact original source and operation parameters.
 pub struct MeshTranslationInput {
@@ -47,13 +47,13 @@ impl MeshTranslationInput {
         *receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..Default::default()};Ok(Some(job))
     }
     /// 🎟️ Quotes the actual boxed retirement ticket needed for the retained cold input.
-    pub fn retirement_birth_bytes(&self)->usize {protocol::value::retirement::owned_retirement_birth_bytes::<Self>()}
+    pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
     /// 🧹️ Moves the same cold source to paid typed retirement or returns the unchanged input on denial.
-    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self)> {protocol::value::retirement::admit_owned_retirement(self,grant)}
+    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self)> {semio_framework_value::retirement::admit_owned_retirement(self,grant)}
 }
 
-impl protocol::value::retirement::RetireOwned for MeshTranslationInput {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::deferred(self.source)}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(protocol::value::retirement::deferred_birth_bytes_for(&self.source))}
+impl semio_framework_value::retirement::RetireOwned for MeshTranslationInput {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::deferred(self.source)}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(semio_framework_value::retirement::deferred_birth_bytes_for(&self.source))}
     fn controlled_retirement_supported()->bool {true}
 }

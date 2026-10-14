@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework_plugin::{ArtifactEditor, PluginApp};
 
 fn fixture() -> serde_json::Value {
@@ -27,7 +27,7 @@ async fn catalogue_descriptors_survive_action_decode_and_retained_publication() 
     for value in fixture()["valid"].as_array().unwrap() {
         let args: semio_framework_value::DslValue = value.clone().into();
         let before = context::snapshot(&app).host_snapshot.widgets.len();
-        let command = semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("command");
+        let command = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("command");
         let Generation3dCommand::AddWidget(decoded) = &command else { panic!("add widget command") };
         assert_eq!(decoded, &payload(value));
         context::dispatch(&mut app, command).await;
@@ -52,7 +52,7 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
     let cases = fixture();
     for value in cases["invalid"].as_array().unwrap().iter().chain(cases["unsupportedOperators"].as_array().unwrap()) {
         let args: semio_framework_value::DslValue = value.clone().into();
-        let command = semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("decoded");
+        let command = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("decoded");
         let admission = app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
         let fault = match admission {
             Err(fault) => fault,

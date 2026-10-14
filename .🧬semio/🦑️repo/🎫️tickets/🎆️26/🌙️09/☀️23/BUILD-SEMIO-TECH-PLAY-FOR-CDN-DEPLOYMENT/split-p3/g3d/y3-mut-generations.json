@@ -1,0 +1,45 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "monolith": "semio_s_artifact_procedural_3d_mutations",
+ "package": "semio-s-artifact-procedural-3d-mut-generations",
+ "description": "Procedural generation3d generation mutation leaves: create, delete, select and rename generations and change their answers and preview",
+ "owner": "🎲️generations",
+ "moves": [
+  {
+   "from": "create_generation",
+   "to": "create_generation"
+  },
+  {
+   "from": "delete_generation",
+   "to": "delete_generation"
+  },
+  {
+   "from": "select_generation",
+   "to": "select_generation"
+  },
+  {
+   "from": "rename_generation",
+   "to": "rename_generation"
+  },
+  {
+   "from": "change_generation_value",
+   "to": "change_generation_value"
+  },
+  {
+   "from": "change_generation_preview",
+   "to": "change_generation_preview"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d"
+ ],
+ "test_upward": null,
+ "workspace": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "doc": "🎲️ Generation3d generation mutation leaves: create, delete, select and rename generations and change their answers and preview. Every leaf is generic over the dispatch enum."
+}

@@ -3,8 +3,9 @@
 //! `invariant` when the rotation is non-finite.
 
 use super::RotateObject;
-use crate::diff::diff_objects_patch;
-use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::diff_objects_patch;
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObjectPatch, snapshot::LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RotateObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

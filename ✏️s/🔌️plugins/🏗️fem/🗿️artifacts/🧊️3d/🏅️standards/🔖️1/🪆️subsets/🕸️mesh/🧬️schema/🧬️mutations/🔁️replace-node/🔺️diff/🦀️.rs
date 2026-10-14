@@ -4,10 +4,14 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME finite-position bound
 //! `create-node` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dNodesDelta, Fem3dNodesModification};
-use crate::standards::v1::subsets::any::schema::mutations::{target_mismatch,invariant,node_breach};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dNodesModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::target_mismatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::node_breach;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceNode, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

@@ -169,7 +169,7 @@ mod subject {
     use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

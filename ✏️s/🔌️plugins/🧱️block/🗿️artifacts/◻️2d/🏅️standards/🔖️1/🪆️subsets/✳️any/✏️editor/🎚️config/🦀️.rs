@@ -4,7 +4,6 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! node kind's identity/presentation/handles live in `crate`.
 
-
 //#region 🔖️Config
 /// 🧮️ `Block2dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
@@ -63,8 +62,6 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 }
 
 //#endregion 🔖️ArtifactCodec
-
-
 
 impl store::ConfigRecord for Block2dConfig {}
 
@@ -138,3 +135,8 @@ impl protocol::OpBinary for Block2dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️Mounts

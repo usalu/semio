@@ -1,7 +1,7 @@
 //! 📤️ Cancellable layer-to-PNG export with sealed, credited output pages.
-use crate::RasterSnapshot;
-use crate::standards::v1::subsets::any::io::RasterStackPreparation;
-use crate::editor::raster::{RasterPlayApp,RasterCommand};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_io::RasterStackPreparation;
+use crate::{RasterPlayApp, RasterCommand};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework_plugin::{ArtifactOwnedToolJobRequest,ArtifactToolCompletion,ArtifactDownloadOutput,EphemeralEmit};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -231,7 +231,7 @@ impl ToolJobFactory for RasterMediaExportJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RasterMediaExportJobFactory {
     type Owner=EditorApp<RasterPlayApp>;
     const TOOL_IDS:&'static [&'static str]=&[TOOL_ID];
-    const DOCUMENT_SCHEMA:&'static str=crate::RASTER_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA:&'static str=semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS:&'static [ArtifactToolPublicationContract]=&[ArtifactToolPublicationContract {tool_id:TOOL_ID,lanes:&[ArtifactToolPublicationLane::HostOnly]}];
 }
 #[cfg(test)]
@@ -262,6 +262,6 @@ impl ToolJobFactory for RasterDownloadJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RasterDownloadJobFactory {
     type Owner=EditorApp<RasterPlayApp>;
     const TOOL_IDS:&'static [&'static str]=&["exportPng"];
-    const DOCUMENT_SCHEMA:&'static str=crate::RASTER_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA:&'static str=semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS:&'static [ArtifactToolPublicationContract]=&[ArtifactToolPublicationContract {tool_id:"exportPng",lanes:&[ArtifactToolPublicationLane::HostOnly]}];
 }

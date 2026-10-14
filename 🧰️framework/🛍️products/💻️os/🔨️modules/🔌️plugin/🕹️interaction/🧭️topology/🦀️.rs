@@ -15,7 +15,7 @@ use semio_framework::{kernel::Effect, Fault, InteractionDefinition, CLEAR_SELECT
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_framework_ui_contract::*;
 use std::collections::BTreeMap;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::window_surface::UiAssemblyResult;
 use crate::window_surface::ui_assembly_error;
 

@@ -256,13 +256,85 @@
     },
     "externalNodes": {
       "type": "object"
+    },
+    "unavailable": {
+      "description": "Projects whose own declaration, or a source their inference consumed, does not parse in the published snapshot; they contribute no targets until that source parses, while every other project stays available.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/UnavailableProject"
+      }
+    },
+    "admission": {
+      "type": "object",
+      "required": [
+        "selection",
+        "registry",
+        "closure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "selection": {
+          "oneOf": [
+            {"type":"object","required":["kind"],"properties":{"kind":{"const":"all"}},"additionalProperties":false},
+            {"type":"object","required":["kind","tasks"],"properties":{"kind":{"const":"tasks"},"tasks":{"type":"array","minItems":1,"maxItems":65536,"uniqueItems":true,"items":{"type":"object","required":["project","target"],"properties":{"project":{"type":"string","minLength":1},"target":{"type":"string","minLength":1},"configuration":{"type":"string","minLength":1}},"additionalProperties":false}}},"additionalProperties":false}
+          ]
+        },
+        "registry": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "closure": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
     }
   },
   "additionalProperties": false,
   "$defs": {
+    "UnavailableProject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "source",
+        "sha256",
+        "reason"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source": {
+          "description": "Workspace-relative path of the source that does not parse.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sha256": {
+          "description": "Digest of the unparseable bytes the snapshot observed.",
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      }
+    },
     "LiteralArguments": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "ExecutionConfiguration": {
       "type": "object",

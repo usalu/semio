@@ -17,7 +17,7 @@
 //! f64 as `significand as f64 * 10^exponent`, which is off by one ULP for any 17-significant-digit
 //! literal (`0.42839899821678995` came back as `0.4283989982167899`) and made every example whose
 //! geometry needs full f64 precision fail its lossless-round-trip oracle.
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
@@ -26,7 +26,7 @@ pub fn register() {}
 pub fn deserialize(from: &JsonSnapshot) -> Result<Puzzle3dSnapshot, semio_framework_diagnostic::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let raw: semio_framework_value::DslValue = semio_framework_pack_json::to_dsl_value(&from.to_pack_value());
-    let raw = crate::standards::v1::subsets::any::io::json_native::convert(raw,true).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let raw = crate::json_native::convert(raw,true).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1,1)))?;
     let snap: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|e| semio_framework_diagnostic::TextError::new(e.kind, format!("puzzle3d<-json: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     Ok(snap)
 }

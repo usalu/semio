@@ -1,8 +1,8 @@
 //! ➖ `remove-permanent` diff — removes the row at the index; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemovePermanent;
-use crate::diff::{En1990Diff, En1990PermanentDelta};
-use crate::En1990Snapshot;
+use crate::remove_permanent::RemovePermanent;
+use semio_s_artifact_norm_en1990_diff::{En1990Diff, En1990PermanentDelta};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(payload: &RemovePermanent, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {

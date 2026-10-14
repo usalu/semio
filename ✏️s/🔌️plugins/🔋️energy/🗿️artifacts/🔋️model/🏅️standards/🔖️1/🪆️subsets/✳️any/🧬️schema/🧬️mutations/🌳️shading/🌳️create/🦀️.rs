@@ -1,8 +1,7 @@
 //! 🌳️ Energy model mutation — `CreateShadingSurface`: Adds one free-standing solar obstruction — the site-level sibling of a window's own attached overhang and fins, which stay on the fenestration.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -20,19 +19,22 @@ pub struct CreateShadingSurface {
     pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_shading_surface(id: crate::model::EntityId, name: String, vertices_m: Vec<[f64; 3]>, transmittance_schedule_id: Option<crate::schedule::ScheduleId>, index: Option<u32>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateShadingSurface(CreateShadingSurface { id, name, vertices_m, transmittance_schedule_id, index })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_shading_surface<Op: From<CreateShadingSurface>>(id: crate::model::EntityId, name: String, vertices_m: Vec<[f64; 3]>, transmittance_schedule_id: Option<crate::schedule::ScheduleId>, index: Option<u32>) -> Op {
+    CreateShadingSurface { id, name, vertices_m, transmittance_schedule_id, index }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateShadingSurface {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateShadingSurface
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateShadingSurface> + From<crate::DeleteShadingSurface>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "shading-surface", kind: "create-shading-surface", record: "CreatedShadingSurface" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

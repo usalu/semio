@@ -4,6 +4,9 @@
 //! This is APP state, not document state: show-mode and generation selection live here rather than under `🗿️artifacts/`, since neither survives into the `.generation2d`
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -240,3 +243,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

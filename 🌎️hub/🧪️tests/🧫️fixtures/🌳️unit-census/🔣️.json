@@ -128,5 +128,121 @@
       ],
       "nonComponentCdylibs": ["kernel@0.1.0 kernel build wasm32-wasip2"]
     }
+  ],
+  "firstPartyFeaturesAllowed": [
+    {"package":"semio-framework-artifact-flow-flow","feature":"protocol-laws","classification":"test-only","reason":"protocol laws for dependents' tests; extraction into a law crate pending"},
+    {"package":"semio-framework-async","feature":"entrypoint","classification":"peer-blocked","reason":"block_on gate enabled by peer-owned crates (os-kernel, os-run, ui, plugin-host, renderer); an entrypoint crate replaces it once they move"},
+    {"package":"semio-framework-async","feature":"testkit","classification":"test-only","reason":"ManualRuntime test double for dependents' tests; peer crates enable it in their dev-dependencies"},
+    {"package":"semio-framework-graph-layout-run","feature":"testing","classification":"test-only","reason":"fdg-sim reference oracle for dependents' layout tests"},
+    {"package":"semio-framework-job","feature":"testkit","classification":"test-only","reason":"forwards the async test double; peer crates enable it in their dev-dependencies"},
+    {"package":"semio-framework-os-command","feature":"mutation-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-directory","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-directory-client","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-directory-client","feature":"sync","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-directory-client","feature":"ureq","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-history","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-history","feature":"deflate","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"deflate","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"durable-group-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"mutation-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"native-bin","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"protocol-laws","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"record-codec-laws","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"semio-framework-actor","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"sync","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"typegen","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"ureq","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel","feature":"worker","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-kernel-db","feature":"claimed-backend-laws","classification":"test-only","reason":"claimed shared-server laws for the hub's live directory lanes"},
+    {"package":"semio-framework-os-pack","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-pack","feature":"deflate","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-pack","feature":"record-codec-laws","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-store-cursor","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-store-ephemeral","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-os-store-one-item","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-pack","feature":"corruption-testing","classification":"test-only","reason":"corruption fixtures; the peer-owned os-pack forwards it"},
+    {"package":"semio-framework-pack","feature":"default","classification":"peer-blocked","reason":"selects deflate by default for the peer-owned consumers that do not name it"},
+    {"package":"semio-framework-pack","feature":"deflate","classification":"peer-blocked","reason":"default feature forwarded by the peer-owned os-pack, os-history and os-kernel"},
+    {"package":"semio-framework-pack-json-retained-schema","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-plugin","feature":"artifact-app-testing","classification":"test-only","reason":"artifact app harness for every artifact crate's tests; moves with the plugin crate cut"},
+    {"package":"semio-framework-plugin","feature":"media-turn-testing","classification":"test-only","reason":"hooks for the plugin's own [[test]] target; becomes a unit test with the plugin crate cut"},
+    {"package":"semio-framework-plugin","feature":"original-actor-context-testing","classification":"test-only","reason":"hooks for the plugin's own [[test]] target; becomes a unit test with the plugin crate cut"},
+    {"package":"semio-framework-plugin","feature":"reserved-producer-testing","classification":"test-only","reason":"hooks for the plugin's own [[test]] target; becomes a unit test with the plugin crate cut"},
+    {"package":"semio-framework-replication","feature":"deflate","classification":"peer-blocked","reason":"forwarded by the peer-owned os-pack, os-history and os-kernel"},
+    {"package":"semio-framework-server","feature":"conformance","classification":"test-only","reason":"server conformance laws for dependents' tests"},
+    {"package":"semio-framework-ui","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"tui","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"tui-bindgen","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"tui-terminal","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"typegen","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"wgpu","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui","feature":"wgpu-engine","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-backend-webgpu","feature":"backend-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-backend-webgpu","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-contract","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-contract","feature":"typegen","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-draw-contract","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-prepared","feature":"browser-presenter","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-prepared","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-prepared-staging","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-raster-owner","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-render","feature":"backend-testing","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-render","feature":"default","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-ui-retained-tree","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-value","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-framework-value-snapshot-read","feature":"testkit","classification":"peer-owned","reason":"owned by peer fleet A (peer-scope map §1); classified in 📓️2026-10-14-wave-l2-feature-free.md, not edited by this wave"},
+    {"package":"semio-hub","feature":"integration-fixtures","classification":"test-only","reason":"fixture-carrying os-hub binary for cross-target integration laws; needs a fixture library plus a test-server binary crate"},
+    {"package":"semio-s-artifact-stdio-contract","feature":"testing","classification":"test-only","reason":"stdio contract law kit for every stdio artifact's tests"},
+    {"package":"semio-s-artifact-stdio-gltf-model","feature":"testing","classification":"test-only","reason":"test-only serde derives on glTF model types (production types stay serde-free)"},
+    {"package":"semio-s-artifact-stdio-semio-base","feature":"testing","classification":"test-only","reason":"test-only serde derives on semio base types (production types stay serde-free)"},
+    {"package":"semio-s-plugin-block","feature":"test-serde","classification":"test-only","reason":"test-only serde derives on block plugin types (production types stay serde-free)"},
+    {"package":"semio-s-plugin-norm-app-surface","feature":"compliance-testing","classification":"test-only","reason":"norm app-surface compliance oracle for every norm artifact's tests"},
+    {"package":"semio-s-plugin-norm-compliance","feature":"compliance-testing","classification":"test-only","reason":"norm compliance oracle for every norm artifact's tests"}
+  ],
+  "featureCases": [
+    {
+      "name": "a feature-free first-party unit passes and registry units keep their features",
+      "graphs": [
+        {
+          "package": "app",
+          "units": [
+            { "pkg_id": "path+file:///w/app#app@0.1.0", "target": { "name": "app", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#leaf@1.0.0", "target": { "name": "leaf", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["derive", "std"], "dependencies": [] }
+          ]
+        }
+      ],
+      "allowed": [],
+      "violations": []
+    },
+    {
+      "name": "a first-party feature outside the allow-list is a violation",
+      "graphs": [
+        {
+          "package": "app",
+          "units": [
+            { "pkg_id": "path+file:///w/app#app@0.1.0", "target": { "name": "app", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/lib#lib@0.1.0", "target": { "name": "lib", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["testing"], "dependencies": [] }
+          ]
+        }
+      ],
+      "allowed": [],
+      "violations": ["lib@0.1.0 testing"]
+    },
+    {
+      "name": "an allowed feature passes and default is a feature of its own",
+      "graphs": [
+        {
+          "package": "app",
+          "units": [
+            { "pkg_id": "path+file:///w/app#app@0.1.0", "target": { "name": "app", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/lib#lib@0.1.0", "target": { "name": "lib", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["default", "deflate"], "dependencies": [] }
+          ]
+        }
+      ],
+      "allowed": ["lib/deflate"],
+      "violations": ["lib@0.1.0 default"]
+    }
   ]
 }

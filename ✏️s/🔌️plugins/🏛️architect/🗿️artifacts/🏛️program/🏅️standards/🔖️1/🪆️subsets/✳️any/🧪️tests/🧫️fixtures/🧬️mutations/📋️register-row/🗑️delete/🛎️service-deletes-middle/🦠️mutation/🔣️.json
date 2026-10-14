@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "serviceRequirement",
+  "id": "service-requirement-a"
+}

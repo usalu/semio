@@ -23,73 +23,263 @@
         "storeDirectory": "build-telemetry",
         "storeFile": "units.jsonl",
         "sourceExtension": ".rs",
-        "sourceSkipDirectories": ["target", "node_modules", "dist", ".git"]
+        "sourceSkipDirectories": [
+          "target",
+          "node_modules",
+          "dist",
+          ".git"
+        ]
       }
     },
-    "Path": { "type": "string", "maxLength": 4096 },
+    "Path": {
+      "type": "string",
+      "maxLength": 4096
+    },
     "AdmitRequestV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "pass", "pid", "crate", "package", "version", "target", "crateTypes", "outDir", "extraFilename", "source", "manifestDir", "primary", "buildScriptOutDir", "externs"],
+      "required": [
+        "v",
+        "op",
+        "pass",
+        "pid",
+        "crate",
+        "package",
+        "version",
+        "target",
+        "crateTypes",
+        "outDir",
+        "extraFilename",
+        "source",
+        "manifestDir",
+        "primary",
+        "buildScriptOutDir",
+        "externs"
+      ],
       "properties": {
-        "v": { "const": 1 },
-        "op": { "const": "admit" },
-        "pass": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$" },
-        "pid": { "type": "integer", "minimum": 1 },
-        "crate": { "type": "string", "pattern": "^[A-Za-z0-9_]{1,128}$" },
-        "package": { "type": "string", "maxLength": 128 },
-        "version": { "type": "string", "maxLength": 128 },
-        "target": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$" },
-        "crateTypes": { "type": "array", "minItems": 1, "items": { "enum": ["lib", "rlib", "dylib", "cdylib", "staticlib", "proc-macro", "bin"] } },
-        "outDir": { "$ref": "#/definitions/Path" },
-        "extraFilename": { "type": "string", "maxLength": 128 },
-        "source": { "$ref": "#/definitions/Path" },
-        "manifestDir": { "$ref": "#/definitions/Path" },
-        "primary": { "type": "boolean" },
-        "buildScriptOutDir": { "anyOf": [{ "$ref": "#/definitions/Path" }, { "type": "null" }] },
-        "externs": { "type": "array", "items": { "$ref": "#/definitions/Path" } }
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "admit"
+        },
+        "pass": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "crate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]{1,128}$"
+        },
+        "package": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        },
+        "crateTypes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "lib",
+              "rlib",
+              "dylib",
+              "cdylib",
+              "staticlib",
+              "proc-macro",
+              "bin"
+            ]
+          }
+        },
+        "outDir": {
+          "$ref": "#/definitions/Path"
+        },
+        "extraFilename": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "source": {
+          "$ref": "#/definitions/Path"
+        },
+        "manifestDir": {
+          "$ref": "#/definitions/Path"
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "buildScriptOutDir": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "externs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Path"
+          }
+        }
       }
     },
     "VerdictV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "admitted"],
-      "properties": { "v": { "const": 1 }, "op": { "const": "verdict" }, "admitted": { "type": "boolean" } }
+      "required": [
+        "v",
+        "op",
+        "admitted"
+      ],
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "verdict"
+        },
+        "admitted": {
+          "type": "boolean"
+        }
+      }
     },
     "RssReportV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "bytes"],
-      "properties": { "v": { "const": 1 }, "op": { "const": "rss" }, "bytes": { "type": "integer", "minimum": 0 } }
+      "required": [
+        "v",
+        "op",
+        "bytes"
+      ],
+      "properties": {
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "rss"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
     "DoneReportV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "op", "exit", "peakRssBytes", "userMs", "sysMs", "startMs", "endMs", "rmetaMs"],
+      "required": [
+        "v",
+        "op",
+        "exit",
+        "peakRssBytes",
+        "userMs",
+        "sysMs",
+        "startMs",
+        "endMs",
+        "rmetaMs"
+      ],
       "properties": {
-        "v": { "const": 1 },
-        "op": { "const": "done" },
-        "exit": { "type": "integer" },
-        "peakRssBytes": { "type": "integer", "minimum": 0 },
-        "userMs": { "type": "integer", "minimum": 0 },
-        "sysMs": { "type": "integer", "minimum": 0 },
-        "startMs": { "type": "integer", "minimum": 0 },
-        "endMs": { "type": "integer", "minimum": 0 },
-        "rmetaMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+        "v": {
+          "const": 1
+        },
+        "op": {
+          "const": "done"
+        },
+        "exit": {
+          "type": "integer"
+        },
+        "peakRssBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "userMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sysMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "startMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rmetaMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "ObservationV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["v", "key", "peakRssBytes", "wallMs", "cpuMs", "remainingMs", "atMs"],
+      "required": [
+        "v",
+        "key",
+        "peakRssBytes",
+        "outputBytes",
+        "wallMs",
+        "cpuMs",
+        "remainingMs",
+        "atMs"
+      ],
       "properties": {
-        "v": { "const": 1 },
-        "key": { "type": "string", "minLength": 3, "maxLength": 512 },
-        "peakRssBytes": { "type": "integer", "minimum": 0 },
-        "wallMs": { "type": "integer", "minimum": 0 },
-        "cpuMs": { "type": "integer", "minimum": 0 },
-        "remainingMs": { "type": "integer", "minimum": 0 },
-        "atMs": { "type": "integer", "minimum": 0 }
+        "v": {
+          "const": 1
+        },
+        "key": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 512
+        },
+        "peakRssBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outputBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cpuMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remainingMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

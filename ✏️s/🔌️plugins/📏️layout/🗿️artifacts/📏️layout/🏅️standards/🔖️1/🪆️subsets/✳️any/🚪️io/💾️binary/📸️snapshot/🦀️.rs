@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::LayoutSnapshot;
+use crate::snapshot::LayoutSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `LayoutSnapshot` to its binary pack form.
@@ -28,10 +28,9 @@ mod tests;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-#[cfg(test)]
-use crate::Frame;
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::snapshot::*;
+
+
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

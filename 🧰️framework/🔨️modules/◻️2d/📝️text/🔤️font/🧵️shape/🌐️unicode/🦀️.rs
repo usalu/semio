@@ -1,5 +1,7 @@
 //! 🌐️ Immutable original Unicode data validates one record and probes one ordered range per turn.
-use super::super::{FontReader,FontProgress};
+use semio_framework_2d_text_font::{FontReader,FontProgress};
+use semio_framework_unicode_properties::PROPERTIES;
+use semio_framework_unicode_mappings::MAPPINGS;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 pub const UNICODE_VERSION:&str="16.0.0";
 #[path="🧵️normalize/🦀️.rs"]
@@ -8,7 +10,11 @@ pub mod normalize;
 pub mod cluster;
 #[path="↔️bidi/🦀️.rs"]
 pub mod bidi;
-pub const UNICODE_BYTES:&[u8]=include_bytes!("📦️data/🔢️properties.bin");
+static UNICODE_RECORD:[u8;PROPERTIES.len()+MAPPINGS.len()]=unicode_record();
+/// 🧷️ Composes the immutable record from its two asset parts at compile time, so the shipped record stays one contiguous static.
+const fn unicode_record()->[u8;PROPERTIES.len()+MAPPINGS.len()]{let mut record=[0;PROPERTIES.len()+MAPPINGS.len()];let(head,tail)=record.split_at_mut(PROPERTIES.len());head.copy_from_slice(PROPERTIES);tail.copy_from_slice(MAPPINGS);record}
+/// 📜️ The complete pinned Unicode shaping record that `UnicodeDataAdmissionJob` admits.
+pub static UNICODE_BYTES:&[u8]=&UNICODE_RECORD;
 #[derive(Clone,Copy,Debug)]
 pub struct UnicodeLayout{pub counts:[usize;6],pub offsets:[usize;6],pub byte_length:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -56,3 +62,6 @@ impl UnicodeMappingCursor{
  pub fn step(&mut self,bytes:&[u8])->Result<bool,String>{if self.done{return Ok(true);}if bytes.len()!=self.layout.byte_length{return Err("Unicode source changed".into());}if self.low==self.high{self.done=true;return Ok(true);}let(index,width)=match self.kind{UnicodeMapping::Decomposition=>(1,16),UnicodeMapping::Composition=>(2,12),UnicodeMapping::Mirror=>(4,8),UnicodeMapping::Bracket=>(5,12)};let r=FontReader::whole(bytes);let at=self.layout.offsets[index]+(self.low+self.high)/2*width;let a=r.u32(at)?;let b=if self.kind==UnicodeMapping::Composition{r.u32(at+4)?}else{0};if(self.first,self.second)<(a,b){self.high=(self.low+self.high)/2;}else if(self.first,self.second)>(a,b){self.low=(self.low+self.high)/2+1;}else{self.found=Some(at);self.done=true;}Ok(self.done)}
  pub fn result(&self)->Result<Option<usize>,String>{if !self.done{return Err("Unicode mapping probe incomplete".into());}Ok(self.found)}
 }
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

@@ -1,5 +1,21 @@
-use super::*;
-use crate::editor::process3d::unit_tests::context;
+extern crate semio_framework_os_kernel as store;
+#[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod context;
+use semio_s_artifact_process_process3d_panels::catalogue::*;
+use semio_s_artifact_process_process3d_kit::iconed_tree_item_with_action;
+use semio_s_artifact_process_process3d_kit::installed_catalogs;
+use semio_s_artifact_process_process3d_kit::process3d_action;
+use semio_s_artifact_process_process3d_kit::editor::process3d::terminology::Process3dLabels;
+use semio_s_artifact_process_process3d_inferences::{validate_capability, validation_reason, ValidationContext};
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MachineCatalog, snapshot::Process3dSnapshot, snapshot::WorkingSolid, snapshot::WorkshopMachine};
+use semio_framework_plugin::tree_item_desc;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::PanelGroup;
+use semio_framework_plugin::PanelTabDefinition;
+use semio_framework_plugin::PanelTabKind;
+use semio_framework_plugin::PanelTreeBuilder;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 /// 🪵️ Both wood machines' capabilities render as tree items (labels present) whether the current
 /// stock satisfies their rules or not — `stock_validation_context` now checks real dimensions, so
@@ -20,8 +36,8 @@ async fn catalogue_lists_workshop_wood_machines() {
 /// text and no `addStep` action binding; the satisfied one binds `addStep` and carries no reason.
 #[semio_framework_async_macros::async_test]
 async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
-    use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
-    let mut fixture = crate::empty_process3d_snapshot();
+    use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::Workshop, snapshot::WorkshopMachine};
+    let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     fixture.stock_payload = Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 0.5, depth: 0.5, height: 0.2 }, pose: Default::default() };
     fixture.workshop = Workshop {
         machines: vec![WorkshopMachine {
@@ -49,7 +65,7 @@ async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
             ],
         }],
     };
-    let labels = crate::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
     // node's `BuiltChildren` only serialises through the retained page transport.
     let node = render(&fixture, "[]", labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue renders");
@@ -91,9 +107,9 @@ fn container_of(json: &str, key: &str) -> (u64, u64, Vec<String>) {
 /// 🌾️ A workshop an order of magnitude past any viewport: one uncataloged machine carrying 80
 /// capabilities, every one of them satisfiable (no rules), so the section's window is what bounds
 /// the tree and nothing else.
-fn oversized_workshop() -> crate::Process3dSnapshot {
-    use crate::{Capability, MeasureRecipe, Workshop, WorkshopMachine};
-    let mut fixture = crate::empty_process3d_snapshot();
+fn oversized_workshop() -> semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot {
+    use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::MeasureRecipe, snapshot::Workshop, snapshot::WorkshopMachine};
+    let mut fixture = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     fixture.workshop = Workshop {
         machines: vec![WorkshopMachine {
             id: "saw".into(),
@@ -116,8 +132,8 @@ fn oversized_workshop() -> crate::Process3dSnapshot {
 }
 
 /// 🚚️ Reads through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`.
-fn project(fixture: &crate::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
-    let labels = crate::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+fn project(fixture: &semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot, windows: &TreeWindows<'_>) -> String {
+    let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(fixture, "[]", labels, windows).expect("catalogue renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("catalogue projection")
 }

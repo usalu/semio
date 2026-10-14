@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "owner": "os/store/member-producer",
+  "roles": {
+    "producer": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",
+      "symbols": [
+        "MemberStoreProducer"
+      ]
+    },
+    "catalog": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🦀️.rs",
+      "symbols": [
+        "DocumentStoreOwners",
+        "funded_member_store_owners",
+        "complete_unscheduled_catalog",
+        "bounded_artifact_store_owners"
+      ]
+    },
+    "opening": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/🦀️.rs",
+      "symbols": [
+        "InitialMemberStoreOpen",
+        "MemberSnapshotOpenOperation"
+      ]
+    },
+    "store": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "symbols": [
+        "ArtifactStore",
+        "ArtifactStoreOwnedDisposer",
+        "ArtifactStoreCursorDisposer",
+        "create_member_store",
+        "open_member_store"
+      ]
+    },
+    "valueFactory": {
+      "language": "rust",
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "symbols": [
+        "ArtifactOwnedValueRetirementFactory"
+      ]
+    },
+    "readRetirement": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "symbols": [
+        "ArtifactStoreVcsRetirement",
+        "ArtifactStoreEnvelopeRetirement"
+      ]
+    },
+    "editRetirement": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+      "symbols": [
+        "ArtifactStoreOperationRowsRetirement",
+        "ArtifactStoreDecodedEditRetirement"
+      ]
+    },
+    "messageLedger": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+      "symbols": [
+        "ArtifactEditMessageLedger",
+        "ArtifactEditMessageLedgerRetirement"
+      ]
+    },
+    "storeLaws": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "symbols": [
+        "member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog",
+        "member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal",
+        "typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_child"
+      ]
+    },
+    "catalogLaws": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🦀️.rs",
+      "symbols": [
+        "member_catalog_constructor_birth_and_retirement_match_original_system_allocations",
+        "member_catalog_initial_open_cancellation_pays_original_catalog_and_page_before_drop"
+      ]
+    }
+  }
+}

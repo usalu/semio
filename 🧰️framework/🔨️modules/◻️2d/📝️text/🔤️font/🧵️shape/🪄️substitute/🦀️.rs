@@ -1,5 +1,6 @@
 //! 🪄️ Bounded original GSUB single and multiple records preserve genuine captured font bytes.
-use super::{FontLookup,super::{FontFace,FontProgress,FontReader,kerning::Index}};
+use super::FontLookup;
+use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,kerning::Index};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct FontSubstitution{pub glyphs:[u16;64],pub count:usize}

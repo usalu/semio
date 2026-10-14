@@ -1,0 +1,19 @@
+{
+  "row": {
+    "name": "🏃️Process Compiler Capacity",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-process:test-compiler-capacity",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"process:compiler-capacity:caller\",\"maximumElapsedMilliseconds\":300000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests"
+    },
+    "presentation": {
+      "group": "🧹clean🛡️gates",
+      "order": 900.0574
+    }
+  },
+  "launchSha256": "818145f7263ae75d9d578d95e8f5610849e5bf1a5dd1c359b0b2c7b281e2d235",
+  "outputRedirectOnly": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/process-compiler-capacity-current"
+}

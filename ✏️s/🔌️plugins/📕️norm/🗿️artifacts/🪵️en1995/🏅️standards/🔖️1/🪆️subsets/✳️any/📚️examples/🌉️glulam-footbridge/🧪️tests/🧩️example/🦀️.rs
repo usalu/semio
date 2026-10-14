@@ -1,6 +1,6 @@
-use crate::artifact_schema::evaluate_structure;
-use crate::standards::v1::subsets::any::io::text::snapshot::decode_en1995_dsl;
-use crate::En1995Snapshot;
+use semio_s_artifact_norm_en1995_schema::evaluate_structure;
+use semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 fn decoded() -> En1995Snapshot {
     decode_en1995_dsl(crate::glulam_footbridge::PRIMARY_TEXT).expect("glulam-footbridge DSL decodes")
@@ -23,7 +23,7 @@ async fn decoded_example_complies_with_every_bridge_check() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1995Inference;
+    use semio_s_artifact_norm_en1995_inferences::En1995Inference;
     use protocol::Inference;
     let snapshot = decoded();
     assert_eq!(En1995Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1995Inference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -31,7 +31,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1995Inference;
+    use semio_s_artifact_norm_en1995_inferences::En1995Inference;
     use protocol::Inference;
     assert_eq!(En1995Inference::infer(&En1995Snapshot::default()).expect("valid materialized inference fixture"), En1995Inference::default());
 }

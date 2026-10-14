@@ -1,8 +1,8 @@
 //! 🔺️ `change-cold-formed` diff.
 
-use crate::mutations::change_cold_formed::ChangeColdFormed;
-use crate::En1999Snapshot;
-use crate::diff::{En1999Diff, En1999ColdFormedRows};
+use crate::change_cold_formed::ChangeColdFormed;
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
+use semio_s_artifact_norm_en1999_diff::{En1999Diff, En1999ColdFormedRows};
 
 pub fn diff(payload: &ChangeColdFormed, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
     if &base.cold_formed == &payload.cold_formed {

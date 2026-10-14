@@ -1,9 +1,9 @@
-use super::InsertZone;
-use crate::mutations::remove_zone::RemoveZone;
-use crate::{Din16798Mutation, Din16798Snapshot};
-pub fn inverse(payload: &InsertZone, _base: &Din16798Snapshot) -> Result<Vec<Din16798Mutation>, semio_framework_value::ValueError> {
+use crate::insert_zone::InsertZone;
+use crate::remove_zone::RemoveZone;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
+pub fn inverse<Op>(payload: &InsertZone, _base: &Din16798Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_zone::RemoveZone> {
     Ok((|| {
-    vec![Din16798Mutation::RemoveZone(RemoveZone { zone_id: payload.zone.id.clone() })]
+    vec![Op::from(RemoveZone { zone_id: payload.zone.id.clone() })]
 
     })())
 }

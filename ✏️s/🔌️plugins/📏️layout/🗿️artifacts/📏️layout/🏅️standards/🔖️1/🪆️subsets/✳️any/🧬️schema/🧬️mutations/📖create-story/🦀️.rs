@@ -1,9 +1,12 @@
 //! 📖 `create-story` — brings a new {@link TextStory} into existence in the id-keyed `stories`
 //! collection.
 
-use crate::mutations::{delete_story, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::{LayoutStoriesDelta, LayoutStoryInsertion};
-use crate::{LayoutDiff, LayoutSnapshot, TextStory};
+use crate::delete_story;
+use semio_s_artifact_layout_layout_diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutStoryInsertion;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::TextStory;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +22,12 @@ pub struct CreateStory {
     pub index: Option<usize>,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateStory {
+impl<Op> MutationKind<LayoutSnapshot, Op> for CreateStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::delete_story::DeleteStory> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "story", kind: "create-story", record: "CreatedStory" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_create_story(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_create_story(self, base)?
     
@@ -52,10 +55,16 @@ pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protoc
 //#endregion 📖CreateStory
 
 //#region 📖CreateStory
-pub fn inverse_create_story(payload: &CreateStory, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_create_story<Op: From<crate::delete_story::DeleteStory>>(payload: &CreateStory, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![LayoutMutation::DeleteStory(delete_story::DeleteStory { id: payload.story.id.clone() })]
+    vec![Op::from(delete_story::DeleteStory { id: payload.story.id.clone() })]
 
     })())
 }
 //#endregion 📖CreateStory
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/📖️appends-story-3/🦀️.rs"]
+mod tests_appends_story_3;
+//#endregion 🪢️TaxonomyMounts

@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::{board_snapshot_nodes, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
+use {crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
 use geo::{coord, Intersects, Rect};
 use semio_framework_job::{INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_plugin::{DslValue, PluginApp};

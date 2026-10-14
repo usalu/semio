@@ -1,8 +1,7 @@
 //! 🚧️ Energy model mutation — `ChangeSurfaceBoundaryCondition`: Sets what the surface's outside face faces. The tagged union arrives as its two halves — a `newBoundary` discriminator and the `newInterzoneSurfaceId` only the `Interzone` arm carries — and the two must agree.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -18,19 +17,22 @@ pub struct ChangeSurfaceBoundaryCondition {
     pub new_interzone_surface_id: Option<crate::model::EntityId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_surface_boundary_condition(id: crate::model::EntityId, new_boundary: crate::model::OutsideBoundaryKind, new_interzone_surface_id: Option<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeSurfaceBoundaryCondition(ChangeSurfaceBoundaryCondition { id, new_boundary, new_interzone_surface_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_surface_boundary_condition<Op: From<ChangeSurfaceBoundaryCondition>>(id: crate::model::EntityId, new_boundary: crate::model::OutsideBoundaryKind, new_interzone_surface_id: Option<crate::model::EntityId>) -> Op {
+    ChangeSurfaceBoundaryCondition { id, new_boundary, new_interzone_surface_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeSurfaceBoundaryCondition {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceBoundaryCondition
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceBoundaryCondition>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-boundary-condition", record: "ChangedSurfaceBoundaryCondition" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

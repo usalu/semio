@@ -8,8 +8,16 @@
 //! The native editor owns its immutable play root; semantic mutation authority remains the
 //! canonical typed snapshot and its typed diff algebra.
 
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use protocol::{DiffAlgebra, Mutation};
 
 //#region 🔖️Mutations
@@ -23,9 +31,9 @@ use protocol::{DiffAlgebra, Mutation};
 /// through `store::ArtifactStore::reset` (non-history), never through this enum.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = Puzzle3dSnapshot, diff = Puzzle3dDiff, schema = "puzzle.puzzle3d")]
 pub enum Puzzle3dMutation {
     CreateObject(CreateObject),
@@ -116,52 +124,44 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_object_vortex::mutation::{add_object_vortex, AddObjectVortex};
-pub use super::change_domain::mutation::{change_domain, ChangeDomain};
-pub use super::change_object_anchor::mutation::{change_object_anchor, ChangeObjectAnchor};
-pub use super::change_object_hidden::mutation::{change_object_hidden, ChangeObjectHidden};
-pub use super::change_object_kind::mutation::{change_object_kind, ChangeObjectKind};
-pub use super::change_object_locked::mutation::{change_object_locked, ChangeObjectLocked};
-pub use super::change_object_mesh::mutation::{change_object_mesh, ChangeObjectMesh};
-pub use super::change_reference_hidden::mutation::{change_reference_hidden, ChangeReferenceHidden};
-pub use super::change_reference_locked::mutation::{change_reference_locked, ChangeReferenceLocked};
-pub use super::change_target_volume_hidden::mutation::{change_target_volume_hidden, ChangeTargetVolumeHidden};
-pub use super::change_target_volume_locked::mutation::{change_target_volume_locked, ChangeTargetVolumeLocked};
-pub use super::connect_kind_compatibility::mutation::{connect_kind_compatibility, ConnectKindCompatibility};
-pub use super::connect_vortices::mutation::{connect_vortices, ConnectVortices};
-pub use super::create_object::mutation::{create_object, CreateObject};
-pub use super::create_reference::mutation::{create_reference, CreateReference};
-pub use super::create_target_volume::mutation::{create_target_volume, CreateTargetVolume};
-pub use super::delete_object::mutation::{delete_object, DeleteObject};
-pub use super::delete_reference::mutation::{delete_reference, DeleteReference};
-pub use super::delete_target_volume::mutation::{delete_target_volume, DeleteTargetVolume};
-pub use super::disconnect_kind_compatibility::mutation::{disconnect_kind_compatibility, DisconnectKindCompatibility};
-pub use super::disconnect_vortices::mutation::{disconnect_vortices, DisconnectVortices};
-pub use super::drag_selection::mutation::{drag_selection, DragSelection};
-pub use super::edit_object_label::mutation::{edit_object_label, EditObjectLabel};
-pub use super::move_object::mutation::{move_object, MoveObject};
-pub use super::move_reference::mutation::{move_reference, MoveReference};
-pub use super::move_target_volume::mutation::{move_target_volume, MoveTargetVolume};
-pub use super::remove_object_vortex::mutation::{remove_object_vortex, RemoveObjectVortex};
-pub use super::replace_attraction_geometry::mutation::{replace_attraction_geometry, ReplaceAttractionGeometry};
-pub use super::replace_kind_catalogs::mutation::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use super::replace_object_vortex::mutation::{replace_object_vortex, ReplaceObjectVortex};
-pub use super::replace_reference_source::mutation::{replace_reference_source, ReplaceReferenceSource};
-pub use super::resize_reference::mutation::{resize_reference, ResizeReference};
-pub use super::rotate_object::mutation::{rotate_object, RotateObject};
-pub use super::rotate_selection::mutation::{rotate_selection, RotateSelection};
-pub use super::rotate_target_volume::mutation::{rotate_target_volume, RotateTargetVolume};
-pub use super::scale_object::mutation::{scale_object, ScaleObject};
-pub use super::scale_selection::mutation::{scale_selection, ScaleSelection};
-pub use super::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
-
-//#region 🔖️SelectionTransform
-
-//#endregion 🔖️SelectionTransform
-
-//#region 🔖️AttractionPose
-
-//#endregion 🔖️AttractionPose
+use semio_s_artifact_puzzle_3d_mutations_vortex::add_object_vortex::mutation::AddObjectVortex;
+use semio_s_artifact_puzzle_3d_mutations_catalog::change_domain::mutation::ChangeDomain;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_anchor::mutation::ChangeObjectAnchor;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::ChangeObjectHidden;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_kind::mutation::ChangeObjectKind;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::ChangeObjectLocked;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_mesh::mutation::ChangeObjectMesh;
+use semio_s_artifact_puzzle_3d_mutations_reference::change_reference_hidden::mutation::ChangeReferenceHidden;
+use semio_s_artifact_puzzle_3d_mutations_reference::change_reference_locked::mutation::ChangeReferenceLocked;
+use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::ChangeTargetVolumeHidden;
+use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::ChangeTargetVolumeLocked;
+use semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::ConnectKindCompatibility;
+use semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices;
+use semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::CreateObject;
+use semio_s_artifact_puzzle_3d_mutations_reference::create_reference::mutation::CreateReference;
+use semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::CreateTargetVolume;
+use semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::DeleteObject;
+use semio_s_artifact_puzzle_3d_mutations_reference::delete_reference::mutation::DeleteReference;
+use semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::DeleteTargetVolume;
+use semio_s_artifact_puzzle_3d_mutations_catalog::disconnect_kind_compatibility::mutation::DisconnectKindCompatibility;
+use semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::DisconnectVortices;
+use semio_s_artifact_puzzle_3d_mutations_selection::drag_selection::mutation::DragSelection;
+use semio_s_artifact_puzzle_3d_mutations_object::edit_object_label::mutation::EditObjectLabel;
+use semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject;
+use semio_s_artifact_puzzle_3d_mutations_reference::move_reference::mutation::MoveReference;
+use semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume;
+use semio_s_artifact_puzzle_3d_mutations_vortex::remove_object_vortex::mutation::RemoveObjectVortex;
+use semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry;
+use semio_s_artifact_puzzle_3d_mutations_catalog::replace_kind_catalogs::mutation::ReplaceKindCatalogs;
+use semio_s_artifact_puzzle_3d_mutations_vortex::replace_object_vortex::mutation::ReplaceObjectVortex;
+use semio_s_artifact_puzzle_3d_mutations_reference::replace_reference_source::mutation::ReplaceReferenceSource;
+use semio_s_artifact_puzzle_3d_mutations_reference::resize_reference::mutation::ResizeReference;
+use semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject;
+use semio_s_artifact_puzzle_3d_mutations_selection::rotate_selection::mutation::RotateSelection;
+use semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::RotateTargetVolume;
+use semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject;
+use semio_s_artifact_puzzle_3d_mutations_selection::scale_selection::mutation::ScaleSelection;
+use semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume;
 
 pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Result<Vec<Puzzle3dMutation>, semio_framework_value::ValueError> {
     Ok({
@@ -174,9 +174,6 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
-mod selection_time_travel;
 //#endregion 🧪️Tests
 
 /// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
@@ -186,5 +183,29 @@ pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puz
     Ok(())
 }
 
-#[path = "✋️selection/🦀️.rs"]
-pub mod selection;
+//#region 🔖️SchemaLeaves
+/// 🧬️ The mutations facet's five handcrafted schema leaves.
+pub const SCHEMA_LEAVES: ::semio_framework_schema_registry::FacetLeaves = ::semio_framework_schema_registry::FacetLeaves {
+    rust: include_str!("🦀️.rs"),
+    typescript: include_str!("🟦️.ts"),
+    graphql: include_str!("🔗️.graphql"),
+    json_schema: include_str!("🔣️.json"),
+    proto: include_str!("🛰️.proto"),
+};
+//#endregion 🔖️SchemaLeaves
+
+//#region 🌳️Modules
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+        pub mod mutations;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+        pub mod mutations;
+    }
+}
+//#endregion 🌳️Modules

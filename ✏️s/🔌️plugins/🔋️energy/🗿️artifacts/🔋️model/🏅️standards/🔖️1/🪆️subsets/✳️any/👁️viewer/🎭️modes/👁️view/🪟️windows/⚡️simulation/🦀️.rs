@@ -29,7 +29,7 @@ pub fn definition() -> WindowKindDefinition {
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: None,
-        artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
+        artifact_snapshot_schema: Some(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),

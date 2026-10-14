@@ -28,3 +28,5 @@ semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+

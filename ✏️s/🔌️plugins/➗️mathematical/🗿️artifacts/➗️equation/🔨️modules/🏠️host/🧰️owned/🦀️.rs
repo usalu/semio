@@ -8,7 +8,7 @@ pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::sc
 /// read but never mutated, undone or closed. The app installs the same catalog through
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_equation_store(envelope: EquationEnvelope, actor: protocol::ActorId) -> Result<OwnedEquationStore, store::VcsError> {
-    let mut store = EquationStore::new(envelope, actor).await?;
+    let mut store = EquationStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     Ok(OwnedEquationStore(store))
 }

@@ -21,3 +21,4 @@ semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+

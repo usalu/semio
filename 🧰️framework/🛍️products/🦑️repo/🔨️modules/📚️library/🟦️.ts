@@ -1,5 +1,4 @@
 import {type CargoDependencyNetworkV1} from "./🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {runRepositoryCargoTestsV1} from "./🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS} from "./🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
 export {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS};
 import {nextestArtifactLocation,repositoryCargoTestPolicyV1} from "./🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
@@ -890,7 +889,7 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 //#region 🔖️bundle-script
 //#region 🔖️Script
 import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readScriptPolicy, checkScriptInvocation, advanceScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, receiveScriptProcessInvocation, withScriptProcessEnvelope } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
@@ -1173,7 +1172,7 @@ function killBudgetTree(pid: number): void {
 /** 🦀️ Composes repository Cargo preparation with neutral bounded test execution. */
 export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; signal?: AbortSignal; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
-  if (command === "cargo") prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),args,cwd,process.env);
+  if(command==="cargo"){await receiveScriptProcessInvocation(options.env??process.env,async invocation=>{const {runRepositoryCargoCommandV1}=await import("./🏃️process/🦀️cargo/🎟️admission/🟦️.ts");await runRepositoryCargoCommandV1(invocation,getWorkspaceRoot(),args,cwd,options.env??process.env,options.budgetMs??testLevelBudgetMs());});return;}
   await runBudgetedTestCommand(command, args, { ...options, cwd, budgetMs: options.budgetMs ?? testLevelBudgetMs() });
 }
 
@@ -1365,21 +1364,7 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 /** 🔐️ Authors repository-native execution policy for one selected manifest. */
 
 
-/** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
-export async function runRepositoryCargoTests(packages:string[],cwd:string,invocation:ScriptInvocation,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
-  invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");}
-  const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
-  const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
-  const scopes=new Map<string,string[]>();
-  for(const manifest of manifests){const scope=cargoWorkspaceForManifest(repository,manifest).directory;scopes.set(scope,[...(scopes.get(scope)??[]),manifest]);}
-  for(const manifests of scopes.values()){
-    const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
-    prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
-    invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo preparation deadline exhausted");}
-    const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
-    await runRepositoryCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets},repository,invocation);
-  }
-}
+export {runRepositoryCargoTests} from "./🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 
 
 
@@ -1760,20 +1745,12 @@ export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
   });
 }
 
-/** ▶️Vite dev server with polling-friendly env defaults. */
-export function runViteDev(bundleRoot: string, segments: string[], opts: { config: string; portEnv?: string; defaultPort?: string }): void {
-  const env = playPollingEnv();
-  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-  const port = process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173";
-  spawnBun(["run", "vite", "--config", opts.config, "--host", host, "--port", port, ...segments], bundleRoot, env);
-}
-
 /** 🌐️ Builds a mode-owned site under shared compiler admission and complete artifact publication. */
 export async function runViteBuild(invocation: ScriptInvocation, bundleRoot: string, segments: string[], config: string): Promise<void> {
   checkScriptInvocation(invocation);
-  const [{ resolveConfig }, { buildViteArtifact }, { readBuildMode }] = await Promise.all([import("vite"), import("./⚡️caching/🌐️vite/🟦️.ts"), import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts")]);
-  const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), configFile = resolve(bundleRoot, config), resolved = await resolveConfig({ root: bundleRoot, configFile, configLoader: "native", mode }, "build", mode);
-  await buildViteArtifact({ invocation, root: bundleRoot, workspace: getWorkspaceRoot(), config: configFile, output: resolve(resolved.root, resolved.build.outDir), owner: `vite:${relative(getWorkspaceRoot(), bundleRoot)}:${mode}`, mode, args: segments, signal: invocation.control.signal, timeoutMs: scriptInvocationBudget(invocation, buildBudgetMs()), environment: devToolingEnv(), ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
+  const [{ buildViteArtifact }, { readBuildMode }] = await Promise.all([import("./⚡️caching/🌐️vite/🟦️.ts"), import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts")]);
+  const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), configFile = resolve(bundleRoot, config);
+  await buildViteArtifact({ invocation, root: bundleRoot, workspace: getWorkspaceRoot(), config: configFile, owner: `vite:${relative(getWorkspaceRoot(), bundleRoot)}`, mode, args: segments, signal: invocation.control.signal, timeoutMs: scriptInvocationBudget(invocation, buildBudgetMs()), environment: devToolingEnv() });
 }
 /**
  * ▶️Vitest run in bundle directory, under the [[runRepositoryTestCommand]] wall-clock budget. Appends v8 lcov coverage

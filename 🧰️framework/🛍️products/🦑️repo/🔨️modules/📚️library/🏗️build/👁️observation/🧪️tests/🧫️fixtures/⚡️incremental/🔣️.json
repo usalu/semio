@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "owners": [
+    "a",
+    "b",
+    "c"
+  ],
+  "files": {
+    "a/📋️project.json": "{\"name\":\"a\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"a\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "a/📜️script.ts": "import {value} from '../b/source.ts'; export {value};\n",
+    "b/📋️project.json": "{\"name\":\"b\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"b\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "b/📜️script.ts": "import {value} from './source.ts';export {value};\n",
+    "b/source.ts": "export const value=1;\n",
+    "c/📋️project.json": "{\"name\":\"c\",\"targets\":{\"check\":{\"executor\":\"repo:script\",\"cache\":true,\"metadata\":{\"semio\":{\"execution\":{\"version\":1,\"kind\":\"source\"}}},\"options\":{\"cwd\":\"c\",\"command\":\"bun ./📜️script.ts check\"}}}}",
+    "c/📜️script.ts": "export const independent=true;\n"
+  },
+  "concurrency": {
+    "serial": 1,
+    "parallel": 4
+  },
+  "warm": {
+    "a": 1,
+    "b": 1,
+    "c": 1
+  },
+  "stale": {
+    "path": "b/source.ts",
+    "content": "import {changed} from './extra.ts';export const value=changed;\n",
+    "extra": {
+      "path": "b/extra.ts",
+      "content": "export const changed=2;\n"
+    },
+    "recomputed": [
+      "a",
+      "b"
+    ],
+    "untouched": [
+      "c"
+    ]
+  },
+  "race": {
+    "path": "b/source.ts",
+    "content": "import {raced} from './raced.ts';export const value=raced;\n",
+    "extra": {
+      "path": "b/raced.ts",
+      "content": "export const raced=3;\n"
+    },
+    "untouched": [
+      "c"
+    ]
+  },
+  "unparseable": {
+    "root": "c",
+    "source": "c/📋️project.json",
+    "content": "{\"name\":\"c\",\"targets\":",
+    "ageMilliseconds": 5000,
+    "untouched": [
+      "a",
+      "b"
+    ]
+  },
+  "halfWritten": {
+    "source": "c/📋️project.json",
+    "partial": "{\"name\":\"c\",\"tar",
+    "completeAfterMilliseconds": 300
+  },
+  "foreignLibraryFacts": 0,
+  "retirement": {
+    "cases": [
+      {
+        "id": "wedged-just-below-maximum",
+        "usedBytes": 1073741704,
+        "availableBytes": 2362232012,
+        "due": true
+      },
+      {
+        "id": "at-low-water",
+        "usedBytes": 536870912,
+        "availableBytes": 2362232012,
+        "due": false
+      },
+      {
+        "id": "above-low-water",
+        "usedBytes": 536870913,
+        "availableBytes": 2362232012,
+        "due": true
+      },
+      {
+        "id": "volume-pressure",
+        "usedBytes": 0,
+        "availableBytes": 1073741823,
+        "due": true
+      },
+      {
+        "id": "empty",
+        "usedBytes": 0,
+        "availableBytes": 2362232012,
+        "due": false
+      }
+    ]
+  },
+  "members": {
+    "files": [
+      "📋️build-owners.json",
+      "bun.lock",
+      "package.json",
+      "patches/tool@1.0.0.patch",
+      "x/📋️project.json",
+      "x/Cargo.toml",
+      "x/src/lib.rs",
+      "x/README.md",
+      "x/🧪️tests/🧪️case.feature",
+      "x/📜️script.ts",
+      "x/view.tsx",
+      "x/module.mjs",
+      "x/worker.cjs",
+      "x/types.d.mts",
+      "x/go.mod",
+      "x/go.sum",
+      "x/🔣️.json",
+      "x/notes.txt"
+    ],
+    "expected": [
+      "bun.lock",
+      "package.json",
+      "patches/tool@1.0.0.patch",
+      "x/📋️project.json",
+      "x/Cargo.toml",
+      "x/🧪️tests/🧪️case.feature",
+      "x/📜️script.ts",
+      "x/view.tsx",
+      "x/module.mjs",
+      "x/worker.cjs",
+      "x/types.d.mts",
+      "x/go.mod"
+    ]
+  }
+}

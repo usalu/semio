@@ -4,15 +4,14 @@
 //! publishes them as one edit on finalize. This module declares the definition, the count measure (shared
 //! configuration the driver watches) and builds the run and revalidate jobs.
 
-use crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID;
-use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dRuntime};
-use crate::editor::puzzle3d::modes::edit::windows::main;
-use crate::editor::puzzle3d::precompute::fill::{fill_run_placements, FillPreparationRoots, FillRevalidateJob, FillRunJob, FillRunPlacement, FILL_RUN_OPS_PER_PLACEMENT};
-use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, CollisionBody};
-use crate::editor::puzzle3d::precompute::{brush_mesh_digest, shared_brush_mesh};
-use crate::editor::puzzle3d::terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
-use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::editor::puzzle3d::snapshot::puzzle3d_distribution_group, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document, crate::editor::puzzle3d::session::scene_config, crate::editor::puzzle3d::session::Puzzle3dEditor, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND};
-use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig};
+use semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID;
+use semio_s_artifact_puzzle_3d_editor_config::{Puzzle3dConfig, Puzzle3dRuntime};
+use semio_s_artifact_puzzle_3d_precompute_fill::{fill_run_placements, FillPreparationRoots, FillRevalidateJob, FillRunJob, FillRunPlacement, FILL_RUN_OPS_PER_PLACEMENT};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, CollisionBody};
+use semio_s_artifact_puzzle_3d_precompute::{brush_mesh_digest, shared_brush_mesh};
+use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_distribution_group, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_fallback_mesh_buffers, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_session::scene_config, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FALLBACK_MESH_KIND};
+use semio_s_artifact_puzzle_3d_model::{FillRunCheckpoint, SceneConfig};
 use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext};
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::EditorApp;
@@ -93,7 +92,7 @@ pub fn measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Opt
 }
 
 /// 🏃️ The fill run of this document instance while it is not terminal.
-pub(crate) fn live_fill_run(tool_run: Option<&ToolRunView>) -> Option<&ToolRunView> {
+pub fn live_fill_run(tool_run: Option<&ToolRunView>) -> Option<&ToolRunView> {
     tool_run.filter(|run| run.tool_id == PUZZLE3D_FILL_TOOL_ID && !run.state.is_terminal())
 }
 
@@ -116,7 +115,7 @@ pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp
     let runtime = Puzzle3dRuntime { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
     let envelope = Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(request.snapshot.typed()), runtime, active_utility: PUZZLE3D_FILL_TOOL_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("puzzle3d.fill.scene-unavailable"), "the fill run's document builds no engine scene"))?;
-    let lane = main::mesh_lane(&envelope.scene_snapshot);
+    let lane = semio_s_artifact_puzzle_3d_editor_session::mesh_lane(&envelope.scene_snapshot);
     let target = match request.purpose {
         ToolRunJobPurpose::Run => FillToolRunTarget::Run { requested: config.fill_count as usize, checkpoint: request.checkpoint.and_then(FillRunCheckpoint::decode), provisional: request.provisional.len() as u32 },
         ToolRunJobPurpose::Revalidate => {
@@ -177,7 +176,7 @@ enum FillToolRunPhase {
 /// ⏯️ The fill tool's run and revalidate job as the framework ledger steps it: bounded mesh preparation,
 /// then the planner run (fresh, replaying to its checkpoint, or restarting over the ledger's provisional ops)
 /// or the finalize revalidation.
-pub(crate) struct Puzzle3dFillToolRunJob {
+pub struct Puzzle3dFillToolRunJob {
     phase: FillToolRunPhase,
     inputs: FillRunInputs,
 }
@@ -199,7 +198,7 @@ impl Puzzle3dFillToolRunJob {
     fn prepare_one(preparation: &mut FillToolRunPreparation) -> bool {
         let Some(url) = preparation.lane.get(preparation.cursor).cloned() else { return true };
         preparation.cursor += 1;
-        if url != main::VORTEX_MARKER_MESH_KIND {
+        if url != semio_s_artifact_puzzle_3d_editor_snapshot::VORTEX_MARKER_MESH_KIND {
             let (body, source) = match shared_brush_mesh(&url).and_then(|(positions, indices)| Some((collision_body_from_buffers(&positions, &indices)?, brush_mesh_digest(&positions, &indices)))) {
                 Some(real) => real,
                 None if url == PUZZLE3D_FALLBACK_MESH_KIND => {

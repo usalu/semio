@@ -114,7 +114,7 @@ fn large_payload_metadata_edit_uses_compact_native_event_and_exact_inverse_admis
 #[test]
 fn payload_detail_edits_publish_the_exact_requested_value() {
     register_mp4_snapshot_schema();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut snapshot = Mp4Snapshot::default();
     let mut track = Mp4Track::default();
     track.samples.push(Mp4Sample { data: vec![7, 9], duration: 1000, cts_offset: 0, sync: true });

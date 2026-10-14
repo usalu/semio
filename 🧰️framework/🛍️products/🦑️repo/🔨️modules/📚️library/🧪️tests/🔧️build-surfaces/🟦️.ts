@@ -2,10 +2,13 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
 import {parseArgsStringToArgv} from "string-argv";
+import {createRequire} from "node:module";
 import { parseBuildInvocationV1 } from "../../🏗️build/🧭️invocation/🟦️.ts";
 import { validateBuildTaskArgumentsV1 } from "../../🏗️build/🧭️selection/🟦️.ts";
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve, posix, win32 } from "node:path";
+import { spawnSync } from "node:child_process";
+import { literalCommandTokensV1 } from "../../🏗️build/📤️arguments/🟨️.mjs";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import fixture from "../🧫️fixtures/🔧️build-surfaces/🔣️.json";
@@ -15,6 +18,41 @@ import { nativeHostContractLaws } from "../../🎮️playground/🖥️native-ho
 
 const root = findWorkspaceRoot(import.meta.dir);
 const read = (path: string): string => readFileSync(join(root, path), "utf8");
+
+test("package wrappers route to the repository root with independent argv and path oracles", () => {
+  for (const row of fixture.packageRouting.cases) {
+    const argv=literalCommandTokensV1(row.command), paths=row.platform==="win32"?win32:posix;
+    expect(argv).toEqual(parseArgsStringToArgv(row.command));
+    expect(argv.slice(0,2)).toEqual(["bun","--cwd"]);
+    expect(paths.resolve(row.root,row.package,argv[2]!)).toBe(paths.resolve(row.root));
+    expect(argv[3]).toBe("repo");
+    expect(argv.slice(4)).toEqual(row.arguments);
+  }
+  const inventory=spawnSync("git",["-c","core.fsmonitor=false","ls-files","-z","--cached","--","**/package.json","package.json"],{cwd:root,encoding:"utf8",timeout:10000,maxBuffer:16*1024*1024});
+  expect(inventory.status,inventory.stderr).toBe(0);
+  let wrappers=0;
+  for(const path of new Set(inventory.stdout.split("\0").filter(Boolean))) {
+    const manifest=JSON.parse(read(path));
+    for(const [name,command] of Object.entries(manifest.scripts??{})) {
+      if(typeof command!=="string"||!/^bun (?:repo |--cwd )/u.test(command))continue;
+      const argv=literalCommandTokensV1(command);
+      if(argv[1]!=="repo"&&argv[3]!=="repo")continue;
+      expect(argv,`${path}:${name}`).toEqual(parseArgsStringToArgv(command));
+      if(path==="package.json"){expect(argv[1]).toBe("repo");continue;}
+      expect(argv.slice(0,2),`${path}:${name}`).toEqual(["bun","--cwd"]);
+      expect(resolve(root,dirname(path),argv[2]!),`${path}:${name}`).toBe(root);
+      expect(argv[2]).not.toContain("\\");
+      expect(argv[3]).toBe("repo");
+      wrappers++;
+    }
+  }
+  expect(wrappers).toBeGreaterThan(600);
+  const source=ts.createSourceFile("caller.ts",read(fixture.packageRouting.sourceCaller),ts.ScriptTarget.Latest,true),calls:ts.CallExpression[]=[];
+  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&node.expression.getText(source)==="runCmd"&&node.arguments[1]?.getText(source).includes('"repo"'))calls.push(node);ts.forEachChild(node,visit);};visit(source);
+  expect(calls.length).toBeGreaterThan(0);
+  for(const call of calls){const options=call.arguments[2];expect(options&&ts.isObjectLiteralExpression(options)).toBe(true);const cwd=(options as ts.ObjectLiteralExpression).properties.find(property=>ts.isPropertyAssignment(property)&&property.name.getText(source)==="cwd") as ts.PropertyAssignment;expect(cwd.initializer.getText(source)).toBe("this.repoRoot");}
+  console.log(`[DEBUG] Repository-root package routing checked ${wrappers} wrappers with independent string-argv and TypeScript AST oracles`);
+});
 
 test("portable developer entry points agree with the independent schema oracle", () => {
   expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
@@ -73,9 +111,13 @@ test("editor task arguments cross the neutral argument boundary", () => {
     if (typeof row !== "object" || row === null || typeof row.command !== "string") continue;
     expect(row.command, String(row.name)).not.toMatch(/(?:^|\s)nx\s+(?:run|run-many|exec|show|graph|watch|affected)\b/u);
     if (!row.command.startsWith("bun repo ")) continue;
-    const parsed = parseBuildInvocationV1(parseArgsStringToArgv(row.command.replaceAll("${input:repoBuildTool}", "nx")).slice(2), {}).args, boundary = parsed.findIndex(value => /^(?:\d*[<>]|&&|\|\||;)$/u.test(value));
-    const args = boundary < 0 ? parsed : parsed.slice(0, boundary);
-    if (["run", "run-many", "affected", "exec", "watch"].includes(args[0]!)) expect(() => validateBuildTaskArgumentsV1(args), String(row.name)).not.toThrow();
+    for(const answers of fixture.editorAnswers){
+      const template=createRequire(import.meta.url)("lodash/template"),command=row.command.replace(/\$\{input:(repoBuild[^}]+)\}/gu,(_,id:string)=>{expect(Object.hasOwn(answers,id),id).toBe(true);return answers[id as keyof typeof answers];});
+      expect(command).toBe(template(row.command,{interpolate:/\$\{input:(repoBuild[^}]+)\}/g})(answers));
+      const parsed = parseBuildInvocationV1(parseArgsStringToArgv(command).slice(2), {}).args, boundary = parsed.findIndex(value => /^(?:\d*[<>]|&&|\|\||;)$/u.test(value));
+      const args = boundary < 0 ? parsed : parsed.slice(0, boundary);
+      if (["run", "run-many", "affected", "exec", "watch"].includes(args[0]!)) expect(() => validateBuildTaskArgumentsV1(args), String(row.name)).not.toThrow();
+    }
   }
 });
 

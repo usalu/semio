@@ -31,7 +31,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Fem3dAnalyzer;
-    use crate::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem3d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -79,7 +79,10 @@ pub use derived_composition::*;
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::{Fem3dMutation, Fem3dSnapshot, FEM3D_DIALECT, FEM_3D_SCHEMA};
+    use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use crate::standards::v1::subsets::any::io::FEM3D_DIALECT;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -103,7 +106,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .as_slice()
     }
 
-    let langs = crate::pilot_languages();
+    let langs = crate::standards::v1::subsets::any::io::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -123,17 +126,10 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
-
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-
 pub mod derived_construction {
-    use crate::{Fem3dDiff, Fem3dMutation, Fem3dSnapshot};
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+    use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -183,7 +179,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -239,3 +235,150 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: Fem3dAnalyzer,
     composer: Fem3dComposer,
 );
+
+//#region 🪪️ArtifactKind
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
+
+/// 🪪️ W2 packet P7 (26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the canonical `ArtifactEditor`/
+/// `ArtifactViewer::DIALECT` for this artifact — `artifact_kind` is the 3-part schema id
+/// (`#[artifact_schema(id = "s.fem.fem3d")]` on `Fem3dSnapshot`), NOT the 2-part
+/// `ArtifactIdentity::parse("s.fem3d")` string `definition()` below uses, and NOT the module-private
+/// `FEM3D_DIALECT` in this subset's own `🚪️io/🦀️.rs` (an older, unrelated 2-part io/composer
+/// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
+/// file can read it without ever importing through the sibling editor module.
+pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+/// 🪪️ The fem 3D model document kind — the id `fem3d_io`'s `ArtifactPresentation` already names (`3d.fem`),
+/// with the ONE schema the hub's codec rows, document-open targets and genesis key on (`FEM_3D_SCHEMA`). Declared
+/// beside [`computation_artifact_kind`], which stays the results kind `results:out` pins itself to.
+pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "3d.fem".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 3D Model", "FEM-3D-Modell"),
+        source_format: FEM_3D_SCHEMA.into(),
+        component_kind: "fem3d".into(),
+        dimension: "3d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        schema: FEM_3D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
+/// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
+/// `semio_s_fem_model::StaticResult`, pinned to this kind by the `results:out` media port (see
+/// `crate::editor::fem3d::fem3d_results_out_port`) and produced by
+/// `crate::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
+/// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
+pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "computation.fem3d".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 3D Results", "FEM-3D-Ergebnisse"),
+        source_format: "computation.fem3d".into(),
+        component_kind: "fem3d-results".into(),
+        dimension: "computation".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
+        schema: "computation.fem3d".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `🗒️note`'s own `pilot_languages()` convention.
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem3d",
+                    extension: Some("fem3d"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem3d"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem3d.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem3d.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem3d.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem3d.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem3d.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem3d.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem3d.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem3d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🪪️ArtifactKind
+
+//#region 🚀️BootDocument
+/// 🚀️ The document every `fem3d` surface boots with — the bundled `concrete-forest` (Betonwald) example
+/// so Entwerfen-mit-Bestand surfaces and the demonstrator Statik pane paint the reuse story on first
+/// frame. Shared by `Fem3dPlayApp::initial_snapshot` and `Fem3dViewer::initial_snapshot` (the viewer
+/// must never import through the sibling editor module, so the shared boot document lives here). Falls
+/// back to the legacy `demo` fixture, then the empty document, if parsing ever fails — a boot must
+/// never fault on a fixture.
+pub fn fem3d_boot_snapshot() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT)
+        .or_else(|_| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT))
+        .unwrap_or_else(|_| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::empty_fem3d_snapshot())
+}
+//#endregion 🚀️BootDocument
+
+//#region 🌱️ResetDocument
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// history — the sanctioned non-mutation path for a whole-document replace (file import,
+/// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
+/// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
+/// former "replace the whole document" gesture in this package (`import_media`'s `"artifact:in"`,
+/// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
+/// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
+pub fn reset_document_effect(scene: &crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) -> semio_framework::kernel::Effect {
+    let pack = <crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem3d", semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA));
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
+}
+//#endregion 🌱️ResetDocument

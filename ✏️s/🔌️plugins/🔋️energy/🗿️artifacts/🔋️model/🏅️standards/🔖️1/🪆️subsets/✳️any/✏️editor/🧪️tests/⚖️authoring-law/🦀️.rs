@@ -1,8 +1,8 @@
 //! ⚖️ Real-store authoring: an energy config edit authors, applies, undoes and redoes through the energy editor's own config catalog and the runtime's canonical operation wire.
 use semio_framework_plugin::{authoring_law::author_through_config_store, EditorApp};
 use semio_framework_value::ToValue;
-use semio_s_artifact_energy_model::editor::model::config::{ChangeResultField, EnergyModelConfig, EnergyModelConfigMutation};
-use semio_s_artifact_energy_model::editor::model::EnergyModelEditor;
+use semio_s_artifact_energy_model_editor_config::{ChangeResultField, EnergyModelConfig, EnergyModelConfigMutation};
+use semio_s_artifact_energy_model_editor::EnergyModelEditor;
 
 fn assert_row_is_the_serde_document(row: &[u8], mutation: &EnergyModelConfigMutation) {
     assert!(row.starts_with(b"op"), "the canonical wire carries its operation header");

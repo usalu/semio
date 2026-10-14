@@ -2,18 +2,14 @@
 //! `ArtifactDeclaration` (`crate::declaration`), not per-leaf register().
 //#region 🔖️Submodules
 /// 🧱 BrepMesh analyzer view, derived from the generic graph — never persisted itself.
-#[path = "🧱️brep/🦀️.rs"]
-pub mod brep;
 /// 🪜 Shared CC ladder classification + FILE_SCHEMA/PRODUCT-chain scans, reused by all six
 /// `✳️ccN` subset analyzers (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
-#[path = "🪜️ladder/🦀️.rs"]
-pub mod ladder;
 //#endregion 🔖️Submodules
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ap214::subsets::base::io::StepAnalyzer;
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
@@ -61,13 +57,11 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v_ap214::subsets::base::schema::diff::{StepDiff};
-    use crate::standards::v_ap214::subsets::base::schema::mutations::{StepMutation};
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+    use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -116,7 +110,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+    use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts

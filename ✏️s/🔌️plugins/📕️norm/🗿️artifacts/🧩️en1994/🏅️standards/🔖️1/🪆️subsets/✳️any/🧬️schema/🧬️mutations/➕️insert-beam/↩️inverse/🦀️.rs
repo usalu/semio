@@ -1,10 +1,10 @@
 //! Inverse for `insert-beam`.
-use super::InsertBeam;
-use crate::artifact_schema::mutations::remove_beam::RemoveBeam;
-use crate::{En1994Mutation, En1994Snapshot};
-pub fn inverse(payload: &InsertBeam, _base: &En1994Snapshot) -> Result<Vec<En1994Mutation>, semio_framework_value::ValueError> {
+use crate::insert_beam::InsertBeam;
+use crate::remove_beam::RemoveBeam;
+use semio_s_artifact_norm_en1994_model::En1994Snapshot;
+pub fn inverse<Op>(payload: &InsertBeam, _base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_beam::RemoveBeam> {
     Ok((|| {
-    vec![En1994Mutation::RemoveBeam(RemoveBeam { index: payload.index })]
+    vec![Op::from(RemoveBeam { index: payload.index })]
 
     })())
 }

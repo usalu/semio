@@ -1,8 +1,10 @@
 //! 🗂 `update-layer` — sets a page layer's name, visibility, and lock.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayerPatch, LayoutPagesDelta, LayoutPagesModification, PageLayersDelta, PagePatch};
-use crate::{LayoutDiff, LayoutSnapshot};
+#[cfg(test)] use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_diff::{LayerPatch, LayoutPagesDelta, PageLayersDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_diff::LayoutDiff;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -20,12 +22,12 @@ pub struct UpdateLayer {
     pub locked: bool,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdateLayer {
+impl<Op> MutationKind<LayoutSnapshot, Op> for UpdateLayer where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::update_layer::UpdateLayer> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer", record: "UpdatedLayer" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_update_layer(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_update_layer(self, base)?
     
@@ -67,11 +69,11 @@ pub fn diff_update_layer(payload: &UpdateLayer, base: &LayoutSnapshot) -> protoc
     })
 }
 
-pub fn inverse_update_layer(payload: &UpdateLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_update_layer<Op: From<crate::update_layer::UpdateLayer>>(payload: &UpdateLayer, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(layer) = page.layers.iter().find(|layer| layer.id == payload.layer_id) else { return Vec::new() };
-    vec![LayoutMutation::UpdateLayer(UpdateLayer { page_id: payload.page_id.clone(), layer_id: payload.layer_id.clone(), name: layer.name.clone(), visible: layer.visible, locked: layer.locked })]
+    vec![Op::from(UpdateLayer { page_id: payload.page_id.clone(), layer_id: payload.layer_id.clone(), name: layer.name.clone(), visible: layer.visible, locked: layer.locked })]
 
     })())
 }

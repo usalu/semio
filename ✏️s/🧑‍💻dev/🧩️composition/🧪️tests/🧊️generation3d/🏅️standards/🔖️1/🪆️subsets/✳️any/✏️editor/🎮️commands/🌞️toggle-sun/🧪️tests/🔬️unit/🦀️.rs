@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
+use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use crate::editor_domain::editor_laws::context;
 
 #[semio_framework_async_macros::async_test]

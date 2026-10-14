@@ -1,7 +1,13 @@
 //! 🔺️ Sparse diff builder for `RemoveLoad` — clones the target case, drops the load, patches it.
 use super::RemoveLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dLoadCasePatch, Fem3dLoadCasesDelta, Fem3dLoadCasesModification, Fem3dLoadsDelta, Fem3dLoadRemoval};
-use crate::{load_id, Fem3dSnapshot};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasePatch;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadCasesModification;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dLoadRemoval;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemoveLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

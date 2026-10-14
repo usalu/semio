@@ -2,14 +2,14 @@ use super::*;
 #[test]
 fn layout_inspection_summary_matches_the_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️summary.json")).expect("neutral inspector vectors");
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
     snapshot.name = fixture["name"].as_str().expect("document name").into();
     snapshot.pages.clear();
     assert_eq!(snapshot.pages.len(), fixture["pageCount"].as_u64().expect("page count") as usize);
     for row in fixture["cases"].as_array().expect("locales") {
         let config = LayoutWindowConfig { active_page_id: fixture["activePage"].as_str().expect("active page").into(), ..LayoutWindowConfig::default() };
         let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag(row["locale"].as_str().expect("locale")).expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
-        let node = render(&snapshot, &config, &crate::editor::layout::LayoutInteractionSnapshot::default(), crate::editor::layout::terminology::layout_labels(&view_state)).expect("semantic inspector");
+        let node = render(&snapshot, &config, &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(), semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels(&view_state)).expect("semantic inspector");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent semantic JSON oracle");
         // 🌳️ The inspector root is the panel TREE; its heading and rows live on the one summary

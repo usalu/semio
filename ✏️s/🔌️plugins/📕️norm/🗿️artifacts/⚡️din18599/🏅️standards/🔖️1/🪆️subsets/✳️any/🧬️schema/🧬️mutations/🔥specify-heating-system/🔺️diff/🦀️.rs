@@ -1,8 +1,8 @@
 //! 🔺️ `specify-heating-system` sparse diff.
 
-use crate::mutations::specify_heating_system::SpecifyHeatingSystem;
-use crate::Din18599Snapshot;
-use crate::diff::{Din18599Diff, Din18599HeatingPatch};
+use crate::specify_heating_system::SpecifyHeatingSystem;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::{Din18599Diff, Din18599HeatingPatch};
 
 pub fn diff(payload: &SpecifyHeatingSystem, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

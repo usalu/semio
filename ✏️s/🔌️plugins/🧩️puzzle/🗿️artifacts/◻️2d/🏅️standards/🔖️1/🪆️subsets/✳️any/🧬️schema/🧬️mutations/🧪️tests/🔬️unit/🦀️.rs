@@ -1,5 +1,5 @@
 use super::*;
-use crate::PUZZLE_2D_SCHEMA;
+use crate::standards::v1::subsets::any::schema::PUZZLE_2D_SCHEMA;
 use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
@@ -13,7 +13,7 @@ fn concrete_kinds_round_trip_through_the_central_applier() {
     let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
     let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d snapshot")).expect("canonical puzzle2d JSON");
     let before_snapshot: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&before)).expect("base admits");
-    let created: crate::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }))).expect("node admits");
+    let created: crate::standards::v1::subsets::any::schema::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }))).expect("node admits");
     let operations=vec![delete_node("n1".into()), move_node("n2".into(), 99.0, 0.0), create_node(created, None)];
     let mut forward = before_snapshot.clone();
     let mut inverses = Vec::new();
@@ -32,19 +32,19 @@ fn concrete_kinds_round_trip_through_the_central_applier() {
 #[test]
 fn a_sparse_node_record_without_anchor_creates_through_create_node() {
     let before: Puzzle2dSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] }))).expect("base admits");
-    let node: crate::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }))).expect("sparse node admits");
+    let node: crate::standards::v1::subsets::any::schema::Puzzle2dNode=semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&json!({ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }))).expect("sparse node admits");
     let operation=create_node(node, None);
     let outcome=Mutation::<Puzzle2dSnapshot>::diff(&operation, &before);
     assert!(outcome.messages().is_empty(), "a sparse add applies cleanly: {:?}", outcome.messages());
     let created=protocol::apply_diff(outcome.diff(), &before).expect("valid mutation diff");
     assert_eq!(created.nodes.len(), 1, "sparse add stays one create-node");
-    assert_eq!(created.nodes.iter().next().map(|node| node.anchor), Some(crate::Puzzle2dNodeAnchor::Fixed));
+    assert_eq!(created.nodes.iter().next().map(|node| node.anchor), Some(crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor::Fixed));
 }
 
 //#region 🔖️MutationLaws
 #[test]
 fn create_delete_node_inverse_law() {
-    use crate::{Puzzle2dNode};
+    use crate::standards::v1::subsets::any::schema::Puzzle2dNode;
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
@@ -54,7 +54,7 @@ fn create_delete_node_inverse_law() {
 
 #[test]
 fn move_node_inverse_and_absorb_law() {
-    use crate::{Puzzle2dNode};
+    use crate::standards::v1::subsets::any::schema::Puzzle2dNode;
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     let with_node = protocol::apply_diff(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -67,7 +67,7 @@ fn move_node_inverse_and_absorb_law() {
 
 #[test]
 fn node_field_mutations_inverse_law() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dNodeAnchor};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }].into(), ..Default::default() };
     let with_node = protocol::apply_diff(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -87,7 +87,7 @@ fn node_field_mutations_inverse_law() {
 
 #[test]
 fn connect_disconnect_handles_inverse_law() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
@@ -109,7 +109,7 @@ fn connect_disconnect_handles_inverse_law() {
 /// `mutation.precondition-drifted` naming both handles; a negative or non-finite tolerance is what the schema forbids.
 #[test]
 fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode};
     let node = |id: &str, x: f64, handle: &str, angle: f64| Puzzle2dNode { id: id.into(), x, radius: Some(24.0), handles: vec![Puzzle2dHandle { id: handle.into(), angle, ..Default::default() }].into(), ..Default::default() };
     let mut base = empty_puzzle2d_snapshot();
     base.nodes = vec![node("a", 0.0, "ha", 0.0), node("b", 56.0, "hb", std::f64::consts::PI)].into();
@@ -150,7 +150,7 @@ fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
 
 #[test]
 fn delete_node_severs_and_reconnects_edges() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
@@ -167,7 +167,7 @@ fn delete_node_severs_and_reconnects_edges() {
 
 #[test]
 fn meta_mutations_inverse_law() {
-    use crate::{Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs};
     let base = empty_puzzle2d_snapshot();
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle, None)));
@@ -209,7 +209,7 @@ fn missing_target_is_error_per_verb_family() {
 
 #[test]
 fn create_duplicate_id_is_fatal_and_never_applies() {
-    use crate::{Puzzle2dNode};
+    use crate::standards::v1::subsets::any::schema::Puzzle2dNode;
     let mut base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };
     base.nodes.push(node.clone());
@@ -224,7 +224,7 @@ fn create_duplicate_id_is_fatal_and_never_applies() {
 /// 🧫️ A board with awkward (non-dyadic) coordinates: a node with a handle, a LOCKED node and a target
 /// region — the negated-offset inverse these leaves deliberately do not use would drift on it.
 fn selection_board() -> Puzzle2dSnapshot {
-    use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dTargetRegion};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
     let mut base = empty_puzzle2d_snapshot();
     base.nodes = vec![
         Puzzle2dNode { id: "a".into(), x: 0.1, y: 0.2, handles: vec![Puzzle2dHandle { id: "ha".into(), angle: 0.3, ..Default::default() }].into(), ..Default::default() },
@@ -330,9 +330,9 @@ fn selection_labels_name_count_and_parameters() {
 /// board that does hold every addressed record, so the refusal cannot be a missing target in disguise.
 #[test]
 fn every_bounded_leaf_refuses_what_its_schema_forbids() {
-    use crate::{Puzzle2dCatalogHandleKind, Puzzle2dCatalogNodeKind, Puzzle2dHandle, Puzzle2dHandleTemplate, Puzzle2dKindCatalogs, Puzzle2dNode, Puzzle2dTargetRegion};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dCatalogHandleKind, crate::standards::v1::subsets::any::schema::Puzzle2dCatalogNodeKind, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dHandleTemplate, crate::standards::v1::subsets::any::schema::Puzzle2dKindCatalogs, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
     let mut base = selection_board();
-    base.edges = vec![crate::Puzzle2dEdge { id: "e".into(), source: "ha".into(), target: "ha".into(), ..Default::default() }].into();
+    base.edges = vec![crate::standards::v1::subsets::any::schema::Puzzle2dEdge { id: "e".into(), source: "ha".into(), target: "ha".into(), ..Default::default() }].into();
     let handle = |angle: f64, radius: Option<f64>, scale: Option<f64>| Puzzle2dHandle { id: "hn".into(), angle, radius, scale, ..Default::default() };
     let node = |edit: fn(&mut Puzzle2dNode)| {
         let mut node = Puzzle2dNode { id: "n".into(), ..Default::default() };
@@ -429,7 +429,7 @@ fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
 /// inverse diffs sum to the negative diff.
 #[test]
 fn middle_row_removals_restore_their_position() {
-    use crate::{Puzzle2dCompatSpecificity, Puzzle2dHandle, Puzzle2dNode, Puzzle2dTargetRegion};
+    use {crate::standards::v1::subsets::any::schema::Puzzle2dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle2dHandle, crate::standards::v1::subsets::any::schema::Puzzle2dNode, crate::standards::v1::subsets::any::schema::Puzzle2dTargetRegion};
     use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     let step = |base: Puzzle2dSnapshot, mutation: Puzzle2dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let mut base = empty_puzzle2d_snapshot();

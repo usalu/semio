@@ -1,0 +1,107 @@
+//! ⚖️ The laws every committed `move-selection` scenario holds, written once beside the leaf's scenarios and called
+//! by each scenario's `🧪️tests/<scenario>/🦀️.rs` with its committed quintet.
+
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem3d_mutation,Fem3dMutation};
+use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
+
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+
+fn snapshot(text: &str) -> Fem3dSnapshot {
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")
+}
+
+fn mutation(text: &str) -> Fem3dMutation {
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+}
+
+fn value(text: &str) -> semio_framework_value::DslValue {
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed JSON parses")
+}
+
+fn applied(base: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
+    let mut snapshot = base.clone();
+    apply_fem3d_mutation(&mut snapshot, operation).expect("the leaf applies");
+    snapshot
+}
+
+/// ▶️ `before` → exactly `after`, through exactly the committed delta, bound to this kind's descriptor.
+pub fn forward(before: &str, operation: &str, after: &str, diff: &str) {
+    let (base, operation) = (snapshot(before), mutation(operation));
+    let produced = applied(&base, &operation);
+    assert_eq!(produced, snapshot(after), "the applied state is the committed after-snapshot");
+    assert_ne!(produced, base, "a forward vector moves the model");
+    assert_eq!(semio_framework_value::ToValue::to_value(protocol::Mutation::diff(&operation, &base).diff()), value(diff), "the produced delta is the committed one");
+    assert_eq!(<Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
+}
+
+/// 🔣️ The committed snapshot, decoded.
+pub fn decoded_snapshot(text: &str) -> Fem3dSnapshot {
+    snapshot(text)
+}
+
+/// 🔣️ The committed mutation, decoded.
+pub fn decoded_mutation(text: &str) -> Fem3dMutation {
+    mutation(text)
+}
+
+/// ↩️ The inverse restores `before` exactly, one whole-record replacement per moved node and solid.
+pub fn inverse_restores(before: &str, operation: &str) {
+    let (base, operation) = (snapshot(before), mutation(operation));
+    let inverse = inverse_fem3d_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+    let moved = applied(&base, &operation);
+    let changed = moved.nodes.iter().filter(|node| !base.nodes.contains(node)).count() + moved.solids.iter().filter(|solid| !base.solids.contains(solid)).count();
+    assert_eq!(inverse.len(), changed, "one inverse step per moved record: {inverse:?}");
+    let restored = inverse.iter().rev().fold(moved, |state, step| applied(&state, step));
+    assert_eq!(restored, base, "the inverse restores the before-snapshot exactly");
+}
+
+/// 🎯️ An applied vector's declared diagnostics, in order, are exactly the emitted ones, none an Error or worse.
+pub fn declared_outcome(before: &str, operation: &str, outcome: &str) {
+    let declared = value(outcome);
+    assert_eq!(declared.get("status").and_then(semio_framework_value::DslValue::as_str), Some("applied"));
+    let produced = protocol::Mutation::diff(&mutation(operation), &snapshot(before));
+    let emitted: Vec<(String, Vec<String>)> = produced.messages().iter().map(|message| (message.code.0.clone(), message.target.clone())).collect();
+    let expected: Vec<(String, Vec<String>)> = declared.get("messages").and_then(semio_framework_value::DslValue::as_array).expect("declared messages").iter().map(|message| (message.get("code").and_then(semio_framework_value::DslValue::as_str).expect("code").to_string(), message.get("target").and_then(semio_framework_value::DslValue::as_array).map(|target| target.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect()).unwrap_or_default())).collect();
+    assert_eq!(emitted, expected, "the emitted diagnostics are the declared ones");
+    assert!(produced.messages().iter().all(|message| message.level < semio_framework_diagnostic::Severity::Error), "an applied vector raises nothing at Error or worse");
+}
+
+/// ⛔️ A refused or no-op vector leaves the document byte-identical behind an empty delta, raises exactly the
+/// declared diagnostic at its level and address, and inverts to nothing.
+pub fn refusal(before: &str, operation: &str, after: &str, outcome: &str) {
+    assert_eq!(before, after, "a refusal changes nothing: the committed snapshots are byte-identical");
+    let (base, operation) = (snapshot(before), mutation(operation));
+    assert_eq!(applied(&base, &operation), base);
+    let produced = protocol::Mutation::diff(&operation, &base);
+    assert_eq!(produced.diff(), &Fem3dDiff::default(), "a refusal carries the empty delta");
+    let declared = value(outcome);
+    let messages = produced.messages();
+    assert_eq!(messages.len(), 1, "exactly one diagnostic: {messages:?}");
+    match declared.get("status").and_then(semio_framework_value::DslValue::as_str) {
+        Some("rejected") => {
+            assert_eq!(declared.get("code").and_then(semio_framework_value::DslValue::as_str), Some(messages[0].code.0.as_str()));
+            assert!(messages[0].level >= semio_framework_diagnostic::Severity::Error, "a rejection is at least an Error");
+            let path: Vec<String> = declared.get("path").and_then(semio_framework_value::DslValue::as_array).expect("path").iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect();
+            assert_eq!(path, messages[0].target, "the declared address is the emitted one");
+        }
+        Some("no-op") => {
+            assert_eq!(messages[0].code.0, "mutation.no-op");
+            assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning);
+        }
+        other => panic!("a refusal vector declares rejected or no-op, not {other:?}"),
+    }
+    assert!(inverse_fem3d_mutation(&base, &operation).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
+}
+
+/// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
+pub fn canonical(before: &str, after: &str, operation: &str, diff: Option<&str>) {
+    for text in [before, after] {
+        assert_eq!(semio_framework_value::ToValue::to_value(&snapshot(text)), value(text), "a committed snapshot is canonical");
+    }
+    assert_eq!(semio_framework_value::ToValue::to_value(&mutation(operation)), value(operation), "the committed mutation is canonical");
+    if let Some(diff) = diff {
+        let decoded: Fem3dDiff = semio_framework_pack_json::from_json_str(diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed diff decodes");
+        assert_eq!(semio_framework_value::ToValue::to_value(&decoded), value(diff), "the committed diff is canonical");
+    }
+}

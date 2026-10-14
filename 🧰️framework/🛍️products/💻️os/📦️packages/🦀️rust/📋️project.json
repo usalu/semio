@@ -564,15 +564,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-snapshot-receiving-native": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts test-snapshot-receiving-native",
-        "cwd": "{projectRoot}",
-        "forwardAllArgs": true
-      }
-    },
     "test-snapshot-codec-receiving-source": {
       "executor": "repo:script",
       "options": {

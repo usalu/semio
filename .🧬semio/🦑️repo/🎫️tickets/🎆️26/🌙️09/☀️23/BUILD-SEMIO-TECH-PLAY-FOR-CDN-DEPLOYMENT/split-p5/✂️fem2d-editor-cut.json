@@ -1,0 +1,141 @@
+{
+ "artifact": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+ "layers": "🧊️fem2d-editor-layers.json",
+ "crate": "semio_s_artifact_fem_2d",
+ "aggregator": "aggregator",
+ "crates": {
+  "transient": {
+   "package": "semio-s-artifact-fem-2d-editor-transient",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/📦️packages/🦀️rust"
+  },
+  "terminology": {
+   "package": "semio-s-artifact-fem-2d-editor-terminology",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/📦️packages/🦀️rust"
+  },
+  "interaction": {
+   "package": "semio-s-artifact-fem-2d-editor-interaction",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust"
+  },
+  "model-window": {
+   "package": "semio-s-artifact-fem-2d-editor-model-window",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust"
+  },
+  "results-window": {
+   "package": "semio-s-artifact-fem-2d-editor-results-window",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust"
+  },
+  "commands": {
+   "package": "semio-s-artifact-fem-2d-editor-commands",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+  },
+  "session": {
+   "package": "semio-s-artifact-fem-2d-editor-session",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/📦️packages/🦀️rust"
+  },
+  "panels": {
+   "package": "semio-s-artifact-fem-2d-editor-panels",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+  },
+  "editor": {
+   "package": "semio-s-artifact-fem-2d-editor",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "transient": [
+   "//! 🫧️ `s.fem.fem2d` editor transient state: selection, hover and pending gestures.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "terminology": [
+   "//! 🗣️ `s.fem.fem2d` editor terminology: labels, action ids and the play controller identity.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "interaction": [
+   "//! 🕹️ `s.fem.fem2d` editor interaction: canvas geometry, picking, canvas gestures and the gumball.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "model-window": [
+   "//! 🧱️ `s.fem.fem2d` model window: its config and the model canvas scene.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "results-window": [
+   "//! 📊️ `s.fem.fem2d` results window: its config, playback transient and the results canvas scene.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "commands": [
+   "//! 🎮️ `s.fem.fem2d` document commands: add, patch, remove and document settings.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "session": [
+   "//! 🧵️ `s.fem.fem2d` mounted editor session: analysis jobs, live visuals and numerical previews.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "panels": [
+   "//! 📌️ `s.fem.fem2d` editor panels: artifact, inspection and results.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "editor": [
+   "//! ✏️ `s.fem.fem2d` play app editor: the app, its manifest, view commands, options and the edit mode.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ]
+ },
+ "consumers": [
+  "✏️s/🔌️plugins/🏗️fem",
+  "🌎️hub/🧩️compositions/🏗️fem",
+  "✏️s/🔌️plugins/📕️norm"
+ ]
+}

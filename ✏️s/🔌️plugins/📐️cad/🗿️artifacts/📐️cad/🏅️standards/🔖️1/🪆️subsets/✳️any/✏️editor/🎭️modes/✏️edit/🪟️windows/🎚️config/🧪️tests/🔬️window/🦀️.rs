@@ -1,4 +1,16 @@
+extern crate semio_framework_os_kernel as protocol;
 use semio_s_artifact_cad_cad_modes::windows::config::*;
+use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
+use semio_s_artifact_cad_cad_config::{CadConfig, cad_sun_config_to_world};
+use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, cad_runtime_from};
+use crate;
+use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
+use semio_framework_plugin::{ConfigView, Fault, ViewModel};
+use std::collections::HashMap;
+use semio_s_artifact_cad_cad_config::{CadDislocateOptions, CadSunConfig};
+use semio_s_artifact_cad_cad_modes::{windows::building, windows::energy, windows::shape, windows::structure_classic};
+use semio_s_artifact_cad_cad_model::snapshot::CadCamera;
+use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output {

@@ -1,8 +1,11 @@
 //! 🔤 `change-frame-wrap-mode` — sets a `Frame::Text`'s `wrap_mode`. A no-op on non-text frames.
 
-use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagesDelta, LayoutPagesModification, PageFramesDelta, PagePatch};
-use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot};
+
+use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesModification;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,12 +22,12 @@ pub struct ChangeFrameWrapMode {
     pub new_wrap_mode: String,
 }
 
-impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameWrapMode {
+impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeFrameWrapMode where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_frame_wrap_mode::ChangeFrameWrapMode> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-wrap-mode", kind: "change-frame-wrap-mode", record: "ChangedFrameWrapMode" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_change_frame_wrap_mode(self, base)
     }
-    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse_change_frame_wrap_mode(self, base)?
     
@@ -66,7 +69,7 @@ pub fn diff_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutS
 //#endregion 🔤ChangeFrameWrapMode
 
 //#region 🔤ChangeFrameWrapMode
-pub fn inverse_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+pub fn inverse_change_frame_wrap_mode<Op: From<crate::change_frame_wrap_mode::ChangeFrameWrapMode>>(payload: &ChangeFrameWrapMode, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -77,8 +80,14 @@ pub fn inverse_change_frame_wrap_mode(payload: &ChangeFrameWrapMode, base: &Layo
     let Frame::Text { wrap_mode, .. } = frame else {
         return Vec::new();
     };
-    vec![LayoutMutation::ChangeFrameWrapMode(ChangeFrameWrapMode { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_wrap_mode: wrap_mode.clone() })]
+    vec![Op::from(ChangeFrameWrapMode { page_id: payload.page_id.clone(), frame_id: payload.frame_id.clone(), new_wrap_mode: wrap_mode.clone() })]
 
     })())
 }
 //#endregion 🔤ChangeFrameWrapMode
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🔤️switches/🦀️.rs"]
+mod tests_switches_the_text_frame_to_column_wrap;
+//#endregion 🪢️TaxonomyMounts

@@ -5,6 +5,11 @@ resolver = "2"
 members = [
     "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🔣️json/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust",
     "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
@@ -127,6 +132,21 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-exports-rust]
+path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🦀️rust/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-exports-typescript]
+path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🟦️typescript/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-exports-graphql]
+path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-exports-json]
+path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🔣️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-exports-proto]
+path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

@@ -1,5 +1,5 @@
 //! 🧱️ Complete DIN4108 envelope, layer, segment and window cells before typed binding.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -15,4 +15,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,b)in n::list(n::field(root,9)?)?.iter().enumerate(){n::entity(out,"din4108_thermal_bridge",1,index,&n::cells(n::record(b)?,[Text(0),Real(1),Real(2),Text(3)])?,BRIDGE_FLOATS)?;}Ok(())
 }
 /// 🛂️ All seven concrete tables, IEEE physical columns and copied limits are admitted before ownership.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,Din4108Snapshot::SQLITE_SCHEMA,7,25,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,Din4108Snapshot::SQLITE_SCHEMA,7,25,count(root)?,write)}

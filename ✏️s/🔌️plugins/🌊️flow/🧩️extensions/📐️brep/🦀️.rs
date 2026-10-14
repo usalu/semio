@@ -1168,7 +1168,7 @@ impl Operator for ExportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
-            let value = semio_s_artifact_stdio_step::geometry::export_step(kernel, &[geometry]).map_err(|error| map_kernel_error(&error))?;
+            let value = semio_s_artifact_stdio_step_geometry::geometry::export_step(kernel, &[geometry]).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("step", text_dictionary(value)))
         })
     }
@@ -1221,7 +1221,7 @@ impl Operator for ImportStep {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let data = read_text(input, "data")?;
-            let shapes = semio_s_artifact_stdio_step::geometry::import_step(kernel, &data).map_err(|error| map_kernel_error(&error))?;
+            let shapes = semio_s_artifact_stdio_step_geometry::geometry::import_step(kernel, &data).map_err(|error| map_kernel_error(&error))?;
             let handle = shapes.into_iter().next().ok_or_else(|| EvalError::InvalidInput("step import produced no solids".into()))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
@@ -2395,7 +2395,7 @@ pub fn register(registry: &mut Registry, session: &Session) {
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    let session = semio_s_artifact_stdio_step::geometry::session::geometry_session();
+    let session = semio_s_artifact_stdio_step_geometry::geometry::session::geometry_session();
     let registry = neural_engine::ColdOwner::new(module_registry(&session));
     let manifest = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &registry, vec!["onStartup".into()], vec![], vec![], vec![]);
     drop(registry);
@@ -2515,5 +2515,5 @@ use semio_framework_3d_brep_representation::contract::BREP_KERNEL_OPERATIONS;
 fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
 
 fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
-    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
+    if semio_s_artifact_stdio_step_geometry::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step_geometry::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
 }

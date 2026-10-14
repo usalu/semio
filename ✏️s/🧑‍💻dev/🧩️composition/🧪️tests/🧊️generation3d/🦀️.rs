@@ -80,14 +80,31 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_eval_chain_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_3d_preview_eval;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
+use semio_s_artifact_procedural_3d_viewer::*;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_viewer_commands::export_document;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_tick;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example;
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera;
+use semio_s_artifact_procedural_3d_viewer_commands::set_contributions;
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_modes::view;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
@@ -99,14 +116,31 @@ mod laws;
 #[path = "."]
 mod viewer_domain {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_3d_preview_eval;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
+use semio_s_artifact_procedural_3d_viewer::*;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_viewer_commands::export_document;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_tick;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example;
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera;
+use semio_s_artifact_procedural_3d_viewer_commands::set_contributions;
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_modes::view;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
@@ -118,14 +152,31 @@ pub(crate) mod viewer_laws;
 #[path = "."]
 mod viewer_generation3d_status_contract_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_3d_preview_eval;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
+use semio_s_artifact_procedural_3d_viewer::*;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_viewer_commands::export_document;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_tick;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example;
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera;
+use semio_s_artifact_procedural_3d_viewer_commands::set_contributions;
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_modes::view;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
@@ -137,8 +188,8 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_modes_view_windows_preview_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::*;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_preview_eval::self;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
@@ -150,9 +201,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_sun_azimuth_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_azimuth::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧭️set-sun-azimuth/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -161,9 +213,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_sun_elevation_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_elevation::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌄️set-sun-elevation/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -172,9 +225,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_sun_intensity_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_intensity::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔆️set-sun-intensity/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -183,9 +237,11 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_camera_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_camera::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation, Generation3dViewCamera};
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -194,10 +250,11 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_active_example_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_active_example::*;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example::*;
 use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -206,9 +263,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_show_mode_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_show_mode::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -217,9 +275,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_set_lod_mode_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_lod_mode::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -228,9 +287,10 @@ mod laws;
 #[path = "."]
 mod viewer_generation3d_commands_toggle_sun_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::toggle_sun::*;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
-use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun::*;
+use semio_s_artifact_procedural_3d_viewer_config as config;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -239,8 +299,8 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_panels_artifact_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::artifact::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_panels::artifact::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -252,9 +312,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_panels_inspection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::inspection::*;
+use semio_s_artifact_procedural_3d_editor_panels::inspection::*;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_model::widget_id;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -263,9 +323,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_panels_catalogue_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::catalogue::*;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue::*;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -273,20 +333,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_fold_contract_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -298,20 +400,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_interaction_scope_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -323,20 +467,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_generate_interactions_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -348,20 +534,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_example_switch_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -373,20 +601,62 @@ mod laws;
 #[path = "."]
 mod editor_domain {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -398,20 +668,62 @@ pub(crate) mod editor_laws;
 #[path = "."]
 mod editor_generation3d_tick_addressing_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -423,20 +735,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_work_capacity_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -448,20 +802,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_mode_panels_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -473,20 +869,62 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_slider_values_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::{activate_selection, select_downstream_node, select_next_node, select_previous_node, select_upstream_node};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::{
-    add_generation, add_widget, cycle_lod_mode, cycle_show_mode, delete_selection, export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, import_document, import_document_request, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget, rename_generation, reorganize, rotate_selection,
-    scale_selection, select_generation, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun, translate_selection,
-    update_generation_values, set_widget_input,
-};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
+use semio_s_artifact_procedural_3d_editor::*;
+use semio_s_artifact_procedural_3d_navigate_graph::activate_selection;
+use semio_s_artifact_procedural_3d_navigate_graph::select_downstream_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_next_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_previous_node;
+use semio_s_artifact_procedural_3d_navigate_graph::select_upstream_node;
+use semio_s_artifact_procedural_3d_editor_commands::add_generation;
+use semio_s_artifact_procedural_3d_add_widget as add_widget;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+use semio_s_artifact_procedural_3d_export_document as export_document;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_import_document as import_document;
+use semio_s_artifact_procedural_3d_editor_commands::import_document_request;
+use semio_s_artifact_procedural_3d_node_graph_edit as node_graph_edit;
+use semio_s_artifact_procedural_3d_editor_commands::node_graph_viewport;
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets;
+use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
+use semio_s_artifact_procedural_3d_editor_commands::reorganize;
+use semio_s_artifact_procedural_3d_rotate_selection as rotate_selection;
+use semio_s_artifact_procedural_3d_scale_selection as scale_selection;
+use semio_s_artifact_procedural_3d_editor_commands::select_generation;
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example;
+use semio_s_artifact_procedural_3d_editor_commands::set_camera;
+use semio_s_artifact_procedural_3d_set_contributions as set_contributions;
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_editor_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection;
+use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
+use semio_s_artifact_procedural_3d_set_widget_input as set_widget_input;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow as flow_window;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview as edit_preview;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview as generate_preview;
+use semio_s_artifact_procedural_3d_mode_edit as edit;
+use semio_s_artifact_procedural_3d_mode_generate as generate;
+use semio_s_artifact_procedural_3d_editor_panels::catalogue as catalogue_panel;
+use semio_s_artifact_procedural_3d_editor_panels::artifact as artifact_panel;
+use semio_s_artifact_procedural_3d_editor_panels::inspection as inspection_panel;
 use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransient;
+use semio_s_artifact_procedural_3d_editor_transient::Generation3dTransientMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::artifact_kind;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -498,21 +936,21 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_modes_generate_windows_preview_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::preview::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
+use semio_s_artifact_procedural_3d_mode_generate::windows::preview::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::show_mode_measure;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_camera_json;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewPayload;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::generation_by_id;
 use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
@@ -522,9 +960,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_modes_generate_windows_form_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::form::*;
+use semio_s_artifact_procedural_3d_mode_generate::windows::form::*;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -532,8 +970,8 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_modes_generate_windows_generations_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::generations::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_mode_generate::windows::generations::*;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -541,19 +979,19 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_modes_edit_windows_preview_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_camera_json;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -562,14 +1000,14 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_modes_edit_windows_flow_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_mode_edit::windows::flow::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_CHANNEL;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -580,9 +1018,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_eval_tick_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_flow_eval_tick::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs"]
@@ -592,8 +1031,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_scale_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::scale_selection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_scale_selection::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::gumball_widget_json;
@@ -605,8 +1045,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_node_graph_edit_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::node_graph_edit::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_node_graph_edit::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -618,8 +1059,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_set_widget_input_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_widget_input::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_set_widget_input::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::text::Generation3dMutation;
@@ -631,9 +1073,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_tessellate_cancel_resolve_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_tessellate_cancel_resolve::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_cancel_resolve::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🧪️tests/🔬️unit/🦀️.rs"]
@@ -643,10 +1086,11 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_eval_resolve_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_resolve::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️unit/🦀️.rs"]
@@ -656,10 +1100,11 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_eval_resolve_budget_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_resolve::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs"]
@@ -669,8 +1114,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_cycle_lod_mode_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::cycle_lod_mode::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{next_lod_mode, Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode::*;
+use semio_s_artifact_procedural_3d_editor_config::next_lod_mode;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
@@ -680,8 +1127,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_delete_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::delete_selection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_delete_selection::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -693,8 +1141,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_rotate_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::rotate_selection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_rotate_selection::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::gumball_widget_json;
@@ -706,8 +1155,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_remove_widget_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::remove_widget::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::remove_widget::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -719,8 +1169,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_add_widget_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_widget::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_add_widget::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -732,8 +1183,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_set_contributions_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_contributions::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_set_contributions::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs"]
@@ -743,10 +1195,11 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_tessellate_resolve_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_tessellate_resolve::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::flow_tessellate_resolve::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_flow_eval_tick as flow_eval_tick;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🧪️tests/🔬️unit/🦀️.rs"]
@@ -756,8 +1209,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_reorganize_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::reorganize::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::reorganize::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
@@ -769,9 +1223,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_flow_eval_release_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_release::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs"]
@@ -781,8 +1236,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_set_active_example_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_active_example::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_host_snapshot_operations;
 use semio_s_artifact_procedural_3d_io_text::mutations::generation_mutation_to_generation3d;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
@@ -797,8 +1253,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_patch_flow_widgets_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::patch_flow_widgets::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::patch_flow_widgets::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_host_snapshot_operations;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
@@ -810,9 +1267,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_add_generation_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_generation::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::generation::generation_command_result;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::add_generation::*;
+use semio_s_artifact_procedural_3d_editor_commands::generation::generation_command_result;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🧪️tests/🔬️unit/🦀️.rs"]
@@ -822,8 +1280,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_navigate_graph_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_navigate_graph::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs"]
@@ -833,8 +1292,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_set_lod_mode_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_lod_mode::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
@@ -844,8 +1304,11 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_knife_mesh_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::knife_mesh_selection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::{config::{Generation3dConfig, Generation3dConfigMutation}, selection::{component_group, DOMAIN}};
+use semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
+use semio_s_artifact_procedural_3d_editor_selection::component_group;
+use semio_s_artifact_procedural_3d_editor_selection::DOMAIN;
 use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::text::Generation3dMutation;
@@ -857,8 +1320,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_toggle_sun_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::toggle_sun::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::toggle_sun::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs"]
@@ -868,8 +1332,10 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_cycle_show_mode_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::cycle_show_mode::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{next_show_mode, Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode::*;
+use semio_s_artifact_procedural_3d_editor_config::next_show_mode;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🧪️tests/🔬️unit/🦀️.rs"]
@@ -879,8 +1345,9 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_commands_translate_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::translate_selection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::translate_selection::*;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_model::gumball_widget_json;
@@ -892,7 +1359,7 @@ mod laws;
 #[path = "."]
 mod editor_generation3d_selection_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::selection::*;
+use semio_s_artifact_procedural_3d_editor_selection::*;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎯️selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }

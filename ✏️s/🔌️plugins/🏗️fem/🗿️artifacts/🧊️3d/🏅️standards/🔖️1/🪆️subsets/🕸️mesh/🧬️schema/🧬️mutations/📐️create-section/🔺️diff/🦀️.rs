@@ -1,9 +1,12 @@
 //! 🔺️ Sparse diff builder for `CreateSection`.
 use super::CreateSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSectionInsertion, Fem3dSectionsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::{invariant,section_breach};
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSectionInsertion;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSectionsDelta;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::invariant;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::guards::section_breach;
 
-use crate::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSection, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

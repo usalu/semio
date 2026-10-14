@@ -2,7 +2,7 @@
 use super::publication::admit_identity;
 use semio_s_artifact_draw_drawing_model::identity::{DrawingIdentity, DrawingIdentityKind};
 use semio_framework_value::{NativeEncodeControl,ValueError};
-fn text(source:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{let mut bytes=control.allocate_vec(source.len())?;for chunk in source.retained_chunks().iter(){control.step()?;bytes.extend_from_slice(chunk.as_bytes());}Ok(bytes)}
+pub fn text(source:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{let mut bytes=control.allocate_vec(source.len())?;for chunk in source.retained_chunks().iter(){control.step()?;bytes.extend_from_slice(chunk.as_bytes());}Ok(bytes)}
 pub fn layer_identity(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,kind:&str,operation:&semio_framework_plugin::AppOperationContext,control:&mut NativeEncodeControl<'_>)->Result<DrawingIdentity,ValueError>{
  validate_operation(operation)?;let document_bytes=text(&document.id,control)?;let mut ordinal=document.layers.len()as u64;
  loop{control.checkpoint()?;let index=ordinal.to_le_bytes();let operation_id=operation.operation_id.to_le_bytes();let app=operation.app_instance_id.to_le_bytes();let generation=operation.generation.to_le_bytes();let revision=operation.canonical_base_revision.as_slice();

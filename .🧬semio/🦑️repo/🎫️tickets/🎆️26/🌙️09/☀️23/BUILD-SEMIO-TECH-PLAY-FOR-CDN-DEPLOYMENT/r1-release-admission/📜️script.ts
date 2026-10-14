@@ -13,7 +13,7 @@ import { playRuntimeComponentIds } from "../../../../../../../../🏢️semio-te
 /** 🧭️ R1 ticket probes for the release admission (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
  * `legacy <plugin-id>` replays the pre-fix release call shape (no storage, no Source boundary) on a one-component plan;
  * `release <plugin-id>` runs the fixed release route on one component;
- * `census <release|prototype> <out.json>` captures every release pass's unit graph without compiling and measures every repository unit against the policy. */
+ * `batches <budget-MiB> <units.jsonl>` prints the planned hub batches; `census <release|prototype> <out.json>` captures every release pass's unit graph without compiling and measures every repository unit against the policy. */
 const repoRoot = resolve(import.meta.dir, "../../../../../../../..");
 const control = (() => { const controller = new AbortController(), deadline = Date.now() + 2 * 3600_000; return { signal: controller.signal, remainingMilliseconds: () => deadline - Date.now(), publish: () => {}, yieldContinuation: async () => {} }; })();
 
@@ -30,6 +30,25 @@ async function release(pluginId: string, offline: boolean): Promise<void> {
   const pipeline = JSON.parse(require("node:fs").readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release;
   try { const outcome = await buildReleasePipelineV1(repoRoot, pipeline, { components: new Set([pluginId]), network: { offline }, control }); console.log("[DEBUG] release outcome " + JSON.stringify({ staged: outcome.staged, failed: outcome.failed, report: outcome.report })); }
   catch (error) { console.log("[DEBUG] release refused: " + (error instanceof Error ? error.message : String(error)).slice(0, 1500)); }
+}
+
+/** 📦️ Prints the batches the driver would plan for every release pass under `budgetMiB` of free storage: each pass's real unit graph (`--unit-graph`, nothing
+ * compiled, in the issued release compiler store) against the recorded p95 output footprints in `<history>` (a `units.jsonl`), unmeasured units estimated
+ * by kind, the reserve kept free. */
+async function batches(budgetMiB: number, historyPath: string): Promise<void> {
+  const { componentBatchesV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildUnitGraphArgsV1 } = await import("../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts");
+  const { ADMISSION_POLICY_V1, readUnitHistoryV1 } = await import("../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");
+  const { captureOwnedCommandV1 } = await import("../../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+  const { withRepositoryCompilerStoreV1 } = await import("../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts");
+  const history = await readUnitHistoryV1(resolve(historyPath)), plan = componentPassPlanV1(repoRoot, undefined, "release");
+  await withRepositoryCompilerStoreV1(repoRoot, "release", control, { ...process.env, SEMIO_BUILD_MODE: "release" }, async (store) => {
+    for (const pass of plan.passes) {
+      let graph;
+      try { graph = JSON.parse(await captureOwnedCommandV1("cargo", nativeBuildUnitGraphArgsV1(pass), repoRoot, { control, env: store.environment, output: { maximumBytes: 536870912, maximumLines: 1 } })); }
+      catch (error) { console.log(`[DEBUG] ${pass.id} ${relative(repoRoot, pass.manifest)}: no unit graph (${String(error instanceof Error ? error.message : error).split("\n").find((line) => line.startsWith("error")) ?? "failed"})`); continue; }
+      for (const batch of componentBatchesV1(pass, graph, history, budgetMiB * 1024 ** 2 - NATIVE_BUILD_DRIVER_POLICY_V1.storageReserveBytes, { quantile: ADMISSION_POLICY_V1.quantile, bounds: NATIVE_BUILD_DRIVER_POLICY_V1.unitFootprintBoundsBytes })) console.log(`[DEBUG] ${batch.pass.id} ${relative(repoRoot, pass.manifest)}: ${batch.pass.packages.length} component(s), ${(batch.bytes / 1024 ** 2).toFixed(0)} MiB${batch.measured ? "" : " (unmeasured units estimated by kind)"}`);
+    }
+  });
 }
 
 /** 📏️ Measures every repository unit of the workspace and play release closures against the configured Source boundary. */
@@ -72,5 +91,6 @@ async function census(mode: "release" | "prototype", output: string): Promise<vo
 const [command, ...rest] = process.argv.slice(2);
 if (command === "legacy" && rest.length === 1) await legacy(rest[0]!);
 else if (command === "release" && rest.length === 2 && ["offline", "online"].includes(rest[1]!)) await release(rest[0]!, rest[1] === "offline");
+else if (command === "batches" && rest.length === 2 && Number(rest[0]) > 0) await batches(Number(rest[0]), rest[1]!);
 else if (command === "census" && (rest[0] === "release" || rest[0] === "prototype") && rest[1]) await census(rest[0], resolve(rest[1]));
-else throw Error("usage: legacy <plugin-id> | release <plugin-id> <offline|online> | census <release|prototype> <out.json>");
+else throw Error("usage: legacy <plugin-id> | release <plugin-id> <offline|online> | batches <budget-MiB> <units.jsonl> | census <release|prototype> <out.json>");

@@ -1,7 +1,7 @@
 //! 🛍️ Raster play app panel — the layer-kind catalogue.
 
-use crate::editor::raster::terminology::RasterPlayLabels;
-use crate::editor::raster::ui_label;
+use crate::terminology::RasterPlayLabels;
+use crate::ui_label;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LabelText;

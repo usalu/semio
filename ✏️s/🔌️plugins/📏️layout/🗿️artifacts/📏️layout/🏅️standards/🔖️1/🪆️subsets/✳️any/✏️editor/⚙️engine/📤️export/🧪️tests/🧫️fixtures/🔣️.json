@@ -1,0 +1,150 @@
+{
+  "contract": {
+    "version": 1,
+    "sources": {
+      "editor": "../../🦀️.rs",
+      "export": "./🦀️.rs"
+    },
+    "adopter": {
+      "implementation": "ArtifactEditor for LayoutPlayApp",
+      "method": "build_media_export_job",
+      "parameters": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>",
+      "result": "Result<bool,semio_framework_job::OriginalTurnFailure>",
+      "body": "use crate::editor::layout::engine::export::{LayoutMediaExportJob,LAYOUT_MEDIA_EXPORT_TOOL_ID};\n        if request.as_ref().is_some_and(|input|input.port!=\"layout:out\"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,\"layout producer requires its exact registered output port\").into())}\n        LayoutMediaExportJob::admit_original(request,body,cx)"
+    },
+    "producer": {
+      "definition": {
+        "implementation": "LayoutMediaExportJob",
+        "method": "admit_original",
+        "parameters": "request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>",
+        "result": "Result<bool,semio_framework_job::OriginalTurnFailure>"
+      },
+      "phases": [
+        {
+          "id": "source-parent",
+          "source": "let _=cx.original_source_parent()?;"
+        },
+        {
+          "id": "yield-cancellation",
+          "source": "if cx.should_yield()||cx.is_cancelled(){return Ok(false)}"
+        },
+        {
+          "id": "retained-grant",
+          "source": "let grant=cx.retained_grant();"
+        },
+        {
+          "id": "paid-body-birth",
+          "source": "if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(false)}"
+        },
+        {
+          "id": "actual-body",
+          "source": "downcast_mut::<Self>()"
+        },
+        {
+          "id": "authority-reservation",
+          "source": "output.try_reserve_exact(bytes)"
+        },
+        {
+          "id": "authority-copy",
+          "source": "let count=(bytes-output.len()).min(grant.maximum_copy_bytes);"
+        },
+        {
+          "id": "paid-request-donation",
+          "source": "if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}"
+        },
+        {
+          "id": "original-request",
+          "source": "let input=request.take().unwrap();"
+        },
+        {
+          "id": "snapshot-output-custody",
+          "source": "owner.inner=Some(LayoutExportJob::from_admitted(input.operation,input.source_identity,export,input.output_chunks).with_snapshot_close_lease(input.snapshot_close).with_media_output_credit(input.output_credit));"
+        },
+        {
+          "id": "completion-custody",
+          "source": "owner.completion=Some(input.completion);"
+        }
+      ]
+    }
+  },
+  "negativeBindings": [
+    {
+      "id": "foreign-adopter",
+      "source": "editor",
+      "from": "impl ArtifactEditor for LayoutPlayApp",
+      "to": "impl ArtifactEditor for ForeignLayout"
+    },
+    {
+      "id": "foreign-method",
+      "source": "editor",
+      "from": "fn build_media_export_job(",
+      "to": "fn foreign_media_export_job("
+    },
+    {
+      "id": "immutable-request",
+      "source": "editor",
+      "from": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>",
+      "to": "request:&Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>"
+    },
+    {
+      "id": "immutable-body",
+      "source": "editor",
+      "from": "body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>",
+      "to": "body:&Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>"
+    },
+    {
+      "id": "comment-delegate",
+      "source": "editor",
+      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
+      "to": "Ok(false) /* LayoutMediaExportJob::admit_original(request,body,cx) */"
+    },
+    {
+      "id": "literal-delegate",
+      "source": "editor",
+      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
+      "to": "{let _=\"LayoutMediaExportJob::admit_original(request,body,cx)\";Ok(false)}"
+    },
+    {
+      "id": "foreign-delegate",
+      "source": "editor",
+      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
+      "to": "ForeignMediaExportJob::admit_original(request,body,cx)"
+    },
+    {
+      "id": "wrong-context",
+      "source": "editor",
+      "from": "LayoutMediaExportJob::admit_original(request,body,cx)",
+      "to": "LayoutMediaExportJob::admit_original(request,body,foreign_cx)"
+    },
+    {
+      "id": "wrong-port",
+      "source": "editor",
+      "from": "input.port!=\"layout:out\"",
+      "to": "input.port!=\"foreign:out\""
+    },
+    {
+      "id": "foreign-producer",
+      "source": "export",
+      "from": "impl LayoutMediaExportJob{",
+      "to": "impl ForeignMediaExportJob{"
+    },
+    {
+      "id": "comment-producer",
+      "source": "export",
+      "from": " pub fn admit_original(",
+      "to": " // pub fn admit_original("
+    },
+    {
+      "id": "unpaid-request-donation",
+      "source": "export",
+      "from": "if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}",
+      "to": "if false{return Ok(false)}"
+    },
+    {
+      "id": "wrong-snapshot-close",
+      "source": "export",
+      "from": ".with_snapshot_close_lease(input.snapshot_close)",
+      "to": ".with_snapshot_close_lease(foreign_snapshot_close)"
+    }
+  ]
+}

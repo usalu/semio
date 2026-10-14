@@ -1,7 +1,7 @@
 //! 🎨️ Lowpoly play app — the `paint` mode: a two-window layout (Model + UV) for paint-focused editing.
 //! Reuses the edit mode's `model` window kind alongside its own `uv` window (sibling `🪟️windows/🖼️uv/`).
 
-use crate::editor::lowpoly::modes::edit::windows::model;
+use crate::windows::model;
 use crate::editor::lowpoly::modes::paint::windows::uv;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::create_named_layout;

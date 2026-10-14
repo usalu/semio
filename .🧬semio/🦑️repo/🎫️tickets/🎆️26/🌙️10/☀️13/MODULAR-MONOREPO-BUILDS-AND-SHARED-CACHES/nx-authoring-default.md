@@ -1,0 +1,13 @@
+# Authored Nx Cache Default
+
+The repository `nx.json` cacheDirectory now names `.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/nx/artifacts`, inside the authored 16 GiB Rust partition already used by the original Nx storage adapter. The previous ordinary host cache path has been removed from the authored default.
+
+A closed schema and own reader bind this value to the exact canonical finite policy. `withRepositoryNxStorageV1` validates the actual repository config before opening its native backing, then supplies all runtime cache, graph/database, native-loader and temporary paths from the genuine mounted namespace. Missing, ordinary, absolute and parent-relative aliases refuse; they are not compatibility routes.
+
+TDD: the registered nx-bounded prototype gate first failed with the intentionally absent `readAuthoredNxCacheDirectoryV1` export. After implementing the reader and production binder, the actual gate passed eight laws / 72 assertions with strict TypeScript validation. The independent Ajv oracle agrees on six neutral authored-directory cases. This gate also preserves the existing actual bounded compiler-store recovery specimen. Release and the current refreshed SDK / ordinary backend qualification remain separate required checks.
+
+A second actual frozen SDK law exposed the remaining initialization escape: with canonical authored cacheDirectory but no original namespace, Nx previously returned its path (expected refusal true / actual false). The precise Nx cache-directory patch now rejects that authored default unless both fixed-root and cache-directory environment paths exactly match, before native cache construction. Foreign cache environment overrides also refuse. Its current frozen SDK qualification must occur after the refreshed SDK is provisioned; the old SDK red is retained as evidence. The pure authored-directory gate passed prototype and release, eight laws / 72 assertions, including strict TypeScript.
+
+The actual Nx CLI version path avoids cache-directory imports. Bootstrap preserves this `--version` fast path, and retains the original fixed image for help/daemon/reset cache-path consumers; their graph discovery exemptions remain intact. This ensures the new canonical initialization guard does not claim custody merely from an authored path. No destructive reset was executed as validation.
+
+The first normal refreshed SDK provisioning refused the patch's exact post-hunk context: the new hunk incorrectly declared line 32 while the upstream function is at line 27. Bun had applied it by context, but our exact independent post-hunk receipt rejected the offset. The authored hunk was corrected to exact line 27 before retrying; the refusal is retained as evidence rather than counted as a successful SDK publication.

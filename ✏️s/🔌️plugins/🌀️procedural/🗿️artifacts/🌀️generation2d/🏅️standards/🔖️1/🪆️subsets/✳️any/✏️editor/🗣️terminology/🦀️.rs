@@ -1,5 +1,6 @@
 //! 🗣️ Generation2d play app — the single `app_labels!` block plus the locale resolver every taxonomy
 //! node reaches for. Deliberately ONE block for the whole app.
+#![allow(clippy::result_large_err)]
 
 //#region 🔖️Labels
 semio_framework_ui_locale::app_labels! {

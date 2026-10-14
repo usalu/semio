@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::Vdi3805Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
@@ -18,15 +26,15 @@ fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError 
 pub struct Vdi3805ManufacturerFilePatch {
     pub header_version: Option<String>,
     pub manufacturer: Option<String>,
-    pub building_system_number: Option<crate::BuildingSystemNumber>,
+    pub building_system_number: Option<semio_s_artifact_norm_vdi3805_model::BuildingSystemNumber>,
     pub created: Option<String>,
     pub charset: Option<String>,
     pub record_count: Option<u32>,
-    pub extensions: Option<crate::ExtensionBag>,
+    pub extensions: Option<semio_s_artifact_norm_vdi3805_model::ExtensionBag>,
 }
 
 impl Vdi3805ManufacturerFilePatch {
-    fn apply_to_row(&self, row: &mut crate::ManufacturerFile) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_vdi3805_model::ManufacturerFile) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.header_version {
             row.header_version = value.clone();
         }
@@ -75,7 +83,7 @@ impl Vdi3805ManufacturerFilePatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::ManufacturerFile) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_vdi3805_model::ManufacturerFile) -> Self {
         Self {
             header_version: self.header_version.as_ref().map(|_| row.header_version.clone()),
             manufacturer: self.manufacturer.as_ref().map(|_| row.manufacturer.clone()),
@@ -94,12 +102,12 @@ impl Vdi3805ManufacturerFilePatch {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805ProductsPatch {
-    pub title: Option<Vec<crate::document::LocalizedText>>,
-    pub configuration: Option<crate::Configuration>,
+    pub title: Option<Vec<semio_s_plugin_norm_compliance::LocalizedText>>,
+    pub configuration: Option<semio_s_artifact_norm_vdi3805_model::Configuration>,
 }
 
-impl protocol::list_delta::RowPatch<crate::CatalogueProduct> for Vdi3805ProductsPatch {
-    fn commit_into(&self, row: &mut crate::CatalogueProduct, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::CatalogueProduct> for Vdi3805ProductsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_vdi3805_model::CatalogueProduct, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.title {
             row.title = value.clone();
         }
@@ -118,7 +126,7 @@ impl protocol::list_delta::RowPatch<crate::CatalogueProduct> for Vdi3805Products
         }
     }
 
-    fn inverse(&self, row: &crate::CatalogueProduct) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_vdi3805_model::CatalogueProduct) -> Self {
         Self {
             title: self.title.as_ref().map(|_| row.title.clone()),
             configuration: self.configuration.as_ref().map(|_| row.configuration.clone()),
@@ -134,7 +142,7 @@ protocol::list_delta! {
     /// 🔑️ Positional keyed row delta of `catalog.products`; the key of a `crate::CatalogueProduct` row is `identity.article_number`.
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
-    pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: crate::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<crate::CatalogueProduct>, key: String = |row| row.identity.article_number.clone() }
+    pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: semio_s_artifact_norm_vdi3805_model::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<semio_s_artifact_norm_vdi3805_model::CatalogueProduct>, key: String = |row| row.identity.article_number.clone() }
 }
 
 /// 🔑️ A `edition_profile` entry: its map key and value.
@@ -144,7 +152,7 @@ protocol::list_delta! {
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805EditionProfileEntry {
     pub key: String,
-    pub value: crate::EditionProfileChoice,
+    pub value: semio_s_artifact_norm_vdi3805_model::EditionProfileChoice,
 }
 
 /// 🔺️ Keyed diff of the `edition_profile` map: added entries, removed keys and modified values.
@@ -163,7 +171,7 @@ impl Vdi3805EditionProfileRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::EditionProfileChoice>) -> Result<std::collections::BTreeMap<String, crate::EditionProfileChoice>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
@@ -203,7 +211,7 @@ impl Vdi3805EditionProfileRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, crate::EditionProfileChoice>) -> Self {
+    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805EditionProfileEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -225,8 +233,8 @@ pub struct Vdi3805GeometryConnectionsPatch {
     pub diameter_mm: Option<Vdi3805GeometryConnectionsPatchDiameterMmValue>,
 }
 
-impl protocol::list_delta::RowPatch<crate::ConnectionPoint> for Vdi3805GeometryConnectionsPatch {
-    fn commit_into(&self, row: &mut crate::ConnectionPoint, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::ConnectionPoint> for Vdi3805GeometryConnectionsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_vdi3805_model::ConnectionPoint, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.medium {
             row.medium = value.clone();
         }
@@ -257,7 +265,7 @@ impl protocol::list_delta::RowPatch<crate::ConnectionPoint> for Vdi3805GeometryC
         }
     }
 
-    fn inverse(&self, row: &crate::ConnectionPoint) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_vdi3805_model::ConnectionPoint) -> Self {
         Self {
             medium: self.medium.as_ref().map(|_| row.medium.clone()),
             position: self.position.as_ref().map(|_| row.position.clone()),
@@ -275,7 +283,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `connections` list (rows keyed by `id`).
-    pub Vdi3805GeometryConnectionsRows { removal: Vdi3805GeometryConnectionsRemoved, insertion: Vdi3805GeometryConnectionsInserted, relocation: Vdi3805GeometryConnectionsMoved, modification: Vdi3805GeometryConnectionsModified, row: crate::ConnectionPoint, patch: Vdi3805GeometryConnectionsPatch, key: id }
+    pub Vdi3805GeometryConnectionsRows { removal: Vdi3805GeometryConnectionsRemoved, insertion: Vdi3805GeometryConnectionsInserted, relocation: Vdi3805GeometryConnectionsMoved, modification: Vdi3805GeometryConnectionsModified, row: semio_s_artifact_norm_vdi3805_model::ConnectionPoint, patch: Vdi3805GeometryConnectionsPatch, key: id }
 }
 
 /// 🔑️ A `geometry` entry: its map key and value.
@@ -285,7 +293,7 @@ protocol::list_delta! {
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805GeometryEntry {
     pub key: String,
-    pub value: crate::ParametricGeometry,
+    pub value: semio_s_artifact_norm_vdi3805_model::ParametricGeometry,
 }
 
 /// 🩹️ Sparse patch of the `geometry` entry addressed by `key`.
@@ -295,13 +303,13 @@ pub struct Vdi3805GeometryEntry {
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805GeometryPatch {
     pub key: String,
-    pub bbox: Option<crate::BoundingBox>,
+    pub bbox: Option<semio_s_artifact_norm_vdi3805_model::BoundingBox>,
     pub parameters: Option<std::collections::BTreeMap<String, f64>>,
     pub connections: Option<Vdi3805GeometryConnectionsRows>,
 }
 
 impl Vdi3805GeometryPatch {
-    fn apply_to_row(&self, row: &mut crate::ParametricGeometry, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_vdi3805_model::ParametricGeometry, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.bbox {
             row.bbox = value.clone();
         }
@@ -330,7 +338,7 @@ impl Vdi3805GeometryPatch {
         self.connections = self.connections.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse_from_row(&self, row: &crate::ParametricGeometry) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_vdi3805_model::ParametricGeometry) -> Self {
         Self {
             key: self.key.clone(),
             bbox: self.bbox.as_ref().map(|_| row.bbox.clone()),
@@ -356,7 +364,7 @@ impl Vdi3805GeometryRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::ParametricGeometry>, capability: protocol::ApplyCapability) -> Result<std::collections::BTreeMap<String, crate::ParametricGeometry>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, capability: protocol::ApplyCapability) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
@@ -395,7 +403,7 @@ impl Vdi3805GeometryRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, crate::ParametricGeometry>) -> Self {
+    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805GeometryEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -412,7 +420,7 @@ impl Vdi3805GeometryRows {
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805CurvesEntry {
     pub key: String,
-    pub value: crate::CharacteristicCurve,
+    pub value: semio_s_artifact_norm_vdi3805_model::CharacteristicCurve,
 }
 
 /// 🩹️ Sparse patch of the `curves` entry addressed by `key`.
@@ -422,11 +430,11 @@ pub struct Vdi3805CurvesEntry {
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805CurvesPatch {
     pub key: String,
-    pub points: Option<Vec<crate::CurvePoint>>,
+    pub points: Option<Vec<semio_s_artifact_norm_vdi3805_model::CurvePoint>>,
 }
 
 impl Vdi3805CurvesPatch {
-    fn apply_to_row(&self, row: &mut crate::CharacteristicCurve) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_vdi3805_model::CharacteristicCurve) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.points {
             row.points = value.clone();
         }
@@ -439,7 +447,7 @@ impl Vdi3805CurvesPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::CharacteristicCurve) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_vdi3805_model::CharacteristicCurve) -> Self {
         Self {
             key: self.key.clone(),
             points: self.points.as_ref().map(|_| row.points.clone()),
@@ -463,7 +471,7 @@ impl Vdi3805CurvesRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::CharacteristicCurve>) -> Result<std::collections::BTreeMap<String, crate::CharacteristicCurve>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
@@ -505,7 +513,7 @@ impl Vdi3805CurvesRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, crate::CharacteristicCurve>) -> Self {
+    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805CurvesEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -528,7 +536,7 @@ pub struct Vdi3805LimitsPatch {
 }
 
 impl Vdi3805LimitsPatch {
-    fn apply_to_row(&self, row: &mut crate::SecurityLimits) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_vdi3805_model::SecurityLimits) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.max_file_bytes {
             row.max_file_bytes = value.clone();
         }
@@ -559,7 +567,7 @@ impl Vdi3805LimitsPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::SecurityLimits) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_vdi3805_model::SecurityLimits) -> Self {
         Self {
             max_file_bytes: self.max_file_bytes.as_ref().map(|_| row.max_file_bytes.clone()),
             max_records: self.max_records.as_ref().map(|_| row.max_records.clone()),
@@ -590,11 +598,11 @@ pub struct Vdi3805Diff {
     #[state(artifact)]
     pub products: Option<Vdi3805ProductsRows>,
     #[state(artifact)]
-    pub catalog_extensions: Option<crate::ExtensionBag>,
+    pub catalog_extensions: Option<semio_s_artifact_norm_vdi3805_model::ExtensionBag>,
     #[state(artifact)]
     pub edition_profile: Option<Vdi3805EditionProfileRows>,
     #[state(artifact)]
-    pub correction_as_of: Option<crate::EditionId>,
+    pub correction_as_of: Option<semio_s_artifact_norm_vdi3805_model::EditionId>,
     #[state(artifact)]
     pub strict_mode: Option<bool>,
     #[state(artifact)]
@@ -636,7 +644,7 @@ impl protocol::MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             patch.apply_to_row(&mut next.limits).map_err(|error| error.under(["limits"]))?;
         }
         if self.products.is_some() {
-            next.index = crate::CatalogIndex::from_catalog(&next.catalog);
+            next.index = semio_s_artifact_norm_vdi3805_model::CatalogIndex::from_catalog(&next.catalog);
         }
         Ok(next)
     }
@@ -714,6 +722,7 @@ impl protocol::DiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

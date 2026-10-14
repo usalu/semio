@@ -16,7 +16,7 @@ const dashboard = resolve(import.meta.dir, "../..");
 const repo = resolve(dashboard, "../../../../..");
 
 function binary(): string {
-  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo,readBuildMode(process.env.SEMIO_BUILD_MODE));
+  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo,readBuildMode(process.env.SEMIO_BUILD_MODE),repo);
 }
 
 let root = "";

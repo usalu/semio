@@ -1,0 +1,6 @@
+{
+  "mutation": "renameRegisterRow",
+  "register": "stakeholder",
+  "id": "stakeholder-a",
+  "newName": "Renamed Stakeholder A"
+}

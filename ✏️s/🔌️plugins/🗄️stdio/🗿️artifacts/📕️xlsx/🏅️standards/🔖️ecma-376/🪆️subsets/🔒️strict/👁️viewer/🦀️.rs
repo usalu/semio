@@ -8,7 +8,9 @@
 
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::modes::view;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::strict::modes::view::windows::main;
-use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -71,7 +73,7 @@ impl ArtifactViewer for XlsxStrictViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> XlsxSnapshot {
-        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
+        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

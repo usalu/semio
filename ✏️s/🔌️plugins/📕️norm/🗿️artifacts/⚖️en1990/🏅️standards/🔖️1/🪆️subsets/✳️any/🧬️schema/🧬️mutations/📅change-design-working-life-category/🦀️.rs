@@ -1,6 +1,6 @@
 //! `change-design-working-life-category` mutation for EN 1990.
 
-use crate::{En1990Mutation, En1990Snapshot};
+use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +13,7 @@ pub struct ChangeDesignWorkingLifeCategory {
     pub new_design_working_life_category: u8,
 }
 
-impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeDesignWorkingLifeCategory {
+impl<Op> protocol::MutationKind<En1990Snapshot, Op> for ChangeDesignWorkingLifeCategory where Op: protocol::Mutation<En1990Snapshot, Diff = semio_s_artifact_norm_en1990_diff::En1990Diff> + From<crate::change_design_working_life_category::ChangeDesignWorkingLifeCategory> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "design-working-life-category",
@@ -21,12 +21,12 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeDesignWork
         record: "ChangedDesignWorkingLifeCategory",
     };
 
-    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1990Snapshot>>::Diff> {
+        crate::change_design_working_life_category::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<En1990Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1990Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_design_working_life_category::inverse::inverse(self, base)?
     
     })
 }
@@ -35,3 +35,10 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeDesignWork
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

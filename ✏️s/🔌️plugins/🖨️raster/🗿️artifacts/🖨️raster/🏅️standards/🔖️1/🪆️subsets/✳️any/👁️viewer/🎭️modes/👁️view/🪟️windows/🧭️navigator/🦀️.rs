@@ -6,8 +6,8 @@
 //! for the actual pixel payload, under its own distinct window kind id (`ImageWindowKit::window_kind()`
 //! is reserved for the Composite window — reusing it verbatim here would collide on id/body_key).
 
-use crate::viewer::raster::modes::view::windows::composite;
-use crate::RasterSnapshot;
+use crate::modes::view::windows::composite;
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_plugin::app::{ImageWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

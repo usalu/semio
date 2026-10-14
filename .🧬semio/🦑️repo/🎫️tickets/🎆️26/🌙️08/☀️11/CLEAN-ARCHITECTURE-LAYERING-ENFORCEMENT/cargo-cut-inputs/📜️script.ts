@@ -1,0 +1,39 @@
+import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
+import {resolve,join,relative} from "node:path";
+import {pathToFileURL} from "node:url";
+import {createHash} from "node:crypto";
+import {setImmediate} from "node:timers/promises";
+import assert from "node:assert/strict";
+import ts from "typescript";
+
+const label=process.argv[2];if(!label||!/^[-a-z0-9]+$/u.test(label))throw Error("Explicit fresh pure Source output label required");
+const root=process.cwd(),ticket=resolve(import.meta.dir,".."),output=join(ticket,"🗑️generated",label),library="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",actor="🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",inferencePath=library+"/🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+const load=(path:string)=>import(pathToFileURL(resolve(root,path)).href),hash=(path:string)=>createHash("sha256").update(readFileSync(resolve(root,path))).digest("hex"),source=readFileSync(inferencePath,"utf8");
+const project=JSON.parse(readFileSync(join(actor,"📋️project.json"),"utf8")),{declaredNativeOwnerCommandV1,bindBuildCommandV1}=await load(library+"/🏗️build/📤️arguments/🟨️.mjs"),{issueBuildTaskEnvironmentV1}=await load(library+"/🏗️build/📥️caller/🟦️.ts"),{canonicalArchitectureEnvironment}=await load(library+"/⚡️caching/🦀️cargo/🌿️environment/🟦️.ts"),{requireRepositoryCargoExecutionV1}=await load(library+"/🏃️process/🦀️cargo/🏃️execution/🟦️.ts"),{parseCommandArgumentsV1,resolveCommandConfigurationV1}=await load("🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/⚙️configuration/🟦️.ts");
+const actorSource=readFileSync(join(actor,"📜️script.ts"),"utf8"),actorParsed=ts.createSourceFile(actor+"/📜️script.ts",actorSource,ts.ScriptTarget.Latest,true),requests:string[]=[];
+const requestsVisit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="executeCargoRequestV1"&&node.arguments[0])requests.push(node.arguments[0].getText(actorParsed));ts.forEachChild(node,requestsVisit);};requestsVisit(actorParsed);assert.equal(requests.length,3);
+const started=performance.now(),controller=new AbortController(),control={signal:controller.signal,remainingMilliseconds:()=>60000-(performance.now()-started),async publish(){},async yieldContinuation(){await setImmediate();}},environment=canonicalArchitectureEnvironment(root,{SEMIO_BUILD_MODE:"prototype",CARGO_NET_OFFLINE:"true"}),transport={maximumBytes:134217728,maximumLines:1000000},rows:unknown[]=[];
+const targets=["test-original-owned-async-native","test-original-context-native","test-original-receiving-native"];
+for(const target of targets){
+  const options=project.targets[target].options,bound=bindBuildCommandV1(options.command,root,options.cwd,actor).command,nativeOwnerCommand=declaredNativeOwnerCommandV1(actor+"/Cargo.toml",options.cwd,bound),args=["repo","run",project.name+":"+target,"--configuration=prototype"],capabilities={tool:"nx",workspaceRoot:root,arguments:args,selection:args,buildMode:"prototype",native:{artifactDirectory:environment.CARGO_TARGET_DIR,transport,child:{maximumElapsedMilliseconds:60000},network:{offline:true}},launches:[args]},invocation={policy:{version:1,owner:"cargo-cut-pure-production-ports",maximumElapsedMilliseconds:60000},capabilities,control},before=JSON.stringify(invocation.capabilities);
+  const issued=issueBuildTaskEnvironmentV1(root,invocation,{kind:"command",nativeOwnerCommand,ownerArguments:true},[],environment),wire=JSON.parse(issued.SEMIO_SCRIPT_PROCESS_INVOCATION),selected={...invocation,capabilities:wire.capabilities};
+  assert.equal(JSON.stringify(invocation.capabilities),before);assert.deepEqual(wire.capabilities.command,nativeOwnerCommand);assert.deepEqual(wire.capabilities.transport,transport);assert.deepEqual(wire.capabilities.network,{offline:true});assert.deepEqual(wire.policy,invocation.policy);assert(wire.deadlineEpochMilliseconds<=Date.now()+60000);
+  const backend=requireRepositoryCargoExecutionV1(root,wire.capabilities.cargoExecutionBackend.request,selected);assert(backend);assert.equal(backend.sources.length,2);
+  const authored=requests.map(expression=>new Function("relative","resolve","segments",`return function(){return (${expression});}.call({repoRoot:${JSON.stringify(root)},root:${JSON.stringify(resolve(root,actor))}});`)(relative,resolve,backend.request.kind==="tests"?backend.request.arguments:[]));assert(authored.some(request=>JSON.stringify(request)===JSON.stringify(backend.request)),"Actor code-authored request differs from selected declaration");
+  let nested:unknown;
+  if(target==="test-original-receiving-native"){
+    const commandIndex=nativeOwnerCommand.arguments.indexOf("command"),selection=parseCommandArgumentsV1(nativeOwnerCommand.arguments.slice(commandIndex+1)),configuration=resolve(root,options.cwd,selection.configuration),{repositoryCargoTestPolicyV1}=await load(library+"/🏃️process/🦀️cargo/🔣️policy/🟦️.ts"),policy=repositoryCargoTestPolicyV1(resolve(root,actor,"Cargo.toml"),resolve(root,options.cwd),issued),plan=resolveCommandConfigurationV1({...selection,configuration},{...issued,SEMIO_CARGO_TEST_POLICY:JSON.stringify(policy)},selected);
+    assert.equal(plan.environment.CARGO_TARGET_DIR,issued.CARGO_TARGET_DIR);assert.equal(plan.environment.CARGO_BUILD_BUILD_DIR,issued.CARGO_BUILD_BUILD_DIR);assert.equal(plan.environment.SEMIO_CARGO_TEST_POLICY,JSON.stringify(policy));assert.equal(plan.policy.cargoArtifactPolicy,null);assert.deepEqual(plan.request.args,backend.continuation.arguments);assert.equal(plan.request.command,backend.continuation.program);assert.equal(plan.request.cwd,backend.continuation.cwd);assert.equal(backend.request.arguments[0],"long");nested={request:plan.request,policy:plan.policy.cargoPolicies[0],originalCargoTargetRetained:true};
+  }
+  rows.push({target,nativeOwnerCommand,backend,nested});
+}
+const inference=await load(inferencePath),context={workspaceRoot:root,invocation:{policy:{version:1,owner:"cargo-cut-pure-source-observation",maximumElapsedMilliseconds:60000},capabilities:{},control}},scripts=inference.createScriptInputCache(context),closures:unknown[]=[],files=new Set<string>();
+for(const [index,target] of targets.entries()){
+ const row=rows[index] as {nativeOwnerCommand:unknown},original=project.targets[target],effective={...original,options:{...original.options,nativeOwnerCommand:row.nativeOwnerCommand}},sources=await inference.cacheInternals.targetScriptSources(effective,root,scripts,actor,actor+"/Cargo.toml"),native=await inference.cacheInternals.nativeTargetCommandInputs(effective,root,undefined,scripts,actor);
+ assert(sources.closure);for(const input of [...sources.closure,...native])if(typeof input==="string"&&input.startsWith("{workspaceRoot}/"))files.add(input.slice("{workspaceRoot}/".length));closures.push({target,sources,native});
+}
+const required=[actor+"/📜️script.ts",actor+"/🧪️execution/🔣️.json",library+"/🏃️process/🦀️cargo/🏃️execution/🟦️.ts",library+"/🏃️process/🦀️cargo/🏃️execution/📜️script.ts"];
+for(const path of required)assert(files.has(path),"Actual selected Source misses "+path);
+const admission={files:[...files].sort(),closures};
+assert.equal(hash(inferencePath),createHash("sha256").update(source).digest("hex"));
+mkdirSync(output,{recursive:true});const result={scope:"Read-only production ports and selected Source observation; unissued pure fixture, no registered/native/Store/factory execution",elapsedMilliseconds:performance.now()-started,normalizerSource:{path:inferencePath,sha256:hash(inferencePath)},rows,admission,requiredSource:required.map(path=>({path,sha256:hash(path)}))};writeFileSync(join(output,"current-actor-ports.json"),JSON.stringify(result,null,2)+"\n",{flag:"wx"});console.log("[DEBUG] Pure actual Actor native ports "+JSON.stringify({routes:rows.length,files:admission.files.length,requiredSource:required.length,elapsedMilliseconds:result.elapsedMilliseconds}));

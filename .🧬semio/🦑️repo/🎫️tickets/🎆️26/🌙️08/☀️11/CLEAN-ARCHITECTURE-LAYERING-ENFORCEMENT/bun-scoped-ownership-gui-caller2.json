@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🦑️repo 🗂️Bun workspace ownership",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run repo:test-workspace-ownership",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "🧹clean🛡️gates",
+      "order": 900.057071
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:workspace-ownership:caller\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "ccc5bafe5e5ac21bc25392344c9898d6a9571776d8811d85dd89b20860ba628a",
+  "changedLeaseSourceSha256": "3badd5f53dfcee73bfbb3637f37bf971b68ef3154e107a0b56c8782f8dcc1b70",
+  "reason": "Current defining initializer now preserves the primary SQLite error on failed rollback; prior GUI1 did not collect assertions",
+  "outputRedirect": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/bso-gui2"
+  },
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1"
+}

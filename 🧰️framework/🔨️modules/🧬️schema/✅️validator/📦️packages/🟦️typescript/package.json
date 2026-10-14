@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test-shape": "bun repo run @semio-tech/schema-validator-ts:test-shape"
+    "test-shape": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-validator-ts:test-shape"
   },
   "exports": {
     ".": "./🟦️.ts"

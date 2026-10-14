@@ -3,7 +3,7 @@
 use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapsesDelta;
 use crate::disconnect_synapse::DisconnectSynapse;
-use crate::synapse_index;
+use semio_s_artifact_procedural_3d_model::synapse_index;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta severing one synapse edge by id.

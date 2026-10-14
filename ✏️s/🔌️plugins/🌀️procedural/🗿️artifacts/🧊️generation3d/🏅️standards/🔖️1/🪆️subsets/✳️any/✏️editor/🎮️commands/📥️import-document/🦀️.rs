@@ -20,9 +20,11 @@
 //!
 //! @see ../../../🚪️io/🦀️.rs — `document_io::import_document_bytes`, the composition point this calls.
 //! @see ../🎨️set/🦀️.rs — the same whole-document replacement, from a bundled example.
+#![allow(clippy::result_large_err)]
 
-use crate::editor::generation3d::commands::set_active_example::config_load_mutations;
-use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
+use semio_s_artifact_procedural_3d_editor_commands::set_active_example::config_load_mutations;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
+use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_io::document_io;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
@@ -32,13 +34,19 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, F
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📏️Bounds
+/// 🎒️ Real bound for one Artifact-lane edit: the 8 built-in example DSLs top out around 1.6 KB of text
+/// (`📚️examples/*/🖼️assets/*/🗣️.dsl.semio`), and `setActiveExample`'s full-fixture replacement is the
+/// single largest Artifact mutation any of the 27 tools ever emits — 64 KiB stays a real ceiling, not a
+/// rubber stamp, for every example plus ordinary interactive graph edits.
+pub const GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+
 /// 📏️ Largest payload ONE import may carry.
 ///
 /// 🧾️ Derived, never a literal: an imported file is planted in the graph as an `InputNote`'s text
 /// (`mesh_bridge::import_document`), so the whole payload has to fit ONE Artifact-lane edit —
 /// `GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES`. A payload past it is refused by name before anything
 /// is decoded, rather than by the store after the graph was rebuilt.
-pub const GENERATION3D_IMPORT_TOTAL_BYTES: usize = crate::editor::generation3d::GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES;
+pub const GENERATION3D_IMPORT_TOTAL_BYTES: usize = GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES;
 
 /// 🏷️ The stable code of the one size refusal (`🧫️fixtures/🚪️io/🗿️artifact-surface.json` `faultCodes.capacity`).
 pub const GENERATION3D_IMPORT_CAPACITY_CODE: &str = "generation3d-import-capacity";
@@ -75,9 +83,9 @@ pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapsho
     match (&payload.widget_id, &payload.channel, &payload.texture_id) {
         (None, None, None) => apply_complete_payload(&payload.name, &payload.payload, doc, cfg),
         (Some(widget), Some(channel), Some(texture)) => {
-            let (id, channel, text) = super::set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
-            let edited = super::set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
-            let artifact_mutations = if edited == text { Vec::new() } else { vec![semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input(&id, &channel, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue::Text(edited))] };
+            let (id, channel, text) = semio_s_artifact_procedural_3d_set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
+            let edited = semio_s_artifact_procedural_3d_set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
+            let artifact_mutations = if edited == text { Vec::new() } else { vec![semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::change_widget_input(&id, &channel, semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue::Text(edited))] };
             Ok(Emit { artifact_mutations, ..Default::default() })
         }
         _ => Err(Fault::from("Choose a complete texture target")),
@@ -98,7 +106,7 @@ pub fn apply_complete_payload(
     cfg: &ConfigView<'_, Generation3dConfig>,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let imported = document_io::import_document(name, payload).map_err(|error| import_fault("generation3d.io.import", error.to_string()))?;
-    let effect = crate::editor::generation3d::reset_generation3d_document_effect(&imported);
+    let effect = semio_s_artifact_procedural_3d_editor_commands::set_active_example::reset_generation3d_document_effect(&imported);
     let config_mutations = config_load_mutations(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
     Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })

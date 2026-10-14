@@ -75,7 +75,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let initial = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
-    let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
+    let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.

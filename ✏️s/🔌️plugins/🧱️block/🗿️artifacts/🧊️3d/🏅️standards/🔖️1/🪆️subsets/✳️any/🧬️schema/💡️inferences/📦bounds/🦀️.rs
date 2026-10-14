@@ -4,7 +4,7 @@
 //! a plain whole-snapshot derivation, not a per-entity `InferredField` chain: every vortex
 //! contributes independently to one aggregate box, there is nothing to invalidate incrementally.
 
-use crate::Block3dSnapshot;
+use semio_s_artifact_block_3d_model::Block3dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the object kind's local space.

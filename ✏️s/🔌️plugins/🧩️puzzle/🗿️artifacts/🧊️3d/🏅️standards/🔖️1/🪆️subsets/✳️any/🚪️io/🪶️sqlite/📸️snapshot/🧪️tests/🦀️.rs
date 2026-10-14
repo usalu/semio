@@ -1,14 +1,12 @@
 //! 🧊️ Exact Native capability and controlled Scale laws precede semantic owner mounting.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::Puzzle3dSnapshot;
-use crate::*;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_model::*;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
 fn words() -> Vec<u64> {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("committed test data reads").as_str()).unwrap();
     corpus["binary64Bits"].as_array().unwrap().iter().map(|v| u64::from_str_radix(v.as_str().unwrap(), 16).unwrap()).collect()
 }
 fn specimen(word: u64) -> Puzzle3dSnapshot {
@@ -114,8 +112,8 @@ fn sqlite_snapshot_puzzle3d_play_text_preserves_the_actual_typed_snapshot() {
 fn sqlite_snapshot_puzzle3d_declared_json_preserves_every_word() {
     for word in words() {
         let s = specimen(word);
-        let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&s).unwrap();
-        let out = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).unwrap();
+        let bytes = semio_s_artifact_puzzle_3d_io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&s).unwrap();
+        let out = semio_s_artifact_puzzle_3d_io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).unwrap();
         assert_eq!(out.print_dsl(), s.print_dsl());
     }
 }
@@ -142,7 +140,7 @@ fn sqlite_snapshot_puzzle3d_controlled_scale_has_real_metadata_and_both_variants
 
 fn independent_puzzle3_edit(bytes: &[u8], edit: &str) -> Vec<u8> {
     use std::io::Write;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("committed test data reads").as_str()).unwrap();
     let script = r#"import{Database}from'bun:sqlite';const db=Database.deserialize(await Bun.stdin.bytes());if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('SQLite integrity');const counts=JSON.parse(process.argv[1]);for(const[name,count]of Object.entries(counts)){if(db.query('SELECT count(*) AS n FROM '+name).get().n!==count)throw Error(name+' count');}db.exec(process.argv[2]);process.stdout.write(db.serialize());"#;
     let mut child =
         std::process::Command::new("bun").args(["--eval", script, &corpus["nativeTableRowCounts"].to_string(), edit]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn().unwrap();
@@ -180,7 +178,7 @@ fn sqlite_snapshot_puzzle3d_independently_edited_malformed_graphs_are_rejected()
     let mut control = SqliteSnapshotControl::new(&mut cb, SqliteDatabaseLimits::default());
     let database = specimen(0).to_sqlite_database(&mut control).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("committed test data reads").as_str()).unwrap();
     for edit in corpus["nativeMalformedSql"].as_array().unwrap() {
         let file = independent_puzzle3_edit(&bytes, edit.as_str().unwrap());
         match import_sqlite_database(&file, SqliteDatabaseLimits::default(), &mut |_| true) {
@@ -255,15 +253,15 @@ fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
 }
 
 mod populated_public_owner {
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use super::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
-pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::puzzle3d::session::Puzzle3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),}
+pub enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>>),}
 }
 struct PublicOwned(Option<Puzzle3dSnapshot>);impl PublicOwned{fn new(value:Puzzle3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Puzzle3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Puzzle3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Puzzle3dSnapshot,b:&Puzzle3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
-fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
+fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};
@@ -277,14 +275,14 @@ use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism
 register();let dialect=ArtifactDialect{artifact_kind:"s.puzzle.puzzle3d".into(),standard:"1".into(),subset:"*".into()};
 for word in words(){let expected=PublicOwned::new(specimen(word));for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect;let original_file_input=expected.get();let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;
 let script=r#"import{Database}from'bun:sqlite';const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==24n)throw Error('table census');const c=JSON.parse(process.argv[2]);for(const[name,count]of Object.entries(c.nativeTableRowCounts))if(d.query('SELECT COUNT(*) AS n FROM '+name).get().n!==BigInt(count))throw Error(name);const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');if(m.artifact_kind!=='s.puzzle.puzzle3d'||m.standard!=='1'||m.subset!=='*'||m.native_encoding!==process.argv[1])throw Error('metadata');d.query('UPDATE puzzle3_document SET domain=? WHERE id=1').run('independent 日本\u0000');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
-let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=PublicOwned::new(async{let original_file_dialect=&dialect;let original_file_input=&out.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Puzzle3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=specimen(word);literal.domain="independent 日本\0".into();let literal=PublicOwned::new(literal);exact(actual.get(),literal.get());assert_eq!((actual.get()).encode_pack(),(literal.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(literal.get()).print_dsl());}}
+let mut child=Command::new("bun").args(["--eval",script,encoding.as_str(),&(serde_json::from_str::<serde_json::Value>(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("committed test data reads").as_str()).unwrap()).to_string()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let out=child.wait_with_output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let actual=PublicOwned::new(async{let original_file_dialect=&dialect;let original_file_input=&out.stdout;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<Puzzle3dSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value);let mut literal=specimen(word);literal.domain="independent 日本\0".into();let literal=PublicOwned::new(literal);exact(actual.get(),literal.get());assert_eq!((actual.get()).encode_pack(),(literal.get()).encode_pack());assert_eq!((actual.get()).print_dsl(),(literal.get()).print_dsl());}}
 eprintln!("[DEBUG] puzzle3d independent public SQL edit complete owner and retirement");
 }
 }
 
 #[test]
 fn sqlite_snapshot_puzzle3d_borrowed_scale_matches_neutral_list_shape() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("committed test data reads").as_str()).unwrap();
     assert_eq!(corpus["scaleDsl"]["shape"], "list");
     assert_eq!(corpus["scaleDsl"]["item"], "float");
     let semio_framework_dsl_record::BorrowedShape::List(item) = <Puzzle3dScale as semio_framework_dsl_record::BorrowedDslField>::SHAPE else { panic!("Scale metadata lost its self-delimiting list") };

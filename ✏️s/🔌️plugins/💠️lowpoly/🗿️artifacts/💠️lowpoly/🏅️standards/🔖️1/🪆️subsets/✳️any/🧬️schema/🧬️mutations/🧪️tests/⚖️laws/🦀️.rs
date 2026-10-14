@@ -1,13 +1,15 @@
 //! ⚖️ The laws every committed quintet of a single-row-inverse lowpoly leaf holds (`apply-paint-stroke`, the three selection motions and `set-vertex-positions`), written once and called by each scenario's `🧪️tests/<case>/🦀️.rs`.
 
-use crate::{LowpolyDiff, LowpolyMutation, LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff;
+use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 
 fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
-    crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
+    semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
 }
 
 fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
-    serde_json::from_str(&crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
+    serde_json::from_str(&semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
 }
 
 fn produced(mutation: &LowpolyMutation, before: &LowpolySnapshot) -> Vec<(String, String)> {

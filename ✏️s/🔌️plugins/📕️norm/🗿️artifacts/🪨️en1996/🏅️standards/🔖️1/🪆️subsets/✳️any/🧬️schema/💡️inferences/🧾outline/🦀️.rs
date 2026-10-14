@@ -1,6 +1,6 @@
 //! 🧾 Document outline for EN 1996 masonry building.
 
-use crate::En1996Snapshot;
+use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 const SECTION_FIELDS: &[&str] = &["annex", "masonryClass", "designSituation", "storeys", "walls"];
 

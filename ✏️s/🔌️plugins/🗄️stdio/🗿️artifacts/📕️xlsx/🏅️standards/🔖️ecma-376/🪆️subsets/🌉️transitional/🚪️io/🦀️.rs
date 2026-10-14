@@ -5,8 +5,8 @@
 //! `🧱️base/🚪️io` and `🔒️strict/🚪️io` already established for this artifact family.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-    use crate::standards::v_ecma_376::subsets::base::io::XlsxComposer as XlsxAnyComposer;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxComposer as XlsxAnyComposer;
     use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -95,9 +95,11 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use crate::standards::v_ecma_376::subsets::transitional::schema::{check_transitional_conformance, stamp_transitional_namespace};
-    use crate::{XlsxDiff, XlsxMutation};
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -114,7 +116,7 @@ use semio_framework_diagnostic::Severity;
         /// ecma-376 engine, then stamps it explicitly Transitional.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_transitional_namespace(crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_transitional_namespace(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook)) }
         }
     }
 
@@ -171,9 +173,9 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::transitional::schema::check_transitional_conformance;
-    #[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-    use crate::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer as XlsxAnyAnalyzer;
-    pub use crate::standards::v_ecma_376::subsets::base::io::XlsxParts;
+    #[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer as XlsxAnyAnalyzer;
+    pub use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::XlsxParts;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;
 #[cfg(test)] use semio_framework_diagnostic::FaultScope;

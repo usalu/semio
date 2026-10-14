@@ -1,8 +1,8 @@
 //! 🔺️ `change-building-category` sparse diff.
 
-use crate::diff::Din18599Diff;
-use crate::mutations::change_building_category::ChangeBuildingCategory;
-use crate::Din18599Snapshot;
+use semio_s_artifact_norm_din18599_diff::Din18599Diff;
+use crate::change_building_category::ChangeBuildingCategory;
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 pub fn diff(payload: &ChangeBuildingCategory, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
 

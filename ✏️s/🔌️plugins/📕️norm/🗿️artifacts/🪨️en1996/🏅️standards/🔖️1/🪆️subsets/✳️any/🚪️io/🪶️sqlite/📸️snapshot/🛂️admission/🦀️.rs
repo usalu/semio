@@ -1,5 +1,5 @@
 //! 🪨️ Borrowed masonry walls, openings and load cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -13,4 +13,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,load)in n::list(n::field(case,11)?)?.iter().enumerate(){n::entity(out,"en1996_concentrated_load",parent,index,&n::cells(n::record(load)?,[Text(0),Real(1),Real(2),Real(3)])?,CONCENTRATED_FLOATS)?;}}}Ok(())
 }
 /// 🛂️ Five authored SQL tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1996Snapshot::SQLITE_SCHEMA,5,70,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1996Snapshot::SQLITE_SCHEMA,5,70,count(root)?,write)}

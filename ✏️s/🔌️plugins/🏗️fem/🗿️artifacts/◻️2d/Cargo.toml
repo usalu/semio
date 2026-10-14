@@ -4,6 +4,15 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "⚙️engine/◻️2d/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
@@ -223,6 +232,37 @@ path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬�
 
 [workspace.dependencies.semio-s-artifact-fem-2d-viewer]
 path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust"
+
+[workspace.dependencies.machine]
+path = "../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust"
+package = "semio-framework-machine"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-interaction]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-model-window]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-results-window]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-session]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-terminology]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🗣️terminology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-editor-transient]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

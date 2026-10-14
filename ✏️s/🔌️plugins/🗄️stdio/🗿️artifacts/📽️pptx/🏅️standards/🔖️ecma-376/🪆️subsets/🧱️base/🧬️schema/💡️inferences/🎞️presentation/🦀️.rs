@@ -1,6 +1,6 @@
 //! 🎞️ Projects PresentationML shapes from authoritative logical XML.
 use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*,refusal::PptxError};
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc;
 fn local_name(name: &str) -> &str {
@@ -77,7 +77,7 @@ fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
 /// convention this codec pair uses for "not present in the XML").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn position_from_xml(shape_children: &[XmlNode]) -> PptxTransform {
-    use crate::schema::snapshot::PptxTransform;
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
     let Some(sp_pr) = find_local_child(shape_children, "spPr") else { return PptxTransform::default() };
     let Some(xfrm) = find_local_child(element_children(sp_pr), "xfrm") else { return PptxTransform::default() };
     let xfrm_children = element_children(xfrm);
@@ -176,7 +176,7 @@ fn presentation_slide_rids_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec
 pub fn project_presentation(opc: &opc::OpcPackage, xml_parts: &[PptxXmlPart]) -> Result<PptxPresentation, PptxError> {
     resolve_office_document_relationship(opc).ok_or(PptxError::MissingPresentationRelationship)?;
     let snapshot = PptxSnapshot::from_parts(opc.clone(), xml_parts.to_vec());
-    let projections = crate::schema::mutations::xml_address::pptx_slides(&snapshot).map_err(PptxError::Malformed)?;
+    let projections = crate::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&snapshot).map_err(PptxError::Malformed)?;
     let mut slides = Vec::with_capacity(projections.len());
     for projection in projections {
         let slide = xml_parts.iter().find(|part| part.path == projection.address.slide_part_path).ok_or_else(|| PptxError::MissingPart(projection.address.slide_part_path.clone()))?;

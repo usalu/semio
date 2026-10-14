@@ -1,0 +1,618 @@
+{
+ "family": {
+  "semio-s-artifact-process-process3d": {
+   "owner": "",
+   "root": "🦀️.rs",
+   "lib": [
+    "🦀️.rs"
+   ],
+   "test": [
+    "🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-reference-solids": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️reference-solids",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️reference-solids/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️reference-solids/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-model": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🔍️rows/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🏗️ownership/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️capability/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️retained-mounted-laws/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "process3d_model_unit",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "process3d_io_sqlite_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚦️public/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧮️census/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"
+     ]
+    },
+    {
+     "name": "process3d_text_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-process-process3d-model-diff": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-mutations": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-conformance/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🪚️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🚫️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🧪️tests/🔤️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🧪️tests/⏸️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🧪️tests/🏭️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🧪️tests/🕳️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🧪️tests/🔀️accepts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🧪️tests/🪛️adds/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🧪️tests/➖️empties/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🧪️tests/🏷️retitles-the-saw/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🧪️tests/🪚️swaps/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine/🧪️tests/🕳️trades/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🧪️tests/🎈️lifts/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🧪️tests/🔤️relabels/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🧪️tests/🧊️reissues/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-mut-machines": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️machines",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️machines/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭create-machine/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-machine/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖rename-machine/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-machine-icon/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-mut-steps": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️steps",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️steps/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-step/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘change-step-enabled/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-step-origin/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐replace-step-measure/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-steps/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-mut-stock": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️stock",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️stock/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-stock/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-stock-label/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-stock-solid/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-inferences": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "process3d_inferences_unit",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-process-process3d-io": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-examples": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-host": {
+   "owner": "🔨️modules/🏠️host/🧰️owned",
+   "root": "🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "lib": [
+    "🔨️modules/🏠️host/🧰️owned/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "process3d_host_retained_laws",
+     "file": "🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-laws/🦀️.rs",
+     "files": [
+      "🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️retained-laws/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-process-process3d-config": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-presence": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-kit": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-modes": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/☑️options/☀️sun/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/☑️options/☀️sun/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "process3d_workpiece_window",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-process-process3d-commands": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️contribution/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️cursor/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️artifact/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️engagement/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️inspector/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️step/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪵️stock/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️sun/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛠️workshop/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️cursor/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-panels": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛠️workshop/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "process3d_panels_inspection",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "process3d_panels_artifact",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "process3d_panels_catalogue",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "process3d_panels_workshop",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛠️workshop/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛠️workshop/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-process-process3d-wasm": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🔬️mounted-registry/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-editor": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-process-process3d-viewer": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪚️workpiece/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  }
+ },
+ "consumers": {
+  "✏️s/🔌️plugins/🏭️process/🏭️bridge/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 1,
+   "semio-s-artifact-process-process3d-mutations": 1
+  },
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏭️mutate-process3d-1/🦀️.rs": {
+   "semio-s-artifact-process-process3d-mutations": 1,
+   "semio-s-artifact-process-process3d-model": 1
+  },
+  "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 7
+  },
+  "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 7
+  },
+  "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 7
+  },
+  "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 7
+  },
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️fleet-example-sweep/🦀️.rs": {
+   "semio-s-artifact-process-process3d-model": 1
+  },
+  "🌎️hub/🧩️compositions/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🦀️.rs": {
+   "semio-s-artifact-process-process3d-editor": 2,
+   "semio-s-artifact-process-process3d-viewer": 2
+  },
+  "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/🦀️.rs": {
+   "semio-s-artifact-process-process3d": 2,
+   "semio-s-artifact-process-process3d-viewer": 1
+  }
+ },
+ "dropped_reexports": [
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::schema::mutations::insert_step_mutations",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::mutations::remove_step_mutations",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::process3d::kit::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::process3d::kit::PROCESS3D_EXAMPLE_CONCRETE_FOREST",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS3D_EXAMPLE_PLATE",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS3D_EXAMPLE_TIMBER",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS3D_GRANULARITY_FACE",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS3D_GRANULARITY_OBJECT",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS3D_INTERACTION_DOMAIN",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::PROCESS_3D_PLAY_APP_ID",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::Process3dDispatchCtx",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::Process3dInteractionSnapshot",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::axis_angle_from_up_to",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::catalog_machine",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::iconed_tree_item_with_action",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::installable_contributions",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::installed_catalogs",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::internal_action",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::process3d_action",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::process3d_action_fault",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::process3d_interaction_definition",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::reset_process3d_document_effect",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_label",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_value_bool",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_value_list",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_value_map",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_value_number",
+     null
+    ],
+    [
+     "crate::editor::process3d::kit::ui_value_text",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::schema::snapshot::ContributedMachineCatalog",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::snapshot::ProcessMachinesTopicPayload",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   [
+    [
+     "crate::editor::process3d::modes::edit::windows::workpiece::set_active_utility_effect",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   [
+    [
+     "crate::editor::process3d::process3d_io",
+     null
+    ]
+   ]
+  ],
+  [
+   "🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MAXIMUM_DOMAIN_ITEMS",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_OWNER_BYTES",
+     null
+    ]
+   ]
+  ]
+ ]
+}

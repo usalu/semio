@@ -33,4 +33,4 @@ fn creation_keeps_explicit_paint() {
     assert_eq!(layer,before);
 }
 
-fn admitted_layer(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,kind:&str)->Result<semio_s_artifact_draw_drawing_model::DrawingLayerNode,semio_framework_plugin::Fault>{let admission=crate::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::build_layer(document,kind,&admission,&mut control)}
+fn admitted_layer(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,kind:&str)->Result<semio_s_artifact_draw_drawing_model::DrawingLayerNode,semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::build_layer(document,kind,&admission,&mut control)}

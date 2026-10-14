@@ -8,7 +8,28 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      }
+      },
+      "metadata": {
+        "semio": {
+          "rustBuildIntent": {
+            "version": 1,
+            "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/Cargo.toml",
+            "package": "semio-framework-repo-coordinator",
+            "scope": "package",
+            "fallback": {
+              "kind": "bounded-cargo",
+              "adapters": [
+                "foreign-source",
+                "proc-macro",
+                "build-script",
+                "build-script-run",
+                "binary"
+              ]
+            }
+          }
+        }
+      },
+      "cache": false
     },
     "run": {
       "executor": "repo:script",

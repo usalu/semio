@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/forms/producer/schema.json",
+  "title": "Flow Form Producer Capability",
+  "$defs": {
+    "Producer": {
+      "type": "object",
+      "required": [
+        "version",
+        "source",
+        "capabilities"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "source": {
+          "const": "original-widget-field-loans"
+        },
+        "capabilities": {
+          "const": [
+            "slider",
+            "note",
+            "image",
+            "variable",
+            "finish"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Input": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "label",
+            "value",
+            "min",
+            "max",
+            "step"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputSlider"
+            },
+            "id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "text"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputNote"
+            },
+            "id": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "src"
+          ],
+          "properties": {
+            "kind": {
+              "const": "inputImage"
+            },
+            "id": {
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "variable"
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "action"
+          ],
+          "properties": {
+            "kind": {
+              "const": "outputAction"
+            },
+            "id": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "producer",
+        "widgets",
+        "selectedInputs",
+        "playbook"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "producer": {
+          "$ref": "#/$defs/Producer"
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Input"
+          }
+        },
+        "selectedInputs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "slider",
+                  "note",
+                  "image",
+                  "variable"
+                ]
+              }
+            ],
+            "additionalItems": false
+          }
+        },
+        "playbook": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/Corpus"
+}

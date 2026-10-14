@@ -1,7 +1,7 @@
 //! 🔬️ End-to-end compliance report for hierarchical din16798 subjects.
 
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::Din16798Snapshot;
+use crate::evaluate;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 #[test]
 fn compliant_office_evaluate_complies() {

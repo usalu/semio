@@ -1,8 +1,7 @@
 //! 🏟️ Energy model mutation — `CreateThermalEnclosure`: Adds one thermal enclosure — the named set of zones that share one continuous envelope boundary, which is what an envelope-area report normalizes over.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -19,19 +18,22 @@ pub struct CreateThermalEnclosure {
     pub zone_ids: Vec<crate::model::EntityId>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_thermal_enclosure(index: u32, id: crate::model::EntityId, name: String, zone_ids: Vec<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateThermalEnclosure(CreateThermalEnclosure { index, id, name, zone_ids })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn create_thermal_enclosure<Op: From<CreateThermalEnclosure>>(index: u32, id: crate::model::EntityId, name: String, zone_ids: Vec<crate::model::EntityId>) -> Op {
+    CreateThermalEnclosure { index, id, name, zone_ids }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateThermalEnclosure {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateThermalEnclosure
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateThermalEnclosure> + From<crate::DeleteThermalEnclosure>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "thermal-enclosure", kind: "create-thermal-enclosure", record: "CreatedThermalEnclosure" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

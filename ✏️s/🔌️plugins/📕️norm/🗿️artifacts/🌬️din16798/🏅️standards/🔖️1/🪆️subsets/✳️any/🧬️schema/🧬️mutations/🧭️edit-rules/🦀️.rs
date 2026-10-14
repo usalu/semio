@@ -1,8 +1,10 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN EN 16798 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
-use crate::mutations::{remove_vent_system::RemoveVentSystem, remove_zone::RemoveZone};
-use crate::{Din16798Mutation, Din16798Snapshot};
+use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use semio_s_artifact_norm_din16798_mut_ventilation::remove_vent_system::RemoveVentSystem;
+use semio_s_artifact_norm_din16798_mut_zones::remove_zone::RemoveZone;
+use crate::Din16798Mutation;
+use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 
 /// 📚 Every path an DIN EN 16798 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {

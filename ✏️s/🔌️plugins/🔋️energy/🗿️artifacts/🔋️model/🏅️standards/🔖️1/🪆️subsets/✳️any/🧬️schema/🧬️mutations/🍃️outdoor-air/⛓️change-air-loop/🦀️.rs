@@ -1,8 +1,7 @@
 //! ⛓️ Energy model mutation — `ChangeOutdoorAirSystemAirLoop`: Moves the outdoor air system to another air loop.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -17,19 +16,22 @@ pub struct ChangeOutdoorAirSystemAirLoop {
     pub new_air_loop_id: crate::model::EntityId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_outdoor_air_system_air_loop(id: crate::model::EntityId, new_air_loop_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::ChangeOutdoorAirSystemAirLoop(ChangeOutdoorAirSystemAirLoop { id, new_air_loop_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn change_outdoor_air_system_air_loop<Op: From<ChangeOutdoorAirSystemAirLoop>>(id: crate::model::EntityId, new_air_loop_id: crate::model::EntityId) -> Op {
+    ChangeOutdoorAirSystemAirLoop { id, new_air_loop_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ChangeOutdoorAirSystemAirLoop {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeOutdoorAirSystemAirLoop
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeOutdoorAirSystemAirLoop>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "outdoor-air-system", kind: "change-outdoor-air-system-air-loop", record: "ChangedOutdoorAirSystemAirLoop" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

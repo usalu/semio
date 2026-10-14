@@ -1,5 +1,5 @@
 //! 📇️ Explicit shipped families retain their actual immutable bytes through progressive admission.
-use super::{AdmittedFont,StaticFontBytes,FontFaceAdmissionJob,FontOutlineLimits,FontProgress,reserve_slot};
+use semio_framework_2d_text_font::{AdmittedFont,StaticFontBytes,FontFaceAdmissionJob,FontOutlineLimits,FontProgress,reserve_slot};
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 pub const DEFAULT_FAMILY:&str="Anta";
 pub struct FontSourceLocation{pub family:&'static str,pub id:&'static str,pub bytes:StaticFontBytes}
@@ -37,3 +37,6 @@ impl FontCatalogAdmissionJob{
  pub fn take_result(&mut self)->Result<Vec<AdmittedFont<StaticFontBytes>>,String>{self.result()?;Ok(self.owners.output.take().unwrap())}
  pub fn cancel(&mut self){self.cancelled=true;}
 }
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

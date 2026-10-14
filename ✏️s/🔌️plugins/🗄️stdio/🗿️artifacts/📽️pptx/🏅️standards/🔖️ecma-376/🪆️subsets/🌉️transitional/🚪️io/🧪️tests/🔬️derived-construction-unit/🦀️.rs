@@ -16,7 +16,7 @@ mod tests {
         opc.content_types.set_default("xml", "application/xml");
         opc.set_part("ppt/presentation.xml", "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml", TRANSITIONAL_PRESENTATION_XML.as_bytes().to_vec());
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "ppt/presentation.xml");
-        crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("valid OPC package")).expect("valid presentation")
+        semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&semio_s_artifact_stdio_zip::opc::encode_opc(&opc).expect("valid OPC package")).expect("valid presentation")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -34,7 +34,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_in_the_snapshot_still_fails_build() {
         let mut violating = transitional_snapshot();
-        violating.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
+        violating.xml_parts.push(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart {
             path: "ppt/slides/slide1.xml".into(),
             content_type: "application/vnd.openxmlformats-officedocument.presentationml.slide+xml".into(),
             document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<p:sld xmlns:p="http://purl.oclc.org/ooxml/presentationml/main"/>"#).expect("valid XML"),

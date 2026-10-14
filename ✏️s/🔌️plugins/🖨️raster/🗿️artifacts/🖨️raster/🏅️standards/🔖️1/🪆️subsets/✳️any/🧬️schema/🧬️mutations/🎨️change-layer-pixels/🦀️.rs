@@ -1,7 +1,8 @@
 //! 🎨️ Replace only a layer's pixels, with optimistic image revision validation.
-use crate::{RasterLayerNode, RasterLayerPatch, RasterPixelContent, RasterTransform, RasterSnapshot, RasterMutation};
-use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::standards::v1::subsets::any::schema::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterLayerPatch, RasterPixelContent, RasterTransform};
+use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
+use semio_s_artifact_raster_raster_diff::{diff_patch_layer, RasterDiff};
+use semio_s_artifact_raster_raster_model::find_layer;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -27,7 +28,7 @@ pub fn validate(payload: &ChangeLayerPixels, base: &RasterSnapshot) -> Result<()
     Ok(())
 }
 
-impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerPixels {
+impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ChangeLayerPixels where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::change_layer_pixels::ChangeLayerPixels> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-pixels", kind: "change-layer-pixels", record: "ChangedLayerPixels" };
 
     fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
@@ -35,10 +36,10 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ChangeLayerPixel
         protocol::MutationOutcome::new(diff_patch_layer(&self.layer_id, RasterLayerPatch { pixel_content: Some(self.content.clone()), transform: self.transform.clone(), ..Default::default() }))
     }
 
-    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
         let Some(RasterLayerNode::Pixel { image_key, width, height, transform, .. }) = find_layer(&base.layers, &self.layer_id) else { return Vec::new(); };
-        vec![RasterMutation::ChangeLayerPixels(Self { layer_id: self.layer_id.clone(), expected_image_key: self.content.image_key.clone(), content: RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height }, transform: self.transform.as_ref().map(|_| transform.clone()) })]
+        vec![Op::from(Self { layer_id: self.layer_id.clone(), expected_image_key: self.content.image_key.clone(), content: RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height }, transform: self.transform.as_ref().map(|_| transform.clone()) })]
     
     })())
 }

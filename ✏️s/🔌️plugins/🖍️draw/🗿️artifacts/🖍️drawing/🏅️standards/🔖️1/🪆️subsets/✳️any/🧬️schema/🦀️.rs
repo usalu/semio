@@ -7,21 +7,10 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 
-use ::semio_framework_os_kernel as dsl;
 use crate::stroke::StrokeCap;
 use crate::stroke::StrokeJoin;
 use crate::fill_rule::FillRule;
 use crate::font_family::DrawingFontFamily;
-use semio_s_artifact_draw_drawing::schema;
-use semio_s_artifact_draw_drawing_geometry::filter_path_segments_by_contour_area;
-use semio_s_artifact_draw_drawing_geometry::flatten_segments_to_lines;
-use semio_s_artifact_draw_drawing_geometry::from_kernel_segments;
-use semio_s_artifact_draw_drawing_geometry::layer_to_path_segments;
-use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
-use semio_s_artifact_draw_drawing_geometry::scale_path_segments;
-use semio_s_artifact_draw_drawing_geometry::to_kernel_segments;
-use semio_s_artifact_draw_drawing_geometry::transform_path_segments;
-use crate::{default_drawing_trace_params, default_drawing_transform, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 use crate::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
@@ -116,34 +105,6 @@ impl DrawingArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.draw.drawing` — twenty handcrafted schema leaves.
-pub fn drawing_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.draw.drawing",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
 //#endregion 🔖️Descriptor
 //#region 🏗️Construction
 //#endregion 🏗️Construction
@@ -1260,4 +1221,25 @@ pub mod affine;
 pub mod inferences;
 #[path = "📸️snapshot/🦀️.rs"]
 pub mod snapshot;
+//#endregion 🪢️TaxonomyMounts
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+    #[path = "."]
+    pub mod sqlite {
+        #[path = "../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+}
 //#endregion 🪢️TaxonomyMounts

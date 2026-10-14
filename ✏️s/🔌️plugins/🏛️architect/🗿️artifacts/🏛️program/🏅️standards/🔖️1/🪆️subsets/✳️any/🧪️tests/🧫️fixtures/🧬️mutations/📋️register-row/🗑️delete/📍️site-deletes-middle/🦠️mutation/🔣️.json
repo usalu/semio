@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "siteContext",
+  "id": "site-context-a"
+}

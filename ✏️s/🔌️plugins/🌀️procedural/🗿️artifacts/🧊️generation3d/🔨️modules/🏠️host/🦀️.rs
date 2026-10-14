@@ -3,21 +3,21 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #![allow(unused_imports)]
-use semio_s_artifact_procedural_3d_mutations::change_generation_value::ChangeGenerationValue;
-use semio_s_artifact_procedural_3d_mutations::change_schema::ChangeSchema;
-use semio_s_artifact_procedural_3d_mutations::connect_synapse::ConnectSynapse;
-use semio_s_artifact_procedural_3d_mutations::create_generation::CreateGeneration;
-use semio_s_artifact_procedural_3d_mutations::create_widget::CreateWidget;
-use semio_s_artifact_procedural_3d_mutations::delete_generation::DeleteGeneration;
-use semio_s_artifact_procedural_3d_mutations::delete_widget::DeleteWidget;
-use semio_s_artifact_procedural_3d_mutations::delete_widget_position::DeleteWidgetPosition;
-use semio_s_artifact_procedural_3d_mutations::disconnect_synapse::DisconnectSynapse;
-use semio_s_artifact_procedural_3d_mutations::move_widget::MoveWidget;
-use semio_s_artifact_procedural_3d_mutations::rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_value::ChangeGenerationValue;
+use semio_s_artifact_procedural_3d_mut_document::change_schema::ChangeSchema;
+use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse::ConnectSynapse;
+use semio_s_artifact_procedural_3d_mut_generations::create_generation::CreateGeneration;
+use semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget;
+use semio_s_artifact_procedural_3d_mut_generations::delete_generation::DeleteGeneration;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget::DeleteWidget;
+use semio_s_artifact_procedural_3d_mut_widgets::delete_widget_position::DeleteWidgetPosition;
+use semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse::DisconnectSynapse;
+use semio_s_artifact_procedural_3d_mut_widgets::move_widget::MoveWidget;
+use semio_s_artifact_procedural_3d_mut_generations::rename_generation::RenameGeneration;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
-use semio_s_artifact_procedural_3d_mutations::update_camera::UpdateCamera;
-use semio_s_artifact_procedural_3d_mutations::update_synapse::UpdateSynapse;
-use semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget;
+use semio_s_artifact_procedural_3d_mut_document::update_camera::UpdateCamera;
+use semio_s_artifact_procedural_3d_mut_synapses::update_synapse::UpdateSynapse;
+use semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget;
 use semio_s_artifact_procedural_3d_io_text::snapshot::camera_from_dsl;
 use semio_s_artifact_procedural_3d_io_text::snapshot::camera_to_dsl;
 use semio_s_artifact_procedural_3d_io_text::snapshot::form_generation_from_dsl;
@@ -34,15 +34,15 @@ use semio_s_artifact_procedural_3d_io_text::snapshot::SynapseSpecDsl;
 use semio_s_artifact_procedural_3d_io_text::snapshot::WidgetDsl;
 use semio_s_artifact_procedural_3d_io_text::snapshot::WidgetLayoutDsl;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_mutations::change_slider_value::ChangeSliderValue;
-use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
-use semio_s_artifact_procedural_3d_mutations::rotate_transforms::RotateTransforms;
-use semio_s_artifact_procedural_3d_mutations::scale_transforms::ScaleTransforms;
-use semio_s_artifact_procedural_3d_mutations::move_nodes::MoveNodes;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::ChangeWidgetInput;
-use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
-use semio_s_artifact_procedural_3d_mutations::change_generation_preview::ChangeGenerationPreview;
-use semio_s_artifact_procedural_3d_mutations::select_generation::SelectGeneration;
+use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::ChangeSliderValue;
+use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::rotate_transforms::RotateTransforms;
+use semio_s_artifact_procedural_3d_mut_transforms::scale_transforms::ScaleTransforms;
+use semio_s_artifact_procedural_3d_mut_widgets::move_nodes::MoveNodes;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::ChangeWidgetInput;
+use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mut_generations::change_generation_preview::ChangeGenerationPreview;
+use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGeneration;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 //#region 🔖️RetainedMountedIngress
@@ -491,8 +491,8 @@ fn generation3d_park_flow_strings(flow: &mut semio_framework_artifact_flow_flow:
 
 /// 🧮️ Replays a relative gesture into addressed operators and retains only displaced widget owners.
 fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_artifact_flow_flow::neural::Dictionary) -> Option<Vec<(&'static str, semio_framework_artifact_flow_flow::neural::Value)>>) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
-    use semio_s_artifact_procedural_3d_mutations::generation3d_targets_invariant;
-    use semio_s_artifact_procedural_3d_mutations::generation3d_with_params;
+    use semio_s_artifact_procedural_3d_mut_widgets::generation3d_targets_invariant;
+    use semio_s_artifact_procedural_3d_mut_widgets::generation3d_with_params;
 
     generation3d_targets_invariant(targets)?;
     if targets.len() > GENERATION3D_MAXIMUM_DOMAIN_ITEMS { return Err("generation3d-replay.target-limit"); }
@@ -531,7 +531,7 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
         Generation3dMutation::UpdateWidget(payload) => {
             let id = semio_s_artifact_procedural_3d_model::widget_id(&payload.widget);
             let index = snapshot.host_snapshot.widgets.iter().position(|entry| semio_s_artifact_procedural_3d_model::widget_id(entry) == id).ok_or("generation3d-replay.widget-missing")?;
-            for (index, synapse) in semio_s_artifact_procedural_3d_mutations::update_widget::variable_synapses(&snapshot.host_snapshot.widgets[index], &payload.widget, &snapshot.host_snapshot.synapses) { snapshot.host_snapshot.synapses[index] = synapse; }
+            for (index, synapse) in semio_s_artifact_procedural_3d_mut_widgets::update_widget::variable_synapses(&snapshot.host_snapshot.widgets[index], &payload.widget, &snapshot.host_snapshot.synapses) { snapshot.host_snapshot.synapses[index] = synapse; }
             Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], generation3d_copy_widget(&payload.widget)?)))
         }
         Generation3dMutation::DeleteWidget(payload) => {
@@ -622,9 +622,9 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             Some(Generation3dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)))
         }
         Generation3dMutation::DragTransforms(payload) => {
-            use semio_s_artifact_procedural_3d_mutations::generation3d_param_vector;
-            use semio_s_artifact_procedural_3d_mutations::generation3d_vector_value;
-            use semio_s_artifact_procedural_3d_mutations::GENERATION3D_TRANSLATE_KINDS;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_vector;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_vector_value;
+            use semio_s_artifact_procedural_3d_mut_transforms::GENERATION3D_TRANSLATE_KINDS;
 
             let delta = [payload.dx, payload.dy, payload.dz];
             if delta.iter().any(|value| !value.is_finite()) { return Err("generation3d-replay.drag-nonfinite"); }
@@ -635,11 +635,11 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             })?
         }
         Generation3dMutation::RotateTransforms(payload) => {
-            use semio_s_artifact_procedural_3d_mutations::generation3d_param_vector;
-            use semio_s_artifact_procedural_3d_mutations::generation3d_param_number;
-            use semio_s_artifact_procedural_3d_mutations::generation3d_vector_value;
-            use semio_s_artifact_procedural_3d_mutations::generation3d_number_value;
-            use semio_s_artifact_procedural_3d_mutations::GENERATION3D_ROTATE_KINDS;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_vector;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_number;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_vector_value;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_number_value;
+            use semio_s_artifact_procedural_3d_mut_transforms::GENERATION3D_ROTATE_KINDS;
 
             use semio_s_artifact_procedural_3d_model::transforms::AxisAngle;
             let axis = [payload.ax, payload.ay, payload.az];
@@ -652,9 +652,9 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             })?
         }
         Generation3dMutation::ScaleTransforms(payload) => {
-            use semio_s_artifact_procedural_3d_mutations::generation3d_param_vector;
-            use semio_s_artifact_procedural_3d_mutations::generation3d_vector_value;
-            use semio_s_artifact_procedural_3d_mutations::GENERATION3D_SCALE_KINDS;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_param_vector;
+            use semio_s_artifact_procedural_3d_mut_transforms::generation3d_vector_value;
+            use semio_s_artifact_procedural_3d_mut_transforms::GENERATION3D_SCALE_KINDS;
 
             use semio_s_artifact_procedural_3d_model::transforms::compose_scale;
             let factors = [payload.sx, payload.sy, payload.sz];
@@ -665,7 +665,7 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
             })?
         }
         Generation3dMutation::MoveNodes(payload) => {
-            semio_s_artifact_procedural_3d_mutations::generation3d_targets_invariant(&payload.ids)?;
+            semio_s_artifact_procedural_3d_mut_widgets::generation3d_targets_invariant(&payload.ids)?;
             if !payload.dx.is_finite() || !payload.dy.is_finite() || payload.ids.len() > GENERATION3D_MAXIMUM_DOMAIN_ITEMS { return Err("generation3d-replay.nodes-invariant"); }
             let mut updates = Vec::new();
             updates.try_reserve_exact(payload.ids.len()).map_err(|_| "generation3d-replay.layout-preflight")?;

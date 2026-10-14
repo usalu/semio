@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "row": {
+    "name": "🏛️Actor · Canonical Architecture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.828
+    }
+  },
+  "launchSha256": "382597060d4c7328cde1b805cf98e16e6aba2aba733e2a55ef87bbdf505fd44b",
+  "outputRedirectOnly": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/ap-gui18",
+  "sourceObservationKind": "read-only-source-observation-not-authority",
+  "sourceObservations": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+      "sha256": "c5c66bd5cd0d94b735fba8782ea3a70ac7024a9ff28b2e061a47de769bac9fbf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+      "sha256": "46ec9e7834fee897761ea7fb9bfb6964db26edf03f073122db7862e12fea6707"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "sha256": "4d96920cc4482f2f0a05dc42b2a168ffeb765584848cf5fcb3bacdb98e7bddc4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+      "sha256": "88b3e4794b8f0d67adec5fa687e7aa9b2cbdf860ccbbb61475e62f60ee405295"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🟦️.ts",
+      "sha256": "0dfc350b578a527d3aa9c37f9f9531f08a867efea9e04eec66400010d6f6afe3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts",
+      "sha256": "f79d4010cc7643c2928ff6a53328cdcd892f36c2ad006c6921d719868c41a404"
+    },
+    {
+      "path": "📋️build-owners.json",
+      "sha256": "f2653fbee5dc9568e0fe37f16a2ca0ac8cc96b193ca88cdac322dfec971e66b2"
+    }
+  ],
+  "reason": "Registered architecture recheck after neutral Cargo execution contract and Repo backend dependency cut"
+}

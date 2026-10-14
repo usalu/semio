@@ -1,8 +1,8 @@
 
     use super::*;
-    use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-    use crate::editor::puzzle3d::terminology::puzzle3d_labels;
-    use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_VORTEX};
+    use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+    use semio_s_artifact_puzzle_3d_editor_terminology::puzzle3d_labels;
+    use {semio_s_artifact_puzzle_3d_editor_snapshot::empty_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dObject, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX};
     use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
     fn labels() -> &'static Puzzle3dLabels {

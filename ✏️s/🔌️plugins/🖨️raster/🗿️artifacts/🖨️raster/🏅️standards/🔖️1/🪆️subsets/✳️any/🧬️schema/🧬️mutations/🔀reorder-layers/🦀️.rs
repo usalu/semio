@@ -2,9 +2,9 @@
 //! position, never spatial — the coordinator's explicit ruling; spatial reposition is `move-layer`).
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️ReorderLayers
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -17,15 +17,15 @@ pub mod mutation {
         pub index: usize,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ReorderLayers {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ReorderLayers where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::reorder_layers::mutation::ReorderLayers> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layers", record: "ReorderedLayers" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::reorder_layers::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::reorder_layers::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -40,3 +40,13 @@ pub mod mutation {
 }
 
 pub use mutation::ReorderLayers;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/⤴️lifts/🦀️.rs"]
+mod tests_lifts_the_caption_layer_out_of_the_frame_group;
+//#endregion 🪢️TaxonomyMounts

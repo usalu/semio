@@ -1,12 +1,20 @@
 //! ⚡️ Block 5D artifact — the mutation dispatch enum (`dsl::Mutations`-derived, real per-mutation
 //! triads) plus the store aliases.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::diff::Block5dDiff;
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_diff::Block5dDiff;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
@@ -123,48 +131,6 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::{add_attribute, add_attribute_at, AddAttribute};
-pub use super::add_author::{add_author, add_author_at, AddAuthor};
-pub use super::add_compatibility_rule::{add_compatibility_rule, add_compatibility_rule_at, AddCompatibilityRule};
-pub use super::add_representation_attribute::{add_representation_attribute, add_representation_attribute_at, AddRepresentationAttribute};
-pub use super::add_representation_tag::{add_representation_tag, add_representation_tag_at, AddRepresentationTag};
-pub use super::change_grip_grip_kind::{change_grip_grip_kind, ChangeGripGripKind};
-pub use super::change_grip_kind_color::{change_grip_kind_color, ChangeGripKindColor};
-pub use super::change_grip_kind_default_rope_kind::{change_grip_kind_default_rope_kind, ChangeGripKindDefaultRopeKind};
-pub use super::change_grip_kind_label::{change_grip_kind_label, ChangeGripKindLabel};
-pub use super::change_meta_description::{change_meta_description, ChangeMetaDescription};
-pub use super::change_part_kind_description::{change_part_kind_description, ChangePartKindDescription};
-pub use super::change_part_kind_icon::{change_part_kind_icon, ChangePartKindIcon};
-pub use super::change_part_kind_label::{change_part_kind_label, ChangePartKindLabel};
-pub use super::change_part_kind_unit::{change_part_kind_unit, ChangePartKindUnit};
-pub use super::change_part_kind_variant::{change_part_kind_variant, ChangePartKindVariant};
-pub use super::change_representation_description::{change_representation_description, ChangeRepresentationDescription};
-pub use super::change_representation_lod::{change_representation_lod, ChangeRepresentationLod};
-pub use super::change_representation_mesh_url::{change_representation_mesh_url, ChangeRepresentationMeshUrl};
-pub use super::create_grip::{create_grip, create_grip_at, CreateGrip};
-pub use super::create_grip_kind::{create_grip_kind, create_grip_kind_at, CreateGripKind};
-pub use super::create_representation::{create_representation, create_representation_at, CreateRepresentation};
-pub use super::delete_grip::{delete_grip, DeleteGrip};
-pub use super::delete_grip_kind::{delete_grip_kind, DeleteGripKind};
-pub use super::delete_representation::{delete_representation, DeleteRepresentation};
-pub use super::move_camera2d::{move_camera2d, MoveCamera2d};
-pub use super::move_camera3d::{move_camera3d, MoveCamera3d};
-pub use super::move_grip_2d::{move_grip_2d, MoveGrip2d};
-pub use super::move_grip_3d::{move_grip_3d, MoveGrip3d};
-pub use super::remove_attribute::{remove_attribute, RemoveAttribute};
-pub use super::remove_author::{remove_author, RemoveAuthor};
-pub use super::remove_compatibility_rule::{remove_compatibility_rule, RemoveCompatibilityRule};
-pub use super::remove_representation_attribute::{remove_representation_attribute, RemoveRepresentationAttribute};
-pub use super::remove_representation_tag::{remove_representation_tag, RemoveRepresentationTag};
-pub use super::rename_grip_kind::{rename_grip_kind, RenameGripKind};
-pub use super::rename_part_kind::{rename_part_kind, RenamePartKind};
-pub use super::rename_representation::{rename_representation, RenameRepresentation};
-pub use super::resize_grip_3d::{resize_grip_3d, ResizeGrip3d};
-pub use super::scale_camera2d::{scale_camera2d, ScaleCamera2d};
-pub use super::scale_camera3d::{scale_camera3d, ScaleCamera3d};
-pub use super::update_part_2d::{update_part_2d, UpdatePart2d};
-pub use super::update_part_3d::{update_part_3d, UpdatePart3d};
-
 pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Result<Vec<Block5dMutation>, semio_framework_value::ValueError> {
     Ok({
     mutation.inverse(projection)?
@@ -172,8 +138,7 @@ pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5d
     })
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

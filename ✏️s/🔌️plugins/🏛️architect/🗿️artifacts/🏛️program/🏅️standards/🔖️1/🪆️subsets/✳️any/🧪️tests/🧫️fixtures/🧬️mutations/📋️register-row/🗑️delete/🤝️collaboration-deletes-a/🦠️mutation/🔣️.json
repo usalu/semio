@@ -1,0 +1,5 @@
+{
+  "mutation": "deleteRegisterRow",
+  "register": "collaborationRecord",
+  "id": "collaboration-record-a"
+}

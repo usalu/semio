@@ -8,8 +8,8 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
-use crate::PptxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyResult, MutationDiff};

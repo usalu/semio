@@ -1,8 +1,8 @@
 //! ♻️ Tool operation keys, document authority and tool cancellation scopes, handles and leases.
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
-use crate::bounded_ownership::ArtifactFixedRegistry;
-use crate::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 #[path="🎟️issuer/🦀️.rs"]
 mod issuer;
 pub(crate) use issuer::ToolCancellationIssuer;

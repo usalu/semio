@@ -1,7 +1,7 @@
 //! 👁️ Original generation leases, immutable reads and bounded return/retirement custody.
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::retirement::shared::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
+use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use std::{marker::PhantomData, mem::{size_of, size_of_val}, sync::Arc};
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🦀️.rs"]
 pub mod snapshot_read_registry_handle;

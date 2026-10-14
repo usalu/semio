@@ -2,8 +2,8 @@
 //!
 //! Geometry over the real `io::decode_glb` grammar: every mesh primitive with POSITION (+ optional indices) becomes one
 //!    lowpoly object; n-gons fan-triangulated on export are re-imported as triangles.
-use crate::standards::v1::subsets::any::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
-use crate::schema::snapshot::LowpolySnapshot;
+use crate::{mesh_geometry::snapshot_from_parts, mesh_geometry::text_error, mesh_geometry::PolygonPart};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;

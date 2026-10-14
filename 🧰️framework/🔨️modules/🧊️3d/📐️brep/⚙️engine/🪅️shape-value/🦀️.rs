@@ -12,7 +12,7 @@ mod original;
 
 /// 🧵️ An ordered chain of oriented edges, labelled because a wire has no arena identity of its own.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeWire {
     pub members: Vec<(EdgeId, bool)>,
     pub vertices: Vec<VertexId>,
@@ -22,7 +22,7 @@ pub struct ShapeWire {
 
 /// 🎯️ The root of a [`ShapeValue`]: arena ids into its own [`Body`] for topological kinds, an owned labelled value for the kinds with no arena identity.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 #[value(rename_all = "camelCase")]
 pub enum ShapeRoot {
     Vertex(VertexId),
@@ -38,7 +38,7 @@ pub enum ShapeRoot {
 
 /// 🏷️ One labelled sub-element of a [`ShapeValue`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeComponent {
     pub kind: GeometryKind,
     pub label: PersistentLabel,
@@ -46,7 +46,7 @@ pub struct ShapeComponent {
 
 /// 📦️ An owned, session-free B-Rep shape: encodes canonically through `ToValue`, compares by value, and re-enters any [`Brep`] through [`Brep::import_shape`].
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
-#[value(crate = "::protocol::value")]
+#[value(crate = "::semio_framework_value")]
 pub struct ShapeValue {
     pub root: ShapeRoot,
     pub body: Body,

@@ -1,7 +1,7 @@
 //! 🧪️ `regen_assets` — moved out of `📸️snapshot/🦀️.rs` into its canonical test implementation.
-use super::{compliant_demo, noncompliant_demo};
-use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_en1997_pack};
-use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1997_dsl};
+use semio_s_artifact_norm_en1997_model::{compliant_demo, noncompliant_demo};
+use semio_s_artifact_norm_en1997_io::binary::snapshot::encode_en1997_pack;
+use semio_s_artifact_norm_en1997_io::text::snapshot::encode_en1997_dsl;
 
 #[test]
 fn regen_example_assets_when_env_set() {

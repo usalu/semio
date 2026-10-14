@@ -3,7 +3,7 @@
 //! contract §1 only requires "one real view mode with ≥1 real window" for a viewer packet — a
 //! read-only UV/paint-layer window is a follow-up, not a purity or completeness requirement.
 
-use crate::viewer::lowpoly::modes::view::windows::model;
+use crate::modes::view::windows::model;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

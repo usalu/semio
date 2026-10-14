@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::En1999Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 use protocol::list_delta::Keyed as _;
 
@@ -17,8 +25,8 @@ pub struct En1999MaterialsPatch {
     pub designation: Option<String>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumMaterial> for En1999MaterialsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumMaterial, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::AluminiumMaterial> for En1999MaterialsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::AluminiumMaterial, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.designation {
             row.designation = value.clone();
         }
@@ -31,7 +39,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumMaterial> for En19
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::AluminiumMaterial) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::AluminiumMaterial) -> Self {
         Self {
             designation: self.designation.as_ref().map(|_| row.designation.clone()),
         }
@@ -46,12 +54,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `materials` list (rows keyed by `id`).
-    pub En1999MaterialsRows { removal: En1999MaterialsRemoved, insertion: En1999MaterialsInserted, relocation: En1999MaterialsMoved, modification: En1999MaterialsModified, row: crate::snapshot::AluminiumMaterial, patch: En1999MaterialsPatch, key: id }
+    pub En1999MaterialsRows { removal: En1999MaterialsRemoved, insertion: En1999MaterialsInserted, relocation: En1999MaterialsMoved, modification: En1999MaterialsModified, row: semio_s_artifact_norm_en1999_model::AluminiumMaterial, patch: En1999MaterialsPatch, key: id }
 }
 
 impl En1999MaterialsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::AluminiumMaterial], new: &[crate::snapshot::AluminiumMaterial]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::AluminiumMaterial], new: &[semio_s_artifact_norm_en1999_model::AluminiumMaterial]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999MaterialsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999MaterialsInserted { index, row: row.clone() }).collect(),
@@ -70,8 +78,8 @@ pub struct En1999SectionsElementsPatch {
     pub thickness: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::PlateElement> for En1999SectionsElementsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::PlateElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::PlateElement> for En1999SectionsElementsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::PlateElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.thickness {
             row.thickness = value.clone();
         }
@@ -84,7 +92,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::PlateElement> for En1999Sec
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::PlateElement) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::PlateElement) -> Self {
         Self {
             thickness: self.thickness.as_ref().map(|_| row.thickness.clone()),
         }
@@ -99,7 +107,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `elements` list (rows keyed by `id`).
-    pub En1999SectionsElementsRows { removal: En1999SectionsElementsRemoved, insertion: En1999SectionsElementsInserted, relocation: En1999SectionsElementsMoved, modification: En1999SectionsElementsModified, row: crate::snapshot::PlateElement, patch: En1999SectionsElementsPatch, key: id }
+    pub En1999SectionsElementsRows { removal: En1999SectionsElementsRemoved, insertion: En1999SectionsElementsInserted, relocation: En1999SectionsElementsMoved, modification: En1999SectionsElementsModified, row: semio_s_artifact_norm_en1999_model::PlateElement, patch: En1999SectionsElementsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `sections` row addressed by its key.
@@ -117,8 +125,8 @@ pub struct En1999SectionsPatch {
     pub elements: Option<En1999SectionsElementsRows>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumSection> for En1999SectionsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumSection, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::AluminiumSection> for En1999SectionsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::AluminiumSection, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.kind {
             row.kind = value.clone();
         }
@@ -171,7 +179,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumSection> for En199
         self.elements = self.elements.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse(&self, row: &crate::snapshot::AluminiumSection) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::AluminiumSection) -> Self {
         Self {
             kind: self.kind.as_ref().map(|_| row.kind.clone()),
             height: self.height.as_ref().map(|_| row.height.clone()),
@@ -192,12 +200,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `sections` list (rows keyed by `id`).
-    pub En1999SectionsRows { removal: En1999SectionsRemoved, insertion: En1999SectionsInserted, relocation: En1999SectionsMoved, modification: En1999SectionsModified, row: crate::snapshot::AluminiumSection, patch: En1999SectionsPatch, key: id }
+    pub En1999SectionsRows { removal: En1999SectionsRemoved, insertion: En1999SectionsInserted, relocation: En1999SectionsMoved, modification: En1999SectionsModified, row: semio_s_artifact_norm_en1999_model::AluminiumSection, patch: En1999SectionsPatch, key: id }
 }
 
 impl En1999SectionsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::AluminiumSection], new: &[crate::snapshot::AluminiumSection]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::AluminiumSection], new: &[semio_s_artifact_norm_en1999_model::AluminiumSection]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999SectionsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999SectionsInserted { index, row: row.clone() }).collect(),
@@ -217,8 +225,8 @@ pub struct En1999MembersActionsPatch {
     pub m_y_k: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::MemberAction> for En1999MembersActionsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::MemberAction, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::MemberAction> for En1999MembersActionsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::MemberAction, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.n_k {
             row.n_k = value.clone();
         }
@@ -237,7 +245,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::MemberAction> for En1999Mem
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::MemberAction) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::MemberAction) -> Self {
         Self {
             n_k: self.n_k.as_ref().map(|_| row.n_k.clone()),
             m_y_k: self.m_y_k.as_ref().map(|_| row.m_y_k.clone()),
@@ -253,7 +261,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `actions` list (rows keyed by `id`).
-    pub En1999MembersActionsRows { removal: En1999MembersActionsRemoved, insertion: En1999MembersActionsInserted, relocation: En1999MembersActionsMoved, modification: En1999MembersActionsModified, row: crate::snapshot::MemberAction, patch: En1999MembersActionsPatch, key: id }
+    pub En1999MembersActionsRows { removal: En1999MembersActionsRemoved, insertion: En1999MembersActionsInserted, relocation: En1999MembersActionsMoved, modification: En1999MembersActionsModified, row: semio_s_artifact_norm_en1999_model::MemberAction, patch: En1999MembersActionsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `members` row addressed by its key.
@@ -269,8 +277,8 @@ pub struct En1999MembersPatch {
     pub actions: Option<En1999MembersActionsRows>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumMember> for En1999MembersPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumMember, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::AluminiumMember> for En1999MembersPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::AluminiumMember, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.buckling_length_y {
             row.buckling_length_y = value.clone();
         }
@@ -311,7 +319,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumMember> for En1999
         self.actions = self.actions.take().filter(|rows| !rows.is_empty());
     }
 
-    fn inverse(&self, row: &crate::snapshot::AluminiumMember) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::AluminiumMember) -> Self {
         Self {
             buckling_length_y: self.buckling_length_y.as_ref().map(|_| row.buckling_length_y.clone()),
             buckling_length_z: self.buckling_length_z.as_ref().map(|_| row.buckling_length_z.clone()),
@@ -330,12 +338,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `members` list (rows keyed by `id`).
-    pub En1999MembersRows { removal: En1999MembersRemoved, insertion: En1999MembersInserted, relocation: En1999MembersMoved, modification: En1999MembersModified, row: crate::snapshot::AluminiumMember, patch: En1999MembersPatch, key: id }
+    pub En1999MembersRows { removal: En1999MembersRemoved, insertion: En1999MembersInserted, relocation: En1999MembersMoved, modification: En1999MembersModified, row: semio_s_artifact_norm_en1999_model::AluminiumMember, patch: En1999MembersPatch, key: id }
 }
 
 impl En1999MembersRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::AluminiumMember], new: &[crate::snapshot::AluminiumMember]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::AluminiumMember], new: &[semio_s_artifact_norm_en1999_model::AluminiumMember]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999MembersRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999MembersInserted { index, row: row.clone() }).collect(),
@@ -356,8 +364,8 @@ pub struct En1999ConnectionsPatch {
     pub bolts_bolts_per_row: Option<u32>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumConnection> for En1999ConnectionsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumConnection, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::AluminiumConnection> for En1999ConnectionsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::AluminiumConnection, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.welds_throat {
             row.welds.throat = value.clone();
         }
@@ -382,7 +390,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumConnection> for En
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::AluminiumConnection) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::AluminiumConnection) -> Self {
         Self {
             welds_throat: self.welds_throat.as_ref().map(|_| row.welds.throat.clone()),
             bolts_rows: self.bolts_rows.as_ref().map(|_| row.bolts.rows.clone()),
@@ -399,12 +407,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `connections` list (rows keyed by `id`).
-    pub En1999ConnectionsRows { removal: En1999ConnectionsRemoved, insertion: En1999ConnectionsInserted, relocation: En1999ConnectionsMoved, modification: En1999ConnectionsModified, row: crate::snapshot::AluminiumConnection, patch: En1999ConnectionsPatch, key: id }
+    pub En1999ConnectionsRows { removal: En1999ConnectionsRemoved, insertion: En1999ConnectionsInserted, relocation: En1999ConnectionsMoved, modification: En1999ConnectionsModified, row: semio_s_artifact_norm_en1999_model::AluminiumConnection, patch: En1999ConnectionsPatch, key: id }
 }
 
 impl En1999ConnectionsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::AluminiumConnection], new: &[crate::snapshot::AluminiumConnection]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::AluminiumConnection], new: &[semio_s_artifact_norm_en1999_model::AluminiumConnection]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999ConnectionsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999ConnectionsInserted { index, row: row.clone() }).collect(),
@@ -425,8 +433,8 @@ pub struct En1999FireScenariosPatch {
     pub duration_s: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::FireScenario> for En1999FireScenariosPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::FireScenario, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::FireScenario> for En1999FireScenariosPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::FireScenario, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.member_id {
             row.member_id = value.clone();
         }
@@ -451,7 +459,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::FireScenario> for En1999Fir
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::FireScenario) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::FireScenario) -> Self {
         Self {
             member_id: self.member_id.as_ref().map(|_| row.member_id.clone()),
             theta_a: self.theta_a.as_ref().map(|_| row.theta_a.clone()),
@@ -468,12 +476,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `fire_scenarios` list (rows keyed by `id`).
-    pub En1999FireScenariosRows { removal: En1999FireScenariosRemoved, insertion: En1999FireScenariosInserted, relocation: En1999FireScenariosMoved, modification: En1999FireScenariosModified, row: crate::snapshot::FireScenario, patch: En1999FireScenariosPatch, key: id }
+    pub En1999FireScenariosRows { removal: En1999FireScenariosRemoved, insertion: En1999FireScenariosInserted, relocation: En1999FireScenariosMoved, modification: En1999FireScenariosModified, row: semio_s_artifact_norm_en1999_model::FireScenario, patch: En1999FireScenariosPatch, key: id }
 }
 
 impl En1999FireScenariosRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::FireScenario], new: &[crate::snapshot::FireScenario]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::FireScenario], new: &[semio_s_artifact_norm_en1999_model::FireScenario]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999FireScenariosRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999FireScenariosInserted { index, row: row.clone() }).collect(),
@@ -498,8 +506,8 @@ pub struct En1999FatigueDetailsPatch {
     pub m2: Option<f64>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::FatigueDetail> for En1999FatigueDetailsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::FatigueDetail, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::FatigueDetail> for En1999FatigueDetailsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::FatigueDetail, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.member_id {
             row.member_id = value.clone();
         }
@@ -548,7 +556,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::FatigueDetail> for En1999Fa
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::FatigueDetail) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::FatigueDetail) -> Self {
         Self {
             member_id: self.member_id.as_ref().map(|_| row.member_id.clone()),
             detail_category: self.detail_category.as_ref().map(|_| row.detail_category.clone()),
@@ -569,12 +577,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `fatigue_details` list (rows keyed by `id`).
-    pub En1999FatigueDetailsRows { removal: En1999FatigueDetailsRemoved, insertion: En1999FatigueDetailsInserted, relocation: En1999FatigueDetailsMoved, modification: En1999FatigueDetailsModified, row: crate::snapshot::FatigueDetail, patch: En1999FatigueDetailsPatch, key: id }
+    pub En1999FatigueDetailsRows { removal: En1999FatigueDetailsRemoved, insertion: En1999FatigueDetailsInserted, relocation: En1999FatigueDetailsMoved, modification: En1999FatigueDetailsModified, row: semio_s_artifact_norm_en1999_model::FatigueDetail, patch: En1999FatigueDetailsPatch, key: id }
 }
 
 impl En1999FatigueDetailsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::FatigueDetail], new: &[crate::snapshot::FatigueDetail]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::FatigueDetail], new: &[semio_s_artifact_norm_en1999_model::FatigueDetail]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999FatigueDetailsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999FatigueDetailsInserted { index, row: row.clone() }).collect(),
@@ -595,11 +603,11 @@ pub struct En1999ColdFormedPatch {
     pub width: Option<f64>,
     pub span: Option<f64>,
     pub welded: Option<bool>,
-    pub actions: Option<Vec<crate::snapshot::MemberAction>>,
+    pub actions: Option<Vec<semio_s_artifact_norm_en1999_model::MemberAction>>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::ColdFormedSheet> for En1999ColdFormedPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::ColdFormedSheet, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::ColdFormedSheet> for En1999ColdFormedPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::ColdFormedSheet, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.material_id {
             row.material_id = value.clone();
         }
@@ -642,7 +650,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::ColdFormedSheet> for En1999
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::ColdFormedSheet) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::ColdFormedSheet) -> Self {
         Self {
             material_id: self.material_id.as_ref().map(|_| row.material_id.clone()),
             thickness: self.thickness.as_ref().map(|_| row.thickness.clone()),
@@ -662,12 +670,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `cold_formed` list (rows keyed by `id`).
-    pub En1999ColdFormedRows { removal: En1999ColdFormedRemoved, insertion: En1999ColdFormedInserted, relocation: En1999ColdFormedMoved, modification: En1999ColdFormedModified, row: crate::snapshot::ColdFormedSheet, patch: En1999ColdFormedPatch, key: id }
+    pub En1999ColdFormedRows { removal: En1999ColdFormedRemoved, insertion: En1999ColdFormedInserted, relocation: En1999ColdFormedMoved, modification: En1999ColdFormedModified, row: semio_s_artifact_norm_en1999_model::ColdFormedSheet, patch: En1999ColdFormedPatch, key: id }
 }
 
 impl En1999ColdFormedRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::ColdFormedSheet], new: &[crate::snapshot::ColdFormedSheet]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::ColdFormedSheet], new: &[semio_s_artifact_norm_en1999_model::ColdFormedSheet]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999ColdFormedRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999ColdFormedInserted { index, row: row.clone() }).collect(),
@@ -687,11 +695,11 @@ pub struct En1999ShellsPatch {
     pub radius: Option<f64>,
     pub thickness: Option<f64>,
     pub length: Option<f64>,
-    pub actions: Option<Vec<crate::snapshot::MemberAction>>,
+    pub actions: Option<Vec<semio_s_artifact_norm_en1999_model::MemberAction>>,
 }
 
-impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumShell> for En1999ShellsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumShell, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::AluminiumShell> for En1999ShellsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1999_model::AluminiumShell, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.material_id {
             row.material_id = value.clone();
         }
@@ -728,7 +736,7 @@ impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumShell> for En1999S
         }
     }
 
-    fn inverse(&self, row: &crate::snapshot::AluminiumShell) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_en1999_model::AluminiumShell) -> Self {
         Self {
             material_id: self.material_id.as_ref().map(|_| row.material_id.clone()),
             radius: self.radius.as_ref().map(|_| row.radius.clone()),
@@ -747,12 +755,12 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `shells` list (rows keyed by `id`).
-    pub En1999ShellsRows { removal: En1999ShellsRemoved, insertion: En1999ShellsInserted, relocation: En1999ShellsMoved, modification: En1999ShellsModified, row: crate::snapshot::AluminiumShell, patch: En1999ShellsPatch, key: id }
+    pub En1999ShellsRows { removal: En1999ShellsRemoved, insertion: En1999ShellsInserted, relocation: En1999ShellsMoved, modification: En1999ShellsModified, row: semio_s_artifact_norm_en1999_model::AluminiumShell, patch: En1999ShellsPatch, key: id }
 }
 
 impl En1999ShellsRows {
         /// 🧮️ The delta of a whole-list setter: every base row leaves at its base index and every payload row enters at its payload index.
-        pub fn setting(base: &[crate::snapshot::AluminiumShell], new: &[crate::snapshot::AluminiumShell]) -> Self {
+        pub fn setting(base: &[semio_s_artifact_norm_en1999_model::AluminiumShell], new: &[semio_s_artifact_norm_en1999_model::AluminiumShell]) -> Self {
             Self {
                 removed: base.iter().enumerate().map(|(index, row)| En1999ShellsRemoved { id: row.key().to_string(), index }).collect(),
                 inserted: new.iter().enumerate().map(|(index, row)| En1999ShellsInserted { index, row: row.clone() }).collect(),
@@ -770,7 +778,7 @@ impl En1999ShellsRows {
 #[artifact_schema(id = "s.norm.en1999")]
 pub struct En1999Diff {
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub materials: Option<En1999MaterialsRows>,
     #[state(artifact)]
@@ -905,6 +913,7 @@ impl protocol::DiffAlgebra<En1999Snapshot> for En1999Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

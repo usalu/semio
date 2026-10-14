@@ -453,8 +453,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
 #[semio_framework_async_macros::async_test]
 async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_once() {
-    let envelope = store::os_store::document_materialize::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None);
-    let mut document = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Remodel window preparation-law Store opens");
+    let envelope = store::os_store::document_materialize::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut document = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Remodel window preparation-law Store opens");
     document
         .install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<RemodelingSnapshot, RemodelingMutation>().expect("Remodel document Store owners"))
         .map_err(|(error, _)| error)

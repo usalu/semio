@@ -16,7 +16,7 @@ pub fn handle(
     payload: &CommitDocument,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
-    _session: &mut crate::commands::canvas_pointer_down::DrawingSession,
+    _session: &mut semio_s_artifact_draw_drawing_editor_tool::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    Ok(Emit { effects: vec![crate::drawing_reset_document_effect(&payload.snapshot)], ..Default::default() })
+    Ok(Emit { effects: vec![semio_s_artifact_draw_drawing_editor_interaction::drawing_reset_document_effect(&payload.snapshot)], ..Default::default() })
 }

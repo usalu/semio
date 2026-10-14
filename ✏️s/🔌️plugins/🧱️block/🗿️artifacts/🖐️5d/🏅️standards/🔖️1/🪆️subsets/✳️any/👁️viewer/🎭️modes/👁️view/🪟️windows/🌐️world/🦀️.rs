@@ -5,7 +5,7 @@
 //! selection, no gumball, no engagement: a viewer has no utilities that edit and emits no mutations
 //! by construction (`ViewEmit`).
 
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 // 🚧️ SDK GAP: the seven framework `WindowKit`s (contract §2.6, `MeshWindowKit` included) live in the
 // `//#region 🔖️WindowKits` region nested inside `pub mod app { … }` but are NOT in the crate-root
 // curated `pub use app::{ … };` re-export list (unlike `ArtifactViewer`/`Viewer`/`ViewEmit`, whose

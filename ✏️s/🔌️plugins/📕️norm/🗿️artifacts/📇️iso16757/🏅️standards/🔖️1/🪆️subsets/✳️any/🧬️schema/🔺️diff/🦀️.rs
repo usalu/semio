@@ -4,7 +4,15 @@
 //! `absorb` coalesces same-key entries (patch∘patch, create∘delete, delete∘create) and `DiffAlgebra::inverse` returns the negative
 //! diff, read row by row from the base.
 
-use crate::Iso16757Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError {
     protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
@@ -19,8 +27,8 @@ pub struct Iso16757ProductGroupsPatch {
     pub name: Option<String>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::ProductGroup> for Iso16757ProductGroupsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductGroup, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::ProductGroup> for Iso16757ProductGroupsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::ProductGroup, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.name {
             row.names.preferred.text = value.clone();
         }
@@ -33,7 +41,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::ProductGroup> for Iso16757Pro
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::ProductGroup) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::ProductGroup) -> Self {
         Self {
             name: self.name.as_ref().map(|_| row.names.preferred.text.clone()),
         }
@@ -48,7 +56,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_groups` list (rows keyed by `id`).
-    pub Iso16757ProductGroupsRows { removal: Iso16757ProductGroupsRemoved, insertion: Iso16757ProductGroupsInserted, relocation: Iso16757ProductGroupsMoved, modification: Iso16757ProductGroupsModified, row: crate::part_1::ProductGroup, patch: Iso16757ProductGroupsPatch, key: id }
+    pub Iso16757ProductGroupsRows { removal: Iso16757ProductGroupsRemoved, insertion: Iso16757ProductGroupsInserted, relocation: Iso16757ProductGroupsMoved, modification: Iso16757ProductGroupsModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductGroup, patch: Iso16757ProductGroupsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_classes` row addressed by its key.
@@ -59,13 +67,13 @@ protocol::list_delta! {
 pub struct Iso16757ProductClassesPatch {
     pub group_id: Option<String>,
     pub parent_id: Option<Iso16757ProductClassesPatchParentIdValue>,
-    pub names: Option<crate::Names>,
+    pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
     pub required_property_ids: Option<Vec<String>>,
     pub optional_property_ids: Option<Vec<String>>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::ProductClass> for Iso16757ProductClassesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductClass, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::ProductClass> for Iso16757ProductClassesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::ProductClass, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.group_id {
             row.group_id = value.clone();
         }
@@ -102,7 +110,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::ProductClass> for Iso16757Pro
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::ProductClass) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::ProductClass) -> Self {
         Self {
             group_id: self.group_id.as_ref().map(|_| row.group_id.clone()),
             parent_id: self.parent_id.as_ref().map(|_| Iso16757ProductClassesPatchParentIdValue { value: row.parent_id.clone() }),
@@ -121,7 +129,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_classes` list (rows keyed by `id`).
-    pub Iso16757ProductClassesRows { removal: Iso16757ProductClassesRemoved, insertion: Iso16757ProductClassesInserted, relocation: Iso16757ProductClassesMoved, modification: Iso16757ProductClassesModified, row: crate::part_1::ProductClass, patch: Iso16757ProductClassesPatch, key: id }
+    pub Iso16757ProductClassesRows { removal: Iso16757ProductClassesRemoved, insertion: Iso16757ProductClassesInserted, relocation: Iso16757ProductClassesMoved, modification: Iso16757ProductClassesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductClass, patch: Iso16757ProductClassesPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_series` row addressed by its key.
@@ -131,13 +139,13 @@ protocol::list_delta! {
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductSeriesPatch {
     pub class_id: Option<String>,
-    pub names: Option<crate::Names>,
-    pub shared_property_values: Option<std::collections::BTreeMap<String, crate::CatalogueValue>>,
+    pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
+    pub shared_property_values: Option<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>>,
     pub geometry_id: Option<Iso16757ProductSeriesPatchGeometryIdValue>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::ProductSeries> for Iso16757ProductSeriesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductSeries, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::ProductSeries> for Iso16757ProductSeriesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::ProductSeries, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.class_id {
             row.class_id = value.clone();
         }
@@ -168,7 +176,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::ProductSeries> for Iso16757Pr
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::ProductSeries) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::ProductSeries) -> Self {
         Self {
             class_id: self.class_id.as_ref().map(|_| row.class_id.clone()),
             names: self.names.as_ref().map(|_| row.names.clone()),
@@ -186,7 +194,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_series` list (rows keyed by `id`).
-    pub Iso16757ProductSeriesRows { removal: Iso16757ProductSeriesRemoved, insertion: Iso16757ProductSeriesInserted, relocation: Iso16757ProductSeriesMoved, modification: Iso16757ProductSeriesModified, row: crate::part_1::ProductSeries, patch: Iso16757ProductSeriesPatch, key: id }
+    pub Iso16757ProductSeriesRows { removal: Iso16757ProductSeriesRemoved, insertion: Iso16757ProductSeriesInserted, relocation: Iso16757ProductSeriesMoved, modification: Iso16757ProductSeriesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductSeries, patch: Iso16757ProductSeriesPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.products` row addressed by its key.
@@ -198,8 +206,8 @@ pub struct Iso16757ProductsPatch {
     pub name: Option<String>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::Product> for Iso16757ProductsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::Product, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::Product> for Iso16757ProductsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::Product, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.name {
             row.names.preferred.text = value.clone();
         }
@@ -212,7 +220,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::Product> for Iso16757Products
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::Product) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::Product) -> Self {
         Self {
             name: self.name.as_ref().map(|_| row.names.preferred.text.clone()),
         }
@@ -227,7 +235,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.products` list (rows keyed by `id`).
-    pub Iso16757ProductsRows { removal: Iso16757ProductsRemoved, insertion: Iso16757ProductsInserted, relocation: Iso16757ProductsMoved, modification: Iso16757ProductsModified, row: crate::part_1::Product, patch: Iso16757ProductsPatch, key: id }
+    pub Iso16757ProductsRows { removal: Iso16757ProductsRemoved, insertion: Iso16757ProductsInserted, relocation: Iso16757ProductsMoved, modification: Iso16757ProductsModified, row: semio_s_artifact_norm_iso16757_model::part_1::Product, patch: Iso16757ProductsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_indexes` row addressed by its key.
@@ -241,8 +249,8 @@ pub struct Iso16757ProductIndexesPatch {
     pub search_tags: Option<Vec<String>>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::ProductIndex> for Iso16757ProductIndexesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductIndex, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::ProductIndex> for Iso16757ProductIndexesPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::ProductIndex, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.product_id {
             row.product_id = value.clone();
         }
@@ -267,7 +275,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::ProductIndex> for Iso16757Pro
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::ProductIndex) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::ProductIndex) -> Self {
         Self {
             product_id: self.product_id.as_ref().map(|_| row.product_id.clone()),
             variant_id: self.variant_id.as_ref().map(|_| Iso16757ProductIndexesPatchVariantIdValue { value: row.variant_id.clone() }),
@@ -284,7 +292,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_indexes` list (rows keyed by `id`).
-    pub Iso16757ProductIndexesRows { removal: Iso16757ProductIndexesRemoved, insertion: Iso16757ProductIndexesInserted, relocation: Iso16757ProductIndexesMoved, modification: Iso16757ProductIndexesModified, row: crate::part_1::ProductIndex, patch: Iso16757ProductIndexesPatch, key: id }
+    pub Iso16757ProductIndexesRows { removal: Iso16757ProductIndexesRemoved, insertion: Iso16757ProductIndexesInserted, relocation: Iso16757ProductIndexesMoved, modification: Iso16757ProductIndexesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductIndex, patch: Iso16757ProductIndexesPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.property_definitions` row addressed by its key.
@@ -293,16 +301,16 @@ protocol::list_delta! {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PropertyDefinitionsPatch {
-    pub names: Option<crate::Names>,
+    pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
     pub data_type: Option<String>,
     pub unit: Option<Iso16757PropertyDefinitionsPatchUnitValue>,
-    pub cardinality: Option<crate::Cardinality>,
-    pub kind: Option<crate::part_1::PropertyKind>,
+    pub cardinality: Option<semio_s_artifact_norm_iso16757_model::Cardinality>,
+    pub kind: Option<semio_s_artifact_norm_iso16757_model::part_1::PropertyKind>,
     pub dictionary_property_id: Option<Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_1::PropertyDefinition> for Iso16757PropertyDefinitionsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::PropertyDefinition, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition> for Iso16757PropertyDefinitionsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.names {
             row.names = value.clone();
         }
@@ -345,7 +353,7 @@ impl protocol::list_delta::RowPatch<crate::part_1::PropertyDefinition> for Iso16
         }
     }
 
-    fn inverse(&self, row: &crate::part_1::PropertyDefinition) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition) -> Self {
         Self {
             names: self.names.as_ref().map(|_| row.names.clone()),
             data_type: self.data_type.as_ref().map(|_| row.data_type.clone()),
@@ -365,7 +373,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.property_definitions` list (rows keyed by `id`).
-    pub Iso16757PropertyDefinitionsRows { removal: Iso16757PropertyDefinitionsRemoved, insertion: Iso16757PropertyDefinitionsInserted, relocation: Iso16757PropertyDefinitionsMoved, modification: Iso16757PropertyDefinitionsModified, row: crate::part_1::PropertyDefinition, patch: Iso16757PropertyDefinitionsPatch, key: id }
+    pub Iso16757PropertyDefinitionsRows { removal: Iso16757PropertyDefinitionsRemoved, insertion: Iso16757PropertyDefinitionsInserted, relocation: Iso16757PropertyDefinitionsMoved, modification: Iso16757PropertyDefinitionsModified, row: semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition, patch: Iso16757PropertyDefinitionsPatch, key: id }
 }
 
 /// 🩹️ Sparse patch of the `dictionary.subjects` row addressed by its key.
@@ -374,14 +382,14 @@ protocol::list_delta! {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757SubjectsPatch {
-    pub kind: Option<crate::part_4::SubjectKind>,
-    pub names: Option<crate::Names>,
-    pub definition: Option<crate::document::LocalizedText>,
+    pub kind: Option<semio_s_artifact_norm_iso16757_model::part_4::SubjectKind>,
+    pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
+    pub definition: Option<semio_s_plugin_norm_compliance::LocalizedText>,
     pub parent_id: Option<Iso16757SubjectsPatchParentIdValue>,
 }
 
-impl protocol::list_delta::RowPatch<crate::part_4::Subject> for Iso16757SubjectsPatch {
-    fn commit_into(&self, row: &mut crate::part_4::Subject, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_4::Subject> for Iso16757SubjectsPatch {
+    fn commit_into(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_4::Subject, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.kind {
             row.kind = value.clone();
         }
@@ -412,7 +420,7 @@ impl protocol::list_delta::RowPatch<crate::part_4::Subject> for Iso16757Subjects
         }
     }
 
-    fn inverse(&self, row: &crate::part_4::Subject) -> Self {
+    fn inverse(&self, row: &semio_s_artifact_norm_iso16757_model::part_4::Subject) -> Self {
         Self {
             kind: self.kind.as_ref().map(|_| row.kind.clone()),
             names: self.names.as_ref().map(|_| row.names.clone()),
@@ -430,7 +438,7 @@ protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `dictionary.subjects` list (rows keyed by `id`).
-    pub Iso16757SubjectsRows { removal: Iso16757SubjectsRemoved, insertion: Iso16757SubjectsInserted, relocation: Iso16757SubjectsMoved, modification: Iso16757SubjectsModified, row: crate::part_4::Subject, patch: Iso16757SubjectsPatch, key: id }
+    pub Iso16757SubjectsRows { removal: Iso16757SubjectsRemoved, insertion: Iso16757SubjectsInserted, relocation: Iso16757SubjectsMoved, modification: Iso16757SubjectsModified, row: semio_s_artifact_norm_iso16757_model::part_4::Subject, patch: Iso16757SubjectsPatch, key: id }
 }
 
 /// 🔑️ A `geometry.objects` entry: its map key and value.
@@ -440,7 +448,7 @@ protocol::list_delta! {
 #[value(rename_all = "camelCase")]
 pub struct Iso16757GeometryObjectsEntry {
     pub key: String,
-    pub value: crate::part_2::GeometryObject,
+    pub value: semio_s_artifact_norm_iso16757_model::part_2::GeometryObject,
 }
 
 /// 🔺️ Keyed diff of the `geometry.objects` map: added entries, removed keys and modified entry patches.
@@ -458,7 +466,7 @@ impl Iso16757GeometryObjectsRows {
         self.added.is_empty() && self.removed.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::part_2::GeometryObject>) -> Result<std::collections::BTreeMap<String, crate::part_2::GeometryObject>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
@@ -484,7 +492,7 @@ impl Iso16757GeometryObjectsRows {
         self.added.extend(other.added);
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, crate::part_2::GeometryObject>) -> Self {
+    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Iso16757GeometryObjectsEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -500,7 +508,7 @@ impl Iso16757GeometryObjectsRows {
 #[value(rename_all = "camelCase")]
 pub struct Iso16757SelectionConstraintsInserted {
     pub index: usize,
-    pub row: crate::part_1::SelectionConstraint,
+    pub row: semio_s_artifact_norm_iso16757_model::part_1::SelectionConstraint,
 }
 
 /// 🔺️ Positional diff of `selection.constraints` rows: removed base positions, inserted rows at final positions and modified base-position patches, each strictly ascending.
@@ -529,7 +537,7 @@ impl Iso16757SelectionConstraintsRows {
         true
     }
 
-    fn apply_rows(&self, base: &[crate::part_1::SelectionConstraint]) -> Result<Vec<crate::part_1::SelectionConstraint>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &[semio_s_artifact_norm_iso16757_model::part_1::SelectionConstraint]) -> Result<Vec<semio_s_artifact_norm_iso16757_model::part_1::SelectionConstraint>, protocol::MutationApplyError> {
         let out_of_range = |index: usize| protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("row position {index} is out of range")).at([index.to_string()]);
         if !(Self::strictly_ascending(self.removed.iter().copied()) && Self::strictly_ascending(self.inserted.iter().map(|inserted| inserted.index))) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index-order", "row positions must be strictly ascending"));
@@ -553,7 +561,7 @@ impl Iso16757SelectionConstraintsRows {
         Ok(rows)
     }
 
-    fn inverse_rows(&self, base: &[crate::part_1::SelectionConstraint]) -> Self {
+    fn inverse_rows(&self, base: &[semio_s_artifact_norm_iso16757_model::part_1::SelectionConstraint]) -> Self {
         let _final_index = |index: usize| {
             let mut position = index - self.removed.iter().filter(|removed| **removed < index).count();
             for inserted in &self.inserted {
@@ -620,7 +628,7 @@ impl Iso16757SelectionConstraintsRows {
 #[value(rename_all = "camelCase")]
 pub struct Iso16757PartNumberInputsEntry {
     pub key: String,
-    pub value: crate::CatalogueValue,
+    pub value: semio_s_artifact_norm_iso16757_model::CatalogueValue,
 }
 
 /// 🔺️ Keyed diff of the `part_number_inputs` map: added entries, removed keys and modified values.
@@ -639,7 +647,7 @@ impl Iso16757PartNumberInputsRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, crate::CatalogueValue>) -> Result<std::collections::BTreeMap<String, crate::CatalogueValue>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
             map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
@@ -679,7 +687,7 @@ impl Iso16757PartNumberInputsRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, crate::CatalogueValue>) -> Self {
+    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Iso16757PartNumberInputsEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -701,7 +709,7 @@ pub struct Iso16757ScriptLimitsPatch {
 }
 
 impl Iso16757ScriptLimitsPatch {
-    fn apply_to_row(&self, row: &mut crate::part_5::ScriptLimits) -> Result<(), protocol::MutationApplyError> {
+    fn apply_to_row(&self, row: &mut semio_s_artifact_norm_iso16757_model::part_5::ScriptLimits) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.max_steps {
             row.max_steps = value.clone();
         }
@@ -726,7 +734,7 @@ impl Iso16757ScriptLimitsPatch {
         }
     }
 
-    fn inverse_from_row(&self, row: &crate::part_5::ScriptLimits) -> Self {
+    fn inverse_from_row(&self, row: &semio_s_artifact_norm_iso16757_model::part_5::ScriptLimits) -> Self {
         Self {
             max_steps: self.max_steps.as_ref().map(|_| row.max_steps.clone()),
             max_recursion: self.max_recursion.as_ref().map(|_| row.max_recursion.clone()),
@@ -777,7 +785,7 @@ pub struct Iso16757ProductIndexesPatchVariantIdValue {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PropertyDefinitionsPatchUnitValue {
-    pub value: Option<crate::CatalogueUnit>,
+    pub value: Option<semio_s_artifact_norm_iso16757_model::CatalogueUnit>,
 }
 
 /// 🎁️ Carries the optional `PropertyDefinition.dictionary_property_id` value so an explicit `None` stays distinct from an untouched field.
@@ -832,13 +840,13 @@ pub struct Iso16757Diff {
     #[state(artifact)]
     pub selection_constraints: Option<Iso16757SelectionConstraintsRows>,
     #[state(artifact)]
-    pub part_number_rule: Option<crate::part_5::PartNumberRule>,
+    pub part_number_rule: Option<semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule>,
     #[state(artifact)]
     pub part_number_inputs: Option<Iso16757PartNumberInputsRows>,
     #[state(artifact)]
     pub script_limits: Option<Iso16757ScriptLimitsPatch>,
     #[state(artifact)]
-    pub exchange_process: Option<crate::part_5::ExchangeProcess>,
+    pub exchange_process: Option<semio_s_artifact_norm_iso16757_model::part_5::ExchangeProcess>,
 }
 
 impl protocol::MutationDiff<Iso16757Snapshot> for Iso16757Diff {
@@ -1024,6 +1032,7 @@ impl protocol::DiffAlgebra<Iso16757Snapshot> for Iso16757Diff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

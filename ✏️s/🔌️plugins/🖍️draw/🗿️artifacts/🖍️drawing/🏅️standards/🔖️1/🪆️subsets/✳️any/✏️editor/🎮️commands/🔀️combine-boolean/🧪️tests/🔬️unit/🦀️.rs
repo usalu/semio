@@ -41,4 +41,4 @@ fn drawing_boolean_command_preserves_parent_and_checks_ancestor_admission() {
     }
 }
 
-fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_framework_plugin::Fault>{let admission=crate::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<(Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,String),semio_framework_plugin::Fault>{let admission=semio_s_artifact_draw_drawing_editor::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}

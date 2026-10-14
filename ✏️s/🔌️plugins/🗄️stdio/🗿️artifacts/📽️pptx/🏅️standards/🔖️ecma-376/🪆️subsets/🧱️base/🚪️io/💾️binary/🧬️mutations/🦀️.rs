@@ -7,9 +7,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
-use crate::schema::diff::PptxDiff;
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
-use crate::PptxSnapshot;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxShape;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSlide;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxTransform;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;

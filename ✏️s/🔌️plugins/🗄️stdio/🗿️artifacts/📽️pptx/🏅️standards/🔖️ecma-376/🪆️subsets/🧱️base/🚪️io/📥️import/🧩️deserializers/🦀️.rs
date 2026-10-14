@@ -9,12 +9,11 @@
 //! `p:grpSp` group, `p:graphicFrame` (charts/tables/SmartArt), `p:cxnSp` connectors, and anything
 //! unrecognized fall back to `PptxShape::Other{node}` as logical XML.
 
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship;
-use crate::standards::v_ecma_376::subsets::base::schema::refusal::{PptxError};
-use crate::{
-    schema::snapshot::{pptx_part_is_xml, PptxXmlPart},
-    PptxSnapshot,
-};
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 use semio_s_artifact_stdio_zip::opc;
 
@@ -54,4 +53,4 @@ pub fn sniff_pptx_bytes(data: &[u8]) -> bool {
 }
 //#endregion 🔖️Sniff
 
-use crate::standards::v_ecma_376::subsets::base::schema::inferences::presentation::*;
+use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::inferences::presentation::*;

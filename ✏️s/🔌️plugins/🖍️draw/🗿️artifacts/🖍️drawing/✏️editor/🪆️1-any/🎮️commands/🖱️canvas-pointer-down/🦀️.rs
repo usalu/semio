@@ -7,10 +7,34 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5). Marquee, lasso and click picks
 //! are interaction, never mutations: the session derives their selection query from the tool's context at the release.
 
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+use semio_framework_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::create_layer_by_kind;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
+use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::{drag_path_points, DrawingPathPointTarget};
+use semio_s_artifact_draw_drawing_geometry::multiply;
+use semio_s_artifact_draw_drawing_geometry::editing::{PathPointRef, translate_world_path_points};
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
+use std::collections::{BTreeMap,BTreeSet};
+use semio_framework_value::{list::PagedList,paged::PagedUtf8};
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
+use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
+use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
+use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value::{list::PagedList,paged::{PagedUtf8,Utf8Text}};
-use crate::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
-use crate::interaction::points;
+use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
+use semio_s_artifact_draw_drawing_editor_interaction::points;
 use crate::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
 use crate::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
 use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
@@ -20,13 +44,13 @@ use semio_s_artifact_draw_drawing_transform::scale_layers::mutation::scale_layer
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_geometry::handles::{handle_motion, HandleMotion};
 use semio_s_artifact_draw_drawing_scene::paint::scene::query::{PreparedScenePickJob, PreparedScenePick, PreparedSceneIdentity};
-use crate::geometry_session::MountedSceneQuery;
+use semio_s_artifact_draw_drawing_editor_interaction::geometry_session::MountedSceneQuery;
 use semio_s_artifact_draw_drawing_model::{create_drawing_trace_layer, layer_id};
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, PathSegment};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_geometry::editing::{PathPoint, path_point_hit};
-use crate::commands::canvas_pointer_down::machine::Command;
+use crate::machine::Command;
 use semio_framework_plugin::{kernel::Effect, AppOperationContext, ArtifactView, ConfigView, Emit, Fault, RequestId, UiFixedList};
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolYield};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -246,7 +270,7 @@ fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: 
         line: if utility == "shapeLine" { Some(semio_s_artifact_draw_drawing_model::DrawingLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
         polygon: None,
     });
-    crate::commands::add_layer::initialize_appearance(&mut layer);
+    crate::initialize_appearance(&mut layer);
     Some(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, Some(doc.layers.len()), layer))
 }
 
@@ -268,7 +292,7 @@ fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 
             polygon: Some(semio_s_artifact_draw_drawing_model::DrawingPolygon { points: points.iter().copied().collect() }),
         })
     };
-    crate::commands::add_layer::initialize_appearance(&mut layer);
+    crate::initialize_appearance(&mut layer);
     Some(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, Some(doc.layers.len()), layer))
 }
 
@@ -276,7 +300,7 @@ fn draft_layer(doc: &DrawingSnapshot, utility: &str, points: &UiFixedList<[f64; 
 fn trace_layer(doc: &DrawingSnapshot, source_key: Option<&str>,identity:crate::schema::identity::DrawingIdentity) -> Option<DrawingMutation> {
     let source_key=source_key?;
     let mut layer = create_drawing_trace_layer(identity, "Trace", source_key);
-    crate::commands::add_layer::initialize_appearance(&mut layer);
+    crate::initialize_appearance(&mut layer);
     Some(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, Some(doc.layers.len()), layer))
 }
 
@@ -290,7 +314,7 @@ fn created_layer_effects(mutations: &[DrawingMutation]) -> Vec<Effect> {
     if created.is_empty() {
         return Vec::new();
     }
-    vec![interaction_select_effect(&created, "replace"), Effect::SetActiveUtility { window_id: crate::modes::edit::windows::canvas::DRAWING_PLAY_WINDOW_CANVAS.into(), utility_id: crate::DRAWING_DEFAULT_UTILITY.into() }]
+    vec![interaction_select_effect(&created, "replace"), Effect::SetActiveUtility { window_id: crate::modes::edit::windows::canvas::DRAWING_PLAY_WINDOW_CANVAS.into(), utility_id: semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY.into() }]
 }
 
 /// 🎚️ The world-space motion a drag grabbed so far, as the parametric leaf it yields — `None` for the identity or a
@@ -1250,7 +1274,7 @@ pub fn drawing_rebound_points(base: &DrawingSnapshot, leaf: &DrawingMutation) ->
 
 impl Default for DrawingSession {
     fn default() -> Self {
-        Self::new(crate::DRAWING_DEFAULT_UTILITY, "")
+        Self::new(semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY, "")
     }
 }
 
@@ -1334,13 +1358,13 @@ impl DrawingSession {
     /// ✅️ Commits the open pen or polygon draft as one transaction.
     pub fn finish_draft(&mut self, base: DrawingToolBase) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
         let context=self.tool.context().clone();
-        let identity=if context.points.len()<2{None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing draft lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::commands::add_layer::prepare_identity(&base.document,if context.utility=="pen"{"path"}else{"shape:polygon"},operation,control))?)};
+        let identity=if context.points.len()<2{None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing draft lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::prepare_identity(&base.document,if context.utility=="pen"{"path"}else{"shape:polygon"},operation,control))?)};
         self.step(canvas_tool::Event::CommitDraft(DrawingDraftCommit {base,identity}))
     }
 
     /// 🖼️ Commits a finished trace as one transaction.
     fn traced(&mut self, base: DrawingToolBase, source_key: Option<String>) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-        let identity=if source_key.is_none(){None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing trace lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::commands::add_layer::prepare_identity(&base.document,"trace",operation,control))?)};
+        let identity=if source_key.is_none(){None}else{let operation=base.operation.as_ref().ok_or_else(||Fault::from("Drawing trace lacks original operation admission"))?;Some(self.with_identity_control(|control|crate::prepare_identity(&base.document,"trace",operation,control))?)};
         self.step(canvas_tool::Event::Traced(DrawingTraced { base, source_key,identity }))
     }
 
@@ -1426,7 +1450,7 @@ impl DrawingSession {
             }
             query.node_selection=Some(selected.clone());
             if hit.as_ref().is_some_and(|hit|selected.contains(hit)) {
-                let targets=crate::commands::nudge_selection::drawing_point_targets(document,ids,&selected)?;
+                let targets=crate::drawing_point_targets(document,ids,&selected)?;
                 self.step(canvas_tool::Event::Grab(DrawingGrab::Points { targets }))?;
             }
             return Ok(true);
@@ -1460,7 +1484,7 @@ impl DrawingSession {
         Ok(true)
     }
 
-    pub fn advance_lasso_move(&mut self, payload: &crate::commands::canvas_pointer_move::CanvasPointerMove) -> Result<Option<Emit<DrawingMutation,NoConfigMutation>>,Fault> {
+    pub fn advance_lasso_move(&mut self, payload: &crate::canvas_pointer_move::CanvasPointerMove) -> Result<Option<Emit<DrawingMutation,NoConfigMutation>>,Fault> {
         let [x,y]=payload.samples.get(self.move_sample_cursor).copied().unwrap_or([payload.x,payload.y]);
         let (x,y)=canvas_point_to_world(&self.window_config.viewport,x,y,payload.width,payload.height);
         let emit=self.sample([x,y],payload.shift,payload.alt)?;
@@ -1557,8 +1581,8 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Ef
 /// the trace layer of the image under the pointer as one transaction.
 fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, base: DrawingToolBase) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let captured=session.source_identity.ok_or_else(||Fault::from("Drawing pointer has no source authority"))?;
-    crate::geometry_session::prepare_query(captured,&base.document);
-    let complete=crate::geometry_session::with_query(captured,|status,borrowed|match status{
+    semio_s_artifact_draw_drawing_editor_interaction::geometry_session::prepare_query(captured,&base.document);
+    let complete=semio_s_artifact_draw_drawing_editor_interaction::geometry_session::with_query(captured,|status,borrowed|match status{
         semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Pending=>Ok(false),
         semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Ready=>{let complete=job.advance(&base.document,&borrowed.unwrap());if job.overflowed{Err(Fault::from(job.failure.clone().unwrap_or_else(||"Drawing pointer exceeds capacity".into())))}else{Ok(complete)}},
         _=>Err(Fault::from("Drawing pointer geometry is unavailable or changed")),
@@ -1613,7 +1637,7 @@ pub struct CanvasPointerDown {
 pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     let operation = doc.operation()?;
-    let document_revision = crate::drawing_document_revision(doc);
+    let document_revision = semio_s_artifact_draw_drawing_editor_interaction::drawing_document_revision(doc);
     if let Some(generation) = payload.generation {
         let Some(base_revision) = payload.base_revision.as_deref() else { return Ok(Emit::default()) };
         if base_revision.len() != 64
@@ -1652,3 +1676,107 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, DrawingSnapsho
 #[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+/// 🎨️ Paint new artwork without replacing an explicitly supplied appearance.
+pub fn initialize_appearance(layer: &mut semio_s_artifact_draw_drawing_model::DrawingLayerNode) {
+    use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, StrokeStyle};
+    let filled=matches!(layer,DrawingLayerNode::Shape(shape) if shape.shape_kind!="line") || matches!(layer,DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_));
+    let outlined=matches!(layer,DrawingLayerNode::Shape(_) | DrawingLayerNode::Path(_));
+    let text=matches!(layer,DrawingLayerNode::Text(_));
+    let attributes=&mut semio_s_artifact_draw_drawing_model::layer_base_mut(layer).attributes;
+    if attributes.fill.is_some() || attributes.stroke.is_some() { return; }
+    if filled { attributes.fill=Some(FillStyle::Solid { color:[0.2,0.7,0.65,1.0] }); }
+    else if text { attributes.fill=Some(FillStyle::Solid { color:[0.0,0.0,0.0,1.0] }); }
+    if outlined { attributes.stroke=Some(StrokeStyle { color:[0.1,0.15,0.2,1.0],width:2.0,cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round,join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Round,dash:None }); }
+}
+
+/// 🪪️ Admits a fresh identity at the explicit command IO boundary.
+pub fn prepare_identity(document:&DrawingSnapshot,kind:&str,operation:&semio_framework_plugin::AppOperationContext,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_s_artifact_draw_drawing_model::identity::DrawingIdentity,Fault>{
+ semio_s_artifact_draw_drawing_io::text::identity::creation::layer_identity(document,kind,operation,control).map_err(|error|Fault::from(error.to_string()))
+}
+
+/// 🎯️ What a selection transform addresses once validated against `document`: the selected layers without the ones a
+/// selected ancestor already moves, or the selected points of the selected paths — `None` when nothing moves.
+pub enum DrawingSelectionTargets {
+    Layers(PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>),
+    Points(Vec<DrawingPathPointTarget>),
+}
+
+/// 🔎️ Validates the selection a transform by `delta` addresses — every selected layer exists, is visible and unlocked
+/// through its whole ancestry and moves through a regular transform; every selected point belongs to a selected path at
+/// its current geometry — and answers its targets in document order. A refusal changes nothing.
+pub fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingSelectionTargets>,Fault> {
+    if ids.is_empty() || (nodes && point_ids.is_empty()) {return Ok(None);}
+    if ids.len()>4_096 || point_ids.len()>4_096 {return Err(Fault::from("Selection exceeds keyboard movement capacity"));}
+    let selected: BTreeSet<_>=ids.iter().map(|id|PagedUtf8::<{usize::MAX}>::from(id.as_str())).collect();
+    let mut references:BTreeMap<PagedUtf8<{usize::MAX}>,Vec<points::PointSelectionRef<'_>>>=BTreeMap::new();
+    if nodes {for id in point_ids {
+        let point=points::parse_point_id(id).ok_or_else(||Fault::from("Invalid selected point"))?;
+        if selected.contains(&PagedUtf8::from(point.layer_id)) {references.entry(point.layer_id.into()).or_default().push(point);}
+    }}
+    let wanted:BTreeSet<_>=if nodes {references.keys().cloned().collect()} else {selected};
+    if wanted.is_empty() {return Ok(None);}
+    let mut stack=vec![(&document.layers,0usize,[1.0,0.0,0.0,1.0,0.0,0.0],true,false)];
+    let mut found=BTreeSet::new();
+    let (mut layers,mut targets)=(PagedList::new(),Vec::new());
+    let mut remaining=4_096usize;
+    while let Some((children,index,parent,editable,ancestor_selected))=stack.last_mut() {
+        let Some(layer)=children.get(*index) else {stack.pop();continue;};
+        *index+=1;
+        remaining=remaining.checked_sub(1).ok_or_else(||Fault::from("Drawing exceeds keyboard movement capacity"))?;
+        let base=semio_s_artifact_draw_drawing_model::layer_base(layer);
+        let editable=*editable && base.visible && !base.locked;
+        let chosen=wanted.contains(&base.id);
+        let ancestor_selected=*ancestor_selected;
+        let parent=*parent;
+        let matrix=multiply(parent,semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform));
+        if chosen {
+            found.insert(base.id.clone());
+            if !editable {return Err(Fault::from("Unlock and show selected layers before moving"));}
+            if nodes {
+                let DrawingLayerNode::Path(path)=layer else {return Err(Fault::from("Selected points no longer belong to a path"));};
+                remaining=remaining.checked_sub(path.segments.len()).ok_or_else(||Fault::from("Path exceeds keyboard movement capacity"))?;
+                let before=points::geometry_id(&path.segments).ok_or_else(||Fault::from("Invalid path geometry"))?;
+                let chosen_points=&references[&base.id];
+                if chosen_points.iter().any(|point|point.geometry!=before) {return Err(Fault::from("Selected path points changed"));}
+                let refs=chosen_points.iter().map(|point|PathPointRef {index:point.index,point:point.point}).collect::<Vec<_>>();
+                translate_world_path_points(&path.segments,&refs,matrix,delta).map_err(Fault::from)?;
+                targets.extend(chosen_points.iter().map(|point|DrawingPathPointTarget {layer_id:base.id.clone(),index:point.index,point:point.point}));
+            } else if !ancestor_selected {
+                let source=&base.transform;
+                semio_s_artifact_draw_drawing_geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],parent,delta).ok_or_else(||Fault::from("Cannot move through a singular or nonfinite transform"))?;
+                layers.push(base.id.clone());
+            }
+        }
+        if let DrawingLayerNode::Group(group)=layer {stack.push((&group.children,0,matrix,editable,ancestor_selected || chosen));}
+    }
+    if found!=wanted {return Err(Fault::from("A selected layer no longer exists"));}
+    Ok(if nodes {(!targets.is_empty()).then_some(DrawingSelectionTargets::Points(targets))} else {(!layers.is_empty()).then_some(DrawingSelectionTargets::Layers(layers))})
+}
+
+/// 🎯️ The dragged path points `point_ids` name on the selected paths `ids`, validated as a node drag validates them.
+pub fn drawing_point_targets(document:&DrawingSnapshot,ids:&[String],point_ids:&[String])->Result<Vec<DrawingPathPointTarget>,Fault> {
+    match drawing_selection_targets(document,true,ids,point_ids,[0.0,0.0])? {
+        Some(DrawingSelectionTargets::Points(targets))=>Ok(targets),
+        _=>Err(Fault::from("Select path points to move")),
+    }
+}
+
+
+//#region 🪢️TaxonomyMounts
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️canvas-commit-draft/🦀️.rs"]
+pub mod canvas_commit_draft;
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-double-click/🦀️.rs"]
+pub mod canvas_double_click;
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪️canvas-escape/🦀️.rs"]
+pub mod canvas_escape;
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️canvas-pointer-move/🦀️.rs"]
+pub mod canvas_pointer_move;
+#[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬆️canvas-pointer-up/🦀️.rs"]
+pub mod canvas_pointer_up;
+#[path = "."]
+pub mod modes {
+    #[path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+//#endregion 🪢️TaxonomyMounts

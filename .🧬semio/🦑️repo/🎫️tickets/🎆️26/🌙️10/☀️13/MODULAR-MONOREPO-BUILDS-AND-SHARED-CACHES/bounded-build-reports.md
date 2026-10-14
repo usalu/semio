@@ -1,0 +1,17 @@
+# Bounded Build Report Publication
+
+The build CLI graph/show `--file` and Bazel planning `--graph` outputs now publish through an issued diagnostics2GiB store. The argument is a compact JSON artifact name; arbitrary absolute/parent/nested paths refuse before any filesystem write. JSON is limited16MiB, retained reports64MiB/64files and one fixed exclusive report writer avoids per-report lease database growth. Publication writes a unique finite temporary, fsyncs, rechecks original backing, atomically renames, and fsyncs its parent. Foreign symlink/hardlink/report inventory refuses. Completed output path is printed for the caller.
+
+Prototype actual private Nx gate passed2tests/18assertions in220ms, including independent SQLite/Ajv name validation and actual output JSON byte parity with SQLite. Pure name gate passed1/15 separately. Earlier intended red attempts failed infrastructure/import/schema setup; no genuine unsafe-name behavioral red is claimed because a concurrent source change had already restored the guard before the actual run. Strict output owner compiled earlier; current integrated strict gate is running. Release completed success and its counts are being inspected.
+
+Direct old Bazel reset recursive removal was replaced with explicit refusal requiring an issued maintenance owner. This closes an unsafe deletion route, but does not implement Bazel reset; shared backend maintenance custody remains required. Other report/verifier writers and full repository maximum remain open. Source and editor launch registrations are additive; no modifying git operation was performed.
+
+Release actual same report gate passed2tests/18assertions in226msNx. Integrated strict gate initially found the preexisting unchecked `show project` name index, corrected with an explicit required name guard; current rerun pending. Graph/show CLI fullfront has not been rerun, so the output callback unit law does not prove complete frontend latency.
+
+Final Source actual privateNx gate passed3tests/20assertions inprototype484ms and release217ms, including absent/nonJSON value refusal before storage. Strict unchecked integrated reporting/build owner gate exited0. Report allocation admission rounds requested JSON bytes conservatively to1MiB blocks before retained-budget eviction; physical filesystem still enforces its overall2GiB maximum independently. RootSource nowstable for currentSDK qualification.
+
+Report lifetime correction: the old publisher returned only a path after releasing image custody. It is replaced by `withRepositoryBuildReportV1`; no compatibility publisher remains. Complete bytes, digest, original backing and exclusive finite report custody remain held until callback settlement; escaped recheck handles refuse. Real behavioral callback red3passed/1failed became green4tests/24assertions inprototype639ms and release350msNx. The law proves held consumers exclude exclusive retirement and post-release handles reject. Permanent reporting script/project test target is now authored.
+
+Consolidatedreportwriterleasefinallycoverspublication,identitycapture,callbackandcleanup,includingerrorsbetweenpublishandreadersetup. Actualcallbackfailurepropagatesoriginalerror,releaseswriterfornextEXadmission,andcleansstaging5/26prototypeGREEN554ms+ES2022strictuncheckedGREEN.
+
+Finalreportlifetimecurrentrelease5tests/26assertionsGREEN1465ms, allOriginalroottooljobssettled. NoRootactivebuildleft; pendingfleetworkcontinues.

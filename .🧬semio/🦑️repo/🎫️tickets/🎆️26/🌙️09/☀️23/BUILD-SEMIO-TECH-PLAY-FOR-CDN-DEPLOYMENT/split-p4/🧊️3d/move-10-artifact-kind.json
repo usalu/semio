@@ -1,0 +1,6 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "from_module": "",
+   "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs", "to_module": "standards::v1::subsets::any::schema",
+   "select": ["artifact_kind", "kit_catalog_artifact_kind"]}
+ ]}

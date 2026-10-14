@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Version 2 immutable Bun installation material uses canonical JSON manifests with only top-level semio omitted. Native fields, nested semio, array ordering, lock/config/patch bytes and exact canonical physical membership remain install inputs. Every operation captures and revalidates full original Source bytes and physical path/mode facts, including omitted metadata; an active publisher witness fences complete current membership before reuse and publication. No earlier generation protocol is admitted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "excludedTopLevelFields",
+    "keyOrder",
+    "sourceCustody",
+    "membershipCustody"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "excludedTopLevelFields": {
+      "const": [
+        "semio"
+      ]
+    },
+    "keyOrder": {
+      "const": "recursive-utf8-keys-preserve-array-order"
+    },
+    "sourceCustody": {
+      "const": "exact-current-full-bytes-path-kind-mode"
+    },
+    "membershipCustody": {
+      "const": "original-controlled-publisher-observations"
+    }
+  },
+  "$defs": {
+    "InstallManifest": {
+      "type": "object",
+      "properties": {
+        "semio": false
+      }
+    },
+    "Mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "before",
+        "after",
+        "sameInstallMaterial"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "before": {
+          "type": "object"
+        },
+        "after": {
+          "type": "object"
+        },
+        "sameInstallMaterial": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DelayedCustody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "result"
+      ],
+      "properties": {
+        "sequence": {
+          "const": [
+            "body-entered",
+            "recheck-paused",
+            "body-returned",
+            "custody-released",
+            "recheck-resumed"
+          ]
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "refusal"
+          ],
+          "properties": {
+            "refusal": {
+              "const": "Original Bun installation callback released"
+            }
+          }
+        }
+      }
+    }
+  }
+}

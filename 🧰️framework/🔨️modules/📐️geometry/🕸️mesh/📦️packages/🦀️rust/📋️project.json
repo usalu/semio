@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/geometry-solids-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

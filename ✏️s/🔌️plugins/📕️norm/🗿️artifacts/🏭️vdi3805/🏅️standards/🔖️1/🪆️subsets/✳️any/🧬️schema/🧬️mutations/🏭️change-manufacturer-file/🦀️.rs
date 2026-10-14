@@ -1,7 +1,7 @@
 //! 🏭️ `change-manufacturer-file` — atomically updates the manufacturer file header facet (the
 //! norm's `010` record fields are always authored together, never one-field-at-a-time).
 
-use crate::{ManufacturerFile, Vdi3805Mutation, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_model::{ManufacturerFile, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,15 +14,15 @@ pub struct ChangeManufacturerFile {
     pub new_manufacturer_file: ManufacturerFile,
 }
 
-impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeManufacturerFile {
+impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeManufacturerFile where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_manufacturer_file::ChangeManufacturerFile> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "manufacturer-file", kind: "change-manufacturer-file", record: "ChangedManufacturerFile" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
+        crate::change_manufacturer_file::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Vdi3805Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Vdi3805Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_manufacturer_file::inverse::inverse(self, base)?
     
     })
 }
@@ -31,3 +31,10 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeManufact
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

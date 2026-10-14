@@ -1,16 +1,17 @@
 #!/usr/bin/env bun
+import { runDeclaredRustBuildV1 } from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ⚙️ Builds and tests the `semio-framework-repo-languages` crate (nx bridge for `repo/languages/rs`). */
-import { devToolingEnv, runRepositoryCargoTests, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const CRATE = "semio-framework-repo-languages";
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["build", "-p", CRATE], { cwd: this.repoRoot, env: devToolingEnv() });
+  async run(segments: string[]): Promise<void> {
+    await runDeclaredRustBuildV1(this.repoRoot, "@semio-tech/repo-languages-rs", this.root, this.invocation, segments);
   }
 }
 

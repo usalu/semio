@@ -2,19 +2,19 @@
 //! touches the document.
 
 use super::*;
-use crate::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::ProcessWorkingScene, snapshot::Stock, snapshot::Workshop};
 use semio_framework_plugin::HistoryView;
 
 fn timeline(steps: usize) -> Process3dSnapshot {
     let step = |index: usize| ProcessStep { id: format!("step-{index}"), label: format!("Step {index}"), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: 0.01, depth: 0.05, pose: Pose::default() } };
-    crate::process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: (0..steps).map(step).collect() }, Workshop::default())
+    semio_s_artifact_process_process3d_model::snapshot::process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps: (0..steps).map(step).collect() }, Workshop::default())
 }
 
-fn moved(snapshot: &Process3dSnapshot, config: &Process3dConfig, command: impl FnOnce(&ArtifactView<'_, Process3dSnapshot>, &ConfigView<'_, Process3dConfig>, &mut crate::editor::process3d::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault>) -> Emit<Process3dMutation, Process3dConfigMutation> {
+fn moved(snapshot: &Process3dSnapshot, config: &Process3dConfig, command: impl FnOnce(&ArtifactView<'_, Process3dSnapshot>, &ConfigView<'_, Process3dConfig>, &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault>) -> Emit<Process3dMutation, Process3dConfigMutation> {
     let history = HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let cfg = ConfigView { snapshot: config, window: None };
-    let mut ctx = crate::editor::process3d::Process3dDispatchCtx { interaction: Default::default(), view_state: None };
+    let mut ctx = semio_s_artifact_process_process3d_kit::Process3dDispatchCtx { interaction: Default::default(), view_state: None };
     command(&doc, &cfg, &mut ctx).expect("the cursor moves")
 }
 

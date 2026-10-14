@@ -1,6 +1,7 @@
+import {repositoryRustCompilerIdentityV1} from "../../../../🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
 import {createHash} from "node:crypto";
-import {readFileSync,lstatSync,readdirSync,mkdirSync} from "node:fs";
-import {join,dirname,resolve} from "node:path";
+import {readFileSync,mkdirSync} from "node:fs";
+import {join,resolve} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {acquireCompilerCapacityLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
@@ -10,10 +11,8 @@ import type {RustUnitCompilerPortV1} from "../🟦️.ts";
 import type {RustUnitPlanV1} from "../../🟦️.ts";
 import {captureRustUnitReceiptV1,readRustUnitReceiptV1,type RustUnitReceiptV1} from "../../📤️receipt/🟦️.ts";
 const digest=(bytes:Buffer|string)=>createHash("sha256").update(bytes).digest("hex");
-/** 🛠️ Captures the actual compiler binary and target sysroot libraries independently of storage and scheduling. */
-export function rustCompilerIdentityV1(program:string,triple:string) {
- if(!/^[a-z0-9_-]+$/u.test(triple))throw Error("Closed Rust target triple required");program=resolve(program);const executable=lstatSync(program);if(!executable.isFile()||executable.isSymbolicLink())throw Error("Actual Rust compiler binary required");const sysroot=dirname(dirname(program)),libraries=join(sysroot,"lib/rustlib",triple,"lib"),records=readdirSync(libraries).sort().map(name=>{const file=join(libraries,name),facts=lstatSync(file);if(!facts.isFile()||facts.isSymbolicLink())throw Error("Actual Rust target sysroot file required");return[name,digest(readFileSync(file))];});return{program,digest:digest(readFileSync(program)),sysrootDigest:digest(JSON.stringify(records)),linkerDigest:digest("rust-rlib-no-linker-v1")};
-}
+/** 🛠️ Uses only the actual complete compiler generation retained by Original tools custody. */
+export function rustCompilerIdentityV1(program:string,triple:string){return repositoryRustCompilerIdentityV1(program,triple);}
 export interface RustUnitDependencyArtifactV1 {plan:RustUnitPlanV1;directory:string;receipt:RustUnitReceiptV1;withReader<T>(control:ResourceLeaseControl,body:()=>Promise<T>):Promise<T>}
 /** 🦀️ Compiles one library in the acquired physical workspace using verified direct dependency receipts. */
 export function rustLibraryCompilerPortV1(root:string,invocation:ScriptInvocation,dependencies:ReadonlyMap<string,RustUnitDependencyArtifactV1>,executionEnvironment:Readonly<Record<string,string|undefined>>):RustUnitCompilerPortV1 {

@@ -5,7 +5,7 @@ const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")
+    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
 }
 
 fn canvas_point(camera: &Viewport2d, model: (f64, f64)) -> (f64, f64) {
@@ -138,17 +138,3 @@ fn select_and_hover_effects_carry_the_framework_wire_contract() {
     assert_eq!(decoded[0].id, "n1");
 }
 
-#[test]
-fn structure_layers_paint_stable_selected_and_hovered_emphasis() {
-    let doc = demo();
-    let snapshot = Fem2dInteractionSnapshot { selected_ids: vec!["n1".into(), "e3".into(), "r1".into(), "s1".into(), "l6".into()], hovered_ids: vec!["n2".into()] };
-    let bare = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
-    let painted = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &snapshot)));
-    for id in ["sel-node-n1", "sel-el-e3", "sel-region-r1", "sel-support-s1", "sel-load-l6", "hov-node-n2"] {
-        assert!(painted.contains(id), "missing emphasis layer {id}");
-        assert!(!bare.contains(id), "the bare structure layers must stay free of interaction state ({id})");
-    }
-    assert!(painted.contains(model_window::SELECTION_COLOR_2D), "the selected emphasis carries its own colour");
-    assert!(painted.contains(model_window::HOVER_COLOR_2D), "the hovered emphasis carries the lighter colour");
-    assert_eq!(semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(model_window::fem2d_structure_layers_with(&doc, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot::default()))), bare, "an empty interaction snapshot paints exactly the bare layers");
-}

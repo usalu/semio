@@ -3,9 +3,9 @@
 //! no-op (`RasterDiff::default()` / `Vec::new()`), never a panic.
 
 pub mod mutation {
-    use crate::diff::RasterDiff;
-    use crate::mutations::RasterMutation;
-    use crate::RasterSnapshot;
+    use semio_s_artifact_raster_raster_diff::RasterDiff;
+
+    use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 
     //#region 🔖️ResizeLayer
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -18,15 +18,15 @@ pub mod mutation {
         pub new_height: u32,
     }
 
-    impl protocol::MutationKind<RasterSnapshot, RasterMutation> for ResizeLayer {
+    impl<Op> protocol::MutationKind<RasterSnapshot, Op> for ResizeLayer where Op: protocol::Mutation<RasterSnapshot, Diff = semio_s_artifact_raster_raster_diff::RasterDiff> + From<crate::resize_layer::mutation::ResizeLayer> {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "layer", kind: "resize-layer", record: "ResizedLayer" };
 
         fn diff(&self, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {
-            super::super::diff::diff(self, base)
+            crate::resize_layer::diff::diff(self, base)
         }
 
-        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    super::super::inverse::inverse(self, base)
+        fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    crate::resize_layer::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -41,3 +41,13 @@ pub mod mutation {
 }
 
 pub use mutation::ResizeLayer;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[cfg(test)]
+#[path = "🧪️tests/📐️resizes/🦀️.rs"]
+mod tests_resizes_the_canvas_layer_to_256_by_128;
+//#endregion 🪢️TaxonomyMounts

@@ -6,16 +6,19 @@
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
-use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
-use crate::standards::v1::subsets::any::schema::{
-    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
-    ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
-};
-use crate::editor::puzzle3d::precompute::geometry::{
-    collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d,
-};
-use crate::standards::v1::subsets::any::schema::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
-use crate::puzzle_job::JobTurn;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use semio_s_artifact_puzzle_3d_model::{AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind, ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps};
+use semio_s_artifact_puzzle_3d_precompute_geometry::{collision_body_from_buffers, compute_brush_placement_pose, normalize_vec3, pose_isometry, precompute_work, quat_rotate_vec, vec3_add, CollisionAabb, CollisionBody, CollisionPenetrationState, CollisionStepContext, CollisionStepResult, Pose3d};
+use semio_s_artifact_puzzle_3d_model::{BrushSuggestionsRunCounter, BrushSuggestionsRunReason, BrushSuggestionsRunStage, SceneConfig};
+use semio_s_plugin_puzzle_jobs::JobTurn;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, StepContext};
 use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, ToolRunJobPort};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
@@ -23,25 +26,25 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
+pub const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
 
 //#region 🔖️VortexContext
 #[derive(Debug, Clone)]
-pub(crate) struct AttractionVortexContext {
-    pub(crate) object_kind: Option<String>,
-    pub(crate) vortex_kind: Option<String>,
+pub struct AttractionVortexContext {
+    pub object_kind: Option<String>,
+    pub vortex_kind: Option<String>,
 }
 
 #[derive(Clone, value_derive::ToValue, value_derive::FromValue)]
-pub(crate) struct BrushFillVortexTarget {
-    pub(crate) full_id: String,
-    pub(crate) object_id: String,
-    pub(crate) object_kind: Option<String>,
-    pub(crate) vortex_kind: Option<String>,
-    pub(crate) vortex_index: usize,
+pub struct BrushFillVortexTarget {
+    pub full_id: String,
+    pub object_id: String,
+    pub object_kind: Option<String>,
+    pub vortex_kind: Option<String>,
+    pub vortex_index: usize,
 }
 
-pub(crate) trait BrushCatalogView {
+pub trait BrushCatalogView {
     fn objects(&self) -> &[ObjectKind];
     fn vortices(&self) -> &[VortexKindCatalog];
     fn cables(&self) -> &[CableKindCatalog];
@@ -61,7 +64,7 @@ impl BrushCatalogView for KindCatalogBundle {
     }
 }
 
-pub(crate) trait BrushSceneView {
+pub trait BrushSceneView {
     fn object_count(&self) -> usize;
     fn find_object_kind(&self, kind_id: &str) -> Option<&EngineSceneObject>;
 }
@@ -78,7 +81,7 @@ impl BrushSceneView for EngineSceneSnapshot {
 //#endregion 🔖️VortexContext
 
 //#region 🔖️Compatibility
-pub(crate) fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static str> {
+pub fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static str> {
     if vortex_kind.contains(" circular ") {
         Some("circular")
     } else if vortex_kind.contains(" rectangular ") {
@@ -88,14 +91,14 @@ pub(crate) fn puzzle3d_vortex_port_shape(vortex_kind: &str) -> Option<&'static s
     }
 }
 
-pub(crate) fn puzzle3d_vortex_port_shapes_compatible(source: &str, target: &str) -> bool {
+pub fn puzzle3d_vortex_port_shapes_compatible(source: &str, target: &str) -> bool {
     match (puzzle3d_vortex_port_shape(source), puzzle3d_vortex_port_shape(target)) {
         (None, _) | (_, None) => true,
         (Some(a), Some(b)) => a == b,
     }
 }
 
-pub(crate) fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
+pub fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<char> {
     let head = vortex_kind.split('-').next()?;
     if head.len() == 1 {
         let ch = head.chars().next()?;
@@ -106,7 +109,7 @@ pub(crate) fn puzzle3d_single_letter_port_family(vortex_kind: &str) -> Option<ch
     None
 }
 
-pub(crate) fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
+pub fn puzzle3d_single_letter_port_families_compatible(source: &str, target: &str) -> bool {
     match (puzzle3d_single_letter_port_family(source), puzzle3d_single_letter_port_family(target)) {
         (None, _) | (_, None) => true,
         (Some(a), Some(b)) => a == b,
@@ -121,19 +124,19 @@ fn catalog_cable_by_id<'a>(catalogs: &'a impl BrushCatalogView, cable_kind: &str
     catalogs.cables().iter().find(|w| w.id == cable_kind)
 }
 
-pub(crate) fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &impl BrushCatalogView) -> String {
+pub fn resolve_cable_kind_for_vortex(vortex_kind: &str, catalogs: &impl BrushCatalogView) -> String {
     catalog_vortex_by_id(catalogs, vortex_kind).and_then(|v| v.default_cable_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_else(|| DEFAULT_CABLE_KIND_ID.to_string())
 }
 
-pub(crate) fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &impl BrushCatalogView) -> String {
+pub fn resolve_attraction_kind_for_cable(cable_kind: &str, catalogs: &impl BrushCatalogView) -> String {
     catalog_cable_by_id(catalogs, cable_kind).and_then(|c| c.default_attraction_kind.as_ref()).map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default()
 }
 
-pub(crate) fn compat_pair_matches(rule: &KindCompatEntry, a: &str, b: &str) -> bool {
+pub fn compat_pair_matches(rule: &KindCompatEntry, a: &str, b: &str) -> bool {
     (rule.source == a && rule.target == b) || (rule.bidirectional && rule.source == b && rule.target == a)
 }
 
-pub(crate) fn specificity_rank(spec: Option<&str>) -> i32 {
+pub fn specificity_rank(spec: Option<&str>) -> i32 {
     match spec {
         Some("general") => 0,
         Some("object") => 1,
@@ -144,7 +147,7 @@ pub(crate) fn specificity_rank(spec: Option<&str>) -> i32 {
     }
 }
 
-pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &impl BrushCatalogView) -> bool {
+pub fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, catalogs: &impl BrushCatalogView) -> bool {
     let cable_src = resolve_cable_kind_for_vortex(attracting.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let cable_tgt = resolve_cable_kind_for_vortex(attracted.vortex_kind.as_deref().unwrap_or(""), catalogs);
     let attraction_src = resolve_attraction_kind_for_cable(&cable_src, catalogs);
@@ -163,7 +166,7 @@ pub(crate) fn attraction_gesture_rule_applies(rule: &KindCompatEntry, attracting
     }
 }
 
-pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &impl BrushCatalogView) -> bool {
+pub fn vortices_attraction_compatible_for_drag(attracting: &AttractionVortexContext, attracted: &AttractionVortexContext, rules: &[KindCompatEntry], catalogs: &impl BrushCatalogView) -> bool {
     let sv = attracting.vortex_kind.as_deref().unwrap_or("");
     let tv = attracted.vortex_kind.as_deref().unwrap_or("");
     if !puzzle3d_vortex_port_shapes_compatible(sv, tv) {
@@ -190,7 +193,7 @@ pub(crate) fn vortices_attraction_compatible_for_drag(attracting: &AttractionVor
 //#endregion 🔖️Compatibility
 
 //#region 🔖️StackPairs
-pub(crate) fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
+pub fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
     if let Some(base) = vortex_kind.strip_suffix(" bottom") {
         Some(base)
     } else if let Some(base) = vortex_kind.strip_suffix(" top") {
@@ -200,21 +203,21 @@ pub(crate) fn brush_stack_vortex_base(vortex_kind: &str) -> Option<&str> {
     }
 }
 
-pub(crate) fn brush_stack_bottom_top_pair(source: &str, target: &str) -> bool {
+pub fn brush_stack_bottom_top_pair(source: &str, target: &str) -> bool {
     let (Some(sb), Some(tb)) = (brush_stack_vortex_base(source), brush_stack_vortex_base(target)) else {
         return false;
     };
     source.ends_with(" bottom") && target.ends_with(" top") && sb == tb
 }
 
-pub(crate) fn brush_stack_top_bottom_pair(source: &str, target: &str) -> bool {
+pub fn brush_stack_top_bottom_pair(source: &str, target: &str) -> bool {
     let (Some(sb), Some(tb)) = (brush_stack_vortex_base(source), brush_stack_vortex_base(target)) else {
         return false;
     };
     source.ends_with(" top") && target.ends_with(" bottom") && sb == tb
 }
 
-pub(crate) fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
+pub fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
     if !puzzle3d_vortex_port_shapes_compatible(source, target) {
         return false;
     }
@@ -223,7 +226,7 @@ pub(crate) fn brush_stack_mate_pair(source: &str, target: &str) -> bool {
 //#endregion 🔖️StackPairs
 
 //#region 🔖️Candidates
-pub(crate) fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate, target: &AttractionVortexContext) -> i64 {
+pub fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate, target: &AttractionVortexContext) -> i64 {
     let mut score: i64 = 0;
     let target_kind = target.vortex_kind.as_deref().unwrap_or("");
     let source_kind = template.vortex_kind.as_deref().unwrap_or("");
@@ -260,7 +263,7 @@ pub(crate) fn brush_candidate_rank(candidate: &BrushCompatibleCandidate, templat
     score
 }
 
-pub(crate) fn host_accepts_candidate(rules: &BrushHostRules, target: &AttractionVortexContext, candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate) -> bool {
+pub fn host_accepts_candidate(rules: &BrushHostRules, target: &AttractionVortexContext, candidate: &BrushCompatibleCandidate, template: &ObjectKindVortexTemplate) -> bool {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     if rules.reject_capital_on_tambour && (target_vk.contains("tambour circular") || target_vk.contains("tambour rectangular")) && candidate.object_kind_id.contains("Capital") {
         return false;
@@ -285,7 +288,7 @@ pub(crate) fn host_accepts_candidate(rules: &BrushHostRules, target: &Attraction
     x >= rules.door_capsule_min_abs_x && y < rules.door_capsule_max_abs_y
 }
 
-pub(crate) fn brush_placement_uses_host_orientation(target: &AttractionVortexContext, source_vk: &str, candidate_kind: &str) -> bool {
+pub fn brush_placement_uses_host_orientation(target: &AttractionVortexContext, source_vk: &str, candidate_kind: &str) -> bool {
     let target_vk = target.vortex_kind.as_deref().unwrap_or("");
     if brush_stack_mate_pair(source_vk, target_vk) {
         return false;
@@ -296,11 +299,11 @@ pub(crate) fn brush_placement_uses_host_orientation(target: &AttractionVortexCon
     candidate_kind == target.object_kind.as_deref().unwrap_or("")
 }
 
-pub(crate) fn catalog_object_kind_by_id<'a>(catalogs: &'a impl BrushCatalogView, id: &str) -> Option<&'a ObjectKind> {
+pub fn catalog_object_kind_by_id<'a>(catalogs: &'a impl BrushCatalogView, id: &str) -> Option<&'a ObjectKind> {
     catalogs.objects().iter().find(|k| k.id == id)
 }
 
-pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
+pub fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
     if let Some(kind) = catalog_object_kind_by_id(catalogs, kind_id) {
         if let Some(url) = kind.representations.iter().map(|r| r.url.trim()).find(|u| !u.is_empty()) {
             return Some(url.to_string());
@@ -312,11 +315,11 @@ pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushC
 /// 🥽️ The mesh identity a PLACED object renders and collides with: its own non-empty `meshUrl`, else its
 /// kind's. The same law as the renderer's `Puzzle3dKindMeshIndex::resolve`; resolving a placed object by kind
 /// alone found the first object of that kind instead, so a body carrying its own mesh was never indexed.
-pub(crate) fn resolve_placed_object_mesh_url(object: &EngineSceneObject, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
+pub fn resolve_placed_object_mesh_url(object: &EngineSceneObject, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
     object.mesh_url.as_deref().map(str::trim).filter(|url| !url.is_empty()).map(str::to_string).or_else(|| resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, scene_snapshot))
 }
 
-pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
+pub fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
     let mut scored: Vec<(BrushCompatibleCandidate, i64)> = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for (kind_index, kind) in catalogs.objects.iter().enumerate() {
@@ -333,7 +336,7 @@ pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, cata
     scored.into_iter().map(|(c, _)| c).collect()
 }
 
-pub(crate) fn brush_fill_candidate_at(
+pub fn brush_fill_candidate_at(
     target: &AttractionVortexContext,
     catalogs: &impl BrushCatalogView,
     rules: &[KindCompatEntry],
@@ -363,8 +366,8 @@ pub(crate) fn brush_fill_candidate_at(
     Some((candidate, rank))
 }
 
-#[cfg(test)]
-pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
+#[cfg(any(test, feature = "testing"))]
+pub fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
     let mut s = std::collections::HashSet::new();
     for a in attractions {
         s.insert(a.attracting.clone());
@@ -373,7 +376,7 @@ pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::c
     s
 }
 
-pub(crate) fn vortex_world_from_object(obj: &EngineSceneObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
+pub fn vortex_world_from_object(obj: &EngineSceneObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
     let vortex = obj.vortices.get(vortex_index)?;
     let orientation = obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let position = vec3_add(obj.origin, quat_rotate_vec(orientation, vortex.position));
@@ -381,8 +384,8 @@ pub(crate) fn vortex_world_from_object(obj: &EngineSceneObject, vortex_index: us
     Some((position, direction))
 }
 
-#[cfg(test)]
-pub(crate) fn enumerate_brush_fill_vortex_targets(scene_snapshot: &EngineSceneSnapshot) -> Vec<BrushFillVortexTarget> {
+#[cfg(any(test, feature = "testing"))]
+pub fn enumerate_brush_fill_vortex_targets(scene_snapshot: &EngineSceneSnapshot) -> Vec<BrushFillVortexTarget> {
     let blocked = blocked_vortex_full_ids(&scene_snapshot.attractions);
     let mut out = Vec::new();
     for obj in &scene_snapshot.objects {
@@ -398,21 +401,21 @@ pub(crate) fn enumerate_brush_fill_vortex_targets(scene_snapshot: &EngineSceneSn
 //#endregion 🔖️Candidates
 
 //#region 🔖️Weights
-pub(crate) fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
+pub fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
     weights.get(id).copied().unwrap_or(1.0)
 }
 
-pub(crate) fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
+pub fn brush_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, weights: &BrushKindWeights, catalogs: &KindCatalogBundle) -> f64 {
     let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id).and_then(|kind| kind.vortices.get(candidate.source_vortex_index)).and_then(|template| template.vortex_kind.as_deref()).unwrap_or("");
     brush_joint_weight_value(&weights.object_weights, &weights.vortex_weights, &candidate.object_kind_id, vortex_kind)
 }
 
-pub(crate) fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
+pub fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
     brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
 }
 
 fn brush_joint_weight_value(object_weights: &std::collections::BTreeMap<String, f64>, joint_weights: &std::collections::BTreeMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
-    let sep = crate::editor::puzzle3d::snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let sep = semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
     let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
     if let Some(weight) = joint_weights.get(&composite) {
         return *weight;
@@ -420,15 +423,15 @@ fn brush_joint_weight_value(object_weights: &std::collections::BTreeMap<String, 
     brush_kind_weight_value(object_weights, object_kind_id) * brush_kind_weight_value(joint_weights, vortex_kind_id)
 }
 
-#[cfg(test)]
-pub(crate) fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
+#[cfg(any(test, feature = "testing"))]
+pub fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
     let object_kind = target.object_kind.as_deref().unwrap_or("");
     let vortex_kind = target.vortex_kind.as_deref().unwrap_or("");
     brush_joint_weight_value(&weights.object_weights, &weights.vortex_weights, object_kind, vortex_kind)
 }
 
-#[cfg(test)]
-pub(crate) fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
+#[cfg(any(test, feature = "testing"))]
+pub fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
 where
     T: Clone,
     F: Fn(&T) -> f64,
@@ -460,30 +463,30 @@ where
     out
 }
 
-pub(crate) fn fill_rng(rng_state: &mut u32) -> f64 {
+pub fn fill_rng(rng_state: &mut u32) -> f64 {
     *rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
     *rng_state as f64 / 4_294_967_296.0
 }
 
-#[cfg(test)]
-pub(crate) fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
+#[cfg(any(test, feature = "testing"))]
+pub fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
     weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
 }
 
-#[cfg(test)]
-pub(crate) fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
+#[cfg(any(test, feature = "testing"))]
+pub fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
     weighted_sample_without_replacement(candidates, |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs), rng_state)
 }
 
-pub(crate) fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidate, target_vortex_index: usize, target_object_kind: Option<&str>) -> i64 {
+pub fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidate, target_vortex_index: usize, target_object_kind: Option<&str>) -> i64 {
     if target_object_kind != Some(candidate.object_kind_id.as_str()) {
         return 0;
     }
     1000 + (candidate.source_vortex_index as i64 - target_vortex_index as i64).unsigned_abs() as i64 * 100
 }
 
-#[cfg(test)]
-pub(crate) fn order_brush_fill_compatible_candidates(
+#[cfg(any(test, feature = "testing"))]
+pub fn order_brush_fill_compatible_candidates(
     candidates: &[BrushCompatibleCandidate],
     target_vortex_kind: Option<&str>,
     target_vortex_index: usize,
@@ -520,13 +523,13 @@ pub(crate) fn order_brush_fill_compatible_candidates(
 //#region 🔖️Placement
 /// 🎯️ A target vortex's world-space pose, bundled so `brush_preview_from_candidate` stays under clippy's arg-count limit.
 #[derive(Clone, Copy)]
-pub(crate) struct TargetVortexWorld {
-    pub(crate) position: Vec3,
-    pub(crate) direction: Vec3,
-    pub(crate) reference_orientation: Option<Quat>,
+pub struct TargetVortexWorld {
+    pub position: Vec3,
+    pub direction: Vec3,
+    pub reference_orientation: Option<Quat>,
 }
 
-pub(crate) fn brush_preview_from_candidate(
+pub fn brush_preview_from_candidate(
     target_full_id: &str,
     candidate: &BrushCompatibleCandidate,
     target: &AttractionVortexContext,
@@ -582,7 +585,7 @@ pub fn apply_brush_placement_to_snapshot(scene_snapshot: &EngineSceneSnapshot, p
 }
 
 /// 🪪️ Content-addressed brush object id — keyed by scene_snapshot size and placement payload (no global counter).
-pub(crate) fn brush_object_id(scene_snapshot: &impl BrushSceneView, payload: &BrushPlacePayload) -> String {
+pub fn brush_object_id(scene_snapshot: &impl BrushSceneView, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
@@ -619,11 +622,11 @@ pub enum BrushSuggestionVerdict {
 /// it, so a closing job never retires what its successor already published.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct BrushSuggestionsFound {
-    pub(crate) writer: (u64, u32),
-    pub(crate) target: String,
-    pub(crate) previews: Vec<Option<BrushPreviewState>>,
-    pub(crate) verdicts: Vec<BrushSuggestionVerdict>,
-    pub(crate) done: bool,
+    pub writer: (u64, u32),
+    pub target: String,
+    pub previews: Vec<Option<BrushPreviewState>>,
+    pub verdicts: Vec<BrushSuggestionVerdict>,
+    pub done: bool,
 }
 
 impl BrushSuggestionsFound {
@@ -664,10 +667,10 @@ pub enum BrushSuggestionsRequest {
 pub struct BrushSuggestionsLink {
     menu: Option<String>,
     hover: Option<String>,
-    port: Option<ToolRunJobPort>,
-    pub(crate) requested: Option<(BrushSuggestionsRequest, Option<u64>)>,
-    pub(crate) retry: bool,
-    pub(crate) found: Option<BrushSuggestionsFound>,
+    pub port: Option<ToolRunJobPort>,
+    pub requested: Option<(BrushSuggestionsRequest, Option<u64>)>,
+    pub retry: bool,
+    pub found: Option<BrushSuggestionsFound>,
 }
 
 impl BrushSuggestionsLink {
@@ -716,17 +719,17 @@ impl BrushSuggestionsLink {
         self.found.as_ref().filter(|found| found.target == target)
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.menu.is_none() && self.hover.is_none() && self.port.is_none() && self.requested.is_none() && self.found.is_none()
     }
 
-    pub(crate) fn clear(&mut self) {
+    pub fn clear(&mut self) {
         *self = Self::default();
     }
 }
 
 /// 🧠️ An instance operation owner that carries a [`BrushSuggestionsLink`].
-pub(crate) trait BrushSuggestionsOwner: std::any::Any {
+pub trait BrushSuggestionsOwner: std::any::Any {
     fn brush_suggestions(&mut self) -> &mut BrushSuggestionsLink;
 }
 
@@ -741,7 +744,7 @@ enum BrushSuggestionsPhase {
 #[derive(semio_framework_value::RetireOwned)]
 struct BrushSuggestionsPlaced {
     object_id: String,
-    mesh_url: String,
+    pub mesh_url: String,
     world: Pose3d,
     bounds: CollisionAabb,
 }
@@ -754,7 +757,7 @@ struct BrushSuggestionsSearch {
     pair: usize,
     collision: Option<CollisionPenetrationState>,
     tested: u64,
-    free: u64,
+    pub free: u64,
     collisions: u64,
     settled: bool,
 }
@@ -782,15 +785,15 @@ fn brush_suggestions_scale(scale: &Option<semio_framework_value::DslValue>) -> f
 }
 
 /// 🥽️ Where a run reads one mesh identity's geometry: the process-wide derived mesh store in production.
-pub(crate) type BrushSuggestionsMeshSource = fn(&str) -> Option<(Vec<f32>, Vec<u32>)>;
+pub type BrushSuggestionsMeshSource = fn(&str) -> Option<(Vec<f32>, Vec<u32>)>;
 
 /// ♻️ The owners one `BrushSuggestionsRunJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct BrushSuggestionsRunOwners {
     owner: ArtifactInstanceOperationOwnerHandle,
-    port: ToolRunJobPort,
-    writer: ToolRunTickWriter,
-    scene: Arc<SceneConfig>,
+    pub port: ToolRunJobPort,
+    pub writer: ToolRunTickWriter,
+    pub scene: Arc<SceneConfig>,
     catalogs: KindCatalogBundle,
     lane: Vec<String>,
     meshes: HashMap<String, CollisionBody>,
@@ -806,13 +809,13 @@ struct BrushSuggestionsRunOwners {
 /// then `success/free` or `danger/collision` — one fuel unit per verdict — and every verdict is published to the
 /// instance's [`BrushSuggestionsLink`]. The job follows the link's target: a new target clears the trace and
 /// searches again, and a settled search waits on its port until a gesture wakes it.
-pub(crate) struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
-    close_owners: crate::puzzle_job::WorkClosing<BrushSuggestionsRunOwners>,
-    outbox: crate::puzzle_job::JobOutbox,
+pub struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
+    close_owners: semio_s_plugin_puzzle_jobs::WorkClosing<BrushSuggestionsRunOwners>,
+    outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
     owner: ArtifactInstanceOperationOwnerHandle,
-    port: ToolRunJobPort,
-    writer: ToolRunTickWriter,
-    scene: Arc<SceneConfig>,
+    pub port: ToolRunJobPort,
+    pub writer: ToolRunTickWriter,
+    pub scene: Arc<SceneConfig>,
     catalogs: KindCatalogBundle,
     lane: Vec<String>,
     mesh_source: BrushSuggestionsMeshSource,
@@ -821,7 +824,7 @@ pub(crate) struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
     fallback: CollisionBody,
     placed: Vec<BrushSuggestionsPlaced>,
     search: Option<BrushSuggestionsSearch>,
-    stage: BrushSuggestionsRunStage,
+    pub stage: BrushSuggestionsRunStage,
     published: bool,
     progress_sequence: u64,
     closed: bool,
@@ -831,7 +834,7 @@ pub(crate) struct BrushSuggestionsRunJob<O: BrushSuggestionsOwner> {
 impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
     /// 🌱️ A run over `scene` whose trace subjects index the published mesh `lane`; a mesh identity `mesh_source`
     /// cannot serve collides as the `fallback` box.
-    pub(crate) fn new(owner: ArtifactInstanceOperationOwnerHandle, port: ToolRunJobPort, identity: ToolRunIdentity, scene: Arc<SceneConfig>, lane: Vec<String>, mesh_source: BrushSuggestionsMeshSource, fallback: (Vec<f32>, Vec<u32>)) -> Option<Self> {
+    pub fn new(owner: ArtifactInstanceOperationOwnerHandle, port: ToolRunJobPort, identity: ToolRunIdentity, scene: Arc<SceneConfig>, lane: Vec<String>, mesh_source: BrushSuggestionsMeshSource, fallback: (Vec<f32>, Vec<u32>)) -> Option<Self> {
         let fallback = collision_body_from_buffers(&fallback.0, &fallback.1)?;
         let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
         Some(Self {
@@ -1045,7 +1048,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
 }
 
 impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
-    fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
+    pub fn turn(&mut self, context: &mut StepContext<'_>) -> JobTurn {
         if context.is_cancelled() || self.closed {
             return JobTurn::Cancelled;
         }
@@ -1073,12 +1076,12 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
 impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
-            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
-            crate::puzzle_job::OutboxPhase::Idle => {}
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
         self.outbox.settle(turn, cx)
@@ -1119,23 +1122,23 @@ impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
 
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
+        semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.close_owners, grant)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.copy_bytes)
     }
 
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, maximum_copy_bytes)?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.close_owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1145,7 +1148,4 @@ impl<O: BrushSuggestionsOwner> InteractiveJob for BrushSuggestionsRunJob<O> {
 //#endregion ⏯️BrushSuggestionsRun
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

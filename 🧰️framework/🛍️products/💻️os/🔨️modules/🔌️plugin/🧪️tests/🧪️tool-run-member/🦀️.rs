@@ -10,10 +10,11 @@ use super::*;
 use crate::test_app_mutation_fixture::SetSlotChildren;
 
 store::space_members! {
+    native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
     history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum ToolRunMembers, ToolRunMembersOpen {
-        Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation),
+        Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, crate::test_app_mutation_fixture::TestMemberStoreProducer, crate::test_app_mutation_fixture::TestMemberStoreProducer),
     }
 }
 
@@ -117,10 +118,10 @@ fn member_key() -> (String, String) {
 
 /// 🧒️ The live owned member store at its default state, under the member owner catalog every product member adopts.
 async fn member_store() -> ToolRunMembers {
-    let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     envelope.dialect = Some(member_dialect());
-    let mut child = ArtifactStore::new(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
-    store::install_funded_member_store_owners(&mut child).expect("the original member catalog is funded and installed");
+    let mut child = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
+    store::install_funded_member_store_owners(&mut child,&crate::test_app_mutation_fixture::TestMemberStoreProducer).expect("the original member catalog is funded and installed");
     ToolRunMembers::Child(Box::new(child))
 }
 

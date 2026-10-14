@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::LayoutSnapshot;
+use crate::snapshot::LayoutSnapshot;
 
 /// 📄️ The bundled sample fixture, handcrafted in the `.layout` DSL.
 pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -35,10 +35,9 @@ pub type LayoutSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-#[cfg(test)]
-use crate::Frame;
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::snapshot::*;
+
+use crate::{GridSettings, ImageLink, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -68,10 +67,8 @@ impl pack::snapshot::ArtifactDsl for LayoutSnapshot {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{LayoutDiff, LayoutSnapshot};
+use crate::snapshot::LayoutSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
-use crate::standards::v1::subsets::any::schema::mutations::{change_data_fields,change_frame_columns,change_frame_fill,change_frame_stroke,change_frame_wrap_mode,change_link_path,change_page_height,change_page_width,change_print_target,create_frame,create_link,create_page,create_story,delete_frame,delete_link,delete_page,delete_story,drag_frames,edit_story,move_frame,rename_layout,rotate_frames,scale_frames,rename_page,reorder_pages,resize_frame,rotate_frame,set_frame_flags,update_grid,create_character_style,delete_character_style,set_page_guides,set_page_parent,set_story_runs,update_link,set_page_overrides,create_layer,set_frame_layer,set_drawing_text,reorder_frame,update_character_style,update_layer,update_page_columns,update_page_margins,update_paragraph_style,update_parent_page,update_spread,update_text_frame};
 
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
@@ -90,17 +87,17 @@ pub use mutations_codec::*;
 
 
 #[allow(unused_imports)]
-mod snapshot_wire_codec {
+pub mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{LayoutDrawingChild, LAYOUT_DOCUMENT_SCHEMA};
+use crate::*;
+use crate::LAYOUT_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use crate::CharacterStyle;
+
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::GridSettings;
 use crate::ImageLink;
-use crate::LayoutDropPreviewState;
+
 use crate::Page;
 use crate::ParagraphStyle;
 use crate::ParentPage;
@@ -110,12 +107,12 @@ use crate::TextStory;
 /// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_snapshot`
 /// and the app manifest's `.example(...)` document. Relocated from the deleted `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn default_document() -> crate::LayoutSnapshot {
+pub fn default_document() -> crate::snapshot::LayoutSnapshot {
     build_demo_layout_snapshot()
 }
 
-pub(crate) fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
-    crate::LayoutSnapshot {
+pub fn build_demo_layout_snapshot() -> crate::snapshot::LayoutSnapshot {
+    crate::snapshot::LayoutSnapshot {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         name: "Demo".into(),
         grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
@@ -220,17 +217,17 @@ pub fn layout_sample_document_json() -> String {
 pub use snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
-mod snapshot_wire2_codec {
+pub mod snapshot_wire2_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::*;
-use crate::{LayoutDrawingChild, LAYOUT_DOCUMENT_SCHEMA};
+use crate::*;
+use crate::LAYOUT_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use crate::CharacterStyle;
+
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::GridSettings;
 use crate::ImageLink;
-use crate::LayoutDropPreviewState;
+
 use crate::Page;
 use crate::ParagraphStyle;
 use crate::ParentPage;
@@ -239,10 +236,10 @@ use crate::TextStory;
 
 /// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
-pub fn parse_layout_document(json: &str) -> Result<crate::LayoutSnapshot, crate::standards::v1::subsets::any::io::LayoutError> {
-    let doc: crate::LayoutSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
+pub fn parse_layout_document(json: &str) -> Result<crate::snapshot::LayoutSnapshot, crate::LayoutError> {
+    let doc: crate::snapshot::LayoutSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
     if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
-        return Err(crate::standards::v1::subsets::any::io::LayoutError::UnexpectedSchema(doc.schema));
+        return Err(crate::LayoutError::UnexpectedSchema(doc.schema));
     }
     Ok(doc)
 }

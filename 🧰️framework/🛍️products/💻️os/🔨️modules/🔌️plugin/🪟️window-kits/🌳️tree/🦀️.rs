@@ -25,7 +25,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 /// implement; [`TreeWindows`] is this side of it.
 use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
 use crate::window_kits::ActionFactory;
-use crate::sdk_fault::PluginAssemblyError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::table_kit::activation_target;
 use crate::window_kits::WindowKit;
 use crate::window_surface::UiAssemblyResult;

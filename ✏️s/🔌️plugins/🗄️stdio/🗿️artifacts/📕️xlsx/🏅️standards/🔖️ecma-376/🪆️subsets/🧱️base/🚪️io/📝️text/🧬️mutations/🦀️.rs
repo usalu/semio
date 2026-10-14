@@ -8,15 +8,26 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
-use crate::schema::diff::XlsxDiff;
-use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_cell_value_bin,dec_sheet_bin,enc_cell_value_bin,enc_sheet_bin,read_str_lp,write_str_lp};
-use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_cell_value,dec_sheet,dec_str,enc_cell_value,enc_sheet,enc_str};
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_cell_value_bin;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_sheet_bin;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_cell_value_bin;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_sheet_bin;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::read_str_lp;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::write_str_lp;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_cell_value;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_sheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_str;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_cell_value;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_sheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_str;
 #[cfg(test)]
-use crate::schema::snapshot::XlsxCell;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
 #[cfg(test)]
-use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxCellValue, XlsxSheet};
-use crate::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};

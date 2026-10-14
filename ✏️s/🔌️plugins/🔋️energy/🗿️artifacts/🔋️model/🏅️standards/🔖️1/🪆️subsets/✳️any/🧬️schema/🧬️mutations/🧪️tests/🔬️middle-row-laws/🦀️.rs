@@ -4,9 +4,8 @@
 //! `index`; absent appends), and the inverse diffs must sum to exactly the negative of the forward diff.
 
 use crate::model::Model;
-use crate::mutations as v;
 use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 
 async fn holds(mut model: Model, setup: impl FnOnce(&mut Model), mutation: EnergyModelMutation) {
     setup(&mut model);
@@ -487,12 +486,12 @@ fn rule(first: u8, last: u8) -> crate::schedule::CompactScheduleRule {
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_zone() {
-    holds(seed(), |m| m.zones = three(zone), v::delete_zone(id(2))).await;
+    holds(seed(), |m| m.zones = three(zone), crate::zone_mutations::delete_zone(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_space() {
-    holds(seed(), |m| m.spaces = three(space), v::delete_space(id(2))).await;
+    holds(seed(), |m| m.spaces = three(space), crate::space_mutations::delete_space(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -503,152 +502,152 @@ async fn deleting_the_middle_surface_cascades_its_middle_window() {
         m.fenestrations[0].surface_id = id(1);
         m.fenestrations[1].surface_id = id(2);
         m.fenestrations[2].surface_id = id(3);
-    }, v::delete_surface(id(2))).await;
+    }, crate::surface_mutations::delete_surface(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_fenestration() {
-    holds(seed(), |m| m.fenestrations = three(fenestration), v::delete_fenestration(id(2))).await;
+    holds(seed(), |m| m.fenestrations = three(fenestration), crate::fenestration_mutations::delete_fenestration(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_material() {
-    holds(seed(), |m| m.materials = three(material), v::delete_material(id(2))).await;
+    holds(seed(), |m| m.materials = three(material), crate::material_mutations::delete_material(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_construction() {
-    holds(seed(), |m| m.constructions = three(construction), v::delete_construction(id(2))).await;
+    holds(seed(), |m| m.constructions = three(construction), crate::construction_mutations::delete_construction(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_people_gain() {
-    holds(seed(), |m| m.people = three(people), v::delete_people_gain(id(2))).await;
+    holds(seed(), |m| m.people = three(people), crate::people_gain_mutations::delete_people_gain(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_lighting_gain() {
-    holds(seed(), |m| m.lighting = three(lighting), v::delete_lighting_gain(id(2))).await;
+    holds(seed(), |m| m.lighting = three(lighting), crate::lighting_gain_mutations::delete_lighting_gain(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_equipment_gain() {
-    holds(seed(), |m| m.equipment = three(equipment), v::delete_equipment_gain(id(2))).await;
+    holds(seed(), |m| m.equipment = three(equipment), crate::equipment_gain_mutations::delete_equipment_gain(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_thermostat() {
-    holds(seed(), |m| m.thermostats = three(thermostat), v::delete_thermostat(id(2))).await;
+    holds(seed(), |m| m.thermostats = three(thermostat), crate::thermostat_mutations::delete_thermostat(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_humidistat() {
-    holds(seed(), |m| m.humidistats = three(humidistat), v::delete_humidistat(id(2))).await;
+    holds(seed(), |m| m.humidistats = three(humidistat), crate::humidistat_mutations::delete_humidistat(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_setpoint_manager() {
-    holds(seed(), |m| m.setpoint_managers = three(setpoint_manager), v::delete_setpoint_manager(id(2))).await;
+    holds(seed(), |m| m.setpoint_managers = three(setpoint_manager), crate::setpoint_mutations::delete_setpoint_manager(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_ideal_loads_system() {
-    holds(seed(), |m| m.ideal_loads = three(ideal_loads), v::delete_ideal_loads_system(id(2))).await;
+    holds(seed(), |m| m.ideal_loads = three(ideal_loads), crate::ideal_loads_mutations::delete_ideal_loads_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_zone_equipment() {
-    holds(seed(), |m| m.zone_equipment = three(zone_equipment), v::delete_zone_equipment(id(2))).await;
+    holds(seed(), |m| m.zone_equipment = three(zone_equipment), crate::zone_equipment_mutations::delete_zone_equipment(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_air_loop() {
-    holds(seed(), |m| m.air_loops = three(air_loop), v::delete_air_loop(id(2))).await;
+    holds(seed(), |m| m.air_loops = three(air_loop), crate::air_loop_mutations::delete_air_loop(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_plant_loop() {
-    holds(seed(), |m| m.plant_loops = three(plant_loop), v::delete_plant_loop(id(2))).await;
+    holds(seed(), |m| m.plant_loops = three(plant_loop), crate::plant_loop_mutations::delete_plant_loop(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_outdoor_air_system() {
-    holds(seed(), |m| m.outdoor_air_systems = three(outdoor_air), v::delete_outdoor_air_system(id(2))).await;
+    holds(seed(), |m| m.outdoor_air_systems = three(outdoor_air), crate::outdoor_air_mutations::delete_outdoor_air_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_infiltration() {
-    holds(seed(), |m| m.infiltrations = three(infiltration), v::delete_infiltration(id(2))).await;
+    holds(seed(), |m| m.infiltrations = three(infiltration), crate::infiltration_mutations::delete_infiltration(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_mechanical_ventilation() {
-    holds(seed(), |m| m.mechanical_ventilations = three(mechanical), v::delete_mechanical_ventilation(id(2))).await;
+    holds(seed(), |m| m.mechanical_ventilations = three(mechanical), crate::ventilation_mutations::delete_mechanical_ventilation(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_shading_surface() {
-    holds(seed(), |m| m.shading_surfaces = three(shading), v::delete_shading_surface(id(2))).await;
+    holds(seed(), |m| m.shading_surfaces = three(shading), crate::shading_mutations::delete_shading_surface(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_space_list() {
-    holds(seed(), |m| m.space_lists = three(space_list), v::delete_space_list(id(2))).await;
+    holds(seed(), |m| m.space_lists = three(space_list), crate::space_list_mutations::delete_space_list(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_thermal_enclosure() {
-    holds(seed(), |m| m.thermal_enclosures = three(thermal_enclosure), v::delete_thermal_enclosure(id(2))).await;
+    holds(seed(), |m| m.thermal_enclosures = three(thermal_enclosure), crate::enclosure_mutations::delete_thermal_enclosure(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_electrical_load_center() {
-    holds(seed(), |m| m.electrical_load_centers = three(electrical_load), v::delete_electrical_load_center(id(2))).await;
+    holds(seed(), |m| m.electrical_load_centers = three(electrical_load), crate::load_center_mutations::delete_electrical_load_center(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_pv_system() {
-    holds(seed(), |m| m.pv_systems = three(pv), v::delete_pv_system(id(2))).await;
+    holds(seed(), |m| m.pv_systems = three(pv), crate::pv_system_mutations::delete_pv_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_battery() {
-    holds(seed(), |m| m.battery_storage = three(battery), v::delete_battery(id(2))).await;
+    holds(seed(), |m| m.battery_storage = three(battery), crate::battery_mutations::delete_battery(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_shw_system() {
-    holds(seed(), |m| m.shw_systems = three(shw), v::delete_shw_system(id(2))).await;
+    holds(seed(), |m| m.shw_systems = three(shw), crate::shw_system_mutations::delete_shw_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_solar_thermal_system() {
-    holds(seed(), |m| m.solar_thermal_systems = three(solar_thermal), v::delete_solar_thermal_system(id(2))).await;
+    holds(seed(), |m| m.solar_thermal_systems = three(solar_thermal), crate::solar_thermal_mutations::delete_solar_thermal_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_refrigeration_system() {
-    holds(seed(), |m| m.refrigeration_systems = three(refrigeration), v::delete_refrigeration_system(id(2))).await;
+    holds(seed(), |m| m.refrigeration_systems = three(refrigeration), crate::refrigeration_mutations::delete_refrigeration_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_water_system() {
-    holds(seed(), |m| m.water_systems = three(water), v::delete_water_system(id(2))).await;
+    holds(seed(), |m| m.water_systems = three(water), crate::water_system_mutations::delete_water_system(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_fault() {
-    holds(seed(), |m| m.faults = three(fault), v::delete_fault(id(2))).await;
+    holds(seed(), |m| m.faults = three(fault), crate::fault_mutations::delete_fault(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_sizing_object() {
-    holds(seed(), |m| m.sizing_objects = three(sizing), v::delete_sizing_object(id(2))).await;
+    holds(seed(), |m| m.sizing_objects = three(sizing), crate::sizing_mutations::delete_sizing_object(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_daylight_zone() {
-    holds(seed(), |m| m.daylight_zones = three(daylight), v::delete_daylight_zone(id(2))).await;
+    holds(seed(), |m| m.daylight_zones = three(daylight), crate::daylight_zone_mutations::delete_daylight_zone(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -656,37 +655,37 @@ async fn deleting_the_middle_room_air_model_assignment() {
     holds(seed(), |m| {
         m.zones = three(zone);
         m.room_air_models = three(room_air);
-    }, v::delete_room_air_model_assignment(id(2))).await;
+    }, crate::room_air_mutations::delete_room_air_model_assignment(id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_constant_schedule() {
-    holds(seed(), |m| m.schedules.constants = three(constant), v::delete_constant_schedule(schedule(2))).await;
+    holds(seed(), |m| m.schedules.constants = three(constant), crate::fixed_schedule_mutations::delete_constant_schedule(schedule(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_daily_schedule() {
-    holds(seed(), |m| m.schedules.daily = vec![daily(4), daily(5), daily(6)], v::delete_daily_schedule(schedule(5))).await;
+    holds(seed(), |m| m.schedules.daily = vec![daily(4), daily(5), daily(6)], crate::day_schedule_mutations::delete_daily_schedule(schedule(5))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_weekly_schedule() {
-    holds(seed(), |m| m.schedules.weekly = vec![weekly(4), weekly(5), weekly(6)], v::delete_weekly_schedule(schedule(5))).await;
+    holds(seed(), |m| m.schedules.weekly = vec![weekly(4), weekly(5), weekly(6)], crate::week_schedule_mutations::delete_weekly_schedule(schedule(5))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_annual_schedule() {
-    holds(seed(), |m| m.schedules.annual = vec![annual(4), annual(5), annual(6)], v::delete_annual_schedule(schedule(5))).await;
+    holds(seed(), |m| m.schedules.annual = vec![annual(4), annual(5), annual(6)], crate::year_schedule_mutations::delete_annual_schedule(schedule(5))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_middle_time_series_schedule() {
-    holds(seed(), |m| m.schedules.time_series = vec![time_series(4), time_series(5), time_series(6)], v::delete_time_series_schedule(schedule(5))).await;
+    holds(seed(), |m| m.schedules.time_series = vec![time_series(4), time_series(5), time_series(6)], crate::time_series_mutations::delete_time_series_schedule(schedule(5))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_output_variable() {
-    holds(seed(), |m| m.output_variables = (1..=3).map(|n| crate::model::OutputVariableSpec { name: format!("VARIABLE {n}"), key: "KEY".to_string(), reporting_frequency: crate::model::OutputReportFrequency::Hourly }).collect(), v::remove_output_variable("VARIABLE 2".to_string(), "KEY".to_string())).await;
+    holds(seed(), |m| m.output_variables = (1..=3).map(|n| crate::model::OutputVariableSpec { name: format!("VARIABLE {n}"), key: "KEY".to_string(), reporting_frequency: crate::model::OutputReportFrequency::Hourly }).collect(), crate::model_mutations::remove_output_variable("VARIABLE 2".to_string(), "KEY".to_string())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -694,7 +693,7 @@ async fn disconnecting_the_middle_adjacency_pair() {
     holds(seed(), |m| {
         m.surfaces = three(surface);
         m.adjacency_pairs = vec![(1, 2), (1, 3), (2, 3)].into_iter().map(|(a, b)| crate::model::AdjacencyPair { surface_a_id: id(a), surface_b_id: id(b) }).collect();
-    }, v::disconnect_surfaces(id(1), id(3))).await;
+    }, crate::boundary_mutations::disconnect_surfaces(id(1), id(3))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -702,7 +701,7 @@ async fn removing_the_middle_construction_layer() {
     holds(seed(), |m| {
         m.materials = three(material);
         m.constructions[0].layer_material_ids = vec![id(1), id(2), id(3)];
-    }, v::remove_construction_layer(id(1), 1)).await;
+    }, crate::construction_mutations::remove_construction_layer(id(1), 1)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -710,7 +709,7 @@ async fn reordering_the_middle_construction_layer() {
     holds(seed(), |m| {
         m.materials = three(material);
         m.constructions[0].layer_material_ids = vec![id(1), id(2), id(3)];
-    }, v::reorder_construction_layers(id(1), vec![id(1), id(3), id(2)])).await;
+    }, crate::construction_mutations::reorder_construction_layers(id(1), vec![id(1), id(3), id(2)])).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -718,7 +717,7 @@ async fn removing_the_middle_space_list_member() {
     holds(seed(), |m| {
         m.spaces = three(space);
         m.space_lists = vec![crate::model::SpaceList { space_ids: vec![id(1), id(2), id(3)], ..space_list(1) }];
-    }, v::remove_space_list_member(id(1), id(2))).await;
+    }, crate::space_list_mutations::remove_space_list_member(id(1), id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -726,7 +725,7 @@ async fn removing_the_middle_thermal_enclosure_zone() {
     holds(seed(), |m| {
         m.zones = three(zone);
         m.thermal_enclosures = vec![crate::model::ThermalEnclosure { zone_ids: vec![id(1), id(2), id(3)], ..thermal_enclosure(1) }];
-    }, v::remove_thermal_enclosure_zone(id(1), id(2))).await;
+    }, crate::enclosure_mutations::remove_thermal_enclosure_zone(id(1), id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -734,12 +733,12 @@ async fn removing_the_middle_air_loop_terminal_zone() {
     holds(seed(), |m| {
         m.zones = three(zone);
         m.air_loops[0].terminal_zone_ids = vec![id(1), id(2), id(3)];
-    }, v::remove_air_loop_terminal_zone(id(1), id(2))).await;
+    }, crate::air_loop_mutations::remove_air_loop_terminal_zone(id(1), id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_plant_loop_equipment() {
-    holds(seed(), |m| m.plant_loops = vec![crate::model::PlantLoopConfig { equipment_ids: vec![id(10), id(20), id(30)], ..plant_loop(1) }], v::remove_plant_loop_equipment(id(1), id(20))).await;
+    holds(seed(), |m| m.plant_loops = vec![crate::model::PlantLoopConfig { equipment_ids: vec![id(10), id(20), id(30)], ..plant_loop(1) }], crate::plant_loop_mutations::remove_plant_loop_equipment(id(1), id(20))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -747,7 +746,7 @@ async fn removing_the_middle_electrical_load_center_pv() {
     holds(seed(), |m| {
         m.pv_systems = three(pv);
         m.electrical_load_centers = vec![crate::model::ElectricalLoadCenter { pv_ids: vec![id(1), id(2), id(3)], ..electrical_load(1) }];
-    }, v::remove_electrical_load_center_pv(id(1), id(2))).await;
+    }, crate::load_center_mutations::remove_electrical_load_center_pv(id(1), id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -755,40 +754,40 @@ async fn removing_the_middle_electrical_load_center_battery() {
     holds(seed(), |m| {
         m.battery_storage = three(battery);
         m.electrical_load_centers = vec![crate::model::ElectricalLoadCenter { battery_ids: vec![id(1), id(2), id(3)], ..electrical_load(1) }];
-    }, v::remove_electrical_load_center_battery(id(1), id(2))).await;
+    }, crate::load_center_mutations::remove_electrical_load_center_battery(id(1), id(2))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_annual_schedule_rule() {
-    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { rules: vec![rule(1, 3), rule(4, 6), rule(7, 9)], ..annual(4) }], v::remove_annual_schedule_rule(schedule(4), 1)).await;
+    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { rules: vec![rule(1, 3), rule(4, 6), rule(7, 9)], ..annual(4) }], crate::year_schedule_mutations::remove_annual_schedule_rule(schedule(4), 1)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reordering_the_middle_annual_schedule_rule() {
-    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { rules: vec![rule(1, 3), rule(4, 6), rule(7, 9)], ..annual(4) }], v::reorder_annual_schedule_rules(schedule(4), 1, 0)).await;
+    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { rules: vec![rule(1, 3), rule(4, 6), rule(7, 9)], ..annual(4) }], crate::year_schedule_mutations::reorder_annual_schedule_rules(schedule(4), 1, 0)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_annual_schedule_holiday() {
-    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { holiday_dates: vec![(2026, 1, 1), (2026, 5, 1), (2026, 12, 25)], ..annual(4) }], v::remove_annual_schedule_holiday(schedule(4), 2026, 5, 1)).await;
+    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { holiday_dates: vec![(2026, 1, 1), (2026, 5, 1), (2026, 12, 25)], ..annual(4) }], crate::year_schedule_mutations::remove_annual_schedule_holiday(schedule(4), 2026, 5, 1)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn creating_a_zone_at_a_middle_index_is_undone_by_its_delete() {
-    holds(seed(), |m| m.zones = three(zone), v::create_zone(id(9), "ZONE NINE".to_string(), 1.0, 1, true, true, Some(1))).await;
+    holds(seed(), |m| m.zones = three(zone), crate::zone_mutations::create_zone(id(9), "ZONE NINE".to_string(), 1.0, 1, true, true, Some(1))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn creating_a_thermostat_at_a_middle_index_is_undone_by_its_delete() {
-    holds(seed(), |m| m.thermostats = three(thermostat), v::create_thermostat(id(9), id(1), schedule(1), schedule(1), 1.0, 1.0, Some(1))).await;
+    holds(seed(), |m| m.thermostats = three(thermostat), crate::thermostat_mutations::create_thermostat(id(9), id(1), schedule(1), schedule(1), 1.0, 1.0, Some(1))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn adding_an_output_variable_at_a_middle_index_is_undone_by_its_removal() {
-    holds(seed(), |m| m.output_variables = Vec::new(), v::add_output_variable("VARIABLE".to_string(), "KEY".to_string(), crate::model::OutputReportFrequency::Hourly, Some(0))).await;
+    holds(seed(), |m| m.output_variables = Vec::new(), crate::model_mutations::add_output_variable("VARIABLE".to_string(), "KEY".to_string(), crate::model::OutputReportFrequency::Hourly, Some(0))).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn adding_plant_loop_equipment_at_a_middle_index_is_undone_by_its_removal() {
-    holds(seed(), |m| m.plant_loops = vec![crate::model::PlantLoopConfig { equipment_ids: vec![id(10), id(30)], ..plant_loop(1) }], v::add_plant_loop_equipment(id(1), id(20), Some(1))).await;
+    holds(seed(), |m| m.plant_loops = vec![crate::model::PlantLoopConfig { equipment_ids: vec![id(10), id(30)], ..plant_loop(1) }], crate::plant_loop_mutations::add_plant_loop_equipment(id(1), id(20), Some(1))).await;
 }

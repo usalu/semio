@@ -31,16 +31,16 @@
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
 //! @see ../🔣️oracle.json — the `step-ap214-cc4` catalog `KINDS` is checked against.
 
-use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::diff::StepDiff;
 #[cfg(test)]
-use crate::standards::v_ap214::subsets::base::io::ladder::ShapeRepresentationRow;
-use crate::standards::v_ap214::subsets::base::io::ladder;
-use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder::ShapeRepresentationRow;
+use semio_s_artifact_stdio_step_ladder::standards::v_ap214::subsets::base::io::ladder;
+use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 #[cfg(test)] use protocol::Mutation;
 
 #[cfg(test)]
-pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation};
-pub use crate::standards::v_ap214::subsets::base::schema::mutations::{StepMutation};
+pub use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::apply_step_mutation;
+pub use semio_s_artifact_stdio_step_mutations::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
 
 //#region 🔖️Vocabulary
 /// 🏷️ How this class names itself in a rejection message.

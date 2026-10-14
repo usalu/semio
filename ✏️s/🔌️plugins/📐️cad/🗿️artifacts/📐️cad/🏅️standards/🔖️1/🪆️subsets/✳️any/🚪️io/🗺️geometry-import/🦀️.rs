@@ -14,7 +14,7 @@ fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
     let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&semio_mesh)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
-pub(crate) fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
+pub fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
     let extent = mesh_extent(mesh);
     let solid_handle = mesh_to_obj_text(mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok()).map(|handle| handle.0);
     let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
@@ -43,7 +43,7 @@ use std::sync::{Arc,OnceLock};
         let objects = objects_from_host_snapshot_model(&mut kernel, &objects_value, &geometry);
         (objects, geometry)
     }
-    pub(crate) fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
+    pub fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
         let model_index = match pane {
             CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
             CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
@@ -97,7 +97,7 @@ pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3
 /// the scene the document was born with: its objects are the child's genesis content and its raw geometry is what
 /// `SemioModelSnapshot` has no field for. This resolves shipped assets; it never shares one live document's state with
 /// another.
-pub(crate) fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<CadWorkingScene>> {
+pub fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<CadWorkingScene>> {
     static CATALOGUE: std::sync::OnceLock<Vec<(String, std::sync::Arc<CadWorkingScene>)>> = std::sync::OnceLock::new();
     CATALOGUE
         .get_or_init(|| {
@@ -152,10 +152,10 @@ impl CadComposedPane {
 /// child store has it; a pane whose child is not composed yet reads the genesis content its stable id names, and a pane
 /// without a handle has no objects.
 #[derive(Clone, Debug, Default)]
-pub(crate) struct CadComposedPanes([CadComposedPane; 4]);
+pub struct CadComposedPanes([CadComposedPane; 4]);
 impl CadComposedPanes {
     /// 🪆️ Composes `snapshot`'s pane handles with their live child content.
-    pub(crate) fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
+    pub fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
         use semio_s_artifact_cad_cad_model::geometry::objects_from_model_snapshot;
         Self(CadPaneId::all().map(|pane| {
             let Some(handle) = cad_pane_model(snapshot, pane) else { return CadComposedPane::default() };

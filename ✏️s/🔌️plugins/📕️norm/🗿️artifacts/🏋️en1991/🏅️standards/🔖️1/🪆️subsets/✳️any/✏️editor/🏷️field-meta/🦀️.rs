@@ -1,6 +1,6 @@
 //! 🏷️ EN 1991 NormFieldMeta lookup — SI display units + en/de labels for the structured inputs editor.
 
-use crate::app_surface::{NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{NormFieldChoice, NormFieldMeta};
 
 /// 🏷️ Exact-path (or leaf-segment) metadata for the EN 1991 design-load subject.
 pub fn en1991_field_meta(path: &str) -> Option<NormFieldMeta> {
@@ -132,7 +132,6 @@ fn exact(path: &str) -> Option<NormFieldMeta> {
         _ => return None,
     })
 }
-
 
 /// 🧭 Map grouped inputs-editor paths back onto the flat SI snapshot (UiFixedList cap = 32).
 pub fn flatten_editor_path(path: &str) -> String {

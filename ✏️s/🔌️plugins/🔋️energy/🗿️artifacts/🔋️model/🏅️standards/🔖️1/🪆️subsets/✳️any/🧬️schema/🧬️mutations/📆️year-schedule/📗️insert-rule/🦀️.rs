@@ -1,8 +1,7 @@
 //! 📗️ Energy model mutation — `InsertAnnualScheduleRule`: Places one date rule at a stated position in a year's ordered rule list. The order is load-bearing, not cosmetic — `ScheduleSet::annual_value` returns the FIRST rule whose date range contains the day — so this is `insert` with a FINAL-state index, not a set-like `add`.
 
 use crate::diff::EnergyModelDiff;
-use crate::mutations::EnergyModelMutation;
-use crate::EnergyModelSnapshot;
+use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
@@ -22,19 +21,22 @@ pub struct InsertAnnualScheduleRule {
     pub daily_schedule_id: crate::schedule::ScheduleId,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn insert_annual_schedule_rule(id: crate::schedule::ScheduleId, index: u32, start_month: u8, start_day: u8, end_month: u8, end_day: u8, daily_schedule_id: crate::schedule::ScheduleId) -> EnergyModelMutation {
-    EnergyModelMutation::InsertAnnualScheduleRule(InsertAnnualScheduleRule { id, index, start_month, start_day, end_month, end_day, daily_schedule_id })
+/// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
+pub fn insert_annual_schedule_rule<Op: From<InsertAnnualScheduleRule>>(id: crate::schedule::ScheduleId, index: u32, start_month: u8, start_day: u8, end_month: u8, end_day: u8, daily_schedule_id: crate::schedule::ScheduleId) -> Op {
+    InsertAnnualScheduleRule { id, index, start_month, start_day, end_month, end_day, daily_schedule_id }.into()
 }
 
-impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for InsertAnnualScheduleRule {
+impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for InsertAnnualScheduleRule
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<InsertAnnualScheduleRule> + From<crate::RemoveAnnualScheduleRule>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "annual-schedule", kind: "insert-annual-schedule-rule", record: "InsertedAnnualScheduleRule" };
 
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

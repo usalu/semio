@@ -1,8 +1,8 @@
 //! ➖️ `remove-building` diff — removes the row at the index, guarded by the row's own id; an index past the collection's end is a `mutation.target-missing`.
 
-use super::RemoveBuilding;
-use crate::diff::{En1998Diff, En1998BuildingDelta};
-use crate::En1998Snapshot;
+use crate::remove_building::RemoveBuilding;
+use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998BuildingDelta};
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &RemoveBuilding, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
     if payload.index >= base.buildings.len() {

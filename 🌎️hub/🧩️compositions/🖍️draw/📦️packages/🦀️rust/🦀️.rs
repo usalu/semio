@@ -23,24 +23,6 @@
 // conditional-compilation bug here) — this crate declares no `serde` feature, so rustc flags the value as
 // unrecognized. Harmless, but a hard error under `-D warnings` without this crate-wide allow.
 
-//#region 🗿️Artifacts
-mod artifacts {
-    pub use semio_s_artifact_draw_drawing as drawing;
-}
-//#endregion 🗿️Artifacts
-
-//#region ✏️Editor
-mod editor {
-    pub use semio_s_artifact_draw_drawing_editor::*;
-}
-//#endregion ✏️Editor
-
-//#region 👁️Viewer
-mod viewer {
-    pub use semio_s_artifact_draw_drawing_viewer::*;
-}
-//#endregion 👁️Viewer
-
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 pub mod plugin;

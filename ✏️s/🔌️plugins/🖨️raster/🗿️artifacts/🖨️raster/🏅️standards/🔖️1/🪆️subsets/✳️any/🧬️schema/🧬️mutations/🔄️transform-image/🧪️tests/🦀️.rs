@@ -4,11 +4,12 @@
 //! downstream; the store folds it like the leaf.
 
 use super::*;
-use crate::mutations::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
-use crate::mutations::{inverse_raster_mutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_raster_mutation;
-use crate::standards::v1::subsets::any::schema::find_layer;
-use crate::{RasterLayerNode, SemioImageSnapshot, RASTER_DOCUMENT_SCHEMA};
+use crate::paint_stroke::{paint_stroke, RasterBrush, RasterStrokePoint};
+use semio_s_artifact_raster_raster_mutations::inverse_raster_mutation;
+use semio_s_artifact_raster_raster_mutations::text::apply_raster_mutation;
+use semio_s_artifact_raster_raster_model::find_layer;
+use semio_s_artifact_raster_raster_model::{RasterLayerNode, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
 //#region 🧫️Cases
@@ -26,7 +27,7 @@ fn walled() -> RasterMutation {
 }
 
 fn retire(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
 }
 
 fn walled_base() -> RasterSnapshot {
@@ -160,7 +161,7 @@ fn the_layer_keeps_its_place_and_scale() {
     assert_eq!(grid(&cropped), (Some(3), Some(2), RasterTransform { x: -0.5, y: 0.0, a: 1.0, b: 0.0, c: 0.0, d: 1.0 }));
     let rotated = apply_raster_mutation(&before, &rotate_image("paint", true)).expect("the turn applies");
     assert_eq!(grid(&rotated), (Some(4), Some(6), RasterTransform { x: 0.0, y: 0.0, a: 1.0, b: 0.0, c: 0.0, d: 1.0 }));
-    let stretched = apply_raster_mutation(&before, &RasterMutation::ResizeLayer(crate::mutations::resize_layer::ResizeLayer { layer_id: "paint".into(), new_width: 12, new_height: 4 })).expect("the display stretches");
+    let stretched = apply_raster_mutation(&before, &RasterMutation::ResizeLayer(semio_s_artifact_raster_raster_mutations_layers::resize_layer::mutation::ResizeLayer { layer_id: "paint".into(), new_width: 12, new_height: 4 })).expect("the display stretches");
     let turned = apply_raster_mutation(&stretched, &rotate_image("paint", true)).expect("the stretched turn applies");
     assert_eq!(grid(&turned), (Some(4), Some(6), RasterTransform { x: 0.0, y: 0.0, a: 1.0, b: 0.0, c: 0.0, d: 2.0 }), "the doubled width scale moves onto the turned image's height");
     for document in [before, cropped, rotated, stretched, turned] {
@@ -256,8 +257,8 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 #[semio_framework_async_macros::async_test]
 async fn the_store_folds_a_transform_like_the_leaf() {
     let transform = crop_image("paint", 1, 0, 4, 3);
-    let mut store = crate::mutations::RasterStore::new(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "transform-image", walled_base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    let mut store = semio_s_artifact_raster_raster_mutations::RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "transform-image", walled_base(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![transform.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the transform applies");
     let before = walled_base();
     let expected = apply_raster_mutation(&before, &transform).expect("the leaf applies");

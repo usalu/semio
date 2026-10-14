@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
+use crate::io::binary::snapshot::*;
+use crate::io::text::snapshot as dsl;
 use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]

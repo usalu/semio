@@ -15,13 +15,53 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "cad_binary_mutations"
+path = "../../../../🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "cad_create_shape_model"
+path = "../../🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs"
+
+[[test]]
+name = "cad_delete_shape_model"
+path = "../../🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot/🦀️.rs"
+
+[[test]]
+name = "cad_create_building_model"
+path = "../../🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs"
+
+[[test]]
+name = "cad_delete_building_model"
+path = "../../💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs"
+
+[[test]]
+name = "cad_create_energy_model"
+path = "../../⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs"
+
+[[test]]
+name = "cad_delete_energy_model"
+path = "../../🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs"
+
+[[test]]
+name = "cad_create_structure_classic_model"
+path = "../../🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs"
+
+[[test]]
+name = "cad_delete_structure_classic_model"
+path = "../../💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs"
+
 [dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-model-diff = { workspace = true }
 semio-s-artifact-cad-cad-mut-documents = { workspace = true }
 semio-s-artifact-cad-cad-mut-nodes = { workspace = true }
 semio-s-artifact-cad-cad-mut-references = { workspace = true }
@@ -31,5 +71,7 @@ semio-s-artifact-cad-cad-mut-slots = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-cad-cad-host = { workspace = true }
 semio-s-artifact-cad-cad-testing = { workspace = true }
 serde_json = { workspace = true }

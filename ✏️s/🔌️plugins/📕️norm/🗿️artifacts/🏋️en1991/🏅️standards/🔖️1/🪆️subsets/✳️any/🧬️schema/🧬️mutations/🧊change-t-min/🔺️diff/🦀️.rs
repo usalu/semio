@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `change-t-min`.
-use super::ChangeTMin;
-use crate::{En1991Diff, En1991Snapshot};
+use crate::change_t_min::ChangeTMin;
+use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn diff(payload: &ChangeTMin, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if base.t_min == payload.new_t_min {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");

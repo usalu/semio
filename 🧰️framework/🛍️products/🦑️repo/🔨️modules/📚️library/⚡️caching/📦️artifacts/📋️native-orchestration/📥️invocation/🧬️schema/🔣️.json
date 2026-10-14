@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/caching/artifacts/native-orchestration/invocation/component.json",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,6 +14,9 @@
     "network"
   ],
   "properties": {
+    "cargoExecutionBackend": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/testing/cargo/execution/component.json#/$defs/CargoExecutionBackendV1"
+    },
     "version": {
       "const": 1
     },

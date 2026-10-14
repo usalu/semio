@@ -27,7 +27,6 @@ semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pa
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }

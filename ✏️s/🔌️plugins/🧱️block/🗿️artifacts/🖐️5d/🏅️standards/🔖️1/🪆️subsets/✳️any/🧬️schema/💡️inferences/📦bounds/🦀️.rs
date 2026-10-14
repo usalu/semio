@@ -5,7 +5,7 @@
 //! parent/child object graph — it is a single flat catalog of rim placements — so this is a plain
 //! whole-snapshot derivation, not a per-entity `InferredField` chain.
 
-use crate::Block5dSnapshot;
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the part kind's local 3d space.

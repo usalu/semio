@@ -1,0 +1,87 @@
+{
+  "name": "repo-next-storage",
+  "tags": [
+    "scope:repo",
+    "language:typescript"
+  ],
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "test-nx-cache": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test nx-cache",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    },
+    "test-execution": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test execution",
+        "forwardAllArgs": false
+      },
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
+    }
+  }
+}

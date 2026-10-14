@@ -2,10 +2,10 @@
 use crate::genesis::{ArtifactGenesis,ArtifactGenesisWitness};
 use semio_framework_value::ValueError;
 use std::sync::Arc;
-/// 📦️ Native binary genesis capability.
-pub trait ArtifactGenesisCodec:Sized {
- fn encode_genesis_pack(&self)->Result<Vec<u8>,ValueError>;
- fn decode_genesis_pack(pack:&[u8])->Result<Self,ValueError>;
+/// 📦️ The selected native producer encodes and reconstructs its actual typed genesis snapshot.
+pub trait ArtifactGenesisProducer<P> {
+ fn encode_genesis_pack(&self,snapshot:&P)->Result<Vec<u8>,ValueError>;
+ fn decode_genesis_pack(&self,pack:&[u8])->Result<P,ValueError>;
 }
 #[derive(Debug,PartialEq)]
 pub struct AdmittedArtifactGenesis<P>{facts:ArtifactGenesis<P>,pack:Arc<Vec<u8>>}
@@ -30,21 +30,18 @@ impl<P> AdmittedArtifactGenesis<P>{
  }
  pub fn into_owners(self)->(Arc<P>,Arc<Vec<u8>>){(self.facts.into_snapshot(),self.pack)}
 }
-impl<P:ArtifactGenesisCodec> AdmittedArtifactGenesis<P>{
- pub fn born(snapshot:P)->Result<Self,ValueError>{let pack=snapshot.encode_genesis_pack()?;Ok(Self::from_decoded_pack(snapshot,pack))}
- pub fn from_stored_pack(pack:Vec<u8>)->Result<Self,ValueError>{let snapshot=P::decode_genesis_pack(&pack)?;Ok(Self::from_decoded_pack(snapshot,pack))}
+impl<P> AdmittedArtifactGenesis<P>{
+ pub fn born<G:ArtifactGenesisProducer<P>>(snapshot:P,producer:&G)->Result<Self,ValueError>{let pack=producer.encode_genesis_pack(&snapshot)?;Ok(Self::from_decoded_pack(snapshot,pack))}
+ pub fn from_stored_pack<G:ArtifactGenesisProducer<P>>(pack:Vec<u8>,producer:&G)->Result<Self,ValueError>{let snapshot=producer.decode_genesis_pack(&pack)?;Ok(Self::from_decoded_pack(snapshot,pack))}
 }
 
 impl<P> ArtifactGenesisWitness for AdmittedArtifactGenesis<P>{type Snapshot=P;fn genesis_facts(&self)->&ArtifactGenesis<P>{&self.facts}}
 
 use pack::snapshot::ArtifactPack;
 use pack::record::EncodeOptions as PackEncodeOptions;
-impl<P: ArtifactPack> ArtifactGenesisCodec for P {
-    fn encode_genesis_pack(&self) -> Result<Vec<u8>, ValueError> {
-        self.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-    }
-    fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> {
-        Self::decode_pack(pack).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-    }
+/// 🎒️ The native Pack producer uses the authored snapshot Pack representation.
+pub struct ArtifactPackGenesisProducer;
+impl<P:ArtifactPack> ArtifactGenesisProducer<P> for ArtifactPackGenesisProducer {
+ fn encode_genesis_pack(&self,snapshot:&P)->Result<Vec<u8>,ValueError>{snapshot.encode_pack_with(&PackEncodeOptions::default()).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
+ fn decode_genesis_pack(&self,pack:&[u8])->Result<P,ValueError>{P::decode_pack(pack).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
 }
-

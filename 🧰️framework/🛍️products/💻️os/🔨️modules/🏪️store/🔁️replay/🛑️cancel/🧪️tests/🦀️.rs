@@ -18,7 +18,7 @@ fn original() -> Raw {
     let mut target = Vec::with_capacity(8192);
     target.push(String::with_capacity(65536));
     owner.original.edit_messages.rows_mut().try_push(crate::os_spr::MutationMessage { level: semio_framework_diagnostic::Severity::Warning, code: "original-row".into(), message: String::with_capacity(65536), target, op_index: Some(0) }).unwrap();
-    owner.with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoMutation>::default()))
+    owner.with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()))
 }
 
 pub(crate) fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {

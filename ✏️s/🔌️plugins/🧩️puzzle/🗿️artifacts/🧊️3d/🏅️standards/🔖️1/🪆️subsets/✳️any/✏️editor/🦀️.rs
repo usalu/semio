@@ -12,32 +12,36 @@
 //! and each action emits the concrete typed mutation kinds of the gesture it carries (`🎮️commands/<group>`),
 //! never a delta of two scenes.
 
-#[path="📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+#![allow(clippy::result_large_err)]
 
-use crate::editor::puzzle3d::retained_action::{PUZZLE3D_RETAINED_PAYLOAD_SCHEMA, Puzzle3dAcceptSuggestionWork, Puzzle3dAddBrushObjectWork, Puzzle3dFocusSelectionWork, Puzzle3dInstanceBinding, Puzzle3dPrecomputeCommandWork, Puzzle3dTransformWork, Puzzle3dWindowCommandWork, puzzle3d_retained_extent, puzzle3d_retained_reduce};
-use {crate::editor::puzzle3d::retained_document::Puzzle3dAddObjectKindWork, crate::editor::puzzle3d::retained_document::Puzzle3dCreateAttractionWork, crate::editor::puzzle3d::retained_document::Puzzle3dKindWeightWork, crate::editor::puzzle3d::retained_document::Puzzle3dPatchInspectorWork, crate::editor::puzzle3d::retained_document::Puzzle3dSetActiveExampleWork};
-use crate::editor::puzzle3d::dispatch::puzzle3d_handle_action;
-use {crate::editor::puzzle3d::session::Puzzle3dInstanceOperationOwner, crate::editor::puzzle3d::session::with_puzzle3d_session_for, crate::editor::puzzle3d::session::puzzle3d_view_session_key};
-use {crate::editor::puzzle3d::snapshot::PUZZLE3D_DEFAULT_UTILITY, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_KIND, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_REFERENCE, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_VORTEX, crate::editor::puzzle3d::snapshot::PUZZLE3D_HOVER_CHANNEL, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::snapshot::Puzzle3dInteractionSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::dispatch::Puzzle3dScopeClass, crate::editor::puzzle3d::snapshot::default_scene_snapshot, crate::editor::puzzle3d::snapshot::puzzle3d_addressed_window_id, crate::editor::puzzle3d::snapshot::puzzle3d_copy_fragment, crate::editor::puzzle3d::snapshot::puzzle3d_copy_fragment_from, crate::editor::puzzle3d::snapshot::puzzle3d_entity_label, crate::editor::puzzle3d::snapshot::puzzle3d_fault_notices, crate::editor::puzzle3d::snapshot::puzzle3d_flag_value_action, crate::editor::puzzle3d::snapshot::puzzle3d_flag_value_argument, crate::editor::puzzle3d::snapshot::puzzle3d_inspector_origin_nudge, crate::editor::puzzle3d::snapshot::puzzle3d_kind_ids, crate::editor::puzzle3d::snapshot::puzzle3d_paste_operations, crate::editor::puzzle3d::snapshot::puzzle3d_scene_active_utility, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_play_snapshot, crate::editor::puzzle3d::dispatch::puzzle3d_scope, crate::editor::puzzle3d::snapshot::puzzle3d_selected_objects_from, crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot, crate::editor::puzzle3d::snapshot::puzzle3d_upsert_catalog_rows, crate::editor::puzzle3d::snapshot::scene_from_snapshot};
-use crate::editor::puzzle3d::commands::world_relocate;
-use {crate::editor::puzzle3d::config::Puzzle3dConfig, crate::editor::puzzle3d::config::Puzzle3dConfigMutation, crate::editor::puzzle3d::config::Puzzle3dRuntime};
-use crate::editor::puzzle3d::modes::edit;
-use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
-use crate::editor::puzzle3d::modes::edit::windows::main;
-use crate::editor::puzzle3d::modes::edit::windows::main::utilities;
-use crate::editor::puzzle3d::panels::{catalogue, artifact, inspection, settings as settings_panel};
-use crate::editor::puzzle3d::precompute::brush::BrushSuggestionsOwner;
-use crate::editor::puzzle3d::presence;
-use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
-use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
-use crate::editor::puzzle3d::window as window_ownership;
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{};
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
 
-use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d_retained_action::{PUZZLE3D_RETAINED_PAYLOAD_SCHEMA, Puzzle3dAcceptSuggestionWork, Puzzle3dAddBrushObjectWork, Puzzle3dFocusSelectionWork, Puzzle3dInstanceBinding, Puzzle3dPrecomputeCommandWork, Puzzle3dTransformWork, Puzzle3dWindowCommandWork, puzzle3d_retained_extent, puzzle3d_retained_reduce};
+use {semio_s_artifact_puzzle_3d_retained_document::Puzzle3dAddObjectKindWork, semio_s_artifact_puzzle_3d_retained_document::Puzzle3dCreateAttractionWork, semio_s_artifact_puzzle_3d_retained_document::Puzzle3dKindWeightWork, semio_s_artifact_puzzle_3d_retained_document::Puzzle3dPatchInspectorWork, semio_s_artifact_puzzle_3d_retained_document::Puzzle3dSetActiveExampleWork};
+use semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_handle_action;
+use {semio_s_artifact_puzzle_3d_editor_session::PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceOperationOwner, semio_s_artifact_puzzle_3d_editor_session::with_puzzle3d_session_for, semio_s_artifact_puzzle_3d_editor_session::puzzle3d_view_session_key};
+use {semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_DEFAULT_UTILITY, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_KIND, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_REFERENCE, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_VORTEX, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_HOVER_CHANNEL, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dInteractionSnapshot, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dSceneSnapshot, semio_s_artifact_puzzle_3d_editor_dispatch::Puzzle3dScopeClass, semio_s_artifact_puzzle_3d_editor_snapshot::default_scene_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_addressed_window_id, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_copy_fragment, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_copy_fragment_from, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_entity_label, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_fault_notices, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_flag_value_action, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_flag_value_argument, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_inspector_origin_nudge, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_kind_ids, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_paste_operations, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_active_utility, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_document, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_snapshot_from_play_snapshot, semio_s_artifact_puzzle_3d_editor_dispatch::puzzle3d_scope, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_selected_objects_from, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot, semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_upsert_catalog_rows, semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot};
+use semio_s_artifact_puzzle_3d_commands_document::world_relocate;
+use {semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig, semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfigMutation, semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime};
+use semio_s_artifact_puzzle_3d_editor_modes as edit;
+use semio_s_artifact_puzzle_3d_editor_modes::tools::fill as fill_tool;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
+use semio_s_artifact_puzzle_3d_editor_panels::{catalogue, artifact, inspection, settings as settings_panel};
+use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsOwner;
+use semio_s_artifact_puzzle_3d_editor_presence as presence;
+use semio_s_artifact_puzzle_3d_editor_presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
+use semio_s_artifact_puzzle_3d_editor_terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
+use semio_s_artifact_puzzle_3d_editor_window as window_ownership;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
+
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, StepContext};
@@ -57,7 +61,6 @@ use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
-#[cfg(test)] use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DialogDefinition;
@@ -115,412 +118,19 @@ use semio_framework_value::FromValue;
 use {semio_framework_pack_json::json, semio_framework_pack_json::object, semio_framework_pack_json::parse, semio_framework_pack_json::to_json_string, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
 use std::collections::{HashMap, HashSet};
-#[cfg(test)] use std::collections::{BTreeMap};
-
-//#region 🔖️Constants
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Constants
 
 //#region 🔖️Document
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //#region 🔖️Quaternions
-pub use {crate::standards::v1::subsets::any::schema::quat_from_axis_angle, crate::standards::v1::subsets::any::schema::quat_mul, crate::standards::v1::subsets::any::schema::quat_rotate_vector};
+pub use {semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul, semio_s_artifact_puzzle_3d_model::quat_rotate_vector};
 
 //#endregion 🔖️Quaternions
 
-//#region 🔖️FixtureQueries
-
-
-
-
-
-
-
-
-
-
-
-
-pub use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️FixtureQueries
-
-//#region 🔖️SceneState
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️SceneState
-
-//#region 🔖️InteractionSnapshot
-
-
-
-//#endregion 🔖️InteractionSnapshot
-
-//#region 🔖️FixtureEdits
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️FixtureEdits
-
-//#region 🔖️EngineBridge
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️EngineBridge
-
-//#region 🔖️AttractionResolve
-/// 📐️ Attraction placement math lives with the selection leaves that re-solve attractions on every move
-/// (`🧬️schema/🧬️mutations` `🔖️AttractionPose`); the editor resolves whole fixtures with the same kernel.
-pub use crate::standards::v1::subsets::any::schema::derive_attraction_params;
-
-
-//#endregion 🔖️AttractionResolve
-
-//#region 🔖️Distribution
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️Distribution
-
-//#region 🔖️UiScopes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🔖️UiScopes
-
-//#region 🔖️Puzzle3dCommand
-
-
-
-
-
-//#endregion 🔖️Puzzle3dCommand
-
-//#region 🔖️ActionContext
-
-
-
-
-//#endregion 🔖️ActionContext
-
-//#region 🔖️ContextMenu
-
-
-
-
-
-
-
-//#endregion 🔖️ContextMenu
-
 //#region 🔖️PlayApp
-//#region 🎟️SessionRegistry
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//#endregion 🎟️SessionRegistry
-
-
-
-
-
-
-
-//#region 🧠️InstanceOperationOwner
-
-
-
-
-
-//#endregion 🧠️InstanceOperationOwner
-
-
-
-
-
-
-
-
-
-//#region 🧾️ActionPrologue
-
-
-
-
-
-
-
-//#endregion 🧾️ActionPrologue
-
-
-
-
 
 //#region 🧵️RetainedCommands
 
-
-pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
+pub const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "openAddObjectDialog",
     "worldPointerDown",
     "setActiveExample",
@@ -586,170 +196,20 @@ pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
     "toggleSun",
 ];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// 📏️ Raw wire bytes ONE retained 3d command may carry — one whole `importSnapshot` file, escaped, plus its envelope.
-const PUZZLE3D_IMPORT_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
+const PUZZLE3D_IMPORT_RAW_BYTES: usize = semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_RAW_BYTES;
 const PUZZLE3D_IMPORT_DECODED_ITEMS: usize = 16_384;
 
-struct Puzzle3dRetainedCommandJobFactory {
+pub struct Puzzle3dRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
-    contract: semio_framework::ToolExecutionContract,
+    pub contract: semio_framework::ToolExecutionContract,
 }
 
 impl Puzzle3dRetainedCommandJobFactory {
-    fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self {
             keys: PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect(),
-            contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
+            contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         }
     }
 }
@@ -798,7 +258,7 @@ impl ToolJobFactory for Puzzle3dRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     type Owner = EditorApp<Puzzle3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE3D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "openAddObjectDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1216,7 +676,7 @@ impl Puzzle3dRetainedCommandProofs {
         artifact_schema: "puzzle.3d",
         factory: "Puzzle3dRetainedCommandJobFactory",
         factory_type: Puzzle3dRetainedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
+        contract: semio_framework::ToolExecutionContract::resumable(PUZZLE3D_IMPORT_RAW_BYTES, PUZZLE3D_IMPORT_DECODED_ITEMS, 1, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_OUTPUT_BYTES, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
         tools: [
             "openAddObjectDialog", "worldPointerDown", "setActiveExample", "setFillCount",
             "addTargetVolume",
@@ -1249,11 +709,11 @@ impl Puzzle3dHostConfigurationProofs {
 /// ♻️ The owners one `Puzzle3dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle3dClipboardOwners {
-    args: Option<semio_framework_value::DslValue>,
+    pub args: Option<semio_framework_value::DslValue>,
     interaction: Option<semio_framework::InteractionState>,
     hover: Option<semio_framework_plugin::app::InteractionHoverState>,
-    tool_id: String,
-    snapshot: Option<std::sync::Arc<Puzzle3dPlaySnapshot>>,
+    pub tool_id: String,
+    pub snapshot: Option<std::sync::Arc<Puzzle3dPlaySnapshot>>,
     raw_wire: Vec<u8>,
     completion: Option<semio_framework_plugin::app::ArtifactToolCompletion<EditorApp<Puzzle3dPlayApp>>>,
     rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>,
@@ -1261,26 +721,26 @@ struct Puzzle3dClipboardOwners {
 
 /// 📋️ One-step reserved copy/cut/paste job — the framework route is an empty stub unless the app owns this producer.
 struct Puzzle3dClipboardJob {
-    tool_id: String,
-    snapshot: Option<std::sync::Arc<Puzzle3dPlaySnapshot>>,
+    pub tool_id: String,
+    pub snapshot: Option<std::sync::Arc<Puzzle3dPlaySnapshot>>,
     raw_wire: Vec<u8>,
-    args: Option<semio_framework_value::DslValue>,
+    pub args: Option<semio_framework_value::DslValue>,
     interaction: Option<semio_framework::InteractionState>,
     hover: Option<semio_framework_plugin::app::InteractionHoverState>,
     completion: Option<semio_framework_plugin::app::ArtifactToolCompletion<EditorApp<Puzzle3dPlayApp>>>,
     rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle3dPlayApp>>>,
-    outbox: crate::puzzle_job::JobOutbox,
+    outbox: semio_s_plugin_puzzle_jobs::JobOutbox,
     closing: bool,
-    owners: crate::puzzle_job::WorkClosing<Puzzle3dClipboardOwners>,
+    owners: semio_s_plugin_puzzle_jobs::WorkClosing<Puzzle3dClipboardOwners>,
 }
 
 impl Puzzle3dClipboardJob {
-    fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle3dPlayApp>>) -> Self {
+    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<Puzzle3dPlayApp>>) -> Self {
         let ArtifactReservedToolInput::Action { args, interaction, hover } = request.input else { unreachable!("clipboard routes carry action input") };
         Self { tool_id: request.tool_id, snapshot: Some(request.snapshot), raw_wire: request.raw_wire, args, interaction: Some(interaction), hover: Some(hover), completion: Some(request.completion), rejection: None, outbox: Default::default(), closing: false, owners: Default::default() }
     }
 
-    fn emit(&mut self) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation, NoDraftMutation> {
+    pub fn emit(&mut self) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation, NoDraftMutation> {
         let (Some(interaction), Some(hover)) = (self.interaction.as_ref(), self.hover.as_ref()) else {
             return Emit::default();
         };
@@ -1322,12 +782,12 @@ impl Puzzle3dClipboardJob {
 impl InteractiveJob for Puzzle3dClipboardJob {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
-            crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
-            crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Building => return self.outbox.advance(cx),
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Delivered | semio_s_plugin_puzzle_jobs::OutboxPhase::Retiring => {
                 self.outbox.retire_step(cx)?;
                 return Ok(None);
             }
-            crate::puzzle_job::OutboxPhase::Idle => {}
+            semio_s_plugin_puzzle_jobs::OutboxPhase::Idle => {}
         }
         let turn = self.turn(cx);
         self.outbox.settle(turn, cx)
@@ -1346,23 +806,23 @@ impl InteractiveJob for Puzzle3dClipboardJob {
 
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.begin_close();
-        crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant)
+        semio_s_plugin_puzzle_jobs::job_close_step(&mut self.outbox, &mut self.owners, grant)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.owners, 0)?.copy_bytes)
     }
 
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.owners, maximum_copy_bytes)?.capacity_bytes)
     }
 
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.owners, 0)?.release_bytes)
     }
 
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        Ok(crate::puzzle_job::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
+        Ok(semio_s_plugin_puzzle_jobs::job_close_demands(&self.outbox, &self.owners, 0)?.depth)
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1371,20 +831,20 @@ impl InteractiveJob for Puzzle3dClipboardJob {
 }
 
 impl Puzzle3dClipboardJob {
-    fn turn(&mut self, cx: &StepContext<'_>) -> crate::puzzle_job::JobTurn {
+    pub fn turn(&mut self, cx: &StepContext<'_>) -> semio_s_plugin_puzzle_jobs::JobTurn {
         if self.closing || cx.is_cancelled() {
-            return crate::puzzle_job::JobTurn::Cancelled;
+            return semio_s_plugin_puzzle_jobs::JobTurn::Cancelled;
         }
         if !self.raw_wire.is_empty() {
-            return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw_wire));
+            return semio_s_plugin_puzzle_jobs::JobTurn::Prepare(std::mem::take(&mut self.raw_wire));
         }
         let emit = self.emit();
-        let Some(completion) = self.completion.as_ref() else { return crate::puzzle_job::JobTurn::Fault(b"puzzle3d-clipboard-completion-owner".to_vec()) };
+        let Some(completion) = self.completion.as_ref() else { return semio_s_plugin_puzzle_jobs::JobTurn::Fault(b"puzzle3d-clipboard-completion-owner".to_vec()) };
         if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
             self.rejection = Some(rejected);
-            return crate::puzzle_job::JobTurn::Fault(b"puzzle3d-clipboard-completion-rejected".to_vec());
+            return semio_s_plugin_puzzle_jobs::JobTurn::Fault(b"puzzle3d-clipboard-completion-rejected".to_vec());
         }
-        crate::puzzle_job::JobTurn::Complete
+        semio_s_plugin_puzzle_jobs::JobTurn::Complete
     }
 }
 
@@ -1397,8 +857,8 @@ impl ArtifactReservedJob for Puzzle3dClipboardJob {}
 pub struct Puzzle3dPlayApp;
 
 impl ArtifactEditor for Puzzle3dPlayApp {
-    const DIALECT: Dialect = crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA;
+    const DIALECT: Dialect = semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA;
     type Snapshot = Puzzle3dPlaySnapshot;
     type Mutation = Puzzle3dMutation;
     type Config = Puzzle3dConfig;
@@ -1434,8 +894,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         window_ownership::register_transient(registry)
     }
 
-
-
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))
     }
@@ -1451,7 +909,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-
 
     /// 🧽️ puzzle3d owns no draft lane, but `VcsArtifactApp::close_step` still walks it: every one of
     /// its seven owned lanes is mandatory, and the `interaction-store` lane behind this one never runs
@@ -1587,8 +1044,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             "openImportSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance)),
             "importSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance)),
             "addTargetVolume" => Box::new(Puzzle3dWindowCommandWork::new(tool_id).bound(&instance)),
-            "worldPointerDown" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
-            _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce::<Puzzle3dPlayApp>, puzzle3d_retained_extent)),
+            "worldPointerDown" => Box::new(semio_s_plugin_puzzle_retained::NoopPuzzleCommandWork::new(tool_id)),
+            _ => Box::new(semio_s_plugin_puzzle_retained::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce::<Puzzle3dPlayApp>, puzzle3d_retained_extent)),
         };
         let operation_context = semio_framework_plugin::AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -1614,7 +1071,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             },
             Puzzle3dCommand::action_id,
             PUZZLE3D_IMPORT_RAW_BYTES,
-            crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS,
+            semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS,
             work,
         );
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
@@ -1626,7 +1083,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// now call this automatically the moment `Puzzle3dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::puzzle3d::config::schema::app_schema_descriptor())
+        Some(semio_s_artifact_puzzle_3d_editor_config::schema::app_schema_descriptor())
     }
 
     /// 🚀️ The `default_scene_snapshot()` (Concrete Forest) document, nothing else.
@@ -1636,7 +1093,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// static is a `LazyLock`: the example that needs it forces it when it is actually switched to.
     /// It then built a scene and synced a whole precompute session (mesh fallbacks, collision scene) into a
     /// throwaway `Puzzle3dPlayApp` dropped on return: every rendering app syncs its own session before its
-    /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
+    /// first body (`with_puzzle3d_session_for`), so that work reached no one — while every `codec` call of a hub
     /// creating or validating a document paid for it in the interpreter.
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
         Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored initial snapshot admits"))
@@ -1715,7 +1172,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
     fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
  Ok((||{
-        #[cfg(test)]
         PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
         let snapshot = puzzle3d_scene_snapshot_from_document(doc.snapshot.typed());
         let mut ordered = Vec::new();
@@ -1780,24 +1236,24 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_upsert_catalog_rows(&mut catalogs, "vortices", fragment.get("vortexKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "cables", fragment.get("cableKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "attractions", fragment.get("attractionKinds"));
-        let kind_catalogs: Option<crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs> = Some(<crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs as FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+        let kind_catalogs: Option<semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs> = Some(<semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs as FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
         let mut operations = Vec::new();
         if kind_catalogs != before.meta.kind_catalogs {
-            operations.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(kind_catalogs));
+            operations.push(semio_s_artifact_puzzle_3d_mutations_catalog::replace_kind_catalogs::mutation::replace_kind_catalogs(kind_catalogs));
         }
 
         if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
             let mut rows = before.meta.kind_compatibility.clone();
             for incoming in incoming_compat {
-                let row = <crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let connect = crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
+                let row = <semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let connect = semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
                 match rows.iter().position(|entry| entry.source == row.source && entry.target == row.target) {
                     None => {
                         operations.push(connect);
                         rows.push(row);
                     }
                     Some(index) if rows[index] != row => {
-                        operations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
+                        operations.push(semio_s_artifact_puzzle_3d_mutations_catalog::disconnect_kind_compatibility::mutation::disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
                         operations.push(connect);
                         rows[index] = row;
                     }
@@ -1889,10 +1345,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle3dWindowTransient::default(), Some(view_state));
         with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |app| {
-            let wid = view_state.window_id.as_deref().unwrap_or(main::WINDOW_KIND_ID);
+            let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), wid);
-            HashMap::from([(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
+            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
         })
     }
 
@@ -1906,8 +1362,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Self::context_menu_body(request, doc, cfg, view_state, &Puzzle3dInteractionSnapshot::default(), registry)
     }
 }
-
-
 
 //#endregion 🔖️PlayApp
 
@@ -2038,9 +1492,9 @@ fn puzzle3d_object_kind_arg() -> ActionArgDef {
 /// known gap for the coordinator, not silently lost.
 pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-    Editor::builder(crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT)
+    Editor::builder(semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT)
             .document(["semio", "puzzle", "3d"])
-            .artifact_kind(crate::artifact_kind())
+            .artifact_kind(semio_s_artifact_puzzle_3d_model::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
@@ -2049,7 +1503,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .io(puzzle3d_io())
             .window_kind_def(main::definition(&envelope, &Puzzle3dLabels::NATIVE_EN))
             .interaction(puzzle3d_interaction_definition())
-            .window_kind_interactions(main::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)])
+            .window_kind_interactions(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, vec![InteractionRef::new(PUZZLE3D_INTERACTION_DOMAIN)])
             .default_layout(edit::layout())
             .panel_tab_def(artifact::definition())
             .panel_tab_def(catalogue::definition())
@@ -2154,12 +1608,12 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_args("addObjectKind", vec![puzzle3d_object_kind_arg()])
             // 🧰️ Flat per-window set of utilities; no utility is active until the host presses one — the
             // transform gumball exposes translate and rotate together via Move/Rotate flags.
-            .utility(utilities::transform::definition())
+            .utility(semio_s_artifact_puzzle_3d_editor_transform::definition())
             .utility(utilities::brush::definition(puzzle3d_localized(|l| l.brush)))
             .utility(utilities::volume_brush::definition(puzzle3d_localized(|l| l.volume_brush)))
             .utility(utilities::world_relocate::definition())
-            .window_kind_utilities(main::WINDOW_KIND_ID, vec![
-                utilities::transform::UTILITY_ID.into(),
+            .window_kind_utilities(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, vec![
+                semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into(),
                 utilities::brush::UTILITY_ID.into(),
                 utilities::volume_brush::UTILITY_ID.into(),
                 utilities::world_relocate::UTILITY_ID.into(),
@@ -2167,7 +1621,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
             // its viewport interaction via `Puzzle3dConfig::active_tool_id`.
             .tool(fill_tool::definition(puzzle3d_localized(|l| l.fill)))
-            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID))])
+            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID))])
             // 🎓️ Reference introduction: a short first-run walkthrough of the viewport, the catalogue
             // panel, adding an object, and the Transform utility.
             .introduction(IntroductionDefinition {
@@ -2189,11 +1643,11 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                             "Das ist Ihre 3D-Szene — orbitieren, verschieben und zoomen Sie, um sich umzusehen.",
                         ),
                     )
-                        .introduce(window_element_id(main::WINDOW_KIND_ID))
+                        .introduce(window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID))
                         .interact(vec![
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::zoom(main::WINDOW_KIND_ID, "Zoom")),
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::pan(main::WINDOW_KIND_ID, "Pan")),
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::orbit(main::WINDOW_KIND_ID, "Orbit")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::zoom(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Zoom")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::pan(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Pan")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::orbit(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Orbit")),
                         ]),
                     IntroductionStepDefinition::new(
                         "catalogue",
@@ -2212,7 +1666,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                         ),
                     )
                         .introduce(panel_tab_first_draggable_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
-                        .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(main::WINDOW_KIND_ID)])
+                        .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
                         .placement(IntroductionPlacement::Right)
                         .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::action("addObjectKind", "Add an object"))]),
                     IntroductionStepDefinition::new(
@@ -2224,9 +1678,9 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                             |w| format!("Aktivieren Sie das Transformieren-Hilfsmittel, um {w} zu verschieben und zu drehen."),
                         ),
                     )
-                        .introduce(utilities::transform::UTILITY_ID)
-                        .show(vec![window_element_id(main::WINDOW_KIND_ID)])
-                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(utilities::transform::UTILITY_ID, "Activate Transform"))]),
+                        .introduce(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID)
+                        .show(vec![window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
+                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID, "Activate Transform"))]),
                 ],
             })
             // 🗨️ Reference dialog opened by `openAddObjectDialog`, driving the existing `addObjectKind`
@@ -2374,45 +1828,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
 
 //#endregion 🔖️Manifest
 
-//#region 🧪️UnitTests
-/// 🧪️ The one puzzle3d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
-/// instead of re-deriving a store/dispatch/render scaffold of its own.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🤖️agent-lane/🦀️.rs"]
-mod agent_lane_tests;
-//#endregion 🧪️UnitTests
-
-//#region 🧪️Tests
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️example-switch/🦀️.rs"]
-mod example_switch;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-latency/🦀️.rs"]
-mod mutation_latency;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️gesture-kinds/🦀️.rs"]
-mod gesture_kinds;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️selection-scale/🦀️.rs"]
-mod selection_scale;
-//#endregion 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🧵️retained-wiring/🦀️.rs"]
-mod retained_wiring_tests;
-
-#[path = "🧵️session/🦀️.rs"]
-pub mod session;
-
-#[path = "🎮️commands/🦀️.rs"]
-pub mod dispatch;
 
 impl Puzzle3dPlayApp {
     /// 🖱️ The ONE context-menu implementation — `ArtifactEditor::context_menu` and
@@ -2427,7 +1842,7 @@ impl Puzzle3dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle3dWindowTransient::default(), Some(view_state));
         let Some(labels) = puzzle3d_labels(view_state) else { return Vec::new() };
-        let wid = view_state.window_id.as_deref().unwrap_or(main::WINDOW_KIND_ID);
+        let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
         let active_utility = puzzle3d_scene_active_utility(&config, Some(view_state), Some(wid));
         let envelope = scene_from_snapshot(doc.snapshot.typed(),config,&active_utility);
         let mut selection = Puzzle3dContextSelection::from_surface(request.surface.as_ref());
@@ -2438,7 +1853,7 @@ impl Puzzle3dPlayApp {
     /// 🖼️ The ONE render implementation — both `ArtifactEditor::render` and
     /// `render_with_request_context` funnel here, differing only in whether `interaction` carries a
     /// live `vortex`-domain read or the empty default.
-    fn render_body(
+    pub fn render_body(
         owner: Option<&ArtifactInstanceOperationOwnerHandle>,
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
@@ -2495,22 +1910,30 @@ impl Puzzle3dPlayApp {
     }
 }
 
-#[path = "🧵️retained/🎬️action/🦀️.rs"]
-pub mod retained_action;
-
-#[path = "🧵️retained/🗂️document/🦀️.rs"]
-pub mod retained_document;
-
-use crate::editor::puzzle3d::commands::delete_selection;
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_commands_document::delete_selection;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
 
 /// ✂️ Copies then deletes the selected objects as one mutation list.
 fn puzzle3d_cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Vec<Puzzle3dMutation> {
     puzzle3d_cut_operations_from(doc.snapshot.typed(), &Puzzle3dInteractionSnapshot::from_interaction(interaction))
 }
 
-fn puzzle3d_cut_operations_from(before: &Puzzle3dSnapshot, marks: &Puzzle3dInteractionSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn puzzle3d_cut_operations_from(before: &Puzzle3dSnapshot, marks: &Puzzle3dInteractionSnapshot) -> Vec<Puzzle3dMutation> {
     let host = puzzle3d_scene_snapshot_from_document(before);
     let ids: Vec<String> = puzzle3d_selected_objects_from(marks, &host).into_iter().map(|object| object.id).collect();
     delete_selection::delete_selection_mutations(before, &ids, &HashSet::new(), &[], &[], &[])
 }
+
+//#region 🌳️Modules
+#[path = "🌉️wasm/🦀️.rs"]
+pub mod wasm;
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo_session {
+        #[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+        pub mod component;
+        pub use component::*;
+    }
+}
+//#endregion 🌳️Modules

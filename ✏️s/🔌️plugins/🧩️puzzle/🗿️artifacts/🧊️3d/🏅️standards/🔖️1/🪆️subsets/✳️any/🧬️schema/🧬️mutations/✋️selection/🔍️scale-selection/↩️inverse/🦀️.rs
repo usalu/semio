@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE scale the scaling changes
 //! (exact, never a reciprocal factor that would accumulate float error). Nothing scaled ⇒ `Vec::new()`.
 use super::mutation::ScaleSelection;
-use crate::standards::v1::subsets::any::schema::mutations::{ScaleObject, ScaleTargetVolume};
-use {crate::standards::v1::subsets::any::schema::puzzle3d_scaled, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle3d_selection, crate::standards::v1::subsets::any::schema::mutations::scale_object, crate::standards::v1::subsets::any::schema::mutations::scale_target_volume};
-use crate::Puzzle3dSnapshot;
+use {semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume};
+use {semio_s_artifact_puzzle_3d_model::puzzle3d_scaled, crate::puzzle3d_selection, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::scale_object, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume};
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ScaleSelection> + From<ScaleObject> + From<ScaleTargetVolume>>(payload: &super::mutation::ScaleSelection, base: &Puzzle3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

@@ -2,7 +2,7 @@
 //! window kind, mirroring the editor's single `📋️board` window). Never calls into the sibling
 //! editor module — built directly from the shared artifact-level `Block2dSnapshot`.
 
-use crate::Block2dSnapshot;
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::column;
 use semio_framework_plugin::plugin_app_close_prelude::text;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;

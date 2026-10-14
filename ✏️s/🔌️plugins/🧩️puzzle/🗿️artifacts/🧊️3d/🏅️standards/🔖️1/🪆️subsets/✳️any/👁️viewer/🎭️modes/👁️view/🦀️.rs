@@ -3,7 +3,7 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires one real window per
 //! viewer packet.
 
-use crate::viewer::puzzle3d::modes::view::windows::main;
+use crate::modes::view::windows::main;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

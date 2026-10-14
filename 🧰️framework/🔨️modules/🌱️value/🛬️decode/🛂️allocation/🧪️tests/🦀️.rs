@@ -28,7 +28,7 @@ fn decoder_original_retirement_slot_survives_pause_and_refused_hops(){
 
 #[test]
 fn decoder_refused_partial_owner_returns_to_the_same_original_recipient(){
- use semio_framework_value::{ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+ use crate::{ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
  use std::sync::Arc;
  struct Owner{bytes:Option<Vec<u8>>,drops:Arc<AtomicUsize>}
  impl Drop for Owner{fn drop(&mut self){assert!(self.bytes.is_none());self.drops.fetch_add(1,Ordering::Relaxed);}}
@@ -48,7 +48,7 @@ fn decoder_refused_partial_owner_returns_to_the_same_original_recipient(){
 
 #[test]
 fn original_decoder_text_slot_keeps_materialized_utf8_on_interior_cancellation(){
- use semio_framework_value::{ErasedSnapshotRetirement,retirement::controlled::ControlledRetirement,RetainedCloneGrant,retained_clone::RetainedCloneStep};
+ use crate::{ErasedSnapshotRetirement,retirement::controlled::ControlledRetirement,RetainedCloneGrant,retained_clone::RetainedCloneStep};
  struct Owner{value:ControlledRetirement<String>,drops:std::sync::Arc<AtomicUsize>}
  impl Drop for Owner{fn drop(&mut self){assert!(self.value.terminal_is_empty());self.drops.fetch_add(1,Ordering::Relaxed);}}
  impl ErasedSnapshotRetirement for Owner{fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.value.step(grant)}fn terminal_is_empty(&self)->bool{self.value.terminal_is_empty()}fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.value.next_copy_byte_demand()}fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.value.next_capacity_byte_demand(copy)}fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.value.next_release_byte_demand()}fn next_depth_demand(&self)->Result<usize,ValueError>{self.value.next_depth_demand()}}

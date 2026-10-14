@@ -1,13 +1,11 @@
 //! 📚️ DIN EN 16798 play app panel — examples plus SFP, draught, and Annex B reference tables.
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::artifact_schema::{
-    annex_params::AnnexParams,
-    part_1::{co2_above_outdoor_ppm, draught_limit_percent, outdoor_air_per_area_l_s_m2, outdoor_air_per_person_l_s},
-    part_3::sfp_bound,
-    ComfortCategory, PollutionClass,
-};
-use crate::document::ClauseId;
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_din16798_checks::annex_params::AnnexParams;
+use semio_s_artifact_norm_din16798_checks::part_1::{co2_above_outdoor_ppm, draught_limit_percent, outdoor_air_per_area_l_s_m2, outdoor_air_per_person_l_s};
+use semio_s_artifact_norm_din16798_checks::part_3::sfp_bound;
+use semio_s_artifact_norm_din16798_checks::{ComfortCategory, PollutionClass};
+use semio_s_plugin_norm_compliance::ClauseId;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -21,7 +19,7 @@ pub const BODY_CATALOGUE: &str = "norm.din16798.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -191,7 +189,7 @@ pub fn render(
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let tables = reference_tables();
-    crate::app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

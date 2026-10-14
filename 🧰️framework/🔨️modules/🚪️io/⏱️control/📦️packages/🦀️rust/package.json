@@ -1,0 +1,15 @@
+{
+  "name": "@semio-tech/framework-io-control-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-source": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-source",
+    "test-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-native",
+    "test-snapshot-receiving-native": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-io-control-rs:test-snapshot-receiving-native"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
+  }
+}

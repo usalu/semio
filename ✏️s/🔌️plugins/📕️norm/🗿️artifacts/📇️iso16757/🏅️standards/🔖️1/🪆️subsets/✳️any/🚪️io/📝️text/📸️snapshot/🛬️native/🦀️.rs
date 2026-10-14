@@ -1,5 +1,6 @@
 //! 🛬️ Explicit borrowed construction of catalogue native syntax under one cumulative control.
-use crate::{CatalogueValue as V,CatalogueUnit,DimensionSignature,NullState,part_5::PartNumberRule};
+use semio_s_artifact_norm_iso16757_model::{CatalogueValue as V, CatalogueUnit, DimensionSignature, NullState};
+use semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::NativeDecodeControl;
@@ -18,9 +19,9 @@ fn unit(v:&D,c:&mut NativeDecodeControl<'_>)->Result<CatalogueUnit,semio_framewo
 fn reserve<T>(v:&mut Vec<T>,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if v.len()==v.capacity(){let extra=v.capacity().max(1);let bytes=v.capacity().checked_add(extra).and_then(|n|n.checked_mul(size_of::<T>())).filter(|n|*n<=isize::MAX as usize).ok_or_else(||invalid("catalogue frontier allocation overflow"))?;c.charge(bytes)?;v.try_reserve_exact(extra).map_err(|_|invalid("catalogue construction allocation failed"))?;}Ok(())}
 fn push<T>(v:&mut Vec<T>,value:T,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{reserve(v,c)?;v.push(value);Ok(())}
 
-fn push_value(values:&mut Vec<V>,value:V,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if let Err(error)=reserve(values,c){crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_value(value);return Err(error)}values.push(value);Ok(())}
+fn push_value(values:&mut Vec<V>,value:V,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if let Err(error)=reserve(values,c){semio_s_artifact_norm_iso16757_model::retire_decoded_catalogue_value(value);return Err(error)}values.push(value);Ok(())}
 struct Values(Vec<V>);
-impl Drop for Values{fn drop(&mut self){for v in self.0.drain(..){crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_value(v);}}}
+impl Drop for Values{fn drop(&mut self){for v in self.0.drain(..){semio_s_artifact_norm_iso16757_model::retire_decoded_catalogue_value(v);}}}
 enum Task<'a>{Value(&'a D),List(usize)}
 pub fn catalogue_value(value:&FieldValue,c:&mut NativeDecodeControl<'_>)->Result<V,semio_framework_value::ValueError>{
  let FieldValue::Value(root)=value else{return Err(invalid("expected catalogue intrinsic syntax value"))};

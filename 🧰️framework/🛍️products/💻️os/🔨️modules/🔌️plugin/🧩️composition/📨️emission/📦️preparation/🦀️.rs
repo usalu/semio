@@ -1,7 +1,7 @@
 //! 📨️ Owned child emission preparation retains typed operation owners across every refusal.
 use crate::{store,protocol};
 use crate::app_emission::ChildEmit;
-use crate::bounded_ownership::PluginLifecycleStep;
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_diagnostic::{Fault,FaultFrom};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop, sync::Arc};

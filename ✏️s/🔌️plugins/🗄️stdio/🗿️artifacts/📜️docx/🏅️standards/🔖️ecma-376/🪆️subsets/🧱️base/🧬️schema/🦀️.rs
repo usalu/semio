@@ -1,7 +1,7 @@
 //! 🧬️ DocxArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{DocxDocument, DocxXmlParts};
-use crate::DocxSnapshot;
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxDocument, DocxXmlParts};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 
@@ -43,34 +43,6 @@ impl DocxArtifact {
 //#endregion Conversions
 
 //#region Descriptor
-/// 🧬️ Descriptor for `s.stdio.docx`.
-pub fn docx_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.stdio.docx",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
 
@@ -94,7 +66,7 @@ pub async fn empty_docx_snapshot() -> DocxSnapshot {
 /// `fixture_honesty_law` below) — same shape `📷️png/…/⚙️engine/🦀️.rs`'s own
 /// `demo_png_snapshot()` establishes.
 pub async fn demo_docx_snapshot() -> DocxSnapshot {
-    use crate::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
     let document = DocxDocument {
         body: vec![
             DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Semio Demo") }),
@@ -116,7 +88,7 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
     let mut snap = construction::build_minimal_docx(document);
     snap.xml_parts
         .try_push(
-            crate::schema::snapshot::DocxXmlPart::try_from_document(
+            crate::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart::try_from_document(
                 "word/numbering.xml".into(),
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml".into(),
                 semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument { root: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "w:numbering".into(), attrs: Vec::new(), children: Vec::new() }), ..Default::default() },
@@ -144,9 +116,6 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[path="🏷️vocabulary/🦀️.rs"]

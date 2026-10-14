@@ -2,7 +2,7 @@
 /** 📦️ layout layout Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget, scriptInvocationEnvironment } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -51,7 +51,23 @@ if (segments[0] === "layout-frame-selection") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+/** 🎞️ Checks S Layout's owned Source adoption under the original caller's control. */
+class MediaAdoptionSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-media-adoption-source accepts no arguments");
+    const source = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🟦️.ts");
+    const phases = [
+      { name: "strict", budget: 120_000, args: [Bun.resolveSync("typescript/bin/tsc", this.repoRoot), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", source] },
+      { name: "source", budget: 15_000, args: ["test", source] },
+    ];
+    for (const phase of phases) await runOwnedCommand(process.execPath, phase.args, this.repoRoot, `layout:media-adoption:${phase.name}`, scriptInvocationBudget(this.invocation, phase.budget), {
+      signal: this.invocation.control.signal,
+      env: scriptInvocationEnvironment(this.invocation, process.env),
+      onProgress: () => this.invocation.control.publish({ owner: this.invocation.policy.owner, command: "test-media-adoption-source", stage: "running" }),
+    });
+  }
+}
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { commands: { verify: OwnedVerifyScript, "test-media-adoption-source": MediaAdoptionSourceScript }, snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
 
 
 

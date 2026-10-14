@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::vdi3805::unit_tests::context;
+use crate::panels::document::*;
+use crate::unit_tests::context;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {
@@ -10,7 +10,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_family_headline() {
     let mut app = context::app_with_registry().await;
-    let mut host = crate::document::NormHost::<crate::editor::vdi3805::Vdi3805Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = semio_s_plugin_norm_compliance::NormHost::<crate::Vdi3805Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
     assert!(context::render(&mut app, BODY_ARTIFACT).await.contains("checks"));
     context::close(&mut app);

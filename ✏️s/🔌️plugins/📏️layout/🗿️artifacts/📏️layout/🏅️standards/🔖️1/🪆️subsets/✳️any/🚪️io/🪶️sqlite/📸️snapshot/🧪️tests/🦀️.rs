@@ -2,21 +2,21 @@
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
+use crate::io::sqlite::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(){
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout owned SQLite").version("0.0.1").package_id("semio:layout").artifact(crate::declaration().unwrap()).try_build().unwrap();
+    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout owned SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();
     let codec=store::os_store::codec_registry::document_codec(LAYOUT_DOCUMENT_SCHEMA).await.unwrap().unwrap();
     let provider=codec.snapshot_sqlite.expect("actual Layout declaration must publish semantic SQLite capability");
     assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<LayoutSnapshot>()));
-    let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let snapshot=crate::io::text::snapshot::snapshot_wire_codec::default_document();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
     let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));
     let database=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
     assert!(database.table("layout_document").is_ok());
 }
 #[test]
-fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
+fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::io::text::snapshot::snapshot_wire_codec::default_document();let provider=<LayoutSnapshot as pack::snapshot::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
 
 fn component_fixture()->crate::LayoutDrawingChild {
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioPoint2};
@@ -68,13 +68,14 @@ fn sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled
 }
 
 fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
-    use crate::*;
+    use crate::{CharacterStyle, Frame, GridSettings, ImageLink, LAYOUT_DOCUMENT_SCHEMA, Layer, LayoutBounds, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
+    use crate::snapshot::LayoutSnapshot;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum=fixture["maximumU64"].as_str().unwrap().parse::<u64>().unwrap();
     let bounds=LayoutBounds{x:word,y:word,width:word,height:word,rotation:word};let rect=LayoutRect{x:word,y:word,width:word,height:word};
     let layers=vec![Layer{id:String::new(),name:String::new(),visible:false,locked:true,object_ids:vec![String::new(),"!".into()]}];
     let frames=vec![Frame::Rect{id:String::new(),layer_id:String::new(),bounds:bounds.clone(),locked:None,visible:Some(false),fill:Some([color;4]),stroke:None},Frame::Text{id:String::new(),layer_id:String::new(),bounds:bounds.clone(),locked:Some(true),visible:None,story_id:String::new(),thread_next:Some(String::new()),columns:u32::MAX,inset:rect.clone(),wrap_mode:String::new()},Frame::Image{id:String::new(),layer_id:String::new(),bounds:bounds.clone(),locked:Some(false),visible:Some(true),link_id:String::new()}];
-    let mut value=crate::standards::v1::subsets::any::schema::snapshot::empty_layout_snapshot();value.schema=fixture["schema"].as_str().unwrap().into();value.grid=GridSettings{baseline_grid:word,baseline_offset:word,snap_to_baseline:false};
+    let mut value=crate::snapshot::empty_layout_snapshot();value.schema=fixture["schema"].as_str().unwrap().into();value.grid=GridSettings{baseline_grid:word,baseline_offset:word,snap_to_baseline:false};
     value.paragraph_styles=vec![ParagraphStyle{id:String::new(),name:String::new(),font_family:String::new(),font_size:word,font_weight:u32::MAX,leading:word,tracking:word,alignment:String::new()}];
     value.character_styles=vec![CharacterStyle{id:String::new(),name:None,font_family:Some(String::new()),font_size:Some(word),font_weight:None,italic:Some(false),color:Some([color;4]),tracking:None}];
     value.stories=vec![TextStory{id:String::new(),content:"語\0".into(),style_runs:vec![TextStyleRun{start:maximum,end:0,paragraph_style_id:Some(String::new()),character_style_id:None}]}];
@@ -82,16 +83,16 @@ fn complete_fixture(word:f64,color:f32)->LayoutSnapshot{
     value.parent_pages=vec![ParentPage{id:String::new(),name:String::new(),width:word,height:word,layer_ids:vec![String::new(),String::new()],layers:layers.clone(),frames:frames.clone()}];
     value.spreads=vec![Spread{id:String::new(),name:String::new(),page_ids:vec![String::new(),"!".into()]}];
     value.pages=vec![Page{id:String::new(),name:String::new(),spread_id:String::new(),parent_page_id:Some(String::new()),width:word,height:word,margins:PageMargins{top:word,right:word,bottom:word,left:word},columns:PageColumns{count:u32::MAX,gutter:word},guides:vec![rect],layer_ids:vec![String::new()],layers,frames,overrides:vec![PageOverride{object_id:String::new(),bounds:Some(bounds),visible:Some(false),locked:None},PageOverride{object_id:String::new(),bounds:None,visible:None,locked:Some(true)}]}];
-    value.print_target=Some(String::new());value.data_fields=Some(crate::FormDictionary{entries:vec![
- crate::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::String("intrinsic data field\0".into())},
- crate::FormDictionaryEntry{question_id:"null".into(),value:semio_framework_value::DslValue::Null},
- crate::FormDictionaryEntry{question_id:"boolean".into(),value:semio_framework_value::DslValue::Bool(true)},
- crate::FormDictionaryEntry{question_id:"unsigned".into(),value:semio_framework_value::DslValue::uint(u64::MAX)},
- crate::FormDictionaryEntry{question_id:"signed".into(),value:semio_framework_value::DslValue::int(i64::MIN)},
- crate::FormDictionaryEntry{question_id:"float".into(),value:semio_framework_value::DslValue::float(word)},
- crate::FormDictionaryEntry{question_id:"bytes".into(),value:semio_framework_value::DslValue::Bytes(vec![0,127,128,255])},
- crate::FormDictionaryEntry{question_id:"array".into(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null,semio_framework_value::DslValue::uint(u64::MAX)])},
- crate::FormDictionaryEntry{question_id:"object".into(),value:semio_framework_value::DslValue::Object(vec![("repeat".into(),semio_framework_value::DslValue::float(word)),(String::new(),semio_framework_value::DslValue::Bytes(vec![0,255])),("repeat".into(),semio_framework_value::DslValue::Null)])},
+    value.print_target=Some(String::new());value.data_fields=Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:String::new(),value:semio_framework_value::DslValue::String("intrinsic data field\0".into())},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"null".into(),value:semio_framework_value::DslValue::Null},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"boolean".into(),value:semio_framework_value::DslValue::Bool(true)},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"unsigned".into(),value:semio_framework_value::DslValue::uint(u64::MAX)},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"signed".into(),value:semio_framework_value::DslValue::int(i64::MIN)},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"float".into(),value:semio_framework_value::DslValue::float(word)},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"bytes".into(),value:semio_framework_value::DslValue::Bytes(vec![0,127,128,255])},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"array".into(),value:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null,semio_framework_value::DslValue::uint(u64::MAX)])},
+ semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"object".into(),value:semio_framework_value::DslValue::Object(vec![("repeat".into(),semio_framework_value::DslValue::float(word)),(String::new(),semio_framework_value::DslValue::Bytes(vec![0,255])),("repeat".into(),semio_framework_value::DslValue::Null)])},
  ]});value.background_drawing=Some(component_fixture());
     value.referenced_model=Some(store::ArtifactLink{target:semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:"!/@".into(),subset:String::new()},artifact_id:String::new()},role:String::new(),pin:store::LinkPin::Snapshot{blob:store::BlobRef{hash:String::new(),size:maximum,media_type:String::new()}}});value
 }
@@ -128,7 +129,7 @@ fn sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_bou
     assert_eq!(restored.handle,expected.handle);let mut current=&restored.content.layers[0].root;let mut count=0;
     while let DrawNode::Group{children,..}=current{assert_eq!(children.len(),1);current=&children[0];count+=1;}
     assert_eq!(count,depth);let DrawNode::Image{bytes,..}=current else{panic!("complete image leaf")};assert_eq!(bytes,&[0,127,255]);
-    <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
+    <semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
 }
 
 #[test]
@@ -151,14 +152,14 @@ fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){
         let DrawNode::Group{transform,children}=&restored.content.layers[0].root else{panic!("literal group")};
         assert_eq!(transform.translation.x.to_bits(),word);
         let DrawNode::Image{width,bytes,..}=&children[2] else{panic!("literal image")};assert_eq!(width.to_bits(),word);assert_eq!(bytes,&[0,127,255]);
-        <crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
+        <semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(expected.content);<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(restored.content);
     }
 }
 
 #[path="💰️backing/🦀️.rs"]mod backing;
 
 mod public_populated_owner {
-    use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
+    use crate::io::sqlite::snapshot::tests::*;
     use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshotHost};
     use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
     struct Owned(Option<LayoutSnapshot>);
@@ -174,7 +175,7 @@ mod public_populated_owner {
         }}
         same(&a.to_value(),&b.to_value());assert_eq!(a.encode_pack(),b.encode_pack());assert_eq!(a.print_dsl(),b.print_dsl());
     }
-    fn register(){semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout populated public SQLite").version("0.0.1").package_id("semio:layout").artifact(crate::declaration().unwrap()).try_build().unwrap();}
+    fn register(){semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("layout").label("Layout populated public SQLite").version("0.0.1").package_id("semio:layout").artifact(semio_s_artifact_layout_layout::declaration().unwrap()).try_build().unwrap();}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_layout_populated_public_binary_text_exact_owner(){
         use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};

@@ -1,15 +1,15 @@
 //! 🧪️ Keyed-diff algebra of Vdi3805: map-entry coalescing, nested connection rows, the derived index, the negative diff.
 
-use super::Vdi3805Diff;
-use crate::mutations::add_curve::AddCurve;
-use crate::mutations::add_geometry_connection::AddGeometryConnection;
-use crate::mutations::add_product::AddProduct;
-use crate::mutations::change_curve_points::ChangeCurvePoints;
-use crate::mutations::change_edition_profile::ChangeEditionProfile;
-use crate::mutations::remove_curve::RemoveCurve;
-use crate::mutations::remove_product::RemoveProduct;
-use crate::mutations::Vdi3805Mutation;
-use crate::{EditionProfileChoice, Vdi3805Snapshot};
+use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_curve::AddCurve;
+use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection::AddGeometryConnection;
+use semio_s_artifact_norm_vdi3805_mut_products::add_product::AddProduct;
+use semio_s_artifact_norm_vdi3805_mut_geometry::change_curve_points::ChangeCurvePoints;
+use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile::ChangeEditionProfile;
+use semio_s_artifact_norm_vdi3805_mut_geometry::remove_curve::RemoveCurve;
+use semio_s_artifact_norm_vdi3805_mut_products::remove_product::RemoveProduct;
+use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use semio_s_artifact_norm_vdi3805_model::{EditionProfileChoice, Vdi3805Snapshot};
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 
 fn diff_of(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vdi3805Diff {
@@ -28,7 +28,7 @@ async fn law(base: &Vdi3805Snapshot, first: &Vdi3805Mutation, second: impl Fn(&V
     sum
 }
 
-fn curve(base: &Vdi3805Snapshot) -> crate::CharacteristicCurve {
+fn curve(base: &Vdi3805Snapshot) -> semio_s_artifact_norm_vdi3805_model::CharacteristicCurve {
     let mut curve = base.curves.values().next().expect("curve").clone();
     curve.id = "curve-created".into();
     curve
@@ -95,7 +95,7 @@ async fn the_derived_index_follows_the_product_rows() {
     let forward = diff_of(&mutation, &base);
     assert!(forward.products.is_some());
     let after = protocol::apply_diff(&forward, &base).expect("apply");
-    assert_eq!(after.index, crate::CatalogIndex::from_catalog(&after.catalog));
+    assert_eq!(after.index, semio_s_artifact_norm_vdi3805_model::CatalogIndex::from_catalog(&after.catalog));
     assert_eq!(protocol::apply_diff(&forward.inverse(&base), &after).expect("inverse"), base);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let sum = law(&base, &mutation, |_| Vdi3805Mutation::RemoveProduct(RemoveProduct { id: product.identity.article_number.clone() })).await;

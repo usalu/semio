@@ -1,5 +1,5 @@
 //! 🧩️ Borrowed composite member and nested material cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
@@ -20,4 +20,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  sheeting(out,"en1994_slab_sheeting",parent,n::record(n::field(s,3)?)?)?;actions(out,"en1994_slab_action",parent,s,9)?;}Ok(())
 }
 /// 🛂️ Eleven authored SQL tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1994Snapshot::SQLITE_SCHEMA,11,39,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1994Snapshot::SQLITE_SCHEMA,11,39,count(root)?,write)}

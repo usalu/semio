@@ -1,19 +1,19 @@
 //! Puzzle3d mutation — `ChangeObjectAnchor`: changes whether a root object keeps its stored plane or resets to default XY.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
-use crate::Puzzle3dSnapshot;
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
+use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-object-anchor` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "change-object-anchor")]
 pub struct ChangeObjectAnchor {
     pub id: String,
-    pub new_anchor: crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor,
+    pub new_anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor,
 }
 
 impl<Op> protocol::MutationKind<Puzzle3dSnapshot, Op> for ChangeObjectAnchor
@@ -41,6 +41,6 @@ where
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_object_anchor<Op: From<ChangeObjectAnchor>>(id: String, new_anchor: crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor) -> Op {
+pub fn change_object_anchor<Op: From<ChangeObjectAnchor>>(id: String, new_anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor) -> Op {
     Op::from(ChangeObjectAnchor { id, new_anchor })
 }

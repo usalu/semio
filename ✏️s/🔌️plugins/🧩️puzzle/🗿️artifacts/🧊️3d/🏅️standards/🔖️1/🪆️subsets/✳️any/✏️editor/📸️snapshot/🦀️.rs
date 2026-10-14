@@ -1,6 +1,14 @@
 //! 📸️ Native editor root with typed authority and a derived intrinsic host view.
-use crate::{Puzzle3dSnapshot,Puzzle3dMutation};
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_value_derive as value_derive;
+
+use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation};
+use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use protocol::{DiffAlgebra,Mutation,MutationDiff};
 use semio_framework_value::DslValue;
 
@@ -19,7 +27,7 @@ impl Puzzle3dPlaySnapshot {
     }
 
     /// 🧬️ Retains typed mutation authority and defers its native host view.
-    pub(crate) fn from_typed(typed: Puzzle3dSnapshot) -> Self {
+    pub fn from_typed(typed: Puzzle3dSnapshot) -> Self {
         Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
     }
 
@@ -185,10 +193,8 @@ impl semio_framework_value::retirement::RetireOwned for Puzzle3dPlaySnapshot {
     }
 }
 
-use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::modes::edit::windows::main;
-use crate::editor::puzzle3d::panels::catalogue;
-use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
+use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dRuntime;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_framework_plugin::kernel::ClipboardError, semio_framework_plugin::kernel::ClipboardFragment, semio_framework_plugin::kernel::PastePlacement};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionDefinition;
@@ -209,8 +215,8 @@ use semio_framework_plugin::app::InteractionView;
 use {std::collections::HashMap, std::collections::HashSet};
 use {std::sync::atomic::AtomicU32, std::sync::atomic::Ordering};
 use std::sync::LazyLock;
-use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
-use crate::editor::puzzle3d::snapshot;
+use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
+use crate as snapshot;
 
 pub const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
 
@@ -260,15 +266,15 @@ pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 /// local structural-twin mirror of `crate::Puzzle3dSnapshot`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `from_json_str::<Puzzle3dSceneSnapshot>`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::concrete_forest::SOURCE.document_json().to_string());
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| semio_s_artifact_puzzle_3d_examples::concrete_forest::SOURCE.document_json().to_string());
 
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.document_json().to_string());
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| semio_s_artifact_puzzle_3d_examples::nakagin_capsule_tower::SOURCE.document_json().to_string());
 
-static CONCRETE_FOREST_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_scene_snapshot()));
+pub static CONCRETE_FOREST_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_scene_snapshot()));
 
-static NAKAGIN_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_scene_snapshot()));
+pub static NAKAGIN_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| empty_scene_snapshot()));
 
-static EMPTY_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(empty_scene_snapshot);
+pub static EMPTY_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(empty_scene_snapshot);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example scene_snapshot parses as dsl: {error}"));
@@ -454,7 +460,7 @@ fn puzzle3d_scene_snapshot_from_view(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot
     puzzle3d_scene_snapshot_from_play_snapshot(doc.snapshot)
 }
 
-fn puzzle3d_scene_snapshot_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzle3dSceneSnapshot {
+pub fn puzzle3d_scene_snapshot_from_play_snapshot(snapshot: &Puzzle3dPlaySnapshot) -> Puzzle3dSceneSnapshot {
     puzzle3d_scene_snapshot_from_document(snapshot.typed())
 }
 
@@ -462,7 +468,7 @@ fn puzzle3d_selected_objects(scene_snapshot: &Puzzle3dSceneSnapshot, interaction
     puzzle3d_selected_objects_from(&Puzzle3dInteractionSnapshot::from_interaction(interaction), scene_snapshot)
 }
 
-fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<Puzzle3dObject> {
+pub fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<Puzzle3dObject> {
     let ids = snapshot.selected_object_ids();
     let mut objects: Vec<Puzzle3dObject> = scene_snapshot.objects.iter().filter(|object| ids.contains(&object.id)).cloned().collect();
     if objects.is_empty() {
@@ -482,12 +488,12 @@ fn puzzle3d_selected_objects_from(snapshot: &Puzzle3dInteractionSnapshot, scene_
 }
 
 /// 📋️ Copies the selected objects as a scene_snapshot-shaped fragment.
-fn puzzle3d_copy_fragment(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+pub fn puzzle3d_copy_fragment(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
     let scene_snapshot = puzzle3d_scene_snapshot_from_view(doc);
     puzzle3d_copy_fragment_from(&scene_snapshot, puzzle3d_selected_objects(&scene_snapshot, interaction))
 }
 
-fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objects: Vec<Puzzle3dObject>) -> Result<ClipboardFragment, ClipboardError> {
+pub fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objects: Vec<Puzzle3dObject>) -> Result<ClipboardFragment, ClipboardError> {
     let _ = scene_snapshot;
     if objects.is_empty() {
         return Err(ClipboardError::EmptySelection);
@@ -505,12 +511,8 @@ fn puzzle3d_copy_fragment_from(scene_snapshot: &Puzzle3dSceneSnapshot, objects: 
     })
 }
 
-
-
-
-
 /// 📋 Clones a copied scene_snapshot fragment with fresh ids, one `create-object` per clone.
-fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
+pub fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle3dMutation>, ClipboardError> {
     let expected = MediaType { class: MediaClass::ThreeD, form: MediaForm::Design };
     if fragment.media_type != expected {
         return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
@@ -528,7 +530,7 @@ fn puzzle3d_paste_operations(fragment: &ClipboardFragment, placement: &PastePlac
             clone.origin[0] += offset[0];
             clone.origin[1] += offset[1];
             clone.origin[2] += offset[2];
-            snapshot_object_from_host_snapshot(&clone).map(|object| crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))
+            snapshot_object_from_host_snapshot(&clone).map(|object| semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object(object, None)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))
         })
         .collect()
 }
@@ -542,7 +544,7 @@ pub fn nakagin_scene_snapshot() -> Puzzle3dSceneSnapshot {
 }
 
 /// 👁️ Builds the native host view from the editor-owned intrinsic projection.
-pub(crate) fn puzzle3d_projection_value<T:std::borrow::Borrow<semio_framework_value::DslValue>>(value:T)->Value{
+pub fn puzzle3d_projection_value<T:std::borrow::Borrow<semio_framework_value::DslValue>>(value:T)->Value{
     semio_framework_pack_json::from_dsl_value(value.borrow())
 }
 
@@ -573,7 +575,7 @@ pub fn puzzle3d_snapshot_from_host_snapshot(scene_snapshot: &Puzzle3dSceneSnapsh
     Ok(Puzzle3dSnapshot {
         schema: scene_snapshot.schema.clone(),
         domain: scene_snapshot.domain.clone(),
-        meta: crate::standards::v1::subsets::any::schema::Puzzle3dMeta {
+        meta: semio_s_artifact_puzzle_3d_model::Puzzle3dMeta {
             kind_catalogs: scene_snapshot.meta.kind_catalogs.clone().map(FromValue::from_value).transpose()?,
             kind_compatibility: match scene_snapshot.meta.kind_compatibility.clone(){Some(value)=>FromValue::from_value(value)?,None=>Default::default()},
         },
@@ -584,12 +586,12 @@ pub fn puzzle3d_snapshot_from_host_snapshot(scene_snapshot: &Puzzle3dSceneSnapsh
     })
 }
 
-fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<crate::standards::v1::subsets::any::schema::Puzzle3dObject,semio_framework_value::ValueError> {
-    Ok(crate::standards::v1::subsets::any::schema::Puzzle3dObject {
+fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<semio_s_artifact_puzzle_3d_model::Puzzle3dObject,semio_framework_value::ValueError> {
+    Ok(semio_s_artifact_puzzle_3d_model::Puzzle3dObject {
         id: object.id.clone(),
         label: object.label.clone(),
         object_kind: object.object_kind.clone(),
-        anchor: crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor::default(),
+        anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor::default(),
         origin: object.origin,
         orientation: object.orientation,
         scale: object.scale.clone().map(FromValue::from_value).transpose()?,
@@ -600,12 +602,12 @@ fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<crate::
     })
 }
 
-fn snapshot_vortex_from_host_snapshot(vortex: &Puzzle3dVortex) -> crate::standards::v1::subsets::any::schema::Puzzle3dVortex {
-    crate::standards::v1::subsets::any::schema::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: None, position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
+fn snapshot_vortex_from_host_snapshot(vortex: &Puzzle3dVortex) -> semio_s_artifact_puzzle_3d_model::Puzzle3dVortex {
+    semio_s_artifact_puzzle_3d_model::Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), label: None, position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
 }
 
-fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> crate::standards::v1::subsets::any::schema::Puzzle3dAttraction {
-    crate::standards::v1::subsets::any::schema::Puzzle3dAttraction {
+fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction {
+    semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction {
         id: attraction.id.clone(),
         attracting: attraction.attracting.clone(),
         attracted: attraction.attracted.clone(),
@@ -620,14 +622,14 @@ fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> cr
     }
 }
 
-fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> Result<crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume,semio_framework_value::ValueError> {
-    Ok(crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().map(FromValue::from_value).transpose()?, hidden: volume.hidden, locked: volume.locked })
+fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> Result<semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume,semio_framework_value::ValueError> {
+    Ok(semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().map(FromValue::from_value).transpose()?, hidden: volume.hidden, locked: volume.locked })
 }
 
-fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate::standards::v1::subsets::any::schema::Puzzle3dReference {
-    crate::standards::v1::subsets::any::schema::Puzzle3dReference {
+fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> semio_s_artifact_puzzle_3d_model::Puzzle3dReference {
+    semio_s_artifact_puzzle_3d_model::Puzzle3dReference {
         id: reference.id.clone(),
-        source: crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
+        source: semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
         origin: reference.origin,
         width_world: reference.width_world,
         locked: reference.locked,
@@ -635,7 +637,7 @@ fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate
     }
 }
 
-pub(crate) fn scene_object_from_snapshot(object: &crate::standards::v1::subsets::any::schema::Puzzle3dObject) -> Puzzle3dObject {
+pub fn scene_object_from_snapshot(object: &semio_s_artifact_puzzle_3d_model::Puzzle3dObject) -> Puzzle3dObject {
     Puzzle3dObject {
         id: object.id.clone(),
         label: object.label.clone(),
@@ -650,11 +652,11 @@ pub(crate) fn scene_object_from_snapshot(object: &crate::standards::v1::subsets:
     }
 }
 
-fn scene_vortex_from_snapshot(vortex: &crate::standards::v1::subsets::any::schema::Puzzle3dVortex) -> Puzzle3dVortex {
+fn scene_vortex_from_snapshot(vortex: &semio_s_artifact_puzzle_3d_model::Puzzle3dVortex) -> Puzzle3dVortex {
     Puzzle3dVortex { id: vortex.id.clone(), vortex_kind: vortex.vortex_kind.clone(), position: vortex.position, direction: vortex.direction, radius: vortex.radius, hidden: vortex.hidden, locked: vortex.locked }
 }
 
-fn scene_attraction_from_snapshot(attraction: &crate::standards::v1::subsets::any::schema::Puzzle3dAttraction) -> Puzzle3dAttraction {
+fn scene_attraction_from_snapshot(attraction: &semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction) -> Puzzle3dAttraction {
     Puzzle3dAttraction {
         id: attraction.id.clone(),
         attracting: attraction.attracting.clone(),
@@ -668,11 +670,11 @@ fn scene_attraction_from_snapshot(attraction: &crate::standards::v1::subsets::an
     }
 }
 
-fn scene_target_volume_from_snapshot(volume: &crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume) -> Puzzle3dTargetVolume {
+fn scene_target_volume_from_snapshot(volume: &semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume) -> Puzzle3dTargetVolume {
     Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.as_ref().map(semio_framework_value::ToValue::to_value), hidden: volume.hidden, locked: volume.locked }
 }
 
-fn scene_reference_from_snapshot(reference: &crate::standards::v1::subsets::any::schema::Puzzle3dReference) -> Puzzle3dReference {
+fn scene_reference_from_snapshot(reference: &semio_s_artifact_puzzle_3d_model::Puzzle3dReference) -> Puzzle3dReference {
     Puzzle3dReference {
         id: reference.id.clone(),
         source: Puzzle3dReferenceSource { url: reference.source.url.clone(), media_kind: reference.source.media_kind.clone() },
@@ -720,7 +722,7 @@ fn puzzle3d_normalize_object_kind_row(row: Value) -> Value {
 /// still-`Value`-shaped `import_media` fragment; `DslValue`'s `Object`/`Array` variants are bare
 /// `Vec`s with no `entry`/`as_*_mut` sugar, so the section lookup below is index-based instead of
 /// `serde_json::Value`'s `entry(...).or_insert_with(...)`.
-fn puzzle3d_upsert_catalog_rows(catalogs: &mut semio_framework_value::DslValue, section: &str, incoming: Option<&Value>) {
+pub fn puzzle3d_upsert_catalog_rows(catalogs: &mut semio_framework_value::DslValue, section: &str, incoming: Option<&Value>) {
     let Some(incoming_rows) = incoming.and_then(Value::as_array) else {
         return;
     };
@@ -762,7 +764,7 @@ pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<Stri
 
 /// 📢️ The localized notice of every refusal code the puzzle 3d guest names (design §20.12): a set-verb's missing flag value and
 /// the fill tool's run refusals (`🛠️tools/🪣️fill`).
-fn puzzle3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+pub fn puzzle3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
     static NOTICES: LazyLock<[(&str, LocalizedLabel); 3]> = LazyLock::new(|| {
         [
             ("puzzle3d.action.flag-value-required", LocalizedLabel::native("Choose on or off for this setting.", "Für diese Einstellung Ein oder Aus wählen.")),
@@ -775,7 +777,7 @@ fn puzzle3d_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
 
 /// 🙈️ The flag a set-verb sets to exactly the boolean its arguments carry (`setSelectionHidden{hidden}`,
 /// `setSelectionLocked{locked}`) — the row target's explicit next state, so a stale view sets a value and never flips one.
-fn puzzle3d_flag_value_argument(action: &str) -> Option<&'static str> {
+pub fn puzzle3d_flag_value_argument(action: &str) -> Option<&'static str> {
     match action {
         "setSelectionHidden" => Some("hidden"),
         "setSelectionLocked" => Some("locked"),
@@ -785,7 +787,7 @@ fn puzzle3d_flag_value_argument(action: &str) -> Option<&'static str> {
 
 /// 🙈️ A set-verb's definition: the explicit `{entity, ids}` a row names (or, left empty, the live selection) and the REQUIRED
 /// boolean `flag` it sets — a missing value is refused, never defaulted.
-fn puzzle3d_flag_value_action(id: &str, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
+pub fn puzzle3d_flag_value_action(id: &str, flag: &str, label: LocalizedLabel, value: LocalizedLabel) -> ActionDefinition {
     ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation)
         .category("hand")
         .with_args([ActionArgDef::text("entity", LocalizedLabel::native("Entity", "Entität")), ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), ActionArgDef::toggle(flag, value).required()])
@@ -900,7 +902,7 @@ pub fn puzzle3d_kind_catalog_label(scene_snapshot: &Puzzle3dSceneSnapshot, kind_
     puzzle3d_catalog_entries(scene_snapshot, "objects")
         .iter()
         .find(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str) == Some(kind_id))
-        .map(catalogue::catalog_entry_label)
+        .map(crate::catalog_entry_label)
         .unwrap_or_else(|| kind_id.to_string())
 }
 
@@ -944,7 +946,7 @@ pub fn puzzle3d_object_display_label(object: &Puzzle3dObject, scene_snapshot: &P
 pub fn puzzle3d_entity_label(snapshot: &Puzzle3dSnapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
     let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
     let text = |value: &Option<String>| value.clone().filter(|text| !text.is_empty());
-    let object_label = |object: &crate::standards::v1::subsets::any::schema::Puzzle3dObject| {
+    let object_label = |object: &semio_s_artifact_puzzle_3d_model::Puzzle3dObject| {
         text(&object.label)
             .or_else(|| {
                 let kind = object.object_kind.as_deref()?;
@@ -1050,7 +1052,7 @@ pub fn puzzle3d_fill_tool_active(config: &Puzzle3dRuntime) -> bool {
 /// is not an addressing hit when an instance candidate exists — a window command otherwise looks the
 /// utility map up under the kind (`map_hit=false`) and never sees the pane's armed utility.
 pub fn puzzle3d_window_id_is_kind(id: &str) -> bool {
-    id == main::WINDOW_KIND_ID
+    id == semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID
 }
 
 fn puzzle3d_first_instance_id<'a>(ids: impl IntoIterator<Item = Option<&'a str>>) -> Option<&'a str> {
@@ -1086,7 +1088,7 @@ pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_p
     .or_else(|| view_state.and_then(|view| view.focused_window_id.as_deref()).filter(|id| !id.is_empty()))
     .or(fallback.filter(|id| !id.is_empty()))
     .or_else(|| roster.first().map(String::as_str).filter(|id| !id.is_empty()))
-    .unwrap_or(main::WINDOW_KIND_ID)
+    .unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)
 }
 
 /// 🛠️ The effective interaction id threaded through `Puzzle3dScene.active_utility`: the host-owned
@@ -1223,7 +1225,7 @@ pub fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
 /** 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
  * otherwise a `delta` (stepper nudge) is added to `current` — offset-preserving across a multi-select
  * where `current` differs per entity. `None` when neither parses. */
-fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
+pub fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
     if let Some(absolute) = value.and_then(Value::as_f64) {
         return Some(absolute);
     }
@@ -1240,7 +1242,7 @@ pub fn puzzle3d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<
 /** 📐️ Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`/`w`), returning
  * the axis index when `field` names a component of `base` — the dot-path convention
  * `ui_inspector_vec3_group`/the inspector's quaternion group use for their per-axis actions. */
-fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
+pub fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
     match field.strip_prefix(base)?.strip_prefix('.')? {
         "x" => Some(0),
         "y" => Some(1),
@@ -1253,7 +1255,7 @@ fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
 /// 🧲️ The world offset an inspector stepper nudge states — `patchInspector{entity: object|targetVolume,
 /// field: origin.x|y|z, delta}` without an absolute `value` — the one inspector edit that is a gesture, so it
 /// commits the transform tool's `drag-selection` instead of an absolute origin. `None` for every other edit.
-pub(crate) fn puzzle3d_inspector_origin_nudge(args: Option<&Value>) -> Option<[f64; 3]> {
+pub fn puzzle3d_inspector_origin_nudge(args: Option<&Value>) -> Option<[f64; 3]> {
     let args = args?;
     if !matches!(args.get("entity").and_then(Value::as_str), Some("object" | "targetVolume")) || args.get("value").is_some_and(|value| !value.is_null()) {
         return None;
@@ -1600,26 +1602,6 @@ pub fn puzzle3d_distribution_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLa
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// 🎯️ B1: `Puzzle3dPlayApp::Command` — the SOLE dispatch surface, one variant per declared
 /// action (mirrors every `.mutation(...)`/`.view_action(...)` id `create_puzzle3d_app` registers
 /// below). Each variant carries `window_id` (was host-pushed `view_state.window_id`) plus `args` (the
@@ -1863,7 +1845,7 @@ pub const PUZZLE3D_ENGAGEMENT_VERBS: &[&str] = &["brush", "fill <n>", "zoom", "c
 /// 🏷️ One catalog entry's display name — `label`, else `name`, else its `id`. Shared with the
 /// manifest's `addObjectKind`/"Add Object" dialog option set (`✏️editor/🦀️.rs`), which must read
 /// exactly the same catalog rows this panel renders.
-pub(crate) fn catalog_entry_label(entry: &semio_framework_value::DslValue) -> String {
+pub fn catalog_entry_label(entry: &semio_framework_value::DslValue) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
@@ -1876,7 +1858,6 @@ use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteSnapshotCon
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::ValueError;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use pack::snapshot::ArtifactPack as _;
 
 impl pack::snapshot::ArtifactDsl for Puzzle3dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle3d-play";
@@ -1932,3 +1913,9 @@ fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -
     }
 }
 //#endregion 🚪️Codecs
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️play-pack/🦀️.rs"]
+mod play_pack_tests;
+//#endregion 🧪️Tests

@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::LayoutMutation;
-use crate::LayoutSnapshot;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧾change-data-fields/🧾️attaches/📸️snapshot/⬅️before/🔣️.json");
@@ -35,7 +35,7 @@ fn applied() -> LayoutSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn stores_the_complete_typed_dictionary() {
     let after = applied();
-    assert_eq!(after.data_fields, Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]}), "change-data-fields preserves the typed client value");
+    assert_eq!(after.data_fields, Some(semio_s_artifact_forms_forms::schema::dictionary::FormDictionary{entries:vec![semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]}), "change-data-fields preserves the typed client value");
     assert!(after.print_target.is_none(), "change-data-fields must not touch the print target");
     assert_eq!(after.name, "Fixture Layout", "change-data-fields must not rename the document");
     assert_eq!(after, expected_after(), "change-data-fields/attaches-a-data-fields-payload: applied state differs from the committed after-snapshot");
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-data-fields/attaches-a-data-fields-payload: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    assert_eq!(produced.diff().data_fields, Some(crate::diff::LayoutDataFieldsDelta { presence: Some(crate::diff::DataFieldsPresence::Created), entries: Some(crate::diff::LayoutDataEntriesDelta { inserted: vec![crate::diff::LayoutDataEntryInsertion { index: 0, row: crate::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) } }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
+    assert_eq!(produced.diff().data_fields, Some(semio_s_artifact_layout_layout_diff::LayoutDataFieldsDelta { presence: Some(semio_s_artifact_layout_layout_diff::DataFieldsPresence::Created), entries: Some(semio_s_artifact_layout_layout_diff::LayoutDataEntriesDelta { inserted: vec![semio_s_artifact_layout_layout_diff::LayoutDataEntryInsertion { index: 0, row: semio_s_artifact_forms_forms::schema::dictionary::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) } }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
     assert!(produced.diff().print_target.is_none(), "change-data-fields leaves `print_target` untouched in the diff");
 }
 
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-data-fields/attaches-a-data-fields-payload: committed diff JSON is not canonical");
@@ -111,7 +111,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `change-data-fields` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_layout_layout_diff::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-data-fields/attaches-a-data-fields-payload: committed diff did not carry before to after");
 }

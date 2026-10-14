@@ -126,7 +126,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 }
 
 /// ♻️ The fixture child is an openable member, so its snapshot needs the same bounded owned-value
-/// retirement a real member's does — `store::PackMemberSnapshotOpen` retires the decoded snapshot
+/// retirement a real member's does — `store::ProducedMemberSnapshotOpen` retires the decoded snapshot
 /// through it when an open is cancelled or rejected mid-flight.
 semio_framework_value::artifact_retire_struct!(TestSnapshot { count, label, slot });
 

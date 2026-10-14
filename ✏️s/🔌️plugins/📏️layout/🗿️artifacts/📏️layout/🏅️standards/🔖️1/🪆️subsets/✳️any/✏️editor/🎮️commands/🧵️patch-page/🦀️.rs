@@ -1,21 +1,22 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::layout::modes::edit::windows::blueprint::config::current;
-use crate::mutations::change_page_height::ChangePageHeight;
-use crate::mutations::change_page_width::ChangePageWidth;
-use crate::mutations::delete_page::DeletePage;
-use crate::mutations::rename_page::RenamePage;
-use crate::mutations::reorder_pages::ReorderPages;
-use crate::mutations::create_layer::CreateLayer;
-use crate::mutations::set_page_guides::SetPageGuides;
-use crate::mutations::set_page_parent::SetPageParent;
-use crate::LayoutRect;
-use crate::mutations::update_layer::UpdateLayer;
-use crate::mutations::update_page_columns::UpdatePageColumns;
-use crate::mutations::update_page_margins::UpdatePageMargins;
-use crate::mutations::LayoutMutation;
-use crate::{LayoutSnapshot, Page};
+use crate::modes::edit::windows::blueprint::config::current;
+use semio_s_artifact_layout_layout_mutations_content::change_page_height::ChangePageHeight;
+use semio_s_artifact_layout_layout_mutations_content::change_page_width::ChangePageWidth;
+use semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage;
+use semio_s_artifact_layout_layout_mutations_content::rename_page::RenamePage;
+use semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages;
+use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
+use semio_s_artifact_layout_layout_mutations_content::set_page_guides::SetPageGuides;
+use semio_s_artifact_layout_layout_mutations_content::set_page_parent::SetPageParent;
+use semio_s_artifact_layout_layout_model::LayoutRect;
+use semio_s_artifact_layout_layout_mutations_frames::update_layer::UpdateLayer;
+use semio_s_artifact_layout_layout_mutations_content::update_page_columns::UpdatePageColumns;
+use semio_s_artifact_layout_layout_mutations_content::update_page_margins::UpdatePageMargins;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::Page;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

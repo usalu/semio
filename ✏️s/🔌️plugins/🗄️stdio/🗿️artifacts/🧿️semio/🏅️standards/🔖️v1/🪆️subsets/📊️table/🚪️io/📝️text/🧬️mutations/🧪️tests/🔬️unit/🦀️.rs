@@ -1,4 +1,4 @@
-use crate::io::text::mutations::*;
+use semio_s_artifact_stdio_semio_table_mutations::io::text::mutations::*;
 use protocol::OpText;
 
 #[semio_framework_async_macros::async_test]

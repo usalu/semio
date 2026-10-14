@@ -1,6 +1,6 @@
 //! 🧱️ Handwritten Block owned relational fields.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
+use semio_s_artifact_block_3d_model::*;
 use std::collections::{BTreeMap, BTreeSet};
 use store::{
     sqlite_snapshot::{
@@ -360,7 +360,7 @@ fn write_rows(v:&Block3dSnapshot,out:&mut RowWriter<'_,'_>,total:usize)->Result<
 }
 fn forecast(v:&Block3dSnapshot,c:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize,ValueError>{let total=total_rows(v,c,phase)?;let mut out=RowWriter::borrowed(c,phase)?;write_rows(v,&mut out,total)?;out.finish_borrowed()?;Ok(total)}
 impl ArtifactSqliteSnapshotHost for Block3dSnapshot {
-    fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,c)}
+    fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{crate::snapshot::preflight::check(self,encoding,c)}
 
     
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, c: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
@@ -372,7 +372,7 @@ impl ArtifactSqliteSnapshotHost for Block3dSnapshot {
             <Self as pack::snapshot::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
-                admission::admit(record,native,limits)?;
+                crate::snapshot::admission::admit(record,native,limits)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,
@@ -461,10 +461,15 @@ fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -
 }
 
 #[path="🛂️admission/🦀️.rs"]
-pub(super)mod admission;
+pub(crate)mod admission;
 
 #[path="📏️preflight/🦀️.rs"]mod preflight;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+//#region 🪢️Mounts
+#[path = "."]
+pub mod tests {
+    #[cfg(test)]
+    #[path = "📏️preflight/🫳️borrowed/🦀️.rs"]
+    mod exact_borrowed_wire;
+}
+//#endregion 🪢️Mounts

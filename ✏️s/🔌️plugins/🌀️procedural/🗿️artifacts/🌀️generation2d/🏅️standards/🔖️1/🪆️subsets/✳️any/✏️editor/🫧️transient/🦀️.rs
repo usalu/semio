@@ -1,4 +1,8 @@
 //! 👁️ App-local Generation2d preview output shared by generation windows.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
